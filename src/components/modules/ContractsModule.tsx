@@ -4,9 +4,17 @@ import { Badge } from "@/components/ui/badge";
 import { FileCheck, User, Calendar, DollarSign, Clock } from "lucide-react";
 import { ModuleProps } from "@/types/modules";
 import { useContracts } from "@/hooks/useContracts";
+import { ContractTypeSelectionDialog } from "@/components/dialogs/ContractTypeSelectionDialog";
+import { useState } from "react";
 
 export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
   const { contracts, loading } = useContracts();
+  const [showContractTypeDialog, setShowContractTypeDialog] = useState(false);
+
+  const handleContractTypeSelect = (type: string) => {
+    console.log("Selected contract type:", type);
+    // TODO: Implement contract creation logic for each type
+  };
 
   const totalValue = contracts.length;
   const signedValue = contracts.filter(c => c.status === 'completed').length;
@@ -23,7 +31,7 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
             <h1 className="text-2xl font-bold">Contracts Management</h1>
             <p className="text-muted-foreground">Create, manage, and track performance contracts</p>
           </div>
-          <Button>
+          <Button onClick={() => setShowContractTypeDialog(true)}>
             <FileCheck className="h-4 w-4 mr-2" />
             New Contract
           </Button>
@@ -114,6 +122,12 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
             </div>
           </CardContent>
         </Card>
+
+        <ContractTypeSelectionDialog
+          open={showContractTypeDialog}
+          onOpenChange={setShowContractTypeDialog}
+          onSelectType={handleContractTypeSelect}
+        />
       </div>
     );
   }
