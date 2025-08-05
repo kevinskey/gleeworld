@@ -2,13 +2,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CreditCard, Users, DollarSign, Calendar, AlertCircle, Plus, Bell } from "lucide-react";
+import { CreditCard, Users, DollarSign, Calendar, AlertCircle, Plus, Bell, ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { ModuleProps } from "@/types/modules";
 import { useDuesManagement, type DuesRecord } from "@/hooks/useDuesManagement";
 import { PaymentPlanSelectionDialog } from "@/components/dialogs/PaymentPlanSelectionDialog";
 import { useState } from "react";
 
 export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
+  const navigate = useNavigate();
   const { 
     duesRecords, 
     paymentPlans, 
@@ -72,6 +74,10 @@ export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModulePro
             <p className="text-muted-foreground">Track and collect member dues and payments</p>
           </div>
           <div className="flex gap-2">
+            <Button onClick={() => navigate('/dues-management')} variant="outline">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Full Dues Management
+            </Button>
             <Button onClick={sendBulkReminders} variant="outline">
               <Bell className="h-4 w-4 mr-2" />
               Send Reminders
@@ -237,14 +243,24 @@ export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModulePro
         <CardDescription>Track member payments and dues</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
-          <div className="text-sm">${paidDues.toFixed(2)} of ${totalDues.toFixed(2)} collected</div>
-          <div className="text-sm">
-            {totalDues > 0 ? Math.round((paidDues/totalDues) * 100) : 0}% collection rate
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <div className="text-sm">${paidDues.toFixed(2)} of ${totalDues.toFixed(2)} collected</div>
+            <div className="text-sm">
+              {totalDues > 0 ? Math.round((paidDues/totalDues) * 100) : 0}% collection rate
+            </div>
+            <div className="text-sm">
+              {duesRecords.filter(d => d.status === 'overdue').length} overdue payments
+            </div>
           </div>
-          <div className="text-sm">
-            {duesRecords.filter(d => d.status === 'overdue').length} overdue payments
-          </div>
+          <Button 
+            onClick={() => navigate('/dues-management')} 
+            className="w-full"
+            size="sm"
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Open Full Dues Management
+          </Button>
         </div>
       </CardContent>
     </Card>
