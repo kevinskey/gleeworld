@@ -96,6 +96,7 @@ import { AmazonShoppingModule } from "./components/shopping/AmazonShoppingModule
 import { RadioStationPage } from "./components/radio/RadioStationPage";
 import { AuditionsManagement } from "./components/admin/AuditionsManagement";
 import { ReceiptsPage } from "./pages/ReceiptsPage";
+import ApprovalSystemPage from "./pages/ApprovalSystemPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -695,22 +696,30 @@ const App = () => {
                                     </ProtectedRoute>
                                   } 
                                  />
-                                 <Route 
-                                   path="/receipts" 
-                                   element={
-                                     <ProtectedRoute>
-                                       <ReceiptsPage />
-                                     </ProtectedRoute>
-                                   } 
-                                 />
-                    <Route 
-                      path="/" 
-                      element={
-                        <PublicRoute>
-                          <GleeWorldLanding />
-                        </PublicRoute>
-                      } 
-                    />
+                                  <Route 
+                                    path="/receipts" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <ReceiptsPage />
+                                      </ProtectedRoute>
+                                    } 
+                                  />
+                                  <Route 
+                                    path="/admin/approval-system" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <ApprovalSystemPage />
+                                      </ProtectedRoute>
+                                    } 
+                                  />
+                     <Route 
+                       path="/" 
+                       element={
+                         <PublicRoute>
+                           <GleeWorldLanding />
+                         </PublicRoute>
+                       } 
+                     />
                     <Route 
                       path="/admin" 
                       element={

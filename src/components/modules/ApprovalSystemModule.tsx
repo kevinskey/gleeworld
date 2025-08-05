@@ -1,31 +1,56 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Clock, X, User, DollarSign } from "lucide-react";
+import { CheckCircle, Clock, X, User, DollarSign, Plus } from "lucide-react";
 import { ModuleProps } from "@/types/modules";
+import { useApprovalRequests } from "@/hooks/useApprovalRequests";
+import { ApprovalRequestForm } from "@/components/approval/ApprovalRequestForm";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export const ApprovalSystemModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
-  const approvals = [
-    { id: 1, type: "Budget Request", title: "Spring Concert Decorations", amount: 850, requestor: "Sarah M.", status: "pending", date: "2024-01-15" },
-    { id: 2, type: "Expense Report", title: "Travel Reimbursement - Atlanta Trip", amount: 320, requestor: "Marcus W.", status: "approved", date: "2024-01-14" },
-    { id: 3, type: "Purchase Order", title: "New Sheet Music Licenses", amount: 1200, requestor: "Elena R.", status: "rejected", date: "2024-01-13" },
-    { id: 4, type: "Budget Request", title: "Uniform Dry Cleaning", amount: 450, requestor: "David C.", status: "review", date: "2024-01-16" }
-  ];
+  const { requests, loading, updateRequestStatus } = useApprovalRequests();
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const pendingAmount = approvals.filter(a => a.status === 'pending').reduce((sum, a) => sum + a.amount, 0);
-  const approvedAmount = approvals.filter(a => a.status === 'approved').reduce((sum, a) => sum + a.amount, 0);
+  const pendingRequests = requests.filter(r => r.status === 'pending');
+  const approvedRequests = requests.filter(r => r.status === 'approved');
+  const pendingAmount = pendingRequests.reduce((sum, r) => sum + r.amount, 0);
+  const approvedAmount = approvedRequests.reduce((sum, r) => sum + r.amount, 0);
+
+  const handleApprove = async (requestId: string) => {
+    setActionLoading(requestId);
+    try {
+      await updateRequestStatus(requestId, 'approved');
+    } catch (error) {
+      console.error('Error approving request:', error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (requestId: string) => {
+    setActionLoading(requestId);
+    try {
+      await updateRequestStatus(requestId, 'rejected', undefined, 'Request denied');
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   if (isFullPage) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold">Approval System</h1>
+            <h1 className="text-2xl font-bold">Financial Approval System</h1>
             <p className="text-muted-foreground">Review and approve financial requests and expense reports</p>
           </div>
-          <Button>
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Batch Approve
+          <Button onClick={() => setShowCreateForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Request
           </Button>
         </div>
 
@@ -34,7 +59,7 @@ export const ApprovalSystemModule = ({ user, isFullPage, onNavigate }: ModulePro
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-2xl font-bold">{approvals.filter(a => a.status === 'pending').length}</div>
+                  <div className="text-2xl font-bold">{pendingRequests.length}</div>
                   <div className="text-sm text-muted-foreground">Pending Approval</div>
                 </div>
                 <Clock className="h-8 w-8 text-orange-500" />
@@ -45,7 +70,7 @@ export const ApprovalSystemModule = ({ user, isFullPage, onNavigate }: ModulePro
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-2xl font-bold">${pendingAmount}</div>
+                  <div className="text-2xl font-bold">${pendingAmount.toFixed(2)}</div>
                   <div className="text-sm text-muted-foreground">Pending Amount</div>
                 </div>
                 <DollarSign className="h-8 w-8 text-yellow-500" />
@@ -56,8 +81,8 @@ export const ApprovalSystemModule = ({ user, isFullPage, onNavigate }: ModulePro
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-2xl font-bold">{approvals.filter(a => a.status === 'approved').length}</div>
-                  <div className="text-sm text-muted-foreground">Approved Today</div>
+                  <div className="text-2xl font-bold">{approvedRequests.length}</div>
+                  <div className="text-sm text-muted-foreground">Approved Requests</div>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-500" />
               </div>
@@ -67,7 +92,7 @@ export const ApprovalSystemModule = ({ user, isFullPage, onNavigate }: ModulePro
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-2xl font-bold">${approvedAmount}</div>
+                  <div className="text-2xl font-bold">${approvedAmount.toFixed(2)}</div>
                   <div className="text-sm text-muted-foreground">Approved Amount</div>
                 </div>
                 <DollarSign className="h-8 w-8 text-green-500" />
@@ -81,47 +106,77 @@ export const ApprovalSystemModule = ({ user, isFullPage, onNavigate }: ModulePro
             <CardTitle>Approval Queue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {approvals.map((approval) => (
-                <div key={approval.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="flex-shrink-0">
-                      {approval.status === 'approved' && <CheckCircle className="h-5 w-5 text-green-500" />}
-                      {approval.status === 'pending' && <Clock className="h-5 w-5 text-orange-500" />}
-                      {approval.status === 'rejected' && <X className="h-5 w-5 text-red-500" />}
-                      {approval.status === 'review' && <User className="h-5 w-5 text-blue-500" />}
-                    </div>
-                    <div>
-                      <div className="font-medium">{approval.title}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {approval.type} • {approval.requestor} • {approval.date}
+            {loading ? (
+              <div className="text-center py-8">Loading requests...</div>
+            ) : requests.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No approval requests found
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {requests.map((request) => (
+                  <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-shrink-0">
+                        {request.status === 'approved' && <CheckCircle className="h-5 w-5 text-green-500" />}
+                        {request.status === 'pending' && <Clock className="h-5 w-5 text-orange-500" />}
+                        {request.status === 'rejected' && <X className="h-5 w-5 text-red-500" />}
+                        {request.status === 'review' && <User className="h-5 w-5 text-blue-500" />}
+                      </div>
+                      <div>
+                        <div className="font-medium">{request.title}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {request.request_type.replace('_', ' ')} • {request.requestor_name} • {new Date(request.created_at).toLocaleDateString()}
+                        </div>
+                        {request.description && (
+                          <div className="text-sm text-muted-foreground mt-1">{request.description}</div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="font-medium">${approval.amount}</div>
-                      <div className="text-sm text-muted-foreground">Requested</div>
-                    </div>
-                    <Badge variant={
-                      approval.status === 'approved' ? 'default' : 
-                      approval.status === 'pending' ? 'secondary' : 
-                      approval.status === 'review' ? 'outline' : 'destructive'
-                    }>
-                      {approval.status}
-                    </Badge>
-                    {approval.status === 'pending' && (
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm">Approve</Button>
-                        <Button variant="ghost" size="sm">Reject</Button>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="font-medium">${request.amount.toFixed(2)}</div>
+                        <div className="text-sm text-muted-foreground">Requested</div>
                       </div>
-                    )}
+                      <Badge variant={
+                        request.status === 'approved' ? 'default' : 
+                        request.status === 'pending' ? 'secondary' : 
+                        request.status === 'review' ? 'outline' : 'destructive'
+                      }>
+                        {request.status}
+                      </Badge>
+                      {request.status === 'pending' && user && (
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleApprove(request.id)}
+                            disabled={actionLoading === request.id}
+                          >
+                            Approve
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleReject(request.id)}
+                            disabled={actionLoading === request.id}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
+
+        <ApprovalRequestForm 
+          open={showCreateForm} 
+          onClose={() => setShowCreateForm(false)} 
+        />
       </div>
     );
   }
@@ -131,16 +186,23 @@ export const ApprovalSystemModule = ({ user, isFullPage, onNavigate }: ModulePro
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CheckCircle className="h-5 w-5" />
-          Approval System
+          Financial Approvals
         </CardTitle>
-        <CardDescription>Financial approval workflows</CardDescription>
+        <CardDescription>Review and manage approval requests</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          <div className="text-sm">{approvals.filter(a => a.status === 'pending').length} pending approvals</div>
-          <div className="text-sm">${pendingAmount} awaiting approval</div>
-          <div className="text-sm">{approvals.filter(a => a.status === 'approved').length} approved today</div>
+          <div className="text-sm">{pendingRequests.length} pending approvals</div>
+          <div className="text-sm">${pendingAmount.toFixed(2)} awaiting approval</div>
+          <div className="text-sm">{approvedRequests.length} approved requests</div>
         </div>
+        <Button 
+          className="w-full mt-4" 
+          variant="outline" 
+          onClick={() => onNavigate?.('admin-approval-system')}
+        >
+          View All Requests
+        </Button>
       </CardContent>
     </Card>
   );

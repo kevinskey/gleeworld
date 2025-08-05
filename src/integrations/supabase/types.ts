@@ -250,6 +250,116 @@ export type Database = {
         }
         Relationships: []
       }
+      approval_requests: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          budget_category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          notes: string | null
+          receipt_urls: string[] | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          request_type: string
+          requestor_id: string
+          requestor_name: string
+          status: string
+          supporting_documents: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          budget_category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          receipt_urls?: string[] | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          request_type: string
+          requestor_id: string
+          requestor_name: string
+          status?: string
+          supporting_documents?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          budget_category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          receipt_urls?: string[] | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          request_type?: string
+          requestor_id?: string
+          requestor_name?: string
+          status?: string
+          supporting_documents?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      approval_workflow_history: {
+        Row: {
+          action_type: string
+          approval_request_id: string
+          created_at: string
+          id: string
+          new_status: string | null
+          notes: string | null
+          old_status: string | null
+          performed_by: string
+          performer_name: string
+        }
+        Insert: {
+          action_type: string
+          approval_request_id: string
+          created_at?: string
+          id?: string
+          new_status?: string | null
+          notes?: string | null
+          old_status?: string | null
+          performed_by: string
+          performer_name: string
+        }
+        Update: {
+          action_type?: string
+          approval_request_id?: string
+          created_at?: string
+          id?: string
+          new_status?: string | null
+          notes?: string | null
+          old_status?: string | null
+          performed_by?: string
+          performer_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_workflow_history_approval_request_id_fkey"
+            columns: ["approval_request_id"]
+            isOneToOne: false
+            referencedRelation: "approval_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audio_archive: {
         Row: {
           artist_info: string | null
