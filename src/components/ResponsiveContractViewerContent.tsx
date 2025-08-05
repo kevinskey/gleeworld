@@ -63,124 +63,119 @@ export const ResponsiveContractViewerContent = ({ contract }: ResponsiveContract
   };
 
   const formatContractContent = (content: string) => {
-    const lines = content.split('\n');
+    // First, let's clean up the content and handle it as a whole document
+    const cleanContent = content
+      .replace(/\r\n/g, '\n')  // Normalize line endings
+      .replace(/\r/g, '\n')    // Normalize line endings
+      .trim();
+
+    // Split into logical sections rather than individual lines
+    const sections = cleanContent.split(/\n\s*\n/); // Split on double newlines (paragraph breaks)
     const processedElements: JSX.Element[] = [];
-    let currentParagraph: string[] = [];
     let elementIndex = 0;
 
-    const flushParagraph = () => {
-      if (currentParagraph.length > 0) {
-        const paragraphText = currentParagraph.join(' ').trim();
-        if (paragraphText) {
+    sections.forEach((section, sectionIndex) => {
+      const trimmedSection = section.trim();
+      
+      if (!trimmedSection) return;
+
+      // Handle different types of content sections
+      const lines = trimmedSection.split('\n').map(line => line.trim()).filter(line => line);
+      
+      // Check if this is a single-line special element
+      if (lines.length === 1) {
+        const line = lines[0];
+        
+        // Main title (all caps, standalone)
+        if (line.toUpperCase() === line && 
+            line.length > 10 && 
+            !line.includes('{{') &&
+            !line.includes('Article') &&
+            !line.includes(':') &&
+            !line.includes('_')) {
           processedElements.push(
-            <p key={`paragraph-${elementIndex++}`} className="mb-4 leading-relaxed text-sm md:text-base text-justify">
+            <h1 key={`title-${elementIndex++}`} className="text-center font-bold text-xl md:text-2xl lg:text-3xl mb-8 mt-8 first:mt-0 break-words">
+              {line}
+            </h1>
+          );
+          return;
+        }
+
+        // Article headers
+        if (line.match(/^Article \d+\./)) {
+          processedElements.push(
+            <h2 key={`article-${elementIndex++}`} className="font-bold text-lg md:text-xl mb-4 mt-8 break-words">
+              {line}
+            </h2>
+          );
+          return;
+        }
+
+        // Section headers (lines ending with colon)
+        if (line.endsWith(':') && line.length < 50) {
+          processedElements.push(
+            <h3 key={`section-${elementIndex++}`} className="font-semibold text-base md:text-lg mb-3 mt-6 break-words">
+              {line}
+            </h3>
+          );
+          return;
+        }
+
+        // Signature lines or form fields
+        if (line.includes('____') || line.match(/^[A-Z\s]+\s+HOST$/)) {
+          processedElements.push(
+            <div key={`signature-${elementIndex++}`} className="my-6 text-center">
+              <div className="font-medium text-sm md:text-base break-words">
+                {line}
+              </div>
+            </div>
+          );
+          return;
+        }
+
+        // Exhibit sections
+        if (line.match(/^Exhibit [A-Z]/)) {
+          processedElements.push(
+            <h2 key={`exhibit-${elementIndex++}`} className="font-bold text-lg md:text-xl mb-6 mt-8 text-center break-words">
+              {line}
+            </h2>
+          );
+          return;
+        }
+      }
+
+      // For multi-line sections, join them into paragraphs
+      const paragraphText = lines.join(' ').trim();
+      
+      if (paragraphText) {
+        // Check if it's a list section (all lines start with bullets or numbers)
+        const isListSection = lines.every(line => 
+          line.match(/^[\•·\-\*]\s/) || 
+          line.match(/^\d+\.\s/) || 
+          line.match(/^[a-z]\.\s/)
+        );
+
+        if (isListSection) {
+          // Render as list items
+          processedElements.push(
+            <div key={`list-section-${elementIndex++}`} className="mb-4">
+              {lines.map((line, lineIndex) => (
+                <div key={`list-item-${lineIndex}`} className="ml-4 mb-2 text-sm md:text-base break-words">
+                  {line}
+                </div>
+              ))}
+            </div>
+          );
+        } else {
+          // Render as paragraph
+          processedElements.push(
+            <p key={`paragraph-${elementIndex++}`} className="mb-4 leading-relaxed text-sm md:text-base break-words hyphens-auto">
               {paragraphText}
             </p>
           );
         }
-        currentParagraph = [];
-      }
-    };
-
-    lines.forEach((line, index) => {
-      const trimmedLine = line.trim();
-      
-      // Empty line - flush current paragraph and add spacing
-      if (!trimmedLine) {
-        flushParagraph();
-        return;
-      }
-
-      // Main title (all caps, standalone)
-      if (trimmedLine.toUpperCase() === trimmedLine && 
-          trimmedLine.length > 10 && 
-          !trimmedLine.includes('{{') &&
-          !trimmedLine.includes('Article') &&
-          !trimmedLine.includes(':')) {
-        flushParagraph();
-        processedElements.push(
-          <h1 key={`title-${elementIndex++}`} className="text-center font-bold text-lg md:text-xl lg:text-2xl mb-6 mt-8 first:mt-0">
-            {trimmedLine}
-          </h1>
-        );
-        return;
-      }
-
-      // Article headers
-      if (trimmedLine.match(/^Article \d+\./)) {
-        flushParagraph();
-        processedElements.push(
-          <h2 key={`article-${elementIndex++}`} className="font-bold text-base md:text-lg mb-4 mt-8">
-            {trimmedLine}
-          </h2>
-        );
-        return;
-      }
-
-      // Section headers (lines ending with colon or standalone short lines in title case)
-      if ((trimmedLine.endsWith(':') && trimmedLine.length < 50) || 
-          (trimmedLine.length < 30 && trimmedLine.match(/^[A-Z][a-z]/) && !trimmedLine.includes('.'))) {
-        flushParagraph();
-        processedElements.push(
-          <h3 key={`section-${elementIndex++}`} className="font-semibold text-sm md:text-base mb-3 mt-6">
-            {trimmedLine}
-          </h3>
-        );
-        return;
-      }
-
-      // Signature lines or form fields
-      if (trimmedLine.includes('____') || trimmedLine.match(/^[A-Z\s]+\s+HOST$/)) {
-        flushParagraph();
-        processedElements.push(
-          <div key={`signature-${elementIndex++}`} className="my-6 text-center">
-            <div className="font-medium text-sm md:text-base">
-              {trimmedLine}
-            </div>
-          </div>
-        );
-        return;
-      }
-
-      // Exhibit sections
-      if (trimmedLine.match(/^Exhibit [A-Z]/)) {
-        flushParagraph();
-        processedElements.push(
-          <h2 key={`exhibit-${elementIndex++}`} className="font-bold text-base md:text-lg mb-4 mt-8 text-center">
-            {trimmedLine}
-          </h2>
-        );
-        return;
-      }
-
-      // List items (bullets or numbered)
-      if (trimmedLine.match(/^[\•·\-\*]\s/) || trimmedLine.match(/^\d+\.\s/) || trimmedLine.match(/^[a-z]\.\s/)) {
-        flushParagraph();
-        processedElements.push(
-          <div key={`list-${elementIndex++}`} className="ml-4 mb-2 text-sm md:text-base">
-            {trimmedLine}
-          </div>
-        );
-        return;
-      }
-
-      // Regular content - add to current paragraph
-      if (trimmedLine.length > 0) {
-        // If the line looks like it should be on its own (very short or special formatting)
-        if (trimmedLine.length < 15 && !currentParagraph.length) {
-          processedElements.push(
-            <div key={`standalone-${elementIndex++}`} className="mb-2 text-sm md:text-base text-center">
-              {trimmedLine}
-            </div>
-          );
-        } else {
-          currentParagraph.push(trimmedLine);
-        }
       }
     });
-
-    // Flush any remaining paragraph
-    flushParagraph();
 
     return processedElements;
   };
@@ -273,21 +268,37 @@ export const ResponsiveContractViewerContent = ({ contract }: ResponsiveContract
 
   return (
     <DocumentContainer>
-      <div className="contract-content font-serif leading-relaxed text-gray-900">
+      <div className="contract-content font-serif leading-relaxed text-gray-900 w-full">
         <style dangerouslySetInnerHTML={{
           __html: `
             .contract-content {
-              line-height: 1.6;
+              line-height: 1.7;
               color: #1a1a1a;
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+              width: 100%;
             }
             .contract-content h1, .contract-content h2, .contract-content h3 {
               color: #000;
-            }
-            .contract-content p {
-              hyphens: auto;
               word-wrap: break-word;
               overflow-wrap: break-word;
-              text-align: justify;
+            }
+            .contract-content p {
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+              white-space: normal;
+              width: 100%;
+              max-width: 100%;
+            }
+            .contract-content .break-words {
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+              white-space: normal;
+            }
+            .contract-content .hyphens-auto {
+              hyphens: auto;
+              -webkit-hyphens: auto;
+              -ms-hyphens: auto;
             }
             @media print {
               .contract-content {
@@ -298,18 +309,20 @@ export const ResponsiveContractViewerContent = ({ contract }: ResponsiveContract
             @media (max-width: 768px) {
               .contract-content {
                 font-size: 14px;
-                line-height: 1.5;
+                line-height: 1.6;
               }
               .contract-content h1 {
-                font-size: 18px;
+                font-size: 20px;
               }
               .contract-content h2 {
-                font-size: 16px;
+                font-size: 18px;
               }
             }
           `
         }} />
-        {processContractContent()}
+        <div className="w-full max-w-none overflow-wrap-anywhere">
+          {processContractContent()}
+        </div>
       </div>
     </DocumentContainer>
   );
