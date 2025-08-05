@@ -231,16 +231,20 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       {/* Radio Player Button */}
       <div className={`flex items-center ${className}`}>
         <Button
-          variant="ghost"
+          variant={isPlaying ? "default" : "ghost"}
           size="sm"
           onClick={handleTogglePlay}
-          className="h-5 w-5 p-0 hover:bg-transparent border border-black rounded"
+          className={`h-5 w-5 p-0 border rounded transition-all duration-200 ${
+            isPlaying 
+              ? 'bg-primary text-primary-foreground border-primary hover:bg-primary/90' 
+              : 'hover:bg-muted border-border'
+          }`}
           title="Glee Radio"
         >
           {isPlaying ? (
-            <Pause className="h-4 w-4 sm:h-5 sm:w-5 text-black stroke-2" />
+            <Pause className="h-4 w-4 sm:h-5 sm:w-5 stroke-2" />
           ) : (
-            <Play className="h-4 w-4 sm:h-5 sm:w-5 text-black stroke-2" />
+            <Play className="h-4 w-4 sm:h-5 sm:w-5 stroke-2" />
           )}
         </Button>
       </div>
