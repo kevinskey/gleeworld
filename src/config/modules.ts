@@ -133,10 +133,10 @@ export const moduleCategories: ModuleCategory[] = [
   },
   {
     id: "tours",
-    title: "Tours",
+    title: "Tours and Concert Logistics",
     icon: Route,
     color: "blue",
-    description: "Tour planning, logistics, scheduling, and management",
+    description: "Tour planning, concert logistics, scheduling, and management",
     modules: [
       {
         id: "tour-management",
