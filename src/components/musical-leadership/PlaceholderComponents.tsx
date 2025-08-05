@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Settings } from 'lucide-react';
+import { SheetMusicAnnotationLibrary } from './SheetMusicAnnotationLibrary';
 
 interface SectionLeaderManagementProps {
   user?: any;
@@ -24,12 +25,9 @@ export const SectionLeaderManagement = ({ user }: SectionLeaderManagementProps) 
   );
 };
 
-export const SheetMusicAnnotations = ({ user }: any) => (
-  <Card>
-    <CardHeader><CardTitle>Sheet Music Annotations</CardTitle></CardHeader>
-    <CardContent><p className="text-muted-foreground">Sheet music annotation functionality coming soon.</p></CardContent>
-  </Card>
-);
+export const SheetMusicAnnotations = ({ user }: any) => {
+  return <SheetMusicAnnotationLibrary user={user} />;
+};
 
 export const CommunicationCenter = ({ user }: any) => (
   <Card>
