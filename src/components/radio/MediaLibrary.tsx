@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Play, 
   Pause, 
@@ -18,7 +19,9 @@ import {
   Headphones,
   File,
   Download,
-  Eye
+  Eye,
+  ArrowUpDown,
+  Filter
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,6 +57,9 @@ export const MediaLibrary = ({
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('mp3');
+  const [sortBy, setSortBy] = useState<'title' | 'date' | 'size'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -114,16 +120,44 @@ export const MediaLibrary = ({
     return 'other';
   };
 
-  const filterMediaByType = (type: string) => {
-    return mediaFiles.filter(file => {
+  const filterAndSortMedia = (type: string) => {
+    let filtered = mediaFiles.filter(file => {
       const fileType = getFileTypeFromUrl(file.file_url);
       const matchesType = fileType === type;
       const matchesSearch = !searchQuery || 
         file.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         file.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = categoryFilter === 'all' || file.category === categoryFilter;
       
-      return matchesType && matchesSearch;
+      return matchesType && matchesSearch && matchesCategory;
     });
+
+    // Sort the filtered results
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'title':
+          comparison = a.title.localeCompare(b.title);
+          break;
+        case 'date':
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        case 'size':
+          comparison = (a.file_size || 0) - (b.file_size || 0);
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  };
+
+  // Get unique categories for filter dropdown
+  const getCategories = () => {
+    const categories = new Set(mediaFiles.map(file => file.category).filter(Boolean));
+    return Array.from(categories);
   };
 
   const formatFileSize = (bytes?: number) => {
@@ -262,10 +296,10 @@ export const MediaLibrary = ({
     );
   }
 
-  const mp3Files = filterMediaByType('mp3');
-  const videoFiles = filterMediaByType('video');
-  const pdfFiles = filterMediaByType('pdf');
-  const otherFiles = filterMediaByType('other');
+  const mp3Files = filterAndSortMedia('mp3');
+  const videoFiles = filterAndSortMedia('video');
+  const pdfFiles = filterAndSortMedia('pdf');
+  const otherFiles = filterAndSortMedia('other');
 
   return (
     <div className="space-y-6">
@@ -279,9 +313,10 @@ export const MediaLibrary = ({
         </p>
       </div>
 
-      {/* Search */}
+      {/* Search and Filters */}
       <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-4">
+          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -290,6 +325,47 @@ export const MediaLibrary = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-background/80"
             />
+          </div>
+          
+          {/* Filters and Sort */}
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {getCategories().map(category => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+              <Select value={sortBy} onValueChange={(value: 'title' | 'date' | 'size') => setSortBy(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">Date</SelectItem>
+                  <SelectItem value="title">Title</SelectItem>
+                  <SelectItem value="size">Size</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="px-3"
+              >
+                {sortOrder === 'asc' ? '↑' : '↓'}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
