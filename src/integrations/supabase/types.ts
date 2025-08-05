@@ -10287,6 +10287,51 @@ export type Database = {
         }
         Relationships: []
       }
+      radio_schedule: {
+        Row: {
+          artist_info: string | null
+          audio_url: string
+          category: string | null
+          created_at: string
+          created_by: string
+          duration_seconds: number | null
+          id: string
+          scheduled_date: string
+          scheduled_time: string
+          title: string
+          track_id: string
+          updated_at: string
+        }
+        Insert: {
+          artist_info?: string | null
+          audio_url: string
+          category?: string | null
+          created_at?: string
+          created_by: string
+          duration_seconds?: number | null
+          id?: string
+          scheduled_date: string
+          scheduled_time: string
+          title: string
+          track_id: string
+          updated_at?: string
+        }
+        Update: {
+          artist_info?: string | null
+          audio_url?: string
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          duration_seconds?: number | null
+          id?: string
+          scheduled_date?: string
+          scheduled_time?: string
+          title?: string
+          track_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       receipts: {
         Row: {
           amount: number

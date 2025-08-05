@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Clock, 
   Calendar, 
   Play, 
   Trash2,
-  Volume2
+  Volume2,
+  Save,
+  Loader2
 } from 'lucide-react';
 
 interface AudioTrack {
@@ -35,6 +39,144 @@ interface RadioTimelineProps {
 export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
   const [scheduledTracks, setScheduledTracks] = useState<ScheduledTrack[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  // Load scheduled tracks for the selected date
+  const loadScheduledTracks = async (date: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('radio_schedule')
+        .select('*')
+        .eq('scheduled_date', date)
+        .order('scheduled_time');
+
+      if (error) throw error;
+
+      // Transform database records to ScheduledTrack format
+      const tracks: ScheduledTrack[] = data?.map(record => ({
+        id: record.track_id,
+        title: record.title,
+        artist_info: record.artist_info,
+        audio_url: record.audio_url,
+        category: record.category || 'performance',
+        duration_seconds: record.duration_seconds,
+        play_count: 0,
+        is_public: true,
+        created_at: record.created_at,
+        scheduledTime: record.scheduled_time,
+        scheduledDate: record.scheduled_date
+      })) || [];
+
+      setScheduledTracks(tracks);
+    } catch (error) {
+      console.error('Error loading scheduled tracks:', error);
+      toast({
+        title: "Error Loading Schedule",
+        description: "Failed to load scheduled tracks for this date",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Save a scheduled track to database
+  const saveScheduledTrack = async (scheduledTrack: ScheduledTrack) => {
+    setIsSaving(true);
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('radio_schedule')
+        .upsert({
+          track_id: scheduledTrack.id,
+          scheduled_date: scheduledTrack.scheduledDate,
+          scheduled_time: scheduledTrack.scheduledTime,
+          title: scheduledTrack.title,
+          artist_info: scheduledTrack.artist_info,
+          audio_url: scheduledTrack.audio_url,
+          duration_seconds: scheduledTrack.duration_seconds,
+          category: scheduledTrack.category,
+          created_by: user.user.id
+        }, {
+          onConflict: 'scheduled_date,scheduled_time'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Schedule Updated",
+        description: `"${scheduledTrack.title}" scheduled for ${scheduledTrack.scheduledTime}`,
+      });
+    } catch (error) {
+      console.error('Error saving scheduled track:', error);
+      toast({
+        title: "Save Failed",
+        description: "Failed to save track to schedule",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Remove a scheduled track from database
+  const removeScheduledTrackFromDB = async (timeSlot: string) => {
+    try {
+      const { error } = await supabase
+        .from('radio_schedule')
+        .delete()
+        .eq('scheduled_date', selectedDate)
+        .eq('scheduled_time', timeSlot);
+
+      if (error) throw error;
+
+      toast({
+        title: "Track Removed",
+        description: `Track removed from ${timeSlot}`,
+      });
+    } catch (error) {
+      console.error('Error removing scheduled track:', error);
+      toast({
+        title: "Remove Failed",
+        description: "Failed to remove track from schedule",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('radio-schedule-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'radio_schedule'
+        },
+        (payload) => {
+          console.log('Real-time schedule update:', payload);
+          // Reload the current date's schedule when changes occur
+          loadScheduledTracks(selectedDate);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedDate]);
+
+  // Load tracks when date changes
+  useEffect(() => {
+    loadScheduledTracks(selectedDate);
+  }, [selectedDate]);
 
   // Generate time slots for 24 hours (every 30 minutes)
   const generateTimeSlots = () => {
@@ -50,7 +192,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
 
   const timeSlots = generateTimeSlots();
 
-  const handleDrop = (e: React.DragEvent, timeSlot: string) => {
+  const handleDrop = async (e: React.DragEvent, timeSlot: string) => {
     e.preventDefault();
     const trackData = e.dataTransfer.getData('application/json');
     
@@ -80,9 +222,16 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
           setScheduledTracks(prev => [...prev, scheduledTrack]);
         }
 
+        // Save to database
+        await saveScheduledTrack(scheduledTrack);
         onTrackScheduled?.(scheduledTrack);
       } catch (error) {
         console.error('Error parsing dropped track data:', error);
+        toast({
+          title: "Drop Failed",
+          description: "Failed to schedule track",
+          variant: "destructive"
+        });
       }
     }
   };
@@ -91,10 +240,14 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     e.preventDefault();
   };
 
-  const removeScheduledTrack = (timeSlot: string) => {
+  const removeScheduledTrack = async (timeSlot: string) => {
+    // Remove from local state
     setScheduledTracks(prev => 
       prev.filter(track => !(track.scheduledTime === timeSlot && track.scheduledDate === selectedDate))
     );
+    
+    // Remove from database
+    await removeScheduledTrackFromDB(timeSlot);
   };
 
   const getScheduledTrack = (timeSlot: string) => {
@@ -138,11 +291,18 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               className="px-3 py-2 border border-border rounded-md bg-background"
+              disabled={isLoading}
             />
             <Badge variant="outline" className="flex items-center gap-1">
               <Volume2 className="h-3 w-3" />
               {scheduledTracks.filter(t => t.scheduledDate === selectedDate).length} tracks scheduled
             </Badge>
+            {isSaving && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Saving...
+              </Badge>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -155,11 +315,17 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
             Timeline - {selectedDate}
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Drag MP3 tracks from the library above to schedule them on the timeline
+            Drag MP3 tracks from the library above to schedule them on the timeline. Changes are saved automatically.
           </p>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[500px]">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-[200px]">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span className="ml-2">Loading schedule...</span>
+            </div>
+          ) : (
+            <ScrollArea className="h-[500px]">
             <div className="space-y-2">
               {timeSlots.map((timeSlot) => {
                 const scheduledTrack = getScheduledTrack(timeSlot);
@@ -223,6 +389,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
               })}
             </div>
           </ScrollArea>
+          )}
         </CardContent>
       </Card>
     </div>
