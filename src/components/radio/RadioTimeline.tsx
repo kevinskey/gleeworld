@@ -207,26 +207,36 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
 
   const playNextTrack = (currentTrackId: string) => {
     // Find current track in timeline
-    const currentTrackIndex = scheduledTracks
-      .filter(t => t.scheduledDate === selectedDate)
-      .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime))
-      .findIndex(t => t.id === currentTrackId);
-    
     const sortedTracks = scheduledTracks
       .filter(t => t.scheduledDate === selectedDate)
       .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
     
-    // Check if there's a next track
-    if (currentTrackIndex >= 0 && currentTrackIndex < sortedTracks.length - 1) {
-      const nextTrack = sortedTracks[currentTrackIndex + 1];
-      handlePlayToggle(nextTrack);
-    } else {
-      // No more tracks, stop playback
+    if (sortedTracks.length === 0) {
       setCurrentlyPlaying(null);
       localStorage.removeItem('timeline-currently-playing');
+      setIsTimelinePlaying(false);
+      localStorage.setItem('timeline-is-playing', 'false');
+      return;
+    }
+
+    const currentTrackIndex = sortedTracks.findIndex(t => t.id === currentTrackId);
+    
+    // Check if there's a next track
+    if (currentTrackIndex >= 0 && currentTrackIndex < sortedTracks.length - 1) {
+      // Play next track
+      const nextTrack = sortedTracks[currentTrackIndex + 1];
+      handlePlayToggle(nextTrack);
       toast({
-        title: "Playlist Complete",
-        description: "All scheduled tracks have finished playing",
+        title: "Next Track",
+        description: `Now playing: ${nextTrack.title}`,
+      });
+    } else {
+      // Loop back to the beginning
+      const firstTrack = sortedTracks[0];
+      handlePlayToggle(firstTrack);
+      toast({
+        title: "Playlist Looped",
+        description: `Restarting from: ${firstTrack.title}`,
       });
     }
   };
