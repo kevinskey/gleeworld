@@ -110,8 +110,9 @@ serve(async (req) => {
           continue
         }
 
-        // Generate a temporary password
-        const tempPassword = Math.random().toString(36).slice(-8)
+        // SECURITY FIX: Generate secure temporary password
+        const tempPassword = crypto.getRandomValues(new Uint8Array(12))
+          .reduce((acc, byte) => acc + String.fromCharCode(33 + (byte % 94)), '');
         
         // Create user in auth.users
         const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
@@ -165,10 +166,11 @@ serve(async (req) => {
         }
 
         results.success++
+        // SECURITY FIX: Do not expose passwords in API responses
         results.users.push({
           email: email,
-          temp_password: tempPassword,
-          user_id: authData.user.id
+          user_id: authData.user.id,
+          password_reset_required: true
         })
 
       } catch (userError) {

@@ -19,10 +19,84 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // CRITICAL SECURITY FIX: Verify admin authorization
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Unauthorized: Authentication required',
+          results: []
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     )
+
+    // Verify the requesting user is an admin
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Unauthorized: Invalid authentication',
+          results: []
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
+    }
+
+    // Check if user has admin privileges
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('gw_profiles')
+      .select('role, is_admin, is_super_admin')
+      .eq('user_id', user.id)
+      .single()
+
+    if (profileError || !profile || (!profile.is_admin && !profile.is_super_admin && !['admin', 'super-admin'].includes(profile.role))) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Unauthorized: Admin privileges required',
+          results: []
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
+        }
+      )
+    }
+
+    // Log the admin operation for audit trail
+    await supabaseClient
+      .from('activity_logs')
+      .insert({
+        user_id: user.id,
+        action_type: 'bulk_executive_board_assignment',
+        resource_type: 'users',
+        details: { 
+          source: req.headers.get('source') || 'bulk-assign-exec-board',
+          assignment_count: Array.isArray(req.body?.assignments) ? req.body.assignments.length : 0 
+        }
+      })
 
     const { assignments } = await req.json() as { assignments: AssignmentRequest[] };
     
@@ -220,7 +294,8 @@ Deno.serve(async (req) => {
           email: assignment.email,
           success: true,
           role: assignment.role,
-          user_id: userId
+          user_id: userId,
+          password_reset_required: true
         });
 
         console.log(`Successfully assigned ${assignment.role} to ${assignment.email}`);

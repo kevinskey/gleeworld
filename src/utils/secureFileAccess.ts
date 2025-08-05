@@ -73,7 +73,7 @@ export const getSecureFileUrl = async ({
   }
 };
 
-// Enhanced input sanitization utilities
+// Enhanced input sanitization utilities with comprehensive security
 export const sanitizeInput = (input: string): string => {
   if (!input) return '';
   
@@ -81,17 +81,23 @@ export const sanitizeInput = (input: string): string => {
   return input
     // Remove script tags and their content
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    // Remove iframe and object tags
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
     // Remove event handlers like onclick, onload, etc.
     .replace(/\s*on[a-z]+\s*=\s*["'][^"']*["']/gi, '')
     .replace(/\s*on[a-z]+\s*=\s*[^>\s]+/gi, '')
     // Remove javascript: URLs
     .replace(/javascript:/gi, '')
+    .replace(/vbscript:/gi, '')
     // Remove data: URLs with javascript
     .replace(/data:[^;]*;[^,]*,.*javascript/gi, '')
     // Remove style attributes that could contain expressions
     .replace(/style\s*=\s*["'][^"']*expression[^"']*["']/gi, '')
     // Remove all HTML tags (more comprehensive)
     .replace(/<[^>]*>/g, '')
+    // Block common SQL injection patterns  
+    .replace(/['";\\|*%+?<>{}[\]()]/g, '')
     // Encode dangerous characters
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -100,6 +106,20 @@ export const sanitizeInput = (input: string): string => {
     .replace(/'/g, '&#x27;')
     .replace(/\//g, '&#x2F;')
     .trim();
+};
+
+// SECURITY FIX: Secure password generator
+export const generateSecurePassword = (length: number = 16): string => {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    password += charset[array[i] % charset.length];
+  }
+  
+  return password;
 };
 
 // Rate limiting helper
