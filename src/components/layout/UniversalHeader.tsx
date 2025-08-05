@@ -62,9 +62,9 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
 
   return (
     <>
-      <header className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-lg border-b border-white/30 sticky top-0 z-[100] shadow-xl">
+      <header className="bg-background/90 backdrop-blur-lg border-b border-border sticky top-0 z-[100] shadow-lg">
           <div className="container mx-auto px-2 sm:px-4 lg:px-6">
-            <div className="flex items-center justify-between min-h-10 sm:min-h-14 py-4 sm:py-5">
+            <div className="flex items-center justify-between min-h-12 sm:min-h-16 py-4 sm:py-5">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <EnhancedTooltip content="Go to GleeWorld Home">
@@ -78,7 +78,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     />
                     <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 z-[111]"></div>
                   </div>
-                  <span className="text-gray-900 font-bold text-lg sm:text-xl md:text-2xl whitespace-nowrap drop-shadow-sm relative z-[112]">
+                  <span className="text-foreground font-bold text-lg sm:text-xl md:text-2xl whitespace-nowrap drop-shadow-sm relative z-[112]">
                     GleeWorld
                   </span>
                 </Link>
@@ -106,7 +106,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         <span className="hidden sm:inline">Super Monitor</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto bg-white/95 backdrop-blur-lg border border-white/30">
+                    <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto bg-popover/95 backdrop-blur-lg border border-border">
                       <DropdownMenuLabel className="text-center font-bold text-lg">🔥 Super Admin Monitor</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       
@@ -198,7 +198,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="h-7 w-7 sm:h-8 sm:w-8 p-1 rounded-md hover:bg-white/20"
+                      className="h-7 w-7 sm:h-8 sm:w-8 p-1 rounded-md hover:bg-accent/20"
                     >
                       <LayoutDashboard className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
@@ -287,7 +287,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                           window.dispatchEvent(new CustomEvent('trigger-pr-quick-capture'));
                         }, 500);
                       }}
-                      className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 rounded-full hover:bg-white/20"
+                      className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 rounded-full hover:bg-accent/20"
                     >
                       <img 
                         src="/lovable-uploads/a9348c2b-145b-4530-a755-80ee32c5bf6f.png" 
@@ -303,7 +303,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                    <EnhancedTooltip content="Profile menu">
                      <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 rounded-full p-0">
-                          <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 border-2 border-white/30">
+                          <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 border-2 border-border/30">
                             <AvatarImage 
                               src={userProfile?.avatar_url || undefined} 
                               alt={userProfile?.full_name || user?.email || "Your Profile"}

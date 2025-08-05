@@ -29,9 +29,9 @@ export default function About() {
       <div className="min-h-screen">
         {/* Hero Section */}
         <section id="about-hero" className="relative h-[80vh] bg-gradient-to-br from-spelman-blue-dark via-spelman-blue-light to-spelman-blue-dark flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-black/30"></div>
+          <div className="absolute inset-0 bg-background/30"></div>
           <div className="absolute inset-0 bg-[url('/lovable-uploads/6a86e8cc-1420-4397-8742-983afe6a293f.png')] bg-cover bg-center opacity-60"></div>
-          <div className="relative z-10 text-center text-white px-4 max-w-5xl mx-auto">
+          <div className="relative z-10 text-center text-primary-foreground px-4 max-w-5xl mx-auto">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 font-['Bebas_Neue']">Welcome to GleeWorld</h1>
             <p className="text-xl md:text-3xl opacity-90 mb-8 font-light">
               The Digital Home of the Spelman College Glee Club and Beyond
@@ -40,7 +40,7 @@ export default function About() {
           
           {/* Right corner text - cursive, bold, with drop shadow, moved up 30px */}
           <div className="absolute top-16 right-8 z-20 text-right">
-            <p className="font-dancing text-2xl md:text-3xl font-bold text-white drop-shadow-lg leading-tight">
+            <p className="font-dancing text-2xl md:text-3xl font-bold text-primary-foreground drop-shadow-lg leading-tight">
               Above the choir,<br />
               beyond the music
             </p>
@@ -89,7 +89,7 @@ export default function About() {
                     Your digital headquarters for everything Glee Club.
                   </p>
                   <Link to="/dashboard">
-                    <Button className="w-full bg-spelman-blue-dark hover:bg-spelman-blue-light">
+                    <Button className="w-full">
                       Member Dashboard
                     </Button>
                   </Link>
@@ -111,7 +111,7 @@ export default function About() {
                     to the sisterhood that shaped your musical journey.
                   </p>
                   <Link to="/alumnae">
-                    <Button className="w-full bg-spelman-blue-dark hover:bg-spelman-blue-light">
+                    <Button className="w-full">
                       Alumnae Portal
                     </Button>
                   </Link>

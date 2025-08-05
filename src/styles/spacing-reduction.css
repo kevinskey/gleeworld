@@ -66,7 +66,11 @@
 
   /* Touch-friendly mobile utilities */
   .touch-target {
-    @apply min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0;
+    @apply min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 transition-all duration-200;
+  }
+
+  .touch-hover:hover {
+    @apply scale-105 md:scale-100;
   }
   
   .mobile-text-lg {

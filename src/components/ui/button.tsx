@@ -10,19 +10,19 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground md:hover:bg-primary/90 active:bg-primary/90 border border-primary",
+        default: "bg-primary text-primary-foreground md:hover:bg-primary/90 active:bg-primary/90 border border-primary transition-all duration-200",
         destructive:
-          "bg-destructive text-destructive-foreground md:hover:bg-destructive/90 active:bg-destructive/90",
+          "bg-destructive text-destructive-foreground md:hover:bg-destructive/90 active:bg-destructive/90 transition-all duration-200",
         outline:
-          "bg-background text-primary border border-primary md:hover:bg-secondary md:hover:text-secondary-foreground active:bg-secondary active:text-secondary-foreground shadow-sm",
+          "bg-background text-primary border border-primary md:hover:bg-secondary md:hover:text-secondary-foreground active:bg-secondary active:text-secondary-foreground shadow-sm transition-all duration-200",
         secondary:
-          "bg-background text-primary border border-primary md:hover:bg-secondary md:hover:text-secondary-foreground active:bg-secondary active:text-secondary-foreground",
-        ghost: "md:hover:bg-accent md:hover:text-accent-foreground active:bg-accent active:text-accent-foreground",
-        link: "text-primary underline-offset-4 md:hover:underline",
-        glass: "glass-upload-zone text-foreground md:hover:border-primary/30 active:border-primary/30",
-        "glass-solid": "glass-signature-panel text-foreground shadow-xl",
-        branded: "bg-gradient-to-r from-brand-400/30 to-brand-600/40 text-white backdrop-blur-sm border border-white/20 md:hover:from-brand-400/40 md:hover:to-brand-600/50 active:from-brand-400/40 active:to-brand-600/50 shadow-glass font-medium transition-all duration-300",
-        disabled: "bg-gray-200 text-gray-400 cursor-not-allowed hover:bg-gray-200 hover:text-gray-400",
+          "bg-secondary text-secondary-foreground border border-secondary md:hover:bg-secondary/90 active:bg-secondary/90 transition-all duration-200",
+        ghost: "text-foreground md:hover:bg-accent md:hover:text-accent-foreground active:bg-accent active:text-accent-foreground transition-all duration-200",
+        link: "text-primary underline-offset-4 md:hover:underline transition-all duration-200",
+        glass: "glass-upload-zone text-foreground md:hover:border-primary/30 active:border-primary/30 transition-all duration-300",
+        "glass-solid": "glass-signature-panel text-foreground shadow-xl transition-all duration-300",
+        branded: "bg-gradient-to-r from-primary/20 to-primary/30 text-primary border border-primary/20 md:hover:from-primary/30 md:hover:to-primary/40 active:from-primary/30 active:to-primary/40 shadow-lg font-medium transition-all duration-300 backdrop-blur-sm",
+        disabled: "bg-muted text-muted-foreground cursor-not-allowed hover:bg-muted hover:text-muted-foreground opacity-50",
       },
       size: {
         default: "h-10 px-4 py-2 md:min-h-0 min-h-[44px]",
