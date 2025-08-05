@@ -59,7 +59,8 @@ Return ONLY valid JSON:
       "estimatedPrice": realistic_price_number,
       "priority": "high|medium|low",
       "category": "Amazon category",
-      "notes": "Brand/model and why recommended"
+      "notes": "Brand/model and why recommended",
+      "amazonUrl": "https://amazon.com/s?k=encoded_product_name"
     }
   ],
   "suggestions": [
@@ -125,7 +126,8 @@ Return the same JSON format with optimized products.`;
             estimatedPrice: Math.min(pricePerItem * (0.8 + Math.random() * 0.4), Number(budget) * 0.6),
             priority: index < 3 ? "high" : index < 6 ? "medium" : "low",
             category: "General",
-            notes: "Popular Amazon product with good reviews"
+            notes: "Popular Amazon product with good reviews",
+            amazonUrl: `https://amazon.com/s?k=${encodeURIComponent(item.trim())}`
           })),
           suggestions: [
             "Check Amazon's daily deals for better prices",
@@ -187,10 +189,11 @@ Return the same JSON format with optimized products.`;
       parsedResponse.totalEstimated = parsedResponse.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
     }
 
-    // Add unique IDs if missing
+    // Add unique IDs and Amazon URLs if missing
     parsedResponse.items = parsedResponse.items.map((item, index) => ({
       ...item,
-      id: item.id || `amazon_${Date.now()}_${index}`
+      id: item.id || `amazon_${Date.now()}_${index}`,
+      amazonUrl: item.amazonUrl || `https://amazon.com/s?k=${encodeURIComponent(item.name || 'product')}`
     }));
 
     console.log(`Found ${parsedResponse.items.length} Amazon products`);

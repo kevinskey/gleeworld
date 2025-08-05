@@ -29,6 +29,7 @@ interface ShoppingItem {
   priority: 'high' | 'medium' | 'low';
   category: string;
   notes?: string;
+  amazonUrl?: string;
 }
 
 interface ShoppingPlan {
@@ -481,38 +482,48 @@ Laptop stand`}
                     <p className="text-muted-foreground text-center py-8">No items in your shopping plan yet.</p>
                   ) : (
                     <div className="space-y-3">
-                      {currentPlan.items.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-medium">{item.name}</h4>
-                              <Badge variant="outline" className={getPriorityColor(item.priority)}>
-                                {item.priority}
-                              </Badge>
-                              <Badge variant="secondary">{item.category}</Badge>
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <DollarSign className="w-3 h-3" />
-                                ${item.estimatedPrice.toFixed(2)}
-                              </div>
-                              {item.notes && (
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" />
-                                  {item.notes}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeItem(item.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
+                       {currentPlan.items.map((item) => (
+                         <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
+                           <div className="flex-1">
+                             <div className="flex items-center gap-2 mb-2">
+                               <h4 className="font-medium">{item.name}</h4>
+                               <Badge variant="outline" className={getPriorityColor(item.priority)}>
+                                 {item.priority}
+                               </Badge>
+                               <Badge variant="secondary">{item.category}</Badge>
+                             </div>
+                             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                               <div className="flex items-center gap-1">
+                                 <DollarSign className="w-3 h-3" />
+                                 ${item.estimatedPrice.toFixed(2)}
+                               </div>
+                               {item.notes && (
+                                 <div className="flex items-center gap-1">
+                                   <MapPin className="w-3 h-3" />
+                                   {item.notes}
+                                 </div>
+                               )}
+                             </div>
+                             {item.amazonUrl && (
+                               <Button 
+                                 variant="outline" 
+                                 size="sm" 
+                                 onClick={() => window.open(item.amazonUrl, '_blank')}
+                                 className="mr-2"
+                               >
+                                 View on Amazon
+                               </Button>
+                             )}
+                           </div>
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => removeItem(item.id)}
+                           >
+                             <Trash2 className="w-4 h-4" />
+                           </Button>
+                         </div>
+                       ))}
                     </div>
                   )}
                 </CardContent>
