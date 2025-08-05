@@ -232,6 +232,18 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     const currentTrackIndex = sortedTracks.findIndex(t => t.id === currentTrackId);
     console.log('Current track index:', currentTrackIndex, 'out of', sortedTracks.length);
     
+    // If there's only one track, repeat it
+    if (sortedTracks.length === 1) {
+      const singleTrack = sortedTracks[0];
+      console.log('Repeating single track:', singleTrack.title, 'ID:', singleTrack.id);
+      handlePlayToggle(singleTrack);
+      toast({
+        title: "Track Repeat",
+        description: `Repeating: ${singleTrack.title}`,
+      });
+      return;
+    }
+    
     // Check if there's a next track
     if (currentTrackIndex >= 0 && currentTrackIndex < sortedTracks.length - 1) {
       // Play next track
