@@ -26,7 +26,9 @@ import {
   BookOpen,
   Settings,
   ClipboardCheck,
-  Route
+  Route,
+  Music,
+  Eye
 } from 'lucide-react';
 
 import { UserManagementModule } from '@/components/modules/UserManagementModule';
@@ -38,6 +40,9 @@ import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { TermManagerModule } from '@/components/modules/TermManagerModule';
 import { TourManagerModule } from '@/components/modules/TourManagerModule';
 import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
+import { StudentConductorModule } from '@/components/modules/StudentConductorModule';
+import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
+import { SightSingingModule } from '@/components/modules/SightSingingModule';
 import { ModuleCategory } from '@/types/modules';
 
 export const moduleCategories: ModuleCategory[] = [
@@ -210,6 +215,42 @@ export const moduleCategories: ModuleCategory[] = [
         iconColor: "red",
         category: "member-management",
         component: PermissionsModule,
+      }
+    ]
+  },
+  {
+    id: "musical-leadership",
+    title: "Musical Leadership",
+    icon: Music,
+    color: "purple",
+    description: "Student conductor oversight, section leader management, and sight singing coordination",
+    modules: [
+      {
+        id: "student-conductor",
+        title: "Student Conductor",
+        description: "Manage section leaders, sight singing, sheet music annotations, and sectional coordination",
+        icon: Music,
+        iconColor: "purple",
+        category: "musical-leadership",
+        component: StudentConductorModule,
+      },
+      {
+        id: "section-leader",
+        title: "Section Leader",
+        description: "Manage section rosters, plan sectionals, communicate with members, and create setlists",
+        icon: Users,
+        iconColor: "green",
+        category: "musical-leadership",
+        component: SectionLeaderModule,
+      },
+      {
+        id: "sight-singing-management",
+        title: "Sight Singing Management",
+        description: "Integrate with SightReadingFactory.com and manage sight singing exercises and progress",
+        icon: Eye,
+        iconColor: "blue",
+        category: "musical-leadership",
+        component: SightSingingModule,
       }
     ]
   },
