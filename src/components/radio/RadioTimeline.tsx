@@ -46,6 +46,13 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     // Initialize from localStorage
     return localStorage.getItem('timeline-currently-playing') || null;
   });
+  const [isTimelinePlaying, setIsTimelinePlaying] = useState<boolean>(() => {
+    return localStorage.getItem('timeline-is-playing') === 'true';
+  });
+  const [pausedPosition, setPausedPosition] = useState<number>(() => {
+    const saved = localStorage.getItem('timeline-paused-position');
+    return saved ? parseFloat(saved) : 0;
+  });
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
@@ -270,6 +277,75 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     }
   };
 
+  // Master timeline controls
+  const handleTimelinePlayPause = () => {
+    const sortedTracks = scheduledTracks
+      .filter(t => t.scheduledDate === selectedDate)
+      .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
+
+    if (isTimelinePlaying) {
+      // Pause timeline - save current position
+      if (audioRef.current) {
+        setPausedPosition(audioRef.current.currentTime);
+        localStorage.setItem('timeline-paused-position', audioRef.current.currentTime.toString());
+        audioRef.current.pause();
+      }
+      setIsTimelinePlaying(false);
+      localStorage.setItem('timeline-is-playing', 'false');
+      toast({
+        title: "Glee Radio Paused",
+        description: "Timeline playback paused. Your position is saved.",
+      });
+    } else {
+      // Resume or start timeline
+      if (currentlyPlaying && audioRef.current) {
+        // Resume current track from paused position
+        audioRef.current.currentTime = pausedPosition;
+        audioRef.current.play().then(() => {
+          setIsTimelinePlaying(true);
+          localStorage.setItem('timeline-is-playing', 'true');
+          toast({
+            title: "Glee Radio Resumed",
+            description: "Timeline playback resumed from where you left off.",
+          });
+        }).catch((error) => {
+          console.error('Error resuming audio:', error);
+        });
+      } else {
+        // Start from first track
+        if (sortedTracks.length > 0) {
+          const firstTrack = sortedTracks[0];
+          handlePlayToggle(firstTrack);
+          setIsTimelinePlaying(true);
+          localStorage.setItem('timeline-is-playing', 'true');
+          setPausedPosition(0);
+          localStorage.setItem('timeline-paused-position', '0');
+          toast({
+            title: "Glee Radio Started",
+            description: "Timeline playback started from the beginning.",
+          });
+        } else {
+          toast({
+            title: "No Tracks Scheduled",
+            description: "Add tracks to the timeline to start playback.",
+            variant: "destructive"
+          });
+        }
+      }
+    }
+  };
+
+  // Update timeline playing state when individual tracks play/stop
+  useEffect(() => {
+    if (currentlyPlaying) {
+      setIsTimelinePlaying(true);
+      localStorage.setItem('timeline-is-playing', 'true');
+    } else {
+      setIsTimelinePlaying(false);
+      localStorage.setItem('timeline-is-playing', 'false');
+    }
+  }, [currentlyPlaying]);
+
   // Cleanup audio on unmount
   useEffect(() => {
     return () => {
@@ -471,12 +547,32 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
       {/* Timeline */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Timeline - {selectedDate}
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              <CardTitle>Timeline - {selectedDate}</CardTitle>
+            </div>
+            <Button 
+              onClick={handleTimelinePlayPause}
+              size="sm"
+              variant={isTimelinePlaying ? "secondary" : "default"}
+              className="flex items-center gap-2"
+            >
+              {isTimelinePlaying ? (
+                <>
+                  <Pause className="h-4 w-4" />
+                  Pause Glee Radio
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4" />
+                  {currentlyPlaying ? 'Resume' : 'Start'} Glee Radio
+                </>
+              )}
+            </Button>
+          </div>
           <p className="text-sm text-muted-foreground">
-            Drag MP3 tracks from the library above to schedule them on the timeline. Changes are saved automatically.
+            Drag MP3 tracks from the library above to schedule them on the timeline. Use the master play button to control timeline playback.
           </p>
         </CardHeader>
         <CardContent>
