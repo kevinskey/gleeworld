@@ -369,19 +369,11 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     </Card>
   );
 
-  const renderWardrobeContent = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Wardrobe Management
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground">Wardrobe management tools are coming soon.</p>
-      </CardContent>
-    </Card>
-  );
+  const renderWardrobeContent = () => {
+    // Import the wardrobe component
+    const { WardrobeManagementHub } = require("@/components/wardrobe/WardrobeManagementHub");
+    return <WardrobeManagementHub />;
+  };
 
   const renderMemberManagementContent = () => (
     <Card>
