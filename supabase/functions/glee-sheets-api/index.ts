@@ -233,7 +233,7 @@ async function syncData(supabaseClient: any, userId: string, params: any) {
 }
 
 async function getAuthUrl(supabaseClient: any, userId: string) {
-  const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/glee-sheets-api`;
+  const redirectUri = `${Deno.env.get('SUPABASE_URL')}/auth/v1/callback`;
   const scopes = [
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/drive.file'
