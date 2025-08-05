@@ -76,7 +76,7 @@ export const AIShoppingPlanner = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-shopping-planner', {
+      const { data, error } = await supabase.functions.invoke('shopping-planner', {
         body: {
           title: planTitle,
           budget: parseFloat(budget),
@@ -176,7 +176,7 @@ export const AIShoppingPlanner = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-shopping-planner', {
+      const { data, error } = await supabase.functions.invoke('shopping-planner', {
         body: {
           plan: currentPlan,
           action: 'optimize_plan'

@@ -116,5 +116,5 @@ verify_jwt = false
 [functions.receive-sms-notifications]
 verify_jwt = false
 
-[functions.ai-shopping-planner]
+[functions.shopping-planner]
 verify_jwt = true
