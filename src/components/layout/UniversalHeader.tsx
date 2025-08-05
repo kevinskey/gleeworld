@@ -277,7 +277,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         console.log('Camera button clicked - navigating to PR Hub');
                         // Set flag in sessionStorage for backup trigger method
                         sessionStorage.setItem('trigger-pr-quick-capture', 'true');
-                        navigate('/dashboard/pr-hub');
+                        navigate('/pr-hub');
                         // Trigger quick capture after navigation with longer delay to ensure component is mounted
                         setTimeout(() => {
                           console.log('Dispatching trigger-pr-quick-capture event');
