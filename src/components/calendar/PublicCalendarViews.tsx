@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarIcon, ListIcon, Grid3X3Icon } from "lucide-react";
-import { MonthlyCalendar } from "./MonthlyCalendar";
+import { PublicMonthlyCalendar } from "./PublicMonthlyCalendar";
 import { EventsList } from "./EventsList";
 import { WeeklyCalendar } from "./WeeklyCalendar";
 import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
@@ -87,7 +87,7 @@ export const PublicCalendarViews = () => {
           </TabsList>
           
           <TabsContent value="month" className="mt-3 md:mt-6">
-            <MonthlyCalendar events={events} onEventUpdated={fetchEvents} />
+            <PublicMonthlyCalendar events={events} onEventUpdated={fetchEvents} />
           </TabsContent>
           
           <TabsContent value="week" className="mt-3 md:mt-6">
