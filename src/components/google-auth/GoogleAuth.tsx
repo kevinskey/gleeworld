@@ -22,34 +22,33 @@ export const GoogleAuth = ({
   const initiateGoogleAuth = async () => {
     try {
       setIsAuthenticating(true);
+      console.log('Starting basic Google OAuth...');
       
-      // Use Supabase's built-in Google OAuth with the specific scopes we need
+      // Simple Google OAuth without custom scopes
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          scopes: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file',
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent'
-          },
           redirectTo: `${window.location.origin}/admin`
         }
       });
 
+      console.log('OAuth response:', { data, error });
+
       if (error) {
+        console.error('OAuth error:', error);
         throw error;
       }
 
       toast({
         title: "Authentication Started",
-        description: "Redirecting to Google for authentication...",
+        description: "Redirecting to Google...",
       });
       
     } catch (error) {
       console.error('Error initiating Google auth:', error);
       toast({
         title: "Authentication Error",
-        description: `Failed to start Google authentication: ${error.message}`,
+        description: `Failed: ${error.message}`,
         variant: "destructive"
       });
     } finally {
