@@ -1,19 +1,33 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileCheck, User, Calendar, DollarSign, Clock } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileCheck, User, Calendar, DollarSign, Clock, Plus, FileText, Upload } from "lucide-react";
 import { ModuleProps } from "@/types/modules";
 import { useContracts } from "@/hooks/useContracts";
 import { ContractTypeSelectionDialog } from "@/components/dialogs/ContractTypeSelectionDialog";
+import { ContractTemplates } from "@/components/ContractTemplates";
+import { DocumentUpload } from "@/components/DocumentUpload";
 import { useState } from "react";
 
 export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
   const { contracts, loading } = useContracts();
   const [showContractTypeDialog, setShowContractTypeDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   const handleContractTypeSelect = (type: string) => {
     console.log("Selected contract type:", type);
     // TODO: Implement contract creation logic for each type
+  };
+
+  const handleContractCreated = () => {
+    console.log("Contract created");
+    // Refresh contracts or update state as needed
+  };
+
+  const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
+    console.log("Using template:", { templateName, contractType });
+    // TODO: Implement template usage logic
   };
 
   const totalValue = contracts.length;
@@ -84,44 +98,125 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Contract Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {contracts.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No contracts found. Create your first contract to get started.
-                </div>
-              ) : (
-                contracts.map((contract) => (
-                  <div key={contract.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <FileCheck className="h-5 w-5 text-blue-500" />
-                      <div>
-                        <div className="font-medium">{contract.title}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Created on {new Date(contract.created_at).toLocaleDateString()}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="upload">Upload Document</TabsTrigger>
+            <TabsTrigger value="create">Create New</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Contract Overview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {contracts.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No contracts found. Create your first contract to get started.
+                    </div>
+                  ) : (
+                    contracts.map((contract) => (
+                      <div key={contract.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <FileCheck className="h-5 w-5 text-blue-500" />
+                          <div>
+                            <div className="font-medium">{contract.title}</div>
+                            <div className="text-sm text-muted-foreground">
+                              Created on {new Date(contract.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Badge variant={
+                            contract.status === 'signed' ? 'default' : 
+                            contract.status === 'pending' ? 'secondary' : 
+                            contract.status === 'published' ? 'outline' : 'destructive'
+                          }>
+                            {contract.status}
+                          </Badge>
+                          <Button variant="ghost" size="sm">View</Button>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <Badge variant={
-                        contract.status === 'signed' ? 'default' : 
-                        contract.status === 'pending' ? 'secondary' : 
-                        contract.status === 'published' ? 'outline' : 'destructive'
-                      }>
-                        {contract.status}
-                      </Badge>
-                      <Button variant="ghost" size="sm">View</Button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-4">
+            <ContractTemplates 
+              onUseTemplate={handleUseTemplate}
+              onContractCreated={handleContractCreated}
+            />
+          </TabsContent>
+
+          <TabsContent value="upload" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  Upload Contract Document
+                </CardTitle>
+                <CardDescription>
+                  Upload a PDF or Word document to create a new contract
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DocumentUpload onContractCreated={handleContractCreated} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="create" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  Create New Contract
+                </CardTitle>
+                <CardDescription>
+                  Start with a blank contract or choose from predefined types
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    { id: "tour", label: "SCGC Tour Contract", description: "For performances and tours outside of Atlanta", icon: FileCheck },
+                    { id: "in-town", label: "SCGC In-Town Contract", description: "For local performances in Atlanta area", icon: Calendar },
+                    { id: "stipend", label: "Singer Stipend Contract", description: "For individual singer compensation agreements", icon: DollarSign },
+                    { id: "nda", label: "SCGC NDA Agreement", description: "Non-disclosure agreement for sensitive materials", icon: User },
+                    { id: "custom", label: "Custom Contract", description: "Create a custom contract from scratch", icon: FileText },
+                  ].map((type) => {
+                    const Icon = type.icon;
+                    return (
+                      <Card 
+                        key={type.id} 
+                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => handleContractTypeSelect(type.id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Icon className="h-6 w-6 text-primary mt-1" />
+                            <div className="flex-1">
+                              <h3 className="font-medium mb-1">{type.label}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {type.description}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         <ContractTypeSelectionDialog
           open={showContractTypeDialog}
