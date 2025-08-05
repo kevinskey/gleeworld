@@ -24,7 +24,8 @@ import {
   Printer,
   ShoppingCart,
   BookOpen,
-  Settings
+  Settings,
+  ClipboardCheck
 } from 'lucide-react';
 
 import { UserManagementModule } from '@/components/modules/UserManagementModule';
@@ -32,6 +33,8 @@ import { WardrobeModule } from '@/components/modules/WardrobeModule';
 import { AuditionsModule } from '@/components/modules/AuditionsModule';
 import { PermissionsModule } from '@/components/modules/PermissionsModule';
 import { StudentIntakeModule } from '@/components/modules/StudentIntakeModule';
+import { AttendanceModule } from '@/components/modules/AttendanceModule';
+import { TermManagerModule } from '@/components/modules/TermManagerModule';
 import { ModuleCategory } from '@/types/modules';
 
 export const moduleCategories: ModuleCategory[] = [
@@ -105,6 +108,24 @@ export const moduleCategories: ModuleCategory[] = [
         iconColor: "purple",
         category: "communications",
         component: UserManagementModule, // Placeholder - replace with actual component
+      },
+      {
+        id: "attendance-management",
+        title: "Attendance Management",
+        description: "Track attendance, manage QR codes, process excuses, and generate reports",
+        icon: ClipboardCheck,
+        iconColor: "green",
+        category: "communications",
+        component: AttendanceModule,
+      },
+      {
+        id: "term-management",
+        title: "Term Management",
+        description: "Manage academic terms, schedules, and term-based planning",
+        icon: BookOpen,
+        iconColor: "indigo",
+        category: "communications",
+        component: TermManagerModule,
       }
     ]
   },
