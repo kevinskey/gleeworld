@@ -6,7 +6,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Upload, FileAudio } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-export const SightReadingUploader = () => {
+export const SightReadingUploader = ({ externalMelody }: { externalMelody?: any[] }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
@@ -21,7 +21,7 @@ export const SightReadingUploader = () => {
     }
   };
 
-  const referenceMelody = [
+  const referenceMelody = externalMelody || [
     { "note": "C4", "time": 0.0 },
     { "note": "D4", "time": 0.5 },
     { "note": "E4", "time": 1.0 },
@@ -76,7 +76,7 @@ export const SightReadingUploader = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileAudio className="h-5 w-5" />
-            Sight Reading Audio Submission with Pitch Matching
+            {externalMelody ? 'Record Your Performance' : 'Sight Reading Audio Submission with Pitch Matching'}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
