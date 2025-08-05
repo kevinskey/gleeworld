@@ -122,23 +122,23 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
 
   const getConditionColor = (condition: string) => {
     switch (condition) {
-      case "new": return "bg-green-100 text-green-800";
-      case "good": return "bg-blue-100 text-blue-800";
-      case "fair": return "bg-yellow-100 text-yellow-800";
-      case "poor": return "bg-orange-100 text-orange-800";
-      case "damaged": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "new": return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "good": return "bg-blue-50 text-blue-700 border-blue-200";
+      case "fair": return "bg-amber-50 text-amber-700 border-amber-200";
+      case "poor": return "bg-orange-50 text-orange-700 border-orange-200";
+      case "damaged": return "bg-red-50 text-red-700 border-red-200";
+      default: return "bg-muted text-muted-foreground border-border";
     }
   };
 
   const getStockStatus = (item: WardrobeItem) => {
     const threshold = item.low_stock_threshold || 5;
     if (item.quantity_available <= 0) {
-      return { status: "out-of-stock", color: "bg-red-100 text-red-800" };
+      return { status: "Out of Stock", color: "bg-red-50 text-red-700 border-red-200" };
     } else if (item.quantity_available <= threshold) {
-      return { status: "low-stock", color: "bg-orange-100 text-orange-800" };
+      return { status: "Low Stock", color: "bg-amber-50 text-amber-700 border-amber-200" };
     }
-    return { status: "in-stock", color: "bg-green-100 text-green-800" };
+    return { status: "In Stock", color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -187,46 +187,26 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Filter by category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(category => (
-                <SelectItem key={category.value} value={category.value}>
-                  {category.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Upload className="h-4 w-4 mr-2" />
-            Import CSV
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Wardrobe Inventory</h2>
+            <p className="text-muted-foreground">Manage dresses, accessories, and garment bags</p>
+          </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item
+              <Button size="lg" className="shadow-sm">
+                <Plus className="h-5 w-5 mr-2" />
+                Add New Item
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Add New Inventory Item</DialogTitle>
-                <DialogDescription>
-                  Add a new item to the wardrobe inventory
+                <DialogTitle className="text-2xl">Add New Inventory Item</DialogTitle>
+                <DialogDescription className="text-base">
+                  Add a new item to the wardrobe inventory with detailed specifications
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -302,35 +282,74 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Filter and Actions Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 bg-muted/30 rounded-lg border">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category.value} value={category.value}>
+                    <div className="flex items-center gap-2">
+                      <category.icon className="h-4 w-4" />
+                      {category.label}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex gap-3">
+            <Button variant="outline" className="shadow-sm">
+              <Upload className="h-4 w-4 mr-2" />
+              Import CSV
+            </Button>
+            <Button variant="outline" className="shadow-sm">
+              <Download className="h-4 w-4 mr-2" />
+              Export Data
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Inventory Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Inventory Items ({filteredItems.length})
+      {/* Inventory Grid */}
+      <Card className="shadow-sm border-0 bg-background">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <Package className="h-6 w-6 text-primary" />
+            Inventory Items
+            <Badge variant="secondary" className="ml-2 px-3 py-1">
+              {filteredItems.length} items
+            </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
           {loading ? (
-            <div className="text-center py-8">Loading inventory...</div>
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <Package className="h-12 w-12 mb-4 animate-pulse" />
+              <p className="text-lg">Loading inventory...</p>
+            </div>
           ) : filteredItems.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No items found matching your criteria
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <Package className="h-16 w-16 mb-4 opacity-50" />
+              <h3 className="text-xl font-semibold mb-2">No items found</h3>
+              <p>No items match your current search and filter criteria</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Sizes</TableHead>
-                    <TableHead>Colors</TableHead>
-                    <TableHead>Stock Status</TableHead>
-                    <TableHead>Condition</TableHead>
-                    <TableHead>Actions</TableHead>
+                  <TableRow className="border-b">
+                    <TableHead className="font-semibold text-foreground pl-6">Category & Item</TableHead>
+                    <TableHead className="font-semibold text-foreground">Specifications</TableHead>
+                    <TableHead className="font-semibold text-foreground">Stock</TableHead>
+                    <TableHead className="font-semibold text-foreground">Condition</TableHead>
+                    <TableHead className="font-semibold text-foreground pr-6">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -338,44 +357,83 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
                     const CategoryIcon = getCategoryIcon(item.category);
                     const stockStatus = getStockStatus(item);
                     return (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <CategoryIcon className="h-4 w-4" />
-                            <span className="capitalize">{item.category.replace('-', ' ')}</span>
+                      <TableRow key={item.id} className="hover:bg-muted/30 transition-colors">
+                        <TableCell className="pl-6">
+                          <div className="flex items-center gap-4">
+                            <div className="p-2 rounded-lg bg-muted/50">
+                              <CategoryIcon className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-foreground">{item.item_name}</p>
+                              <p className="text-sm text-muted-foreground capitalize">
+                                {item.category.replace('-', ' ')}
+                              </p>
+                            </div>
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium">{item.item_name}</TableCell>
                         <TableCell>
-                          {item.size_available ? item.size_available.join(", ") : "-"}
+                          <div className="space-y-1">
+                            {item.size_available && item.size_available.length > 0 && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-muted-foreground">Sizes:</span>
+                                <div className="flex gap-1">
+                                  {item.size_available.slice(0, 3).map((size, idx) => (
+                                    <Badge key={idx} variant="outline" className="text-xs px-2 py-0">
+                                      {size}
+                                    </Badge>
+                                  ))}
+                                  {item.size_available.length > 3 && (
+                                    <Badge variant="outline" className="text-xs px-2 py-0">
+                                      +{item.size_available.length - 3}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            {item.color_available && item.color_available.length > 0 && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-muted-foreground">Colors:</span>
+                                <div className="flex gap-1">
+                                  {item.color_available.slice(0, 2).map((color, idx) => (
+                                    <Badge key={idx} variant="outline" className="text-xs px-2 py-0">
+                                      {color}
+                                    </Badge>
+                                  ))}
+                                  {item.color_available.length > 2 && (
+                                    <Badge variant="outline" className="text-xs px-2 py-0">
+                                      +{item.color_available.length - 2}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
-                          {item.color_available ? item.color_available.join(", ") : "-"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Badge className={stockStatus.color}>
-                              {item.quantity_available}/{item.quantity_total}
+                          <div className="flex items-center gap-3">
+                            <Badge className={`${stockStatus.color} border font-medium px-3 py-1`}>
+                              {stockStatus.status}
                             </Badge>
-                            {stockStatus.status === "low-stock" && (
-                              <AlertTriangle className="h-4 w-4 text-orange-500" />
-                            )}
-                            {stockStatus.status === "out-of-stock" && (
-                              <AlertTriangle className="h-4 w-4 text-red-500" />
+                            <div className="text-sm">
+                              <p className="font-medium">{item.quantity_available} available</p>
+                              <p className="text-muted-foreground">of {item.quantity_total} total</p>
+                            </div>
+                            {(stockStatus.status === "Low Stock" || stockStatus.status === "Out of Stock") && (
+                              <AlertTriangle className="h-5 w-5 text-amber-500" />
                             )}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={getConditionColor(item.condition)}>
+                          <Badge className={`${getConditionColor(item.condition)} border font-medium px-3 py-1 capitalize`}>
                             {item.condition}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="pr-6">
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hover:bg-muted">
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hover:bg-destructive/10 hover:text-destructive">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
