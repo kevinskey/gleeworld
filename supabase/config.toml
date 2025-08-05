@@ -124,3 +124,6 @@ verify_jwt = true
 
 [functions.analyze-audio]
 verify_jwt = false
+
+[functions.generate-musicxml]
+verify_jwt = true
