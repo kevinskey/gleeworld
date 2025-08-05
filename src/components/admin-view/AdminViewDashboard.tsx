@@ -18,12 +18,15 @@ export const AdminViewDashboard = () => {
   const navigate = useNavigate();
 
   // Debug logging
-  console.log('AdminViewDashboard - loading:', loading);
-  console.log('AdminViewDashboard - profileLoading:', profileLoading);
-  console.log('AdminViewDashboard - user:', user);
-  console.log('AdminViewDashboard - profile:', profile);
-  console.log('AdminViewDashboard - isAdmin:', isAdmin());
-  console.log('AdminViewDashboard - isSuperAdmin:', isSuperAdmin());
+  console.log('=== AdminViewDashboard Debug ===');
+  console.log('loading:', loading);
+  console.log('profileLoading:', profileLoading);
+  console.log('user:', user);
+  console.log('profile:', profile);
+  console.log('userProfile:', userProfile);
+  console.log('isAdmin():', isAdmin());
+  console.log('isSuperAdmin():', isSuperAdmin());
+  console.log('=== End Debug ===');
 
   // Note: Removed automatic redirect to allow admin setup
 
