@@ -14,13 +14,27 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Function started, API key exists:', !!openAIApiKey);
+    console.log('API key length:', openAIApiKey?.length || 0);
+    
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not found in environment');
+      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const requestBody = await req.json();
+    console.log('Request body received:', requestBody);
+    
     const { 
       difficulty = 'beginner',
       keySignature = 'C major',
       timeSignature = '4/4',
       measures = 8,
       noteRange = 'C4-C5'
-    } = await req.json();
+    } = requestBody;
 
     console.log('Generating MusicXML:', { difficulty, keySignature, timeSignature, measures, noteRange });
 
