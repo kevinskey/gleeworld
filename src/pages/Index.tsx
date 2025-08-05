@@ -5,7 +5,6 @@ import { ContractCreationCollapsible } from "@/components/ContractCreationCollap
 import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
 import { RecentContractsTemplatesCollapsible } from "@/components/RecentContractsTemplatesCollapsible";
 import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
-console.log('Index.tsx - About to render W9FormsListCollapsible');
 import { ContractsSection } from "@/components/dashboard/ContractsSection";
 import { Library } from "@/components/Library";
 import { FinanceManagement } from "@/components/finance/FinanceManagement";
