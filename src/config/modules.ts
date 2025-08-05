@@ -51,6 +51,10 @@ import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
 import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
 import { SchedulingModule } from '@/components/modules/SchedulingModule';
+import { BudgetsModule } from '@/components/modules/BudgetsModule';
+import { DuesCollectionModule } from '@/components/modules/DuesCollectionModule';
+import { ContractsModule } from '@/components/modules/ContractsModule';
+import { ApprovalSystemModule } from '@/components/modules/ApprovalSystemModule';
 import { ModuleCategory } from '@/types/modules';
 
 export const moduleCategories: ModuleCategory[] = [
@@ -296,7 +300,7 @@ export const moduleCategories: ModuleCategory[] = [
         icon: FileCheck,
         iconColor: "blue",
         category: "finances",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: ContractsModule,
       },
       {
         id: "budgets",
@@ -305,7 +309,7 @@ export const moduleCategories: ModuleCategory[] = [
         icon: Calculator,
         iconColor: "green",
         category: "finances",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: BudgetsModule,
       },
       {
         id: "google-ledger",
@@ -323,7 +327,7 @@ export const moduleCategories: ModuleCategory[] = [
         icon: CreditCard,
         iconColor: "purple",
         category: "finances",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: DuesCollectionModule,
       },
       {
         id: "student-payments",
@@ -359,7 +363,7 @@ export const moduleCategories: ModuleCategory[] = [
         icon: CheckCircle,
         iconColor: "emerald",
         category: "finances",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: ApprovalSystemModule,
       },
       {
         id: "monthly-statements",
