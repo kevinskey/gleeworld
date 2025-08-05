@@ -34,7 +34,8 @@ import {
   Eye,
   Megaphone,
   Camera,
-  GraduationCap
+  GraduationCap,
+  Radio
 } from 'lucide-react';
 
 import { UserManagementModule } from '@/components/modules/UserManagementModule';
@@ -59,6 +60,7 @@ import { DuesCollectionModule } from '@/components/modules/DuesCollectionModule'
 import { ContractsModule } from '@/components/modules/ContractsModule';
 import { ApprovalSystemModule } from '@/components/modules/ApprovalSystemModule';
 import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
+import { RadioManagement } from '@/components/admin/RadioManagement';
 import { ModuleCategory } from '@/types/modules';
 
 export const moduleCategories: ModuleCategory[] = [
@@ -394,8 +396,18 @@ export const moduleCategories: ModuleCategory[] = [
     title: "Libraries",
     icon: BookOpen,
     color: "emerald",
-    description: "PDF sheet music, MP3 audio files, and picture collections",
-    modules: []
+    description: "PDF sheet music, MP3 audio files, picture collections, and radio management",
+    modules: [
+      {
+        id: "radio-management",
+        title: "Radio Management",
+        description: "Manage Glee World Radio station, commercials, and broadcasting",
+        icon: Radio,
+        iconColor: "blue",
+        category: "libraries",
+        component: RadioManagement,
+      }
+    ]
   },
   {
     id: "system",
