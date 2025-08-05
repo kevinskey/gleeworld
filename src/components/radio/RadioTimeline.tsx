@@ -42,7 +42,10 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(() => {
+    // Initialize from localStorage
+    return localStorage.getItem('timeline-currently-playing') || null;
+  });
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
@@ -211,6 +214,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     } else {
       // No more tracks, stop playback
       setCurrentlyPlaying(null);
+      localStorage.removeItem('timeline-currently-playing');
       toast({
         title: "Playlist Complete",
         description: "All scheduled tracks have finished playing",
@@ -226,6 +230,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
         audioRef.current.currentTime = 0;
       }
       setCurrentlyPlaying(null);
+      localStorage.removeItem('timeline-currently-playing');
     } else {
       // Play new track
       if (audioRef.current) {
@@ -237,6 +242,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
       
       audio.play().then(() => {
         setCurrentlyPlaying(track.id);
+        localStorage.setItem('timeline-currently-playing', track.id);
       }).catch((error) => {
         console.error('Error playing audio:', error);
         toast({
@@ -254,6 +260,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
       // Handle audio error
       audio.onerror = () => {
         setCurrentlyPlaying(null);
+        localStorage.removeItem('timeline-currently-playing');
         toast({
           title: "Audio Error",
           description: "Failed to load the audio file",
