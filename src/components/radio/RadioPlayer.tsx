@@ -31,6 +31,7 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     title: 'Glee World Radio',
     artist: 'Spelman College Glee Club',
     category: 'Live Radio',
+    // Try the stream with explicit format
     audio_url: 'http://134.199.204.155/public/glee_world_radio'
   });
   const [streamError, setStreamError] = useState<string | null>(null);
@@ -42,11 +43,22 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     if (audioRef.current) {
       console.log('Setting audio source:', currentTrack.audio_url);
       audioRef.current.src = currentTrack.audio_url!;
-      audioRef.current.volume = 0.7;
-      audioRef.current.crossOrigin = "anonymous"; // Handle CORS
+      audioRef.current.volume = 0.8; // Increase volume
+      audioRef.current.preload = 'none'; // Don't preload for streams
+      // Remove crossOrigin for now to test
       audioRef.current.load();
       setStreamError(null);
-      console.log('Audio element loaded, volume:', audioRef.current.volume);
+      console.log('Audio element configured, volume:', audioRef.current.volume);
+      
+      // Test if URL is reachable
+      fetch(currentTrack.audio_url!)
+        .then(response => {
+          console.log('Stream URL response:', response.status, response.statusText);
+          console.log('Content-Type:', response.headers.get('content-type'));
+        })
+        .catch(error => {
+          console.error('Stream URL fetch error:', error);
+        });
     }
   }, [currentTrack.audio_url]);
 
