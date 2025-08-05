@@ -22,14 +22,21 @@ export const GoogleAuth = ({
   const initiateGoogleAuth = async () => {
     try {
       setIsAuthenticating(true);
+      console.log('Initiating Google auth with function:', edgeFunctionName);
       
       const { data, error } = await supabase.functions.invoke(edgeFunctionName, {
         body: { action: 'get_auth_url' }
       });
 
-      if (error) throw error;
+      console.log('Function response:', { data, error });
+
+      if (error) {
+        console.error('Function invocation error:', error);
+        throw error;
+      }
       
       if (data?.authUrl) {
+        console.log('Opening auth URL:', data.authUrl);
         setAuthUrl(data.authUrl);
         // Open in new window/tab for OAuth flow
         window.open(data.authUrl, '_blank', 'width=500,height=600');
@@ -38,12 +45,15 @@ export const GoogleAuth = ({
           title: "Authentication Started",
           description: "Please complete the Google authentication in the new window.",
         });
+      } else {
+        console.error('No auth URL received:', data);
+        throw new Error('No authentication URL received from server');
       }
     } catch (error) {
       console.error('Error initiating Google auth:', error);
       toast({
         title: "Authentication Error",
-        description: "Failed to start Google authentication process.",
+        description: `Failed to start Google authentication: ${error.message}`,
         variant: "destructive"
       });
     } finally {
