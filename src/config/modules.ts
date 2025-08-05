@@ -376,8 +376,8 @@ export const moduleCategories: ModuleCategory[] = [
       },
       {
         id: "check-requests",
-        title: "Check Requests",
-        description: "Process and track check requests",
+        title: "Reimbursements",
+        description: "Process and track reimbursement requests",
         icon: Printer,
         iconColor: "red",
         category: "finances",

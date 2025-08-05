@@ -184,7 +184,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         { id: "ai-financial", title: "AI Financial Planning", icon: Brain, color: "pink" },
         { id: "approval-system", title: "Approval System", icon: CheckCircle, color: "emerald" },
         { id: "monthly-statements", title: "Monthly Statements", icon: FileText, color: "gray" },
-        { id: "check-requests", title: "Check Requests", icon: Printer, color: "red" },
+        { id: "check-requests", title: "Reimbursements", icon: Printer, color: "red" },
         { id: "merch-store", title: "Glee Merch Store", icon: ShoppingCart, color: "yellow" }
       ]
     },
