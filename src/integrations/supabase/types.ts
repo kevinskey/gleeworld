@@ -3700,7 +3700,22 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_gw_dues_records_user_id"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_gw_dues_records_user_id"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       gw_dues_reminders: {
         Row: {
