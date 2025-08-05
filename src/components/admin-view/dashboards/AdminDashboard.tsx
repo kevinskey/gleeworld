@@ -68,7 +68,6 @@ interface AdminDashboardProps {
 
 export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const [selectedCategory, setSelectedCategory] = useState("communications");
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(["communications"]);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -191,68 +190,27 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const renderCategoryButton = (category: any, isMobile = false) => {
     const IconComponent = category.icon;
     const isSelected = selectedCategory === category.id;
-    const isExpanded = expandedCategories.includes(category.id);
     
     return (
-      <div key={category.id}>
-        <div 
-          className={`p-3 ${isMobile ? 'sm:p-4' : 'md:p-4'} rounded-lg cursor-pointer transition-all ${
-            isSelected 
-              ? "bg-primary/10 border-primary/20 border" 
-              : "bg-muted/50 hover:bg-muted"
-          }`}
-          onClick={() => {
-            setSelectedCategory(category.id);
-            if (category.subcategories) {
-              setExpandedCategories(prev => 
-                prev.includes(category.id) 
-                  ? prev.filter(cat => cat !== category.id)
-                  : [...prev, category.id]
-              );
-            } else {
-              setSelectedSubcategory(null);
-            }
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <IconComponent className={`h-4 w-4 ${isMobile ? 'sm:h-5 sm:w-5' : 'md:h-5 md:w-5'} text-${category.color}-600`} />
-              <span className={`font-medium ${isMobile ? 'text-sm sm:text-base' : 'text-base'}`}>{category.title}</span>
-            </div>
-            {category.subcategories && (
-              <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${
-                isExpanded ? "rotate-90" : ""
-              }`} />
-            )}
-          </div>
-          <p className={`text-muted-foreground mt-1 sm:mt-2 ${isMobile ? 'text-xs sm:text-sm' : 'text-sm'}`}>
-            {category.description}
-          </p>
+      <div 
+        key={category.id}
+        className={`p-3 ${isMobile ? 'sm:p-4' : 'md:p-4'} rounded-lg cursor-pointer transition-all ${
+          isSelected 
+            ? "bg-primary/10 border-primary/20 border" 
+            : "bg-muted/50 hover:bg-muted"
+        }`}
+        onClick={() => {
+          setSelectedCategory(category.id);
+          setSelectedSubcategory(null); // Reset subcategory when switching categories
+        }}
+      >
+        <div className="flex items-center gap-2 sm:gap-3">
+          <IconComponent className={`h-4 w-4 ${isMobile ? 'sm:h-5 sm:w-5' : 'md:h-5 md:w-5'} text-${category.color}-600`} />
+          <span className={`font-medium ${isMobile ? 'text-sm sm:text-base' : 'text-base'}`}>{category.title}</span>
         </div>
-
-        {/* Subcategories */}
-        {category.subcategories && isExpanded && (
-          <div className="ml-6 mt-2 space-y-2">
-            {category.subcategories.map((subcategory: any) => {
-              const SubIcon = subcategory.icon;
-              return (
-                <div 
-                  key={subcategory.id}
-                  className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/30"
-                  onClick={() => setSelectedSubcategory(subcategory.id)}
-                >
-                  <div className="flex items-center gap-2">
-                    <SubIcon className={`h-3 w-3 ${isMobile ? 'sm:h-4 sm:w-4' : 'md:h-4 md:w-4'} text-${subcategory.color}-600`} />
-                    <span className={`font-medium ${isMobile ? 'text-xs sm:text-sm' : 'text-sm'}`}>{subcategory.title}</span>
-                    {subcategory.isNew && (
-                      <Badge variant="secondary" className="text-xs ml-1">New</Badge>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <p className={`text-muted-foreground mt-1 sm:mt-2 ${isMobile ? 'text-xs sm:text-sm' : 'text-sm'}`}>
+          {category.description}
+        </p>
       </div>
     );
   };
@@ -263,18 +221,54 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       return renderSubcategoryContent(selectedSubcategory);
     }
 
-    // Handle main category content
+    // Get the selected category
+    const currentCategory = categories.find(cat => cat.id === selectedCategory);
+    
+    // If category has subcategories, show them first
+    if (currentCategory?.subcategories) {
+      return (
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <currentCategory.icon className="h-5 w-5" />
+              {currentCategory.title}
+            </h2>
+            <p className="text-muted-foreground mb-6">{currentCategory.description}</p>
+          </div>
+          
+          <div className="grid gap-3 md:grid-cols-2">
+            {currentCategory.subcategories.map((subcategory: any) => {
+              const SubIcon = subcategory.icon;
+              return (
+                <div 
+                  key={subcategory.id}
+                  className="p-4 rounded-lg cursor-pointer transition-all hover:bg-muted/50 border border-border/50 hover:border-primary/20"
+                  onClick={() => setSelectedSubcategory(subcategory.id)}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <SubIcon className={`h-5 w-5 text-${subcategory.color}-600`} />
+                    <span className="font-medium">{subcategory.title}</span>
+                    {subcategory.isNew && (
+                      <Badge variant="secondary" className="text-xs">New</Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Manage {subcategory.title.toLowerCase()}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // Handle main category content when no subcategories
     switch (selectedCategory) {
-      case "communications":
-        return renderCommunicationsContent();
       case "wardrobe":
         return renderWardrobeContent();
-      case "member-management":
-        return renderMemberManagementContent();
       case "libraries":
         return renderLibrariesContent();
-      case "finances":
-        return renderFinancesContent();
       case "system":
         return renderSystemContent();
       default:
