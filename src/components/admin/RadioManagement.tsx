@@ -74,15 +74,90 @@ export const RadioManagement = () => {
   const fetchTracks = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('audio_archive')
-        .select('*')
-        .order('created_at', { ascending: false });
+      
+      // Fetch ALL audio tracks from multiple sources
+      const [audioArchiveResult, musicTracksResult, alumnaeAudioResult] = await Promise.all([
+        // Audio archive table  
+        supabase
+          .from('audio_archive')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        
+        // Music tracks table
+        supabase
+          .from('music_tracks')
+          .select('id, title, artist, audio_url, duration, play_count, created_at')
+          .not('audio_url', 'is', null),
+          
+        // Alumnae audio stories
+        supabase
+          .from('alumnae_audio_stories')
+          .select('id, title, audio_url, duration_seconds, created_at, is_approved')
+          .not('audio_url', 'is', null)
+      ]);
 
-      if (error) throw error;
-      setTracks(data || []);
-      setRadioStats(prev => ({ ...prev, totalTracks: data?.length || 0 }));
+      const allTracks: AudioTrack[] = [];
+
+      // Add audio archive tracks
+      if (audioArchiveResult.data) {
+        audioArchiveResult.data.forEach(track => {
+          allTracks.push({
+            id: track.id,
+            title: track.title,
+            artist_info: track.artist_info,
+            audio_url: track.audio_url,
+            category: track.category,
+            duration_seconds: track.duration_seconds,
+            play_count: track.play_count || 0,
+            is_public: track.is_public,
+            created_at: track.created_at
+          });
+        });
+      }
+
+      // Add music tracks (convert to AudioTrack format)
+      if (musicTracksResult.data) {
+        musicTracksResult.data.forEach(track => {
+          allTracks.push({
+            id: `music_${track.id}`,
+            title: track.title,
+            artist_info: track.artist || 'Glee Club',
+            audio_url: track.audio_url,
+            category: 'performance',
+            duration_seconds: track.duration || 180,
+            play_count: track.play_count || 0,
+            is_public: true, // Default to true for music tracks
+            created_at: track.created_at
+          });
+        });
+      }
+
+      // Add alumnae audio stories
+      if (alumnaeAudioResult.data) {
+        alumnaeAudioResult.data.forEach(track => {
+          allTracks.push({
+            id: `alumni_${track.id}`,
+            title: track.title,
+            artist_info: 'Alumnae Story',
+            audio_url: track.audio_url,
+            category: 'alumni_story',
+            duration_seconds: track.duration_seconds || 300,
+            play_count: 0,
+            is_public: track.is_approved || false,
+            created_at: track.created_at
+          });
+        });
+      }
+
+      // Sort by creation date (newest first)
+      allTracks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      console.log(`RadioManagement: Found ${allTracks.length} total audio tracks`);
+      setTracks(allTracks);
+      setRadioStats(prev => ({ ...prev, totalTracks: allTracks.length }));
+      
     } catch (error) {
+      console.error('Error fetching tracks:', error);
       toast({
         title: "Error",
         description: "Failed to fetch radio tracks",

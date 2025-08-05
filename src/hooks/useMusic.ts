@@ -39,33 +39,101 @@ export const useMusic = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('useMusic: Starting to fetch tracks');
+      console.log('useMusic: Starting to fetch tracks from ALL sources');
 
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 10000)
+        setTimeout(() => reject(new Error('Request timeout')), 15000)
       );
 
-      // Fetch tracks with album info with timeout
-      const fetchPromise = supabase
-        .from('music_tracks')
-        .select(`
-          *,
-          album:music_albums(title, cover_image_url)
-        `)
-        .order('created_at', { ascending: false });
+      // Fetch tracks from multiple sources with timeout
+      const fetchPromise = Promise.all([
+        // Music tracks table
+        supabase
+          .from('music_tracks')
+          .select(`
+            *,
+            album:music_albums(title, cover_image_url)
+          `)
+          .order('created_at', { ascending: false }),
+        
+        // Audio archive table  
+        supabase
+          .from('audio_archive')
+          .select('*')
+          .not('audio_url', 'is', null)
+          .order('created_at', { ascending: false }),
+          
+        // Alumnae audio stories
+        supabase
+          .from('alumnae_audio_stories')
+          .select('*')
+          .not('audio_url', 'is', null)
+          .eq('is_approved', true)
+          .order('created_at', { ascending: false })
+      ]);
 
-      const { data: tracksData, error: tracksError } = await Promise.race([
+      const [musicTracksResult, audioArchiveResult, alumnaeAudioResult] = await Promise.race([
         fetchPromise,
         timeoutPromise
       ]) as any;
 
-      if (tracksError) throw tracksError;
+      const allTracks: Track[] = [];
 
-      console.log('useMusic: Fetched tracks:', tracksData?.length || 0);
+      // Process music tracks
+      if (musicTracksResult.data) {
+        musicTracksResult.data.forEach((track: any) => {
+          allTracks.push({
+            id: track.id,
+            title: track.title,
+            artist: track.artist || 'Glee Club',
+            audio_url: track.audio_url,
+            duration: track.duration || 180,
+            album_id: track.album_id,
+            album: track.album,
+            play_count: track.play_count || 0,
+            isLiked: false,
+            likeCount: 0
+          });
+        });
+      }
 
-      if (tracksData) {
-        // Simplified approach - only fetch likes if user exists and skip complex processing
+      // Process audio archive tracks
+      if (audioArchiveResult.data) {
+        audioArchiveResult.data.forEach((track: any) => {
+          allTracks.push({
+            id: `archive_${track.id}`,
+            title: track.title,
+            artist: track.artist_info || 'Glee Club',
+            audio_url: track.audio_url,
+            duration: track.duration_seconds || 180,
+            play_count: track.play_count || 0,
+            isLiked: false,
+            likeCount: 0
+          });
+        });
+      }
+
+      // Process alumnae audio stories
+      if (alumnaeAudioResult.data) {
+        alumnaeAudioResult.data.forEach((track: any) => {
+          allTracks.push({
+            id: `alumni_${track.id}`,
+            title: track.title,
+            artist: 'Alumnae Story',
+            audio_url: track.audio_url,
+            duration: track.duration_seconds || 300,
+            play_count: 0,
+            isLiked: false,
+            likeCount: 0
+          });
+        });
+      }
+
+      console.log('useMusic: Total tracks from all sources:', allTracks.length);
+
+      if (allTracks.length > 0) {
+        // Only fetch likes for music_tracks (not for archive or alumnae tracks)
         if (user) {
           try {
             const { data: likesData } = await supabase
@@ -75,7 +143,7 @@ export const useMusic = () => {
             
             const userLikes = likesData?.map(like => like.track_id) || [];
             
-            const enrichedTracks: Track[] = tracksData.map(track => ({
+            const enrichedTracks: Track[] = allTracks.map(track => ({
               ...track,
               isLiked: userLikes.includes(track.id),
               likeCount: 0 // Skip complex like count fetching for now
@@ -84,14 +152,14 @@ export const useMusic = () => {
             setTracks(enrichedTracks);
           } catch (likeError) {
             console.warn('useMusic: Error fetching likes, using basic tracks:', likeError);
-            setTracks(tracksData);
+            setTracks(allTracks);
           }
         } else {
-          setTracks(tracksData);
+          setTracks(allTracks);
         }
       }
       
-      console.log('useMusic: Tracks fetch completed successfully');
+      console.log('useMusic: All tracks fetch completed successfully');
     } catch (err) {
       console.error('useMusic: Error fetching tracks:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch tracks');

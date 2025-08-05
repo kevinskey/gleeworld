@@ -120,13 +120,73 @@ export const RadioStationPage = () => {
         .order('recorded_at', { ascending: false })
         .limit(1);
 
-      // Fetch available audio tracks for the radio from music_tracks table
-      const { data: tracksData } = await supabase
-        .from('music_tracks')
-        .select('id, title, artist, audio_url, duration, play_count')
-        .not('audio_url', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(20);
+      // Fetch ALL audio tracks from multiple sources
+      const [musicTracksResult, audioArchiveResult, alumnaeAudioResult] = await Promise.all([
+        // Music tracks table
+        supabase
+          .from('music_tracks')
+          .select('id, title, artist, audio_url, duration, play_count, created_at')
+          .not('audio_url', 'is', null),
+        
+        // Audio archive table  
+        supabase
+          .from('audio_archive')
+          .select('id, title, artist_info, audio_url, duration_seconds, play_count, created_at, category')
+          .not('audio_url', 'is', null),
+          
+        // Alumnae audio stories
+        supabase
+          .from('alumnae_audio_stories')
+          .select('id, title, audio_url, duration_seconds, created_at')
+          .not('audio_url', 'is', null)
+          .eq('is_approved', true)
+      ]);
+
+      const allTracks: RadioTrack[] = [];
+
+      // Add music tracks
+      if (musicTracksResult.data) {
+        musicTracksResult.data.forEach(track => {
+          allTracks.push({
+            id: `music_${track.id}`,
+            title: track.title,
+            artist: track.artist || 'Glee Club',
+            duration: track.duration || 180,
+            audio_url: track.audio_url,
+            category: 'performance'
+          });
+        });
+      }
+
+      // Add audio archive tracks
+      if (audioArchiveResult.data) {
+        audioArchiveResult.data.forEach(track => {
+          allTracks.push({
+            id: `archive_${track.id}`,
+            title: track.title,
+            artist: track.artist_info || 'Glee Club',
+            duration: track.duration_seconds || 180,
+            audio_url: track.audio_url,
+            category: track.category as any || 'performance'
+          });
+        });
+      }
+
+      // Add alumnae audio stories
+      if (alumnaeAudioResult.data) {
+        alumnaeAudioResult.data.forEach(track => {
+          allTracks.push({
+            id: `alumni_${track.id}`,
+            title: track.title,
+            artist: 'Alumnae Story',
+            duration: track.duration_seconds || 300,
+            audio_url: track.audio_url,
+            category: 'alumni_story'
+          });
+        });
+      }
+
+      console.log(`Found ${allTracks.length} total audio tracks for radio`);
 
       if (episodesData) {
         setRadioStats(prev => ({
@@ -143,26 +203,20 @@ export const RadioStationPage = () => {
         }));
       }
 
-      // Set up default tracks and current track
-      if (tracksData && tracksData.length > 0) {
-        const radioTracks: RadioTrack[] = tracksData.map(track => ({
-          id: track.id,
-          title: track.title,
-          artist: track.artist || 'Glee Club',
-          duration: track.duration || 180,
-          audio_url: track.audio_url,
-          category: 'performance' as const
-        }));
+      // Set up all tracks for radio
+      if (allTracks.length > 0) {
+        // Sort by most recent first
+        allTracks.sort((a, b) => new Date(b.id).getTime() - new Date(a.id).getTime());
         
-        setUpcomingTracks(radioTracks);
+        setUpcomingTracks(allTracks);
         
         // Set the first track as current if no track is playing
-        if (!currentTrack && radioTracks.length > 0) {
-          setCurrentTrack(radioTracks[0]);
-          console.log('Set default current track:', radioTracks[0]);
+        if (!currentTrack && allTracks.length > 0) {
+          setCurrentTrack(allTracks[0]);
+          console.log('Set default current track:', allTracks[0]);
         }
       } else {
-        console.log('No tracks found for radio');
+        console.log('No audio tracks found for radio');
       }
 
     } catch (error) {
