@@ -135,18 +135,15 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       ]
     },
     {
-      id: "student-intake",
-      title: "Student Intake",
-      icon: UserPlus,
-      color: "orange",
-      description: "New student processing, size verification, and wardrobe assignments"
-    },
-    {
       id: "wardrobe",
       title: "Wardrobe",
       icon: Shirt,
       color: "purple",
-      description: "Costume management, fitting schedules, and inventory"
+      description: "Costume management, fitting schedules, and inventory",
+      subcategories: [
+        { id: "wardrobe-management", title: "Wardrobe Management", icon: Shirt, color: "purple" },
+        { id: "student-intake", title: "Student Intake", icon: UserPlus, color: "orange" }
+      ]
     },
     {
       id: "member-management",
@@ -307,8 +304,6 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         
         {(() => {
           switch (selectedCategory) {
-            case "student-intake":
-              return renderIntakeContent();
             case "wardrobe":
               return renderWardrobeContent();
             case "libraries":
@@ -331,6 +326,10 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         return <PermissionManagement />;
       case "auditions":
         return <AuditionsManagement />;
+      case "wardrobe-management":
+        return <WardrobeManagementHub />;
+      case "student-intake":
+        return <StudentIntakeProcessor />;
       default:
         return (
           <Card>
