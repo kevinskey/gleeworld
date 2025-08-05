@@ -26,9 +26,11 @@ const Auth = () => {
         sessionStorage.removeItem('redirectAfterAuth');
         navigate(redirectPath, { replace: true });
       } else {
-        // Always redirect to dashboard for authenticated users
-        console.log('Auth: Redirecting to dashboard');
-        navigate('/dashboard', { replace: true });
+        // Redirect based on user role
+        const isUserAdmin = isAdmin();
+        const defaultPath = isUserAdmin ? '/admin' : '/dashboard';
+        console.log('Auth: Redirecting to:', defaultPath, 'isAdmin:', isUserAdmin);
+        navigate(defaultPath, { replace: true });
       }
     } else {
       console.log('Auth redirect conditions not met:', {
