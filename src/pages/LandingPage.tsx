@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { useIsMobile } from '@/hooks/use-mobile';
+import historicBackground from '@/assets/historic-glee-background.jpg';
 import { 
   Music, 
   Users, 
@@ -320,24 +321,40 @@ const LandingPage = () => {
   if (isMobile) {
     return (
       <UniversalLayout containerized={false}>
-        <Carousel className="w-full" opts={{ align: "start", loop: true }}>
-          <CarouselContent>
-            {sections.map((section) => (
-              <CarouselItem key={section.id} className="min-h-screen">
-                {section.content}
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-4" />
-          <CarouselNext className="right-4" />
-        </Carousel>
+        <div 
+          className="relative bg-cover bg-right bg-no-repeat"
+          style={{ backgroundImage: `url(${historicBackground})` }}
+        >
+          <div className="absolute inset-0 bg-background/90"></div>
+          <div className="relative z-10">
+            <Carousel className="w-full" opts={{ align: "start", loop: true }}>
+              <CarouselContent>
+                {sections.map((section) => (
+                  <CarouselItem key={section.id} className="min-h-screen">
+                    {section.content}
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-4" />
+              <CarouselNext className="right-4" />
+            </Carousel>
+          </div>
+        </div>
       </UniversalLayout>
     );
   }
 
   return (
     <UniversalLayout containerized={false}>
-      {sections.map((section) => section.content)}
+      <div 
+        className="relative bg-cover bg-right bg-no-repeat"
+        style={{ backgroundImage: `url(${historicBackground})` }}
+      >
+        <div className="absolute inset-0 bg-background/90"></div>
+        <div className="relative z-10">
+          {sections.map((section) => section.content)}
+        </div>
+      </div>
     </UniversalLayout>
   );
 };
