@@ -195,38 +195,103 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
   const handleDrop = async (e: React.DragEvent, timeSlot: string) => {
     e.preventDefault();
     const trackData = e.dataTransfer.getData('application/json');
+    const dragType = e.dataTransfer.getData('text/plain');
     
     if (trackData) {
       try {
-        const track: AudioTrack = JSON.parse(trackData);
-        const scheduledTrack: ScheduledTrack = {
-          ...track,
-          scheduledTime: timeSlot,
-          scheduledDate: selectedDate
-        };
-
-        // Check if slot is already occupied
-        const existingTrack = scheduledTracks.find(
-          t => t.scheduledTime === timeSlot && t.scheduledDate === selectedDate
-        );
-
-        if (existingTrack) {
-          // Replace existing track
-          setScheduledTracks(prev => prev.map(t => 
-            t.scheduledTime === timeSlot && t.scheduledDate === selectedDate 
-              ? scheduledTrack 
-              : t
-          ));
+        if (dragType === 'scheduled-track') {
+          // Handle moving existing scheduled track
+          const scheduledTrack: ScheduledTrack = JSON.parse(trackData);
+          const oldTimeSlot = scheduledTrack.scheduledTime;
+          
+          // Don't do anything if dropped on the same slot
+          if (oldTimeSlot === timeSlot) return;
+          
+          // Update the track with new time slot
+          const updatedTrack = {
+            ...scheduledTrack,
+            scheduledTime: timeSlot
+          };
+          
+          // Check if target slot is occupied
+          const existingTrack = scheduledTracks.find(
+            t => t.scheduledTime === timeSlot && t.scheduledDate === selectedDate
+          );
+          
+          if (existingTrack) {
+            // Swap tracks if target slot is occupied
+            const swappedTrack = {
+              ...existingTrack,
+              scheduledTime: oldTimeSlot
+            };
+            
+            setScheduledTracks(prev => prev.map(t => {
+              if (t.scheduledTime === oldTimeSlot && t.scheduledDate === selectedDate) {
+                return updatedTrack;
+              }
+              if (t.scheduledTime === timeSlot && t.scheduledDate === selectedDate) {
+                return swappedTrack;
+              }
+              return t;
+            }));
+            
+            // Save both tracks to database
+            await saveScheduledTrack(updatedTrack);
+            await saveScheduledTrack(swappedTrack);
+            
+            toast({
+              title: "Tracks Swapped",
+              description: `"${updatedTrack.title}" moved to ${timeSlot}, "${swappedTrack.title}" moved to ${oldTimeSlot}`,
+            });
+          } else {
+            // Move to empty slot
+            setScheduledTracks(prev => prev.map(t => 
+              t.scheduledTime === oldTimeSlot && t.scheduledDate === selectedDate 
+                ? updatedTrack 
+                : t
+            ));
+            
+            // Remove from old slot and save to new slot
+            await removeScheduledTrackFromDB(oldTimeSlot);
+            await saveScheduledTrack(updatedTrack);
+            
+            toast({
+              title: "Track Moved",
+              description: `"${updatedTrack.title}" moved to ${timeSlot}`,
+            });
+          }
         } else {
-          // Add new track
-          setScheduledTracks(prev => [...prev, scheduledTrack]);
-        }
+          // Handle new track from library
+          const track: AudioTrack = JSON.parse(trackData);
+          const scheduledTrack: ScheduledTrack = {
+            ...track,
+            scheduledTime: timeSlot,
+            scheduledDate: selectedDate
+          };
 
-        // Save to database
-        await saveScheduledTrack(scheduledTrack);
-        onTrackScheduled?.(scheduledTrack);
+          // Check if slot is already occupied
+          const existingTrack = scheduledTracks.find(
+            t => t.scheduledTime === timeSlot && t.scheduledDate === selectedDate
+          );
+
+          if (existingTrack) {
+            // Replace existing track
+            setScheduledTracks(prev => prev.map(t => 
+              t.scheduledTime === timeSlot && t.scheduledDate === selectedDate 
+                ? scheduledTrack 
+                : t
+            ));
+          } else {
+            // Add new track
+            setScheduledTracks(prev => [...prev, scheduledTrack]);
+          }
+
+          // Save to database
+          await saveScheduledTrack(scheduledTrack);
+          onTrackScheduled?.(scheduledTrack);
+        }
       } catch (error) {
-        console.error('Error parsing dropped track data:', error);
+        console.error('Error handling drop:', error);
         toast({
           title: "Drop Failed",
           description: "Failed to schedule track",
@@ -238,6 +303,12 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+  };
+
+  const handleScheduledTrackDragStart = (e: React.DragEvent, track: ScheduledTrack) => {
+    e.dataTransfer.setData('application/json', JSON.stringify(track));
+    e.dataTransfer.setData('text/plain', 'scheduled-track');
+    e.dataTransfer.effectAllowed = 'move';
   };
 
   const removeScheduledTrack = async (timeSlot: string) => {
@@ -333,10 +404,10 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
                 return (
                   <div
                     key={timeSlot}
-                    className={`flex items-center gap-4 p-3 border border-dashed border-border/50 rounded-lg transition-colors ${
+                    className={`flex items-center gap-4 p-3 border-2 border-dashed rounded-lg transition-all duration-200 ${
                       scheduledTrack 
                         ? 'bg-primary/5 border-primary/30' 
-                        : 'hover:bg-muted/30 hover:border-primary/20'
+                        : 'border-border/50 hover:bg-muted/30 hover:border-primary/20'
                     }`}
                     onDrop={(e) => handleDrop(e, timeSlot)}
                     onDragOver={handleDragOver}
@@ -351,8 +422,12 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
                     {/* Track Slot */}
                     <div className="flex-1">
                       {scheduledTrack ? (
-                        <div className="flex items-center justify-between bg-card/50 p-3 rounded-md border">
-                          <div className="flex-1">
+                        <div 
+                          className="flex items-center justify-between bg-card/50 p-3 rounded-md border cursor-move hover:bg-card/70 transition-colors"
+                          draggable
+                          onDragStart={(e) => handleScheduledTrackDragStart(e, scheduledTrack)}
+                        >
+                          <div className="flex-1 pointer-events-none">
                             <div className="flex items-center gap-2 mb-1">
                               <h4 className="font-medium text-sm">{scheduledTrack.title}</h4>
                               <Badge className={getCategoryColor(scheduledTrack.category)}>
@@ -364,7 +439,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
                               Duration: {formatDuration(scheduledTrack.duration_seconds)}
                             </p>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 pointer-events-auto">
                             <Button size="sm" variant="ghost">
                               <Play className="h-3 w-3" />
                             </Button>
@@ -379,7 +454,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
                           </div>
                         </div>
                       ) : (
-                        <div className="p-8 text-center text-muted-foreground text-sm border-2 border-dashed border-border/30 rounded-md">
+                        <div className="p-8 text-center text-muted-foreground text-sm border-2 border-dashed border-border/30 rounded-md transition-colors hover:border-primary/40">
                           Drop MP3 track here to schedule for {timeSlot}
                         </div>
                       )}
