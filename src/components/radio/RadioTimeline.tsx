@@ -415,12 +415,36 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     const trackData = e.dataTransfer.getData('application/json');
     const dragType = e.dataTransfer.getData('text/plain');
     
+    // Check if this slot contains the currently playing track
+    const existingTrack = scheduledTracks.find(
+      t => t.scheduledTime === timeSlot && t.scheduledDate === selectedDate
+    );
+    
+    if (existingTrack && currentlyPlaying === existingTrack.id) {
+      toast({
+        title: "Cannot Modify Playing Track",
+        description: "The currently playing track cannot be moved or replaced.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (trackData) {
       try {
         if (dragType === 'scheduled-track') {
           // Handle moving existing scheduled track
           const scheduledTrack: ScheduledTrack = JSON.parse(trackData);
           const oldTimeSlot = scheduledTrack.scheduledTime;
+          
+          // Prevent moving the currently playing track
+          if (currentlyPlaying === scheduledTrack.id) {
+            toast({
+              title: "Cannot Move Playing Track",
+              description: "The currently playing track cannot be moved.",
+              variant: "destructive"
+            });
+            return;
+          }
           
           // Don't do anything if dropped on the same slot
           if (oldTimeSlot === timeSlot) return;
@@ -430,11 +454,6 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
             ...scheduledTrack,
             scheduledTime: timeSlot
           };
-          
-          // Check if target slot is occupied
-          const existingTrack = scheduledTracks.find(
-            t => t.scheduledTime === timeSlot && t.scheduledDate === selectedDate
-          );
           
           if (existingTrack) {
             // Swap tracks if target slot is occupied
@@ -487,11 +506,6 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
             scheduledDate: selectedDate
           };
 
-          // Check if slot is already occupied
-          const existingTrack = scheduledTracks.find(
-            t => t.scheduledTime === timeSlot && t.scheduledDate === selectedDate
-          );
-
           if (existingTrack) {
             // Replace existing track
             setScheduledTracks(prev => prev.map(t => 
@@ -530,6 +544,20 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
   };
 
   const removeScheduledTrack = async (timeSlot: string) => {
+    // Check if the track is currently playing
+    const trackToRemove = scheduledTracks.find(
+      t => t.scheduledTime === timeSlot && t.scheduledDate === selectedDate
+    );
+    
+    if (trackToRemove && currentlyPlaying === trackToRemove.id) {
+      toast({
+        title: "Cannot Remove Playing Track",
+        description: "Stop the track before removing it from the timeline.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Remove from local state
     setScheduledTracks(prev => 
       prev.filter(track => !(track.scheduledTime === timeSlot && track.scheduledDate === selectedDate))
@@ -683,13 +711,13 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
                     <div className="flex-1">
                       {scheduledTrack ? (
                         <div 
-                          className={`flex items-center justify-between bg-card/50 rounded-md border cursor-move hover:bg-card/70 transition-all duration-300 ${
+                          className={`flex items-center justify-between bg-card/50 rounded-md border transition-all duration-300 ${
                             currentlyPlaying === scheduledTrack.id 
-                              ? 'pulse ring-2 ring-primary/50 bg-primary/10 p-4 scale-105 shadow-lg' 
-                              : 'p-3'
+                              ? 'pulse ring-2 ring-primary/50 bg-primary/10 p-4 scale-105 shadow-lg cursor-not-allowed' 
+                              : 'p-3 cursor-move hover:bg-card/70'
                           }`}
-                          draggable
-                          onDragStart={(e) => handleScheduledTrackDragStart(e, scheduledTrack)}
+                          draggable={currentlyPlaying !== scheduledTrack.id}
+                          onDragStart={currentlyPlaying === scheduledTrack.id ? undefined : (e) => handleScheduledTrackDragStart(e, scheduledTrack)}
                         >
                           <div className="flex items-center gap-3 flex-1 pointer-events-none">
                             {/* Album Art */}
@@ -748,7 +776,11 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
                               size="sm" 
                               variant="ghost"
                               onClick={() => removeScheduledTrack(trackSlot)}
-                              className="hover:bg-destructive/10 hover:text-destructive"
+                              disabled={currentlyPlaying === scheduledTrack.id}
+                              className={currentlyPlaying === scheduledTrack.id 
+                                ? "opacity-50 cursor-not-allowed" 
+                                : "hover:bg-destructive/10 hover:text-destructive"
+                              }
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
