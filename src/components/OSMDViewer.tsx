@@ -71,14 +71,19 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
 
   // Load music when URL or content changes
   useEffect(() => {
+    console.log('OSMDViewer: URL/content changed', { xmlUrl, xmlContent: !!xmlContent });
     if (osmdRef.current && (xmlUrl || xmlContent)) {
       loadMusic();
     }
   }, [xmlUrl, xmlContent]);
 
   const loadMusic = async () => {
-    if (!osmdRef.current) return;
+    if (!osmdRef.current) {
+      console.error('OSMD not initialized');
+      return;
+    }
 
+    console.log('Loading music...', { xmlUrl, hasXmlContent: !!xmlContent });
     setIsLoading(true);
     setError(null);
 
@@ -90,10 +95,31 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
 
       if (xmlContent) {
         // Load from string content
+        console.log('Loading from XML content, length:', xmlContent.length);
         await osmdRef.current.load(xmlContent);
       } else if (xmlUrl) {
-        // Load from URL
-        await osmdRef.current.load(xmlUrl);
+        // Validate URL first
+        if (!xmlUrl || xmlUrl.trim() === '' || xmlUrl === '0') {
+          throw new Error('Invalid URL provided');
+        }
+        
+        console.log('Loading from URL:', xmlUrl);
+        
+        // Try to fetch the URL first to validate it
+        try {
+          const response = await fetch(xmlUrl);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          const xmlText = await response.text();
+          console.log('Fetched XML, length:', xmlText.length);
+          await osmdRef.current.load(xmlText);
+        } catch (fetchError) {
+          console.error('Fetch error:', fetchError);
+          throw new Error(`Failed to load URL: ${fetchError.message}`);
+        }
+      } else {
+        throw new Error('No XML content or URL provided');
       }
 
       // Render the music

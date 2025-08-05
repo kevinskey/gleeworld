@@ -18,7 +18,9 @@ const SightReadingPreview = () => {
   const { toast } = useToast();
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setXmlUrl(e.target.value);
+    const newUrl = e.target.value;
+    console.log('URL changed to:', newUrl);
+    setXmlUrl(newUrl);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,19 +51,14 @@ const SightReadingPreview = () => {
 
   const predefinedSamples = [
     {
-      name: "Beethoven - An die ferne Geliebte",
-      url: "https://opensheetmusicdisplay.org/demo/Beethoven_AnDieFerneGeliebte.musicxml",
-      description: "Classic German art song"
+      name: "Simple Scale Exercise",
+      url: "https://www.musicxml.com/music-in-musicxml/example-set/BeetAnGelVoice.xml",
+      description: "Basic C major scale exercise"
     },
     {
-      name: "Mozart - Clarinet Quintet",
-      url: "https://opensheetmusicdisplay.org/demo/MozartClarinetQuintet.musicxml", 
-      description: "Chamber music masterpiece"
-    },
-    {
-      name: "Bach - Prelude in C",
-      url: "https://opensheetmusicdisplay.org/demo/MuzioClementi_SonatinaOpus36No1_Part1.musicxml",
-      description: "Well-tempered clavier"
+      name: "Chorale Exercise",
+      url: "https://www.musicxml.com/music-in-musicxml/example-set/ActorPreludeSample.xml", 
+      description: "Four-part harmony practice"
     }
   ];
 
@@ -121,12 +118,15 @@ const SightReadingPreview = () => {
                       <Label>Sample Files</Label>
                       {predefinedSamples.map((sample, index) => (
                         <div key={index} className="space-y-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full justify-start text-left"
-                            onClick={() => setXmlUrl(sample.url)}
-                          >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start text-left"
+                          onClick={() => {
+                            console.log('Setting URL to:', sample.url);
+                            setXmlUrl(sample.url);
+                          }}
+                        >
                             <Music className="h-3 w-3 mr-2" />
                             {sample.name}
                           </Button>
