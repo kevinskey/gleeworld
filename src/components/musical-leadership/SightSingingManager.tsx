@@ -36,12 +36,12 @@ export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
         <div>
           <h3 className="text-xl font-bold text-foreground">Sight Singing Management</h3>
           <p className="text-muted-foreground">
-            Integrate with SightReadingFactory.com and track progress
+            Manage sight singing exercises and track student progress
           </p>
         </div>
-        <Button onClick={() => window.open('https://sightreadingfactory.com', '_blank')}>
+        <Button onClick={() => window.open('/sight-reading-submission', '_blank')}>
           <ExternalLink className="h-4 w-4 mr-2" />
-          Open SightReadingFactory
+          Open Sight Reading Submission
         </Button>
       </div>
 
@@ -112,11 +112,11 @@ export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
       {/* Integration Info */}
       <Card>
         <CardHeader>
-          <CardTitle>SightReadingFactory.com Integration</CardTitle>
+          <CardTitle>Sight Reading Management</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-4">
-            This module integrates with SightReadingFactory.com to provide comprehensive sight singing training and progress tracking for all choir sections.
+            This module provides comprehensive sight singing training and progress tracking for all choir sections.
           </p>
           <div className="flex gap-2">
             <Button variant="outline">

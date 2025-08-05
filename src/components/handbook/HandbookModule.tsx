@@ -221,7 +221,7 @@ He is a member of the American Society of Composers and Publishers as well as an
 - Pay required dues to the Treasurer *
 - Pass all quizzes pertaining to SCGC History
 - Display appropriate behavior during Glee Club rehearsal
-- Complete all **sightreadingfactory.com** assignments
+- Complete all **sight-reading** assignments
 - Adhere to the attendance policy (see below)
 
 **\\* Failure to pay dues will result in revocation of Christmas Carol participation and other Glee Club events/venues as prescribed by the Director.**
@@ -872,7 +872,7 @@ By the end of the semester, students will be able to:
 - Led by Section Leaders via **Zoom** or **Microsoft Teams**.
 
 #### Sight-Singing
-- Minimum **2 quizzes per week** using **SightReadingFactory.com**
+- Minimum **2 quizzes per week** using **sight-reading practice**
 - At least **30 minutes of practice** per week.
 
 #### Assessments

@@ -257,7 +257,7 @@ const positionData = {
     responsibilities: [
       "Lead sectional rehearsals",
       "Oversee section leader coordination",
-      "Manage SightReadingFactory assignments",
+      "Manage sight-reading assignments",
       "Coordinate audition processes",
       "Support vocal technique development",
       "Assist with concert preparation"

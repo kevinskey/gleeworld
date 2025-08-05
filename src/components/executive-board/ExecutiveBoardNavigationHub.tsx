@@ -125,7 +125,7 @@ const EXECUTIVE_PAGE_MAPPINGS: ExecutivePageMapping[] = [
       { path: '/music-library', name: 'Music Library', description: 'Manage sheet music' },
       { path: '/performance', name: 'Performance Suite', description: 'Performance tools' },
       { path: '/sectional-management', name: 'Sectional Management', description: 'Voice part coordination' },
-      { path: '/srf-management', name: 'SRF Management', description: 'Sight-reading factory' },
+      { path: '/srf-management', name: 'SRF Management', description: 'Sight-reading assignments' },
       { path: '/attendance', name: 'Attendance', description: 'Track rehearsal attendance' },
       { path: '/dashboard/executive-board', name: 'Executive Dashboard', description: 'Board overview' },
       { path: '/handbook', name: 'Handbook', description: 'Musical procedures' }

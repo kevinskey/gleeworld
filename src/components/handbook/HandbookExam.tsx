@@ -108,7 +108,7 @@ const SAMPLE_QUESTIONS: Question[] = [
   },
   {
     id: 13,
-    question: "What minimum practice time is required on SightReadingFactory.com per week?",
+    question: "What minimum practice time is required for sight-reading practice per week?",
     options: ["15 minutes", "30 minutes", "45 minutes", "1 hour"],
     correctAnswer: 1,
     section: "Course Requirements"

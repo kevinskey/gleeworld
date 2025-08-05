@@ -702,7 +702,7 @@ export const COMPREHENSIVE_FUNCTIONS_LIST: PermissionFunction[] = [
   {
     id: 'srf_management',
     name: 'SRF Management',
-    description: 'Sight Reading Factory integration',
+    description: 'Sight Reading assignments',
     location: 'SRFManagement',
     isActive: true,
     category: 'Music & Library'

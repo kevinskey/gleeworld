@@ -9,7 +9,7 @@ export const SightSingingModule = ({ user, isFullPage = false }: ModuleProps) =>
     <ModuleWrapper
       id="sight-singing-management"
       title="Sight Singing Management"
-      description="Integrate with SightReadingFactory.com and manage sight singing exercises and progress"
+      description="Manage sight singing exercises and track progress"
       icon={Eye}
       iconColor="blue"
       fullPage={isFullPage}

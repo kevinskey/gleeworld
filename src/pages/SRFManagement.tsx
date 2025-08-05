@@ -37,7 +37,7 @@ export const SRFManagement = () => {
             <BookOpen className="h-8 w-8 text-primary" />
             <div>
               <h1 className="text-3xl font-bold text-foreground">SRF Management</h1>
-              <p className="text-muted-foreground">Manage SightReadingFactory assignments and student progress</p>
+              <p className="text-muted-foreground">Manage sight-reading assignments and student progress</p>
             </div>
           </div>
         </div>
