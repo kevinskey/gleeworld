@@ -388,8 +388,14 @@ export const useDuesManagement = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      console.log('useDuesManagement: Starting to load data...');
       setLoading(true);
-      await Promise.all([fetchDuesRecords(), fetchPaymentPlans()]);
+      try {
+        await Promise.all([fetchDuesRecords(), fetchPaymentPlans()]);
+        console.log('useDuesManagement: Data loaded successfully');
+      } catch (error) {
+        console.error('useDuesManagement: Error loading data:', error);
+      }
       setLoading(false);
     };
 
