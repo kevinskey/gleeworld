@@ -609,7 +609,9 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
                     <div className="flex-1">
                       {scheduledTrack ? (
                         <div 
-                          className="flex items-center justify-between bg-card/50 p-3 rounded-md border cursor-move hover:bg-card/70 transition-colors"
+                          className={`flex items-center justify-between bg-card/50 p-3 rounded-md border cursor-move hover:bg-card/70 transition-colors ${
+                            currentlyPlaying === scheduledTrack.id ? 'pulse ring-2 ring-primary/50 bg-primary/10' : ''
+                          }`}
                           draggable
                           onDragStart={(e) => handleScheduledTrackDragStart(e, scheduledTrack)}
                         >
