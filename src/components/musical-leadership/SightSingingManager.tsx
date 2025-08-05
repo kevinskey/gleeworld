@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ExternalLink, BookOpen, TrendingUp, Target, Users } from 'lucide-react';
+import { SightReadingGenerator } from '@/components/SightReadingGenerator';
 import { SightReadingUploader } from '@/components/SightReadingUploader';
 
 interface SightSingingManagerProps {
@@ -13,6 +15,8 @@ interface SightSingingManagerProps {
 }
 
 export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
+  const [generatedMelody, setGeneratedMelody] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState("generate");
   const [stats] = useState({
     completionRate: 0,
     activeExercises: 0,
@@ -29,6 +33,11 @@ export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
       case 'Advanced': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleStartSightReading = (melody: any[]) => {
+    setGeneratedMelody(melody);
+    setActiveTab("upload");
   };
 
   return (
@@ -110,13 +119,26 @@ export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
         </CardContent>
       </Card>
 
-      {/* Sight Reading Upload Section */}
+      {/* Sight Reading Generator & Upload Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Audio Submission & Analysis</CardTitle>
+          <CardTitle>Sight Reading Practice & Analysis</CardTitle>
         </CardHeader>
         <CardContent>
-          <SightReadingUploader />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="generate">Generate Exercise</TabsTrigger>
+              <TabsTrigger value="upload">Upload Recording</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="generate" className="space-y-6">
+              <SightReadingGenerator onStartSightReading={handleStartSightReading} />
+            </TabsContent>
+            
+            <TabsContent value="upload" className="space-y-6">
+              <SightReadingUploader externalMelody={generatedMelody} />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
