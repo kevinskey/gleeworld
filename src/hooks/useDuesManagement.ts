@@ -114,7 +114,7 @@ export const useDuesManagement = () => {
       const { data: members, error: membersError } = await supabase
         .from('gw_profiles')
         .select('user_id')
-        .in('role', ['member', 'executive'])
+        .eq('role', 'member')
         .not('user_id', 'is', null);
 
       if (membersError) throw membersError;
