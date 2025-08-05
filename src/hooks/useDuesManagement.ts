@@ -110,34 +110,52 @@ export const useDuesManagement = () => {
     amount: number = 100
   ) => {
     try {
+      console.log('Starting dues creation for semester:', semester);
+      
       // Get all current members who don't have dues records for this semester
       const { data: members, error: membersError } = await supabase
         .from('gw_profiles')
-        .select('user_id')
+        .select('user_id, full_name')
         .eq('role', 'member')
         .not('user_id', 'is', null);
 
-      if (membersError) throw membersError;
+      console.log('Members query result:', { members, error: membersError });
+
+      if (membersError) {
+        console.error('Error fetching members:', membersError);
+        throw membersError;
+      }
 
       if (!members || members.length === 0) {
         toast({
           title: "No Members Found",
-          description: "No members or executives found to create dues records for",
+          description: "No members found to create dues records for",
           variant: "destructive",
         });
         return 0;
       }
 
+      console.log(`Found ${members.length} members with valid user_ids`);
+
       // Filter out any existing dues records for this semester
-      const { data: existingDues } = await supabase
+      const { data: existingDues, error: existingError } = await supabase
         .from('gw_dues_records')
         .select('user_id')
         .eq('semester', semester);
+
+      console.log('Existing dues query result:', { existingDues, error: existingError });
+
+      if (existingError) {
+        console.error('Error fetching existing dues:', existingError);
+        throw existingError;
+      }
 
       const existingUserIds = new Set(existingDues?.map(d => d.user_id) || []);
       const membersToCreate = members.filter(member => 
         member.user_id && !existingUserIds.has(member.user_id)
       );
+
+      console.log(`Creating dues for ${membersToCreate.length} members:`, membersToCreate.map(m => m.full_name));
 
       if (membersToCreate.length === 0) {
         toast({
@@ -157,19 +175,27 @@ export const useDuesManagement = () => {
         status: 'pending' as const
       }));
 
-      const { error } = await supabase
-        .from('gw_dues_records')
-        .insert(duesRecords);
+      console.log('About to insert dues records:', duesRecords);
 
-      if (error) throw error;
+      const { data: insertResult, error } = await supabase
+        .from('gw_dues_records')
+        .insert(duesRecords)
+        .select();
+
+      console.log('Insert result:', { data: insertResult, error });
+
+      if (error) {
+        console.error('Error inserting dues records:', error);
+        throw error;
+      }
       
       toast({
         title: "Success",
-        description: `Created dues records for ${members.length} members`,
+        description: `Created dues records for ${membersToCreate.length} members`,
       });
       
       await fetchDuesRecords();
-      return members.length;
+      return membersToCreate.length;
     } catch (error) {
       console.error('Error creating dues for semester:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
