@@ -30,7 +30,7 @@ export const SightReadingUploader = () => {
       const formData = new FormData();
       formData.append('audio', selectedFile);
 
-      const response = await fetch('http://YOUR-DROPLET-IP:4000/analyze', {
+      const response = await fetch('http://134.199.204.155:4000/analyze', {
         method: 'POST',
         body: formData,
       });
