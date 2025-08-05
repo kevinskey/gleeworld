@@ -30,53 +30,16 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
   const [currentTrack, setCurrentTrack] = useState<CurrentTrack>({
     title: 'Glee World Radio',
     artist: 'Spelman College Glee Club',
-    category: 'Live Radio'
+    category: 'Live Radio',
+    audio_url: 'http://134.199.204.155/public/glee_world_radio'
   });
-  const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [errorCount, setErrorCount] = useState(0);
-  const [hasTriedAllTracks, setHasTriedAllTracks] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
 
-  // Fetch audio tracks from the database
-  useEffect(() => {
-    fetchAudioTracks();
-  }, []);
-
-  const fetchAudioTracks = async () => {
-    try {
-      const { data: tracks, error } = await supabase
-        .from('audio_archive')
-        .select('id, title, artist_info, audio_url')
-        .eq('is_public', true)
-        .not('audio_url', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (error) {
-        console.error('Error fetching audio tracks:', error);
-        return;
-      }
-
-      if (tracks && tracks.length > 0) {
-        setAudioTracks(tracks);
-        setCurrentTrack({
-          title: tracks[0].title,
-          artist: tracks[0].artist_info || 'Glee Club',
-          category: 'Radio Stream',
-          audio_url: tracks[0].audio_url
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching tracks:', error);
-    }
-  };
-
   // Effect to handle audio source changes
   useEffect(() => {
-    if (audioRef.current && currentTrack.audio_url) {
-      audioRef.current.src = currentTrack.audio_url;
+    if (audioRef.current) {
+      audioRef.current.src = currentTrack.audio_url!;
       audioRef.current.volume = 0.7; // Fixed volume for radio stream
       audioRef.current.load();
     }
@@ -114,13 +77,10 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     const initialIsPlaying = radioState === 'true';
     setIsPlaying(initialIsPlaying);
 
-    // The separate useEffect will handle audio play/pause based on isPlaying state
-
     // Listen for radio state changes - use different event names
     const eventName = isPersonalRadio ? 'personal-radio-toggle' : 'timeline-radio-toggle';
     const handleRadioToggle = (event: CustomEvent) => {
       setIsPlaying(event.detail.isPlaying);
-      // Audio play/pause is handled by the useEffect above
     };
 
     window.addEventListener(eventName, handleRadioToggle as EventListener);
@@ -130,49 +90,7 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     };
   }, [isPersonalRadio]);
 
-  const playNextTrack = () => {
-    if (audioTracks.length === 0) return;
-    
-    const nextIndex = (currentTrackIndex + 1) % audioTracks.length;
-    const nextTrack = audioTracks[nextIndex];
-    
-    // Check if we've tried all tracks already
-    if (nextIndex === 0 && hasTriedAllTracks) {
-      setIsPlaying(false);
-      toast({
-        title: "No Audio Available",
-        description: "All tracks failed to load. Please try again later.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (nextIndex === 0) {
-      setHasTriedAllTracks(true);
-    }
-    
-    setCurrentTrackIndex(nextIndex);
-    const newTrack = {
-      title: nextTrack.title,
-      artist: nextTrack.artist_info || 'Glee Club',
-      category: 'Radio Stream',
-      audio_url: nextTrack.audio_url
-    };
-    setCurrentTrack(newTrack);
-    
-    // The useEffect will handle loading the new audio source automatically
-  };
-
   const handleTogglePlay = () => {
-    if (!currentTrack.audio_url) {
-      toast({
-        title: "No Audio Available",
-        description: "No tracks available to play",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const newState = !isPlaying;
     setIsPlaying(newState);
     
@@ -191,11 +109,10 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       onToggle();
     }
 
-    // Audio play/pause is now handled by useEffect
     if (newState) {
       toast({
         title: "Radio Playing",
-        description: `Now playing: ${currentTrack.title}`,
+        description: "Glee World Radio Live Stream",
       });
     } else {
       toast({
@@ -211,43 +128,16 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       {/* Hidden audio element */}
       <audio
         ref={audioRef}
-        onPlay={() => {
-          setIsPlaying(true);
-          // Reset error tracking when audio plays successfully
-          setErrorCount(0);
-          setHasTriedAllTracks(false);
-        }}
+        onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
-        onEnded={() => {
-          // Auto play next track when current one ends
-          playNextTrack();
-        }}
         onError={(e) => {
-          console.error('Audio error:', e);
+          console.error('Stream error:', e);
           setIsPlaying(false);
-          
-          // Increment error count and check if we should stop trying
-          const newErrorCount = errorCount + 1;
-          setErrorCount(newErrorCount);
-          
-          if (newErrorCount >= audioTracks.length || hasTriedAllTracks) {
-            toast({
-              title: "Audio Unavailable",
-              description: "All audio tracks failed to load.",
-              variant: "destructive",
-            });
-            setHasTriedAllTracks(true);
-            return;
-          }
-
           toast({
-            title: "Playback Error",
-            description: "Switching to next track...",
+            title: "Stream Error",
+            description: "Unable to connect to radio stream",
             variant: "destructive",
           });
-          
-          // Try next track on error only if we haven't exhausted all options
-          playNextTrack();
         }}
       />
       
