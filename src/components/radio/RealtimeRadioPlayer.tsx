@@ -250,11 +250,13 @@ export const RealtimeRadioPlayer = ({ className = '' }: RealtimeRadioPlayerProps
       return;
     }
 
+    // For now, allow everyone to control the radio
+    // In production, you might want to restrict this to admins only
     try {
       const newIsPlaying = !radioState.is_playing;
       const currentPosition = audioRef.current?.currentTime || 0;
 
-      // Update radio state in database (only admins can do this for now)
+      // Update radio state in database
       const { error } = await supabase
         .from('radio_state')
         .update({
@@ -267,11 +269,30 @@ export const RealtimeRadioPlayer = ({ className = '' }: RealtimeRadioPlayerProps
 
       if (error) {
         console.error('Error updating radio state:', error);
-        toast({
-          title: "Permission Denied",
-          description: "Only admins can control the radio",
-          variant: "destructive",
-        });
+        
+        // Fallback: play locally if can't update global state
+        if (audioRef.current && radioState.current_track_id) {
+          const currentTrack = audioTracks.find(track => track.id === radioState.current_track_id);
+          if (currentTrack) {
+            audioRef.current.src = currentTrack.audio_url;
+            audioRef.current.volume = 0.7;
+            audioRef.current.load();
+            
+            if (newIsPlaying) {
+              audioRef.current.play().catch(console.error);
+              toast({
+                title: "Playing Locally",
+                description: `Now playing: ${radioState.current_track_title}`,
+              });
+            } else {
+              audioRef.current.pause();
+              toast({
+                title: "Paused Locally",
+                description: "Radio paused locally",
+              });
+            }
+          }
+        }
         return;
       }
 
