@@ -99,6 +99,90 @@ const LandingPage = () => {
       )
     },
     {
+      id: 'history',
+      content: (
+        <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-background">
+          <div className="container mx-auto">
+            <div className="text-center space-y-8 mb-16">
+              <Badge variant="outline" className="text-primary">
+                Our Historic Legacy
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-bold">
+                Over a Century of Musical Excellence
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+                Founded in 1924, the Spelman College Glee Club has been the heartbeat of musical tradition 
+                at Spelman College, carrying forward the vision of our founder Doc Johnson.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                {
+                  year: "1924",
+                  title: "Foundation",
+                  description: "The Spelman College Glee Club was founded with Doc Johnson's vision to 'amaze and inspire' through music."
+                },
+                {
+                  year: "1930s",
+                  title: "Early Recognition", 
+                  description: "Gained national recognition for preserving and performing African American spirituals and classical music."
+                },
+                {
+                  year: "1950s",
+                  title: "Cultural Ambassador",
+                  description: "Became cultural ambassadors, touring nationally and representing the excellence of Spelman College."
+                },
+                {
+                  year: "1970s",
+                  title: "Civil Rights Era",
+                  description: "Played a vital role during the Civil Rights Movement, using music as a powerful voice for change."
+                },
+                {
+                  year: "1990s",
+                  title: "International Stage",
+                  description: "Expanded to international performances, sharing African American musical heritage globally."
+                },
+                {
+                  year: "Today",
+                  title: "Digital Innovation",
+                  description: "Embracing technology while maintaining our core mission of musical excellence and cultural preservation."
+                }
+              ].map((milestone, index) => (
+                <Card key={index} className="group hover:shadow-lg transition-all duration-300">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-bold">
+                        {milestone.year}
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
+                      {milestone.title}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {milestone.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="mt-16 text-center">
+              <div className="bg-primary/10 rounded-2xl p-8 space-y-4">
+                <div className="text-primary text-2xl font-bold">
+                  "To Amaze and Inspire"
+                </div>
+                <p className="text-muted-foreground italic max-w-2xl mx-auto">
+                  This motto, established by our founder Doc Johnson, continues to guide every note we sing, 
+                  every performance we give, and every life we touch through the power of music.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )
+    },
+    {
       id: 'about',
       content: (
         <section className="py-20 px-4">
