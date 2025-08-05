@@ -12,6 +12,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Handle OAuth callback (no auth required)
+  if (req.url.includes('/callback')) {
+    return await handleOAuthCallback(req);
+  }
+
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -233,7 +238,11 @@ async function syncData(supabaseClient: any, userId: string, params: any) {
 }
 
 async function getAuthUrl(supabaseClient: any, userId: string) {
-  const redirectUri = `${Deno.env.get('SUPABASE_URL')}/auth/v1/callback`;
+  // For Google Sheets OAuth, we need to redirect back to our own domain
+  // The user will need to configure this URL in Google Cloud Console
+  const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('https://', '')?.replace('.supabase.co', '');
+  const redirectUri = `https://${baseUrl}.supabase.co/functions/v1/glee-sheets-api/callback`;
+  
   const scopes = [
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/drive.file'
@@ -249,7 +258,11 @@ async function getAuthUrl(supabaseClient: any, userId: string) {
     `state=${userId}`;
 
   return new Response(
-    JSON.stringify({ authUrl }),
+    JSON.stringify({ 
+      authUrl,
+      redirectUri: redirectUri,
+      note: "Please configure this redirect URI in your Google Cloud Console OAuth settings"
+    }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
 }
@@ -290,3 +303,86 @@ async function listSheets(supabaseClient: any, userId: string) {
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
 }
+
+async function handleOAuthCallback(req: Request) {
+  const url = new URL(req.url);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state'); // This is the user ID
+  const error = url.searchParams.get('error');
+
+  if (error) {
+    console.error('OAuth error:', error);
+    return new Response(`<html><body><h1>Authentication Error</h1><p>${error}</p><script>window.close();</script></body></html>`, {
+      headers: { 'Content-Type': 'text/html' }
+    });
+  }
+
+  if (!code || !state) {
+    return new Response('<html><body><h1>Authentication Error</h1><p>Missing authorization code or state</p><script>window.close();</script></body></html>', {
+      headers: { 'Content-Type': 'text/html' }
+    });
+  }
+
+  try {
+    // Exchange code for tokens
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: Deno.env.get('GOOGLE_CLIENT_ID')!,
+        client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
+        code: code,
+        grant_type: 'authorization_code',
+        redirect_uri: `${Deno.env.get('SUPABASE_URL')}/functions/v1/glee-sheets-api/callback`
+      })
+    });
+
+    const tokens = await tokenResponse.json();
+
+    if (tokens.error) {
+      throw new Error(tokens.error_description || tokens.error);
+    }
+
+    // Create Supabase client for server operations
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Store tokens in database
+    const { error: dbError } = await supabaseClient
+      .from('google_auth_tokens')
+      .upsert({
+        user_id: state,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+        scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.file']
+      });
+
+    if (dbError) {
+      throw new Error(`Database error: ${dbError.message}`);
+    }
+
+    return new Response(`
+      <html>
+        <body>
+          <h1>Authentication Successful!</h1>
+          <p>Google Sheets integration is now enabled. You can close this window.</p>
+          <script>
+            setTimeout(() => {
+              window.close();
+            }, 2000);
+          </script>
+        </body>
+      </html>
+    `, {
+      headers: { 'Content-Type': 'text/html' }
+    });
+
+  } catch (error) {
+    console.error('Token exchange error:', error);
+    return new Response(`<html><body><h1>Authentication Error</h1><p>${error.message}</p><script>window.close();</script></body></html>`, {
+      headers: { 'Content-Type': 'text/html' }
+    });
+  }
