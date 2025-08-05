@@ -38,7 +38,6 @@ import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { TermManagerModule } from '@/components/modules/TermManagerModule';
 import { TourManagerModule } from '@/components/modules/TourManagerModule';
 import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
-import { SetupCrewManagerModule } from '@/components/modules/SetupCrewManagerModule';
 import { ModuleCategory } from '@/types/modules';
 
 export const moduleCategories: ModuleCategory[] = [
@@ -161,42 +160,6 @@ export const moduleCategories: ModuleCategory[] = [
     ]
   },
   {
-    id: "wardrobe",
-    title: "Wardrobe",
-    icon: Shirt,
-    color: "purple",
-    description: "Costume management, fitting schedules, and inventory",
-    modules: [
-      {
-        id: "wardrobe-management",
-        title: "Wardrobe Management",
-        description: "Manage costumes, fittings, inventory, and garment distribution",
-        icon: Shirt,
-        iconColor: "purple",
-        category: "wardrobe",
-        component: WardrobeModule,
-      },
-      {
-        id: "student-intake",
-        title: "Student Intake",
-        description: "Process new student registrations and onboarding",
-        icon: UserPlus,
-        iconColor: "orange",
-        category: "wardrobe",
-        component: StudentIntakeModule,
-      },
-      {
-        id: "term-management",
-        title: "Term Management",
-        description: "Manage academic terms, schedules, and term-based planning",
-        icon: BookOpen,
-        iconColor: "indigo",
-        category: "wardrobe",
-        component: TermManagerModule,
-      }
-    ]
-  },
-  {
     id: "member-management",
     title: "Member Management",
     icon: Users,
@@ -211,6 +174,24 @@ export const moduleCategories: ModuleCategory[] = [
         iconColor: "blue",
         category: "member-management",
         component: UserManagementModule,
+      },
+      {
+        id: "executive-board-management",
+        title: "Executive Board Management",
+        description: "Manage executive board positions, assignments, and responsibilities",
+        icon: Users,
+        iconColor: "indigo",
+        category: "member-management",
+        component: UserManagementModule, // TODO: Replace with actual ExecBoardModule
+      },
+      {
+        id: "executive-functions",
+        title: "Executive Functions",
+        description: "Role-specific executive board functions and responsibilities",
+        icon: Shield,
+        iconColor: "purple",
+        category: "member-management",
+        component: UserManagementModule, // TODO: Replace with actual ExecFunctionsModule
       },
       {
         id: "auditions",
@@ -229,15 +210,6 @@ export const moduleCategories: ModuleCategory[] = [
         iconColor: "red",
         category: "member-management",
         component: PermissionsModule,
-      },
-      {
-        id: "setup-crew-manager",
-        title: "Setup Crew Manager",
-        description: "Manage auditions as they become members, coordinate crews, equipment, and first-year communications",
-        icon: Settings,
-        iconColor: "orange",
-        category: "member-management",
-        component: SetupCrewManagerModule,
       }
     ]
   },

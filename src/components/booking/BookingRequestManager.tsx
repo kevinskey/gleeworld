@@ -69,7 +69,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
 
       if (error) throw error;
       
-      setRequests(data || []);
+      setRequests((data || []) as BookingRequest[]);
     } catch (error) {
       console.error('Error loading booking requests:', error);
       
