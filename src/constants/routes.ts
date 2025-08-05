@@ -27,7 +27,8 @@ export const ROUTES = {
   TOUR_PLANNER: '/tour-planner',
   APPOINTMENTS: '/appointments',
   PR_HUB: '/dashboard/pr-hub',
-  SIGHT_READING_SUBMISSION: '/sight-reading-submission'
+  SIGHT_READING_SUBMISSION: '/sight-reading-submission',
+  SIGHT_READING_PREVIEW: '/sight-reading-preview'
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -47,7 +48,8 @@ export const PROTECTED_ROUTES = [
   ROUTES.TOUR_PLANNER,
   ROUTES.APPOINTMENTS,
   ROUTES.PR_HUB,
-  ROUTES.SIGHT_READING_SUBMISSION
+  ROUTES.SIGHT_READING_SUBMISSION,
+  ROUTES.SIGHT_READING_PREVIEW
 ] as const;
 
 export const PUBLIC_ROUTES = [

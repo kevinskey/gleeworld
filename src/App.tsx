@@ -99,6 +99,7 @@ import { ShoutcastManagement } from "./pages/admin/ShoutcastManagement";
 import { ReceiptsPage } from "./pages/ReceiptsPage";
 import ApprovalSystemPage from "./pages/ApprovalSystemPage";
 import SightReadingSubmission from "./pages/SightReadingSubmission";
+import SightReadingPreview from "./pages/SightReadingPreview";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -755,14 +756,22 @@ const App = () => {
                                       </ProtectedRoute>
                                     } 
                                   />
-                                  <Route 
-                                    path="/sight-reading-submission" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <SightReadingSubmission />
-                                      </ProtectedRoute>
-                                    } 
-                                  />
+                                   <Route 
+                                     path="/sight-reading-submission" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <SightReadingSubmission />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                                   <Route 
+                                     path="/sight-reading-preview" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <SightReadingPreview />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
                     </Routes>
                    <GlobalMusicPlayer />
                 </div>
