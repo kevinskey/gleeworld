@@ -216,7 +216,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           <IconComponent className={`h-4 w-4 ${isMobile ? 'sm:h-5 sm:w-5' : 'md:h-5 md:w-5'} text-${category.color}-600`} />
           <span className={`font-medium ${isMobile ? 'text-sm sm:text-base' : 'text-base'}`}>{category.title}</span>
         </div>
-        <p className={`text-muted-foreground mt-1 sm:mt-2 ${isMobile ? 'text-xs sm:text-sm' : 'text-sm'}`}>
+        <p className={`text-muted-foreground mt-1 sm:mt-2 ${isMobile ? 'text-xs' : 'text-xs'}`}>
           {category.description}
         </p>
       </div>
@@ -229,7 +229,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       return (
         <div className="space-y-4">
           {/* Breadcrumb-style header showing navigation */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
             <span 
               className="cursor-pointer hover:text-foreground"
               onClick={() => setSelectedSubcategory(null)}
@@ -259,7 +259,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               <currentCategory.icon className={`h-5 w-5 text-${currentCategory.color}-600`} />
               {currentCategory.title}
             </h2>
-            <p className="text-muted-foreground">{currentCategory.description}</p>
+            <p className="text-xs text-muted-foreground">{currentCategory.description}</p>
           </div>
           
           <div className="grid gap-3 md:grid-cols-2">
@@ -278,7 +278,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                       <Badge variant="secondary" className="text-xs">New</Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Manage {subcategory.title.toLowerCase()}
                   </p>
                 </div>
@@ -299,7 +299,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <CategoryIcon className={`h-5 w-5 text-${currentCategory?.color}-600`} />
             {currentCategory?.title}
           </h2>
-          <p className="text-muted-foreground">{currentCategory?.description}</p>
+          <p className="text-xs text-muted-foreground">{currentCategory?.description}</p>
         </div>
         
         {(() => {
@@ -337,7 +337,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               <CardTitle className="capitalize">{subcategory.replace('-', ' ')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
+               <p className="text-xs text-muted-foreground">
                 This {subcategory.replace('-', ' ')} module is coming soon.
               </p>
             </CardContent>
@@ -358,7 +358,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <h3 className="font-semibold">Active Features</h3>
-            <ul className="space-y-1 text-sm text-muted-foreground">
+             <ul className="space-y-1 text-xs text-muted-foreground">
               <li>• Email Management System</li>
               <li>• Push Notifications</li>
               <li>• Internal Messaging</li>
@@ -401,7 +401,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <h3 className="font-semibold">Member Tools</h3>
-            <ul className="space-y-1 text-sm text-muted-foreground">
+             <ul className="space-y-1 text-xs text-muted-foreground">
               <li>• User Registration & Profiles</li>
               <li>• Executive Board Management</li>
               <li>• Audition Scheduling</li>
@@ -430,7 +430,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-muted-foreground">Library management tools are coming soon.</p>
+        <p className="text-xs text-muted-foreground">Library management tools are coming soon.</p>
       </CardContent>
     </Card>
   );
@@ -447,7 +447,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <h3 className="font-semibold">Financial Tools</h3>
-            <ul className="space-y-1 text-sm text-muted-foreground">
+            <ul className="space-y-1 text-xs text-muted-foreground">
               <li>• Contract Management</li>
               <li>• Budget Planning with AI</li>
               <li>• Dues Collection System</li>
@@ -494,7 +494,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             Admin Dashboard
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground px-4">
+          <p className="text-xs text-muted-foreground px-4">
             Manage the Spelman College Glee Club platform
           </p>
         </div>
