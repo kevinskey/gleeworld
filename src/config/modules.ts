@@ -332,15 +332,6 @@ export const moduleCategories: ModuleCategory[] = [
         component: DuesCollectionModule,
       },
       {
-        id: "student-payments",
-        title: "Student Payments",
-        description: "Process student payments and fees",
-        icon: Wallet,
-        iconColor: "cyan",
-        category: "finances",
-        component: UserManagementModule, // Placeholder - replace with actual component
-      },
-      {
         id: "receipts-records",
         title: "Receipts & Records",
         description: "Manage receipts and financial records",
