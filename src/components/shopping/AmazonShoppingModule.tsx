@@ -141,71 +141,95 @@ export const AmazonShoppingModule = () => {
   } : null;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Package className="w-6 h-6 text-primary" />
-            Amazon Shopping Assistant
-          </h1>
-          <p className="text-muted-foreground">AI-powered Amazon product search and planning</p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      {/* Enhanced Header */}
+      <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="p-4 bg-white/10 rounded-full backdrop-blur-sm">
+                <Package className="w-12 h-12" />
+              </div>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+              Amazon Shopping Assistant
+            </h1>
+            <p className="text-xl text-primary-foreground/90 max-w-2xl mx-auto">
+              AI-powered product discovery and smart shopping planning for your Amazon purchases
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 pt-4">
+              <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
+                <Brain className="w-4 h-4" />
+                <span className="text-sm font-medium">AI-Powered</span>
+              </div>
+              <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
+                <DollarSign className="w-4 h-4" />
+                <span className="text-sm font-medium">Budget Tracking</span>
+              </div>
+              <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
+                <Star className="w-4 h-4" />
+                <span className="text-sm font-medium">Best Deals</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <ShoppingCart className="w-5 h-5 text-blue-600" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100/50 hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-500 rounded-xl shadow-md">
+                <ShoppingCart className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Plans</p>
-                <p className="text-xl font-bold">{plans.length}</p>
+                <p className="text-sm font-medium text-blue-700">Total Plans</p>
+                <p className="text-2xl font-bold text-blue-900">{plans.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="w-5 h-5 text-green-600" />
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100/50 hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-500 rounded-xl shadow-md">
+                <DollarSign className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Avg. Savings</p>
-                <p className="text-xl font-bold">15%</p>
+                <p className="text-sm font-medium text-green-700">Avg. Savings</p>
+                <p className="text-2xl font-bold text-green-900">15%</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Brain className="w-5 h-5 text-purple-600" />
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100/50 hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-500 rounded-xl shadow-md">
+                <Brain className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">AI Searches</p>
-                <p className="text-xl font-bold">{results ? '1' : '0'}</p>
+                <p className="text-sm font-medium text-purple-700">AI Searches</p>
+                <p className="text-2xl font-bold text-purple-900">{results ? '1' : '0'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Star className="w-5 h-5 text-orange-600" />
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100/50 hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-orange-500 rounded-xl shadow-md">
+                <Star className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Top Rated</p>
-                <p className="text-xl font-bold">4.5★</p>
+                <p className="text-sm font-medium text-orange-700">Top Rated</p>
+                <p className="text-2xl font-bold text-orange-900">4.5★</p>
               </div>
             </div>
           </CardContent>
@@ -477,6 +501,7 @@ Laptop stand`}
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 };
