@@ -22,7 +22,8 @@ import {
   MapPin,
   Package,
   Star,
-  ExternalLink
+  ExternalLink,
+  RefreshCw
 } from "lucide-react";
 
 interface ShoppingItem {
@@ -100,6 +101,20 @@ export const AmazonShoppingModule = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearAll = () => {
+    setResults(null);
+    setPlanTitle("");
+    setBudget("");
+    setItemsList("");
+    setCurrentPlan(null);
+    setActiveTab("search");
+    
+    toast({
+      title: "Session Cleared",
+      description: "All unsaved information has been cleared. You can start fresh!"
+    });
   };
 
   const savePlan = () => {
@@ -237,12 +252,28 @@ export const AmazonShoppingModule = () => {
       </div>
 
       {/* Main Content Tabs */}
+      <div className="flex items-center justify-between mb-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+          <TabsList className="grid w-full grid-cols-3 max-w-md">
+            <TabsTrigger value="search">Amazon Search</TabsTrigger>
+            <TabsTrigger value="results">Search Results</TabsTrigger>
+            <TabsTrigger value="saved">Saved Plans</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        
+        {(results || itemsList || budget || planTitle) && (
+          <Button
+            onClick={clearAll}
+            variant="outline"
+            className="ml-4 hover-scale animate-fade-in"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Clear All
+          </Button>
+        )}
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="search">Amazon Search</TabsTrigger>
-          <TabsTrigger value="results">Search Results</TabsTrigger>
-          <TabsTrigger value="saved">Saved Plans</TabsTrigger>
-        </TabsList>
 
         {/* Amazon Search Tab */}
         <TabsContent value="search" className="space-y-4">
