@@ -22,33 +22,29 @@ export const GoogleAuth = ({
   const initiateGoogleAuth = async () => {
     try {
       setIsAuthenticating(true);
-      console.log('Initiating Google auth with function:', edgeFunctionName);
       
-      const { data, error } = await supabase.functions.invoke(edgeFunctionName, {
-        body: { action: 'get_auth_url' }
+      // Use Supabase's built-in Google OAuth with the specific scopes we need
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          scopes: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file',
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          },
+          redirectTo: `${window.location.origin}/admin`
+        }
       });
 
-      console.log('Function response:', { data, error });
-
       if (error) {
-        console.error('Function invocation error:', error);
         throw error;
       }
+
+      toast({
+        title: "Authentication Started",
+        description: "Redirecting to Google for authentication...",
+      });
       
-      if (data?.authUrl) {
-        console.log('Opening auth URL:', data.authUrl);
-        setAuthUrl(data.authUrl);
-        // Open in new window/tab for OAuth flow
-        window.open(data.authUrl, '_blank', 'width=500,height=600');
-        
-        toast({
-          title: "Authentication Started",
-          description: "Please complete the Google authentication in the new window.",
-        });
-      } else {
-        console.error('No auth URL received:', data);
-        throw new Error('No authentication URL received from server');
-      }
     } catch (error) {
       console.error('Error initiating Google auth:', error);
       toast({
@@ -63,22 +59,19 @@ export const GoogleAuth = ({
 
   const checkAuthStatus = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke(edgeFunctionName, {
-        body: { action: 'check_auth' }
-      });
-
-      if (error) throw error;
-
-      if (data && data.hasAuth) {
+      // Check if user is authenticated and has Google provider
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user && user.app_metadata.providers?.includes('google')) {
         toast({
-          title: "Authentication Successful",
-          description: data.message || `Google ${serviceType === 'sheets' ? 'Sheets' : 'Docs'} integration is ready.`,
+          title: "Authentication Successful", 
+          description: `Google ${serviceType === 'sheets' ? 'Sheets' : 'Docs'} integration is ready.`,
         });
         onAuthSuccess?.();
       } else {
         toast({
           title: "Authentication Required",
-          description: data?.message || "Please complete the Google authentication process.",
+          description: "Please complete the Google authentication process.",
           variant: "destructive"
         });
       }
