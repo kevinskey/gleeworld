@@ -11626,6 +11626,10 @@ export type Database = {
         Args: { user_id: string; new_role: string }
         Returns: boolean
       }
+      user_can_access_contract: {
+        Args: { contract_id_param: string }
+        Returns: boolean
+      }
       user_can_access_sheet_music: {
         Args: { sheet_music_id_param: string; user_id_param: string }
         Returns: boolean
