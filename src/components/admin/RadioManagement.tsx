@@ -26,7 +26,8 @@ import {
   BarChart3,
   Search,
   Filter,
-  ArrowUpDown
+  ArrowUpDown,
+  X
 } from 'lucide-react';
 import { RadioTimeline } from '../radio/RadioTimeline';
 import { MediaUploadButton } from '@/components/media/MediaUploadButton';
@@ -494,8 +495,18 @@ export const RadioManagement = () => {
                       placeholder="Search tracks or artists..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-muted/50 border-border/50"
+                      className="pl-10 pr-10 bg-muted/50 border-border/50"
                     />
+                    {searchQuery && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-1 top-1 h-8 w-8 p-0 hover:bg-muted"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
                 
