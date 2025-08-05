@@ -238,6 +238,18 @@ async function syncData(supabaseClient: any, userId: string, params: any) {
 }
 
 async function getAuthUrl(supabaseClient: any, userId: string) {
+  const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
+  
+  if (!googleClientId) {
+    return new Response(
+      JSON.stringify({ 
+        error: 'Google Client ID not configured',
+        note: 'Please configure GOOGLE_CLIENT_ID in Supabase secrets'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+    );
+  }
+
   // Use the direct Supabase URL for the redirect
   const redirectUri = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/glee-sheets-api/callback`;
   
@@ -247,7 +259,7 @@ async function getAuthUrl(supabaseClient: any, userId: string) {
   ].join(' ');
 
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-    `client_id=${Deno.env.get('GOOGLE_CLIENT_ID')}&` +
+    `client_id=${googleClientId}&` +
     `redirect_uri=${encodeURIComponent(redirectUri)}&` +
     `scope=${encodeURIComponent(scopes)}&` +
     `response_type=code&` +
@@ -257,6 +269,7 @@ async function getAuthUrl(supabaseClient: any, userId: string) {
 
   console.log('Generated OAuth URL:', authUrl);
   console.log('Redirect URI:', redirectUri);
+  console.log('Google Client ID present:', !!googleClientId);
 
   return new Response(
     JSON.stringify({ 
