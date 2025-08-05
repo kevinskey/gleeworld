@@ -34,8 +34,36 @@ export const DuesManagement = () => {
   useEffect(() => {
     if (user) {
       fetchAllData();
+    } else {
+      setLoading(false);
     }
   }, [user]);
+
+  // If user is not authenticated, show sign-in prompt
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center">Authentication Required</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-center text-muted-foreground">
+              You need to be signed in to access the dues management system.
+            </p>
+            <div className="flex flex-col gap-2">
+              <Button onClick={() => navigate('/auth')} className="w-full">
+                Sign In
+              </Button>
+              <Button onClick={() => navigate('/')} variant="outline" className="w-full">
+                Go Home
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const fetchAllData = async () => {
     setLoading(true);
