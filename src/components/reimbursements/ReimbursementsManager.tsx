@@ -19,7 +19,8 @@ import {
   FileText,
   Eye,
   Calendar,
-  User
+  User,
+  Trash2
 } from "lucide-react";
 
 interface ReimbursementRequest {
@@ -155,6 +156,31 @@ export const ReimbursementsManager = () => {
   const handlePayment = (request: ReimbursementRequest) => {
     setSelectedRequest(request);
     setPaymentDialogOpen(true);
+  };
+
+  const handleDelete = async (request: ReimbursementRequest) => {
+    try {
+      const { error } = await supabase
+        .from('gw_reimbursement_requests')
+        .delete()
+        .eq('id', request.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Reimbursement request deleted successfully"
+      });
+
+      fetchRequests();
+    } catch (error) {
+      console.error('Error deleting reimbursement request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete reimbursement request",
+        variant: "destructive"
+      });
+    }
   };
 
   const filterRequests = (status: string) => {
@@ -343,6 +369,16 @@ export const ReimbursementsManager = () => {
                                 >
                                   <CreditCard className="w-4 h-4 mr-1" />
                                   Pay
+                                </Button>
+                              )}
+                              
+                              {(userRole.isAdmin || userRole.isSuperAdmin) && (
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm"
+                                  onClick={() => handleDelete(request)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
                                 </Button>
                               )}
                             </div>
