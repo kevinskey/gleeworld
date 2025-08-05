@@ -569,32 +569,32 @@ export const RadioManagement = () => {
                           </div>
                           <div className="flex gap-2 ml-4">
                             <Button 
-                              size="sm" 
+                              size="lg" 
                               variant="ghost"
                               onClick={() => handlePlayTrack(track)}
                               className={currentlyPlaying === track.id ? "bg-primary/10 text-primary" : ""}
                             >
                               {currentlyPlaying === track.id ? (
-                                <Pause className="h-4 w-4" />
+                                <Pause className="h-8 w-8" />
                               ) : (
-                                <Play className="h-4 w-4" />
+                                <Play className="h-8 w-8" />
                               )}
                             </Button>
                             <Button 
-                              size="sm" 
+                              size="lg" 
                               variant="ghost"
                               onClick={() => handleEditTrack(track)}
                               className="hover:bg-muted/50"
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-6 w-6" />
                             </Button>
                             <Button 
-                              size="sm" 
+                              size="lg" 
                               variant="ghost"
                               onClick={() => handleDeleteTrack(track.id)}
                               className="hover:bg-destructive/10 hover:text-destructive"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-6 w-6" />
                             </Button>
                           </div>
                         </div>
