@@ -45,6 +45,12 @@ export const SightReadingUploader = () => {
         throw new Error(`Edge Function Error: ${error.message}`);
       }
 
+      // Check if the response contains an error from the droplet server
+      if (data && data.error) {
+        console.error('Droplet server error:', data);
+        throw new Error(`${data.error}: ${data.serverResponse || data.statusText || 'Unknown server error'}`);
+      }
+
       setResults(data);
     } catch (err) {
       console.error('Upload error:', err);

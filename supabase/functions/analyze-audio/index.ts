@@ -72,16 +72,19 @@ serve(async (req) => {
         errorDetails = errorText
       } catch (e) {
         console.log('Could not read error response body')
+        errorDetails = `HTTP ${response.status}: ${response.statusText}`
       }
 
+      // Return the actual error details to the frontend
       return new Response(
         JSON.stringify({ 
-          error: `Analysis server error (${response.status})`,
-          details: errorDetails,
-          status: response.status
+          error: `Droplet server error (${response.status})`,
+          serverResponse: errorDetails,
+          status: response.status,
+          statusText: response.statusText
         }),
         { 
-          status: 400, // Return 400 instead of proxying the server's error status
+          status: 200, // Return 200 so the frontend can see the error details
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
