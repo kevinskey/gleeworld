@@ -22,27 +22,53 @@ export const GoogleAuth = ({
   const initiateGoogleAuth = async () => {
     try {
       setIsAuthenticating(true);
-      console.log('Starting basic Google OAuth...');
       
-      // Simple Google OAuth without custom scopes
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`
+      if (serviceType === 'sheets' && edgeFunctionName === 'glee-sheets-api') {
+        // For Google Sheets, use the edge function to get auth URL
+        const { data, error } = await supabase.functions.invoke('glee-sheets-api', {
+          body: { action: 'get_auth_url' }
+        });
+
+        if (error) throw error;
+
+        if (data.error) {
+          if (data.error.includes('Google Client ID not configured')) {
+            toast({
+              title: "Configuration Required",
+              description: "Google API credentials need to be configured. Please check Supabase secrets.",
+              variant: "destructive"
+            });
+            return;
+          }
+          throw new Error(data.error);
         }
-      });
 
-      console.log('OAuth response:', { data, error });
+        setAuthUrl(data.authUrl);
+        window.open(data.authUrl, 'google-auth', 'width=500,height=600');
+        
+        toast({
+          title: "Authentication Started",
+          description: "Complete authentication in the popup window.",
+        });
+      } else {
+        // Simple Google OAuth for other services
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/dashboard`
+          }
+        });
 
-      if (error) {
-        console.error('OAuth error:', error);
-        throw error;
+        if (error) {
+          console.error('OAuth error:', error);
+          throw error;
+        }
+
+        toast({
+          title: "Authentication Started",
+          description: "Redirecting to Google...",
+        });
       }
-
-      toast({
-        title: "Authentication Started",
-        description: "Redirecting to Google...",
-      });
       
     } catch (error) {
       console.error('Error initiating Google auth:', error);
