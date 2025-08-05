@@ -29,6 +29,9 @@ import {
   ArrowUpDown
 } from 'lucide-react';
 import { RadioTimeline } from '../radio/RadioTimeline';
+import { MediaUploadButton } from '@/components/media/MediaUploadButton';
+import { BulkUploadDialog } from '@/components/radio/BulkUploadDialog';
+import { MediaLibraryDialog } from '@/components/radio/MediaLibraryDialog';
 
 interface AudioTrack {
   id: string;
@@ -67,6 +70,7 @@ export const RadioManagement = () => {
   });
   const [selectedTrack, setSelectedTrack] = useState<AudioTrack | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const { toast } = useToast();
 
   // Form states for editing/adding tracks
@@ -462,11 +466,19 @@ export const RadioManagement = () => {
                 Audio Track Library
               </CardTitle>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Track
-                </Button>
-                <Button size="sm">
+                <BulkUploadDialog 
+                  onUploadComplete={() => {
+                    fetchTracks();
+                    toast({
+                      title: "Upload Complete",
+                      description: "New tracks have been uploaded to the library",
+                    });
+                  }}
+                />
+                <Button 
+                  size="sm"
+                  onClick={() => setShowMediaLibrary(true)}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Track
                 </Button>
@@ -735,6 +747,21 @@ export const RadioManagement = () => {
           </Card>
         </div>
       )}
+
+      {/* Media Library Dialog */}
+      <MediaLibraryDialog
+        open={showMediaLibrary}
+        onOpenChange={setShowMediaLibrary}
+        onAddToPlaylist={(track) => {
+          console.log('Track added from library:', track);
+          toast({
+            title: "Track Added",
+            description: `"${track.title}" added to radio library`,
+          });
+          fetchTracks();
+          setShowMediaLibrary(false);
+        }}
+      />
     </div>
   );
 };
