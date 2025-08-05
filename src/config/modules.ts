@@ -1,3 +1,4 @@
+import { ReceiptsModule } from "@/components/receipts/ReceiptsModule";
 import { ReimbursementsManager } from "@/components/reimbursements/ReimbursementsManager";
 import { AIFinancialPlanningModule } from "@/components/financial/AIFinancialPlanningModule";
 import {
@@ -335,11 +336,11 @@ export const moduleCategories: ModuleCategory[] = [
       {
         id: "receipts-records",
         title: "Receipts & Records",
-        description: "Manage receipts and financial records",
+        description: "Upload and manage receipts and financial records",
         icon: Receipt,
         iconColor: "indigo",
         category: "finances",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: ReceiptsModule,
       },
       {
         id: "ai-financial",

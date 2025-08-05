@@ -95,6 +95,7 @@ import MemberDirectory from "./pages/MemberDirectory";
 import { AmazonShoppingModule } from "./components/shopping/AmazonShoppingModule";
 import { RadioStationPage } from "./components/radio/RadioStationPage";
 import { AuditionsManagement } from "./components/admin/AuditionsManagement";
+import { ReceiptsPage } from "./pages/ReceiptsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -693,7 +694,15 @@ const App = () => {
                                       <RadioStationPage />
                                     </ProtectedRoute>
                                   } 
-                                />
+                                 />
+                                 <Route 
+                                   path="/receipts" 
+                                   element={
+                                     <ProtectedRoute>
+                                       <ReceiptsPage />
+                                     </ProtectedRoute>
+                                   } 
+                                 />
                     <Route 
                       path="/" 
                       element={
