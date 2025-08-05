@@ -1,4 +1,5 @@
 import { ReimbursementsManager } from "@/components/reimbursements/ReimbursementsManager";
+import { AIFinancialPlanningModule } from "@/components/financial/AIFinancialPlanningModule";
 import {
   Users, 
   Shirt, 
@@ -355,7 +356,7 @@ export const moduleCategories: ModuleCategory[] = [
         icon: Brain,
         iconColor: "pink",
         category: "finances",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: AIFinancialPlanningModule,
       },
       {
         id: "approval-system",
