@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ContractViewerContent } from "./ContractViewerContent";
+import { ResponsiveContractViewerContent } from "./ResponsiveContractViewerContent";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -133,25 +133,27 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-2 md:p-6">
+        <DialogHeader className="px-4 md:px-0">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl">{enhancedContract.title}</DialogTitle>
+            <DialogTitle className="text-lg md:text-xl">{enhancedContract.title}</DialogTitle>
             <Badge className={getStatusColor(enhancedContract.status)}>
               {getStatusText(enhancedContract.status)}
             </Badge>
           </div>
-          <DialogDescription>
+          <DialogDescription className="text-sm md:text-base">
             Created: {new Date(enhancedContract.created_at).toLocaleDateString()}
             {enhancedContract.updated_at && enhancedContract.updated_at !== enhancedContract.created_at && (
-              <span className="ml-4">
+              <span className="ml-2 md:ml-4">
                 • Updated: {new Date(enhancedContract.updated_at).toLocaleDateString()}
               </span>
             )}
           </DialogDescription>
         </DialogHeader>
         
-        <ContractViewerContent contract={enhancedContract} />
+        <div className="mt-4">
+          <ResponsiveContractViewerContent contract={enhancedContract} />
+        </div>
       </DialogContent>
     </Dialog>
   );
