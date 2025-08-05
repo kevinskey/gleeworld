@@ -193,14 +193,11 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     loadScheduledTracks(selectedDate);
   }, [selectedDate]);
 
-  // Generate time slots for 24 hours (every 30 minutes)
-  const generateTimeSlots = () => {
+  // Generate sequential track slots instead of time slots
+  const generateTrackSlots = () => {
     const slots = [];
-    for (let hour = 0; hour < 24; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push(timeString);
-      }
+    for (let i = 1; i <= 24; i++) {
+      slots.push(`Track ${i.toString().padStart(2, '0')}`);
     }
     return slots;
   };
@@ -375,7 +372,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
     };
   }, []);
 
-  const timeSlots = generateTimeSlots();
+  const trackSlots = generateTrackSlots();
 
   const handleDrop = async (e: React.DragEvent, timeSlot: string) => {
     e.preventDefault();
@@ -625,24 +622,24 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
           ) : (
             <ScrollArea className="h-[500px]">
             <div className="space-y-2">
-              {timeSlots.map((timeSlot) => {
-                const scheduledTrack = getScheduledTrack(timeSlot);
+              {trackSlots.map((trackSlot) => {
+                const scheduledTrack = getScheduledTrack(trackSlot);
                 
                 return (
                   <div
-                    key={timeSlot}
+                    key={trackSlot}
                     className={`flex items-center gap-4 p-3 border-2 border-dashed rounded-lg transition-all duration-200 ${
                       scheduledTrack 
                         ? 'bg-primary/5 border-primary/30' 
                         : 'border-border/50 hover:bg-muted/30 hover:border-primary/20'
                     }`}
-                    onDrop={(e) => handleDrop(e, timeSlot)}
+                    onDrop={(e) => handleDrop(e, trackSlot)}
                     onDragOver={handleDragOver}
                   >
-                    {/* Time Label */}
-                    <div className="w-16 flex-shrink-0">
-                      <Badge variant="outline" className="font-mono">
-                        {timeSlot}
+                    {/* Track Label */}
+                    <div className="w-20 flex-shrink-0">
+                      <Badge variant="outline" className="font-mono text-xs">
+                        {trackSlot}
                       </Badge>
                     </div>
 
@@ -684,7 +681,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
                             <Button 
                               size="sm" 
                               variant="ghost"
-                              onClick={() => removeScheduledTrack(timeSlot)}
+                              onClick={() => removeScheduledTrack(trackSlot)}
                               className="hover:bg-destructive/10 hover:text-destructive"
                             >
                               <Trash2 className="h-3 w-3" />
@@ -693,7 +690,7 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
                         </div>
                       ) : (
                         <div className="p-8 text-center text-muted-foreground text-sm border-2 border-dashed border-border/30 rounded-md transition-colors hover:border-primary/40">
-                          Drop MP3 track here to schedule for {timeSlot}
+                          Drop MP3 track here to schedule for {trackSlot}
                         </div>
                       )}
                     </div>
