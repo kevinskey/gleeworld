@@ -28,7 +28,7 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
   const [isPlaying, setIsPlaying] = useState(externalIsPlaying || false);
   const [currentTrack, setCurrentTrack] = useState<CurrentTrack>({
     title: 'Glee World Radio',
-    artist: 'Loading...',
+    artist: 'Loading tracks...',
     category: 'Live Radio'
   });
   const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
