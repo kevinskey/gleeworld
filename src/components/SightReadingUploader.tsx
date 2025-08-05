@@ -76,7 +76,7 @@ export const SightReadingUploader = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileAudio className="h-5 w-5" />
-            Sight Reading Audio Submission
+            Sight Reading Audio Submission with Pitch Matching
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -103,17 +103,24 @@ export const SightReadingUploader = () => {
             </div>
           )}
 
+          <div className="p-3 bg-muted/30 rounded-md">
+            <h4 className="text-sm font-medium mb-2">Reference Melody:</h4>
+            <pre className="text-xs text-muted-foreground">
+              {JSON.stringify(referenceMelody, null, 2)}
+            </pre>
+          </div>
+
           <Button
             onClick={handleSubmit}
             disabled={!selectedFile || isLoading}
             className="w-full"
           >
             {isLoading ? (
-              <LoadingSpinner size="sm" text="Analyzing..." />
+              <LoadingSpinner size="sm" text="Analyzing Pitch Matching..." />
             ) : (
               <>
                 <Upload className="h-4 w-4 mr-2" />
-                Submit for Analysis
+                Submit for Pitch Analysis
               </>
             )}
           </Button>
@@ -133,10 +140,10 @@ export const SightReadingUploader = () => {
       {results && (
         <Card>
           <CardHeader>
-            <CardTitle>Analysis Results</CardTitle>
+            <CardTitle>Pitch Matching Results</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="bg-muted p-4 rounded-md text-sm overflow-auto max-h-96">
+            <pre className="bg-muted p-4 rounded-md text-sm overflow-auto max-h-96 whitespace-pre-wrap">
               {JSON.stringify(results, null, 2)}
             </pre>
           </CardContent>
