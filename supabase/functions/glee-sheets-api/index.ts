@@ -400,3 +400,4 @@ async function handleOAuthCallback(req: Request) {
       headers: { 'Content-Type': 'text/html' }
     });
   }
+}
