@@ -28,6 +28,8 @@ export const SightReadingUploader = () => {
     setError(null);
 
     try {
+      console.log('Uploading file:', selectedFile.name, selectedFile.type, selectedFile.size);
+      
       const formData = new FormData();
       formData.append('audio', selectedFile);
 
@@ -36,13 +38,18 @@ export const SightReadingUploader = () => {
         body: formData,
       });
 
+      console.log('Edge function response:', { data, error });
+
       if (error) {
-        throw new Error(error.message);
+        console.error('Edge function error:', error);
+        throw new Error(`Edge Function Error: ${error.message}`);
       }
 
       setResults(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Upload error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(`Upload failed: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
