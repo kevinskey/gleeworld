@@ -35,100 +35,247 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     'C4-G4', 'C4-C5', 'G3-G4', 'F4-F5', 'E4-E5'
   ];
 
-  // Simple SVG music notation renderer
+  // Professional SVG music notation renderer
   const renderMusicNotation = (melody: Note[]) => {
     if (melody.length === 0) return null;
     
-    const svgWidth = 800;
-    const svgHeight = 200;
-    const noteSpacing = 80;
-    const startX = 60;
-    const startY = 100;
+    const svgWidth = 900;
+    const svgHeight = 280;
+    const staffSpacing = 12;
+    const noteSpacing = 90;
+    const startX = 100;
+    const staffStartY = 80;
+    const barLineSpacing = 360; // Space for 4 measures per line
     
-    // Staff lines
-    const staffLines = [];
-    for (let i = 0; i < 5; i++) {
-      staffLines.push(
-        <line
-          key={`staff-${i}`}
-          x1={20}
-          y1={startY + i * 10}
-          x2={svgWidth - 20}
-          y2={startY + i * 10}
-          stroke="#000"
-          strokeWidth={1}
-        />
-      );
-    }
+    const elements = [];
     
-    // Clef (simplified treble clef symbol)
-    const trebleClef = (
-      <text
-        key="clef"
-        x={30}
-        y={startY + 20}
-        fontSize="24"
-        fontFamily="serif"
-        fill="#000"
-      >
-        𝄞
-      </text>
-    );
-    
-    // Note positions mapping
-    const notePositions: { [key: string]: number } = {
-      'G5': startY - 20, 'F5': startY - 15, 'E5': startY - 10, 'D5': startY - 5, 'C5': startY,
-      'B4': startY + 5, 'A4': startY + 10, 'G4': startY + 15, 'F4': startY + 20, 'E4': startY + 25,
-      'D4': startY + 30, 'C4': startY + 35, 'B3': startY + 40, 'A3': startY + 45, 'G3': startY + 50
-    };
-    
-    // Render notes
-    const notes = melody.slice(0, 16).map((note, index) => {
-      const x = startX + (index % 8) * noteSpacing;
-      const y = notePositions[note.note] || startY + 15;
-      const bar = Math.floor(index / 4);
-      const barX = x + (bar * 20); // Add spacing between bars
+    // Create two staff systems (8 bars total, 4 per line)
+    for (let system = 0; system < 2; system++) {
+      const staffY = staffStartY + (system * 120);
       
-      return (
-        <g key={`note-${index}`}>
-          {/* Note head */}
-          <ellipse
-            cx={barX}
-            cy={y}
-            rx={6}
-            ry={4}
-            fill="#000"
-            transform={`rotate(-20 ${barX} ${y})`}
-          />
-          {/* Stem */}
+      // Staff lines for this system
+      for (let i = 0; i < 5; i++) {
+        elements.push(
           <line
-            x1={barX + 5}
-            y1={y}
-            x2={barX + 5}
-            y2={y - 25}
+            key={`staff-${system}-${i}`}
+            x1={40}
+            y1={staffY + i * staffSpacing}
+            x2={svgWidth - 40}
+            y2={staffY + i * staffSpacing}
             stroke="#000"
-            strokeWidth={1.5}
+            strokeWidth={1.2}
           />
-          {/* Ledger lines for notes outside staff */}
-          {(y < startY - 10 || y > startY + 50) && (
-            <line
-              x1={barX - 10}
-              y1={y}
-              x2={barX + 10}
-              y2={y}
-              stroke="#000"
-              strokeWidth={1}
-            />
-          )}
+        );
+      }
+      
+      // Treble clef (more professional styling)
+      elements.push(
+        <g key={`clef-${system}`}>
+          <path
+            d={`M ${60} ${staffY + 48} 
+                Q ${65} ${staffY + 35} ${70} ${staffY + 25}
+                Q ${75} ${staffY + 15} ${65} ${staffY + 10}
+                Q ${55} ${staffY + 15} ${60} ${staffY + 25}
+                Q ${65} ${staffY + 35} ${60} ${staffY + 45}
+                L ${60} ${staffY + 55}
+                Q ${58} ${staffY + 60} ${62} ${staffY + 62}
+                Q ${68} ${staffY + 60} ${66} ${staffY + 55}
+                L ${66} ${staffY + 20}
+                Q ${70} ${staffY + 8} ${75} ${staffY + 12}
+                Q ${80} ${staffY + 18} ${75} ${staffY + 30}
+                Q ${70} ${staffY + 42} ${75} ${staffY + 50}
+                Q ${80} ${staffY + 42} ${75} ${staffY + 35}
+                Q ${70} ${staffY + 25} ${75} ${staffY + 15}
+                Q ${82} ${staffY + 8} ${78} ${staffY - 2}
+                Q ${70} ${staffY - 8} ${62} ${staffY + 5}
+                Q ${58} ${staffY + 15} ${62} ${staffY + 25}
+                L ${62} ${staffY + 48} Z`}
+            fill="#000"
+            strokeWidth={0.5}
+            stroke="#000"
+          />
         </g>
       );
+      
+      // Time signature (4/4)
+      elements.push(
+        <g key={`time-${system}`}>
+          <text
+            x={85}
+            y={staffY + 20}
+            fontSize="18"
+            fontWeight="bold"
+            fontFamily="Times, serif"
+            fill="#000"
+            textAnchor="middle"
+          >
+            4
+          </text>
+          <text
+            x={85}
+            y={staffY + 38}
+            fontSize="18"
+            fontWeight="bold"
+            fontFamily="Times, serif"
+            fill="#000"
+            textAnchor="middle"
+          >
+            4
+          </text>
+        </g>
+      );
+      
+      // Bar lines for this system
+      for (let bar = 0; bar <= 4; bar++) {
+        const barX = startX + (bar * barLineSpacing / 4);
+        elements.push(
+          <line
+            key={`bar-${system}-${bar}`}
+            x1={barX}
+            y1={staffY}
+            x2={barX}
+            y2={staffY + (4 * staffSpacing)}
+            stroke="#000"
+            strokeWidth={bar === 0 || bar === 4 ? 2 : 1}
+          />
+        );
+      }
+    }
+    
+    // Enhanced note positions with more precision
+    const notePositions: { [key: string]: number } = {
+      'B5': staffStartY - 24, 'A5': staffStartY - 18, 'G5': staffStartY - 12, 'F5': staffStartY - 6, 'E5': staffStartY,
+      'D5': staffStartY + 6, 'C5': staffStartY + 12, 'B4': staffStartY + 18, 'A4': staffStartY + 24, 'G4': staffStartY + 30,
+      'F4': staffStartY + 36, 'E4': staffStartY + 42, 'D4': staffStartY + 48, 'C4': staffStartY + 54, 'B3': staffStartY + 60,
+      'A3': staffStartY + 66, 'G3': staffStartY + 72
+    };
+    
+    // Render notes with professional styling
+    melody.slice(0, 32).forEach((note, index) => {
+      const system = Math.floor(index / 16);
+      const systemIndex = index % 16;
+      const measure = Math.floor(systemIndex / 4);
+      const beat = systemIndex % 4;
+      
+      const baseY = system === 0 ? staffStartY : staffStartY + 120;
+      const noteY = notePositions[note.note] ? 
+        notePositions[note.note] + (system * 120) : 
+        baseY + 30;
+      
+      const x = startX + 20 + (measure * (barLineSpacing / 4)) + (beat * 65);
+      
+      // Note head (professional ellipse)
+      elements.push(
+        <ellipse
+          key={`note-head-${index}`}
+          cx={x}
+          cy={noteY}
+          rx={7}
+          ry={5}
+          fill="#000"
+          transform={`rotate(-15 ${x} ${noteY})`}
+        />
+      );
+      
+      // Stem (proper direction based on position)
+      const stemDirection = noteY < baseY + 24 ? 1 : -1;
+      const stemStartY = noteY + (stemDirection > 0 ? 5 : -5);
+      const stemEndY = stemStartY + (stemDirection * 28);
+      
+      elements.push(
+        <line
+          key={`stem-${index}`}
+          x1={x + (stemDirection > 0 ? 6 : -6)}
+          y1={stemStartY}
+          x2={x + (stemDirection > 0 ? 6 : -6)}
+          y2={stemEndY}
+          stroke="#000"
+          strokeWidth={1.5}
+        />
+      );
+      
+      // Ledger lines for notes outside the staff
+      const staffCenter = baseY + 24;
+      if (noteY < baseY - 6 || noteY > baseY + 54) {
+        // Calculate which ledger lines are needed
+        const ledgerLines = [];
+        if (noteY < baseY) {
+          for (let ledgerY = baseY - 12; ledgerY >= noteY - 6; ledgerY -= 12) {
+            ledgerLines.push(ledgerY);
+          }
+        } else if (noteY > baseY + 48) {
+          for (let ledgerY = baseY + 60; ledgerY <= noteY + 6; ledgerY += 12) {
+            ledgerLines.push(ledgerY);
+          }
+        }
+        
+        ledgerLines.forEach((ledgerY, ledgerIndex) => {
+          elements.push(
+            <line
+              key={`ledger-${index}-${ledgerIndex}`}
+              x1={x - 12}
+              y1={ledgerY}
+              x2={x + 12}
+              y2={ledgerY}
+              stroke="#000"
+              strokeWidth={1.2}
+            />
+          );
+        });
+      }
     });
     
     return (
-      <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
-        {staffLines}
-        {trebleClef}
-        {notes}
+      <svg 
+        width={svgWidth} 
+        height={svgHeight} 
+        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+        className="music-notation"
+      >
+        <defs>
+          <style>
+            {`
+              .music-notation {
+                font-family: 'Times New Roman', serif;
+              }
+            `}
+          </style>
+        </defs>
+        {elements}
+        
+        {/* Add measure numbers */}
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((measureNum, index) => {
+          const system = Math.floor(index / 4);
+          const measure = index % 4;
+          const x = startX + 20 + (measure * (barLineSpacing / 4));
+          const y = staffStartY + (system * 120) - 15;
+          
+          return (
+            <text
+              key={`measure-${measureNum}`}
+              x={x}
+              y={y}
+              fontSize="12"
+              fontFamily="Arial, sans-serif"
+              fill="#666"
+              textAnchor="middle"
+            >
+              {measureNum}
+            </text>
+          );
+        })}
+        
+        {/* Key signature indicator */}
+        <text
+          x={svgWidth - 80}
+          y={30}
+          fontSize="14"
+          fontFamily="Arial, sans-serif"
+          fill="#666"
+          textAnchor="middle"
+        >
+          {params.key} Major
+        </text>
       </svg>
     );
   };
