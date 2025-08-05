@@ -39,15 +39,7 @@ export const usePublicGleeWorldEvents = () => {
       console.log('usePublicGleeWorldEvents: Starting fetch...');
       setLoading(true);
       
-      // Get current date and log it for debugging
-      const now = new Date();
-      const currentDate = now.toISOString();
-      console.log('Current date for filtering:', currentDate);
-      
-      // Always filter to only show public events for the public calendar
-      // Use a date that's slightly in the past to account for timezone issues
-      const filterDate = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(); // 24 hours ago
-      
+      // Temporarily remove date filter to debug - get all public events
       const { data, error } = await supabase
         .from('gw_events')
         .select(`
@@ -59,20 +51,21 @@ export const usePublicGleeWorldEvents = () => {
           )
         `)
         .eq('is_public', true)
-        .gte('start_date', filterDate)
         .order('start_date', { ascending: true });
 
       console.log('usePublicGleeWorldEvents: Query result', { 
         data: data?.length || 0, 
         error, 
         firstEvent: data?.[0]?.title,
-        query: {
-          is_public: true,
-          start_date_gte: new Date().toISOString()
-        }
+        allEvents: data?.map(e => ({ title: e.title, date: e.start_date }))
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Setting events to:', data?.length || 0, 'events');
       setEvents(data || []);
     } catch (error) {
       console.error('Error fetching public events:', error);
