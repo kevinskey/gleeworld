@@ -61,6 +61,7 @@ export const useDuesManagement = () => {
 
   const fetchDuesRecords = async () => {
     try {
+      console.log('Fetching dues records...');
       const { data, error } = await supabase
         .from('gw_dues_records')
         .select(`
@@ -73,8 +74,10 @@ export const useDuesManagement = () => {
         `)
         .order('due_date', { ascending: false });
 
+      console.log('Fetch dues records result:', { data, error });
       if (error) throw error;
       setDuesRecords((data || []) as any);
+      console.log('Set dues records:', data?.length || 0, 'records');
     } catch (error) {
       console.error('Error fetching dues records:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
