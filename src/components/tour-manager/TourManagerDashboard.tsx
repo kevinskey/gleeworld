@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
-import { ModuleRegistry } from '@/utils/moduleRegistry';
-import { ModuleConfig } from '@/types/modules';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, Route } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Route, Mail, FileText, MapPin, Calendar, Users } from 'lucide-react';
+import { BookingRequestManager } from './BookingRequestManager';
+import { ContractManager } from './ContractManager';
+import { AIRoutePlanner } from './AIRoutePlanner';
+import { TourCorrespondence } from './TourCorrespondence';
 
 interface TourManagerDashboardProps {
   user?: {
@@ -18,141 +20,148 @@ interface TourManagerDashboardProps {
 }
 
 export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
-  const [selectedModule, setSelectedModule] = useState<string | null>(null);
-  const [breadcrumb, setBreadcrumb] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState('booking-requests');
 
-  const handleModuleSelect = (moduleId: string) => {
-    const module = ModuleRegistry.getModule(moduleId);
-    if (module) {
-      setSelectedModule(moduleId);
-      setBreadcrumb(['Tour Manager', module.title]);
-    }
-  };
-
-  const handleBackToDashboard = () => {
-    setSelectedModule(null);
-    setBreadcrumb([]);
-  };
-
-  const renderSelectedModule = () => {
-    if (!selectedModule) return null;
-    
-    const module = ModuleRegistry.getModule(selectedModule);
-    if (!module) return null;
-
-    const ModuleComponent = module.fullPageComponent || module.component;
-    
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleBackToDashboard}
-            className="gap-2"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Back to Tour Manager
-          </Button>
-          <div className="text-sm text-muted-foreground">
-            {breadcrumb.join(' / ')}
-          </div>
-        </div>
-        
-        <ModuleComponent 
-          user={user} 
-          isFullPage={true}
-          onNavigate={handleModuleSelect}
-        />
-      </div>
-    );
-  };
-
-  const renderModuleGrid = () => {
-    const categories = ModuleRegistry.getCategories();
-    
-    return (
-      <div className="space-y-8">
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Header */}
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-3 mb-4">
             <Route className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold text-foreground">Tour Manager</h1>
           </div>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Comprehensive tour planning and management system for the Spelman College Glee Club. 
-            Access all the tools you need to plan, organize, and execute successful tours.
+            Comprehensive tour management system for handling booking requests, correspondence, 
+            performer contracts, and intelligent route planning.
           </p>
         </div>
 
-        <div className="grid gap-6">
-          {categories.map((category) => {
-            const categoryModules = category.modules.filter(module => 
-              !module.requiredPermissions || 
-              ModuleRegistry.hasPermission(module.id, user?.role ? [user.role] : [])
-            );
-
-            if (categoryModules.length === 0) return null;
-
-            const CategoryIcon = category.icon;
-
-            return (
-              <div key={category.id} className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-${category.color}-100 text-${category.color}-600`}>
-                    <CategoryIcon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">{category.title}</h2>
-                    <p className="text-sm text-muted-foreground">{category.description}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {categoryModules.map((module) => {
-                    const ModuleIcon = module.icon;
-                    
-                    return (
-                      <div
-                        key={module.id}
-                        className="bg-card rounded-lg border border-border p-4 hover:shadow-md transition-shadow cursor-pointer group"
-                        onClick={() => handleModuleSelect(module.id)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={`p-2 rounded-lg bg-${module.iconColor}-100 text-${module.iconColor}-600 group-hover:scale-105 transition-transform`}>
-                            <ModuleIcon className="h-4 w-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-medium text-foreground text-sm truncate">
-                                {module.title}
-                              </h3>
-                              {module.isNew && (
-                                <span className="px-1.5 py-0.5 bg-primary text-primary-foreground text-xs rounded-full">
-                                  New
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {module.description}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <Mail className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-xs text-muted-foreground">New Requests</p>
                 </div>
               </div>
-            );
-          })}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <FileText className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="text-2xl font-bold">8</p>
+                  <p className="text-xs text-muted-foreground">Active Contracts</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-5 w-5 text-purple-600" />
+                <div>
+                  <p className="text-2xl font-bold">5</p>
+                  <p className="text-xs text-muted-foreground">Planned Routes</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5 text-orange-600" />
+                <div>
+                  <p className="text-2xl font-bold">3</p>
+                  <p className="text-xs text-muted-foreground">Upcoming Tours</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
-    );
-  };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
-        {selectedModule ? renderSelectedModule() : renderModuleGrid()}
+        {/* Main Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="booking-requests" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              <span className="hidden sm:inline">Booking Requests</span>
+            </TabsTrigger>
+            <TabsTrigger value="correspondence" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Correspondence</span>
+            </TabsTrigger>
+            <TabsTrigger value="contracts" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Contracts</span>
+            </TabsTrigger>
+            <TabsTrigger value="route-planning" className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              <span className="hidden sm:inline">Route Planning</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="booking-requests" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Booking Requests Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BookingRequestManager user={user} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="correspondence" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Public Correspondence
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TourCorrespondence user={user} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="contracts" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Performer Contracts
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ContractManager user={user} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="route-planning" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  AI Route Planning
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AIRoutePlanner user={user} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
