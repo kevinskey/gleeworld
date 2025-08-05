@@ -2158,6 +2158,104 @@ export type Database = {
         }
         Relationships: []
       }
+      glee_ledger_sheets: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          google_sheet_id: string | null
+          google_sheet_url: string | null
+          id: string
+          is_active: boolean
+          last_synced_at: string | null
+          name: string
+          permissions: Json | null
+          sheet_config: Json | null
+          sheet_type: string
+          sync_enabled: boolean
+          template_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          google_sheet_id?: string | null
+          google_sheet_url?: string | null
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          name: string
+          permissions?: Json | null
+          sheet_config?: Json | null
+          sheet_type?: string
+          sync_enabled?: boolean
+          template_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          google_sheet_id?: string | null
+          google_sheet_url?: string | null
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          name?: string
+          permissions?: Json | null
+          sheet_config?: Json | null
+          sheet_type?: string
+          sync_enabled?: boolean
+          template_type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      glee_ledger_sync_logs: {
+        Row: {
+          completed_at: string | null
+          error_message: string | null
+          id: string
+          sheet_id: string
+          started_at: string
+          sync_data: Json | null
+          sync_status: string
+          sync_type: string
+          triggered_by: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          sheet_id: string
+          started_at?: string
+          sync_data?: Json | null
+          sync_status?: string
+          sync_type: string
+          triggered_by?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          sheet_id?: string
+          started_at?: string
+          sync_data?: Json | null
+          sync_status?: string
+          sync_type?: string
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "glee_ledger_sync_logs_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "glee_ledger_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_auth_tokens: {
         Row: {
           access_token: string
@@ -11758,6 +11856,10 @@ export type Database = {
       trigger_scholarship_update: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      update_google_sheets_scope: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       update_user_role: {
         Args: { user_id: string; new_role: string }

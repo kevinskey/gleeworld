@@ -57,6 +57,7 @@ import { BudgetsModule } from '@/components/modules/BudgetsModule';
 import { DuesCollectionModule } from '@/components/modules/DuesCollectionModule';
 import { ContractsModule } from '@/components/modules/ContractsModule';
 import { ApprovalSystemModule } from '@/components/modules/ApprovalSystemModule';
+import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
 import { ModuleCategory } from '@/types/modules';
 
 export const moduleCategories: ModuleCategory[] = [
@@ -314,13 +315,13 @@ export const moduleCategories: ModuleCategory[] = [
         component: BudgetsModule,
       },
       {
-        id: "google-ledger",
-        title: "Google Ledger",
-        description: "Integration with Google Sheets for financial tracking",
+        id: "glee-ledger",
+        title: "Glee Ledger",
+        description: "Google Sheets integration for financial ledger management",
         icon: Database,
         iconColor: "orange",
         category: "finances",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: GleeLedgerModule,
       },
       {
         id: "dues-collection",
