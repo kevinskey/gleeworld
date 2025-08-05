@@ -100,6 +100,7 @@ import { ReceiptsPage } from "./pages/ReceiptsPage";
 import ApprovalSystemPage from "./pages/ApprovalSystemPage";
 import SightReadingSubmission from "./pages/SightReadingSubmission";
 import SightReadingPreview from "./pages/SightReadingPreview";
+import SightReadingGenerator from "./pages/SightReadingGenerator";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -769,6 +770,14 @@ const App = () => {
                                      element={
                                        <ProtectedRoute>
                                          <SightReadingPreview />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                                   <Route 
+                                     path="/sight-reading-generator" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <SightReadingGenerator />
                                        </ProtectedRoute>
                                      } 
                                    />

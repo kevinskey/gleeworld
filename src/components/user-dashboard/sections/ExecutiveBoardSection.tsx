@@ -25,7 +25,8 @@ import {
   UserCheck,
   Music2,
   Music,
-  FileAudio
+  FileAudio,
+  Wand2
 } from "lucide-react";
 
 interface ExecutiveBoardSectionProps {
@@ -71,7 +72,8 @@ export const ExecutiveBoardSection = ({ isExecBoardMember }: ExecutiveBoardSecti
     { name: "Section Leader", icon: UserCheck, route: "/dashboard/section-leader" },
     { name: "Student Conductor", icon: Music2, route: "/dashboard/student-conductor" },
     { name: "Sight Reading Preview", icon: Music, route: "/sight-reading-preview" },
-    { name: "Sight Reading Submission", icon: FileAudio, route: "/sight-reading-submission" }
+    { name: "Sight Reading Submission", icon: FileAudio, route: "/sight-reading-submission" },
+    { name: "Sight Reading Generator", icon: Wand2, route: "/sight-reading-generator" }
   ];
 
   return (
