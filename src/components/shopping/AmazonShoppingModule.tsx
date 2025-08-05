@@ -392,9 +392,9 @@ Laptop stand`}
                       <Card key={item.id} className="p-4">
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-semibold text-lg">{item.name}</h4>
-                          <span className="text-2xl font-bold text-primary">
-                            ${item.estimatedPrice}
-                          </span>
+                           <span className="text-2xl font-bold text-primary">
+                             ${item.estimatedPrice.toFixed(2)}
+                           </span>
                         </div>
                         <div className="flex items-center gap-2 mb-2">
                           <Badge className={getPriorityColor(item.priority)}>
