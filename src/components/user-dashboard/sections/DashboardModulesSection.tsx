@@ -37,7 +37,8 @@ import {
   Crown,
   Gavel,
   FileText,
-  Headphones
+  Headphones,
+  GraduationCap
 } from "lucide-react";
 
 export const DashboardModulesSection = () => {
@@ -154,6 +155,7 @@ export const DashboardModulesSection = () => {
       modules: [
         { name: "Mass Communications", description: "Send group messages", icon: Bell, route: "/notifications/send" },
         { name: "PR & Media Hub", description: "Manage publicity", icon: Camera, route: "/dashboard/pr-hub", requiresPRAccess: true },
+        { name: "Alumnae Portal", description: "Alumni engagement & mentorship", icon: GraduationCap, route: "/alumnae", requiresAdmin: true },
         { name: "Newsletter Management", description: "Create newsletters", icon: MessageSquare, route: "/newsletter" },
         { name: "Announcements", description: "Read updates", icon: MessageSquare, route: "/announcements" },
         { name: "SMS Center", description: "Text messaging", icon: Bell, route: "/sms-center", requiresAdmin: true }

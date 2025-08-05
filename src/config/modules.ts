@@ -28,7 +28,10 @@ import {
   ClipboardCheck,
   Route,
   Music,
-  Eye
+  Eye,
+  Megaphone,
+  Camera,
+  GraduationCap
 } from 'lucide-react';
 
 import { UserManagementModule } from '@/components/modules/UserManagementModule';
@@ -43,6 +46,7 @@ import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
 import { StudentConductorModule } from '@/components/modules/StudentConductorModule';
 import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 import { SightSingingModule } from '@/components/modules/SightSingingModule';
+import { PRCoordinatorHub } from '@/components/pr-coordinator/PRCoordinatorHub';
 import { ModuleCategory } from '@/types/modules';
 
 export const moduleCategories: ModuleCategory[] = [
@@ -98,6 +102,16 @@ export const moduleCategories: ModuleCategory[] = [
         iconColor: "green",
         category: "communications",
         component: UserManagementModule, // Placeholder - replace with actual component
+      },
+      {
+        id: "pr-coordinator",
+        title: "PR & Media Hub",
+        description: "Public relations, social media management, and press releases",
+        icon: Megaphone,
+        iconColor: "orange",
+        category: "communications",
+        component: PRCoordinatorHub,
+        requiredPermissions: ["pr_coordinator", "admin"],
       },
       {
         id: "scheduling-module",
@@ -188,6 +202,16 @@ export const moduleCategories: ModuleCategory[] = [
         iconColor: "indigo",
         category: "member-management",
         component: UserManagementModule, // TODO: Replace with actual ExecBoardModule
+      },
+      {
+        id: "alumnae-portal",
+        title: "Alumnae Portal",
+        description: "Alumni engagement, mentorship, memories, and reunion management",
+        icon: GraduationCap,
+        iconColor: "purple",
+        category: "member-management",
+        component: UserManagementModule, // TODO: Replace with AlumnaePortal component
+        requiredPermissions: ["alumni", "admin"],
       },
       {
         id: "executive-functions",
