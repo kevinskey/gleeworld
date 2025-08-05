@@ -42,7 +42,7 @@ export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModulePro
   };
 
   const handleCreateDuesForSemester = async () => {
-    await createDuesForSemester('Fall 2025', '2025-09-15', 150);
+    await createDuesForSemester('Fall 2025', '2025-09-15', 100);
     setShowCreateDuesDialog(false);
   };
 
@@ -221,7 +221,7 @@ export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModulePro
           open={showPaymentPlanDialog}
           onOpenChange={setShowPaymentPlanDialog}
           onSelectPlan={handlePaymentPlanSelect}
-          duesAmount={selectedDuesRecord?.amount || 150}
+          duesAmount={selectedDuesRecord?.amount || 100}
         />
       </div>
     );

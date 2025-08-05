@@ -107,7 +107,7 @@ export const useDuesManagement = () => {
   const createDuesForSemester = async (
     semester: string = 'Fall 2025',
     dueDate: string = '2025-09-15',
-    amount: number = 150
+    amount: number = 100
   ) => {
     try {
       // Get all current members who don't have dues records for this semester
