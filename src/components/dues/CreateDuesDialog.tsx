@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface CreateDuesDialogProps {
   open: boolean;
@@ -19,6 +20,8 @@ export const CreateDuesDialog = ({ open, onOpenChange, onSuccess }: CreateDuesDi
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const [formData, setFormData] = useState({
     user_id: '',
     amount: '',
@@ -27,6 +30,36 @@ export const CreateDuesDialog = ({ open, onOpenChange, onSuccess }: CreateDuesDi
     academic_year: new Date().getFullYear().toString(),
     notes: ''
   });
+
+  // Fetch users when dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchUsers();
+    }
+  }, [open]);
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const { data, error } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email, role')
+        .not('user_id', 'is', null)
+        .order('full_name');
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load users",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,14 +117,37 @@ export const CreateDuesDialog = ({ open, onOpenChange, onSuccess }: CreateDuesDi
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="user_id">Member ID</Label>
-            <Input
-              id="user_id"
-              value={formData.user_id}
-              onChange={(e) => setFormData({...formData, user_id: e.target.value})}
-              placeholder="Enter member user ID"
-              required
-            />
+            <Label htmlFor="user_id">Select Member</Label>
+            <Select 
+              value={formData.user_id} 
+              onValueChange={(value) => setFormData({...formData, user_id: value})}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={loadingUsers ? "Loading users..." : "Select a member"} />
+              </SelectTrigger>
+              <SelectContent className="max-h-[200px] bg-background">
+                <ScrollArea className="h-[200px]">
+                  {users.map((member) => (
+                    <SelectItem 
+                      key={member.user_id} 
+                      value={member.user_id}
+                      className="cursor-pointer hover:bg-accent"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {member.full_name || member.email}
+                        </span>
+                        {member.full_name && (
+                          <span className="text-xs text-muted-foreground">
+                            {member.email} • {member.role}
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </ScrollArea>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -125,7 +181,7 @@ export const CreateDuesDialog = ({ open, onOpenChange, onSuccess }: CreateDuesDi
               <SelectTrigger>
                 <SelectValue placeholder="Select semester" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background">
                 <SelectItem value="Fall 2025">Fall 2025</SelectItem>
                 <SelectItem value="Spring 2025">Spring 2025</SelectItem>
                 <SelectItem value="Summer 2025">Summer 2025</SelectItem>
