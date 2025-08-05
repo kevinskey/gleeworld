@@ -6,6 +6,7 @@ import { useTemplateOperations } from "@/hooks/useTemplateOperations";
 import { TemplatesEmptyState } from "./templates/TemplatesEmptyState";
 import { TemplatesGrid } from "./templates/TemplatesGrid";
 import { TemplateDialogsManager } from "./templates/TemplateDialogsManager";
+import { GleeClubTemplateInitializer } from "./contract-templates/GleeClubTemplateInitializer";
 
 interface ContractTemplatesProps {
   onUseTemplate?: (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => void;
@@ -65,6 +66,8 @@ export const ContractTemplates = ({ onUseTemplate, onContractCreated }: Contract
         </Button>
       </div>
 
+      <GleeClubTemplateInitializer />
+      
       {templates.length === 0 ? (
         <TemplatesEmptyState onCreateTemplate={() => setIsCreateOpen(true)} />
       ) : (
