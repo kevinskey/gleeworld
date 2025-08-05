@@ -14,33 +14,31 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const isReset = searchParams.get('reset') === 'true';
 
+  console.log('🔄 Auth component render:', {
+    hasUser: !!user,
+    loading,
+    profileLoading,
+    pathname: window.location.pathname
+  });
+
   useEffect(() => {
     if (!loading && !profileLoading && user) {
       console.log('🚀 Auth redirect logic - User authenticated');
-      console.log('User data:', user);
-      console.log('Profile data:', profile);
       
+      // Single redirect path - avoid loops
       const redirectPath = sessionStorage.getItem('redirectAfterAuth');
       if (redirectPath) {
         console.log('Auth: Redirecting to stored path:', redirectPath);
         sessionStorage.removeItem('redirectAfterAuth');
         navigate(redirectPath, { replace: true });
       } else {
-        // Redirect based on user role
-        const isUserAdmin = isAdmin();
-        const defaultPath = isUserAdmin ? '/admin' : '/dashboard';
-        console.log('Auth: Redirecting to:', defaultPath, 'isAdmin:', isUserAdmin);
+        // Simple redirect based on admin status
+        const defaultPath = isAdmin() ? '/admin' : '/dashboard';
+        console.log('Auth: Redirecting to default path:', defaultPath);
         navigate(defaultPath, { replace: true });
       }
-    } else {
-      console.log('Auth redirect conditions not met:', {
-        loading,
-        profileLoading,
-        hasUser: !!user,
-        hasProfile: !!profile
-      });
     }
-  }, [user, loading, profile, profileLoading, navigate]);
+  }, [user, loading, profileLoading, navigate, isAdmin]);
 
   if (loading || profileLoading) {
     return (
