@@ -72,43 +72,33 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     }
   };
 
-  // Effect to handle audio source changes
+  // Effect to handle audio source changes (without isPlaying dependency to avoid loops)
   useEffect(() => {
     if (audioRef.current && currentTrack.audio_url) {
       audioRef.current.src = currentTrack.audio_url;
       audioRef.current.volume = volume / 100;
       audioRef.current.load();
-      
-      // If radio was playing, continue playing the new track
+    }
+  }, [currentTrack.audio_url, volume]);
+
+  // Separate effect to handle play state changes
+  useEffect(() => {
+    if (audioRef.current && currentTrack.audio_url) {
       if (isPlaying) {
-        // Small delay to allow the new source to load
-        setTimeout(() => {
-          if (audioRef.current) {
-            audioRef.current.play().catch(error => {
-              console.error('Error playing track:', error);
-              toast({
-                title: "Playback Error",
-                description: "Unable to play track. Trying next...",
-                variant: "destructive",
-              });
-              // Try next track on error
-              if (audioTracks.length > 1) {
-                const nextIndex = (currentTrackIndex + 1) % audioTracks.length;
-                const nextTrack = audioTracks[nextIndex];
-                setCurrentTrackIndex(nextIndex);
-                setCurrentTrack({
-                  title: nextTrack.title,
-                  artist: nextTrack.artist_info || 'Glee Club',
-                  category: 'Radio Stream',
-                  audio_url: nextTrack.audio_url
-                });
-              }
-            });
-          }
-        }, 100);
+        audioRef.current.play().catch(error => {
+          console.error('Error playing track:', error);
+          setIsPlaying(false);
+          toast({
+            title: "Playback Error", 
+            description: "Unable to play track",
+            variant: "destructive",
+          });
+        });
+      } else {
+        audioRef.current.pause();
       }
     }
-  }, [currentTrack.audio_url, volume, isPlaying, audioTracks, currentTrackIndex, toast]);
+  }, [isPlaying, currentTrack.audio_url]);
 
   useEffect(() => {
     // Sync with external state if provided
@@ -123,22 +113,13 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     const initialIsPlaying = radioState === 'true';
     setIsPlaying(initialIsPlaying);
 
-    // Initialize audio element
-    if (audioRef.current && currentTrack.audio_url && initialIsPlaying) {
-      audioRef.current.play().catch(console.error);
-    }
+    // The separate useEffect will handle audio play/pause based on isPlaying state
 
     // Listen for radio state changes - use different event names
     const eventName = isPersonalRadio ? 'personal-radio-toggle' : 'timeline-radio-toggle';
     const handleRadioToggle = (event: CustomEvent) => {
       setIsPlaying(event.detail.isPlaying);
-      if (audioRef.current) {
-        if (event.detail.isPlaying) {
-          audioRef.current.play().catch(console.error);
-        } else {
-          audioRef.current.pause();
-        }
-      }
+      // Audio play/pause is handled by the useEffect above
     };
 
     window.addEventListener(eventName, handleRadioToggle as EventListener);
@@ -194,30 +175,17 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       onToggle();
     }
 
-    if (audioRef.current) {
-      if (newState) {
-        audioRef.current.play().catch((error) => {
-          console.error('Playback error:', error);
-          setIsPlaying(false);
-          toast({
-            title: "Playback Error",
-            description: "Unable to play audio. Trying next track...",
-            variant: "destructive",
-          });
-          // Try next track if current one fails
-          playNextTrack();
-        });
-        toast({
-          title: "Radio Playing",
-          description: `Now playing: ${currentTrack.title}`,
-        });
-      } else {
-        audioRef.current.pause();
-        toast({
-          title: "Radio Paused",
-          description: "Glee World Radio paused",
-        });
-      }
+    // Audio play/pause is now handled by useEffect
+    if (newState) {
+      toast({
+        title: "Radio Playing",
+        description: `Now playing: ${currentTrack.title}`,
+      });
+    } else {
+      toast({
+        title: "Radio Paused", 
+        description: "Glee World Radio paused",
+      });
     }
   };
 
