@@ -229,38 +229,45 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
       return;
     }
 
-    const currentTrackIndex = sortedTracks.findIndex(t => t.id === currentTrackId);
-    console.log('Current track index:', currentTrackIndex, 'out of', sortedTracks.length);
-    
-    // If there's only one track, repeat it
-    if (sortedTracks.length === 1) {
-      const singleTrack = sortedTracks[0];
-      console.log('Repeating single track:', singleTrack.title, 'ID:', singleTrack.id);
-      handlePlayToggle(singleTrack);
-      toast({
-        title: "Track Repeat",
-        description: `Repeating: ${singleTrack.title}`,
-      });
+    // Find current track and its timeline position
+    const currentTrack = sortedTracks.find(t => t.id === currentTrackId);
+    if (!currentTrack) {
+      // If current track not found, start from first track
+      const firstTrack = sortedTracks[0];
+      console.log('Current track not found, starting from first:', firstTrack.title);
+      handlePlayToggle(firstTrack);
       return;
     }
+
+    // Get current track's timeline slot number
+    const currentSlotNum = parseInt(currentTrack.scheduledTime.replace('Track ', ''));
+    console.log('Current slot number:', currentSlotNum, 'out of 24 slots');
     
-    // Check if there's a next track
-    if (currentTrackIndex >= 0 && currentTrackIndex < sortedTracks.length - 1) {
-      // Play next track
-      const nextTrack = sortedTracks[currentTrackIndex + 1];
-      console.log('Playing next track:', nextTrack.title, 'ID:', nextTrack.id);
+    // Look for the next scheduled track in the timeline (not just the next in sortedTracks)
+    let nextTrack = null;
+    for (let slotNum = currentSlotNum + 1; slotNum <= 24; slotNum++) {
+      const slotName = `Track ${slotNum.toString().padStart(2, '0')}`;
+      nextTrack = sortedTracks.find(t => t.scheduledTime === slotName);
+      if (nextTrack) {
+        console.log('Found next track at slot', slotNum, ':', nextTrack.title);
+        break;
+      }
+    }
+    
+    if (nextTrack) {
+      // Play the next scheduled track
       handlePlayToggle(nextTrack);
       toast({
         title: "Next Track",
         description: `Now playing: ${nextTrack.title}`,
       });
     } else {
-      // Loop back to the beginning
+      // No more tracks in timeline, loop back to first scheduled track
       const firstTrack = sortedTracks[0];
-      console.log('Looping to first track:', firstTrack.title, 'ID:', firstTrack.id);
+      console.log('End of timeline reached, looping to first track:', firstTrack.title);
       handlePlayToggle(firstTrack);
       toast({
-        title: "Playlist Looped",
+        title: "Timeline Looped",
         description: `Restarting from: ${firstTrack.title}`,
       });
     }
