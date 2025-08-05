@@ -1,4 +1,5 @@
-import { 
+import { ReimbursementsManager } from "@/components/reimbursements/ReimbursementsManager";
+import {
   Users, 
   Shirt, 
   ScanLine, 
@@ -381,7 +382,7 @@ export const moduleCategories: ModuleCategory[] = [
         icon: Printer,
         iconColor: "red",
         category: "finances",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: ReimbursementsManager,
       },
       {
         id: "merch-store",

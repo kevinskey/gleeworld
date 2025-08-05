@@ -6851,6 +6851,128 @@ export type Database = {
           },
         ]
       }
+      gw_reimbursement_approvals: {
+        Row: {
+          action: string
+          approver_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          reimbursement_id: string
+        }
+        Insert: {
+          action: string
+          approver_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reimbursement_id: string
+        }
+        Update: {
+          action?: string
+          approver_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reimbursement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_reimbursement_approvals_reimbursement_id_fkey"
+            columns: ["reimbursement_id"]
+            isOneToOne: false
+            referencedRelation: "gw_reimbursement_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_reimbursement_requests: {
+        Row: {
+          amount: number
+          business_purpose: string
+          category: string
+          check_number: string | null
+          created_at: string
+          description: string
+          id: string
+          paid_by: string | null
+          payment_date: string | null
+          payment_method: string | null
+          payment_notes: string | null
+          purchase_date: string
+          receipt_filename: string | null
+          receipt_url: string | null
+          requester_email: string
+          requester_name: string
+          status: string
+          super_admin_approved_at: string | null
+          super_admin_id: string | null
+          super_admin_notes: string | null
+          treasurer_approved_at: string | null
+          treasurer_id: string | null
+          treasurer_notes: string | null
+          updated_at: string
+          user_id: string
+          vendor_name: string
+        }
+        Insert: {
+          amount: number
+          business_purpose: string
+          category?: string
+          check_number?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          paid_by?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_notes?: string | null
+          purchase_date: string
+          receipt_filename?: string | null
+          receipt_url?: string | null
+          requester_email: string
+          requester_name: string
+          status?: string
+          super_admin_approved_at?: string | null
+          super_admin_id?: string | null
+          super_admin_notes?: string | null
+          treasurer_approved_at?: string | null
+          treasurer_id?: string | null
+          treasurer_notes?: string | null
+          updated_at?: string
+          user_id: string
+          vendor_name: string
+        }
+        Update: {
+          amount?: number
+          business_purpose?: string
+          category?: string
+          check_number?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          paid_by?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_notes?: string | null
+          purchase_date?: string
+          receipt_filename?: string | null
+          receipt_url?: string | null
+          requester_email?: string
+          requester_name?: string
+          status?: string
+          super_admin_approved_at?: string | null
+          super_admin_id?: string | null
+          super_admin_notes?: string | null
+          treasurer_approved_at?: string | null
+          treasurer_id?: string | null
+          treasurer_notes?: string | null
+          updated_at?: string
+          user_id?: string
+          vendor_name?: string
+        }
+        Relationships: []
+      }
       gw_running_ledger: {
         Row: {
           amount: number
