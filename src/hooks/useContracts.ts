@@ -35,11 +35,25 @@ export const useContracts = () => {
       setError(null);
       console.log('Fetching contracts for user:', user.id);
       
-      // First get contracts created by the current user
-      const { data: contractsData, error: contractsError } = await supabase
+      // Check if user is admin/super admin to see all contracts
+      const { data: profile } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin, role')
+        .eq('user_id', user.id)
+        .single();
+
+      const isAdmin = profile?.is_admin || profile?.is_super_admin || profile?.role === 'admin' || profile?.role === 'super-admin';
+
+      // Get contracts - all contracts for admins, only user's contracts for others
+      let query = supabase
         .from('contracts_v2')
-        .select('*')
-        .eq('created_by', user.id)
+        .select('*');
+
+      if (!isAdmin) {
+        query = query.eq('created_by', user.id);
+      }
+
+      const { data: contractsData, error: contractsError } = await query
         .order('created_at', { ascending: false });
 
       console.log('Contracts query result:', { data: contractsData, error: contractsError });
