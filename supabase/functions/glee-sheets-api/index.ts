@@ -38,6 +38,8 @@ serve(async (req) => {
         return await syncData(supabaseClient, user.id, params);
       case 'get_auth_url':
         return await getAuthUrl(supabaseClient, user.id);
+      case 'check_auth':
+        return await checkAuth(supabaseClient, user.id);
       case 'list_sheets':
         return await listSheets(supabaseClient, user.id);
       default:
@@ -248,6 +250,25 @@ async function getAuthUrl(supabaseClient: any, userId: string) {
 
   return new Response(
     JSON.stringify({ authUrl }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+async function checkAuth(supabaseClient: any, userId: string) {
+  const { data: authData } = await supabaseClient
+    .from('google_auth_tokens')
+    .select('access_token, refresh_token, scopes')
+    .eq('user_id', userId)
+    .single();
+
+  const hasAuth = !!(authData && authData.access_token);
+  
+  return new Response(
+    JSON.stringify({ 
+      hasAuth,
+      needsAuth: !hasAuth,
+      message: hasAuth ? 'Google Sheets authentication is active' : 'Google Sheets authentication required'
+    }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
 }

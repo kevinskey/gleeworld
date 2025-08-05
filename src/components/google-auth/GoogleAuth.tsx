@@ -6,9 +6,15 @@ import { Loader2, ExternalLink } from 'lucide-react';
 
 interface GoogleAuthProps {
   onAuthSuccess?: () => void;
+  serviceType?: 'docs' | 'sheets';
+  edgeFunctionName?: string;
 }
 
-export const GoogleAuth = ({ onAuthSuccess }: GoogleAuthProps) => {
+export const GoogleAuth = ({ 
+  onAuthSuccess, 
+  serviceType = 'docs', 
+  edgeFunctionName = 'google-docs-manager' 
+}: GoogleAuthProps) => {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authUrl, setAuthUrl] = useState<string | null>(null);
   const { toast } = useToast();
@@ -17,7 +23,7 @@ export const GoogleAuth = ({ onAuthSuccess }: GoogleAuthProps) => {
     try {
       setIsAuthenticating(true);
       
-      const { data, error } = await supabase.functions.invoke('google-docs-manager', {
+      const { data, error } = await supabase.functions.invoke(edgeFunctionName, {
         body: { action: 'get_auth_url' }
       });
 
@@ -47,35 +53,41 @@ export const GoogleAuth = ({ onAuthSuccess }: GoogleAuthProps) => {
 
   const checkAuthStatus = async () => {
     try {
-      // Check if we have a valid token by trying to get auth URL
-      const { data, error } = await supabase.functions.invoke('google-docs-manager', {
-        body: { action: 'create', title: 'Test', content: 'Test' }
+      const { data, error } = await supabase.functions.invoke(edgeFunctionName, {
+        body: { action: 'check_auth' }
       });
 
-      if (data && !data.needsAuth) {
+      if (error) throw error;
+
+      if (data && data.hasAuth) {
         toast({
           title: "Authentication Successful",
-          description: "Google Docs integration is now ready.",
+          description: data.message || `Google ${serviceType === 'sheets' ? 'Sheets' : 'Docs'} integration is ready.`,
         });
         onAuthSuccess?.();
-      } else if (data?.needsAuth) {
+      } else {
         toast({
           title: "Authentication Required",
-          description: "Please complete the Google authentication process.",
+          description: data?.message || "Please complete the Google authentication process.",
           variant: "destructive"
         });
       }
     } catch (error) {
       console.error('Error checking auth status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to check authentication status.",
+        variant: "destructive"
+      });
     }
   };
 
   return (
     <div className="space-y-4 p-4 border rounded-lg">
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold">Google Docs Authentication</h3>
+        <h3 className="text-lg font-semibold">Google {serviceType === 'sheets' ? 'Sheets' : 'Docs'} Authentication</h3>
         <p className="text-sm text-muted-foreground">
-          Authenticate with Google to enable Google Docs integration for meeting minutes.
+          Authenticate with Google to enable Google {serviceType === 'sheets' ? 'Sheets' : 'Docs'} integration{serviceType === 'sheets' ? ' for ledger management' : ' for meeting minutes'}.
         </p>
       </div>
 

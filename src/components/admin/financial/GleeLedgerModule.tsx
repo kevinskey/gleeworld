@@ -167,7 +167,11 @@ export const GleeLedgerModule = () => {
             <p className="text-muted-foreground mb-6">
               To create and manage Glee Ledger sheets, you need to authenticate with Google Sheets.
             </p>
-            <GoogleAuth onAuthSuccess={handleAuthSuccess} />
+            <GoogleAuth 
+              onAuthSuccess={handleAuthSuccess}
+              serviceType="sheets"
+              edgeFunctionName="glee-sheets-api"
+            />
           </div>
         </CardContent>
       </Card>
