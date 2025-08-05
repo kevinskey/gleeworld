@@ -31,6 +31,7 @@ import TourPlanner from "@/pages/TourPlanner";
 import SendNotificationPage from "@/pages/SendNotificationPage";
 import AdminUsers from "@/pages/AdminUsers";
 import SetupAdmin from "@/pages/SetupAdmin";
+import PublicCalendar from "@/pages/PublicCalendar";
 
 
 
@@ -78,6 +79,10 @@ export const router = createBrowserRouter([
   {
     path: "/calendar",
     element: <Calendar />,
+  },
+  {
+    path: "/public-calendar",
+    element: <PublicCalendar />,
   },
   {
     path: "/attendance",
