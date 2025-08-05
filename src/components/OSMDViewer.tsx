@@ -94,9 +94,41 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
       }
 
       if (xmlContent) {
-        // Load from string content
+        // Load from string content by creating a blob URL
         console.log('Loading from XML content, length:', xmlContent.length);
-        await osmdRef.current.load(xmlContent);
+        
+        // Reinitialize OSMD for the new content
+        if (containerRef.current) {
+          osmdRef.current = new OpenSheetMusicDisplay(containerRef.current, {
+            autoResize: true,
+            backend: 'svg',
+            drawTitle: true,
+            drawComposer: true,
+            drawCredits: false,
+            drawLyrics: false,
+            drawPartNames: true,
+            coloringMode: 0,
+            followCursor: false,
+            cursorsOptions: [],
+            pageFormat: 'A4_P',
+            pageBackgroundColor: '#FFFFFF',
+            renderSingleHorizontalStaffline: false,
+            defaultFontFamily: 'Times New Roman',
+            spacingFactorSoftmax: 5,
+            spacingBetweenTextLines: 0.5,
+          });
+        }
+        
+        // Create blob URL from XML content
+        const blob = new Blob([xmlContent], { type: 'application/xml' });
+        const blobUrl = URL.createObjectURL(blob);
+        
+        try {
+          await osmdRef.current.load(blobUrl);
+        } finally {
+          // Clean up blob URL
+          URL.revokeObjectURL(blobUrl);
+        }
       } else if (xmlUrl) {
         // Validate URL first
         if (!xmlUrl || xmlUrl.trim() === '' || xmlUrl === '0') {
@@ -113,7 +145,17 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
           }
           const xmlText = await response.text();
           console.log('Fetched XML, length:', xmlText.length);
-          await osmdRef.current.load(xmlText);
+          
+          // Create blob URL from fetched content
+          const blob = new Blob([xmlText], { type: 'application/xml' });
+          const blobUrl = URL.createObjectURL(blob);
+          
+          try {
+            await osmdRef.current.load(blobUrl);
+          } finally {
+            // Clean up blob URL
+            URL.revokeObjectURL(blobUrl);
+          }
         } catch (fetchError) {
           console.error('Fetch error:', fetchError);
           throw new Error(`Failed to load URL: ${fetchError.message}`);
@@ -269,8 +311,10 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
             className="bg-white rounded-md border p-4 min-h-[400px] overflow-auto"
             style={{ 
               minHeight: '400px',
-              maxWidth: '100%',
-              maxHeight: '800px'
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              visibility: 'visible'
             }}
           />
           
