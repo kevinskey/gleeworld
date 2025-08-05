@@ -203,10 +203,15 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
   };
 
   const playNextTrack = (currentTrackId: string) => {
-    // Find current track in timeline
+    // Get all scheduled tracks sorted by their track slot position
     const sortedTracks = scheduledTracks
       .filter(t => t.scheduledDate === selectedDate)
-      .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
+      .sort((a, b) => {
+        // Extract track number from "Track XX" format
+        const aNum = parseInt(a.scheduledTime.replace('Track ', ''));
+        const bNum = parseInt(b.scheduledTime.replace('Track ', ''));
+        return aNum - bNum;
+      });
     
     if (sortedTracks.length === 0) {
       setCurrentlyPlaying(null);
