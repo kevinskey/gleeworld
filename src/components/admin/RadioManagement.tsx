@@ -451,28 +451,10 @@ export const RadioManagement = () => {
         </Card>
       </div>
 
-      {/* Radio Management Tabs */}
-      <Tabs defaultValue="schedule" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="schedule">Schedule</TabsTrigger>
-          <TabsTrigger value="tracks">Track Library</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="schedule" className="mt-6">
-          <RadioTimeline 
-            onTrackScheduled={(track) => {
-              console.log('Track scheduled:', track);
-              toast({
-                title: "Track Scheduled",
-                description: `"${track.title}" scheduled for ${track.scheduledTime}`,
-              });
-            }}
-          />
-        </TabsContent>
-
-        <TabsContent value="tracks" className="mt-6">
+      {/* Split Layout: Track Library + Timeline */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Side: Track Library */}
+        <div className="space-y-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
@@ -547,7 +529,7 @@ export const RadioManagement = () => {
                 </div>
               </div>
 
-              <ScrollArea className="h-[400px]">
+              <ScrollArea className="h-[600px]">
                 <div className="space-y-3">
                   {filteredTracks.map((track) => (
                     <Card 
@@ -631,7 +613,28 @@ export const RadioManagement = () => {
               </ScrollArea>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+
+        {/* Right Side: Timeline */}
+        <div className="space-y-4">
+          <RadioTimeline 
+            onTrackScheduled={(track) => {
+              console.log('Track scheduled:', track);
+              toast({
+                title: "Track Scheduled",
+                description: `"${track.title}" scheduled for ${track.scheduledTime}`,
+              });
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Additional Tabs for Analytics and Settings */}
+      <Tabs defaultValue="analytics" className="w-full mt-8">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
 
         <TabsContent value="analytics" className="mt-6">
           <Card>
