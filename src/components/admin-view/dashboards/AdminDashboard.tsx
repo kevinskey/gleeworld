@@ -39,7 +39,9 @@ import {
   Brain,
   FileCheck,
   Printer,
-  ShoppingCart
+  ShoppingCart,
+  UserPlus,
+  Shirt
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
@@ -54,6 +56,7 @@ import { SystemSettings } from "@/components/admin/SystemSettings";
 import { PermissionManagement } from "@/components/admin/PermissionManagement";
 import { AuditionsManagement } from "@/components/admin/AuditionsManagement";
 import { WardrobeManagementHub } from "@/components/wardrobe/WardrobeManagementHub";
+import { StudentIntakeProcessor } from "@/components/admin/StudentIntakeProcessor";
 
 interface AdminDashboardProps {
   user: {
@@ -132,9 +135,16 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       ]
     },
     {
+      id: "student-intake",
+      title: "Student Intake",
+      icon: UserPlus,
+      color: "orange",
+      description: "New student processing, size verification, and wardrobe assignments"
+    },
+    {
       id: "wardrobe",
       title: "Wardrobe",
-      icon: Users,
+      icon: Shirt,
       color: "purple",
       description: "Costume management, fitting schedules, and inventory"
     },
@@ -297,6 +307,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         
         {(() => {
           switch (selectedCategory) {
+            case "student-intake":
+              return renderIntakeContent();
             case "wardrobe":
               return renderWardrobeContent();
             case "libraries":
@@ -369,6 +381,10 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       </CardContent>
     </Card>
   );
+
+  const renderIntakeContent = () => {
+    return <StudentIntakeProcessor />;
+  };
 
   const renderWardrobeContent = () => {
     return <WardrobeManagementHub />;

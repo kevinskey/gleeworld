@@ -6160,6 +6160,7 @@ export type Database = {
           join_date: string | null
           last_name: string | null
           last_sign_in_at: string | null
+          measurements: Json | null
           mentor_opt_in: boolean | null
           middle_name: string | null
           music_role: string | null
@@ -6185,6 +6186,7 @@ export type Database = {
           verified: boolean | null
           visible_piercings: boolean | null
           voice_part: string | null
+          wardrobe_assignments: Json | null
           website_url: string | null
           workplace: string | null
         }
@@ -6227,6 +6229,7 @@ export type Database = {
           join_date?: string | null
           last_name?: string | null
           last_sign_in_at?: string | null
+          measurements?: Json | null
           mentor_opt_in?: boolean | null
           middle_name?: string | null
           music_role?: string | null
@@ -6252,6 +6255,7 @@ export type Database = {
           verified?: boolean | null
           visible_piercings?: boolean | null
           voice_part?: string | null
+          wardrobe_assignments?: Json | null
           website_url?: string | null
           workplace?: string | null
         }
@@ -6294,6 +6298,7 @@ export type Database = {
           join_date?: string | null
           last_name?: string | null
           last_sign_in_at?: string | null
+          measurements?: Json | null
           mentor_opt_in?: boolean | null
           middle_name?: string | null
           music_role?: string | null
@@ -6319,6 +6324,7 @@ export type Database = {
           verified?: boolean | null
           visible_piercings?: boolean | null
           voice_part?: string | null
+          wardrobe_assignments?: Json | null
           website_url?: string | null
           workplace?: string | null
         }
@@ -7323,6 +7329,47 @@ export type Database = {
           },
         ]
       }
+      gw_size_verification_log: {
+        Row: {
+          created_at: string | null
+          id: string
+          intake_id: string | null
+          original_measurements: Json | null
+          verification_notes: string | null
+          verification_status: string
+          verified_measurements: Json | null
+          verifier_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          intake_id?: string | null
+          original_measurements?: Json | null
+          verification_notes?: string | null
+          verification_status: string
+          verified_measurements?: Json | null
+          verifier_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          intake_id?: string | null
+          original_measurements?: Json | null
+          verification_notes?: string | null
+          verification_status?: string
+          verified_measurements?: Json | null
+          verifier_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_size_verification_log_intake_id_fkey"
+            columns: ["intake_id"]
+            isOneToOne: false
+            referencedRelation: "gw_student_intake"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_sms_logs: {
         Row: {
           created_at: string
@@ -7685,6 +7732,120 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      gw_student_intake: {
+        Row: {
+          academic_year: string
+          assigned_accessories: string[] | null
+          assigned_dress_id: string | null
+          assigned_shoes_id: string | null
+          bust_measurement: number | null
+          created_at: string | null
+          dress_size: string | null
+          email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          full_name: string
+          glove_size: string | null
+          height_feet: number | null
+          height_inches: number | null
+          hip_measurement: number | null
+          id: string
+          intake_status: string | null
+          major: string | null
+          notes: string | null
+          phone_number: string | null
+          processed_at: string | null
+          processed_by: string | null
+          shoe_size: string | null
+          size_verified: boolean | null
+          size_verified_at: string | null
+          size_verified_by: string | null
+          student_id: string | null
+          updated_at: string | null
+          user_id: string | null
+          waist_measurement: number | null
+        }
+        Insert: {
+          academic_year: string
+          assigned_accessories?: string[] | null
+          assigned_dress_id?: string | null
+          assigned_shoes_id?: string | null
+          bust_measurement?: number | null
+          created_at?: string | null
+          dress_size?: string | null
+          email: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          full_name: string
+          glove_size?: string | null
+          height_feet?: number | null
+          height_inches?: number | null
+          hip_measurement?: number | null
+          id?: string
+          intake_status?: string | null
+          major?: string | null
+          notes?: string | null
+          phone_number?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          shoe_size?: string | null
+          size_verified?: boolean | null
+          size_verified_at?: string | null
+          size_verified_by?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          waist_measurement?: number | null
+        }
+        Update: {
+          academic_year?: string
+          assigned_accessories?: string[] | null
+          assigned_dress_id?: string | null
+          assigned_shoes_id?: string | null
+          bust_measurement?: number | null
+          created_at?: string | null
+          dress_size?: string | null
+          email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          full_name?: string
+          glove_size?: string | null
+          height_feet?: number | null
+          height_inches?: number | null
+          hip_measurement?: number | null
+          id?: string
+          intake_status?: string | null
+          major?: string | null
+          notes?: string | null
+          phone_number?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          shoe_size?: string | null
+          size_verified?: boolean | null
+          size_verified_at?: string | null
+          size_verified_by?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          waist_measurement?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_student_intake_assigned_dress_id_fkey"
+            columns: ["assigned_dress_id"]
+            isOneToOne: false
+            referencedRelation: "gw_wardrobe_inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_student_intake_assigned_shoes_id_fkey"
+            columns: ["assigned_shoes_id"]
+            isOneToOne: false
+            referencedRelation: "gw_wardrobe_inventory"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_tour_cities: {
         Row: {
