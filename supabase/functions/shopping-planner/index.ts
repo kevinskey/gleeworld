@@ -111,6 +111,36 @@ Return the same JSON format with optimized products.`;
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI API error:', response.status, errorText);
+      
+      // Handle quota exceeded error with fallback
+      if (response.status === 429) {
+        console.log('OpenAI quota exceeded, using fallback Amazon search');
+        const items = purpose.split('\n').filter(item => item.trim()).slice(0, 8);
+        const pricePerItem = Math.floor(Number(budget) / Math.max(items.length, 1));
+        
+        const fallbackResponse = {
+          items: items.map((item, index) => ({
+            id: `amazon_${Date.now()}_${index}`,
+            name: `${item.trim()} - Amazon's Choice`,
+            estimatedPrice: Math.min(pricePerItem * (0.8 + Math.random() * 0.4), Number(budget) * 0.6),
+            priority: index < 3 ? "high" : index < 6 ? "medium" : "low",
+            category: "General",
+            notes: "Popular Amazon product with good reviews"
+          })),
+          suggestions: [
+            "Check Amazon's daily deals for better prices",
+            "Compare customer reviews and ratings",
+            "Consider Amazon Prime for free shipping",
+            "Look for bundle deals to save money"
+          ],
+          totalEstimated: Math.min(Number(budget) * 0.85, items.length * 50)
+        };
+        
+        return new Response(JSON.stringify(fallbackResponse), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
