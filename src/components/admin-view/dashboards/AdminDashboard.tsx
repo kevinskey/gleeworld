@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -75,6 +76,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   
   // Fetch activity logs with the hook
   const { logs: activityLogs, loading: logsLoading } = useActivityLogs(true);
@@ -330,6 +332,28 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         return <WardrobeManagementHub />;
       case "student-intake":
         return <StudentIntakeProcessor />;
+      case "dues-collection":
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Dues Collection
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Manage member dues collection, payment plans, and financial tracking.
+              </p>
+              <button 
+                onClick={() => navigate('/dues-management')}
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Open Dues Management System
+              </button>
+            </CardContent>
+          </Card>
+        );
       default:
         return (
           <Card>
