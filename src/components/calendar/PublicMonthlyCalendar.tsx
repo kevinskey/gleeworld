@@ -13,7 +13,7 @@ import {
   addMonths, 
   subMonths 
 } from "date-fns";
-import { GleeWorldEvent } from "@/hooks/usePublicGleeWorldEvents";
+import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
 import { EventHoverCard } from "./EventHoverCard";
 
