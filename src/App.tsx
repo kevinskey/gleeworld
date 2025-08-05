@@ -15,6 +15,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import FanDashboard from "./pages/FanDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import { DuesManagement } from "./pages/DuesManagement";
 
 import { GleeWorldLanding } from "./pages/GleeWorldLanding";
 import { TestLandingPage } from "./components/debug/TestLandingPage";
@@ -402,7 +403,15 @@ const App = () => {
                            <Treasurer />
                          </ProtectedRoute>
                        } 
-                     />
+                      />
+                      <Route 
+                        path="/dues-management" 
+                        element={
+                          <ProtectedRoute>
+                            <DuesManagement />
+                          </ProtectedRoute>
+                        } 
+                      />
                         <Route 
                           path="/performance" 
                           element={
