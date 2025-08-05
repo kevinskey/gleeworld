@@ -23,7 +23,10 @@ import {
   Volume2,
   Clock,
   Settings,
-  BarChart3
+  BarChart3,
+  Search,
+  Filter,
+  ArrowUpDown
 } from 'lucide-react';
 
 interface AudioTrack {
@@ -47,7 +50,12 @@ interface RadioStats {
 
 export const RadioManagement = () => {
   const [tracks, setTracks] = useState<AudioTrack[]>([]);
+  const [filteredTracks, setFilteredTracks] = useState<AudioTrack[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'title' | 'artist' | 'date' | 'plays'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [radioStats, setRadioStats] = useState<RadioStats>({
     totalTracks: 0,
     totalListeners: 127,
@@ -70,6 +78,10 @@ export const RadioManagement = () => {
     fetchTracks();
     fetchRadioStats();
   }, []);
+
+  useEffect(() => {
+    filterAndSortTracks();
+  }, [tracks, searchQuery, categoryFilter, sortBy, sortOrder]);
 
   const fetchTracks = async () => {
     try {
@@ -176,6 +188,47 @@ export const RadioManagement = () => {
       totalListeners: Math.floor(Math.random() * 200) + 50,
       currentlyPlaying: tracks[0]?.title || null
     }));
+  };
+
+  const filterAndSortTracks = () => {
+    let filtered = tracks.filter(track => {
+      const matchesSearch = !searchQuery || 
+        track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (track.artist_info && track.artist_info.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesCategory = categoryFilter === 'all' || track.category === categoryFilter;
+      
+      return matchesSearch && matchesCategory;
+    });
+
+    // Sort the filtered results
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'title':
+          comparison = a.title.localeCompare(b.title);
+          break;
+        case 'artist':
+          comparison = (a.artist_info || '').localeCompare(b.artist_info || '');
+          break;
+        case 'date':
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        case 'plays':
+          comparison = a.play_count - b.play_count;
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    setFilteredTracks(filtered);
+  };
+
+  // Get unique categories for filter dropdown
+  const getCategories = () => {
+    const categories = new Set(tracks.map(track => track.category).filter(Boolean));
+    return Array.from(categories);
   };
 
   const handleEditTrack = (track: AudioTrack) => {
@@ -338,10 +391,66 @@ export const RadioManagement = () => {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {/* Search and Filters */}
+              <div className="flex flex-wrap gap-4 items-center">
+                <div className="flex-1 min-w-64">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search tracks or artists..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {getCategories().map(category => (
+                        <SelectItem key={category} value={category}>
+                          {category.charAt(0).toUpperCase() + category.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                  <Select value={sortBy} onValueChange={(value: 'title' | 'artist' | 'date' | 'plays') => setSortBy(value)}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date">Date</SelectItem>
+                      <SelectItem value="title">Title</SelectItem>
+                      <SelectItem value="artist">Artist</SelectItem>
+                      <SelectItem value="plays">Plays</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    className="px-3"
+                  >
+                    {sortOrder === 'asc' ? '↑' : '↓'}
+                  </Button>
+                </div>
+              </div>
+
               <ScrollArea className="h-[400px]">
                 <div className="space-y-3">
-                  {tracks.map((track) => (
+                  {filteredTracks.map((track) => (
                     <Card key={track.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="pt-4">
                         <div className="flex items-start justify-between">
@@ -395,9 +504,9 @@ export const RadioManagement = () => {
                       </CardContent>
                     </Card>
                   ))}
-                  {tracks.length === 0 && !loading && (
+                  {filteredTracks.length === 0 && !loading && (
                     <div className="text-center py-8 text-muted-foreground">
-                      No tracks in the library yet
+                      {searchQuery || categoryFilter !== 'all' ? 'No tracks match your filters' : 'No tracks in the library yet'}
                     </div>
                   )}
                 </div>
