@@ -13,18 +13,13 @@ interface SightSingingManagerProps {
 
 export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
   const [stats] = useState({
-    completionRate: 85,
-    activeExercises: 12,
-    totalSections: 4,
-    weeklyProgress: 78
+    completionRate: 0,
+    activeExercises: 0,
+    totalSections: 0,
+    weeklyProgress: 0
   });
 
-  const exercises = [
-    { id: '1', title: 'Interval Training - Major 3rds', type: 'Intervals', difficulty: 'Beginner', completion: 90 },
-    { id: '2', title: 'Chord Recognition - Triads', type: 'Chords', difficulty: 'Intermediate', completion: 75 },
-    { id: '3', title: 'Rhythmic Patterns - Compound Meter', type: 'Rhythm', difficulty: 'Advanced', completion: 60 },
-    { id: '4', title: 'Scale Degrees - Minor Keys', type: 'Scales', difficulty: 'Intermediate', completion: 80 }
-  ];
+  const exercises: any[] = [];
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -87,7 +82,7 @@ export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {exercises.map((exercise) => (
+          {exercises.length > 0 ? exercises.map((exercise) => (
             <div key={exercise.id} className="flex items-center justify-between p-4 border rounded-lg">
               <div className="flex-1">
                 <div className="font-medium">{exercise.title}</div>
@@ -106,7 +101,11 @@ export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
                 </Button>
               </div>
             </div>
-          ))}
+          )) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No sight singing exercises assigned
+            </div>
+          )}
         </CardContent>
       </Card>
 
