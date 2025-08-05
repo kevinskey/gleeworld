@@ -1,0 +1,181 @@
+import React, { ReactNode } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { LucideIcon } from 'lucide-react';
+
+interface ModuleWrapperProps {
+  id: string;
+  title: string;
+  description?: string;
+  icon?: LucideIcon;
+  iconColor?: string;
+  children: ReactNode;
+  isNew?: boolean;
+  isLoading?: boolean;
+  headerActions?: ReactNode;
+  className?: string;
+  fullPage?: boolean;
+}
+
+export const ModuleWrapper = ({
+  id,
+  title,
+  description,
+  icon: Icon,
+  iconColor = "primary",
+  children,
+  isNew = false,
+  isLoading = false,
+  headerActions,
+  className = "",
+  fullPage = false
+}: ModuleWrapperProps) => {
+  const containerClass = fullPage 
+    ? "min-h-screen space-y-4" 
+    : "space-y-4";
+
+  const content = (
+    <div className={`${containerClass} ${className}`}>
+      {/* Standardized Header */}
+      <div className="border-l-4 border-primary pl-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {Icon && <Icon className={`h-5 w-5 text-${iconColor}-600`} />}
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold">{title}</h2>
+                {isNew && <Badge variant="secondary" className="text-xs">New</Badge>}
+              </div>
+              {description && (
+                <p className="text-xs text-muted-foreground mt-1">{description}</p>
+              )}
+            </div>
+          </div>
+          {headerActions && (
+            <div className="flex items-center gap-2">
+              {headerActions}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Module Content */}
+      <div className="space-y-4">
+        {isLoading ? (
+          <Card>
+            <CardContent className="p-8">
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          children
+        )}
+      </div>
+    </div>
+  );
+
+  return fullPage ? content : <div className="space-y-4">{content}</div>;
+};
+
+// Standardized module card component for sub-features
+interface ModuleCardProps {
+  title: string;
+  description?: string;
+  icon?: LucideIcon;
+  iconColor?: string;
+  onClick?: () => void;
+  children?: ReactNode;
+  actions?: ReactNode;
+  className?: string;
+  isNew?: boolean;
+}
+
+export const ModuleCard = ({
+  title,
+  description,
+  icon: Icon,
+  iconColor = "primary",
+  onClick,
+  children,
+  actions,
+  className = "",
+  isNew = false
+}: ModuleCardProps) => {
+  return (
+    <Card className={`hover:shadow-md transition-all ${onClick ? 'cursor-pointer hover:border-primary/20' : ''} ${className}`} onClick={onClick}>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {Icon && <Icon className={`h-4 w-4 text-${iconColor}-600`} />}
+            <span className="text-sm">{title}</span>
+            {isNew && <Badge variant="secondary" className="text-xs">New</Badge>}
+          </div>
+          {actions && (
+            <div className="flex items-center gap-1">
+              {actions}
+            </div>
+          )}
+        </CardTitle>
+        {description && (
+          <p className="text-xs text-muted-foreground">{description}</p>
+        )}
+      </CardHeader>
+      {children && (
+        <CardContent className="pt-0">
+          {children}
+        </CardContent>
+      )}
+    </Card>
+  );
+};
+
+// Standardized stats card component
+interface ModuleStatsCardProps {
+  title: string;
+  value: string | number;
+  description?: string;
+  icon?: LucideIcon;
+  iconColor?: string;
+  trend?: {
+    value: number;
+    isPositive: boolean;
+  };
+}
+
+export const ModuleStatsCard = ({
+  title,
+  value,
+  description,
+  icon: Icon,
+  iconColor = "primary",
+  trend
+}: ModuleStatsCardProps) => {
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground">{title}</p>
+            <p className="text-xl font-semibold">{value}</p>
+            {description && (
+              <p className="text-xs text-muted-foreground mt-1">{description}</p>
+            )}
+          </div>
+          {Icon && (
+            <Icon className={`h-6 w-6 text-${iconColor}-600`} />
+          )}
+        </div>
+        {trend && (
+          <div className="mt-2 flex items-center gap-1">
+            <span className={`text-xs ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+              {trend.isPositive ? '+' : '-'}{Math.abs(trend.value)}%
+            </span>
+            <span className="text-xs text-muted-foreground">from last period</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};

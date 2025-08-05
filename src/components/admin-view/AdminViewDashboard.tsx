@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Shield } from "lucide-react";
 import { DashboardTemplate } from "./DashboardTemplate";
-import { AdminDashboard } from "./dashboards/AdminDashboard";
+import { ModularAdminDashboard } from "./ModularAdminDashboard";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -74,7 +74,7 @@ export const AdminViewDashboard = () => {
       subtitle={getSubtitle()}
       backgroundImage={backgroundImage}
     >
-      <AdminDashboard user={user} />
+      <ModularAdminDashboard user={user} />
     </DashboardTemplate>
   );
 };
