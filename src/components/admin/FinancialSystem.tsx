@@ -9,6 +9,7 @@ import { PaymentTracking } from "./financial/PaymentTracking";
 import { FinancialReports } from "./financial/FinancialReports";
 import { StipendManagement } from "./financial/StipendManagement";
 import { BudgetTracking } from "./financial/BudgetTracking";
+import { MonthlyStatements } from "./financial/MonthlyStatements";
 import { W9Management } from "./W9Management";
 
 interface FinancialSystemProps {
@@ -23,6 +24,7 @@ export const FinancialSystem = ({ initialTab }: FinancialSystemProps) => {
       case 'financial-overview': return 'overview';
       case 'user-records': return 'records';
       case 'w9': return 'w9-forms';
+      case 'monthly-statements': return 'statements';
       case 'financial': return 'overview';
       default: return tab;
     }
@@ -58,7 +60,7 @@ export const FinancialSystem = ({ initialTab }: FinancialSystemProps) => {
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-7 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-8 h-auto p-1">
           <TabsTrigger value="overview" className="flex items-center gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm">
             <TrendingUp className="h-3 w-3 md:h-4 md:w-4" />
             <span className="hidden sm:inline">Overview</span>
@@ -82,6 +84,10 @@ export const FinancialSystem = ({ initialTab }: FinancialSystemProps) => {
           <TabsTrigger value="budget" className="flex items-center gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm">
             <Calculator className="h-3 w-3 md:h-4 md:w-4" />
             <span className="hidden sm:inline">Budget</span>
+          </TabsTrigger>
+          <TabsTrigger value="statements" className="flex items-center gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm">
+            <FileText className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Statements</span>
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm">
             <Users className="h-3 w-3 md:h-4 md:w-4" />
@@ -111,6 +117,10 @@ export const FinancialSystem = ({ initialTab }: FinancialSystemProps) => {
 
         <TabsContent value="budget" className="space-y-4 md:space-y-6">
           <BudgetTracking />
+        </TabsContent>
+
+        <TabsContent value="statements" className="space-y-4 md:space-y-6">
+          <MonthlyStatements />
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-4 md:space-y-6">
