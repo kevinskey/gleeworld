@@ -5,16 +5,12 @@ import { CreditCard, Users, DollarSign, Calendar, AlertCircle } from "lucide-rea
 import { ModuleProps } from "@/types/modules";
 
 export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
-  const duesData = [
-    { id: 1, member: "Sarah Johnson", amount: 150, status: "paid", dueDate: "2024-01-15", section: "Soprano" },
-    { id: 2, member: "Marcus Williams", amount: 150, status: "overdue", dueDate: "2024-01-10", section: "Bass" },
-    { id: 3, member: "Elena Rodriguez", amount: 150, status: "pending", dueDate: "2024-01-20", section: "Alto" },
-    { id: 4, member: "David Chen", amount: 150, status: "partial", dueDate: "2024-01-15", section: "Tenor" }
-  ];
-
-  const totalDues = duesData.length * 150;
-  const paidDues = duesData.filter(d => d.status === 'paid').length * 150;
-  const overdueDues = duesData.filter(d => d.status === 'overdue').length * 150;
+  // TODO: Replace with real dues data from Supabase
+  const duesData: any[] = [];
+  
+  const totalDues = 0;
+  const paidDues = 0;
+  const overdueDues = 0;
 
   if (isFullPage) {
     return (
@@ -68,7 +64,7 @@ export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModulePro
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-2xl font-bold">{Math.round((paidDues/totalDues) * 100)}%</div>
+                  <div className="text-2xl font-bold">0%</div>
                   <div className="text-sm text-muted-foreground">Collection Rate</div>
                 </div>
                 <Users className="h-8 w-8 text-purple-500" />
@@ -83,31 +79,37 @@ export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModulePro
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {duesData.map((payment) => (
-                <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <Users className="h-5 w-5 text-blue-500" />
-                    <div>
-                      <div className="font-medium">{payment.member}</div>
-                      <div className="text-sm text-muted-foreground">{payment.section} • Due: {payment.dueDate}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="font-medium">${payment.amount}</div>
-                      <div className="text-sm text-muted-foreground">Semester dues</div>
-                    </div>
-                    <Badge variant={
-                      payment.status === 'paid' ? 'default' : 
-                      payment.status === 'overdue' ? 'destructive' : 
-                      payment.status === 'partial' ? 'secondary' : 'outline'
-                    }>
-                      {payment.status}
-                    </Badge>
-                    <Button variant="ghost" size="sm">Contact</Button>
-                  </div>
+              {duesData.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No dues records found. Start by creating dues records for members.
                 </div>
-              ))}
+              ) : (
+                duesData.map((payment) => (
+                  <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <Users className="h-5 w-5 text-blue-500" />
+                      <div>
+                        <div className="font-medium">{payment.member}</div>
+                        <div className="text-sm text-muted-foreground">{payment.section} • Due: {payment.dueDate}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="font-medium">${payment.amount}</div>
+                        <div className="text-sm text-muted-foreground">Semester dues</div>
+                      </div>
+                      <Badge variant={
+                        payment.status === 'paid' ? 'default' : 
+                        payment.status === 'overdue' ? 'destructive' : 
+                        payment.status === 'partial' ? 'secondary' : 'outline'
+                      }>
+                        {payment.status}
+                      </Badge>
+                      <Button variant="ghost" size="sm">Contact</Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -126,9 +128,9 @@ export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModulePro
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          <div className="text-sm">${paidDues} of ${totalDues} collected</div>
-          <div className="text-sm">{Math.round((paidDues/totalDues) * 100)}% collection rate</div>
-          <div className="text-sm">{duesData.filter(d => d.status === 'overdue').length} overdue payments</div>
+          <div className="text-sm">$0 of $0 collected</div>
+          <div className="text-sm">0% collection rate</div>
+          <div className="text-sm">0 overdue payments</div>
         </div>
       </CardContent>
     </Card>

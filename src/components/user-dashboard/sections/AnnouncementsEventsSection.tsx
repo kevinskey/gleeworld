@@ -40,19 +40,13 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
     }
   };
 
-  // Mock data for checked out items and dues - replace with real data
-  const checkedOutItems = [
-    { id: '1', title: 'Black Concert Dress', dueDate: '2024-02-15', type: 'uniform' },
-    { id: '2', title: 'Music Folder - Spring Concert', dueDate: '2024-02-20', type: 'music' },
-  ];
+  // TODO: Replace with real data from Supabase
+  const checkedOutItems: any[] = [];
 
   const duesInfo = {
-    totalDue: 150.00,
-    dueDate: '2024-03-01',
-    items: [
-      { description: 'Membership Dues', amount: 100.00 },
-      { description: 'Concert Attire Fee', amount: 50.00 },
-    ]
+    totalDue: 0,
+    dueDate: null,
+    items: []
   };
 
   return (
