@@ -52,11 +52,16 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
 
   // Separate effect to handle play state changes
   useEffect(() => {
+    console.log('Play state changed:', isPlaying, 'Audio URL:', currentTrack.audio_url);
     if (audioRef.current && currentTrack.audio_url) {
+      console.log('Audio element exists, attempting to', isPlaying ? 'play' : 'pause');
       if (isPlaying) {
         const playPromise = audioRef.current.play();
+        console.log('Play promise:', playPromise);
         if (playPromise !== undefined) {
-          playPromise.catch(error => {
+          playPromise.then(() => {
+            console.log('Play promise resolved successfully');
+          }).catch(error => {
             console.error('Error playing stream:', error);
             setIsPlaying(false);
             setStreamError("Unable to play stream. Check if stream is online and try again.");
@@ -70,6 +75,11 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
       } else {
         audioRef.current.pause();
       }
+    } else {
+      console.log('Audio ref or URL missing:', { 
+        hasAudioRef: !!audioRef.current, 
+        audioUrl: currentTrack.audio_url 
+      });
     }
   }, [isPlaying, currentTrack.audio_url]);
 
@@ -100,6 +110,7 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
   }, [isPersonalRadio]);
 
   const handleTogglePlay = () => {
+    console.log('Toggle play clicked, current state:', isPlaying);
     const newState = !isPlaying;
     setIsPlaying(newState);
     
