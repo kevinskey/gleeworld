@@ -238,10 +238,8 @@ async function syncData(supabaseClient: any, userId: string, params: any) {
 }
 
 async function getAuthUrl(supabaseClient: any, userId: string) {
-  // For Google Sheets OAuth, we need to redirect back to our own domain
-  // The user will need to configure this URL in Google Cloud Console
-  const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('https://', '')?.replace('.supabase.co', '');
-  const redirectUri = `https://${baseUrl}.supabase.co/functions/v1/glee-sheets-api/callback`;
+  // Use the direct Supabase URL for the redirect
+  const redirectUri = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/glee-sheets-api/callback`;
   
   const scopes = [
     'https://www.googleapis.com/auth/spreadsheets',
@@ -257,11 +255,14 @@ async function getAuthUrl(supabaseClient: any, userId: string) {
     `prompt=consent&` +
     `state=${userId}`;
 
+  console.log('Generated OAuth URL:', authUrl);
+  console.log('Redirect URI:', redirectUri);
+
   return new Response(
     JSON.stringify({ 
       authUrl,
       redirectUri: redirectUri,
-      note: "Please configure this redirect URI in your Google Cloud Console OAuth settings"
+      note: "Configure this exact redirect URI in Google Cloud Console: " + redirectUri
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
@@ -333,7 +334,7 @@ async function handleOAuthCallback(req: Request) {
         client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
         code: code,
         grant_type: 'authorization_code',
-        redirect_uri: `${Deno.env.get('SUPABASE_URL')}/functions/v1/glee-sheets-api/callback`
+        redirect_uri: `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/glee-sheets-api/callback`
       })
     });
 
