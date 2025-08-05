@@ -31,7 +31,7 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
             <h1 className="text-2xl font-bold">Contracts Management</h1>
             <p className="text-muted-foreground">Create, manage, and track performance contracts</p>
           </div>
-          <Button onClick={() => setShowContractTypeDialog(true)}>
+          <Button onClick={() => setShowContractTypeDialog(true)} className="pr-6">
             <FileCheck className="h-4 w-4 mr-2" />
             New Contract
           </Button>
