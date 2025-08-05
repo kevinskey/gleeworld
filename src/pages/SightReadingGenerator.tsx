@@ -137,6 +137,13 @@ const SightReadingGeneratorPage = () => {
 
     try {
       console.log('Generating sight-reading exercise...');
+      console.log('Parameters:', {
+        difficulty,
+        keySignature,
+        timeSignature,
+        measures: measures[0],
+        noteRange
+      });
       
       const { data, error } = await supabase.functions.invoke('generate-musicxml', {
         body: {
@@ -148,9 +155,22 @@ const SightReadingGeneratorPage = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('Function response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error('No data returned from function');
+      }
 
       const { musicXML } = data;
+      
+      if (!musicXML) {
+        throw new Error('No MusicXML content in response');
+      }
       
       // Validate the generated MusicXML
       if (!validateMusicXML(musicXML)) {
@@ -168,9 +188,21 @@ const SightReadingGeneratorPage = () => {
 
     } catch (error) {
       console.error('Error generating exercise:', error);
+      
+      // More specific error messages
+      let errorMessage = "Failed to generate sight-reading exercise";
+      
+      if (error.message?.includes('Failed to fetch')) {
+        errorMessage = "Network error: Unable to connect to the generation service. Please check your internet connection and try again.";
+      } else if (error.message?.includes('500')) {
+        errorMessage = "Server error: The music generation service is currently unavailable. Please try again in a moment.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Generation Failed",
-        description: error.message || "Failed to generate sight-reading exercise",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
