@@ -214,7 +214,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       >
         <div className="flex items-center gap-2 sm:gap-3">
           <IconComponent className={`h-4 w-4 ${isMobile ? 'sm:h-5 sm:w-5' : 'md:h-5 md:w-5'} text-${category.color}-600`} />
-          <span className={`font-medium ${isMobile ? 'text-sm sm:text-base' : 'text-base'}`}>{category.title}</span>
+          <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{category.title}</span>
         </div>
         <p className={`text-muted-foreground mt-1 sm:mt-2 ${isMobile ? 'text-xs' : 'text-xs'}`}>
           {category.description}
@@ -237,7 +237,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
               {categories.find(cat => cat.id === selectedCategory)?.title}
             </span>
             <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground font-medium">
+            <span className="text-foreground font-medium text-xs">
               {categories.find(cat => cat.id === selectedCategory)?.subcategories?.find(sub => sub.id === selectedSubcategory)?.title}
             </span>
           </div>
@@ -255,7 +255,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         <div className="space-y-4">
           {/* Header showing selected category */}
           <div className="border-l-4 border-primary pl-4">
-            <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+             <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
               <currentCategory.icon className={`h-5 w-5 text-${currentCategory.color}-600`} />
               {currentCategory.title}
             </h2>
@@ -273,7 +273,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <SubIcon className={`h-5 w-5 text-${subcategory.color}-600`} />
-                    <span className="font-medium">{subcategory.title}</span>
+                    <span className="font-medium text-sm">{subcategory.title}</span>
                     {subcategory.isNew && (
                       <Badge variant="secondary" className="text-xs">New</Badge>
                     )}
@@ -295,7 +295,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       <div className="space-y-4">
         {/* Header showing selected category */}
         <div className="border-l-4 border-primary pl-4">
-          <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+          <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
             <CategoryIcon className={`h-5 w-5 text-${currentCategory?.color}-600`} />
             {currentCategory?.title}
           </h2>
@@ -357,7 +357,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       <CardContent>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <h3 className="font-semibold">Active Features</h3>
+            <h3 className="font-semibold text-sm">Active Features</h3>
              <ul className="space-y-1 text-xs text-muted-foreground">
               <li>• Email Management System</li>
               <li>• Push Notifications</li>
@@ -366,7 +366,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             </ul>
           </div>
           <div className="space-y-2">
-            <h3 className="font-semibold">Quick Actions</h3>
+             <h3 className="font-semibold text-sm">Quick Actions</h3>
             <div className="space-y-2">
               <button className="w-full text-left p-2 rounded bg-muted/50 hover:bg-muted">
                 Send Announcement
@@ -400,7 +400,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       <CardContent>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <h3 className="font-semibold">Member Tools</h3>
+            <h3 className="font-semibold text-sm">Member Tools</h3>
              <ul className="space-y-1 text-xs text-muted-foreground">
               <li>• User Registration & Profiles</li>
               <li>• Executive Board Management</li>
@@ -409,7 +409,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             </ul>
           </div>
           <div className="space-y-2">
-            <h3 className="font-semibold">Statistics</h3>
+            <h3 className="font-semibold text-sm">Statistics</h3>
             <div className="space-y-1 text-sm">
               <div>Total Members: {users.length}</div>
               <div>Active Today: 12</div>
@@ -446,7 +446,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       <CardContent>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <h3 className="font-semibold">Financial Tools</h3>
+            <h3 className="font-semibold text-sm">Financial Tools</h3>
             <ul className="space-y-1 text-xs text-muted-foreground">
               <li>• Contract Management</li>
               <li>• Budget Planning with AI</li>
@@ -457,7 +457,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             </ul>
           </div>
           <div className="space-y-2">
-            <h3 className="font-semibold">Quick Actions</h3>
+            <h3 className="font-semibold text-sm">Quick Actions</h3>
             <div className="space-y-2">
               <button className="w-full text-left p-2 rounded bg-muted/50 hover:bg-muted">
                 Create Budget Request
@@ -503,7 +503,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         <div className="block md:hidden">
           <div className="space-y-4">
             <div className="bg-card rounded-lg border p-4 overflow-y-auto">
-              <h2 className="text-lg font-semibold mb-4 text-foreground">
+              <h2 className="text-base font-semibold mb-4 text-foreground">
                 Admin Categories
               </h2>
               <div className="space-y-2 sm:space-y-3">
@@ -523,7 +523,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <div className="flex h-full">
               {/* Left Column - Categories (40%) */}
               <div className="w-2/5 p-6 border-r border-border overflow-y-auto">
-                <h2 className="text-xl font-semibold mb-6 text-foreground">
+                <h2 className="text-lg font-semibold mb-6 text-foreground">
                   Admin Categories
                 </h2>
                 <div className="space-y-3">
