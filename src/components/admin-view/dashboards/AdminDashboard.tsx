@@ -53,6 +53,7 @@ import { CalendarControlsAdmin } from "@/components/admin/CalendarControlsAdmin"
 import { SystemSettings } from "@/components/admin/SystemSettings";
 import { PermissionManagement } from "@/components/admin/PermissionManagement";
 import { AuditionsManagement } from "@/components/admin/AuditionsManagement";
+import { WardrobeManagementHub } from "@/components/wardrobe/WardrobeManagementHub";
 
 interface AdminDashboardProps {
   user: {
@@ -370,8 +371,6 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   );
 
   const renderWardrobeContent = () => {
-    // Import the wardrobe component
-    const { WardrobeManagementHub } = require("@/components/wardrobe/WardrobeManagementHub");
     return <WardrobeManagementHub />;
   };
 
