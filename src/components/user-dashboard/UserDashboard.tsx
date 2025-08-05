@@ -9,6 +9,8 @@ import { YouTubeManagement } from "@/components/admin/YouTubeManagement";
 import { UsernamePermissionsManager } from "@/components/admin/UsernamePermissionsManager";
 import { SpotlightManagement } from "@/components/admin/spotlight/SpotlightManagement";
 import { PermissionsPanel } from "@/components/admin/PermissionsPanel";
+import { PRCoordinatorHub } from "@/components/pr-coordinator/PRCoordinatorHub";
+import AlumnaeLanding from "@/pages/AlumnaeLanding";
 import { WelcomeCard } from "./WelcomeCard";
 import { QuickActionsSection } from "./sections/QuickActionsSection";
 import { GleeClubSpotlightSection } from "./sections/GleeClubSpotlightSection";
@@ -145,6 +147,10 @@ const UserDashboard = React.memo(() => {
             return <SpotlightManagement />;
           case 'permissions-panel':
             return <PermissionsPanel />;
+          case 'pr-coordinator':
+            return <PRCoordinatorHub />;
+          case 'alumnae-portal':
+            return <AlumnaeLanding />;
           default:
             return (
               <Card>
