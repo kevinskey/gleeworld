@@ -10332,6 +10332,50 @@ export type Database = {
         }
         Relationships: []
       }
+      radio_state: {
+        Row: {
+          current_track_artist: string | null
+          current_track_id: string | null
+          current_track_title: string | null
+          id: string
+          is_playing: boolean | null
+          playback_position_seconds: number | null
+          started_at: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          current_track_artist?: string | null
+          current_track_id?: string | null
+          current_track_title?: string | null
+          id?: string
+          is_playing?: boolean | null
+          playback_position_seconds?: number | null
+          started_at?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          current_track_artist?: string | null
+          current_track_id?: string | null
+          current_track_title?: string | null
+          id?: string
+          is_playing?: boolean | null
+          playback_position_seconds?: number | null
+          started_at?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "radio_state_current_track_id_fkey"
+            columns: ["current_track_id"]
+            isOneToOne: false
+            referencedRelation: "audio_archive"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       receipts: {
         Row: {
           amount: number

@@ -6,44 +6,12 @@ import { Music, Settings } from "lucide-react";
 import { ResponsiveNavigation } from "@/components/navigation/ResponsiveNavigation";
 import { HeaderClock } from "@/components/ui/header-clock";
 import { MusicStaffMenu } from "@/components/ui/music-staff-menu";
-import { RadioPlayer } from "@/components/radio/RadioPlayer";
+import { RealtimeRadioPlayer } from "@/components/radio/RealtimeRadioPlayer";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const PublicHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isRadioPlaying, setIsRadioPlaying] = useState(false);
   const { user } = useAuth();
-
-  // Handle radio toggle from local state
-  const handleRadioToggle = () => {
-    const newState = !isRadioPlaying;
-    setIsRadioPlaying(newState);
-    
-    // Dispatch event for radio state synchronization
-    const event = new CustomEvent('personal-radio-toggle', {
-      detail: { isPlaying: newState }
-    });
-    window.dispatchEvent(event);
-    
-    // Store state in localStorage
-    localStorage.setItem('gleeworld-personal-radio-playing', newState.toString());
-  };
-
-  // Sync radio state on mount and listen for external changes
-  useEffect(() => {
-    const savedState = localStorage.getItem('gleeworld-personal-radio-playing');
-    setIsRadioPlaying(savedState === 'true');
-
-    const handleRadioStateChange = (event: CustomEvent) => {
-      setIsRadioPlaying(event.detail.isPlaying);
-    };
-
-    window.addEventListener('personal-radio-toggle', handleRadioStateChange as EventListener);
-    
-    return () => {
-      window.removeEventListener('personal-radio-toggle', handleRadioStateChange as EventListener);
-    };
-  }, []);
 
   // Add global style to hide sheet overlay
   const overlayStyle = `
@@ -78,13 +46,8 @@ export const PublicHeader = () => {
 
             {/* Right side actions */}
             <div className="flex items-center gap-2 lg:gap-3">
-             {/* Radio Player */}
-              <RadioPlayer 
-                className="flex-shrink-0" 
-                isPlaying={isRadioPlaying}
-                onToggle={handleRadioToggle}
-                isPersonalRadio={true}
-              />
+             {/* Realtime Radio Player */}
+              <RealtimeRadioPlayer className="flex-shrink-0" />
               
               {/* Dashboard Link for Authenticated Users */}
               {user && (
