@@ -576,6 +576,69 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_requests: {
+        Row: {
+          assigned_to: string | null
+          budget_range: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          estimated_audience: number | null
+          event_date: string
+          event_description: string
+          event_location: string
+          event_time: string | null
+          event_type: string
+          id: string
+          notes: string | null
+          organization_name: string
+          special_requests: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          budget_range?: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          estimated_audience?: number | null
+          event_date: string
+          event_description: string
+          event_location: string
+          event_time?: string | null
+          event_type: string
+          id?: string
+          notes?: string | null
+          organization_name: string
+          special_requests?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          budget_range?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          estimated_audience?: number | null
+          event_date?: string
+          event_description?: string
+          event_location?: string
+          event_time?: string | null
+          event_type?: string
+          id?: string
+          notes?: string | null
+          organization_name?: string
+          special_requests?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       budget_attachments: {
         Row: {
           budget_id: string | null

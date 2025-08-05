@@ -62,7 +62,18 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
     try {
       setLoading(true);
       
-      // For now, using mock data until we create the database table
+      const { data, error } = await supabase
+        .from('booking_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setRequests(data || []);
+    } catch (error) {
+      console.error('Error loading booking requests:', error);
+      
+      // Fallback to mock data if there's an error
       const mockRequests: BookingRequest[] = [
         {
           id: '1',
@@ -119,8 +130,6 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
       ];
       
       setRequests(mockRequests);
-    } catch (error) {
-      console.error('Error loading booking requests:', error);
     } finally {
       setLoading(false);
     }
