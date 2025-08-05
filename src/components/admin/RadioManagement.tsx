@@ -401,7 +401,7 @@ export const RadioManagement = () => {
                       placeholder="Search tracks or artists..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-muted/50 border-border/50"
                     />
                   </div>
                 </div>
