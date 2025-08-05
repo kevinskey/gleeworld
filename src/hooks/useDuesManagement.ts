@@ -65,7 +65,7 @@ export const useDuesManagement = () => {
         .from('gw_dues_records')
         .select(`
           *,
-          user_profile:gw_profiles!gw_dues_records_user_id_fkey (
+          user_profile:gw_profiles!user_id (
             full_name,
             email,
             role
