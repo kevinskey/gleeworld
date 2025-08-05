@@ -29,12 +29,11 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
   const [isPlaying, setIsPlaying] = useState(externalIsPlaying || false);
   const [currentTrack, setCurrentTrack] = useState<CurrentTrack>({
     title: 'Glee World Radio',
-    artist: 'Loading tracks...',
+    artist: 'Spelman College Glee Club',
     category: 'Live Radio'
   });
   const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [volume, setVolume] = useState(70);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
 
@@ -72,14 +71,14 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     }
   };
 
-  // Effect to handle audio source changes (without isPlaying dependency to avoid loops)
+  // Effect to handle audio source changes
   useEffect(() => {
     if (audioRef.current && currentTrack.audio_url) {
       audioRef.current.src = currentTrack.audio_url;
-      audioRef.current.volume = volume / 100;
+      audioRef.current.volume = 0.7; // Fixed volume for radio stream
       audioRef.current.load();
     }
-  }, [currentTrack.audio_url, volume]);
+  }, [currentTrack.audio_url]);
 
   // Separate effect to handle play state changes
   useEffect(() => {
@@ -189,13 +188,6 @@ export const RadioPlayer = ({ className = '', isPlaying: externalIsPlaying, onTo
     }
   };
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = Number(e.target.value);
-    setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume / 100;
-    }
-  };
 
   return (
     <>
