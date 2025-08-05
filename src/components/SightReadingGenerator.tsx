@@ -40,8 +40,12 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
 
   // Initialize OSMD
   useEffect(() => {
+    console.log('OSMD useEffect triggered, sheetMusicRef.current:', !!sheetMusicRef.current);
+    console.log('osmdRef.current exists:', !!osmdRef.current);
+    
     if (sheetMusicRef.current && !osmdRef.current) {
       try {
+        console.log('Attempting to create OSMD instance...');
         osmdRef.current = new OpenSheetMusicDisplay(sheetMusicRef.current, {
           autoResize: true,
           backend: 'svg',
@@ -58,12 +62,12 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
           renderSingleHorizontalStaffline: false,
           defaultFontFamily: 'Times New Roman',
         });
-        console.log('OSMD initialized successfully');
+        console.log('OSMD initialized successfully:', !!osmdRef.current);
       } catch (error) {
         console.error('Error initializing OSMD:', error);
         toast({
           title: "Initialization Error",
-          description: "Failed to initialize music display",
+          description: "Failed to initialize music display: " + error.message,
           variant: "destructive"
         });
       }
@@ -132,6 +136,7 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     }
     
     setGeneratedMelody(melody);
+    console.log('Generated melody:', melody);
     generateMusicXML(melody);
     setIsGenerating(false);
     toast({
@@ -173,6 +178,7 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
   </part>
 </score-partwise>`;
     
+    console.log('Generated MusicXML:', xml.substring(0, 200) + '...');
     setMusicXML(xml);
     displayMusic(xml);
   };
@@ -224,21 +230,33 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
   };
 
   const displayMusic = async (xml: string) => {
+    console.log('displayMusic called');
+    console.log('osmdRef.current exists:', !!osmdRef.current);
+    console.log('sheetMusicRef.current exists:', !!sheetMusicRef.current);
+    console.log('XML length:', xml.length);
+    
     if (osmdRef.current && sheetMusicRef.current) {
       try {
         console.log('Loading MusicXML into OSMD...');
         await osmdRef.current.load(xml);
-        console.log('Rendering music...');
+        console.log('MusicXML loaded successfully, now rendering...');
         osmdRef.current.render();
         console.log('Music rendered successfully');
+        
+        // Check if content was actually rendered
+        const svgElements = sheetMusicRef.current.querySelectorAll('svg');
+        console.log('SVG elements found after render:', svgElements.length);
+        
       } catch (error) {
         console.error('Error displaying music:', error);
         toast({
           title: "Display Error",
-          description: "Failed to display the generated music notation",
+          description: "Failed to display the generated music notation: " + error.message,
           variant: "destructive"
         });
       }
+    } else {
+      console.error('Missing references - osmdRef:', !!osmdRef.current, 'sheetMusicRef:', !!sheetMusicRef.current);
     }
   };
 
