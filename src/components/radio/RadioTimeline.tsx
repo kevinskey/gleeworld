@@ -301,8 +301,15 @@ export const RadioTimeline = ({ onTrackScheduled }: RadioTimelineProps) => {
       });
       
       audio.addEventListener('ended', () => {
-        // Use the track ID that will be set as currently playing
-        playNextTrack(track.id);
+        console.log('Track ended, track ID:', track.id, 'title:', track.title);
+        console.log('currentlyPlaying state before playNextTrack:', currentlyPlaying);
+        console.log('About to call playNextTrack with:', track.id);
+        // Important: Use the track ID from the audio event, not the state
+        const trackIdToPass = track.id;
+        setTimeout(() => {
+          console.log('Executing playNextTrack after timeout with:', trackIdToPass);
+          playNextTrack(trackIdToPass);
+        }, 100); // Small delay to ensure state updates complete
       });
       
       audio.addEventListener('error', () => {
