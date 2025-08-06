@@ -424,14 +424,9 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         clearInterval(countdownInterval);
         setIsCountingDown(false);
         
-        // For practice mode, stop metronome after countdown
-        // For recording mode, keep metronome running
-        if (!isRecording) {
-          console.log('Countdown complete, stopping metronome for practice mode');
-          stopMetronome();
-        } else {
-          console.log('Countdown complete, keeping metronome for recording mode');
-        }
+        // Keep metronome running for both practice and recording modes
+        // Only stop metronome when user toggles it off or session ends
+        console.log('Countdown complete, metronome continues running');
         
         callback(); // Start the actual practice or recording
       }
@@ -488,12 +483,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     console.log('Starting practice - pianoEnabled:', pianoEnabled, 'extractedMelody length:', extractedMelody.length);
     
-    // For practice mode (not recording), we don't need continuous metronome
-    // The metronome was only used for countdown
+    // Metronome continues running from countdown through practice
     if (metronomeEnabled) {
       toast({
         title: "Practice Started",
-        description: "Ready to practice with melody playback"
+        description: "Practicing with metronome and melody playback"
       });
     }
     
@@ -792,10 +786,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   const actuallyStartRecording = async () => {
     try {
-      // Keep metronome running during recording for timing reference
-      if (metronomeEnabled && !metronomeRef.current) {
-        startMetronome();
-      }
+      // Metronome is already running from countdown, keep it going
+      console.log('Starting recording with metronome continuing from countdown');
       
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -1021,7 +1013,14 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
               <Switch
                 id="metronome"
                 checked={metronomeEnabled}
-                onCheckedChange={setMetronomeEnabled}
+                onCheckedChange={(checked) => {
+                  setMetronomeEnabled(checked);
+                  if (!checked) {
+                    stopMetronome();
+                  } else if (isPlaying || isRecording) {
+                    startMetronome();
+                  }
+                }}
                 className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
               />
               <Label htmlFor="metronome" className="flex items-center gap-1 cursor-pointer text-sm">
