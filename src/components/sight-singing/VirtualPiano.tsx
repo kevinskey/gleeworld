@@ -123,9 +123,9 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
 
     const frequency = NOTE_FREQUENCIES[note as keyof typeof NOTE_FREQUENCIES];
     if (frequency) {
-      playNote(frequency);
+      playNote(frequency, 0.8); // Longer duration for better pitch recognition
       
-      // Visual feedback
+      // Enhanced visual feedback with longer duration
       setActiveKeys(prev => new Set([...prev, note]));
       setTimeout(() => {
         setActiveKeys(prev => {
@@ -133,7 +133,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           newSet.delete(note);
           return newSet;
         });
-      }, 300);
+      }, 600); // Longer visual feedback duration
     }
   };
 
@@ -205,20 +205,26 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 onMouseDown={() => handleKeyPress(note)}
                 onTouchStart={() => handleKeyPress(note)}
                 className={`
-                  relative w-12 h-32 bg-white border border-gray-300 
-                  hover:bg-gray-50 active:bg-gray-100 transition-all duration-150
+                  relative w-12 h-32 border transition-all duration-200
                   cursor-pointer select-none
-                  ${activeKeys.has(note) ? 'bg-primary/20 border-primary shadow-lg transform scale-95' : ''}
+                  ${activeKeys.has(note) 
+                    ? 'bg-gradient-to-b from-primary/80 to-primary/60 border-primary shadow-xl transform scale-95 ring-2 ring-primary/50' 
+                    : 'bg-gradient-to-b from-white to-gray-50 border-gray-300 hover:from-gray-50 hover:to-gray-100 active:from-gray-100 active:to-gray-200'
+                  }
                   ${index === 0 ? 'rounded-l' : ''}
                   ${index === whiteKeys.length - 1 ? 'rounded-r' : ''}
                 `}
               >
                 <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
-                  <div className="text-xs font-medium text-gray-700">
+                  <div className={`text-xs font-medium transition-colors duration-200 ${
+                    activeKeys.has(note) ? 'text-white drop-shadow-sm' : 'text-gray-700'
+                  }`}>
                     {note.replace(/\d+/, '')}
                   </div>
                   {showSolfege && (
-                    <div className="text-xs text-primary font-medium">
+                    <div className={`text-xs font-medium transition-colors duration-200 ${
+                      activeKeys.has(note) ? 'text-yellow-200 drop-shadow-sm' : 'text-primary'
+                    }`}>
                       {getSolfegeFor(note)}
                     </div>
                   )}
@@ -243,18 +249,24 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                     onMouseDown={() => handleKeyPress(blackKeyAfter)}
                     onTouchStart={() => handleKeyPress(blackKeyAfter)}
                     className={`
-                      absolute right-0 w-8 h-20 bg-gray-800 border border-gray-600
-                      hover:bg-gray-700 active:bg-gray-600 transition-all duration-150 rounded-b
+                      absolute right-0 w-8 h-20 border transition-all duration-200 rounded-b
                       transform translate-x-1/2 z-10 cursor-pointer select-none
-                      ${activeKeys.has(blackKeyAfter) ? 'bg-primary border-primary shadow-lg scale-95' : ''}
+                      ${activeKeys.has(blackKeyAfter) 
+                        ? 'bg-gradient-to-b from-primary to-primary/80 border-primary shadow-xl scale-95 ring-2 ring-primary/50' 
+                        : 'bg-gradient-to-b from-gray-800 to-gray-900 border-gray-600 hover:from-gray-700 hover:to-gray-800 active:from-gray-600 active:to-gray-700'
+                      }
                     `}
                   >
                     <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
-                      <div className="text-xs font-medium text-white">
+                      <div className={`text-xs font-medium transition-colors duration-200 ${
+                        activeKeys.has(blackKeyAfter) ? 'text-yellow-100 drop-shadow-sm' : 'text-white'
+                      }`}>
                         {blackKeyAfter.replace(/\d+/, '')}
                       </div>
                       {showSolfege && (
-                        <div className="text-xs text-yellow-300 font-medium">
+                        <div className={`text-xs font-medium transition-colors duration-200 ${
+                          activeKeys.has(blackKeyAfter) ? 'text-yellow-200 drop-shadow-sm' : 'text-yellow-300'
+                        }`}>
                           {getSolfegeFor(blackKeyAfter)}
                         </div>
                       )}
