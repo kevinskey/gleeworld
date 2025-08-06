@@ -249,6 +249,7 @@ const SightReadingGeneratorPage = () => {
   const [exerciseGenerated, setExerciseGenerated] = useState(false);
   const [solfegeEnabled, setSolfegeEnabled] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isPlayingExercise, setIsPlayingExercise] = useState(false);
   
   // Generation parameters
   const [difficulty, setDifficulty] = useState('beginner');
@@ -437,14 +438,42 @@ const SightReadingGeneratorPage = () => {
                     {/* Practice Button */}
                     <Button 
                       onClick={() => {
-                        const practiceEvent = new CustomEvent('startPractice');
-                        window.dispatchEvent(practiceEvent);
+                        if (isPlayingExercise) {
+                          const stopEvent = new CustomEvent('stopPractice');
+                          window.dispatchEvent(stopEvent);
+                          setIsPlayingExercise(false);
+                        } else {
+                          const practiceEvent = new CustomEvent('startPractice');
+                          window.dispatchEvent(practiceEvent);
+                          setIsPlayingExercise(true);
+                          
+                          // Auto-stop after the number of measures * beats per measure * tempo
+                          const [beatsPerMeasure] = timeSignature.split('/').map(Number);
+                          const totalBeats = measures[0] * beatsPerMeasure;
+                          const tempo = 120; // Default tempo, could be made configurable
+                          const duration = (totalBeats * 60) / tempo * 1000; // Convert to milliseconds
+                          
+                          setTimeout(() => {
+                            const stopEvent = new CustomEvent('stopPractice');
+                            window.dispatchEvent(stopEvent);
+                            setIsPlayingExercise(false);
+                          }, duration);
+                        }
                       }}
                       className="flex items-center gap-2"
                       variant="secondary"
                     >
-                      <Play className="h-4 w-4" />
-                      Practice
+                      {isPlayingExercise ? (
+                        <>
+                          <Square className="h-4 w-4" />
+                          Stop
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4" />
+                          Practice
+                        </>
+                      )}
                     </Button>
                     
                     {/* Recording Button */}

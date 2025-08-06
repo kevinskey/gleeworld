@@ -130,15 +130,18 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     const handleStartRecording = () => startRecording();
     const handleStopRecording = () => stopRecording();
     const handleStartPractice = () => startPractice();
+    const handleStopPractice = () => stopPractice();
     
     window.addEventListener('startRecording', handleStartRecording);
     window.addEventListener('stopRecording', handleStopRecording);
     window.addEventListener('startPractice', handleStartPractice);
+    window.addEventListener('stopPractice', handleStopPractice);
     
     return () => {
       window.removeEventListener('startRecording', handleStartRecording);
       window.removeEventListener('stopRecording', handleStopRecording);
       window.removeEventListener('startPractice', handleStartPractice);
+      window.removeEventListener('stopPractice', handleStopPractice);
     };
   }, []);
 
@@ -437,12 +440,17 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       });
     }
     
-    // Simulate practice duration
+    // Calculate practice duration based on exercise measures and tempo
+    const [beatsPerMeasure] = exerciseMetadata.timeSignature.split('/').map(Number);
+    const totalBeats = exerciseMetadata.measures * beatsPerMeasure;
+    const practiceSeconds = Math.ceil((totalBeats * 60) / tempo);
+    
+    // Timer for visual feedback
     let time = 0;
     playbackTimerRef.current = setInterval(() => {
       time += 1;
       setPlaybackTime(time);
-      if (time >= 30) { // 30 second practice
+      if (time >= practiceSeconds) {
         stopPractice();
       }
     }, 1000);
