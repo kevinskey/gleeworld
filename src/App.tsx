@@ -101,6 +101,7 @@ import ApprovalSystemPage from "./pages/ApprovalSystemPage";
 import SightReadingSubmission from "./pages/SightReadingSubmission";
 import SightReadingPreview from "./pages/SightReadingPreview";
 import SightReadingGenerator from "./pages/SightReadingGenerator";
+import SchedulingPage from "./pages/SchedulingPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -773,15 +774,23 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                    />
-                                   <Route 
-                                     path="/sight-reading-generator" 
-                                     element={
-                                       <ProtectedRoute>
-                                         <SightReadingGenerator />
-                                       </ProtectedRoute>
-                                     } 
-                                   />
-                    </Routes>
+                                    <Route 
+                                      path="/sight-reading-generator" 
+                                      element={
+                                        <ProtectedRoute>
+                                          <SightReadingGenerator />
+                                        </ProtectedRoute>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="/scheduling" 
+                                      element={
+                                        <ProtectedRoute>
+                                          <SchedulingPage />
+                                        </ProtectedRoute>
+                                      } 
+                                    />
+                     </Routes>
                    <GlobalMusicPlayer />
                 </div>
               </MusicPlayerProvider>
