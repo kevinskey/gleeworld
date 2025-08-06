@@ -25,6 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserScores } from '@/hooks/useUserScores';
+import { MicTester } from '@/components/audio/MicTester';
 
 // Standard pitch frequencies (A440 tuning) for pitch pipe
 const pitches = [
@@ -950,6 +951,9 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           </CardContent>
         </Card>
       )}
+      
+      {/* Microphone Testing */}
+      <MicTester className="w-full" />
     </div>
   );
 };
