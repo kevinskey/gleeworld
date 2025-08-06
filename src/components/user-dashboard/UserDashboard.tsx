@@ -21,6 +21,7 @@ import { DashboardModulesSection } from "./sections/DashboardModulesSection";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { NotificationsSection } from "./sections/NotificationsSection";
 import { TasksSection } from "./sections/TasksSection";
+import { ExecutiveToursLogistics } from "@/components/executive/modules/ExecutiveToursLogistics";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useMergedProfile } from "@/hooks/useMergedProfile";
@@ -204,6 +205,7 @@ const UserDashboard = React.memo(() => {
 
   // Get user's actual name from profile, fallback to email username
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'Member';
+  const isHonesty = user.email === 'onnestypeele@spelman.edu';
 
   // Get user dashboard data from context
   const { dashboardData, payments, notifications, loading: dashboardLoading } = useUserDashboardContext();
@@ -319,6 +321,20 @@ const UserDashboard = React.memo(() => {
             </div>
           </div>
         </div>
+
+        {/* Honesty's Admin Dashboard Section */}
+        {isHonesty && (
+          <>
+            <div className="mb-6"></div>
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-brand-800 tracking-wide">ADMIN DASHBOARD</h2>
+              <p className="text-sm text-muted-foreground">Tours and Concert Logistics</p>
+            </div>
+            <div className="bg-background border rounded-lg p-6">
+              <ExecutiveToursLogistics />
+            </div>
+          </>
+        )}
 
       </div>
     </UniversalLayout>
