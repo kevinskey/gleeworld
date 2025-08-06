@@ -6409,6 +6409,7 @@ export type Database = {
       gw_profiles: {
         Row: {
           academic_major: string | null
+          academic_year: string | null
           account_balance: number | null
           address: string | null
           allergies: string | null
@@ -6432,6 +6433,7 @@ export type Database = {
           exec_board_role: string | null
           first_name: string | null
           full_name: string | null
+          gpa: number | null
           graduation_year: number | null
           hair_color: string | null
           has_tattoos: boolean | null
@@ -6446,9 +6448,11 @@ export type Database = {
           join_date: string | null
           last_name: string | null
           last_sign_in_at: string | null
+          major: string | null
           measurements: Json | null
           mentor_opt_in: boolean | null
           middle_name: string | null
+          minor: string | null
           music_role: string | null
           notes: string | null
           org: string | null
@@ -6465,6 +6469,7 @@ export type Database = {
           social_media_links: Json | null
           special_roles: string[] | null
           status: string | null
+          student_id: string | null
           student_number: string | null
           title: string | null
           updated_at: string | null
@@ -6472,12 +6477,14 @@ export type Database = {
           verified: boolean | null
           visible_piercings: boolean | null
           voice_part: string | null
+          voice_part_preference: string | null
           wardrobe_assignments: Json | null
           website_url: string | null
           workplace: string | null
         }
         Insert: {
           academic_major?: string | null
+          academic_year?: string | null
           account_balance?: number | null
           address?: string | null
           allergies?: string | null
@@ -6501,6 +6508,7 @@ export type Database = {
           exec_board_role?: string | null
           first_name?: string | null
           full_name?: string | null
+          gpa?: number | null
           graduation_year?: number | null
           hair_color?: string | null
           has_tattoos?: boolean | null
@@ -6515,9 +6523,11 @@ export type Database = {
           join_date?: string | null
           last_name?: string | null
           last_sign_in_at?: string | null
+          major?: string | null
           measurements?: Json | null
           mentor_opt_in?: boolean | null
           middle_name?: string | null
+          minor?: string | null
           music_role?: string | null
           notes?: string | null
           org?: string | null
@@ -6534,6 +6544,7 @@ export type Database = {
           social_media_links?: Json | null
           special_roles?: string[] | null
           status?: string | null
+          student_id?: string | null
           student_number?: string | null
           title?: string | null
           updated_at?: string | null
@@ -6541,12 +6552,14 @@ export type Database = {
           verified?: boolean | null
           visible_piercings?: boolean | null
           voice_part?: string | null
+          voice_part_preference?: string | null
           wardrobe_assignments?: Json | null
           website_url?: string | null
           workplace?: string | null
         }
         Update: {
           academic_major?: string | null
+          academic_year?: string | null
           account_balance?: number | null
           address?: string | null
           allergies?: string | null
@@ -6570,6 +6583,7 @@ export type Database = {
           exec_board_role?: string | null
           first_name?: string | null
           full_name?: string | null
+          gpa?: number | null
           graduation_year?: number | null
           hair_color?: string | null
           has_tattoos?: boolean | null
@@ -6584,9 +6598,11 @@ export type Database = {
           join_date?: string | null
           last_name?: string | null
           last_sign_in_at?: string | null
+          major?: string | null
           measurements?: Json | null
           mentor_opt_in?: boolean | null
           middle_name?: string | null
+          minor?: string | null
           music_role?: string | null
           notes?: string | null
           org?: string | null
@@ -6603,6 +6619,7 @@ export type Database = {
           social_media_links?: Json | null
           special_roles?: string[] | null
           status?: string | null
+          student_id?: string | null
           student_number?: string | null
           title?: string | null
           updated_at?: string | null
@@ -6610,6 +6627,7 @@ export type Database = {
           verified?: boolean | null
           visible_piercings?: boolean | null
           voice_part?: string | null
+          voice_part_preference?: string | null
           wardrobe_assignments?: Json | null
           website_url?: string | null
           workplace?: string | null
@@ -12511,6 +12529,10 @@ export type Database = {
       toggle_love_message_like: {
         Args: { message_id_param: string }
         Returns: Json
+      }
+      transition_auditioner_to_member: {
+        Args: { applicant_user_id: string; performed_by?: string }
+        Returns: boolean
       }
       transition_user_role: {
         Args: {
