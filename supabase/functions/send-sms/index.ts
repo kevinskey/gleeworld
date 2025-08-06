@@ -31,7 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-    const twilioFromNumber = Deno.env.get('TWILIO_FROM_NUMBER');
+    const twilioFromNumber = Deno.env.get('TWILIO_PHONE_NUMBER') || Deno.env.get('TWILIO_FROM_NUMBER');
 
     if (!twilioAccountSid || !twilioAuthToken || !twilioFromNumber) {
       console.log('Twilio credentials not configured, SMS not sent');
