@@ -380,13 +380,55 @@ export const UserDetailPanel = ({
         // Don't throw error since main profiles update succeeded
       }
 
+      // Update local user object immediately for instant UI feedback
+      const updatedUser = {
+        ...user,
+        full_name: fullName.trim(),
+        role: role,
+        bio: bio,
+        website_url: websiteUrl,
+        phone_number: phoneNumber,
+        student_number: studentNumber,
+        workplace: workplace,
+        school_address: schoolAddress,
+        home_address: homeAddress,
+        voice_part: voicePart === "" ? null : voicePart,
+        can_dance: canDance,
+        preferred_payment_method: preferredPaymentMethod === "" ? null : preferredPaymentMethod,
+        instruments_played: selectedInstruments,
+        dress_size: dressSize,
+        shoe_size: shoeSize,
+        hair_color: hairColor,
+        has_tattoos: hasTattoos,
+        visible_piercings: visiblePiercings,
+        academic_major: academicMajor,
+        pronouns: pronouns,
+        class_year: classYear === "" ? null : Number(classYear),
+        graduation_year: graduationYear === "" ? null : Number(graduationYear),
+        emergency_contact: emergencyContact,
+        dietary_restrictions: selectedDietaryRestrictions,
+        allergies: allergies,
+        parent_guardian_contact: parentGuardianContact,
+        join_date: joinDate,
+        mentor_opt_in: mentorOptIn,
+        reunion_rsvp: reunionRsvp,
+        updated_at: new Date().toISOString(),
+      };
+
       toast({
         title: "User Profile Updated",
         description: `${user.email}'s profile has been updated successfully.`,
       });
 
       setEditMode(false);
+      
+      // Force immediate UI update by calling the parent's refetch function
       onUserUpdated();
+      
+      // Also force a small delay to ensure the database update is reflected
+      setTimeout(() => {
+        onUserUpdated();
+      }, 100);
     } catch (error) {
       console.error("Error updating user:", error);
       toast({

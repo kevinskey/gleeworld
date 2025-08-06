@@ -429,7 +429,11 @@ export const EnhancedUserManagement = ({
           setShowDetailPanel(false);
           setSelectedUser(null);
         }}
-        onUserUpdated={handleUpdateSuccess}
+        onUserUpdated={() => {
+          // Force immediate refetch for UI update
+          onRefetch();
+          handleUpdateSuccess();
+        }}
         onUserDeleted={handleDeleteSuccess}
       />
 
