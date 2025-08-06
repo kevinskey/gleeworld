@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -287,21 +288,21 @@ const Dashboard = () => {
         <Card>
           <CardHeader>
             <CardTitle>Your Profile</CardTitle>
-            <CardContent>
-              <div className="flex items-center space-x-4">
-                <Avatar>
-                  <AvatarImage src={userProfile.avatar_url} alt={displayName} />
-                  <AvatarFallback>{displayName?.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-lg font-semibold">{displayName}</p>
-                  <p className="text-muted-foreground">{user.email}</p>
-                  <Badge variant="secondary">{userProfile.role}</Badge>
-                </div>
-              </div>
-            </CardContent>
           </CardHeader>
-        </div>
+          <CardContent>
+            <div className="flex items-center space-x-4">
+              <Avatar>
+                <AvatarImage src={userProfile.avatar_url} alt={displayName} />
+                <AvatarFallback>{displayName?.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-lg font-semibold">{displayName}</p>
+                <p className="text-muted-foreground">{user.email}</p>
+                <Badge variant="secondary">{userProfile.role}</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   };
