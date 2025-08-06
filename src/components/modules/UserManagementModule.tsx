@@ -1,10 +1,14 @@
+
 import React from 'react';
 import { Users } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
-import { UserManagement } from '@/components/admin/UserManagement';
+import { EnhancedUserManagement } from '@/components/admin/user-management/EnhancedUserManagement';
+import { useUsers } from '@/hooks/useUsers';
 import { ModuleProps } from '@/types/modules';
 
 export const UserManagementModule = ({ user, isFullPage = false }: ModuleProps) => {
+  const { users, loading, error, refetch } = useUsers();
+
   return (
     <ModuleWrapper
       id="user-management"
@@ -14,7 +18,12 @@ export const UserManagementModule = ({ user, isFullPage = false }: ModuleProps) 
       iconColor="blue"
       fullPage={isFullPage}
     >
-      <UserManagement />
+      <EnhancedUserManagement 
+        users={users}
+        loading={loading}
+        error={error}
+        onRefetch={refetch}
+      />
     </ModuleWrapper>
   );
 };
