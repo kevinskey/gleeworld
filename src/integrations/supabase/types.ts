@@ -12190,6 +12190,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: string
       }
+      get_current_user_admin_status: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       get_current_user_profile_role: {
         Args: Record<PropertyKey, never>
         Returns: string
