@@ -76,16 +76,19 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
       // Clear container safely
       container.innerHTML = '';
       
-      // Create new OSMD instance
+      // Create new OSMD instance with better sizing options
       osmdRef.current = new OpenSheetMusicDisplay(container, {
         autoResize: true,
         backend: 'svg',
         drawTitle: true,
         drawCredits: false,
         pageBackgroundColor: '#FFFFFF',
-        pageFormat: 'A4_P',
+        pageFormat: 'Endless',
         autoBeam: true,
         coloringMode: 0,
+        defaultFontFamily: 'Arial',
+        renderSingleHorizontalStaffline: false,
+        spacingBetweenTextLines: 5,
       });
 
       console.log('OSMD instance created');
@@ -192,8 +195,13 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
         ) : (
           <div 
             ref={containerRef}
-            className="min-h-[300px] w-full overflow-x-auto border rounded-lg bg-white p-4"
-            style={{ minHeight: '300px' }}
+            className="min-h-[400px] w-full overflow-x-auto border rounded-lg bg-white p-4"
+            style={{ 
+              minHeight: '400px',
+              minWidth: '800px',
+              width: '100%',
+              display: 'block'
+            }}
           />
         )}
       </CardContent>
@@ -418,9 +426,9 @@ const SightReadingGeneratorPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Controls */}
-          <div className="lg:col-span-1">
+          <div className="xl:col-span-1">
             <Card>
               <CardHeader>
                 <CardTitle>Exercise Parameters</CardTitle>
@@ -524,23 +532,25 @@ const SightReadingGeneratorPage = () => {
           </div>
 
           {/* Sheet Music Display */}
-          <div className="lg:col-span-2">
-            {generatedMusicXML ? (
-              <OSMDViewer 
-                musicXML={generatedMusicXML}
-                title={`${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Exercise - ${keySignature}`}
-              />
-            ) : (
-              <Card>
-                <CardContent className="p-12">
-                  <div className="text-center text-muted-foreground">
-                    <Music className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                    <h3 className="text-lg font-medium mb-2">No Exercise Generated</h3>
-                    <p>Configure your parameters and click "Generate Exercise" to create a sight-reading exercise.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+          <div className="xl:col-span-2">
+            <div className="w-full overflow-x-auto">
+              {generatedMusicXML ? (
+                <OSMDViewer 
+                  musicXML={generatedMusicXML}
+                  title={`${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Exercise - ${keySignature}`}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="p-12">
+                    <div className="text-center text-muted-foreground">
+                      <Music className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                      <h3 className="text-lg font-medium mb-2">No Exercise Generated</h3>
+                      <p>Configure your parameters and click "Generate Exercise" to create a sight-reading exercise.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
         </div>
       </div>
