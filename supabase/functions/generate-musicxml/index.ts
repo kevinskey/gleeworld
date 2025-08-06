@@ -1,46 +1,42 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { serve } from "https://deno.land/std/http/server.ts";
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+      },
+    });
   }
 
   try {
-    console.log('Function started, API key exists:', !!openAIApiKey);
-    console.log('API key length:', openAIApiKey?.length || 0);
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
     
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not found in environment');
-      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
+    console.log("Function started, API key exists:", !!openaiKey);
+    console.log("API key length:", openaiKey?.length || 0);
+    
+    if (!openaiKey) {
+      console.error("OpenAI API key not found in environment");
+      return new Response(JSON.stringify({ error: "OpenAI API key not configured" }), {
         status: 500,
         headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json'
-        }
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
       });
     }
 
-    const requestBody = await req.json();
-    console.log('Request body received:', requestBody);
-    
     const { 
-      difficulty = 'beginner',
-      keySignature = 'C major',
-      timeSignature = '4/4',
+      difficulty = "beginner",
+      keySignature = "C major",
+      timeSignature = "4/4",
       measures = 8,
-      noteRange = 'C4-C5'
-    } = requestBody;
+      noteRange = "C4-C5"
+    } = await req.json();
 
-    console.log('Generating MusicXML:', { difficulty, keySignature, timeSignature, measures, noteRange });
+    console.log("Generating MusicXML:", { difficulty, keySignature, timeSignature, measures, noteRange });
 
     const systemPrompt = `You are a music theory expert that generates valid MusicXML 3.1 for sight-reading exercises. 
 
@@ -66,55 +62,55 @@ OUTPUT ONLY VALID MUSICXML - NO EXPLANATIONS OR MARKDOWN.`;
 
 Return ONLY valid MusicXML 3.1 format.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${openaiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: "gpt-4o-mini",
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
         ],
         temperature: 0.8,
         max_tokens: 2000,
       }),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('OpenAI API error:', error);
-      return new Response(JSON.stringify({ error: error.error?.message || 'Failed to generate MusicXML' }), {
+    const result = await openaiRes.json();
+
+    if (!openaiRes.ok) {
+      console.error("OpenAI API error:", result);
+      return new Response(JSON.stringify({ 
+        error: result.error?.message || "Failed to generate MusicXML" 
+      }), {
         status: 500,
         headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json'
-        }
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
       });
     }
 
-    const data = await response.json();
-    const musicXML = data.choices[0].message.content;
-
-    console.log('Generated MusicXML length:', musicXML.length);
+    const musicXML = result.choices[0].message.content;
+    console.log("Generated MusicXML length:", musicXML.length);
 
     return new Response(JSON.stringify({ musicXML }), {
-      status: 200,
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
-      }
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
     });
-  } catch (error) {
-    console.error('Error in generate-musicxml function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (err) {
+    console.error("Error in generate-musicxml function:", err);
+    return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
-      }
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
     });
   }
 });
