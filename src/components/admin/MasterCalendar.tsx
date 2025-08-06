@@ -40,7 +40,7 @@ export const MasterCalendar = () => {
     calendar_id: ''
   });
   
-  const { events, loading, fetchEvents } = useGleeWorldEvents();
+  const { events, loading, fetchEvents, getEventsByDateRange } = useGleeWorldEvents();
 
   // Get default calendar ID
   const getDefaultCalendarId = async () => {
@@ -152,30 +152,35 @@ export const MasterCalendar = () => {
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(startDate, i));
     
     return (
-      <div className="grid grid-cols-7 gap-2 h-[600px]">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-2 min-h-[400px] md:h-[600px]">
         {weekDays.map((day, index) => {
           const dayEvents = getEventsForDate(day);
           return (
-            <div key={index} className="border border-border rounded-lg p-2 bg-card">
-              <div className="font-medium text-sm mb-2 text-card-foreground">
+            <div key={index} className="border border-border rounded-lg p-2 sm:p-3 bg-card min-h-[120px]">
+              <div className="font-medium text-xs sm:text-sm mb-2 text-card-foreground">
                 {format(day, 'EEE dd')}
               </div>
-              <div className="space-y-1 max-h-[500px] overflow-y-auto">
-                {dayEvents.map((event) => (
-                  <div
-                    key={event.id}
-                    className={cn(
-                      "p-2 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity",
-                      getEventTypeStyle(event.event_type)
-                    )}
-                    onClick={() => setSelectedEvent(event)}
-                  >
-                    <div className="font-medium truncate">{event.title}</div>
-                    <div className="text-xs opacity-75">
-                      {format(new Date(event.start_date), 'HH:mm')} - {format(new Date(event.end_date), 'HH:mm')}
+              <div className="space-y-1 max-h-[300px] sm:max-h-[500px] overflow-y-auto">
+                {dayEvents.length === 0 ? (
+                  <div className="text-xs text-muted-foreground opacity-50">No events</div>
+                ) : (
+                  dayEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className={cn(
+                        "p-1 sm:p-2 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity",
+                        getEventTypeStyle(event.event_type)
+                      )}
+                      onClick={() => setSelectedEvent(event)}
+                    >
+                      <div className="font-medium truncate">{event.title}</div>
+                      <div className="text-xs opacity-75 hidden sm:block">
+                        {format(new Date(event.start_date), 'HH:mm')}
+                        {event.end_date && ` - ${format(new Date(event.end_date), 'HH:mm')}`}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           );
@@ -366,20 +371,20 @@ export const MasterCalendar = () => {
 
       {/* Tabbed Interface */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="calendar">Calendar View</TabsTrigger>
-          <TabsTrigger value="events">Event List</TabsTrigger>
-          <TabsTrigger value="appointments">Appointments</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+          <TabsTrigger value="calendar" className="text-xs sm:text-sm">Calendar</TabsTrigger>
+          <TabsTrigger value="events" className="text-xs sm:text-sm">Events</TabsTrigger>
+          <TabsTrigger value="appointments" className="text-xs sm:text-sm">Appointments</TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
         </TabsList>
         
         <TabsContent value="calendar" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <Card className="lg:col-span-1">
-              <CardHeader>
-                <CardTitle>Calendar Navigation</CardTitle>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
+            <Card className="lg:col-span-1 order-2 lg:order-1">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Navigation</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -390,26 +395,36 @@ export const MasterCalendar = () => {
                   }}
                 />
                 
-                <div className="mt-4 space-y-2">
+                <div className="space-y-2">
                   <div className="text-sm font-medium">View Mode</div>
-                  <div className="flex gap-1">
+                  <div className="grid grid-cols-3 gap-1">
                     {(['month', 'week', 'day'] as const).map((mode) => (
                       <Button
                         key={mode}
                         variant={viewMode === mode ? "default" : "outline"}
                         size="sm"
                         onClick={() => setViewMode(mode)}
-                        className="capitalize flex-1"
+                        className="capitalize text-xs"
                       >
                         {mode}
                       </Button>
                     ))}
                   </div>
                 </div>
+
+                {/* Event Stats */}
+                <div className="pt-2 border-t">
+                  <div className="text-xs text-muted-foreground mb-2">Quick Stats</div>
+                  <div className="space-y-1 text-xs">
+                    <div>Total Events: {events.length}</div>
+                    <div>Today: {getEventsForDate(new Date()).length}</div>
+                    <div>This Week: {getEventsByDateRange(startOfWeek(new Date()), addDays(startOfWeek(new Date()), 6)).length}</div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 order-1 lg:order-2">
               {viewMode === 'month' && (
                 <Card>
                   <CardHeader>
@@ -449,30 +464,53 @@ export const MasterCalendar = () => {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="text-center py-8">Loading events...</div>
+                <div className="text-center py-8">
+                  <div className="animate-pulse">Loading events...</div>
+                </div>
+              ) : events.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No events found. Create your first event!</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {events.map((event) => (
                     <div
                       key={event.id}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
                       onClick={() => setSelectedEvent(event)}
                     >
-                      <div className="flex-1">
-                        <div className="font-medium">{event.title}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {format(new Date(event.start_date), 'PPP')} at {format(new Date(event.start_date), 'p')}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <Badge variant="outline" className={cn("text-xs", getEventTypeStyle(event.event_type))}>
+                            {event.event_type || 'event'}
+                          </Badge>
+                          <span className="font-medium truncate">{event.title}</span>
                         </div>
-                        {event.location && (
-                          <div className="text-sm text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {event.location}
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3 w-3" />
+                            {format(new Date(event.start_date), 'MMM dd, yyyy - HH:mm')}
                           </div>
-                        )}
+                          {event.location && (
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-3 w-3" />
+                              <span className="truncate">{event.location}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <Badge className={getEventTypeStyle(event.event_type)}>
-                        {event.event_type}
-                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteEvent(event.id);
+                        }}
+                        className="mt-2 sm:mt-0 self-end sm:self-center"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   ))}
                 </div>
