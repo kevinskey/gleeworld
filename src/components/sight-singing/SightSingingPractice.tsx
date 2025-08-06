@@ -418,6 +418,12 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       if (beatCount >= beatsPerMeasure) {
         clearInterval(countdownInterval);
         setIsCountingDown(false);
+        
+        // Stop metronome after countdown unless we're recording
+        if (!isRecording) {
+          stopMetronome();
+        }
+        
         callback(); // Start the actual practice or recording
       }
     }, interval);
@@ -473,11 +479,12 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     console.log('Starting practice - pianoEnabled:', pianoEnabled, 'extractedMelody length:', extractedMelody.length);
     
-    // Start metronome if enabled - this is now handled by the Metronome component
+    // For practice mode (not recording), we don't need continuous metronome
+    // The metronome was only used for countdown
     if (metronomeEnabled) {
       toast({
         title: "Practice Started",
-        description: "Metronome and practice aids are now active"
+        description: "Ready to practice with melody playback"
       });
     }
     
@@ -743,6 +750,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   const actuallyStartRecording = async () => {
     try {
+      // Keep metronome running during recording for timing reference
+      if (metronomeEnabled && !metronomeRef.current) {
+        startMetronome();
+      }
+      
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 44100,
