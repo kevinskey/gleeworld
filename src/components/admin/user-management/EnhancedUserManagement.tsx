@@ -160,9 +160,9 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
         <CardHeader>
           <div className="flex flex-col space-y-4">
             <div>
-              <CardTitle>User Management</CardTitle>
+              <CardTitle>Search & Filter Users</CardTitle>
               <CardDescription>
-                Search, filter, and manage user accounts across the platform
+                Find and manage user accounts by name, email, role, or status
               </CardDescription>
             </div>
             
