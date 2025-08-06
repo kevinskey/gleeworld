@@ -145,6 +145,7 @@ export const BulkSelectControls = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="fan">Fan</SelectItem>
+                  <SelectItem value="auditioner">Auditioner</SelectItem>
                   <SelectItem value="member">Member</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="super-admin">Super Admin</SelectItem>

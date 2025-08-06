@@ -168,6 +168,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                     <SelectItem value="all">All Roles</SelectItem>
                     <SelectItem value="guest">Guest</SelectItem>
                     <SelectItem value="fan">Fan</SelectItem>
+                    <SelectItem value="auditioner">Auditioner</SelectItem>
                     <SelectItem value="member">Member</SelectItem>
                     <SelectItem value="user">User</SelectItem>
                     <SelectItem value="alumna">Alumna</SelectItem>
