@@ -169,9 +169,9 @@ function AuditionFormContent() {
   // Allow access for both authenticated and non-authenticated users
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pb-24 md:pb-8">
-      <div className="container mx-auto px-4 md:px-6 max-w-2xl lg:max-w-3xl">
-        <div className="text-center mb-6 md:mb-8 pt-6 md:pt-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pb-28 md:pb-8">
+      <div className="container mx-auto px-3 md:px-6 max-w-2xl lg:max-w-3xl">
+        <div className="text-center mb-4 md:mb-8 pt-20 md:pt-8">
           <Mic className="w-12 h-12 md:w-16 md:h-16 mx-auto text-purple-600 mb-3 md:mb-4" />
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 md:mb-3">Audition Application</h1>
           <p className="text-lg md:text-xl lg:text-2xl text-gray-600">Join the Spelman College Glee Club Family</p>
@@ -180,10 +180,10 @@ function AuditionFormContent() {
         <AuditionFormProgress />
 
         <Card className="bg-white/80 backdrop-blur-md border-white/30 shadow-xl">
-          <CardContent className="pt-6 md:pt-8 px-6 md:px-8">
+          <CardContent className="pt-4 md:pt-8 px-4 md:px-8">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-8">
-                <div className="text-base md:text-lg lg:text-xl">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-8">
+                <div className="text-sm md:text-lg lg:text-xl">
                   {renderCurrentPage()}
                 </div>
               </form>
