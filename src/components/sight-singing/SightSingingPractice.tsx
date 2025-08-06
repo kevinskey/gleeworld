@@ -35,11 +35,14 @@ interface SightSingingPracticeProps {
     measures: number;
     noteRange: string;
   };
+  showRecordingButton?: boolean;
+  onRecordingChange?: (isRecording: boolean) => void;
 }
 
 export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   musicXML,
-  exerciseMetadata
+  exerciseMetadata,
+  onRecordingChange
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -85,6 +88,20 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
+    };
+  }, []);
+
+  // Add event listeners for external recording control
+  React.useEffect(() => {
+    const handleStartRecording = () => startRecording();
+    const handleStopRecording = () => stopRecording();
+    
+    window.addEventListener('startRecording', handleStartRecording);
+    window.addEventListener('stopRecording', handleStopRecording);
+    
+    return () => {
+      window.removeEventListener('startRecording', handleStartRecording);
+      window.removeEventListener('stopRecording', handleStopRecording);
     };
   }, []);
 
@@ -293,6 +310,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       setMediaRecorder(recorder);
       recorder.start();
       setIsRecording(true);
+      onRecordingChange?.(true);
       setRecordingTime(0);
       
       // Recording timer
@@ -321,6 +339,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     }
     
     setIsRecording(false);
+    onRecordingChange?.(false);
     
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current);

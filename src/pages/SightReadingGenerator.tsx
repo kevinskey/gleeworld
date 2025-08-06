@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Music, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Music, RefreshCw, ArrowLeft, Mic, Square } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { SightSingingPractice } from '@/components/sight-singing/SightSingingPractice';
+import { RecordingButton } from '@/components/sight-singing/RecordingButton';
 
 interface OSMDViewerProps {
   musicXML: string;
@@ -231,6 +232,7 @@ const SightReadingGeneratorPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedMusicXML, setGeneratedMusicXML] = useState<string>('');
   const [exerciseGenerated, setExerciseGenerated] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   
   // Generation parameters
   const [difficulty, setDifficulty] = useState('beginner');
@@ -415,9 +417,24 @@ const SightReadingGeneratorPage = () => {
                       {measures[0]} measures • {keySignature} • {timeSignature} • {noteRange}
                     </CardDescription>
                   </div>
-                  <Button variant="outline" onClick={startNewExercise}>
-                    Generate New Exercise
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <RecordingButton 
+                      isRecording={isRecording}
+                      onStartRecording={() => {
+                        setIsRecording(true);
+                        const recordingEvent = new CustomEvent('startRecording');
+                        window.dispatchEvent(recordingEvent);
+                      }}
+                      onStopRecording={() => {
+                        setIsRecording(false);
+                        const recordingEvent = new CustomEvent('stopRecording');
+                        window.dispatchEvent(recordingEvent);
+                      }}
+                    />
+                    <Button variant="outline" onClick={startNewExercise}>
+                      Generate New Exercise
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -441,6 +458,7 @@ const SightReadingGeneratorPage = () => {
               measures: measures[0],
               noteRange
             }}
+            onRecordingChange={setIsRecording}
           />
         )}
 
