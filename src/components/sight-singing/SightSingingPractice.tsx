@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { PitchPipe } from '@/components/pitch-pipe/PitchPipe';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserScores } from '@/hooks/useUserScores';
 
@@ -527,6 +528,9 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Pitch Pipe */}
+      <PitchPipe className="mt-6" />
     </div>
   );
 };
