@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useServices, useCreateService, useUpdateService, useDeleteService, Service } from '@/hooks/useServices';
+import { useMediaLibrary, useUploadImage, useDeleteMedia } from '@/hooks/useMediaLibrary';
 import { toast } from 'sonner';
 
 interface ServiceFormData {

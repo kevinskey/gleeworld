@@ -12408,6 +12408,17 @@ export type Database = {
         Args: { user_id: string; new_role: string }
         Returns: boolean
       }
+      upload_service_image: {
+        Args: {
+          p_filename: string
+          p_original_filename: string
+          p_file_path: string
+          p_file_size: number
+          p_mime_type: string
+          p_description?: string
+        }
+        Returns: Json
+      }
       user_can_access_contract: {
         Args: { contract_id_param: string }
         Returns: boolean
