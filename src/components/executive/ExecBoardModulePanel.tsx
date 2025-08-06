@@ -170,7 +170,7 @@ export const ExecBoardModulePanel = ({ userEmail, className }: ExecBoardModulePa
 
   if (loading) {
     return (
-      <Card className={`w-full max-w-sm ${className}`}>
+      <Card className={`w-full ${className}`}>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Crown className="h-5 w-5 text-yellow-600" />
@@ -200,7 +200,7 @@ export const ExecBoardModulePanel = ({ userEmail, className }: ExecBoardModulePa
   }, {} as Record<string, ModuleItem[]>);
 
   return (
-    <Card className={`w-full max-w-sm ${className}`}>
+    <Card className={`w-full ${className}`}>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Crown className="h-5 w-5 text-yellow-600" />
