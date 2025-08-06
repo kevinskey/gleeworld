@@ -232,8 +232,13 @@ const SightReadingGeneratorPage = () => {
       return { valid: false, error: 'Missing part element' };
     }
     
-    if (!xml.includes('<measure>')) {
+    if (!xml.includes('<measure')) {
       return { valid: false, error: 'Missing measure element' };
+    }
+    
+    // Check if XML is truncated (incomplete structure)
+    if (!xml.includes('</score-partwise>')) {
+      return { valid: false, error: 'Incomplete MusicXML - missing closing tags. This may be due to generation limits. Try with fewer measures or a simpler difficulty level.' };
     }
     
     // Check for common MusicXML structure issues
@@ -251,6 +256,11 @@ const SightReadingGeneratorPage = () => {
       const scorePartwise = xmlDoc.querySelector('score-partwise');
       if (!scorePartwise) {
         return { valid: false, error: 'Invalid MusicXML structure: missing score-partwise' };
+      }
+      
+      const measures = xmlDoc.querySelectorAll('measure');
+      if (measures.length === 0) {
+        return { valid: false, error: 'No measures found in MusicXML' };
       }
       
     } catch (error) {
