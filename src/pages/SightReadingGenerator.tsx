@@ -99,23 +99,45 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
       console.log('Loading MusicXML directly...');
       console.log('MusicXML preview:', musicXML.substring(0, 200));
       
-      // Try different methods to load the XML
+      // Try different methods to load the XML with better error handling
+      let loadingMethod = 'unknown';
       try {
         // Method 1: Try loadXML if available
         if (osmdRef.current.loadXML && typeof osmdRef.current.loadXML === 'function') {
           console.log('Using loadXML method');
+          loadingMethod = 'loadXML';
           await osmdRef.current.loadXML(musicXML);
         } else {
-          console.log('loadXML not available, using alternative method');
-          // Method 2: Use the old load method with proper XML handling
+          console.log('loadXML not available, using load method with XML document');
+          loadingMethod = 'load with XMLDocument';
+          // Method 2: Use the load method with proper XML handling
           const parser = new DOMParser();
           const xmlDoc = parser.parseFromString(musicXML, 'application/xml');
+          
+          // Check for parsing errors
+          const parseError = xmlDoc.querySelector('parsererror');
+          if (parseError) {
+            throw new Error(`XML parsing failed: ${parseError.textContent}`);
+          }
+          
           await osmdRef.current.load(xmlDoc);
         }
       } catch (xmlError) {
-        console.log('XML loading failed, trying string approach:', xmlError);
-        // Method 3: Direct string load (last resort)
-        await osmdRef.current.load(musicXML);
+        console.log(`Loading failed with ${loadingMethod}:`, xmlError);
+        
+        // Check if this is a known OSMD error about note initialization
+        if (xmlError.message && xmlError.message.includes('Invalid note initialization object')) {
+          throw new Error(`The generated music contains formatting issues that cannot be displayed. This may be due to invalid note data in the MusicXML. Please try generating a new exercise with different parameters.`);
+        }
+        
+        // If it's a different error, try one more fallback
+        try {
+          console.log('Trying direct string load as final fallback');
+          await osmdRef.current.load(musicXML);
+        } catch (finalError) {
+          console.error('All loading methods failed:', finalError);
+          throw new Error(`Failed to load music notation: ${finalError.message || 'Unknown error'}. The generated MusicXML may be incompatible with the display library.`);
+        }
       }
       
       // Final check before rendering
@@ -192,12 +214,50 @@ const SightReadingGeneratorPage = () => {
   const [measures, setMeasures] = useState([8]);
   const [noteRange, setNoteRange] = useState('C4-C5');
 
-  const validateMusicXML = (xml: string): boolean => {
-    if (!xml || typeof xml !== 'string') return false;
-    if (!xml.trim().startsWith('<?xml')) return false;
-    if (!xml.includes('<score-partwise')) return false;
-    if (!xml.includes('<note>')) return false;
-    return true;
+  const validateMusicXML = (xml: string): { valid: boolean; error?: string } => {
+    if (!xml || typeof xml !== 'string') {
+      return { valid: false, error: 'MusicXML is empty or not a string' };
+    }
+    
+    const trimmed = xml.trim();
+    if (!trimmed.startsWith('<?xml')) {
+      return { valid: false, error: 'Missing XML declaration' };
+    }
+    
+    if (!xml.includes('<score-partwise')) {
+      return { valid: false, error: 'Missing score-partwise element' };
+    }
+    
+    if (!xml.includes('<part>')) {
+      return { valid: false, error: 'Missing part element' };
+    }
+    
+    if (!xml.includes('<measure>')) {
+      return { valid: false, error: 'Missing measure element' };
+    }
+    
+    // Check for common MusicXML structure issues
+    try {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xml, 'application/xml');
+      
+      // Check for parsing errors
+      const parseError = xmlDoc.querySelector('parsererror');
+      if (parseError) {
+        return { valid: false, error: `XML parsing error: ${parseError.textContent}` };
+      }
+      
+      // Check for required elements
+      const scorePartwise = xmlDoc.querySelector('score-partwise');
+      if (!scorePartwise) {
+        return { valid: false, error: 'Invalid MusicXML structure: missing score-partwise' };
+      }
+      
+    } catch (error) {
+      return { valid: false, error: `XML validation failed: ${error.message}` };
+    }
+    
+    return { valid: true };
   };
 
   const testOpenAI = async () => {
@@ -291,9 +351,11 @@ const SightReadingGeneratorPage = () => {
       }
       
       // Validate the generated MusicXML
-      if (!validateMusicXML(musicXML)) {
-        console.error('Invalid MusicXML generated:', musicXML?.substring(0, 200));
-        throw new Error('Generated MusicXML is invalid. Please try again.');
+      const validation = validateMusicXML(musicXML);
+      if (!validation.valid) {
+        console.error('Invalid MusicXML generated:', validation.error);
+        console.error('MusicXML preview:', musicXML?.substring(0, 500));
+        throw new Error(`Generated MusicXML is invalid: ${validation.error}. Please try generating again with different parameters.`);
       }
 
       console.log('Valid MusicXML generated, length:', musicXML.length);
