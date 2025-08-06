@@ -32,6 +32,7 @@ import SendNotificationPage from "@/pages/SendNotificationPage";
 import AdminUsers from "@/pages/AdminUsers";
 import SetupAdmin from "@/pages/SetupAdmin";
 import PublicCalendar from "@/pages/PublicCalendar";
+import VoiceRangeAssessmentPage from "@/pages/VoiceRangeAssessmentPage";
 
 
 
@@ -147,6 +148,10 @@ export const router = createBrowserRouter([
   {
     path: "/booking-request",
     element: <BookingRequest />,
+  },
+  {
+    path: "/voice-assessment",
+    element: <VoiceRangeAssessmentPage />,
   },
   {
     path: "*",

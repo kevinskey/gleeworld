@@ -35,17 +35,40 @@ SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 # Initialize Supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-# Reference melody: C4, D4, E4, F4, G4 in Hz
-REFERENCE_MELODY = {
-    "C4": 261.63,
-    "D4": 293.66,
-    "E4": 329.63,
-    "F4": 349.23,
-    "G4": 392.00
+# Reference melodies for different voice ranges
+VOICE_RANGES = {
+    "soprano": {
+        "melody": {
+            "C4": 261.63,
+            "D4": 293.66,
+            "E4": 329.63,
+            "F4": 349.23,
+            "G4": 392.00
+        },
+        "sequence": [261.63, 293.66, 329.63, 349.23, 392.00],
+        "notes": ["C4", "D4", "E4", "F4", "G4"],
+        "min_freq": 200,
+        "max_freq": 600
+    },
+    "alto": {
+        "melody": {
+            "G3": 196.00,
+            "A3": 220.00,
+            "B3": 246.94,
+            "C4": 261.63,
+            "D4": 293.66
+        },
+        "sequence": [196.00, 220.00, 246.94, 261.63, 293.66],
+        "notes": ["G3", "A3", "B3", "C4", "D4"],
+        "min_freq": 150,
+        "max_freq": 450
+    }
 }
 
-REFERENCE_SEQUENCE = [261.63, 293.66, 329.63, 349.23, 392.00]
-REFERENCE_NOTES = ["C4", "D4", "E4", "F4", "G4"]
+# Default reference (soprano)
+REFERENCE_MELODY = VOICE_RANGES["soprano"]["melody"]
+REFERENCE_SEQUENCE = VOICE_RANGES["soprano"]["sequence"]
+REFERENCE_NOTES = VOICE_RANGES["soprano"]["notes"]
 
 class PitchAnalysisResult(BaseModel):
     note_index: int
@@ -66,15 +89,18 @@ class AssessmentResponse(BaseModel):
     user_id: str
     timestamp: datetime
 
-def hz_to_note_name(frequency: float, tolerance: float = 50.0) -> str:
-    """Convert frequency to closest note name within tolerance."""
+def hz_to_note_name(frequency: float, voice_range: str = "soprano", tolerance: float = 50.0) -> str:
+    """Convert frequency to closest note name within tolerance for the given voice range."""
     if frequency <= 0:
         return "Unknown"
+    
+    range_data = VOICE_RANGES.get(voice_range, VOICE_RANGES["soprano"])
+    reference_melody = range_data["melody"]
     
     closest_note = "Unknown"
     min_diff = float('inf')
     
-    for note, freq in REFERENCE_MELODY.items():
+    for note, freq in reference_melody.items():
         diff = abs(frequency - freq)
         if diff < min_diff and diff <= tolerance:
             min_diff = diff
@@ -82,19 +108,24 @@ def hz_to_note_name(frequency: float, tolerance: float = 50.0) -> str:
     
     return closest_note
 
-def extract_pitch_contour(audio_data: np.ndarray, sr: int) -> List[float]:
+def extract_pitch_contour(audio_data: np.ndarray, sr: int, voice_range: str = "soprano") -> List[float]:
     """
     Extract pitch contour using librosa's fundamental frequency estimation.
     Uses a combination of piptrack and yin algorithms for better accuracy.
     """
     try:
+        # Get frequency range for voice type
+        range_data = VOICE_RANGES.get(voice_range, VOICE_RANGES["soprano"])
+        fmin = range_data["min_freq"]
+        fmax = range_data["max_freq"]
+        
         # Method 1: Use piptrack for pitch detection
         pitches, magnitudes = librosa.piptrack(
             y=audio_data, 
             sr=sr, 
             threshold=0.1,
-            fmin=80,  # Minimum vocal frequency
-            fmax=800  # Maximum vocal frequency
+            fmin=fmin,  # Voice-specific minimum frequency
+            fmax=fmax   # Voice-specific maximum frequency
         )
         
         # Extract the strongest pitch at each time frame
@@ -112,8 +143,8 @@ def extract_pitch_contour(audio_data: np.ndarray, sr: int) -> List[float]:
                 # Use yin algorithm as backup
                 f0 = librosa.yin(
                     audio_data, 
-                    fmin=80, 
-                    fmax=800, 
+                    fmin=fmin, 
+                    fmax=fmax, 
                     sr=sr,
                     frame_length=2048
                 )
@@ -121,17 +152,21 @@ def extract_pitch_contour(audio_data: np.ndarray, sr: int) -> List[float]:
             except Exception as e:
                 print(f"Yin algorithm failed: {e}")
                 # Fallback to basic autocorrelation
-                pitch_contour = extract_pitch_basic_autocorr(audio_data, sr)
+                pitch_contour = extract_pitch_basic_autocorr(audio_data, sr, voice_range)
         
         return pitch_contour
         
     except Exception as e:
         print(f"Pitch extraction error: {e}")
         # Fallback to basic method
-        return extract_pitch_basic_autocorr(audio_data, sr)
+        return extract_pitch_basic_autocorr(audio_data, sr, voice_range)
 
-def extract_pitch_basic_autocorr(audio_data: np.ndarray, sr: int) -> List[float]:
+def extract_pitch_basic_autocorr(audio_data: np.ndarray, sr: int, voice_range: str = "soprano") -> List[float]:
     """Fallback pitch detection using basic autocorrelation."""
+    range_data = VOICE_RANGES.get(voice_range, VOICE_RANGES["soprano"])
+    fmin = range_data["min_freq"]
+    fmax = range_data["max_freq"]
+    
     frame_length = int(0.1 * sr)  # 100ms frames
     hop_length = frame_length // 2
     
@@ -144,9 +179,9 @@ def extract_pitch_basic_autocorr(audio_data: np.ndarray, sr: int) -> List[float]
         autocorr = np.correlate(frame, frame, mode='full')
         autocorr = autocorr[len(autocorr)//2:]
         
-        # Look for fundamental frequency between 80Hz and 800Hz
-        min_period = int(sr / 800)  # Max 800Hz
-        max_period = int(sr / 80)   # Min 80Hz
+        # Look for fundamental frequency in voice range
+        min_period = int(sr / fmax)  # Max frequency
+        max_period = int(sr / fmin)  # Min frequency
         
         if max_period < len(autocorr):
             search_range = autocorr[min_period:max_period]
@@ -154,19 +189,24 @@ def extract_pitch_basic_autocorr(audio_data: np.ndarray, sr: int) -> List[float]
                 peak_idx = np.argmax(search_range) + min_period
                 frequency = sr / peak_idx if peak_idx > 0 else 0
                 
-                # Only keep reasonable vocal frequencies
-                if 80 <= frequency <= 800:
+                # Only keep frequencies in voice range
+                if fmin <= frequency <= fmax:
                     pitches.append(frequency)
     
     return pitches
 
-def segment_pitches_to_notes(pitches: List[float], num_expected_notes: int = 5) -> List[float]:
+def segment_pitches_to_notes(pitches: List[float], voice_range: str = "soprano", num_expected_notes: int = 5) -> List[float]:
     """Segment continuous pitch contour into discrete notes."""
     if not pitches:
         return [0.0] * num_expected_notes
     
-    # Remove outliers (frequencies too far from vocal range)
-    filtered_pitches = [p for p in pitches if 100 <= p <= 600]
+    # Get frequency range for voice type
+    range_data = VOICE_RANGES.get(voice_range, VOICE_RANGES["soprano"])
+    fmin = range_data["min_freq"]
+    fmax = range_data["max_freq"]
+    
+    # Remove outliers (frequencies outside voice range)
+    filtered_pitches = [p for p in pitches if fmin <= p <= fmax]
     
     if not filtered_pitches:
         return [0.0] * num_expected_notes
@@ -195,7 +235,7 @@ def segment_pitches_to_notes(pitches: List[float], num_expected_notes: int = 5) 
     
     return segmented_notes
 
-def analyze_pitch_accuracy(detected: List[float], reference: List[float], tolerance: float = 50.0) -> Dict[str, Any]:
+def analyze_pitch_accuracy(detected: List[float], reference: List[float], reference_notes: List[str], voice_range: str = "soprano", tolerance: float = 50.0) -> Dict[str, Any]:
     """Analyze pitch accuracy with detailed results."""
     note_results = []
     detected_notes = []
@@ -216,10 +256,10 @@ def analyze_pitch_accuracy(detected: List[float], reference: List[float], tolera
         
         result = PitchAnalysisResult(
             note_index=i,
-            expected_note=REFERENCE_NOTES[i],
+            expected_note=reference_notes[i],
             expected_frequency=ref,
             detected_frequency=det,
-            detected_note=hz_to_note_name(det),
+            detected_note=hz_to_note_name(det, voice_range),
             is_accurate=is_accurate,
             frequency_difference=det - ref if det > 0 else 0.0,
             confidence=confidence
@@ -239,8 +279,9 @@ def analyze_pitch_accuracy(detected: List[float], reference: List[float], tolera
         "note_by_note_results": note_results,
         "detected_pitches_hz": detected_notes,
         "reference_melody": {
-            "notes": REFERENCE_NOTES,
-            "frequencies_hz": REFERENCE_SEQUENCE
+            "notes": reference_notes,
+            "frequencies_hz": reference,
+            "voice_range": voice_range
         }
     }
 
@@ -290,19 +331,21 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "supabase_url": SUPABASE_URL,
-        "reference_melody": REFERENCE_MELODY
+        "reference_melody": VOICE_RANGES
     }
 
 @app.post("/grade_singing", response_model=AssessmentResponse)
 async def grade_singing(
     file: UploadFile = File(..., description="Audio file (.wav, .mp3, or .m4a)"),
-    user_id: str = Form(..., description="User ID for result storage")
+    user_id: str = Form(..., description="User ID for result storage"),
+    voice_range: str = Form("soprano", description="Voice range: soprano or alto")
 ):
     """
-    Grade singing performance against reference melody C4-D4-E4-F4-G4.
+    Grade singing performance against reference melody for specified voice range.
     
     - **file**: Audio file in .wav, .mp3, or .m4a format
     - **user_id**: UUID of the user submitting the recording
+    - **voice_range**: Voice range - "soprano" (C4-G4) or "alto" (G3-D4)
     
     Returns detailed pitch analysis and stores results in Supabase.
     """
@@ -323,6 +366,18 @@ async def grade_singing(
             detail="Invalid user_id format. Must be a valid UUID."
         )
     
+    # Validate voice range
+    if voice_range not in VOICE_RANGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid voice_range. Must be one of: {list(VOICE_RANGES.keys())}"
+        )
+    
+    # Get reference data for the selected voice range
+    range_data = VOICE_RANGES[voice_range]
+    reference_sequence = range_data["sequence"]
+    reference_notes = range_data["notes"]
+    
     try:
         # Read audio file
         audio_content = await file.read()
@@ -337,7 +392,7 @@ async def grade_singing(
             audio_data, sample_rate = librosa.load(temp_file_path, sr=None, mono=True)
             
             # Extract pitch contour
-            pitch_contour = extract_pitch_contour(audio_data, sample_rate)
+            pitch_contour = extract_pitch_contour(audio_data, sample_rate, voice_range)
             
             if not pitch_contour:
                 raise HTTPException(
@@ -346,10 +401,10 @@ async def grade_singing(
                 )
             
             # Segment pitches into discrete notes
-            detected_notes = segment_pitches_to_notes(pitch_contour, num_expected_notes=5)
+            detected_notes = segment_pitches_to_notes(pitch_contour, voice_range, num_expected_notes=5)
             
             # Analyze pitch accuracy
-            analysis = analyze_pitch_accuracy(detected_notes, REFERENCE_SEQUENCE, tolerance=50.0)
+            analysis = analyze_pitch_accuracy(detected_notes, reference_sequence, reference_notes, voice_range, tolerance=50.0)
             
             # Store results in Supabase
             storage_successful = await store_results_in_supabase(
