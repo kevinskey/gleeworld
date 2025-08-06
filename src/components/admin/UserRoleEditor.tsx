@@ -16,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { Save, UserCog, Shield, Crown, User } from 'lucide-react';
+import { Save, UserCog, Shield, Crown, User, Edit2, X } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -74,6 +74,7 @@ export const UserRoleEditor = ({ user, onUpdate }: UserRoleEditorProps) => {
     verified: user.verified || false,
   });
   const [saving, setSaving] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const { toast } = useToast();
 
   const handleSave = async () => {
@@ -168,39 +169,67 @@ export const UserRoleEditor = ({ user, onUpdate }: UserRoleEditorProps) => {
 
       {/* Role Management */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Role & Permissions</CardTitle>
-          <CardDescription>Set user's primary role and access level</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div>
+            <CardTitle className="text-lg">Role & Permissions</CardTitle>
+            <CardDescription>Click role to edit</CardDescription>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setEditMode(!editMode)}
+          >
+            {editMode ? <X className="h-4 w-4" /> : <Edit2 className="h-4 w-4" />}
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="role">Primary Role</Label>
-            <Select value={formData.role} onValueChange={(value) => 
-              setFormData(prev => ({ ...prev, role: value }))
-            }>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ROLE_OPTIONS.map((option) => {
-                  const IconComponent = option.icon;
-                  return (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div className="flex items-center gap-2">
-                        <IconComponent className="h-4 w-4" />
-                        <span>{option.label}</span>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-            {selectedRoleOption && (
-              <p className="text-sm text-muted-foreground">
-                {selectedRoleOption.description}
-              </p>
-            )}
-          </div>
+          {!editMode ? (
+            <div className="space-y-2">
+              <Label>Primary Role</Label>
+              <Button
+                variant="outline"
+                className="w-full justify-start h-auto p-3"
+                onClick={() => setEditMode(true)}
+              >
+                <div className="flex items-center gap-2">
+                  {selectedRoleOption && <selectedRoleOption.icon className="h-4 w-4" />}
+                  <div className="text-left">
+                    <div className="font-medium">{selectedRoleOption?.label}</div>
+                    <div className="text-xs text-muted-foreground">{selectedRoleOption?.description}</div>
+                  </div>
+                </div>
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="role">Primary Role</Label>
+              <Select value={formData.role} onValueChange={(value) => 
+                setFormData(prev => ({ ...prev, role: value }))
+              }>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLE_OPTIONS.map((option) => {
+                    const IconComponent = option.icon;
+                    return (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div className="flex items-center gap-2">
+                          <IconComponent className="h-4 w-4" />
+                          <span>{option.label}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              {selectedRoleOption && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedRoleOption.description}
+                </p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -247,27 +276,6 @@ export const UserRoleEditor = ({ user, onUpdate }: UserRoleEditorProps) => {
         </CardContent>
       </Card>
 
-      {/* Current Status Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Current Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline">
-              Role: {formData.role}
-            </Badge>
-            {formData.is_exec_board && (
-              <Badge variant="outline" className="text-blue-600 border-blue-200">
-                Executive: {formData.exec_board_role}
-              </Badge>
-            )}
-            <Badge variant={formData.verified ? "default" : "secondary"}>
-              {formData.verified ? 'Verified' : 'Unverified'}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Save Button */}
       <div className="flex justify-end pt-4">
