@@ -11641,6 +11641,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_role_transitions: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          from_role: string | null
+          id: string
+          notes: string | null
+          to_role: string
+          transition_reason: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          from_role?: string | null
+          id?: string
+          notes?: string | null
+          to_role: string
+          transition_reason?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          from_role?: string | null
+          id?: string
+          notes?: string | null
+          to_role?: string
+          transition_reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -12459,6 +12492,10 @@ export type Database = {
         }
         Returns: Json
       }
+      promote_auditioner_to_member: {
+        Args: { auditioner_user_id: string; audition_application_id: string }
+        Returns: boolean
+      }
       secure_bulk_update_user_roles: {
         Args: { target_user_ids: string[]; new_role: string; reason?: string }
         Returns: Json
@@ -12474,6 +12511,15 @@ export type Database = {
       toggle_love_message_like: {
         Args: { message_id_param: string }
         Returns: Json
+      }
+      transition_user_role: {
+        Args: {
+          target_user_id: string
+          new_role: string
+          reason?: string
+          admin_notes?: string
+        }
+        Returns: boolean
       }
       trigger_scholarship_update: {
         Args: Record<PropertyKey, never>
@@ -12574,6 +12620,14 @@ export type Database = {
         | "Section Leader Review"
         | "Admin Review"
         | "Peer Review"
+      user_role_enum:
+        | "visitor"
+        | "fan"
+        | "auditioner"
+        | "alumna"
+        | "member"
+        | "admin"
+        | "super-admin"
       vocal_status_enum: "Healthy" | "Fatigued" | "Sore" | "Injured"
       voice_part_enum: "S1" | "S2" | "A1" | "A2" | "T1" | "T2" | "B1" | "B2"
     }
@@ -12739,6 +12793,15 @@ export const Constants = {
         "Section Leader Review",
         "Admin Review",
         "Peer Review",
+      ],
+      user_role_enum: [
+        "visitor",
+        "fan",
+        "auditioner",
+        "alumna",
+        "member",
+        "admin",
+        "super-admin",
       ],
       vocal_status_enum: ["Healthy", "Fatigued", "Sore", "Injured"],
       voice_part_enum: ["S1", "S2", "A1", "A2", "T1", "T2", "B1", "B2"],

@@ -1,12 +1,12 @@
 
 export const USER_ROLES = {
-  USER: 'user',
-  MEMBER: 'member',
+  VISITOR: 'visitor',
   FAN: 'fan',
-  ALUMNAE: 'alumnae',
+  AUDITIONER: 'auditioner',
+  ALUMNA: 'alumna',
+  MEMBER: 'member',
   ADMIN: 'admin',
   SUPER_ADMIN: 'super-admin',
-  TREASURER: 'treasurer',
 } as const;
 
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
@@ -44,7 +44,23 @@ export const PERMISSIONS = [
 export type Permission = typeof PERMISSIONS[number];
 
 export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
-  [USER_ROLES.USER]: [
+  [USER_ROLES.VISITOR]: [
+    // No permissions for visitors - they can only view public content
+  ],
+  [USER_ROLES.FAN]: [
+    'view_own_contracts',
+    'view_own_payments', 
+    'view_own_w9_forms',
+    'access_handbook',
+  ],
+  [USER_ROLES.AUDITIONER]: [
+    'view_own_contracts',
+    'view_own_payments',
+    'view_own_w9_forms',
+    'sign_contracts',
+    'access_handbook',
+  ],
+  [USER_ROLES.ALUMNA]: [
     'view_own_contracts',
     'view_own_payments',
     'view_own_w9_forms',
@@ -53,20 +69,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'access_handbook',
   ],
   [USER_ROLES.MEMBER]: [
-    'view_own_contracts',
-    'view_own_payments',
-    'view_own_w9_forms',
-    'sign_contracts',
-    'submit_w9_forms',
-    'access_handbook',
-  ],
-  [USER_ROLES.FAN]: [
-    'view_own_contracts',
-    'view_own_payments',
-    'view_own_w9_forms',
-    'access_handbook',
-  ],
-  [USER_ROLES.ALUMNAE]: [
     'view_own_contracts',
     'view_own_payments',
     'view_own_w9_forms',
@@ -87,12 +89,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'send_emails',
     'manage_username_permissions',
     'access_tour_planner',
-    'access_handbook',
-  ],
-  [USER_ROLES.TREASURER]: [
-    'approve_budgets_treasurer',
-    'access_budget_creation',
-    'view_all_payments',
     'access_handbook',
   ],
   [USER_ROLES.SUPER_ADMIN]: [

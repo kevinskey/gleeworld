@@ -61,6 +61,31 @@ export const useUserRole = () => {
     return profile.is_super_admin;
   };
 
+  const isVisitor = () => {
+    if (!profile) return true; // No profile means visitor
+    return profile.role === 'visitor';
+  };
+
+  const isFan = () => {
+    if (!profile) return false;
+    return profile.role === 'fan';
+  };
+
+  const isAuditioner = () => {
+    if (!profile) return false;
+    return profile.role === 'auditioner';
+  };
+
+  const isAlumna = () => {
+    if (!profile) return false;
+    return profile.role === 'alumna';
+  };
+
+  const isMember = () => {
+    if (!profile) return false;
+    return profile.role === 'member';
+  };
+
   const isAdmin = () => {
     if (!profile) return false;
     return profile.is_admin || profile.is_super_admin;
@@ -84,5 +109,10 @@ export const useUserRole = () => {
     isAdmin,
     isSuperAdmin,
     isExecutiveBoard,
+    isVisitor,
+    isFan,
+    isAuditioner,
+    isAlumna,
+    isMember,
   };
 };

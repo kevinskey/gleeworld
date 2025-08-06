@@ -40,7 +40,10 @@ export function RegistrationPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auditions`
+          emailRedirectTo: `${window.location.origin}/auditions`,
+          data: {
+            signup_context: 'audition'
+          }
         }
       });
 
