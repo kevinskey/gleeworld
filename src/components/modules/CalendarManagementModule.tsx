@@ -1,4 +1,4 @@
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 import { MasterCalendar } from '@/components/admin/MasterCalendar';
 
 export const CalendarManagementModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {

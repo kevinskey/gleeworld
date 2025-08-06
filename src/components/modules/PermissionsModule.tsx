@@ -2,7 +2,7 @@ import React from 'react';
 import { Shield } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
 import { PermissionManagement } from '@/components/admin/PermissionManagement';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const PermissionsModule = ({ user, isFullPage = false }: ModuleProps) => {
   return (

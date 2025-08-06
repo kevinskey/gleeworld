@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calculator, TrendingUp, TrendingDown, DollarSign, PieChart, Plus } from "lucide-react";
-import { ModuleProps } from "@/types/modules";
+import { ModuleProps } from "@/types/unified-modules";
 import { useBudgets } from "@/hooks/useBudgets";
 import { BudgetCreator } from "@/components/budget/BudgetCreator";
 import { useState } from "react";

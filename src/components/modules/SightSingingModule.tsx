@@ -2,7 +2,7 @@ import React from 'react';
 import { Eye } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
 import { SightSingingManager } from '@/components/musical-leadership/SightSingingManager';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const SightSingingModule = ({ user, isFullPage = false }: ModuleProps) => {
   return (

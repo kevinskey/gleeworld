@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileCheck, User, Calendar, DollarSign, Clock, Plus, FileText, Upload } from "lucide-react";
-import { ModuleProps } from "@/types/modules";
+import { ModuleProps } from "@/types/unified-modules";
 import { useContracts } from "@/hooks/useContracts";
 import { ContractTypeSelectionDialog } from "@/components/dialogs/ContractTypeSelectionDialog";
 import { ContractTemplates } from "@/components/ContractTemplates";

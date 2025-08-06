@@ -2,7 +2,7 @@ import React from 'react';
 import { UserPlus } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
 import { StudentIntakeProcessor } from '@/components/admin/StudentIntakeProcessor';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const StudentIntakeModule = ({ user, isFullPage = false }: ModuleProps) => {
   return (

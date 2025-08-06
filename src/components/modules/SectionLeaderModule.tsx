@@ -2,7 +2,7 @@ import React from 'react';
 import { Users } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
 import { SectionLeaderDashboard } from '@/components/musical-leadership/SectionLeaderDashboard';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const SectionLeaderModule = ({ user, isFullPage = false }: ModuleProps) => {
   return (

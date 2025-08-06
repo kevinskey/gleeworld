@@ -3,7 +3,7 @@ import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
 import { Button } from '@/components/ui/button';
 import { Music, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const SightReadingPreviewModule: React.FC<ModuleProps> = ({ 
   isFullPage = false, 

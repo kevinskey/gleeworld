@@ -2,7 +2,7 @@ import React from 'react';
 import { Music } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
 import { StudentConductorDashboard } from '@/components/musical-leadership/StudentConductorDashboard';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const StudentConductorModule = ({ user, isFullPage = false }: ModuleProps) => {
   return (

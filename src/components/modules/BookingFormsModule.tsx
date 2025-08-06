@@ -2,7 +2,7 @@ import React from 'react';
 import { FileText } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
 import { BookingRequestManager } from '@/components/booking/BookingRequestManager';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const BookingFormsModule = ({ user, isFullPage = false }: ModuleProps) => {
   return (

@@ -2,7 +2,7 @@ import React from 'react';
 import { ScanLine } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
 import { AuditionsManagement } from '@/components/admin/AuditionsManagement';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const AuditionsModule = ({ user, isFullPage = false }: ModuleProps) => {
   return (

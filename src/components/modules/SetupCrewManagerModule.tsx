@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, Settings, MessageSquare, Move, Calendar, Plus, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const SetupCrewManagerModule: React.FC<ModuleProps> = ({ user, isFullPage }) => {
   const [activeTab, setActiveTab] = useState('crews');

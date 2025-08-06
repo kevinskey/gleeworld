@@ -4,7 +4,7 @@ import { Users } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
 import { EnhancedUserManagement } from '@/components/admin/user-management/EnhancedUserManagement';
 import { useUsers } from '@/hooks/useUsers';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const UserManagementModule = ({ user, isFullPage = false }: ModuleProps) => {
   const { users, loading, error, refetch } = useUsers();

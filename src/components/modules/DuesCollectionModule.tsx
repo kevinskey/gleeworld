@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreditCard, Users, DollarSign, Calendar, AlertCircle, Plus, Bell, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { ModuleProps } from "@/types/modules";
+import { ModuleProps } from "@/types/unified-modules";
 import { useDuesManagement, type DuesRecord } from "@/hooks/useDuesManagement";
 import { PaymentPlanSelectionDialog } from "@/components/dialogs/PaymentPlanSelectionDialog";
 import { useState } from "react";

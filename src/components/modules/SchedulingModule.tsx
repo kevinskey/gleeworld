@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Calendar, Users, MapPin } from "lucide-react";
-import { ModuleProps } from "@/types/modules";
+import { ModuleProps } from "@/types/unified-modules";
 
 export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
   const upcomingEvents = [

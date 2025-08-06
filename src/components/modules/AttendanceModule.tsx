@@ -2,7 +2,7 @@ import React from 'react';
 import { ClipboardCheck } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
 import { AttendanceDashboard } from '@/components/attendance/AttendanceDashboard';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const AttendanceModule = ({ user, isFullPage = false }: ModuleProps) => {
   return (

@@ -2,7 +2,7 @@ import React from 'react';
 import { BookOpen } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
 import { TermManager } from '@/components/term-manager/TermManager';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const TermManagerModule = ({ user, isFullPage = false }: ModuleProps) => {
   return (

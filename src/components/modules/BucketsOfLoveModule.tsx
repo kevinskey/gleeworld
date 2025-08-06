@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Send, Users, Gift } from "lucide-react";
-import { ModuleProps } from "@/types/modules";
+import { ModuleProps } from "@/types/unified-modules";
 
 export const BucketsOfLoveModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
   const loveMessages = [

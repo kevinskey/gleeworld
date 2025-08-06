@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Clock, X, User, DollarSign, Plus } from "lucide-react";
-import { ModuleProps } from "@/types/modules";
+import { ModuleProps } from "@/types/unified-modules";
 import { useApprovalRequests } from "@/hooks/useApprovalRequests";
 import { ApprovalRequestForm } from "@/components/approval/ApprovalRequestForm";
 import { useState } from "react";

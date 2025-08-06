@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { ModuleCard } from '@/components/shared/ModuleWrapper';
 import { ModuleRegistry } from '@/utils/moduleRegistry';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 interface ModularAdminDashboardProps {
   user: {

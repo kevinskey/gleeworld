@@ -2,7 +2,7 @@ import React from 'react';
 import { Route } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
 import { TourManagerDashboard } from '@/components/tour-manager/TourManagerDashboard';
-import { ModuleProps } from '@/types/modules';
+import { ModuleProps } from '@/types/unified-modules';
 
 export const TourManagerModule = ({ user, isFullPage = false }: ModuleProps) => {
   return (
