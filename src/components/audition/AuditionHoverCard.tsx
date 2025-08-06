@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MusicStaffIcon } from "@/components/icons/MusicStaffIcon";
@@ -9,6 +9,12 @@ import { MusicStaffIcon } from "@/components/icons/MusicStaffIcon";
 export const AuditionHoverCard = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const location = useLocation();
+
+  // Hide on auditions page to prevent interference
+  if (location.pathname === '/auditions') {
+    return null;
+  }
 
   // On mobile, show a compact button fixed to top
   if (isMobile) {

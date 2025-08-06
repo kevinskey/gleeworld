@@ -169,20 +169,20 @@ function AuditionFormContent() {
   // Allow access for both authenticated and non-authenticated users
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pb-28 md:pb-8">
-      <div className="container mx-auto px-3 md:px-6 max-w-2xl lg:max-w-3xl">
-        <div className="text-center mb-4 md:mb-8 pt-20 md:pt-8">
-          <Mic className="w-12 h-12 md:w-16 md:h-16 mx-auto text-purple-600 mb-3 md:mb-4" />
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 md:mb-3">Audition Application</h1>
-          <p className="text-lg md:text-xl lg:text-2xl text-gray-600">Join the Spelman College Glee Club Family</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pb-24 md:pb-8">
+      <div className="container mx-auto px-2 md:px-6 max-w-2xl lg:max-w-3xl">
+        <div className="text-center mb-2 md:mb-8 pt-4 md:pt-8">
+          <Mic className="w-8 h-8 md:w-16 md:h-16 mx-auto text-purple-600 mb-2 md:mb-4" />
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-1 md:mb-3">Audition Application</h1>
+          <p className="text-sm md:text-xl lg:text-2xl text-gray-600">Join the Spelman College Glee Club Family</p>
         </div>
 
         <AuditionFormProgress />
 
-        <Card className="bg-white/80 backdrop-blur-md border-white/30 shadow-xl">
-          <CardContent className="pt-4 md:pt-8 px-4 md:px-8">
+        <Card className="bg-white/80 backdrop-blur-md border-white/30 shadow-xl mb-2 md:mb-0">
+          <CardContent className="pt-3 md:pt-8 px-3 md:px-8 pb-3 md:pb-8">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-8">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2 md:space-y-8">
                 <div className="text-sm md:text-lg lg:text-xl">
                   {renderCurrentPage()}
                 </div>
@@ -192,7 +192,7 @@ function AuditionFormContent() {
         </Card>
 
         {/* Fixed bottom navigation for mobile */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-4 md:hidden">
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 md:hidden z-40">
           <div className="flex justify-between gap-3">
             <Button
               type="button"
