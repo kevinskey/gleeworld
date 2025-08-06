@@ -66,11 +66,38 @@ export const ExecutiveBoardPermissionPanel = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            <Crown className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <h3 className="font-semibold mb-2">Executive Board Permissions</h3>
-            <p>Enhanced permission management for executive board members is being loaded...</p>
-            <p className="text-sm mt-2">Onnesty Williams - Tour Manager permissions are active</p>
+          <div className="space-y-4">
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-blue-900 mb-2">Onnesty Williams - Tour Manager</h4>
+              <p className="text-sm text-blue-700 mb-3">Active executive board member with tour management permissions</p>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Booking Management</span>
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Venue Coordination</span>
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Travel Logistics</span>
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Contract Management</span>
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Budget Oversight</span>
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                </div>
+              </div>
+            </div>
+            
+            <p className="text-sm text-muted-foreground">
+              To modify Onnesty's module assignments, use the <strong>User Assignments</strong> tab or contact system administrators.
+            </p>
           </div>
         </CardContent>
       </Card>
