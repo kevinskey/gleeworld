@@ -134,6 +134,7 @@ export default function SchedulingPage() {
           <Button 
             size="lg" 
             className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-8 py-3 rounded-md font-semibold"
+            onClick={() => window.location.href = '/booking'}
           >
             Book Now
           </Button>
@@ -265,6 +266,7 @@ export default function SchedulingPage() {
                       <Button 
                         size="sm" 
                         className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                        onClick={() => window.location.href = '/booking'}
                       >
                         Book Now
                       </Button>
