@@ -367,30 +367,41 @@ export const CommunityHubWidget = () => {
   };
 
   const onSubmitLoveMessage = async (data: LoveMessageForm) => {
+    console.log('Form submission started', { data, user: user?.id });
+    
     if (!user) {
+      console.error('No user found');
       toast.error("You must be logged in to pin a love note");
       return;
     }
 
-    console.log('Submitting love message:', data);
-
     try {
-      const { error } = await supabase
+      console.log('Attempting to insert love message:', {
+        user_id: user.id,
+        message: data.message,
+        note_color: data.note_color,
+        is_anonymous: data.is_anonymous,
+        decorations: data.decorations || ""
+      });
+
+      const { data: insertResult, error } = await supabase
         .from('gw_buckets_of_love')
         .insert({
           user_id: user.id,
-          message: data.message,
+          message: data.message.trim(),
           note_color: data.note_color,
           is_anonymous: data.is_anonymous,
-          decorations: data.decorations || ""
-        });
+          decorations: (data.decorations || "").trim()
+        })
+        .select();
 
       if (error) {
         console.error('Database error:', error);
-        throw error;
+        toast.error(`Failed to pin love note: ${error.message}`);
+        return;
       }
 
-      console.log('Love message created successfully');
+      console.log('Love message created successfully:', insertResult);
       
       // Show success message
       toast.success("Love note pinned successfully!");
