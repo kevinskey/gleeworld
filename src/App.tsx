@@ -107,6 +107,7 @@ import DateTimeSelection from "./pages/booking/DateTimeSelection";
 import RecurringOptions from "./pages/booking/RecurringOptions";
 import CustomerInfo from "./pages/booking/CustomerInfo";
 import BookingConfirmation from "./pages/booking/BookingConfirmation";
+import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -817,24 +818,32 @@ const App = () => {
                                          <ProtectedRoute>
                                            <RecurringOptions />
                                          </ProtectedRoute>
-                                       } 
-                                     />
-                                     <Route 
-                                       path="/booking/customer-info" 
-                                       element={
-                                         <ProtectedRoute>
-                                           <CustomerInfo />
-                                         </ProtectedRoute>
-                                       } 
-                                     />
-                                     <Route 
-                                       path="/booking/confirmation" 
-                                       element={
-                                         <ProtectedRoute>
-                                           <BookingConfirmation />
-                                         </ProtectedRoute>
                                         } 
                                       />
+                                      <Route 
+                                        path="/booking/customer-info" 
+                                        element={
+                                          <ProtectedRoute>
+                                            <CustomerInfo />
+                                          </ProtectedRoute>
+                                        } 
+                                      />
+                                      <Route 
+                                        path="/booking/confirmation" 
+                                        element={
+                                          <ProtectedRoute>
+                                            <BookingConfirmation />
+                                          </ProtectedRoute>
+                                         } 
+                                       />
+                                       <Route 
+                                         path="/executive-dashboard" 
+                                         element={
+                                           <ProtectedRoute>
+                                             <ExecutiveBoardDashboard />
+                                           </ProtectedRoute>
+                                         } 
+                                       />
                       </Routes>
                    <GlobalMusicPlayer />
                 </div>

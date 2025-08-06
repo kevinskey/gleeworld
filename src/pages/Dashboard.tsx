@@ -153,24 +153,37 @@ const Dashboard = () => {
     }
 
     // Executive Dashboard
-    if (userProfile.role === 'executive') {
+    if (userProfile.role === 'executive' || userProfile.is_exec_board || userProfile.exec_board_role) {
       return (
         <div className="space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold">Executive Dashboard</h1>
+            <h1 className="text-2xl font-bold">Executive Board Dashboard</h1>
             <p className="text-muted-foreground">
-              Manage Glee Club operations and member activities.
+              Access executive tools and manage Glee Club operations.
             </p>
           </div>
 
           {/* Executive Tools */}
           <Card>
             <CardHeader>
-              <CardTitle>Executive Tools</CardTitle>
+              <CardTitle>Executive Tools & Access</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Access administrative tools and resources for managing the Glee Club.</p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Link to="/executive-dashboard">
+                  <Button className="w-full justify-start gap-2 h-auto p-4 bg-purple-600 hover:bg-purple-700">
+                    <Shield className="h-5 w-5" />
+                    <div className="text-left">
+                      <div className="font-medium">Full Executive Dashboard</div>
+                      <div className="text-sm text-purple-100">Tours, concerts, and complete logistics management</div>
+                    </div>
+                  </Button>
+                </Link>
+                <p className="text-sm text-muted-foreground">
+                  Access comprehensive tools for coordinating tours, managing concerts, and overseeing all Glee Club operations.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
