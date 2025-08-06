@@ -12,31 +12,32 @@ export const SightReadingPreviewModule: React.FC<ModuleProps> = ({
   const navigate = useNavigate();
 
   const handleNavigate = () => {
-    navigate('/sight-reading-preview');
+    navigate('/sight-reading-generator');
   };
 
   return (
     <ModuleWrapper
       id="sight-reading-preview"
       title="Sight Reading Generator"
-      description="Preview and analyze MusicXML sheet music with professional notation"
+      description="Generate AI-powered sight-reading exercises with professional notation"
       icon={Music}
       fullPage={isFullPage}
     >
       <div className="space-y-4">
         <p className="text-muted-foreground">
-          Professional sheet music display using OpenSheetMusicDisplay for MusicXML files.
+          Create custom sight-reading exercises using AI-generated MusicXML and professional sheet music display.
         </p>
         
         <div className="space-y-3">
           <div className="text-sm">
             <strong>Features:</strong>
             <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Load MusicXML files from URL or upload</li>
+              <li>AI-powered MusicXML generation</li>
+              <li>Customizable difficulty and parameters</li>
               <li>Professional notation rendering</li>
-              <li>PDF export capability</li>
-              <li>Sample files included (Beethoven, Mozart, Bach)</li>
-              <li>Integration with sight reading practice</li>
+              <li>Multiple key signatures and time signatures</li>
+              <li>Voice range selection (SATB)</li>
+              <li>Validation and error handling</li>
             </ul>
           </div>
           

@@ -71,9 +71,8 @@ export const ExecutiveBoardSection = ({ isExecBoardMember }: ExecutiveBoardSecti
     { name: "Social Chair", icon: Users, route: "/dashboard" },
     { name: "Section Leader", icon: UserCheck, route: "/dashboard/section-leader" },
     { name: "Student Conductor", icon: Music2, route: "/dashboard/student-conductor" },
-    { name: "Sight Reading Generator", icon: Music, route: "/sight-reading-preview" },
+    { name: "Sight Reading Generator", icon: Wand2, route: "/sight-reading-generator" },
     { name: "Sight Reading Submission", icon: FileAudio, route: "/sight-reading-submission" },
-    { name: "Sight Reading Generator", icon: Wand2, route: "/sight-reading-generator" }
   ];
 
   return (
