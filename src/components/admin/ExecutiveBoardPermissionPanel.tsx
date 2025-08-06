@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Crown, Users, Shield, CheckCircle } from 'lucide-react';
+import { PermissionsGrid } from './PermissionsGrid';
+import { EXECUTIVE_POSITIONS } from '@/hooks/useExecutivePermissions';
 
 export const ExecutiveBoardPermissionPanel = () => {
+  const [selectedPosition, setSelectedPosition] = useState<string>('tour_manager');
   console.log('ExecutiveBoardPermissionPanel component loading...');
+  
+  const selectedPositionData = EXECUTIVE_POSITIONS.find(pos => pos.value === selectedPosition);
   
   return (
     <div className="space-y-6">
@@ -54,7 +60,7 @@ export const ExecutiveBoardPermissionPanel = () => {
         </Card>
       </div>
 
-      {/* Main Panel */}
+      {/* Position Selection and Permission Management */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -62,45 +68,49 @@ export const ExecutiveBoardPermissionPanel = () => {
             Executive Board Permission Management
           </CardTitle>
           <CardDescription>
-            Manage permissions for Onnesty and other executive board members
+            Select an executive position to manage their module permissions
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <h4 className="font-semibold text-blue-900 mb-2">Onnesty Williams - Tour Manager</h4>
-              <p className="text-sm text-blue-700 mb-3">Active executive board member with tour management permissions</p>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Booking Management</span>
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Venue Coordination</span>
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Travel Logistics</span>
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Contract Management</span>
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Budget Oversight</span>
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                </div>
-              </div>
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <label htmlFor="position-select" className="text-sm font-medium">
+                Select Executive Position:
+              </label>
+              <Select value={selectedPosition} onValueChange={setSelectedPosition}>
+                <SelectTrigger className="w-[300px]">
+                  <SelectValue placeholder="Choose an executive position" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXECUTIVE_POSITIONS.map((position) => (
+                    <SelectItem key={position.value} value={position.value}>
+                      {position.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
-            <p className="text-sm text-muted-foreground">
-              To modify Onnesty's module assignments, use the <strong>User Assignments</strong> tab or contact system administrators.
-            </p>
+            {selectedPositionData && (
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 className="font-semibold text-blue-900 mb-2">
+                  Managing permissions for: {selectedPositionData.label}
+                </h4>
+                <p className="text-sm text-blue-700">
+                  Use the checkboxes below to grant or revoke access and management permissions for each module.
+                  <br />
+                  <strong>Access</strong> = can view the module, <strong>Manage</strong> = can modify data in the module
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Permissions Grid */}
+      {selectedPositionData && (
+        <PermissionsGrid selectedPosition={selectedPositionData} />
+      )}
     </div>
   );
 };
