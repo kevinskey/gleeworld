@@ -1034,62 +1034,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           </div>
         </div>
       </div>
-      
-      {/* Sheet Music Display */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Music className="h-5 w-5" />
-            Practice Exercise
-            {solfegeEnabled && (
-              <Badge variant="secondary" className="ml-2 text-xs">
-                Solfège Mode Active
-              </Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative">
-            {/* Progress Bar */}
-            {(isPlaying || playbackProgress > 0) && (
-              <div className="absolute top-0 left-0 right-0 z-20 bg-white/90 border-b border-gray-200">
-                <div className="px-4 py-2">
-                  <div className="flex items-center gap-3">
-                    <div className="text-xs font-medium text-gray-600">Progress:</div>
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-primary h-2 rounded-full transition-all duration-300 ease-out"
-                        style={{ width: `${playbackProgress}%` }}
-                      />
-                    </div>
-                    <div className="text-xs font-mono text-gray-600">
-                      {Math.round(playbackProgress)}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Sheet Music */}
-            <div 
-              ref={sheetMusicRef}
-              className="bg-white rounded-md border p-4 min-h-[300px] sheet-music-container"
-              style={{ paddingTop: (isPlaying || playbackProgress > 0) ? '60px' : '16px' }}
-            />
-            
-            {/* Solfège Annotations */}
-            {solfegeEnabled && (
-              <SolfegeAnnotations 
-                notes={extractedMelody}
-                keySignature={exerciseMetadata.keySignature}
-                currentNoteIndex={currentNoteIndex}
-                className="absolute inset-0 pointer-events-none"
-                style={{ paddingTop: (isPlaying || playbackProgress > 0) ? '60px' : '16px' }}
-              />
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
 
       {/* Countdown Display */}
