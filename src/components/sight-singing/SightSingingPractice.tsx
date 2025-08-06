@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { VirtualPiano } from './VirtualPiano';
 import { SolfegeDisplay } from './SolfegeDisplay';
 import { Metronome } from './Metronome';
-import { MelodyPlayer } from './MelodyPlayer';
 import { 
   Play, 
   Pause, 
@@ -748,23 +747,14 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         </CardContent>
       </Card>
 
-      {/* Practice Aids - Piano and Solfège */}
-      {(pianoEnabled || solfegeEnabled) && (
+      {/* Practice Aids - Solfège */}
+      {solfegeEnabled && (
         <Card>
           <CardHeader>
             <CardTitle>Practice Aids</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {pianoEnabled && extractedMelody.length > 0 && (
-                <MelodyPlayer 
-                  melody={extractedMelody} 
-                  tempo={tempo}
-                  className="w-full"
-                  autoPlay={false}
-                />
-              )}
-              
               {solfegeEnabled && (
                 <SolfegeDisplay
                   isEnabled={solfegeEnabled}
