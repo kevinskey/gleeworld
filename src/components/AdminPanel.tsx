@@ -26,6 +26,7 @@ import { AnnouncementManagement } from "./admin/AnnouncementManagement";
 import { AdminPanelHeader } from "./admin/AdminPanelHeader";
 import { PermissionsPanel } from "./admin/PermissionsPanel";
 import { MasterCalendar } from "./admin/MasterCalendar";
+import { SchedulingDashboard } from "./admin/SchedulingDashboard";
 // Square integration removed - using Stripe instead
 
 interface AdminPanelProps {
@@ -84,6 +85,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
      currentPath.includes('products') ? 'products' :
      currentPath.includes('social') ? 'social' :
      currentPath.includes('calendar') ? 'calendar' :
+     currentPath.includes('scheduling') ? 'scheduling' :
      currentPath.includes('settings') ? 'settings' : 'overview');
 
   const handleSort = (column: string) => {
@@ -167,6 +169,8 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         return <ReceiptsManagement />;
       case 'calendar':
         return <MasterCalendar />;
+      case 'scheduling':
+        return <SchedulingDashboard />;
       case 'accounting':
         return (
           <div className="space-y-4 md:space-y-6">
