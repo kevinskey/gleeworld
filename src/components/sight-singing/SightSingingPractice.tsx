@@ -77,7 +77,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [solfegeEnabled, setSolfegeEnabled] = useState(false);
   
   // Melody player state
-  const [melodyPlaysRemaining, setMelodyPlaysRemaining] = useState(2);
   const [isPlayingMelody, setIsPlayingMelody] = useState(false);
   
   // Pitch pipe state
@@ -227,11 +226,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   // Melody player functions
   const playMelody = async () => {
-    if (melodyPlaysRemaining <= 0 || isPlayingMelody) {
-      console.log('Cannot play melody - remaining plays:', melodyPlaysRemaining, 'already playing:', isPlayingMelody);
+    if (isPlayingMelody) {
+      console.log('Cannot play melody - already playing:', isPlayingMelody);
       toast({
         title: "Cannot Play",
-        description: melodyPlaysRemaining <= 0 ? "No plays remaining" : "Already playing melody",
+        description: "Already playing melody",
         variant: "destructive"
       });
       return;
@@ -239,7 +238,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     console.log('Starting melody playback');
     setIsPlayingMelody(true);
-    setMelodyPlaysRemaining(prev => prev - 1);
     
     try {
       // Initialize audio context with user interaction
@@ -271,7 +269,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       
       toast({
         title: "🎹 Playing Exercise Melody",
-        description: `Playing ${exerciseNotes.length} notes. Plays remaining: ${melodyPlaysRemaining - 1}/2`
+        description: `Playing ${exerciseNotes.length} notes`
       });
       
       // Play notes sequentially with improved piano sound
@@ -441,9 +439,10 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     });
   };
 
-  // Reset melody plays when new exercise starts
+  // Reset melody when new exercise starts
   React.useEffect(() => {
-    setMelodyPlaysRemaining(2);
+    // Reset melody state when musicXML changes
+    setIsPlayingMelody(false);
     // Notify parent about solfege setting change
     if (onSolfegeChange) {
       onSolfegeChange(solfegeEnabled);
@@ -906,19 +905,23 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => {
-                  console.log('Melody button clicked, plays remaining:', melodyPlaysRemaining, 'is playing:', isPlayingMelody);
+                  console.log('Melody button clicked, is playing:', isPlayingMelody);
                   playMelody();
                 }}
-                disabled={melodyPlaysRemaining <= 0 || isPlayingMelody}
-                variant="outline"
+                disabled={isPlayingMelody}
+                variant={isPlayingMelody ? "default" : "secondary"}
                 size="sm"
-                className={`flex items-center gap-2 ${isPlayingMelody ? 'animate-pulse bg-blue-100' : ''}`}
+                className={`flex items-center gap-2 transition-all duration-300 ${
+                  isPlayingMelody 
+                    ? 'animate-pulse bg-blue-600 hover:bg-blue-700 text-white' 
+                    : 'bg-green-600 hover:bg-green-700 text-white border-green-600'
+                }`}
               >
                 <PianoIcon className="h-4 w-4" />
                 {isPlayingMelody ? 'Playing...' : 'Play Melody'}
               </Button>
               <div className="text-xs text-muted-foreground">
-                {melodyPlaysRemaining}/2
+                {isPlayingMelody ? '🎵' : '🎹'} Unlimited
               </div>
             </div>
             
