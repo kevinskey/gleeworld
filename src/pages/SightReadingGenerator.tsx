@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { SightSingingPractice } from '@/components/sight-singing/SightSingingPractice';
 import { RecordingButton } from '@/components/sight-singing/RecordingButton';
+import { CompletedExercisesList } from '@/components/sight-singing/CompletedExercisesList';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface OSMDViewerProps {
   musicXML: string;
@@ -236,6 +238,7 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
 const SightReadingGeneratorPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedMusicXML, setGeneratedMusicXML] = useState<string>('');
   const [exerciseGenerated, setExerciseGenerated] = useState(false);
@@ -456,17 +459,24 @@ const SightReadingGeneratorPage = () => {
 
         {/* Sight Singing Practice Component */}
         {exerciseGenerated && generatedMusicXML && (
-          <SightSingingPractice 
-            musicXML={generatedMusicXML}
-            exerciseMetadata={{
-              difficulty,
-              keySignature,
-              timeSignature,
-              measures: measures[0],
-              noteRange
-            }}
-            onRecordingChange={setIsRecording}
-          />
+          <div className="space-y-6">
+            <SightSingingPractice 
+              musicXML={generatedMusicXML}
+              exerciseMetadata={{
+                difficulty,
+                keySignature,
+                timeSignature,
+                measures: measures[0],
+                noteRange
+              }}
+              onRecordingChange={setIsRecording}
+            />
+            
+            {/* Completed Exercises List */}
+            {user && (
+              <CompletedExercisesList user={user} />
+            )}
+          </div>
         )}
 
         {/* Generation Parameters - Show when no exercise is generated */}
