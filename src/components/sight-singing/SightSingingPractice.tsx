@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import './slider-styles.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -766,17 +767,20 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 </Label>
               </div>
               
-              {/* Vertical Tempo Slider */}
+              {/* Tempo Slider */}
               <div className="flex flex-col items-center space-y-2">
                 <Label className="text-xs">Tempo</Label>
-                <div className="flex flex-col items-center h-24">
+                <div className="flex flex-col items-center">
                   <input
                     type="range"
                     min="60"
                     max="200"
                     value={tempo}
                     onChange={(e) => setTempo(Number(e.target.value))}
-                    className="h-20 w-2 bg-gray-200 rounded-lg appearance-none cursor-pointer transform rotate-90"
+                    className="w-20 h-2 bg-gray-200 rounded-lg cursor-pointer range-slider"
+                    style={{
+                      background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((tempo - 60) / (200 - 60)) * 100}%, #e5e7eb ${((tempo - 60) / (200 - 60)) * 100}%, #e5e7eb 100%)`
+                    }}
                   />
                   <span className="text-xs text-muted-foreground mt-1">{tempo}</span>
                 </div>
@@ -804,7 +808,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
             {/* Volume Control for Pitch Pipe */}
             <div className="flex flex-col items-center space-y-2">
               <Label className="text-xs">Volume</Label>
-              <div className="flex flex-col items-center h-24">
+              <div className="flex flex-col items-center">
                 <input
                   type="range"
                   min="0"
@@ -824,7 +828,10 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                       );
                     }
                   }}
-                  className="h-20 w-2 bg-gray-200 rounded-lg appearance-none cursor-pointer transform rotate-90"
+                  className="w-20 h-2 bg-gray-200 rounded-lg cursor-pointer range-slider"
+                  style={{
+                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${pitchPipeVolume * 100}%, #e5e7eb ${pitchPipeVolume * 100}%, #e5e7eb 100%)`
+                  }}
                 />
                 <div className="flex items-center gap-1 mt-1">
                   <Volume2 className="h-3 w-3 text-muted-foreground" />
