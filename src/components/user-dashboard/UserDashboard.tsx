@@ -345,6 +345,10 @@ const UserDashboard = React.memo(() => {
               <p className="text-sm text-muted-foreground">Booking Requests Management</p>
             </div>
             <div className="bg-background border rounded-lg p-6">
+              {(() => {
+                console.log('UserDashboard: Rendering for user:', user.email, 'profile role:', profile?.role, 'is_admin:', profile?.is_admin);
+                return null;
+              })()}
               <BookingRequestManager user={{
                 id: user.id,
                 email: user.email || '',
