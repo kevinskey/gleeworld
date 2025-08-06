@@ -65,8 +65,8 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     const Component = module.component;
     console.log('ExecBoardMemberModules - About to render component:', Component?.name);
     return (
-      <div className="mt-4 max-h-[50vh] overflow-y-auto border rounded-lg bg-background">
-        <div className="flex items-center justify-between mb-4 p-4 border-b bg-muted/50">
+      <div className="mt-4">
+        <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">{module.title}</h3>
           <Button 
             variant="outline" 
@@ -79,9 +79,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
             Close
           </Button>
         </div>
-        <div className="p-4">
-          <Component user={user} />
-        </div>
+        <Component user={user} />
       </div>
     );
   };
