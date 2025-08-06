@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Settings, Crown, Users, Calendar, FileText, MessageSquare, BarChart3, Shield } from "lucide-react";
+import { Settings, Crown, Users, Calendar, FileText, MessageSquare, BarChart3, Shield, Bus, Music } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,8 @@ import { ExecutiveCommunications } from './modules/ExecutiveCommunications';
 import { ExecutiveReports } from './modules/ExecutiveReports';
 import { ExecutiveCalendar } from './modules/ExecutiveCalendar';
 import { ExecutiveTeamOverview } from './modules/ExecutiveTeamOverview';
+import { ExecutiveToursLogistics } from './modules/ExecutiveToursLogistics';
+import { ExecutiveConcertManagement } from './modules/ExecutiveConcertManagement';
 
 interface ExecModule {
   id: string;
@@ -26,7 +28,7 @@ interface ExecModule {
   component: React.ComponentType<any>;
   requiredRole?: string[]; // Specific exec roles that can access this module
   isEnabled: boolean;
-  category: 'management' | 'communication' | 'analytics' | 'planning';
+  category: 'management' | 'communication' | 'analytics' | 'planning' | 'logistics';
 }
 
 interface ExecBoardModularHubProps {
@@ -34,6 +36,26 @@ interface ExecBoardModularHubProps {
 }
 
 const DEFAULT_MODULES: ExecModule[] = [
+  {
+    id: 'tours-logistics',
+    name: 'Tours & Logistics',
+    description: 'Coordinate tours, travel, and concert logistics',
+    icon: Bus,
+    component: ExecutiveToursLogistics,
+    requiredRole: ['tour_manager', 'president', 'vice_president'],
+    isEnabled: true,
+    category: 'logistics'
+  },
+  {
+    id: 'concert-management',
+    name: 'Concert Management',
+    description: 'Manage concerts, rehearsals, and performances',
+    icon: Music,
+    component: ExecutiveConcertManagement,
+    requiredRole: ['tour_manager', 'president', 'music_director', 'secretary'],
+    isEnabled: true,
+    category: 'logistics'
+  },
   {
     id: 'task-manager',
     name: 'Task Management',
@@ -233,8 +255,9 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-5 mb-4">
+            <TabsList className="grid grid-cols-6 mb-4">
               <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+              <TabsTrigger value="logistics" className="text-xs">Logistics</TabsTrigger>
               <TabsTrigger value="management" className="text-xs">Manage</TabsTrigger>
               <TabsTrigger value="communication" className="text-xs">Comm</TabsTrigger>
               <TabsTrigger value="planning" className="text-xs">Plan</TabsTrigger>
