@@ -424,9 +424,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         clearInterval(countdownInterval);
         setIsCountingDown(false);
         
-        // Keep metronome running for both practice and recording modes
-        // Only stop metronome when user toggles it off or session ends
-        console.log('Countdown complete, metronome continues running');
+        // Keep metronome running for practice - DO NOT STOP IT
+        console.log('Countdown complete, metronome continues running for practice');
         
         callback(); // Start the actual practice or recording
       }
@@ -581,23 +580,23 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     setPlaybackProgress(0);
     setCurrentNoteIndex(-1);
     
-    // Calculate metronome beat interval in milliseconds
-    const beatInterval = 60000 / tempo; // ms per beat
-    console.log('Beat interval:', beatInterval, 'ms');
+    // Calculate metronome beat interval in milliseconds using CURRENT tempo
+    const currentTempo = tempo; // Use the current tempo state
+    const beatInterval = 60000 / currentTempo; // ms per beat
+    console.log('Using current tempo:', currentTempo, 'BPM, beat interval:', beatInterval, 'ms');
     
     // Synchronize melody with metronome beats
     extractedMelody.forEach((note, index) => {
-      // Calculate delay based on note's position and metronome timing
-      // Use the note's original time but align to metronome tempo
-      const beatPosition = note.time * (tempo / 120); // Adjust for tempo relative to 120 BPM
-      const delayMs = beatPosition * beatInterval;
-      const duration = (note.duration || 0.5) * (60 / tempo); // Duration adjusted for tempo
+      // Calculate delay based on note's position and current metronome timing
+      const noteTimeInBeats = note.time; // Note time is already in beats from MusicXML
+      const delayMs = noteTimeInBeats * beatInterval;
+      const duration = (note.duration || 0.5) * beatInterval / 1000; // Duration in seconds
       
-      console.log(`Scheduling note ${index + 1}/${extractedMelody.length}: ${note.note} at beat ${beatPosition.toFixed(2)} (${delayMs.toFixed(0)}ms)`);
+      console.log(`Scheduling note ${index + 1}/${extractedMelody.length}: ${note.note} at ${noteTimeInBeats} beats (${delayMs.toFixed(0)}ms), duration: ${duration.toFixed(2)}s`);
       
       const noteTimeout = setTimeout(() => {
         if (isPlaying) { // Only play if still in practice mode
-          console.log(`Playing note: ${note.note} in sync with metronome`);
+          console.log(`🎵 Playing note: ${note.note} at tempo ${currentTempo} BPM`);
           setCurrentNoteIndex(index);
           setCurrentNote(note.note);
           
@@ -626,7 +625,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
     // Reset progress when melody completes
     const lastNote = extractedMelody[extractedMelody.length - 1];
-    const totalDuration = (lastNote?.time || 0) * (tempo / 120) * beatInterval + 2000;
+    const totalDuration = (lastNote?.time || 0) * beatInterval + 2000;
     const resetTimeout = setTimeout(() => {
       if (isPlaying) {
         setPlaybackProgress(0);
