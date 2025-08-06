@@ -80,8 +80,8 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
     if (searchQuery) {
       const lowerCaseQuery = searchQuery.toLowerCase();
       filtered = filtered.filter(user =>
-        user.full_name.toLowerCase().includes(lowerCaseQuery) ||
-        user.email.toLowerCase().includes(lowerCaseQuery)
+        (user.full_name && user.full_name.toLowerCase().includes(lowerCaseQuery)) ||
+        (user.email && user.email.toLowerCase().includes(lowerCaseQuery))
       );
     }
 

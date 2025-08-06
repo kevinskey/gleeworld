@@ -32,10 +32,10 @@ export const ResetPasswordDialog = ({ user, open, onOpenChange }: ResetPasswordD
       return;
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < 8) {
       toast({
         title: "Error",
-        description: "Password must be at least 6 characters long",
+        description: "Password must be at least 8 characters long with uppercase, lowercase, number, and special character",
         variant: "destructive",
       });
       return;
