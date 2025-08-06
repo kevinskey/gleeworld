@@ -483,13 +483,22 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     console.log('Starting practice - pianoEnabled:', pianoEnabled, 'extractedMelody length:', extractedMelody.length);
     
+    console.log('=== MELODY PLAYBACK DEBUG ===');
+    console.log('Piano enabled:', pianoEnabled);
+    console.log('Extracted melody length:', extractedMelody.length);
+    console.log('Extracted melody:', extractedMelody);
+    console.log('Is playing:', isPlaying);
+    
     // Start melody playback synchronized with metronome
     if (pianoEnabled && extractedMelody.length > 0) {
-      console.log('Starting synchronized melody playback with', extractedMelody.length, 'notes');
+      console.log('✅ Starting synchronized melody playback with', extractedMelody.length, 'notes');
       // Add small delay to let metronome establish rhythm
       setTimeout(() => {
         if (isPlaying) {
+          console.log('🎵 Calling playMelodySequence now');
           playMelodySequence();
+        } else {
+          console.log('❌ Practice stopped before melody could start');
         }
       }, 100); // Start melody slightly after practice starts for better sync
       
@@ -498,7 +507,10 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         description: "Melody and metronome synchronized"
       });
     } else {
-      console.log('Melody playback skipped - pianoEnabled:', pianoEnabled, 'melody length:', extractedMelody.length);
+      console.log('❌ Melody playback skipped');
+      console.log('  - Piano enabled:', pianoEnabled);
+      console.log('  - Melody length:', extractedMelody.length);
+      console.log('  - First few notes:', extractedMelody.slice(0, 3));
       
       if (metronomeEnabled) {
         toast({
@@ -549,8 +561,13 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   // Play melody notes in sequence synchronized with metronome tempo
   const playMelodySequence = () => {
+    console.log('🎵 playMelodySequence called');
+    console.log('  - Piano enabled:', pianoEnabled);
+    console.log('  - Melody length:', extractedMelody.length);
+    console.log('  - Is playing:', isPlaying);
+    
     if (!pianoEnabled || extractedMelody.length === 0) {
-      console.log('playMelodySequence aborted - pianoEnabled:', pianoEnabled, 'melody length:', extractedMelody.length);
+      console.log('❌ playMelodySequence aborted - pianoEnabled:', pianoEnabled, 'melody length:', extractedMelody.length);
       return;
     }
 
