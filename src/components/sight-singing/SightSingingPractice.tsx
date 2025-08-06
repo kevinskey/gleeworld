@@ -137,45 +137,67 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   }, []);
 
   // Pitch pipe functions
-  const initPitchAudioContext = useCallback(() => {
+  const initPitchAudioContext = useCallback(async () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
+    
+    // Resume audio context if suspended (required for user interaction)
+    if (audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume();
+    }
+    
     return audioContextRef.current;
   }, []);
 
-  const playPitch = useCallback((frequency: number, note: string) => {
-    stopPitch(); // Stop any currently playing pitch
+  const playPitch = useCallback(async (frequency: number, note: string) => {
+    console.log('Playing pitch:', note, 'frequency:', frequency, 'volume:', pitchPipeVolume);
     
-    const audioContext = initPitchAudioContext();
-    
-    // Create oscillator for the tone
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = frequency;
-    oscillator.type = 'sine'; // Pure tone
-    
-    const currentVolume = pitchPipeMuted ? 0 : pitchPipeVolume;
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(currentVolume, audioContext.currentTime + 0.05);
-    
-    oscillator.start();
-    
-    pitchOscillatorRef.current = oscillator;
-    pitchGainNodeRef.current = gainNode;
-    setCurrentPitch(note);
-    
-    // Auto-stop after 3 seconds
-    setTimeout(() => {
-      if (pitchOscillatorRef.current === oscillator) {
-        stopPitch();
-      }
-    }, 3000);
-  }, [pitchPipeVolume, pitchPipeMuted, initPitchAudioContext]);
+    try {
+      stopPitch(); // Stop any currently playing pitch
+      
+      const audioContext = await initPitchAudioContext();
+      console.log('Audio context state:', audioContext.state);
+      
+      // Create oscillator for the tone
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = frequency;
+      oscillator.type = 'sine'; // Pure tone
+      
+      const currentVolume = pitchPipeMuted ? 0 : pitchPipeVolume;
+      console.log('Setting volume to:', currentVolume);
+      
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(currentVolume, audioContext.currentTime + 0.05);
+      
+      oscillator.start();
+      
+      pitchOscillatorRef.current = oscillator;
+      pitchGainNodeRef.current = gainNode;
+      setCurrentPitch(note);
+      
+      console.log('Pitch started successfully');
+      
+      // Auto-stop after 3 seconds
+      setTimeout(() => {
+        if (pitchOscillatorRef.current === oscillator) {
+          stopPitch();
+        }
+      }, 3000);
+    } catch (error) {
+      console.error('Error playing pitch:', error);
+      toast({
+        title: "Audio Error",
+        description: "Failed to play pitch. Check browser audio permissions.",
+        variant: "destructive"
+      });
+    }
+  }, [pitchPipeVolume, pitchPipeMuted, initPitchAudioContext, toast]);
 
   const stopPitch = useCallback(() => {
     if (pitchOscillatorRef.current && pitchGainNodeRef.current && audioContextRef.current) {
@@ -198,7 +220,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     try {
       // Initialize audio context
-      const audioContext = initPitchAudioContext();
+      const audioContext = await initPitchAudioContext();
       
       // Extract notes from exercise (simplified - in real implementation would parse musicXML)
       const exerciseNotes = extractNotesFromExercise();
@@ -766,7 +788,19 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                   max="1"
                   step="0.1"
                   value={pitchPipeVolume}
-                  onChange={(e) => setPitchPipeVolume(Number(e.target.value))}
+                  onChange={(e) => {
+                    const newVolume = Number(e.target.value);
+                    console.log('Volume changed to:', newVolume);
+                    setPitchPipeVolume(newVolume);
+                    
+                    // Update volume of currently playing pitch if any
+                    if (pitchGainNodeRef.current && audioContextRef.current) {
+                      pitchGainNodeRef.current.gain.setValueAtTime(
+                        pitchPipeMuted ? 0 : newVolume,
+                        audioContextRef.current.currentTime
+                      );
+                    }
+                  }}
                   className="h-20 w-2 bg-gray-200 rounded-lg appearance-none cursor-pointer transform rotate-90"
                 />
                 <div className="flex items-center gap-1 mt-1">
