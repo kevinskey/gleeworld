@@ -98,9 +98,30 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
 
       console.log('Loading MusicXML directly...');
       
-      // Use data URL instead of blob URL to bypass CSP restrictions
-      const dataUrl = 'data:application/xml;charset=utf-8,' + encodeURIComponent(musicXML);
-      await osmdRef.current.load(dataUrl);
+      // Try to load XML directly using OSMD's loadXML method if available
+      if (typeof osmdRef.current.loadXML === 'function') {
+        await osmdRef.current.loadXML(musicXML);
+      } else {
+        // Fallback: create a temporary file and load it
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(musicXML, 'text/xml');
+        
+        // Check for parsing errors
+        const parseError = xmlDoc.querySelector('parsererror');
+        if (parseError) {
+          throw new Error('Invalid MusicXML format');
+        }
+        
+        // Create a proper blob URL without encoding
+        const blob = new Blob([musicXML], { type: 'application/xml' });
+        const objectUrl = URL.createObjectURL(blob);
+        
+        try {
+          await osmdRef.current.load(objectUrl);
+        } finally {
+          URL.revokeObjectURL(objectUrl);
+        }
+      }
       
       // Final check before rendering
       if (!isMountedRef.current) {
