@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,9 +22,24 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { PitchPipe } from '@/components/pitch-pipe/PitchPipe';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserScores } from '@/hooks/useUserScores';
+
+// Standard pitch frequencies (A440 tuning) for pitch pipe
+const pitches = [
+  { note: 'C', frequency: 261.63, octave: 4 },
+  { note: 'C♯', frequency: 277.18, octave: 4 },
+  { note: 'D', frequency: 293.66, octave: 4 },
+  { note: 'D♯', frequency: 311.13, octave: 4 },
+  { note: 'E', frequency: 329.63, octave: 4 },
+  { note: 'F', frequency: 349.23, octave: 4 },
+  { note: 'F♯', frequency: 369.99, octave: 4 },
+  { note: 'G', frequency: 392.00, octave: 4 },
+  { note: 'G♯', frequency: 415.30, octave: 4 },
+  { note: 'A', frequency: 440.00, octave: 4 },
+  { note: 'A♯', frequency: 466.16, octave: 4 },
+  { note: 'B', frequency: 493.88, octave: 4 },
+];
 
 interface SightSingingPracticeProps {
   musicXML: string;
@@ -54,6 +69,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [metronomeEnabled, setMetronomeEnabled] = useState(true);
   const [tempo, setTempo] = useState(120);
   
+  // Pitch pipe state
+  const [currentPitch, setCurrentPitch] = useState<string | null>(null);
+  const [pitchPipeVolume, setPitchPipeVolume] = useState(0.3);
+  const [pitchPipeMuted, setPitchPipeMuted] = useState(false);
+  
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -76,6 +96,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const playbackTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const metronomeRef = useRef<any>(null);
+  const pitchOscillatorRef = useRef<OscillatorNode | null>(null);
+  const pitchGainNodeRef = useRef<GainNode | null>(null);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -103,6 +125,64 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       window.removeEventListener('startRecording', handleStartRecording);
       window.removeEventListener('stopRecording', handleStopRecording);
     };
+  }, []);
+
+  // Pitch pipe functions
+  const initPitchAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    return audioContextRef.current;
+  }, []);
+
+  const playPitch = useCallback((frequency: number, note: string) => {
+    if (currentPitch === note) {
+      stopPitch();
+      return;
+    }
+
+    stopPitch(); // Stop any currently playing pitch
+    
+    const audioContext = initPitchAudioContext();
+    
+    // Create oscillator for the tone
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = 'sine'; // Pure tone
+    
+    const currentVolume = pitchPipeMuted ? 0 : pitchPipeVolume;
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(currentVolume, audioContext.currentTime + 0.05);
+    
+    oscillator.start();
+    
+    pitchOscillatorRef.current = oscillator;
+    pitchGainNodeRef.current = gainNode;
+    setCurrentPitch(note);
+    
+    // Auto-stop after 3 seconds
+    setTimeout(() => {
+      if (currentPitch === note) {
+        stopPitch();
+      }
+    }, 3000);
+  }, [currentPitch, pitchPipeVolume, pitchPipeMuted, initPitchAudioContext]);
+
+  const stopPitch = useCallback(() => {
+    if (pitchOscillatorRef.current && pitchGainNodeRef.current && audioContextRef.current) {
+      pitchGainNodeRef.current.gain.linearRampToValueAtTime(0, audioContextRef.current.currentTime + 0.05);
+      setTimeout(() => {
+        pitchOscillatorRef.current?.stop();
+        pitchOscillatorRef.current = null;
+        pitchGainNodeRef.current = null;
+      }, 50);
+    }
+    setCurrentPitch(null);
   }, []);
 
   const startCountdown = (callback: () => void) => {
@@ -485,19 +565,39 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
               </Label>
             </div>
             
-            {/* Round Pitch Pipe */}
-            <div className="flex items-center justify-center">
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-amber-200 to-amber-400 rounded-full border-4 border-amber-500 shadow-lg flex items-center justify-center">
+            {/* Interactive Round Pitch Pipe */}
+            <div className="flex flex-col items-center justify-center space-y-2">
+              <div 
+                className="relative cursor-pointer group"
+                onClick={() => {
+                  // Cycle through common starting pitches when clicked
+                  const commonPitches = ['C', 'D', 'F', 'G', 'A'];
+                  const currentIndex = currentPitch ? commonPitches.indexOf(currentPitch) : -1;
+                  const nextIndex = (currentIndex + 1) % commonPitches.length;
+                  const nextPitch = pitches.find(p => p.note === commonPitches[nextIndex]);
+                  if (nextPitch) {
+                    playPitch(nextPitch.frequency, nextPitch.note);
+                  }
+                }}
+              >
+                <div className={`w-16 h-16 bg-gradient-to-br from-amber-200 to-amber-400 rounded-full border-4 border-amber-500 shadow-lg flex items-center justify-center transition-all duration-200 ${
+                  currentPitch ? 'scale-110 shadow-xl ring-4 ring-amber-300' : 'group-hover:scale-105'
+                }`}>
                   <div className="w-6 h-6 bg-amber-800 rounded-full shadow-inner">
                     <div className="w-full h-full bg-black rounded-full opacity-40"></div>
                   </div>
                 </div>
                 <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-3 bg-amber-400 rounded-b-full border-l-2 border-r-2 border-b-2 border-amber-500"></div>
-                <Label className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs text-center whitespace-nowrap">
-                  Pitch Pipe
-                </Label>
+                {currentPitch && (
+                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded">
+                    {currentPitch}
+                  </div>
+                )}
               </div>
+              <Label className="text-xs text-center">
+                Pitch Pipe
+                <div className="text-xs text-muted-foreground">Click to play</div>
+              </Label>
             </div>
           </div>
           
@@ -518,10 +618,38 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
             </div>
           </div>
           
-          {/* Interactive Pitch Pipe - Full component below the controls */}
-          <div className="mt-6 pt-4 border-t">
-            <PitchPipe className="w-full" />
-          </div>
+          
+          {/* Pitch Selection Grid - appears when pitch pipe is active */}
+          {currentPitch && (
+            <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <div className="text-sm font-medium mb-2 text-center">Select a pitch:</div>
+              <div className="grid grid-cols-6 gap-1">
+                {pitches.map((pitch) => (
+                  <Button
+                    key={pitch.note}
+                    variant={currentPitch === pitch.note ? "default" : "outline"}
+                    size="sm"
+                    className={`text-xs ${
+                      currentPitch === pitch.note 
+                        ? "bg-amber-600 text-white" 
+                        : "hover:bg-amber-100"
+                    }`}
+                    onClick={() => playPitch(pitch.frequency, pitch.note)}
+                  >
+                    {pitch.note}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={stopPitch}
+                className="w-full mt-2 text-xs"
+              >
+                Stop
+              </Button>
+            </div>
+          )}
           
           
           <div className="flex items-center gap-4">
