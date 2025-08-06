@@ -38,10 +38,18 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
   const [execModules, setExecModules] = useState<ExecModulePermission[]>([]);
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
+  console.log('ExecBoardMemberModules - User:', user);
+  console.log('ExecBoardMemberModules - Profile:', profile);
+  console.log('ExecBoardMemberModules - isExecutiveBoard():', isExecutiveBoard());
+  console.log('ExecBoardMemberModules - exec_board_role:', profile?.exec_board_role);
+
   useEffect(() => {
+    console.log('ExecBoardMemberModules - useEffect triggered');
     if (isExecutiveBoard() && profile?.exec_board_role) {
+      console.log('ExecBoardMemberModules - Fetching permissions for:', profile.exec_board_role);
       fetchExecModulePermissions();
     } else {
+      console.log('ExecBoardMemberModules - No executive board access, stopping loading');
       setLoading(false);
     }
   }, [profile?.exec_board_role, isExecutiveBoard]);
@@ -51,6 +59,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
 
     try {
       setLoading(true);
+      console.log('ExecBoardMemberModules - Fetching for position:', profile.exec_board_role);
       const { data, error } = await supabase
         .from('gw_executive_position_functions')
         .select(`
@@ -80,8 +89,9 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
           module: item.gw_app_functions.module,
           can_access: item.can_access,
           can_manage: item.can_manage
-        })) || [];
+      })) || [];
 
+      console.log('ExecBoardMemberModules - Loaded modules:', modules.length);
       setExecModules(modules);
     } catch (error) {
       console.error('Error fetching exec module permissions:', error);
@@ -172,10 +182,13 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
         <span>Loading executive modules...</span>
       </div>
     );
-  }
+    }
 
-  if (execModules.length === 0) {
-    return (
+    console.log('ExecBoardMemberModules - Rendering with modules:', execModules.length);
+
+    if (execModules.length === 0) {
+      console.log('ExecBoardMemberModules - No modules found');
+      return (
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
