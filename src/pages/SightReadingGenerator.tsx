@@ -99,16 +99,23 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
       console.log('Loading MusicXML directly...');
       console.log('MusicXML preview:', musicXML.substring(0, 200));
       
-      // Try different methods to load the XML directly
-      if (typeof osmdRef.current.loadXML === 'function') {
-        await osmdRef.current.loadXML(musicXML);
-      } else if (typeof osmdRef.current.load === 'function') {
-        // Try creating a proper XML file with better encoding
-        const xmlContent = musicXML.startsWith('<?xml') ? musicXML : `<?xml version="1.0" encoding="UTF-8"?>\n${musicXML}`;
-        const dataUrl = 'data:application/xml;base64,' + btoa(unescape(encodeURIComponent(xmlContent)));
-        await osmdRef.current.load(dataUrl);
-      } else {
-        throw new Error('No suitable loading method found in OSMD');
+      // Try different methods to load the XML
+      try {
+        // Method 1: Try loadXML if available
+        if (osmdRef.current.loadXML && typeof osmdRef.current.loadXML === 'function') {
+          console.log('Using loadXML method');
+          await osmdRef.current.loadXML(musicXML);
+        } else {
+          console.log('loadXML not available, using alternative method');
+          // Method 2: Use the old load method with proper XML handling
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(musicXML, 'application/xml');
+          await osmdRef.current.load(xmlDoc);
+        }
+      } catch (xmlError) {
+        console.log('XML loading failed, trying string approach:', xmlError);
+        // Method 3: Direct string load (last resort)
+        await osmdRef.current.load(musicXML);
       }
       
       // Final check before rendering
