@@ -1,23 +1,38 @@
 import { serve } from "https://deno.land/std/http/server.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+      },
+    });
   }
 
   try {
     const { prompt } = await req.json();
+    console.log('Received prompt:', prompt);
+    
+    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    console.log('API key exists:', !!apiKey);
+
+    if (!apiKey) {
+      return new Response(JSON.stringify({ 
+        error: "OpenAI API key not configured" 
+      }), {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
+      });
+    }
 
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -30,15 +45,18 @@ serve(async (req) => {
     });
 
     const data = await openaiRes.json();
+    console.log('OpenAI response status:', openaiRes.status);
+    console.log('OpenAI response:', data);
 
     if (!openaiRes.ok) {
-      console.error('OpenAI API error:', data);
       return new Response(JSON.stringify({ 
         error: data.error?.message || "OpenAI request failed",
         details: data 
       }), {
-        status: 200, // Return 200 to avoid edge function error
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
       });
     }
 
@@ -47,17 +65,22 @@ serve(async (req) => {
       message: data.choices[0].message.content,
       data: data 
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
     });
 
   } catch (err) {
     console.error('Function error:', err);
     return new Response(JSON.stringify({ 
-      error: err.message,
-      success: false 
+      error: err.message 
     }), {
-      status: 200, // Return 200 to avoid edge function error
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
     });
   }
 });
