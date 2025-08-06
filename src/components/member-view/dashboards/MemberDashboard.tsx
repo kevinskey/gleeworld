@@ -22,7 +22,12 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
         <CommunityHubWidget />
         
         {isExecBoard && (
-          <ExecBoardModulePanel userEmail={user.email} />
+          <>
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-brand-800 tracking-wide">EXECUTIVE BOARD</h2>
+            </div>
+            <ExecBoardModulePanel userEmail={user.email} />
+          </>
         )}
       </div>
     </div>
