@@ -534,6 +534,56 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Practice and Recording Buttons - Top Section */}
+          <div className="flex items-center gap-4 p-4 bg-muted/20 rounded-lg border">
+            <div className="flex items-center gap-2">
+              {!isPlaying ? (
+                <Button onClick={startPractice} className="flex items-center gap-2">
+                  <Play className="h-4 w-4" />
+                  Practice
+                </Button>
+              ) : (
+                <Button onClick={stopPractice} variant="outline" className="flex items-center gap-2">
+                  <Pause className="h-4 w-4" />
+                  Stop Practice
+                </Button>
+              )}
+              
+              {!isRecording ? (
+                <Button 
+                  onClick={startRecording} 
+                  variant="secondary"
+                  className="flex items-center gap-2"
+                  disabled={isPlaying}
+                >
+                  <Mic className="h-4 w-4" />
+                  Start Recording
+                </Button>
+              ) : (
+                <Button 
+                  onClick={stopRecording} 
+                  variant="destructive"
+                  className="flex items-center gap-2"
+                >
+                  <Square className="h-4 w-4" />
+                  Stop Recording
+                </Button>
+              )}
+            </div>
+            
+            {/* Time Display */}
+            {(isPlaying || isRecording) && (
+              <div className="flex items-center gap-2">
+                <Timer className="h-4 w-4" />
+                <span>
+                  {isRecording ? formatTime(recordingTime) : formatTime(playbackTime)}
+                </span>
+                {isRecording && (
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="flex items-center space-x-2">
               <Switch
@@ -661,58 +711,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
             </div>
           </div>
           
-          
-          
-          <div className="flex items-center gap-4">
-            {/* Practice and Recording Buttons */}
-            <div className="flex items-center gap-2">
-              {!isPlaying ? (
-                <Button onClick={startPractice} className="flex items-center gap-2">
-                  <Play className="h-4 w-4" />
-                  Practice
-                </Button>
-              ) : (
-                <Button onClick={stopPractice} variant="outline" className="flex items-center gap-2">
-                  <Pause className="h-4 w-4" />
-                  Stop Practice
-                </Button>
-              )}
-              
-              {!isRecording ? (
-                <Button 
-                  onClick={startRecording} 
-                  variant="secondary"
-                  className="flex items-center gap-2"
-                  disabled={isPlaying}
-                >
-                  <Mic className="h-4 w-4" />
-                  Start Recording
-                </Button>
-              ) : (
-                <Button 
-                  onClick={stopRecording} 
-                  variant="destructive"
-                  className="flex items-center gap-2"
-                >
-                  <Square className="h-4 w-4" />
-                  Stop Recording
-                </Button>
-              )}
-            </div>
-            
-            {/* Time Display */}
-            {(isPlaying || isRecording) && (
-              <div className="flex items-center gap-2">
-                <Timer className="h-4 w-4" />
-                <span>
-                  {isRecording ? formatTime(recordingTime) : formatTime(playbackTime)}
-                </span>
-                {isRecording && (
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                )}
-              </div>
-            )}
-          </div>
           
           {/* Countdown Display */}
           {isCountingDown && (
