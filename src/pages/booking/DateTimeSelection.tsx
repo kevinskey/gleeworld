@@ -79,18 +79,18 @@ export default function DateTimeSelection() {
             {/* Date Selection Controls */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex space-x-2">
-                <Button
-                  variant={viewMode === 'Week' ? 'default' : 'outline'}
-                  className={viewMode === 'Week' ? 'bg-secondary text-secondary-foreground' : 'border-white/30 text-primary-foreground hover:bg-white/10'}
-                  onClick={() => setViewMode('Week')}
-                >
+              <Button
+                variant={viewMode === 'Week' ? 'default' : 'outline'}
+                className={viewMode === 'Week' ? 'bg-blue-400 text-white' : 'border-white/30 text-primary-foreground hover:bg-white/10'}
+                onClick={() => setViewMode('Week')}
+              >
                   Week
                 </Button>
-                <Button
-                  variant={viewMode === 'Month' ? 'default' : 'outline'}
-                  className={viewMode === 'Month' ? 'bg-secondary text-secondary-foreground' : 'border-white/30 text-primary-foreground hover:bg-white/10'}
-                  onClick={() => setViewMode('Month')}
-                >
+              <Button
+                variant={viewMode === 'Month' ? 'default' : 'outline'}
+                className={viewMode === 'Month' ? 'bg-blue-400 text-white' : 'border-white/30 text-primary-foreground hover:bg-white/10'}
+                onClick={() => setViewMode('Month')}
+              >
                   Month
                 </Button>
               </div>
@@ -115,7 +115,7 @@ export default function DateTimeSelection() {
                     variant={selectedDate === dateInfo.date ? 'default' : 'outline'}
                     className={`w-full h-16 text-lg ${
                       selectedDate === dateInfo.date 
-                        ? 'bg-secondary text-secondary-foreground' 
+                        ? 'bg-blue-400 text-white' 
                         : dateInfo.available 
                           ? 'border-white/30 text-primary-foreground hover:bg-white/10' 
                           : 'border-white/20 text-primary-foreground/40 cursor-not-allowed'
@@ -154,7 +154,7 @@ export default function DateTimeSelection() {
                     variant={selectedTime === time ? 'default' : 'outline'}
                     className={`h-12 text-sm ${
                       selectedTime === time 
-                        ? 'bg-secondary text-secondary-foreground' 
+                        ? 'bg-blue-400 text-white' 
                         : 'border-white/30 text-primary-foreground hover:bg-white/10'
                     }`}
                     onClick={() => handleTimeSelect(time)}

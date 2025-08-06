@@ -250,7 +250,7 @@ export default function CustomerInfo() {
               </div>
               <div className="ml-auto">
                 <Button 
-                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-8"
+                  className="bg-blue-400 hover:bg-blue-500 text-white px-8"
                   onClick={handleContinue}
                   disabled={!formData.firstName || !formData.lastName || !formData.acceptTerms}
                 >

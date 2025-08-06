@@ -58,14 +58,14 @@ export default function RecurringOptions() {
             <div className="flex space-x-2 mb-8">
               <Button
                 variant={recurringType === 'Daily' ? 'default' : 'outline'}
-                className={recurringType === 'Daily' ? 'bg-secondary text-secondary-foreground' : 'border-white/30 text-primary-foreground hover:bg-white/10'}
+                className={recurringType === 'Daily' ? 'bg-blue-400 text-white' : 'border-white/30 text-primary-foreground hover:bg-white/10'}
                 onClick={() => setRecurringType('Daily')}
               >
                 Daily
               </Button>
               <Button
                 variant={recurringType === 'Weekly' ? 'default' : 'outline'}
-                className={recurringType === 'Weekly' ? 'bg-secondary text-secondary-foreground' : 'border-white/30 text-primary-foreground hover:bg-white/10'}
+                className={recurringType === 'Weekly' ? 'bg-blue-400 text-white' : 'border-white/30 text-primary-foreground hover:bg-white/10'}
                 onClick={() => setRecurringType('Weekly')}
               >
                 Weekly
@@ -166,7 +166,7 @@ export default function RecurringOptions() {
               </div>
               <div className="ml-auto">
                 <Button 
-                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-8"
+                  className="bg-blue-400 hover:bg-blue-500 text-white px-8"
                   onClick={handleContinue}
                 >
                   Continue

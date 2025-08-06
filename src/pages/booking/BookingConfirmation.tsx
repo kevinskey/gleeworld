@@ -81,7 +81,7 @@ export default function BookingConfirmation() {
                 </Select>
 
                 <Button 
-                  className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground py-3"
+                  className="w-full bg-blue-400 hover:bg-blue-500 text-white py-3"
                   onClick={handleAddToCalendar}
                 >
                   Add to calendar

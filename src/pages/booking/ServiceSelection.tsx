@@ -215,7 +215,7 @@ export default function ServiceSelection() {
                                   <div className="text-right">
                                     <div className="text-lg font-bold text-primary-foreground mb-2">{service.price}</div>
                                     <Button 
-                                      className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                                      className="bg-blue-400 hover:bg-blue-500 text-white"
                                       onClick={() => handleServiceSelect(service.id)}
                                     >
                                       Choose

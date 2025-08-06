@@ -133,7 +133,7 @@ export default function SchedulingPage() {
           </p>
           <Button 
             size="lg" 
-            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-8 py-3 rounded-md font-semibold"
+            className="bg-blue-400 hover:bg-blue-500 text-white px-8 py-3 rounded-md font-semibold"
             onClick={() => window.location.href = '/booking'}
           >
             Book Now
@@ -205,7 +205,7 @@ export default function SchedulingPage() {
 
               <Button 
                 variant={selectedCategory === 'All categories' ? 'default' : 'outline'}
-                className="lg:w-48 bg-secondary hover:bg-secondary/90 text-secondary-foreground border-secondary"
+                className="lg:w-48 bg-blue-400 hover:bg-blue-500 text-white border-blue-400"
               >
                 {selectedCategory}
               </Button>
@@ -265,7 +265,7 @@ export default function SchedulingPage() {
                       </Button>
                       <Button 
                         size="sm" 
-                        className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                        className="flex-1 bg-blue-400 hover:bg-blue-500 text-white"
                         onClick={() => window.location.href = '/booking'}
                       >
                         Book Now
