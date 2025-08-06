@@ -63,42 +63,44 @@ export const useUsers = () => {
         throw gwProfilesError;
       }
 
-      // Transform gw_profiles data into User format
-      const transformedUsers: User[] = (gwProfilesData || []).map(profile => {
-        // Determine the effective role - prioritize admin flags
-        let effectiveRole = profile.role || 'user';
-        if (profile.is_super_admin) {
-          effectiveRole = 'super-admin';
-        } else if (profile.is_admin) {
-          effectiveRole = 'admin';
-        }
+      // Transform gw_profiles data into User format and filter out invalid entries
+      const transformedUsers: User[] = (gwProfilesData || [])
+        .filter(profile => profile.user_id) // Only include profiles with valid user_id
+        .map(profile => {
+          // Determine the effective role - prioritize admin flags
+          let effectiveRole = profile.role || 'user';
+          if (profile.is_super_admin) {
+            effectiveRole = 'super-admin';
+          } else if (profile.is_admin) {
+            effectiveRole = 'admin';
+          }
 
-        return {
-          id: profile.user_id, // Use user_id as the primary key
-          email: profile.email || null,
-          full_name: profile.full_name || 
-                    (profile.first_name && profile.last_name ? 
-                     `${profile.first_name} ${profile.last_name}` : null),
-          role: effectiveRole,
-          created_at: profile.created_at,
-          exec_board_role: profile.exec_board_role || null,
-          is_exec_board: profile.is_exec_board || false,
-          avatar_url: profile.avatar_url || null,
-          verified: profile.verified || false,
-          phone: profile.phone || null,
-          voice_part: profile.voice_part || null,
-          class_year: profile.class_year || null,
-          join_date: profile.join_date || null,
-          status: profile.status || null,
-          dues_paid: profile.dues_paid || false,
-          notes: profile.notes || null,
-          is_admin: profile.is_admin || false,
-          is_super_admin: profile.is_super_admin || false,
-          title: profile.title || null,
-          graduation_year: profile.graduation_year || null,
-          bio: profile.bio || null,
-        };
-      });
+          return {
+            id: profile.user_id, // Use user_id as the primary key
+            email: profile.email || null,
+            full_name: profile.full_name || 
+                      (profile.first_name && profile.last_name ? 
+                       `${profile.first_name} ${profile.last_name}` : null),
+            role: effectiveRole,
+            created_at: profile.created_at,
+            exec_board_role: profile.exec_board_role || null,
+            is_exec_board: profile.is_exec_board || false,
+            avatar_url: profile.avatar_url || null,
+            verified: profile.verified || false,
+            phone: profile.phone || null,
+            voice_part: profile.voice_part || null,
+            class_year: profile.class_year || null,
+            join_date: profile.join_date || null,
+            status: profile.status || null,
+            dues_paid: profile.dues_paid || false,
+            notes: profile.notes || null,
+            is_admin: profile.is_admin || false,
+            is_super_admin: profile.is_super_admin || false,
+            title: profile.title || null,
+            graduation_year: profile.graduation_year || null,
+            bio: profile.bio || null,
+          };
+        });
 
       console.log('useUsers: Transformed users:', { 
         count: transformedUsers.length,
