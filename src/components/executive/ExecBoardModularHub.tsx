@@ -179,8 +179,12 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
 
   // Filter modules based on user role and permissions
   const availableModules = modules.filter(module => {
-    if (!module.requiredRole) return true;
-    return execRole && module.requiredRole.includes(execRole);
+    // If module has specific role requirements, check them
+    if (module.requiredRole && module.requiredRole.length > 0) {
+      return execRole && module.requiredRole.includes(execRole);
+    }
+    // Otherwise, allow all modules for exec board members
+    return true;
   });
 
   const enabledModules = availableModules.filter(module => module.isEnabled);
