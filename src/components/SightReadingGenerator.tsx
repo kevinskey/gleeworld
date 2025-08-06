@@ -17,13 +17,17 @@ interface GeneratorParams {
   key: string;
   range: string;
   difficulty: number;
+  timeSignature: string;
+  measures: number;
 }
 
 export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightReading?: (melody: Note[]) => void }) => {
   const [params, setParams] = useState<GeneratorParams>({
     key: 'C',
     range: 'C4-G4',
-    difficulty: 1
+    difficulty: 1,
+    timeSignature: '4/4',
+    measures: 8
   });
   const [generatedMelody, setGeneratedMelody] = useState<Note[]>([]);
   const [musicXML, setMusicXML] = useState<string>('');
@@ -37,6 +41,8 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
   const ranges = [
     'C4-G4', 'C4-C5', 'G3-G4', 'F4-F5', 'E4-E5'
   ];
+  const timeSignatures = ['4/4', '3/4', '2/4'];
+  const measureCounts = [4, 8, 12, 16];
 
   // Initialize OSMD
   useEffect(() => {
@@ -106,7 +112,7 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     
     const noteSequence = getNoteSequence(params.range, params.key);
     const melody: Note[] = [];
-    const barsCount = 8;
+    const barsCount = params.measures;
     const notesPerBar = 4; // 4/4 time
     const beatDuration = 0.5; // Half second per beat
     
@@ -189,7 +195,7 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
   };
 
   const generateBars = (melody: Note[], fifths: number) => {
-    const barsCount = 8;
+    const barsCount = params.measures;
     const notesPerBar = 4;
     let bars = '';
     
@@ -204,8 +210,8 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
           <fifths>${fifths}</fifths>
         </key>
         <time>
-          <beats>4</beats>
-          <beat-type>4</beat-type>
+          <beats>${params.timeSignature.split('/')[0]}</beats>
+          <beat-type>${params.timeSignature.split('/')[1]}</beat-type>
         </time>
         <clef>
           <sign>G</sign>
@@ -356,7 +362,6 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     }
   };
 
-  // Add function to load custom melody
   const loadCustomMelody = () => {
     const customMelody: Note[] = [
       { "note": "D4", "time": 0, "duration": 0.5 },
@@ -420,25 +425,47 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Music className="h-5 w-5" />
-            Sight Reading Generator (OSMD)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="key">Key</Label>
+      {/* Exercise Parameters Ribbon */}
+      <div className="bg-gradient-to-r from-muted/50 to-muted/30 border border-border rounded-lg p-4">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 mb-3">
+            <Music className="h-4 w-4 text-primary" />
+            <h3 className="font-medium text-sm">Exercise Parameters</h3>
+            <span className="text-xs text-muted-foreground">• Customize your sight-reading exercise</span>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {/* Difficulty Level */}
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Difficulty Level</Label>
+              <Select
+                value={params.difficulty.toString()}
+                onValueChange={(value) => setParams({ ...params, difficulty: parseInt(value) })}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {[1, 2, 3, 4, 5].map((level) => (
+                    <SelectItem key={level} value={level.toString()}>
+                      Level {level} {level === 1 ? '(Beginner)' : level === 5 ? '(Advanced)' : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Key Signature */}
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Key Signature</Label>
               <Select
                 value={params.key}
                 onValueChange={(value) => setParams({ ...params, key: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select key" />
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border shadow-lg z-50">
                   {keys.map((key) => (
                     <SelectItem key={key} value={key}>
                       {key} Major
@@ -448,45 +475,78 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="range">Range</Label>
+            {/* Time Signature */}
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Time Signature</Label>
               <Select
-                value={params.range}
-                onValueChange={(value) => setParams({ ...params, range: value })}
+                value={params.timeSignature}
+                onValueChange={(value) => setParams({ ...params, timeSignature: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select range" />
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  {ranges.map((range) => (
-                    <SelectItem key={range} value={range}>
-                      {range}
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {timeSignatures.map((sig) => (
+                    <SelectItem key={sig} value={sig}>
+                      {sig}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="difficulty">Difficulty</Label>
+            {/* Number of Measures */}
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Measures</Label>
               <Select
-                value={params.difficulty.toString()}
-                onValueChange={(value) => setParams({ ...params, difficulty: parseInt(value) })}
+                value={params.measures.toString()}
+                onValueChange={(value) => setParams({ ...params, measures: parseInt(value) })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select difficulty" />
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <SelectItem key={level} value={level.toString()}>
-                      Level {level}
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {measureCounts.map((count) => (
+                    <SelectItem key={count} value={count.toString()}>
+                      {count}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Note Range */}
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Note Range</Label>
+              <Select
+                value={params.range}
+                onValueChange={(value) => setParams({ ...params, range: value })}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {ranges.map((range) => (
+                    <SelectItem key={range} value={range}>
+                      {range} {range === 'C4-G4' ? '(Beginner)' : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
+        </div>
+      </div>
 
+      {/* Generator Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Music className="h-5 w-5" />
+            Generator Actions
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="flex gap-2">
             <Button
               onClick={generateMelody}
