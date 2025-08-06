@@ -138,31 +138,58 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     stopMetronome();
   };
 
-  const startMetronome = () => {
-    // Simple metronome implementation
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const startMetronome = async () => {
+    try {
+      // Initialize audio context if needed
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      
+      const audioContext = audioContextRef.current;
+      
+      // Resume audio context if suspended (required for user interaction)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      
+      const interval = 60000 / tempo; // Convert BPM to milliseconds
+      
+      // Clear any existing metronome
+      if (metronomeRef.current) {
+        clearInterval(metronomeRef.current);
+      }
+      
+      metronomeRef.current = setInterval(() => {
+        try {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.value = 800; // Higher pitch for clear click
+          oscillator.type = 'sine';
+          
+          const currentTime = audioContext.currentTime;
+          gainNode.gain.setValueAtTime(0, currentTime);
+          gainNode.gain.linearRampToValueAtTime(0.3, currentTime + 0.01);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.1);
+          
+          oscillator.start(currentTime);
+          oscillator.stop(currentTime + 0.1);
+        } catch (error) {
+          console.error('Metronome tick error:', error);
+        }
+      }, interval);
+      
+    } catch (error) {
+      console.error('Error starting metronome:', error);
+      toast({
+        title: "Metronome Error",
+        description: "Failed to start metronome",
+        variant: "destructive"
+      });
     }
-    
-    const audioContext = audioContextRef.current;
-    const interval = 60000 / tempo; // Convert BPM to milliseconds
-    
-    metronomeRef.current = setInterval(() => {
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
-    }, interval);
   };
 
   const stopMetronome = () => {
