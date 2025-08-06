@@ -21,8 +21,7 @@ import { DashboardModulesSection } from "./sections/DashboardModulesSection";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { NotificationsSection } from "./sections/NotificationsSection";
 import { TasksSection } from "./sections/TasksSection";
-import { ExecutiveToursLogistics } from "@/components/executive/modules/ExecutiveToursLogistics";
-import { BookingFormsModule } from "@/components/modules/BookingFormsModule";
+import { BookingRequestManager } from "@/components/booking/BookingRequestManager";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useMergedProfile } from "@/hooks/useMergedProfile";
@@ -343,19 +342,10 @@ const UserDashboard = React.memo(() => {
             <div className="mb-6"></div>
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-brand-800 tracking-wide">ADMIN DASHBOARD</h2>
-              <p className="text-sm text-muted-foreground">Tours and Concert Logistics</p>
+              <p className="text-sm text-muted-foreground">Booking Requests Management</p>
             </div>
             <div className="bg-background border rounded-lg p-6">
-              <ExecutiveToursLogistics />
-            </div>
-            
-            <div className="mb-6"></div>
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-brand-800 tracking-wide">BOOKING FORMS</h2>
-              <p className="text-sm text-muted-foreground">Performance Requests & Inquiries</p>
-            </div>
-            <div className="bg-background border rounded-lg p-6">
-              <BookingFormsModule user={{
+              <BookingRequestManager user={{
                 id: user.id,
                 email: user.email || '',
                 full_name: profile?.full_name || '',
