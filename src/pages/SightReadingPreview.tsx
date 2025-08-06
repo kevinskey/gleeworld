@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 const SightReadingPreview = () => {
-  const [xmlUrl, setXmlUrl] = useState('https://opensheetmusicdisplay.org/demo/Beethoven_AnDieFerneGeliebte.musicxml');
+  const [xmlUrl, setXmlUrl] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadedXmlContent, setUploadedXmlContent] = useState<string>('');
   const navigate = useNavigate();
