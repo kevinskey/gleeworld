@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   FileText, 
   Calendar, 
@@ -16,7 +17,9 @@ import {
   XCircle,
   Eye,
   Filter,
-  Search
+  Search,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -57,6 +60,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedRequest, setSelectedRequest] = useState<BookingRequest | null>(null);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const loadBookingRequests = async () => {
     try {
@@ -237,47 +241,57 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Booking Requests</h2>
-          <p className="text-muted-foreground">
-            Manage performance requests and inquiries from external organizations
-          </p>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {Object.entries(statusCounts).map(([status, count]) => (
-          <Card key={status} className="text-center">
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-foreground">{count}</div>
-              <div className="text-sm text-muted-foreground capitalize">
-                {status === 'all' ? 'Total' : status}
+    <Card className="space-y-6">
+      <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-2xl font-bold text-foreground">Booking Requests</CardTitle>
+                <p className="text-muted-foreground">
+                  Manage performance requests and inquiries from external organizations
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              <div className="flex items-center">
+                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </div>
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        
+        <CollapsibleContent className="transition-all duration-300 ease-out">
+          <CardContent className="space-y-6">
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search organizations, contacts, or event types..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <Filter className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {Object.entries(statusCounts).map(([status, count]) => (
+                <Card key={status} className="text-center">
+                  <CardContent className="pt-4">
+                    <div className="text-2xl font-bold text-foreground">{count}</div>
+                    <div className="text-sm text-muted-foreground capitalize">
+                      {status === 'all' ? 'Total' : status}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search organizations, contacts, or event types..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[200px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="new">New</SelectItem>
@@ -406,6 +420,9 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
           </CardContent>
         </Card>
       )}
-    </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
   );
 };
