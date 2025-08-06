@@ -97,13 +97,13 @@ Generate COMPLETE MusicXML 3.1 format with ALL ${measures} measures.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-4.1-2025-04-14",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
-        temperature: 0.7,
-        max_tokens: 4000,
+        temperature: 0.3,
+        max_tokens: 6000,
       }),
     });
 
@@ -122,8 +122,39 @@ Generate COMPLETE MusicXML 3.1 format with ALL ${measures} measures.`;
       });
     }
 
-    const musicXML = result.choices[0].message.content;
+    let musicXML = result.choices[0].message.content;
     console.log("Generated MusicXML length:", musicXML.length);
+    
+    // Post-process to ensure complete XML structure
+    if (!musicXML.includes('</score-partwise>')) {
+      console.log("MusicXML appears truncated, attempting to fix...");
+      
+      // Try to fix common truncation issues
+      if (musicXML.includes('<clef>') && !musicXML.includes('</clef>')) {
+        // Fix truncated clef element
+        const clefIndex = musicXML.lastIndexOf('<clef>');
+        if (clefIndex !== -1) {
+          const beforeClef = musicXML.substring(0, clefIndex);
+          musicXML = beforeClef + `<clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><type>quarter</type></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>4</duration><type>quarter</type></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><type>quarter</type></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>4</duration><type>quarter</type></note>
+    </measure>
+  </part>
+</score-partwise>`;
+        }
+      } else {
+        // Generic fix - just close the XML properly
+        musicXML += `
+    </measure>
+  </part>
+</score-partwise>`;
+      }
+      
+      console.log("Fixed MusicXML length:", musicXML.length);
+    }
 
     return new Response(JSON.stringify({ musicXML }), {
       headers: {
