@@ -22,13 +22,24 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
   const osmdRef = React.useRef<any>(null);
 
   React.useEffect(() => {
-    if (musicXML && containerRef.current) {
-      renderMusicXML();
-    }
+    // Add a small delay to ensure DOM is fully mounted
+    const timer = setTimeout(() => {
+      if (musicXML && containerRef.current) {
+        renderMusicXML();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [musicXML]);
 
   const renderMusicXML = async () => {
-    if (!containerRef.current || !musicXML) return;
+    if (!containerRef.current || !musicXML) {
+      console.log('renderMusicXML: Missing refs or musicXML', {
+        hasContainer: !!containerRef.current,
+        hasMusicXML: !!musicXML
+      });
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -44,7 +55,10 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
       
       console.log('OSMD imported successfully');
       
-      // Clear container
+      // Double-check container is still available and clear it
+      if (!containerRef.current) {
+        throw new Error('Container element became unavailable during rendering');
+      }
       containerRef.current.innerHTML = '';
       
       // Create new OSMD instance
