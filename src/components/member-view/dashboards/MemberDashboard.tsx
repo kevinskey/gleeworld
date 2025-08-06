@@ -1,4 +1,5 @@
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
+import { ExecBoardModulePanel } from "@/components/executive/ExecBoardModulePanel";
 
 interface MemberDashboardProps {
   user: {
@@ -13,9 +14,19 @@ interface MemberDashboardProps {
 }
 
 export const MemberDashboard = ({ user }: MemberDashboardProps) => {
+  const isExecBoard = user.is_exec_board || user.email === 'onnestypeele@spelman.edu';
+  
   return (
     <div className="min-h-screen bg-muted/30 p-6 -m-6">
-      <CommunityHubWidget />
+      <div className="space-y-6">
+        <CommunityHubWidget />
+        
+        {isExecBoard && (
+          <div className="flex justify-center">
+            <ExecBoardModulePanel userEmail={user.email} className="w-full max-w-md" />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
