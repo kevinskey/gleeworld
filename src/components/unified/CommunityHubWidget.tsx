@@ -111,7 +111,6 @@ interface LoveMessage {
 interface LoveMessageForm {
   message: string;
   note_color: string;
-  voice_part: string;
   is_anonymous: boolean;
   decorations: string;
 }
@@ -167,7 +166,6 @@ export const CommunityHubWidget = () => {
     defaultValues: {
       message: "",
       note_color: "blue",
-      voice_part: "",
       is_anonymous: false,
       decorations: "",
     },
@@ -655,43 +653,6 @@ export const CommunityHubWidget = () => {
                         )}
                       />
 
-                      <FormField
-                        control={loveForm.control}
-                        name="voice_part"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Voice Part (Optional)</FormLabel>
-                            <FormControl>
-                              <RadioGroup
-                                onValueChange={field.onChange}
-                                value={field.value}
-                                className="flex flex-row gap-4 flex-wrap"
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="" id="no-voice" />
-                                  <Label htmlFor="no-voice" className="text-sm">None</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="S1" id="s1" />
-                                  <Label htmlFor="s1" className="text-sm">S1</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="S2" id="s2" />
-                                  <Label htmlFor="s2" className="text-sm">S2</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="A1" id="a1" />
-                                  <Label htmlFor="a1" className="text-sm">A1</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="A2" id="a2" />
-                                  <Label htmlFor="a2" className="text-sm">A2</Label>
-                                </div>
-                              </RadioGroup>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
 
                       <FormField
                         control={loveForm.control}
