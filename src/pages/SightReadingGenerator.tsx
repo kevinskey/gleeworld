@@ -117,20 +117,27 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
 
       // Create OSMD with more conservative settings to prevent width errors
       osmdRef.current = new OpenSheetMusicDisplay(container, {
-        autoResize: false, // Disable auto-resize to prevent conflicts
+        autoResize: false,
         backend: 'svg',
-        drawTitle: false, // Disable title to reduce complexity
+        drawTitle: false,
         drawCredits: false,
         pageBackgroundColor: '#FFFFFF',
-        pageFormat: 'A4_P', // Use standard page format instead of Endless
+        pageFormat: 'A4_P',
         autoBeam: true,
         coloringMode: 0,
         defaultFontFamily: 'Arial',
         renderSingleHorizontalStaffline: false,
         spacingBetweenTextLines: 5,
-        // Simplified options to prevent width calculation issues
-        followCursor: false
-      } as any); // Type assertion to handle OSMD version differences
+        followCursor: false,
+        // Make notation bigger and clearer
+        zoom: 1.5, // Increase size by 50%
+        pageTopMargin: 15,
+        pageBottomMargin: 15,
+        staffDistance: 90, // More space between systems
+        systemLeftMargin: 10,
+        systemRightMargin: 10,
+        compactMode: false
+      } as any);
 
       if (!isMountedRef.current) return;
 
@@ -207,10 +214,10 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
           ref={containerRef}
           className="w-full border rounded-lg bg-white p-4"
           style={{ 
-            minHeight: '400px',
-            minWidth: '800px',
+            minHeight: '500px',
+            minWidth: '900px',
             width: '100%',
-            height: '400px',
+            height: '500px',
             overflow: 'hidden',
             display: 'block'
           }}
