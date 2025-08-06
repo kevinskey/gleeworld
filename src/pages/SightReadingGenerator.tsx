@@ -105,43 +105,39 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title, solfegeEnabled
     try {
       const container = containerRef.current;
       
-      // Ensure container has proper dimensions before OSMD initialization
-      if (container.offsetWidth === 0 || container.offsetHeight === 0) {
-        console.warn('Container has zero dimensions, forcing layout');
-        container.style.width = '800px';
-        container.style.height = '400px';
-        // Force a reflow
-        container.offsetHeight;
+      // Clear container first
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
       }
 
       const { OpenSheetMusicDisplay } = await import('opensheetmusicdisplay');
       
       if (!isMountedRef.current) return;
 
-      // Create OSMD with more conservative settings to prevent width errors
+      // Create OSMD with settings optimized for content-based sizing
       osmdRef.current = new OpenSheetMusicDisplay(container, {
-        autoResize: false,
+        autoResize: true,
         backend: 'svg',
         drawTitle: false,
         drawCredits: false,
         pageBackgroundColor: '#FFFFFF',
-        pageFormat: 'A4_P',
+        pageFormat: 'Endless', // Use endless format for dynamic sizing
         autoBeam: true,
         coloringMode: 0,
         defaultFontFamily: 'Arial',
         renderSingleHorizontalStaffline: false,
         spacingBetweenTextLines: 5,
         followCursor: false,
-        // Make notation bigger and clearer
-        zoom: 2.5, // Increase size by 150%
-        pageTopMargin: 25,
-        pageBottomMargin: 25,
-        staffDistance: 150, // More space between systems
-        systemLeftMargin: 20,
-        systemRightMargin: 20,
+        // Optimized sizing settings
+        zoom: 1.8, // Slightly smaller for better fitting
+        pageTopMargin: 15,
+        pageBottomMargin: 15,
+        staffDistance: 120, // Compact staff spacing
+        systemLeftMargin: 10,
+        systemRightMargin: 10,
         compactMode: false,
-        spacingFactorSoftmax: 10, // Increased note spacing
-        measureWidth: 250, // Wider measures
+        spacingFactorSoftmax: 8, // Balanced note spacing
+        measureWidth: 200, // Reasonable measure width
         // Solfege syllables
         drawSolfegeSyllables: solfegeEnabled
       } as any);
@@ -162,10 +158,30 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title, solfegeEnabled
         
         if (!isMountedRef.current) return;
         
-        // Render with additional safety checks
+        // Render the music
         osmdRef.current.render();
         
-        console.log('MusicXML rendered successfully');
+        // Auto-size container to content after rendering
+        setTimeout(() => {
+          if (isMountedRef.current && containerRef.current && osmdRef.current) {
+            const svgElement = containerRef.current.querySelector('svg');
+            if (svgElement) {
+              const bbox = svgElement.getBBox();
+              const padding = 40; // Extra padding
+              
+              // Set container size based on content
+              containerRef.current.style.height = `${Math.max(300, bbox.height + padding)}px`;
+              containerRef.current.style.width = `${Math.min(1200, Math.max(600, bbox.width + padding))}px`;
+              
+              console.log('Auto-sized container to content:', {
+                width: bbox.width + padding,
+                height: bbox.height + padding
+              });
+            }
+          }
+        }, 100);
+        
+        console.log('MusicXML rendered successfully with auto-sizing');
       } catch (renderError) {
         console.error('OSMD render error:', renderError);
         throw new Error(`Failed to render music: ${renderError.message}`);
@@ -221,12 +237,12 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title, solfegeEnabled
           ref={containerRef}
           className="w-full border rounded-lg bg-white p-4"
           style={{ 
-            minHeight: '500px',
-            minWidth: '900px',
-            width: '100%',
-            height: '500px',
-            overflow: 'hidden',
-            display: 'block'
+            minHeight: '300px',
+            maxWidth: '100%',
+            overflow: 'auto',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'flex-start'
           }}
         />
         {isLoading && (
