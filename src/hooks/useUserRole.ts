@@ -12,6 +12,7 @@ interface UserProfile {
   is_super_admin: boolean;
   exec_board_role?: string;
   is_exec_board: boolean;
+  verified?: boolean;
 }
 
 export const useUserRole = () => {
@@ -30,7 +31,7 @@ export const useUserRole = () => {
       try {
         const { data, error } = await supabase
           .from('gw_profiles')
-          .select('id, user_id, email, role, full_name, is_admin, is_super_admin, exec_board_role, is_exec_board')
+          .select('id, user_id, email, role, full_name, is_admin, is_super_admin, exec_board_role, is_exec_board, verified')
           .eq('user_id', user.id)
           .single();
 

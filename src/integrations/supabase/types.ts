@@ -4538,6 +4538,33 @@ export type Database = {
           },
         ]
       }
+      gw_executive_module_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          is_enabled: boolean
+          module_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          module_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          module_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_executive_position_functions: {
         Row: {
           assigned_at: string
