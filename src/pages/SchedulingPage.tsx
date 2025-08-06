@@ -111,7 +111,7 @@ export default function SchedulingPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0 bg-repeat" 
@@ -124,16 +124,16 @@ export default function SchedulingPage() {
       <div className="relative z-10">
         {/* Header Section */}
         <div className="text-center py-16 px-4">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
             Spelman Glee Club Scheduling
           </h1>
-          <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-8">
+          <p className="text-lg text-primary-foreground/80 max-w-3xl mx-auto mb-8">
             Experience the ease of scheduling rehearsals, lessons, and coaching sessions with just a few clicks. 
             No matter which service you select, we guarantee to help you reach your musical potential!
           </p>
           <Button 
             size="lg" 
-            className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-3 rounded-md font-semibold"
+            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-8 py-3 rounded-md font-semibold"
           >
             Book Now
           </Button>
@@ -144,11 +144,11 @@ export default function SchedulingPage() {
           <div className="max-w-7xl mx-auto">
             {/* Filters Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
-              <h2 className="text-2xl font-bold text-white mb-4 lg:mb-0">Services</h2>
+              <h2 className="text-2xl font-bold text-primary-foreground mb-4 lg:mb-0">Services</h2>
               <div className="flex items-center gap-2">
-                <span className="text-gray-300 text-sm">Sort by</span>
+                <span className="text-primary-foreground/80 text-sm">Sort by</span>
                 <Select defaultValue="popular">
-                  <SelectTrigger className="w-32 bg-slate-800 border-slate-700 text-white">
+                  <SelectTrigger className="w-32 bg-card border-border text-card-foreground">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -164,18 +164,18 @@ export default function SchedulingPage() {
             <div className="flex flex-col lg:flex-row gap-4 mb-8">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     placeholder="Search services"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-gray-400"
+                    className="pl-10 bg-card border-border text-card-foreground placeholder:text-muted-foreground"
                   />
                 </div>
               </div>
 
               <Select value={selectedInstructor} onValueChange={setSelectedInstructor}>
-                <SelectTrigger className="lg:w-48 bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="lg:w-48 bg-card border-border text-card-foreground">
                   <Users className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Instructors" />
                 </SelectTrigger>
@@ -189,7 +189,7 @@ export default function SchedulingPage() {
               </Select>
 
               <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                <SelectTrigger className="lg:w-48 bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="lg:w-48 bg-card border-border text-card-foreground">
                   <MapPin className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Locations" />
                 </SelectTrigger>
@@ -204,7 +204,7 @@ export default function SchedulingPage() {
 
               <Button 
                 variant={selectedCategory === 'All categories' ? 'default' : 'outline'}
-                className="lg:w-48 bg-amber-600 hover:bg-amber-700 text-white border-amber-600"
+                className="lg:w-48 bg-secondary hover:bg-secondary/90 text-secondary-foreground border-secondary"
               >
                 {selectedCategory}
               </Button>
@@ -213,7 +213,7 @@ export default function SchedulingPage() {
             {/* Services Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredServices.map((service) => (
-                <Card key={service.id} className="bg-slate-800 border-slate-700 overflow-hidden hover:bg-slate-750 transition-colors">
+                <Card key={service.id} className="bg-card border-border overflow-hidden hover:bg-card/90 transition-colors depth-hover">
                   <div className="relative">
                     <img 
                       src={service.image} 
@@ -231,10 +231,10 @@ export default function SchedulingPage() {
                   </div>
                   
                   <CardContent className="p-4">
-                    <h3 className="text-white font-semibold text-lg mb-2">{service.name}</h3>
-                    <p className="text-gray-400 text-sm mb-4">{service.description}</p>
+                    <h3 className="text-card-foreground font-semibold text-lg mb-2">{service.name}</h3>
+                    <p className="text-muted-foreground text-sm mb-4">{service.description}</p>
                     
-                    <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
                         <span>Duration: {service.duration}</span>
@@ -246,25 +246,25 @@ export default function SchedulingPage() {
                     </div>
 
                     <div className="space-y-2 mb-4">
-                      <div className="text-sm text-gray-400">No reviews yet</div>
-                      <div className="flex items-center gap-1 text-sm text-gray-400">
+                      <div className="text-sm text-muted-foreground">No reviews yet</div>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <MapPin className="h-4 w-4" />
                         <span>{service.location}</span>
                       </div>
-                      <div className="text-sm text-gray-500">{service.instructor}</div>
+                      <div className="text-sm text-muted-foreground">{service.instructor}</div>
                     </div>
 
                     <div className="flex gap-2">
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="flex-1 border-slate-600 text-gray-300 hover:text-white hover:bg-slate-700"
+                        className="flex-1 border-border text-muted-foreground hover:text-foreground hover:bg-accent hover:text-accent-foreground"
                       >
                         Learn more
                       </Button>
                       <Button 
                         size="sm" 
-                        className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                        className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                       >
                         Book Now
                       </Button>
