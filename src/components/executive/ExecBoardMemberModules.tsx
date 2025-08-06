@@ -302,64 +302,62 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
         </div>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-96">
-          <div className="space-y-4">
-            {Object.entries(modulesByCategory).map(([category, modules]) => {
-              const IconComponent = getCategoryIcon(category);
-              
-              return (
-                <div key={category}>
-                  <div className="flex items-center gap-2 mb-3">
-                    {IconComponent && <IconComponent className="h-4 w-4" />}
-                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                      {category}
-                    </h4>
-                    <div className="flex-1 h-px bg-border" />
-                  </div>
-                  
-                   <div className="grid gap-2">
-                     {modules.map((module) => (
-                       <Card 
-                         key={module.function_id} 
-                         className="cursor-pointer hover:bg-muted/50 transition-colors"
-                         onClick={() => {
-                           console.log('Card clicked for module:', module.module);
-                           handleModuleClick(module.module);
-                         }}
-                       >
-                         <CardContent className="p-3">
-                           <div className="flex items-start justify-between">
-                             <div className="flex-1">
-                               <div className="flex items-center gap-2 mb-1">
-                                 <h5 className="font-medium text-sm">{module.function_name}</h5>
-                                 <div className="flex gap-1">
-                                   {module.can_access && (
-                                     <Badge variant="outline" className="text-xs px-1 py-0">
-                                       View
-                                     </Badge>
-                                   )}
-                                   {module.can_manage && (
-                                     <Badge variant="outline" className="text-xs px-1 py-0 bg-brand-50 border-brand-200">
-                                       Manage
-                                     </Badge>
-                                   )}
-                                 </div>
-                               </div>
-                               <p className="text-xs text-muted-foreground line-clamp-2">
-                                 {module.function_description}
-                               </p>
-                             </div>
-                             <Settings className="h-3 w-3 ml-2 opacity-50" />
-                           </div>
-                         </CardContent>
-                       </Card>
-                    ))}
-                  </div>
+        <div className="space-y-4">
+          {Object.entries(modulesByCategory).map(([category, modules]) => {
+            const IconComponent = getCategoryIcon(category);
+            
+            return (
+              <div key={category}>
+                <div className="flex items-center gap-2 mb-3">
+                  {IconComponent && <IconComponent className="h-4 w-4" />}
+                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                    {category}
+                  </h4>
+                  <div className="flex-1 h-px bg-border" />
                 </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
+                
+                <div className="grid gap-2">
+                  {modules.map((module) => (
+                    <Card 
+                      key={module.function_id} 
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => {
+                        console.log('Card clicked for module:', module.module);
+                        handleModuleClick(module.module);
+                      }}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h5 className="font-medium text-sm">{module.function_name}</h5>
+                              <div className="flex gap-1">
+                                {module.can_access && (
+                                  <Badge variant="outline" className="text-xs px-1 py-0">
+                                    View
+                                  </Badge>
+                                )}
+                                {module.can_manage && (
+                                  <Badge variant="outline" className="text-xs px-1 py-0 bg-brand-50 border-brand-200">
+                                    Manage
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {module.function_description}
+                            </p>
+                          </div>
+                          <Settings className="h-3 w-3 ml-2 opacity-50" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
         
         {renderModuleComponent()}
       </CardContent>
