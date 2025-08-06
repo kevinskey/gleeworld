@@ -193,12 +193,15 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
   };
 
   const renderModuleComponent = () => {
+    console.log('ExecBoardMemberModules - renderModuleComponent called, selectedModule:', selectedModule);
     if (!selectedModule) return null;
     
     const moduleConfig = ModuleRegistry.getModule(selectedModule);
+    console.log('ExecBoardMemberModules - Module config for selectedModule:', moduleConfig?.title);
     if (!moduleConfig) return null;
 
     const Component = moduleConfig.component;
+    console.log('ExecBoardMemberModules - About to render component:', Component?.name);
     return (
       <div className="mt-4">
         <div className="flex items-center justify-between mb-4">
@@ -206,7 +209,10 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => setSelectedModule(null)}
+            onClick={() => {
+              console.log('ExecBoardMemberModules - Close button clicked');
+              setSelectedModule(null);
+            }}
           >
             Close
           </Button>
