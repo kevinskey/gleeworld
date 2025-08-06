@@ -23,61 +23,24 @@ export const GoogleAuth = ({
     try {
       setIsAuthenticating(true);
       
-      if (serviceType === 'sheets' && edgeFunctionName === 'glee-sheets-api') {
-        // For Google Sheets, use the edge function to get auth URL
-        const { data, error } = await supabase.functions.invoke('glee-sheets-api', {
-          body: { action: 'get_auth_url' }
-        });
-
-        if (error) throw error;
-
-        if (data.error) {
-          if (data.error.includes('Google Client ID not configured')) {
-            toast({
-              title: "Configuration Required",
-              description: "Google API credentials need to be configured. Please check Supabase secrets.",
-              variant: "destructive"
-            });
-            return;
-          }
-          throw new Error(data.error);
+      // Use Supabase's built-in Google OAuth provider
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          scopes: 'https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file',
+          redirectTo: `${window.location.origin}/google-docs`
         }
+      });
 
-        setAuthUrl(data.authUrl);
-        window.open(data.authUrl, 'google-auth', 'width=500,height=600');
-        
-        toast({
-          title: "Authentication Started",
-          description: "Complete authentication in the popup window.",
-        });
-      } else {
-        // For Google Docs, use the edge function to get auth URL
-        const { data, error } = await supabase.functions.invoke(edgeFunctionName, {
-          body: { action: 'get_auth_url' }
-        });
-
-        if (error) throw error;
-
-        if (data.error) {
-          if (data.error.includes('Google API credentials not configured')) {
-            toast({
-              title: "Configuration Required",
-              description: "Google API credentials need to be configured. Please check Supabase secrets.",
-              variant: "destructive"
-            });
-            return;
-          }
-          throw new Error(data.error);
-        }
-
-        setAuthUrl(data.authUrl);
-        window.open(data.authUrl, 'google-auth', 'width=500,height=600');
-        
-        toast({
-          title: "Authentication Started",
-          description: "Complete authentication in the popup window.",
-        });
+      if (error) {
+        console.error('OAuth error:', error);
+        throw error;
       }
+
+      toast({
+        title: "Authentication Started",
+        description: "Redirecting to Google for authentication...",
+      });
       
     } catch (error) {
       console.error('Error initiating Google auth:', error);
@@ -95,8 +58,9 @@ export const GoogleAuth = ({
     try {
       // Check if user is authenticated and has Google provider
       const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (user && user.app_metadata.providers?.includes('google')) {
+      if (user && session && user.app_metadata.providers?.includes('google')) {
         toast({
           title: "Authentication Successful", 
           description: `Google ${serviceType === 'sheets' ? 'Sheets' : 'Docs'} integration is ready.`,
@@ -125,6 +89,9 @@ export const GoogleAuth = ({
         <h3 className="text-lg font-semibold">Google {serviceType === 'sheets' ? 'Sheets' : 'Docs'} Authentication</h3>
         <p className="text-sm text-muted-foreground">
           Authenticate with Google to enable Google {serviceType === 'sheets' ? 'Sheets' : 'Docs'} integration{serviceType === 'sheets' ? ' for ledger management' : ' for meeting minutes'}.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Note: You'll need to configure Google OAuth in your Supabase dashboard for this to work.
         </p>
       </div>
 
