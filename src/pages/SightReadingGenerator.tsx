@@ -167,7 +167,7 @@ const SightReadingGeneratorPage = () => {
       if (data.error) {
         toast({
           title: "OpenAI Test Failed",
-          description: data.error,
+          description: typeof data.error === 'string' ? data.error : data.error.message || 'Unknown error',
           variant: "destructive"
         });
       } else {

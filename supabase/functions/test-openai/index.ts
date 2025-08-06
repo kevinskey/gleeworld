@@ -29,9 +29,13 @@ serve(async (req) => {
       }),
     });
 
-    const data = await openaiRes.json();
+    const result = await openaiRes.json();
 
-    return new Response(JSON.stringify(data), {
+    if (!openaiRes.ok) {
+      throw new Error(result.error?.message || "OpenAI request failed");
+    }
+
+    return new Response(JSON.stringify({ result }), {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Content-Type": "application/json",
