@@ -19,7 +19,8 @@ import {
   Save,
   Music,
   Star,
-  Piano as PianoIcon
+  Piano as PianoIcon,
+  GraduationCap
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,12 +55,14 @@ interface SightSingingPracticeProps {
   };
   showRecordingButton?: boolean;
   onRecordingChange?: (isRecording: boolean) => void;
+  onSolfegeChange?: (enabled: boolean) => void;
 }
 
 export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   musicXML,
   exerciseMetadata,
-  onRecordingChange
+  onRecordingChange,
+  onSolfegeChange
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -70,6 +73,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [pianoEnabled, setPianoEnabled] = useState(true);
   const [metronomeEnabled, setMetronomeEnabled] = useState(true);
   const [tempo, setTempo] = useState(120);
+  const [solfegeEnabled, setSolfegeEnabled] = useState(false);
   
   // Melody player state
   const [melodyPlaysRemaining, setMelodyPlaysRemaining] = useState(2);
@@ -358,7 +362,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   // Reset melody plays when new exercise starts
   React.useEffect(() => {
     setMelodyPlaysRemaining(2);
-  }, [musicXML]);
+    // Notify parent about solfege setting change
+    if (onSolfegeChange) {
+      onSolfegeChange(solfegeEnabled);
+    }
+  }, [musicXML, solfegeEnabled]);
 
   const startCountdown = (callback: () => void) => {
     setIsCountingDown(true);
@@ -716,7 +724,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Single Line Practice Controls */}
-          <div className="flex items-center justify-between gap-4 p-4 bg-muted/20 rounded-lg border">
+          <div className="flex items-center justify-between gap-3 p-4 bg-muted/20 rounded-lg border">
             {/* Left Side - Piano Switch */}
             <div className="flex items-center space-x-2">
               <Switch
@@ -727,6 +735,20 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
               <Label htmlFor="piano" className="flex items-center gap-2">
                 <Piano className="h-4 w-4" />
                 Piano
+              </Label>
+            </div>
+            
+            
+            {/* Solfege Toggle */}
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="solfege"
+                checked={solfegeEnabled}
+                onCheckedChange={setSolfegeEnabled}
+              />
+              <Label htmlFor="solfege" className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" />
+                Solfège
               </Label>
             </div>
             

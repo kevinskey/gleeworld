@@ -17,9 +17,10 @@ import { useAuth } from '@/contexts/AuthContext';
 interface OSMDViewerProps {
   musicXML: string;
   title?: string;
+  solfegeEnabled?: boolean;
 }
 
-const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
+const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title, solfegeEnabled = false }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -140,7 +141,9 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
         systemRightMargin: 20,
         compactMode: false,
         spacingFactorSoftmax: 10, // Increased note spacing
-        measureWidth: 250 // Wider measures
+        measureWidth: 250, // Wider measures
+        // Solfege syllables
+        drawSolfegeSyllables: solfegeEnabled
       } as any);
 
       if (!isMountedRef.current) return;
@@ -244,6 +247,7 @@ const SightReadingGeneratorPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedMusicXML, setGeneratedMusicXML] = useState<string>('');
   const [exerciseGenerated, setExerciseGenerated] = useState(false);
+  const [solfegeEnabled, setSolfegeEnabled] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   
   // Generation parameters
@@ -467,6 +471,7 @@ const SightReadingGeneratorPage = () => {
                 <OSMDViewer 
                   musicXML={generatedMusicXML} 
                   title={`${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Exercise - ${keySignature}`}
+                  solfegeEnabled={solfegeEnabled}
                 />
               </CardContent>
             </Card>
@@ -486,6 +491,7 @@ const SightReadingGeneratorPage = () => {
                 noteRange
               }}
               onRecordingChange={setIsRecording}
+              onSolfegeChange={setSolfegeEnabled}
             />
             
             {/* Completed Exercises List */}
