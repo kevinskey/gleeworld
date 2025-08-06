@@ -22,6 +22,7 @@ import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { NotificationsSection } from "./sections/NotificationsSection";
 import { TasksSection } from "./sections/TasksSection";
 import { BookingRequestManager } from "@/components/booking/BookingRequestManager";
+import { ExecBoardMemberModules } from "@/components/executive/ExecBoardMemberModules";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useMergedProfile } from "@/hooks/useMergedProfile";
@@ -336,24 +337,26 @@ const UserDashboard = React.memo(() => {
           </div>
         </div>
 
-        {/* Honesty's Admin Dashboard Section */}
-        {isHonesty && (
+        {/* Executive Board Dashboard Section */}
+        {isExecBoardMember && (
           <>
             <div className="mb-6"></div>
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-brand-800 tracking-wide">ADMIN DASHBOARD</h2>
-              <p className="text-sm text-muted-foreground">Booking Requests Management</p>
+              <h2 className="text-2xl font-bold text-brand-800 tracking-wide">EXECUTIVE BOARD DASHBOARD</h2>
+              <p className="text-sm text-muted-foreground">Role: {profile?.exec_board_role}</p>
             </div>
             <div className="bg-background border rounded-lg p-6">
               {(() => {
-                console.log('UserDashboard: Rendering for user:', user.email, 'profile role:', profile?.role, 'is_admin:', profile?.is_admin);
+                console.log('UserDashboard: Rendering Executive Board for user:', user.email, 'exec role:', profile?.exec_board_role);
                 return null;
               })()}
-              <BookingRequestManager user={{
+              <ExecBoardMemberModules user={{
                 id: user.id,
                 email: user.email || '',
                 full_name: profile?.full_name || '',
-                role: profile?.role || 'member'
+                role: profile?.role || 'member',
+                exec_board_role: profile?.exec_board_role,
+                is_exec_board: !!profile?.exec_board_role
               }} />
             </div>
           </>
