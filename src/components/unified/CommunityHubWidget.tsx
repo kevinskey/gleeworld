@@ -57,6 +57,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
 import { PublicCalendarViews } from "@/components/calendar/PublicCalendarViews";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { toast } from "sonner";
 
 interface Notification {
   id: string;
@@ -366,27 +367,44 @@ export const CommunityHubWidget = () => {
   };
 
   const onSubmitLoveMessage = async (data: LoveMessageForm) => {
-    if (!user) return;
+    if (!user) {
+      toast.error("You must be logged in to pin a love note");
+      return;
+    }
+
+    console.log('Submitting love message:', data);
 
     try {
-        const { error } = await supabase
-          .from('gw_buckets_of_love')
-          .insert({
-            user_id: user.id,
-            message: data.message,
-            note_color: data.note_color,
-            is_anonymous: data.is_anonymous,
-            decorations: data.decorations || ""
-          });
+      const { error } = await supabase
+        .from('gw_buckets_of_love')
+        .insert({
+          user_id: user.id,
+          message: data.message,
+          note_color: data.note_color,
+          is_anonymous: data.is_anonymous,
+          decorations: data.decorations || ""
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
 
+      console.log('Love message created successfully');
+      
+      // Show success message
+      toast.success("Love note pinned successfully!");
+      
       // Refresh messages
       await fetchLoveMessages();
+      
+      // Reset form and close dialog
       loveForm.reset();
       setLoveDialogOpen(false);
+      
     } catch (error) {
       console.error('Error creating love message:', error);
+      toast.error("Failed to pin love note. Please try again.");
     }
   };
 
