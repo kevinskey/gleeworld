@@ -68,7 +68,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <EnhancedTooltip content="Go to GleeWorld Home">
               <div className="flex items-center gap-1 flex-shrink-0">
-                <Link to="/landing" className="flex items-center gap-1 hover:scale-105 transition-transform duration-200 relative z-[110]">
+                <Link to="/" className="flex items-center gap-1 hover:scale-105 transition-transform duration-200 relative z-[110]">
                   <div className="relative z-[111]">
                     <img 
                       src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
@@ -112,7 +112,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         <Globe className="h-4 w-4" />
                         Public Modules
                       </DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => navigate('/landing')}>🏠 Public Landing</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/')}>🏠 Public Landing</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/about')}>ℹ️ About Page</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/shop')}>🛍️ Public Shop</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/public-calendar')}>📅 Public Calendar</DropdownMenuItem>
