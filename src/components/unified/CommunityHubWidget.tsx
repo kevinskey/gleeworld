@@ -371,16 +371,15 @@ export const CommunityHubWidget = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('gw_buckets_of_love')
-        .insert({
-          user_id: user.id,
-          message: data.message,
-          note_color: data.note_color,
-          voice_part: data.voice_part || null,
-          is_anonymous: data.is_anonymous,
-          decorations: data.decorations || ""
-        });
+        const { error } = await supabase
+          .from('gw_buckets_of_love')
+          .insert({
+            user_id: user.id,
+            message: data.message,
+            note_color: data.note_color,
+            is_anonymous: data.is_anonymous,
+            decorations: data.decorations || ""
+          });
 
       if (error) throw error;
 

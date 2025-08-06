@@ -12,9 +12,6 @@ export const NotificationIndicator = () => {
   
   // Only show for authenticated users
   if (!user) return null;
-  
-  // Only show if there are notifications
-  if (unreadCount === 0) return null;
 
   const handleClick = () => {
     navigate('/notifications');
