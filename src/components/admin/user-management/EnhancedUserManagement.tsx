@@ -226,7 +226,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                 <tbody className="bg-white divide-y divide-primary/10">
                   {filteredAndSortedUsers.map((user, index) => (
                     <tr 
-                      key={user.id} 
+                      key={user.id || `user-${index}`} 
                       className={`hover:bg-primary/5 transition-colors border-l-4 ${
                         index % 2 === 0 ? 'border-l-primary/20' : 'border-l-secondary/20'
                       }`}
