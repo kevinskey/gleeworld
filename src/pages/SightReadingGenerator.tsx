@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Music, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Music, RefreshCw, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { SightSingingPractice } from '@/components/sight-singing/SightSingingPractice';
 
 interface OSMDViewerProps {
   musicXML: string;
@@ -231,6 +233,7 @@ const SightReadingGeneratorPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedMusicXML, setGeneratedMusicXML] = useState<string>('');
   const [exerciseGenerated, setExerciseGenerated] = useState(false);
+  const [parametersCollapsed, setParametersCollapsed] = useState(false);
   
   // Generation parameters
   const [difficulty, setDifficulty] = useState('beginner');
@@ -238,11 +241,6 @@ const SightReadingGeneratorPage = () => {
   const [timeSignature, setTimeSignature] = useState('4/4');
   const [measures, setMeasures] = useState([8]);
   const [noteRange, setNoteRange] = useState('C4-C5');
-
-  // Sight singing assessment
-  const [isAssessing, setIsAssessing] = useState(false);
-  const [assessmentScore, setAssessmentScore] = useState<number | null>(null);
-  const [assessmentFeedback, setAssessmentFeedback] = useState<string>('');
 
   const validateMusicXML = (xml: string): { valid: boolean; error?: string } => {
     if (!xml || typeof xml !== 'string') {
@@ -300,6 +298,7 @@ const SightReadingGeneratorPage = () => {
     setIsGenerating(true);
     setGeneratedMusicXML('');
     setExerciseGenerated(false);
+    setParametersCollapsed(true); // Collapse parameters during generation
 
     try {
       console.log('Generating sight-reading exercise...');
@@ -380,38 +379,7 @@ const SightReadingGeneratorPage = () => {
   const startNewExercise = () => {
     setGeneratedMusicXML('');
     setExerciseGenerated(false);
-    setAssessmentScore(null);
-    setAssessmentFeedback('');
-    setIsAssessing(false);
-  };
-
-  const startSightSingingAssessment = async () => {
-    setIsAssessing(true);
-    
-    // Simulate assessment process
-    setTimeout(() => {
-      const score = Math.floor(Math.random() * 41) + 60; // Random score 60-100
-      setAssessmentScore(score);
-      
-      let feedback = '';
-      if (score >= 90) {
-        feedback = 'Excellent sight singing! Your pitch accuracy and rhythm were nearly perfect.';
-      } else if (score >= 80) {
-        feedback = 'Very good sight singing. Minor intonation adjustments needed.';
-      } else if (score >= 70) {
-        feedback = 'Good effort. Focus on maintaining steady tempo and pitch accuracy.';
-      } else {
-        feedback = 'Keep practicing! Work on interval recognition and rhythmic precision.';
-      }
-      
-      setAssessmentFeedback(feedback);
-      setIsAssessing(false);
-      
-      toast({
-        title: "Assessment Complete",
-        description: `Score: ${score}/100`,
-      });
-    }, 3000);
+    setParametersCollapsed(false); // Show parameters again
   };
 
   return (
@@ -452,25 +420,9 @@ const SightReadingGeneratorPage = () => {
                       {measures[0]} measures • {keySignature} • {timeSignature} • {noteRange}
                     </CardDescription>
                   </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={startSightSingingAssessment}
-                      disabled={isAssessing}
-                      className="bg-primary text-primary-foreground"
-                    >
-                      {isAssessing ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                          Assessing...
-                        </>
-                      ) : (
-                        'Start Sight Singing Assessment'
-                      )}
-                    </Button>
-                    <Button variant="outline" onClick={startNewExercise}>
-                      Generate New Exercise
-                    </Button>
-                  </div>
+                  <Button variant="outline" onClick={startNewExercise}>
+                    Generate New Exercise
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -478,30 +430,23 @@ const SightReadingGeneratorPage = () => {
                   musicXML={generatedMusicXML} 
                   title={`${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Exercise - ${keySignature}`}
                 />
-                
-                {/* Assessment Results */}
-                {assessmentScore !== null && (
-                  <div className="mt-6 p-4 bg-muted rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold">Assessment Results</h3>
-                      <div className="text-2xl font-bold text-primary">
-                        {assessmentScore}/100
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground">{assessmentFeedback}</p>
-                    <Button 
-                      onClick={startSightSingingAssessment} 
-                      variant="outline" 
-                      className="mt-3"
-                      disabled={isAssessing}
-                    >
-                      Try Again
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {/* Sight Singing Practice Component */}
+        {exerciseGenerated && generatedMusicXML && (
+          <SightSingingPractice 
+            musicXML={generatedMusicXML}
+            exerciseMetadata={{
+              difficulty,
+              keySignature,
+              timeSignature,
+              measures: measures[0],
+              noteRange
+            }}
+          />
         )}
 
         {/* Controls - Collapse when exercise is generated */}
@@ -646,9 +591,11 @@ const SightReadingGeneratorPage = () => {
                         <p className="text-muted-foreground">
                           Configure your parameters and click "Generate Exercise" to create a personalized sight-reading exercise.
                         </p>
-                      </div>
-                    </CardContent>
-                  </Card>
+            </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
                 )}
               </div>
             </div>

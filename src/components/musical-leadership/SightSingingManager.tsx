@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ExternalLink, BookOpen, TrendingUp, Target, Users } from 'lucide-react';
 import { SightReadingGenerator } from '@/components/SightReadingGenerator';
 import { SightReadingUploader } from '@/components/SightReadingUploader';
+import { SightSingingRecords } from '@/components/sight-singing/SightSingingRecords';
 
 interface SightSingingManagerProps {
   user?: {
@@ -125,20 +126,25 @@ export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
           <CardTitle>Sight Reading Practice & Analysis</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="generate">Generate Exercise</TabsTrigger>
-              <TabsTrigger value="upload">Upload Recording</TabsTrigger>
-            </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="generate">Generate Exercise</TabsTrigger>
+            <TabsTrigger value="upload">Upload Recording</TabsTrigger>
+            <TabsTrigger value="records">Records</TabsTrigger>
+          </TabsList>
             
             <TabsContent value="generate" className="space-y-6">
               <SightReadingGenerator onStartSightReading={handleStartSightReading} />
             </TabsContent>
             
-            <TabsContent value="upload" className="space-y-6">
-              <SightReadingUploader externalMelody={generatedMelody} />
-            </TabsContent>
-          </Tabs>
+          <TabsContent value="upload" className="space-y-6">
+            <SightReadingUploader externalMelody={generatedMelody} />
+          </TabsContent>
+          
+          <TabsContent value="records" className="space-y-6">
+            <SightSingingRecords />
+          </TabsContent>
+        </Tabs>
         </CardContent>
       </Card>
 
