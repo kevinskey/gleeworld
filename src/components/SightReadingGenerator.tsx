@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Download, Music, Play, RefreshCw } from 'lucide-react';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import { useToast } from '@/hooks/use-toast';
+import { MelodyPlayer } from '@/components/sight-singing/MelodyPlayer';
 
 interface Note {
   note: string;
@@ -544,6 +545,12 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
               </div>
             </CardContent>
           </Card>
+
+          <MelodyPlayer 
+            melody={generatedMelody} 
+            tempo={120}
+            className="w-full"
+          />
 
           <Card>
             <CardHeader>
