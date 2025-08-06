@@ -609,3 +609,59 @@
     background-position: center center;
   }
 }
+
+/* Site-wide override: Change all yellow/gold buttons to brand blue */
+button[style*="background-color: rgb(250, 204, 21)"],
+button[style*="background-color: rgb(245, 158, 11)"],
+button[style*="background-color: rgb(217, 119, 6)"],
+.bg-yellow-400,
+.bg-yellow-500,
+.bg-yellow-600,
+.bg-amber-400,
+.bg-amber-500,
+.bg-amber-600,
+[class*="bg-yellow"],
+[class*="bg-amber"] {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+/* Override yellow/gold text colors */
+.text-yellow-400,
+.text-yellow-500,
+.text-yellow-600,
+.text-amber-400,
+.text-amber-500,
+.text-amber-600,
+[class*="text-yellow"],
+[class*="text-amber"] {
+  color: hsl(var(--primary)) !important;
+}
+
+/* Override yellow/gold borders */
+.border-yellow-400,
+.border-yellow-500,
+.border-yellow-600,
+.border-amber-400,
+.border-amber-500,
+.border-amber-600,
+[class*="border-yellow"],
+[class*="border-amber"] {
+  border-color: hsl(var(--primary)) !important;
+}
+
+/* Override hover states for yellow/gold buttons */
+button[style*="background-color: rgb(250, 204, 21)"]:hover,
+button[style*="background-color: rgb(245, 158, 11)"]:hover,
+button[style*="background-color: rgb(217, 119, 6)"]:hover,
+.bg-yellow-400:hover,
+.bg-yellow-500:hover,
+.bg-yellow-600:hover,
+.bg-amber-400:hover,
+.bg-amber-500:hover,
+.bg-amber-600:hover,
+[class*="bg-yellow"]:hover,
+[class*="bg-amber"]:hover {
+  background-color: hsl(var(--primary) / 0.9) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}

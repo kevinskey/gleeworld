@@ -124,29 +124,6 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
 
   return (
     <div className="space-y-6 p-4 bg-gradient-to-br from-spelman-blue-light/5 to-primary/10 min-h-screen">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold tracking-tight">User Management</h2>
-          <p className="text-muted-foreground">
-            Manage user accounts, roles, and permissions across the platform
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            onClick={onRefetch}
-            disabled={loading}
-            className="gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-
       {/* Bulk Selection Controls */}
       <BulkSelectControls
         users={filteredAndSortedUsers}
@@ -155,15 +132,26 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
         onBulkActionComplete={onRefetch}
       />
 
-      {/* User Management */}
+      {/* Main User Management Card */}
       <Card>
         <CardHeader>
           <div className="flex flex-col space-y-4">
-            <div>
-              <CardTitle>Search & Filter Users</CardTitle>
-              <CardDescription>
-                Find and manage user accounts by name, email, role, or status
-              </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Search & Filter Users</CardTitle>
+                <CardDescription>
+                  Find and manage user accounts by name, email, role, or status
+                </CardDescription>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={onRefetch}
+                disabled={loading}
+                className="gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
             </div>
             
             {/* Search and Filter Controls */}
