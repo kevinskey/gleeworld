@@ -173,8 +173,9 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       <div className="p-3 bg-muted/30 border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Piano className="h-4 w-4" />
+            <Piano className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">Virtual Piano ({voiceRange})</span>
+            <span className="text-xs text-muted-foreground">• Click to play</span>
           </div>
           <div className="flex gap-2">
             <button
@@ -202,10 +203,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
               <button
                 key={note}
                 onMouseDown={() => handleKeyPress(note)}
+                onTouchStart={() => handleKeyPress(note)}
                 className={`
                   relative w-12 h-32 bg-white border border-gray-300 
-                  hover:bg-gray-50 active:bg-gray-100 transition-colors
-                  ${activeKeys.has(note) ? 'bg-primary/20 border-primary' : ''}
+                  hover:bg-gray-50 active:bg-gray-100 transition-all duration-150
+                  cursor-pointer select-none
+                  ${activeKeys.has(note) ? 'bg-primary/20 border-primary shadow-lg transform scale-95' : ''}
                   ${index === 0 ? 'rounded-l' : ''}
                   ${index === whiteKeys.length - 1 ? 'rounded-r' : ''}
                 `}
@@ -238,11 +241,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 <div key={index} className="w-12 relative">
                   <button
                     onMouseDown={() => handleKeyPress(blackKeyAfter)}
+                    onTouchStart={() => handleKeyPress(blackKeyAfter)}
                     className={`
                       absolute right-0 w-8 h-20 bg-gray-800 border border-gray-600
-                      hover:bg-gray-700 active:bg-gray-600 transition-colors rounded-b
-                      transform translate-x-1/2 z-10
-                      ${activeKeys.has(blackKeyAfter) ? 'bg-primary border-primary' : ''}
+                      hover:bg-gray-700 active:bg-gray-600 transition-all duration-150 rounded-b
+                      transform translate-x-1/2 z-10 cursor-pointer select-none
+                      ${activeKeys.has(blackKeyAfter) ? 'bg-primary border-primary shadow-lg scale-95' : ''}
                     `}
                   >
                     <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center">
@@ -264,7 +268,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
 
         {/* Instructions */}
         <div className="mt-4 text-xs text-muted-foreground text-center">
-          Click keys to play notes • "Play Scale" for reference melody • Toggle solfège syllables
+          <div className="font-medium text-foreground mb-1">🎹 Interactive Piano</div>
+          <div>Click any key to hear its pitch • "Play Scale" for reference melody • Toggle solfège syllables</div>
         </div>
       </div>
     </div>
