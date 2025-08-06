@@ -460,7 +460,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center space-x-2">
               <Switch
                 id="piano"
@@ -484,17 +484,28 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 Metronome
               </Label>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <Label>Tempo: {tempo} BPM</Label>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">
-                {exerciseMetadata.timeSignature}
-              </Badge>
+          </div>
+          
+          {/* Tempo Control */}
+          <div className="space-y-2">
+            <Label>Tempo: {tempo} BPM</Label>
+            <input
+              type="range"
+              min="60"
+              max="200"
+              value={tempo}
+              onChange={(e) => setTempo(Number(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>60 BPM</span>
+              <span>200 BPM</span>
             </div>
           </div>
+          
+          {/* Pitch Pipe */}
+          <PitchPipe className="mt-4" />
+          
           
           <div className="flex items-center gap-4">
             {!isPlaying ? (
@@ -531,76 +542,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Recording Controls */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mic className="h-5 w-5" />
-            Recording
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            {!isRecording ? (
-              <Button 
-                onClick={startRecording} 
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-700"
-              >
-                <Mic className="h-4 w-4" />
-                Start Recording
-              </Button>
-            ) : (
-              <Button 
-                onClick={stopRecording} 
-                variant="outline" 
-                className="flex items-center gap-2"
-              >
-                <Square className="h-4 w-4" />
-                Stop Recording
-              </Button>
-            )}
-            
-            {isRecording && (
-              <div className="flex items-center gap-2 text-red-600">
-                <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
-                <span>Recording: {formatTime(recordingTime)}</span>
-              </div>
-            )}
-            
-            {audioBlob && !isRecording && (
-              <div className="flex items-center gap-2">
-                <Button 
-                  onClick={submitForAssessment}
-                  disabled={isAssessing}
-                  className="flex items-center gap-2"
-                >
-                  {isAssessing ? (
-                    <>
-                      <RotateCcw className="h-4 w-4 animate-spin" />
-                      Assessing...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4" />
-                      Submit for Grading
-                    </>
-                  )}
-                </Button>
-                
-                <Button 
-                  onClick={resetSession} 
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  Reset
-                </Button>
-              </div>
-            )}
-          </div>
         </CardContent>
       </Card>
 
@@ -643,9 +584,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           </CardContent>
         </Card>
       )}
-
-      {/* Pitch Pipe */}
-      <PitchPipe className="mt-6" />
     </div>
   );
 };
