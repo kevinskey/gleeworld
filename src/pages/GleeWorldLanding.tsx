@@ -284,7 +284,7 @@ export const GleeWorldLanding = () => {
   // };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen w-full relative overflow-hidden">
       
       <PublicLayout>
 
