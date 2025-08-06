@@ -105,8 +105,8 @@ export default function SchedulingPage() {
 
   const filteredServices = services.filter(service => {
     const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesInstructor = !selectedInstructor || service.instructor === selectedInstructor;
-    const matchesLocation = !selectedLocation || service.location === selectedLocation;
+    const matchesInstructor = !selectedInstructor || selectedInstructor === 'all' || service.instructor === selectedInstructor;
+    const matchesLocation = !selectedLocation || selectedLocation === 'all' || service.location === selectedLocation;
     return matchesSearch && matchesInstructor && matchesLocation;
   });
 
@@ -180,7 +180,7 @@ export default function SchedulingPage() {
                   <SelectValue placeholder="Instructors" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Instructors</SelectItem>
+                  <SelectItem value="all">All Instructors</SelectItem>
                   <SelectItem value="Dr. Johnson">Dr. Johnson</SelectItem>
                   <SelectItem value="Ms. Williams">Ms. Williams</SelectItem>
                   <SelectItem value="Section Leader">Section Leader</SelectItem>
@@ -194,7 +194,7 @@ export default function SchedulingPage() {
                   <SelectValue placeholder="Locations" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Locations</SelectItem>
+                  <SelectItem value="all">All Locations</SelectItem>
                   <SelectItem value="Music Room A">Music Room A</SelectItem>
                   <SelectItem value="Music Room B">Music Room B</SelectItem>
                   <SelectItem value="Rehearsal Hall">Rehearsal Hall</SelectItem>
