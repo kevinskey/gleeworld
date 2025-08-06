@@ -18,7 +18,8 @@ import {
   RotateCcw,
   Save,
   Music,
-  Star
+  Star,
+  Volume1
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,6 +69,10 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [pianoEnabled, setPianoEnabled] = useState(true);
   const [metronomeEnabled, setMetronomeEnabled] = useState(true);
   const [tempo, setTempo] = useState(120);
+  
+  // Melody player state
+  const [melodyPlaysRemaining, setMelodyPlaysRemaining] = useState(2);
+  const [isPlayingMelody, setIsPlayingMelody] = useState(false);
   
   // Pitch pipe state
   const [currentPitch, setCurrentPitch] = useState<string | null>(null);
@@ -181,6 +186,30 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     }
     setCurrentPitch(null);
   }, []);
+
+  // Melody player functions
+  const playMelody = () => {
+    if (melodyPlaysRemaining <= 0 || isPlayingMelody) return;
+    
+    setIsPlayingMelody(true);
+    setMelodyPlaysRemaining(prev => prev - 1);
+    
+    // Simulate melody playback
+    toast({
+      title: "Playing Melody",
+      description: `Plays remaining: ${melodyPlaysRemaining - 1}/2`
+    });
+    
+    // Stop melody after 10 seconds (example duration)
+    setTimeout(() => {
+      setIsPlayingMelody(false);
+    }, 10000);
+  };
+
+  // Reset melody plays when new exercise starts
+  React.useEffect(() => {
+    setMelodyPlaysRemaining(2);
+  }, [musicXML]);
 
   const startCountdown = (callback: () => void) => {
     setIsCountingDown(true);
@@ -537,7 +566,9 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Single Line Practice Controls */}
+          <div className="flex items-center justify-between gap-6 p-4 bg-muted/20 rounded-lg border">
+            {/* Left Side - Piano Switch */}
             <div className="flex items-center space-x-2">
               <Switch
                 id="piano"
@@ -550,36 +581,72 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
               </Label>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="metronome"
-                checked={metronomeEnabled}
-                onCheckedChange={setMetronomeEnabled}
-              />
-              <Label htmlFor="metronome" className="flex items-center gap-2">
-                <Timer className="h-4 w-4" />
-                Metronome
-              </Label>
+            {/* Center - Metronome with Vertical Tempo */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="metronome"
+                  checked={metronomeEnabled}
+                  onCheckedChange={setMetronomeEnabled}
+                />
+                <Label htmlFor="metronome" className="flex items-center gap-2">
+                  <Timer className="h-4 w-4" />
+                  Metronome
+                </Label>
+              </div>
+              
+              {/* Vertical Tempo Slider */}
+              <div className="flex flex-col items-center space-y-2">
+                <Label className="text-xs">Tempo</Label>
+                <div className="flex flex-col items-center h-24">
+                  <input
+                    type="range"
+                    min="60"
+                    max="200"
+                    value={tempo}
+                    onChange={(e) => setTempo(Number(e.target.value))}
+                    className="h-20 w-2 bg-gray-200 rounded-lg appearance-none cursor-pointer transform rotate-90"
+                  />
+                  <span className="text-xs text-muted-foreground mt-1">{tempo}</span>
+                </div>
+              </div>
             </div>
             
-            {/* Interactive Round Pitch Pipe */}
-            <div className="flex flex-col items-center justify-center space-y-2">
+            {/* Melody Player */}
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={playMelody}
+                disabled={melodyPlaysRemaining <= 0 || isPlayingMelody}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Volume1 className="h-4 w-4" />
+                {isPlayingMelody ? 'Playing...' : 'Play Melody'}
+              </Button>
+              <div className="text-xs text-muted-foreground">
+                {melodyPlaysRemaining}/2
+              </div>
+            </div>
+            
+            {/* Right Side - Pitch Pipe */}
+            <div className="flex flex-col items-center space-y-2">
               <div className="relative">
                 {/* Main Pitch Pipe */}
                 <div 
                   className="relative cursor-pointer group z-10"
                   onClick={() => setPitchPipeExpanded(!pitchPipeExpanded)}
                 >
-                  <div className={`w-16 h-16 bg-gradient-to-br from-amber-200 to-amber-400 rounded-full border-4 border-amber-500 shadow-lg flex items-center justify-center transition-all duration-300 ${
+                  <div className={`w-12 h-12 bg-gradient-to-br from-amber-200 to-amber-400 rounded-full border-3 border-amber-500 shadow-lg flex items-center justify-center transition-all duration-300 ${
                     pitchPipeExpanded ? 'scale-110 shadow-xl ring-4 ring-amber-300' : 'group-hover:scale-105'
                   }`}>
-                    <div className="w-6 h-6 bg-amber-800 rounded-full shadow-inner">
+                    <div className="w-4 h-4 bg-amber-800 rounded-full shadow-inner">
                       <div className="w-full h-full bg-black rounded-full opacity-40"></div>
                     </div>
                   </div>
-                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-3 bg-amber-400 rounded-b-full border-l-2 border-r-2 border-b-2 border-amber-500"></div>
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-2 bg-amber-400 rounded-b-full border-l-2 border-r-2 border-b-2 border-amber-500"></div>
                   {currentPitch && (
-                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded animate-fade-in">
+                    <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-1 py-0.5 rounded animate-fade-in">
                       {currentPitch}
                     </div>
                   )}
@@ -587,10 +654,10 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
                 {/* Flower Pattern Notes */}
                 {pitchPipeExpanded && (
-                  <div className="absolute inset-0 w-16 h-16">
+                  <div className="absolute inset-0 w-12 h-12">
                     {pitches.map((pitch, index) => {
                       const angle = (index * 30) - 90; // 30 degrees apart, starting from top
-                      const radius = 45; // Distance from center
+                      const radius = 35; // Smaller radius for compact layout
                       const x = Math.cos(angle * Math.PI / 180) * radius;
                       const y = Math.sin(angle * Math.PI / 180) * radius;
                       
@@ -599,7 +666,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                           key={pitch.note}
                           variant={currentPitch === pitch.note ? "default" : "outline"}
                           size="sm"
-                          className={`absolute w-8 h-8 p-0 text-xs font-medium rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 animate-scale-in ${
+                          className={`absolute w-6 h-6 p-0 text-xs font-medium rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 animate-scale-in ${
                             currentPitch === pitch.note 
                               ? "bg-amber-600 text-white shadow-lg scale-110" 
                               : "bg-white hover:bg-amber-100 hover:scale-110 shadow-md border-amber-300"
@@ -625,9 +692,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
               
               <Label className="text-xs text-center">
                 Pitch Pipe
-                <div className="text-xs text-muted-foreground">
-                  {pitchPipeExpanded ? 'Select a note' : 'Click to expand'}
-                </div>
               </Label>
               
               {/* Close button when expanded */}
@@ -647,22 +711,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
             </div>
           </div>
           
-          {/* Tempo Control */}
-          <div className="space-y-2">
-            <Label>Tempo: {tempo} BPM</Label>
-            <input
-              type="range"
-              min="60"
-              max="200"
-              value={tempo}
-              onChange={(e) => setTempo(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>60 BPM</span>
-              <span>200 BPM</span>
-            </div>
-          </div>
           
           
           {/* Countdown Display */}
