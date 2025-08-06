@@ -966,11 +966,6 @@ export const CommunityHubWidget = () => {
 
   const RightColumnContent = () => (
     <div className="space-y-4">
-      {/* Executive Board Modular Hub - Show for executive board members */}
-      {profile?.is_exec_board && profile?.verified && (
-        <ExecBoardModularHub className="mb-4" />
-      )}
-      
       {/* Calendar Section */}
       <div className="border rounded-lg">
         <div className="flex items-center gap-2 p-3 border-b">
