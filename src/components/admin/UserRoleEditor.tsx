@@ -82,10 +82,12 @@ export const UserRoleEditor = ({ user, onUpdate }: UserRoleEditorProps) => {
     try {
       setResettingPassword(true);
 
-      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
-        body: {
-          user_id: user.id,
-          user_email: user.email
+      // Use the auth admin method to generate a password reset link
+      const { error } = await supabase.auth.admin.generateLink({
+        type: 'recovery',
+        email: user.email!,
+        options: {
+          redirectTo: `${window.location.origin}/auth?mode=recovery`
         }
       });
 
