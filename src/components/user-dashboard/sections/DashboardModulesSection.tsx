@@ -153,6 +153,7 @@ export const DashboardModulesSection = () => {
       icon: Megaphone,
       iconColor: "text-orange-600",
       modules: [
+        { name: "Notifications", description: "View all notifications", icon: Bell, route: "/notifications" },
         { name: "Mass Communications", description: "Send group messages", icon: Bell, route: "/notifications/send" },
         { name: "PR & Media Hub", description: "Manage publicity", icon: Camera, route: "/dashboard/pr-hub", requiresPRAccess: true },
         { name: "Alumnae Portal", description: "Alumni engagement & mentorship", icon: GraduationCap, route: "/alumnae", requiresAdmin: true },
