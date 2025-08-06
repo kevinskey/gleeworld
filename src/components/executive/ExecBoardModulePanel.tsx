@@ -124,8 +124,8 @@ export const ExecBoardModulePanel = ({ userEmail, className }: ExecBoardModulePa
         }
 
         if (data) {
-          // Set default modules based on position
-          const defaultModules = ['tours-logistics', 'concert-management', 'task-manager', 'communications', 'executive-calendar'];
+          // All modules disabled for now
+          const defaultModules: string[] = [];
           setUserModules(defaultModules);
         }
       } catch (error) {

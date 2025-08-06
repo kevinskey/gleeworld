@@ -43,7 +43,7 @@ const DEFAULT_MODULES: ExecModule[] = [
     icon: Bus,
     component: ExecutiveToursLogistics,
     requiredRole: ['tour_manager', 'president', 'vice_president'],
-    isEnabled: true,
+    isEnabled: false,
     category: 'logistics'
   },
   {
@@ -53,7 +53,7 @@ const DEFAULT_MODULES: ExecModule[] = [
     icon: Music,
     component: ExecutiveConcertManagement,
     requiredRole: ['tour_manager', 'president', 'music_director', 'secretary'],
-    isEnabled: true,
+    isEnabled: false,
     category: 'logistics'
   },
   {
@@ -62,7 +62,7 @@ const DEFAULT_MODULES: ExecModule[] = [
     description: 'Assign and track executive board tasks',
     icon: FileText,
     component: ExecutiveTaskManager,
-    isEnabled: true,
+    isEnabled: false,
     category: 'management'
   },
   {
@@ -71,7 +71,7 @@ const DEFAULT_MODULES: ExecModule[] = [
     description: 'View executive board member status and roles',
     icon: Users,
     component: ExecutiveTeamOverview,
-    isEnabled: true,
+    isEnabled: false,
     category: 'management'
   },
   {
@@ -80,7 +80,7 @@ const DEFAULT_MODULES: ExecModule[] = [
     description: 'Internal messaging and announcements',
     icon: MessageSquare,
     component: ExecutiveCommunications,
-    isEnabled: true,
+    isEnabled: false,
     category: 'communication'
   },
   {
@@ -89,7 +89,7 @@ const DEFAULT_MODULES: ExecModule[] = [
     description: 'Board meetings and executive events',
     icon: Calendar,
     component: ExecutiveCalendar,
-    isEnabled: true,
+    isEnabled: false,
     category: 'planning'
   },
   {
@@ -99,7 +99,7 @@ const DEFAULT_MODULES: ExecModule[] = [
     icon: BarChart3,
     component: ExecutiveReports,
     requiredRole: ['president', 'secretary', 'treasurer'],
-    isEnabled: true,
+    isEnabled: false,
     category: 'analytics'
   }
 ];
