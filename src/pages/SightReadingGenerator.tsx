@@ -9,6 +9,7 @@ import { Music, RefreshCw, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { OpenAIKeySetup } from '@/components/OpenAIKeySetup';
 
 interface OSMDViewerProps {
   musicXML: string;
@@ -384,15 +385,18 @@ const SightReadingGeneratorPage = () => {
                 title={`${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Exercise - ${keySignature}`}
               />
             ) : (
-              <Card>
-                <CardContent className="p-12">
-                  <div className="text-center text-muted-foreground">
-                    <Music className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                    <h3 className="text-lg font-medium mb-2">No Exercise Generated</h3>
-                    <p>Configure your parameters and click "Generate Exercise" to create a sight-reading exercise.</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="space-y-6">
+                <OpenAIKeySetup />
+                <Card>
+                  <CardContent className="p-12">
+                    <div className="text-center text-muted-foreground">
+                      <Music className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                      <h3 className="text-lg font-medium mb-2">No Exercise Generated</h3>
+                      <p>Configure your parameters and click "Generate Exercise" to create a sight-reading exercise.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             )}
           </div>
         </div>
