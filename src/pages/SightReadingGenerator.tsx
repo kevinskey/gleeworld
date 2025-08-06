@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Music, RefreshCw, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { Music, RefreshCw, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -233,7 +232,6 @@ const SightReadingGeneratorPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedMusicXML, setGeneratedMusicXML] = useState<string>('');
   const [exerciseGenerated, setExerciseGenerated] = useState(false);
-  const [parametersCollapsed, setParametersCollapsed] = useState(false);
   
   // Generation parameters
   const [difficulty, setDifficulty] = useState('beginner');
@@ -298,7 +296,6 @@ const SightReadingGeneratorPage = () => {
     setIsGenerating(true);
     setGeneratedMusicXML('');
     setExerciseGenerated(false);
-    setParametersCollapsed(true); // Collapse parameters during generation
 
     try {
       console.log('Generating sight-reading exercise...');
@@ -379,7 +376,6 @@ const SightReadingGeneratorPage = () => {
   const startNewExercise = () => {
     setGeneratedMusicXML('');
     setExerciseGenerated(false);
-    setParametersCollapsed(false); // Show parameters again
   };
 
   return (
@@ -449,158 +445,141 @@ const SightReadingGeneratorPage = () => {
           />
         )}
 
-        {/* Controls - Collapse when exercise is generated */}
-        <div className={`transition-all duration-500 ${exerciseGenerated ? 'max-h-20 overflow-hidden' : 'max-h-full'}`}>
-          {exerciseGenerated && (
-            <div className="mb-4">
-              <Button 
-                variant="outline" 
-                onClick={startNewExercise}
-                className="w-full"
-              >
-                <Music className="h-4 w-4 mr-2" />
-                Generate New Exercise
-              </Button>
+        {/* Generation Parameters - Show when no exercise is generated */}
+        {!exerciseGenerated && (
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Controls */}
+            <div className="xl:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Exercise Parameters</CardTitle>
+                  <CardDescription>Customize your sight-reading exercise</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="difficulty">Difficulty Level</Label>
+                    <Select value={difficulty} onValueChange={setDifficulty}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="key">Key Signature</Label>
+                    <Select value={keySignature} onValueChange={setKeySignature}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="C major">C Major</SelectItem>
+                        <SelectItem value="G major">G Major</SelectItem>
+                        <SelectItem value="D major">D Major</SelectItem>
+                        <SelectItem value="A major">A Major</SelectItem>
+                        <SelectItem value="F major">F Major</SelectItem>
+                        <SelectItem value="Bb major">B♭ Major</SelectItem>
+                        <SelectItem value="Eb major">E♭ Major</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="time">Time Signature</Label>
+                    <Select value={timeSignature} onValueChange={setTimeSignature}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="4/4">4/4</SelectItem>
+                        <SelectItem value="3/4">3/4</SelectItem>
+                        <SelectItem value="2/4">2/4</SelectItem>
+                        <SelectItem value="6/8">6/8</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="measures">Number of Measures: {measures[0]}</Label>
+                    <Slider
+                      value={measures}
+                      onValueChange={setMeasures}
+                      min={4}
+                      max={16}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="range">Note Range</Label>
+                    <Select value={noteRange} onValueChange={setNoteRange}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="C4-C5">C4-C5 (Beginner)</SelectItem>
+                        <SelectItem value="G3-G5">G3-G5 (Intermediate)</SelectItem>
+                        <SelectItem value="E3-E5">E3-E5 (Advanced)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button 
+                    onClick={generateExercise} 
+                    disabled={isGenerating}
+                    className="w-full bg-primary text-primary-foreground"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Generating Exercise...
+                      </>
+                    ) : (
+                      <>
+                        <Music className="h-4 w-4 mr-2" />
+                        Generate Exercise
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
-          )}
-          
-          {(!exerciseGenerated || isGenerating) && (
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              {/* Controls */}
-              <div className="xl:col-span-1">
+
+            {/* Preview Area */}
+            <div className="xl:col-span-2">
+              {isGenerating ? (
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Exercise Parameters</CardTitle>
-                    <CardDescription>Customize your sight-reading exercise</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="difficulty">Difficulty Level</Label>
-                      <Select value={difficulty} onValueChange={setDifficulty}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="beginner">Beginner</SelectItem>
-                          <SelectItem value="intermediate">Intermediate</SelectItem>
-                          <SelectItem value="advanced">Advanced</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  <CardContent className="p-12">
+                    <div className="flex flex-col items-center justify-center text-center space-y-4">
+                      <RefreshCw className="h-12 w-12 animate-spin text-primary" />
+                      <h3 className="text-xl font-semibold">Generating Your Exercise</h3>
+                      <p className="text-muted-foreground">
+                        Creating a {difficulty} level sight-reading exercise in {keySignature}...
+                      </p>
                     </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="key">Key Signature</Label>
-                      <Select value={keySignature} onValueChange={setKeySignature}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="C major">C Major</SelectItem>
-                          <SelectItem value="G major">G Major</SelectItem>
-                          <SelectItem value="D major">D Major</SelectItem>
-                          <SelectItem value="A major">A Major</SelectItem>
-                          <SelectItem value="F major">F Major</SelectItem>
-                          <SelectItem value="Bb major">B♭ Major</SelectItem>
-                          <SelectItem value="Eb major">E♭ Major</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="time">Time Signature</Label>
-                      <Select value={timeSignature} onValueChange={setTimeSignature}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="4/4">4/4</SelectItem>
-                          <SelectItem value="3/4">3/4</SelectItem>
-                          <SelectItem value="2/4">2/4</SelectItem>
-                          <SelectItem value="6/8">6/8</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="measures">Number of Measures: {measures[0]}</Label>
-                      <Slider
-                        value={measures}
-                        onValueChange={setMeasures}
-                        min={4}
-                        max={16}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="range">Note Range</Label>
-                      <Select value={noteRange} onValueChange={setNoteRange}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="C4-C5">C4-C5 (Beginner)</SelectItem>
-                          <SelectItem value="G3-G5">G3-G5 (Intermediate)</SelectItem>
-                          <SelectItem value="E3-E5">E3-E5 (Advanced)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Button 
-                      onClick={generateExercise} 
-                      disabled={isGenerating}
-                      className="w-full bg-primary text-primary-foreground"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                          Generating Exercise...
-                        </>
-                      ) : (
-                        <>
-                          <Music className="h-4 w-4 mr-2" />
-                          Generate Exercise
-                        </>
-                      )}
-                    </Button>
                   </CardContent>
                 </Card>
-              </div>
-
-              {/* Preview Area */}
-              <div className="xl:col-span-2">
-                {isGenerating ? (
-                  <Card>
-                    <CardContent className="p-12">
-                      <div className="flex flex-col items-center justify-center text-center space-y-4">
-                        <RefreshCw className="h-12 w-12 animate-spin text-primary" />
-                        <h3 className="text-xl font-semibold">Generating Your Exercise</h3>
-                        <p className="text-muted-foreground">
-                          Creating a {difficulty} level sight-reading exercise in {keySignature}...
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card>
-                    <CardContent className="p-12">
-                      <div className="flex flex-col items-center justify-center text-center space-y-4">
-                        <Music className="h-16 w-16 text-muted-foreground" />
-                        <h3 className="text-xl font-semibold text-muted-foreground">Ready to Generate</h3>
-                        <p className="text-muted-foreground">
-                          Configure your parameters and click "Generate Exercise" to create a personalized sight-reading exercise.
-                        </p>
+              ) : (
+                <Card>
+                  <CardContent className="p-12">
+                    <div className="flex flex-col items-center justify-center text-center space-y-4">
+                      <Music className="h-16 w-16 text-muted-foreground" />
+                      <h3 className="text-xl font-semibold text-muted-foreground">Ready to Generate</h3>
+                      <p className="text-muted-foreground">
+                        Configure your parameters and click "Generate Exercise" to create a personalized sight-reading exercise.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </UniversalLayout>
   );

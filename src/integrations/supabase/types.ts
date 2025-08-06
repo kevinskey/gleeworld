@@ -11026,6 +11026,54 @@ export type Database = {
         }
         Relationships: []
       }
+      sight_singing_assessments: {
+        Row: {
+          audio_duration_seconds: number | null
+          created_at: string | null
+          exercise_metadata: Json | null
+          feedback: string | null
+          id: string
+          intonation_score: number | null
+          overall_musicality: number | null
+          pitch_accuracy: number | null
+          rhythm_accuracy: number | null
+          score_value: number
+          tempo_consistency: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          audio_duration_seconds?: number | null
+          created_at?: string | null
+          exercise_metadata?: Json | null
+          feedback?: string | null
+          id?: string
+          intonation_score?: number | null
+          overall_musicality?: number | null
+          pitch_accuracy?: number | null
+          rhythm_accuracy?: number | null
+          score_value: number
+          tempo_consistency?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          audio_duration_seconds?: number | null
+          created_at?: string | null
+          exercise_metadata?: Json | null
+          feedback?: string | null
+          id?: string
+          intonation_score?: number | null
+          overall_musicality?: number | null
+          pitch_accuracy?: number | null
+          rhythm_accuracy?: number | null
+          score_value?: number
+          tempo_consistency?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       singer_contract_assignments: {
         Row: {
           assigned_at: string
