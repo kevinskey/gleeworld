@@ -160,6 +160,27 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     };
   }, []);
 
+  // Spacebar to stop playback
+  React.useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Only handle spacebar if not typing in an input field
+      if (event.code === 'Space' && event.target instanceof HTMLElement && 
+          !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) {
+        event.preventDefault();
+        
+        if (isPlaying) {
+          stopPractice();
+        } else if (isRecording) {
+          stopRecording();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [isPlaying, isRecording]);
   // Pitch pipe functions
   const initPitchAudioContext = useCallback(async () => {
     if (!audioContextRef.current) {
