@@ -128,6 +128,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const pitchGainNodeRef = useRef<GainNode | null>(null);
   const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
   const sheetMusicRef = useRef<HTMLDivElement>(null);
+  const melodyTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -423,9 +424,13 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         clearInterval(countdownInterval);
         setIsCountingDown(false);
         
-        // Stop metronome after countdown unless we're recording
+        // For practice mode, stop metronome after countdown
+        // For recording mode, keep metronome running
         if (!isRecording) {
+          console.log('Countdown complete, stopping metronome for practice mode');
           stopMetronome();
+        } else {
+          console.log('Countdown complete, keeping metronome for recording mode');
         }
         
         callback(); // Start the actual practice or recording
@@ -541,6 +546,10 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     console.log('Playing melody sequence with', extractedMelody.length, 'notes at tempo', tempo);
     const tempoMultiplier = 120 / tempo; // Adjust timing based on current tempo
     
+    // Clear any existing melody timeouts
+    melodyTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+    melodyTimeoutsRef.current = [];
+    
     // Reset progress indicators
     setPlaybackProgress(0);
     setCurrentNoteIndex(-1);
@@ -551,7 +560,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       
       console.log(`Scheduling note ${index + 1}/${extractedMelody.length}: ${note.note} at ${delayMs}ms`);
       
-      setTimeout(() => {
+      const noteTimeout = setTimeout(() => {
         if (isPlaying) { // Only play if still in practice mode
           console.log(`Playing note: ${note.note}`);
           setCurrentNoteIndex(index);
@@ -568,21 +577,29 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         }
       }, delayMs);
       
+      melodyTimeoutsRef.current.push(noteTimeout);
+      
       // Clear current note highlight after duration
-      setTimeout(() => {
+      const clearTimeout = setTimeout(() => {
         if (isPlaying && index === currentNoteIndex) {
           setCurrentNote(undefined);
         }
       }, delayMs + (duration * 1000));
+      
+      melodyTimeoutsRef.current.push(clearTimeout);
     });
 
     // Reset progress when melody completes
     const totalDuration = extractedMelody[extractedMelody.length - 1]?.time * 1000 * tempoMultiplier + 1000;
-    setTimeout(() => {
-      setPlaybackProgress(0);
-      setCurrentNoteIndex(-1);
-      setCurrentNote(undefined);
+    const resetTimeout = setTimeout(() => {
+      if (isPlaying) {
+        setPlaybackProgress(0);
+        setCurrentNoteIndex(-1);
+        setCurrentNote(undefined);
+      }
     }, totalDuration);
+    
+    melodyTimeoutsRef.current.push(resetTimeout);
   };
 
   // Play a single melody note using Web Audio API
@@ -669,6 +686,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     setPlaybackProgress(0);
     setCurrentNoteIndex(-1);
     setCurrentNote(undefined);
+    
+    // Clear all melody timeouts to stop notes from playing
+    console.log('Clearing', melodyTimeoutsRef.current.length, 'melody timeouts');
+    melodyTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+    melodyTimeoutsRef.current = [];
     
     // Clear timer
     if (playbackTimerRef.current) {
