@@ -98,8 +98,9 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
 
       console.log('Loading MusicXML directly...');
       
-      // Load MusicXML directly without blob URLs to avoid CSP issues
-      await osmdRef.current.loadXML(musicXML);
+      // Use data URL instead of blob URL to bypass CSP restrictions
+      const dataUrl = 'data:application/xml;charset=utf-8,' + encodeURIComponent(musicXML);
+      await osmdRef.current.load(dataUrl);
       
       // Final check before rendering
       if (!isMountedRef.current) {
