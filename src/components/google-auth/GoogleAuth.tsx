@@ -51,22 +51,31 @@ export const GoogleAuth = ({
           description: "Complete authentication in the popup window.",
         });
       } else {
-        // Simple Google OAuth for other services
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/dashboard`
-          }
+        // For Google Docs, use the edge function to get auth URL
+        const { data, error } = await supabase.functions.invoke(edgeFunctionName, {
+          body: { action: 'get_auth_url' }
         });
 
-        if (error) {
-          console.error('OAuth error:', error);
-          throw error;
+        if (error) throw error;
+
+        if (data.error) {
+          if (data.error.includes('Google API credentials not configured')) {
+            toast({
+              title: "Configuration Required",
+              description: "Google API credentials need to be configured. Please check Supabase secrets.",
+              variant: "destructive"
+            });
+            return;
+          }
+          throw new Error(data.error);
         }
 
+        setAuthUrl(data.authUrl);
+        window.open(data.authUrl, 'google-auth', 'width=500,height=600');
+        
         toast({
           title: "Authentication Started",
-          description: "Redirecting to Google...",
+          description: "Complete authentication in the popup window.",
         });
       }
       
