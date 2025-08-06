@@ -10,20 +10,22 @@ export const AuditionHoverCard = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
-  // On mobile, show a compact button that fits viewport
+  // On mobile, show a compact button fixed to top
   if (isMobile) {
     return (
-      <div className="fixed top-[74px] left-4 right-4 z-40 max-w-[calc(100vw-2rem)]">
-        <Link to="/auditions">
-          <Button 
-            variant="branded" 
-            size="sm"
-            className="w-full max-w-xs mx-auto px-6 py-4 h-14 rounded-lg text-sm font-bold touch-manipulation flex items-center justify-center bg-gradient-to-b from-spelman-blue-light via-spelman-blue-light/90 to-spelman-blue-dark hover:from-spelman-blue-light/80 hover:via-spelman-blue-light/70 hover:to-spelman-blue-dark/90 text-white border-2 border-spelman-blue-light shadow-[inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.3),0_4px_8px_rgba(0,0,0,0.3)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(0,0,0,0.4),0_6px_12px_rgba(0,0,0,0.4)] transition-all duration-300 ease-out hover:scale-105 animate-fade-in mb-[10px]"
-          >
-            <span className="truncate text-sm mr-3 tracking-widest">AUDITION SIGN UP</span>
-            <Mic className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12" />
-          </Button>
-        </Link>
+      <div className="fixed top-16 left-0 right-0 z-40 px-4 pointer-events-none">
+        <div className="pointer-events-auto">
+          <Link to="/auditions">
+            <Button 
+              variant="branded" 
+              size="sm"
+              className="w-full max-w-sm mx-auto px-4 py-3 h-12 rounded-lg text-sm font-semibold flex items-center justify-center bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 border border-primary/20"
+            >
+              <span className="mr-2">AUDITION SIGN UP</span>
+              <Mic className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
