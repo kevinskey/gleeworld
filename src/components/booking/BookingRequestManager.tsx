@@ -19,11 +19,13 @@ import {
   Filter,
   Search,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Trash2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface BookingRequest {
   id: string;
@@ -61,6 +63,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedRequest, setSelectedRequest] = useState<BookingRequest | null>(null);
   const [isExpanded, setIsExpanded] = useState(true);
+  const { toast } = useToast();
 
   const loadBookingRequests = async () => {
     try {
@@ -229,6 +232,75 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
     completed: requests.filter(r => r.status === 'completed').length
   };
 
+  // Check if user can delete booking requests
+  const canDelete = () => {
+    if (!user) return false;
+    return user.role === 'super-admin' || user.role === 'tour_manager' || user.role === 'admin';
+  };
+
+  // Handle status updates
+  const handleStatusUpdate = async (requestId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('booking_requests')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      setRequests(prev => prev.map(req => 
+        req.id === requestId ? { ...req, status: newStatus as any } : req
+      ));
+
+      toast({
+        title: "Status Updated",
+        description: `Booking request marked as ${newStatus}`,
+      });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle delete
+  const handleDelete = async (requestId: string) => {
+    if (!canDelete()) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to delete booking requests",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('booking_requests')
+        .delete()
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      setRequests(prev => prev.filter(req => req.id !== requestId));
+
+      toast({
+        title: "Deleted",
+        description: "Booking request deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to delete booking request",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -383,19 +455,40 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                   Submitted {formatDate(request.created_at)}
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedRequest(request)}
+                  >
                     <Eye className="h-4 w-4 mr-1" />
                     View Details
                   </Button>
                   {request.status === 'new' && (
                     <>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleStatusUpdate(request.id, 'reviewed')}
+                      >
                         Mark Reviewed
                       </Button>
-                      <Button size="sm">
+                      <Button 
+                        size="sm"
+                        onClick={() => handleStatusUpdate(request.id, 'approved')}
+                      >
                         Approve
                       </Button>
                     </>
+                  )}
+                  {canDelete() && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => handleDelete(request.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
                   )}
                 </div>
               </div>
