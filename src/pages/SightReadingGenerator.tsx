@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Music, RefreshCw, ArrowLeft, Mic, Square, Play } from 'lucide-react';
+import { Music, RefreshCw, ArrowLeft, Mic, Square, Play, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -394,29 +394,54 @@ const SightReadingGeneratorPage = () => {
   const startNewExercise = () => {
     setGeneratedMusicXML('');
     setExerciseGenerated(false);
+    setIsPlayingExercise(false);
+    setIsRecording(false);
+    setSolfegeEnabled(false);
+    
+    // Reset to default parameters
+    setDifficulty('beginner');
+    setKeySignature('C major');
+    setTimeSignature('4/4');
+    setMeasures([8]);
+    setNoteRange('C4-C5');
+    
+    // Dispatch reset events to clear practice component state
+    window.dispatchEvent(new CustomEvent('resetPractice'));
   };
 
   return (
     <UniversalLayout>
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">
+                {exerciseGenerated ? 'Sight Reading Exercise' : 'Sight Reading Generator'}
+              </h1>
+              <p className="text-muted-foreground">
+                {exerciseGenerated ? 'Practice your sight singing skills' : 'Generate AI-powered sight-reading exercises with professional notation'}
+              </p>
+            </div>
+          </div>
+          
+          {/* Reset Button - Always visible */}
           <Button
-            variant="outline"
-            onClick={() => navigate('/dashboard')}
+            variant="destructive"
+            onClick={startNewExercise}
             className="flex items-center gap-2"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            <RotateCcw className="h-4 w-4" />
+            Reset & Start Over
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold">
-              {exerciseGenerated ? 'Sight Reading Exercise' : 'Sight Reading Generator'}
-            </h1>
-            <p className="text-muted-foreground">
-              {exerciseGenerated ? 'Practice your sight singing skills' : 'Generate AI-powered sight-reading exercises with professional notation'}
-            </p>
-          </div>
         </div>
 
         {/* Generated Exercise - Shows at top when available */}

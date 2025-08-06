@@ -133,17 +133,20 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     const handleStopRecording = () => stopRecording();
     const handleStartPractice = () => startPractice();
     const handleStopPractice = () => stopPractice();
+    const handleResetPractice = () => resetSession();
     
     window.addEventListener('startRecording', handleStartRecording);
     window.addEventListener('stopRecording', handleStopRecording);
     window.addEventListener('startPractice', handleStartPractice);
     window.addEventListener('stopPractice', handleStopPractice);
+    window.addEventListener('resetPractice', handleResetPractice);
     
     return () => {
       window.removeEventListener('startRecording', handleStartRecording);
       window.removeEventListener('stopRecording', handleStopRecording);
       window.removeEventListener('startPractice', handleStartPractice);
       window.removeEventListener('stopPractice', handleStopPractice);
+      window.removeEventListener('resetPractice', handleResetPractice);
     };
   }, []);
 
