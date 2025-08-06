@@ -60,22 +60,28 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     try {
       setLoading(true);
       console.log('ExecBoardMemberModules - Fetching for position:', profile.exec_board_role);
+      
+      // Use a more direct query approach
       const { data, error } = await supabase
         .from('gw_executive_position_functions')
         .select(`
-          gw_app_functions (
+          function_id,
+          can_access,
+          can_manage,
+          gw_app_functions!inner (
             id,
             name,
             description,
             category,
             module,
             is_active
-          ),
-          can_access,
-          can_manage
+          )
         `)
         .eq('position', profile.exec_board_role as any)
         .eq('gw_app_functions.is_active', true);
+
+      console.log('ExecBoardMemberModules - Raw query result:', data);
+      console.log('ExecBoardMemberModules - Query error:', error);
 
       if (error) throw error;
 
@@ -91,7 +97,8 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
           can_manage: item.can_manage
       })) || [];
 
-      console.log('ExecBoardMemberModules - Loaded modules:', modules.length);
+      console.log('ExecBoardMemberModules - Processed modules:', modules);
+      console.log('ExecBoardMemberModules - Loaded modules count:', modules.length);
       setExecModules(modules);
     } catch (error) {
       console.error('Error fetching exec module permissions:', error);
