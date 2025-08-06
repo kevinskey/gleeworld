@@ -96,25 +96,19 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
         return;
       }
 
-      // Create blob from MusicXML string
-      const blob = new Blob([musicXML], { type: 'application/xml' });
-      const blobUrl = URL.createObjectURL(blob);
-
-      console.log('Loading MusicXML...');
-      await osmdRef.current.load(blobUrl);
+      console.log('Loading MusicXML directly...');
+      
+      // Load MusicXML directly without blob URLs to avoid CSP issues
+      await osmdRef.current.loadXML(musicXML);
       
       // Final check before rendering
       if (!isMountedRef.current) {
         console.log('Component unmounted during loading, aborting');
-        URL.revokeObjectURL(blobUrl);
         return;
       }
       
       console.log('Rendering sheet music...');
       osmdRef.current.render();
-
-      // Clean up blob URL
-      URL.revokeObjectURL(blobUrl);
       
       console.log('MusicXML rendered successfully');
     } catch (err) {
