@@ -102,7 +102,13 @@ export const useUsers = () => {
 
       console.log('useUsers: Transformed users:', { 
         count: transformedUsers.length,
-        adminUsers: transformedUsers.filter(u => u.is_admin || u.is_super_admin).length
+        adminUsers: transformedUsers.filter(u => u.is_admin || u.is_super_admin).length,
+        sampleUsers: transformedUsers.slice(0, 3).map(u => ({ 
+          id: u.id, 
+          email: u.email, 
+          full_name: u.full_name,
+          role: u.role 
+        }))
       });
 
       setUsers(transformedUsers);
