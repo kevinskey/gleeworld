@@ -63,6 +63,7 @@ import { ContractsModule } from '@/components/modules/ContractsModule';
 import { ApprovalSystemModule } from '@/components/modules/ApprovalSystemModule';
 import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
 import { RadioManagement } from '@/components/admin/RadioManagement';
+import { CalendarManagementModule } from '@/components/modules/CalendarManagementModule';
 import { ModuleCategory } from '@/types/modules';
 
 export const moduleCategories: ModuleCategory[] = [
@@ -149,12 +150,12 @@ export const moduleCategories: ModuleCategory[] = [
       },
       {
         id: "calendar-management",
-        title: "Calendar Management",
-        description: "Manage events and calendar integrations",
+        title: "Master Calendar",
+        description: "Schedule events, block dates, and manage appointments",
         icon: Calendar,
         iconColor: "purple",
         category: "communications",
-        component: UserManagementModule, // Placeholder - replace with actual component
+        component: CalendarManagementModule,
       }
     ]
   },

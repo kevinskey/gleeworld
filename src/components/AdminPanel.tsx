@@ -18,13 +18,14 @@ import { AccountingSummary } from "./accounting/AccountingSummary";
 import { AccountingTable } from "./accounting/AccountingTable";
 import { AccountingFilters } from "./accounting/AccountingFilters";
 import { useAccountingFiltering } from "@/hooks/useAccountingFiltering";
-import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail, Music, Megaphone, Share2, Wrench } from "lucide-react";
+import { Shield, Users, Settings, FileText, Activity, Receipt, Calculator, Mail, Music, Megaphone, Share2, Wrench, Calendar } from "lucide-react";
 import { MusicManagement } from "./admin/MusicManagement";
 import { SocialPushDashboard } from "./admin/SocialPushDashboard";
 import { ProductManager } from "./admin/ProductManager";
 import { AnnouncementManagement } from "./admin/AnnouncementManagement";
 import { AdminPanelHeader } from "./admin/AdminPanelHeader";
 import { PermissionsPanel } from "./admin/PermissionsPanel";
+import { MasterCalendar } from "./admin/MasterCalendar";
 // Square integration removed - using Stripe instead
 
 interface AdminPanelProps {
@@ -82,6 +83,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
      currentPath.includes('announcements') ? 'announcements' :
      currentPath.includes('products') ? 'products' :
      currentPath.includes('social') ? 'social' :
+     currentPath.includes('calendar') ? 'calendar' :
      currentPath.includes('settings') ? 'settings' : 'overview');
 
   const handleSort = (column: string) => {
@@ -98,13 +100,13 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         return (
           <div className="space-y-6">
             {/* Community Hub */}
-            <Card className="bg-gradient-to-br from-secondary/10 via-primary/10 to-accent/10 border-secondary/20 shadow-lg">
+            <Card className="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 border-primary/10 shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-secondary-foreground">
+                <CardTitle className="flex items-center gap-2 text-primary">
                   <Users className="h-5 w-5" />
                   Community Hub
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                   Connect with the Spelman Glee Club community
                 </CardDescription>
               </CardHeader>
@@ -122,13 +124,13 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
             </Card>
             
             {/* Admin Tools Window */}
-            <Card className="bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 border-primary/20 shadow-lg">
+            <Card className="bg-gradient-to-br from-secondary/5 via-primary/5 to-accent/5 border-secondary/10 shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-primary">
+                <CardTitle className="flex items-center gap-2 text-secondary-foreground">
                   <Wrench className="h-5 w-5" />
                   Admin Tools
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                   Specialized administrative modules and tools
                 </CardDescription>
               </CardHeader>
@@ -163,19 +165,21 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         return <ContractSignatureFixer />;
       case 'receipts':
         return <ReceiptsManagement />;
+      case 'calendar':
+        return <MasterCalendar />;
       case 'accounting':
         return (
           <div className="space-y-4 md:space-y-6">
-            <div className="mb-6 md:mb-8 glass-card p-4 md:p-6">
-              <h2 className="text-2xl md:text-3xl font-bold text-gradient mb-2">Accounting</h2>
-              <p className="text-base md:text-lg text-white/70">Contract financial overview and stipend tracking.</p>
+            <div className="mb-6 md:mb-8 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-4 md:p-6 border border-primary/10">
+              <h2 className="text-2xl md:text-3xl font-bold text-primary mb-2">Accounting</h2>
+              <p className="text-base md:text-lg text-muted-foreground">Contract financial overview and stipend tracking.</p>
             </div>
             
-            <div className="glass-card">
-              <div className="p-4 md:p-6 border-b border-white/10">
+            <Card className="bg-card border-border shadow-lg">
+              <div className="p-4 md:p-6 border-b border-border">
                 <div className="flex items-center space-x-2">
-                  <Calculator className="h-5 w-5 md:h-6 md:w-6 text-spelman-400" />
-                  <h3 className="text-xl md:text-2xl font-semibold text-white">Contract Accounting</h3>
+                  <Calculator className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                  <h3 className="text-xl md:text-2xl font-semibold text-card-foreground">Contract Accounting</h3>
                 </div>
               </div>
               <div className="p-4 md:p-6 overflow-x-auto">
@@ -207,7 +211,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
                   />
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
         );
       case 'music':
@@ -237,7 +241,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6 p-4 md:p-6 min-h-screen w-full">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-6 min-h-screen w-full bg-background text-foreground">
       <div className="max-w-full overflow-x-hidden">
         {renderContent()}
       </div>
