@@ -132,13 +132,15 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
         spacingBetweenTextLines: 5,
         followCursor: false,
         // Make notation bigger and clearer
-        zoom: 1.5, // Increase size by 50%
-        pageTopMargin: 15,
-        pageBottomMargin: 15,
-        staffDistance: 90, // More space between systems
-        systemLeftMargin: 10,
-        systemRightMargin: 10,
-        compactMode: false
+        zoom: 2.0, // Increase size by 100%
+        pageTopMargin: 20,
+        pageBottomMargin: 20,
+        staffDistance: 120, // More space between systems
+        systemLeftMargin: 15,
+        systemRightMargin: 15,
+        compactMode: false,
+        spacingFactorSoftmax: 8, // Increased note spacing
+        measureWidth: 200 // Wider measures
       } as any);
 
       if (!isMountedRef.current) return;
