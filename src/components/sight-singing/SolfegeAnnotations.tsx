@@ -9,7 +9,9 @@ interface Note {
 interface SolfegeAnnotationsProps {
   notes: Note[];
   keySignature: string;
+  currentNoteIndex?: number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 const SOLFEGE_MAPPING = {
@@ -36,7 +38,9 @@ const SOLFEGE_COLORS = {
 export const SolfegeAnnotations: React.FC<SolfegeAnnotationsProps> = ({
   notes,
   keySignature,
-  className = ""
+  currentNoteIndex = -1,
+  className = "",
+  style = {}
 }) => {
   const [notePositions, setNotePositions] = useState<Array<{x: number, y: number, solfege: string}>>([]);
 
@@ -116,23 +120,27 @@ export const SolfegeAnnotations: React.FC<SolfegeAnnotationsProps> = ({
   }, [notes, keySignature]);
 
   return (
-    <div className={className}>
-      {notePositions.map((pos, index) => (
-        <div
-          key={index}
-          className={`absolute text-xs font-bold rounded px-1 py-0.5 border shadow-sm ${
-            SOLFEGE_COLORS[pos.solfege as keyof typeof SOLFEGE_COLORS] || 'text-gray-600 bg-gray-100'
-          }`}
-          style={{
-            left: pos.x - 15, // Center the label
-            top: pos.y,
-            transform: 'translateX(-50%)',
-            zIndex: 10
-          }}
-        >
-          {pos.solfege}
-        </div>
-      ))}
+    <div className={className} style={style}>
+      {notePositions.map((pos, index) => {
+        const isCurrentNote = index === currentNoteIndex;
+        const baseColors = SOLFEGE_COLORS[pos.solfege as keyof typeof SOLFEGE_COLORS] || 'text-gray-600 bg-gray-100';
+        const highlightColors = isCurrentNote ? 'text-white bg-primary border-primary shadow-lg scale-110' : baseColors;
+        
+        return (
+          <div
+            key={index}
+            className={`absolute text-xs font-bold rounded px-1 py-0.5 border shadow-sm transition-all duration-200 ${highlightColors}`}
+            style={{
+              left: pos.x - 15, // Center the label
+              top: pos.y,
+              transform: 'translateX(-50%)',
+              zIndex: 10
+            }}
+          >
+            {pos.solfege}
+          </div>
+        );
+      })}
     </div>
   );
 };

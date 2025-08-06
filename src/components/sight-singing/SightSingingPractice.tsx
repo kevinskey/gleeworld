@@ -86,6 +86,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [solfegeEnabled, setSolfegeEnabled] = useState(false);
   const [currentNote, setCurrentNote] = useState<string | undefined>();
   const [extractedMelody, setExtractedMelody] = useState<Note[]>([]);
+  const [playbackProgress, setPlaybackProgress] = useState(0);
+  const [currentNoteIndex, setCurrentNoteIndex] = useState(-1);
   
   // Voice range detection (soprano/alto based on key signature and exercise data)
   const voiceRange = exerciseMetadata.keySignature?.includes('♭') || 
@@ -500,6 +502,10 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     console.log('Playing melody sequence with', extractedMelody.length, 'notes at tempo', tempo);
     const tempoMultiplier = 120 / tempo; // Adjust timing based on current tempo
     
+    // Reset progress indicators
+    setPlaybackProgress(0);
+    setCurrentNoteIndex(-1);
+    
     extractedMelody.forEach((note, index) => {
       const delayMs = note.time * 1000 * tempoMultiplier;
       const duration = (note.duration || 0.5) * tempoMultiplier;
@@ -509,10 +515,31 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       setTimeout(() => {
         if (isPlaying) { // Only play if still in practice mode
           console.log(`Playing note: ${note.note}`);
+          setCurrentNoteIndex(index);
+          setCurrentNote(note.note);
           playMelodyNote(note.note, duration);
+          
+          // Update progress
+          const progress = ((index + 1) / extractedMelody.length) * 100;
+          setPlaybackProgress(progress);
         }
       }, delayMs);
+      
+      // Clear current note highlight after duration
+      setTimeout(() => {
+        if (isPlaying && index === currentNoteIndex) {
+          setCurrentNote(undefined);
+        }
+      }, delayMs + (duration * 1000));
     });
+
+    // Reset progress when melody completes
+    const totalDuration = extractedMelody[extractedMelody.length - 1]?.time * 1000 * tempoMultiplier + 1000;
+    setTimeout(() => {
+      setPlaybackProgress(0);
+      setCurrentNoteIndex(-1);
+      setCurrentNote(undefined);
+    }, totalDuration);
   };
 
   // Play a single melody note using Web Audio API
@@ -587,6 +614,9 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     console.log('Stopping practice session');
     setIsPlaying(false);
     setPlaybackTime(0);
+    setPlaybackProgress(0);
+    setCurrentNoteIndex(-1);
+    setCurrentNote(undefined);
     if (playbackTimerRef.current) {
       clearInterval(playbackTimerRef.current);
       playbackTimerRef.current = null;
@@ -964,15 +994,41 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         </CardHeader>
         <CardContent>
           <div className="relative">
+            {/* Progress Bar */}
+            {(isPlaying || playbackProgress > 0) && (
+              <div className="absolute top-0 left-0 right-0 z-20 bg-white/90 border-b border-gray-200">
+                <div className="px-4 py-2">
+                  <div className="flex items-center gap-3">
+                    <div className="text-xs font-medium text-gray-600">Progress:</div>
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${playbackProgress}%` }}
+                      />
+                    </div>
+                    <div className="text-xs font-mono text-gray-600">
+                      {Math.round(playbackProgress)}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Sheet Music */}
             <div 
               ref={sheetMusicRef}
               className="bg-white rounded-md border p-4 min-h-[300px] sheet-music-container"
+              style={{ paddingTop: (isPlaying || playbackProgress > 0) ? '60px' : '16px' }}
             />
+            
+            {/* Solfège Annotations */}
             {solfegeEnabled && (
               <SolfegeAnnotations 
                 notes={extractedMelody}
                 keySignature={exerciseMetadata.keySignature}
+                currentNoteIndex={currentNoteIndex}
                 className="absolute inset-0 pointer-events-none"
+                style={{ paddingTop: (isPlaying || playbackProgress > 0) ? '60px' : '16px' }}
               />
             )}
           </div>
