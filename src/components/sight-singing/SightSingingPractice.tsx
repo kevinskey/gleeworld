@@ -374,10 +374,12 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       });
     }
     
-    if (pianoEnabled) {
+    if (pianoEnabled && extractedMelody.length > 0) {
+      // Play melody synchronized with tempo
+      playMelodySequence();
       toast({
         title: "Practice Started",
-        description: "Melody playback is available for reference"
+        description: "Melody playback and practice aids are now active"
       });
     }
     
@@ -400,6 +402,71 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         window.dispatchEvent(new CustomEvent('practiceAutoStopped'));
       }
     }, 1000);
+  };
+
+  // Play melody notes in sequence synchronized with tempo
+  const playMelodySequence = () => {
+    if (!pianoEnabled || extractedMelody.length === 0) return;
+
+    const tempoMultiplier = 120 / tempo; // Adjust timing based on current tempo
+    
+    extractedMelody.forEach((note, index) => {
+      const delayMs = note.time * 1000 * tempoMultiplier;
+      const duration = (note.duration || 0.5) * tempoMultiplier;
+      
+      setTimeout(() => {
+        if (isPlaying) { // Only play if still in practice mode
+          playMelodyNote(note.note, duration);
+        }
+      }, delayMs);
+    });
+  };
+
+  // Play a single melody note using Web Audio API
+  const playMelodyNote = async (noteName: string, duration: number = 0.5) => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+
+      // Note frequencies for melody playback
+      const frequencies: { [key: string]: number } = {
+        'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00,
+        'A#3': 233.08, 'B3': 246.94,
+        'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63,
+        'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'A4': 440.00,
+        'A#4': 466.16, 'B4': 493.88,
+        'C5': 523.25, 'C#5': 554.37, 'D5': 587.33, 'D#5': 622.25, 'E5': 659.25,
+        'F5': 698.46, 'F#5': 739.99, 'G5': 783.99, 'G#5': 830.61, 'A5': 880.00
+      };
+
+      const frequency = frequencies[noteName];
+      if (!frequency) return;
+
+      const oscillator = audioContextRef.current.createOscillator();
+      const gainNode = audioContextRef.current.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContextRef.current.destination);
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime);
+
+      // Create envelope for musical sound
+      gainNode.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.2, audioContextRef.current.currentTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.05, audioContextRef.current.currentTime + duration * 0.8);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContextRef.current.currentTime + duration);
+
+      oscillator.start(audioContextRef.current.currentTime);
+      oscillator.stop(audioContextRef.current.currentTime + duration);
+    } catch (error) {
+      console.error('Error playing melody note:', error);
+    }
   };
 
   const stopPractice = () => {
