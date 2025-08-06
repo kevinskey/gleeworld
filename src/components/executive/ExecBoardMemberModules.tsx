@@ -135,6 +135,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
 
   const handleModuleClick = (moduleId: string) => {
     console.log('ExecBoardMemberModules - Attempting to access module:', moduleId);
+    console.log('ExecBoardMemberModules - Available modules in registry:', ModuleRegistry.getModules().map(m => m.id));
     
     // Map database module names to actual module IDs in the registry
     const moduleMapping: Record<string, string> = {
@@ -176,6 +177,8 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     console.log('ExecBoardMemberModules - Mapped module ID:', mappedModuleId);
     
     const moduleConfig = ModuleRegistry.getModule(mappedModuleId);
+    console.log('ExecBoardMemberModules - Module config found:', !!moduleConfig, moduleConfig?.title);
+    
     if (moduleConfig) {
       setSelectedModule(mappedModuleId);
       console.log('ExecBoardMemberModules - Successfully loaded module:', mappedModuleId);
@@ -183,7 +186,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
       console.log('ExecBoardMemberModules - Module not found in registry:', mappedModuleId);
       toast({
         title: "Module Unavailable",
-        description: `This module (${moduleId}) is not yet implemented`,
+        description: `This module (${moduleId} -> ${mappedModuleId}) is not yet implemented`,
         variant: "destructive",
       });
     }
