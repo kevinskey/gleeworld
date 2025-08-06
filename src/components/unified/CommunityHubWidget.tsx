@@ -353,7 +353,7 @@ export const CommunityHubWidget = () => {
 
   const filteredMusic = sheetMusic.filter(music =>
     music.title.toLowerCase().includes(musicSearchTerm.toLowerCase()) ||
-    music.composer.toLowerCase().includes(musicSearchTerm.toLowerCase())
+    (music.composer && music.composer.toLowerCase().includes(musicSearchTerm.toLowerCase()))
   );
 
   const unreadNotificationsCount = notifications.filter(n => !n.is_read).length;
