@@ -460,7 +460,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="flex items-center space-x-2">
               <Switch
                 id="piano"
@@ -484,6 +484,21 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 Metronome
               </Label>
             </div>
+            
+            {/* Round Pitch Pipe */}
+            <div className="flex items-center justify-center">
+              <div className="relative">
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-200 to-amber-400 rounded-full border-4 border-amber-500 shadow-lg flex items-center justify-center">
+                  <div className="w-6 h-6 bg-amber-800 rounded-full shadow-inner">
+                    <div className="w-full h-full bg-black rounded-full opacity-40"></div>
+                  </div>
+                </div>
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-3 bg-amber-400 rounded-b-full border-l-2 border-r-2 border-b-2 border-amber-500"></div>
+                <Label className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs text-center whitespace-nowrap">
+                  Pitch Pipe
+                </Label>
+              </div>
+            </div>
           </div>
           
           {/* Tempo Control */}
@@ -503,8 +518,10 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
             </div>
           </div>
           
-          {/* Pitch Pipe */}
-          <PitchPipe className="mt-4" />
+          {/* Interactive Pitch Pipe - Full component below the controls */}
+          <div className="mt-6 pt-4 border-t">
+            <PitchPipe className="w-full" />
+          </div>
           
           
           <div className="flex items-center gap-4">
