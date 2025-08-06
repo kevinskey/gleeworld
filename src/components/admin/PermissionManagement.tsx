@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Settings, Shield, UserCheck } from 'lucide-react';
 import { PermissionGroupManager } from './PermissionGroupManager';
 import { UserGroupAssignment } from './UserGroupAssignment';
+import { AdvancedPermissionPanels } from './AdvancedPermissionPanels';
+import { ExecutiveBoardPermissionPanel } from './ExecutiveBoardPermissionPanel';
 import { usePermissionGroups } from '@/hooks/usePermissionGroups';
 
 const PermissionOverview = () => {
@@ -138,10 +140,12 @@ export const PermissionManagement = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="groups">Groups</TabsTrigger>
           <TabsTrigger value="assignments">User Assignments</TabsTrigger>
+          <TabsTrigger value="executive">Executive Board</TabsTrigger>
+          <TabsTrigger value="advanced">Advanced Panels</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
@@ -154,6 +158,14 @@ export const PermissionManagement = () => {
         
         <TabsContent value="assignments" className="space-y-4">
           <UserGroupAssignment />
+        </TabsContent>
+        
+        <TabsContent value="executive" className="space-y-4">
+          <ExecutiveBoardPermissionPanel />
+        </TabsContent>
+        
+        <TabsContent value="advanced" className="space-y-4">
+          <AdvancedPermissionPanels />
         </TabsContent>
       </Tabs>
     </div>
