@@ -264,10 +264,14 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   // Extract melody from musicXML and reset solfege when new exercise starts
   React.useEffect(() => {
-    console.log('MusicXML changed, extracting melody. XML length:', musicXML.length);
+    console.log('=== MELODY EXTRACTION DEBUG ===');
+    console.log('MusicXML changed, extracting melody. XML length:', musicXML?.length || 0);
+    console.log('MusicXML content preview:', musicXML?.substring(0, 200) || 'No XML');
+    
     // Extract melody from MusicXML
     const melody = extractMelodyFromMusicXML(musicXML);
     console.log('Extracted melody:', melody.length, 'notes');
+    console.log('Melody notes:', melody);
     setExtractedMelody(melody);
     
     // Notify parent about solfege setting change
