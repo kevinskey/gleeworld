@@ -362,6 +362,11 @@ const UserDashboard = React.memo(() => {
           </>
         )}
 
+        {/* Dashboard Modules Section */}
+        <div className="mt-6">
+          <DashboardModulesSection />
+        </div>
+      
       </div>
     </UniversalLayout>
   );
