@@ -1,14 +1,14 @@
 import { serve } from "https://deno.land/std/http/server.ts";
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "*",
-      },
-    });
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -29,25 +29,35 @@ serve(async (req) => {
       }),
     });
 
-    const result = await openaiRes.json();
+    const data = await openaiRes.json();
 
     if (!openaiRes.ok) {
-      throw new Error(result.error?.message || "OpenAI request failed");
+      console.error('OpenAI API error:', data);
+      return new Response(JSON.stringify({ 
+        error: data.error?.message || "OpenAI request failed",
+        details: data 
+      }), {
+        status: 200, // Return 200 to avoid edge function error
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    return new Response(JSON.stringify({ result }), {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json",
-      },
+    return new Response(JSON.stringify({ 
+      success: true,
+      message: data.choices[0].message.content,
+      data: data 
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json",
-      },
+    console.error('Function error:', err);
+    return new Response(JSON.stringify({ 
+      error: err.message,
+      success: false 
+    }), {
+      status: 200, // Return 200 to avoid edge function error
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
