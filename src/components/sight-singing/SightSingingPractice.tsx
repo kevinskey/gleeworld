@@ -53,7 +53,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isCountingDown, setIsCountingDown] = useState(false);
+  const [countdownBeats, setCountdownBeats] = useState(0);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [playbackTime, setPlaybackTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordingStream, setRecordingStream] = useState<MediaStream | null>(null);
@@ -63,9 +67,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [assessmentScore, setAssessmentScore] = useState<number | null>(null);
   const [assessmentFeedback, setAssessmentFeedback] = useState<string>('');
   
-  // Audio playback
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackTime, setPlaybackTime] = useState(0);
   
   // Refs
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -87,37 +88,48 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     };
   }, []);
 
+  const startCountdown = (callback: () => void) => {
+    setIsCountingDown(true);
+    setCountdownBeats(0);
+    
+    // Get beats per measure from time signature
+    const [beatsPerMeasure] = exerciseMetadata.timeSignature.split('/').map(Number);
+    const interval = 60000 / tempo; // Convert BPM to milliseconds
+    
+    let beatCount = 0;
+    
+    // Start metronome for countdown
+    if (metronomeEnabled) {
+      startMetronome();
+    }
+    
+    const countdownInterval = setInterval(() => {
+      beatCount++;
+      setCountdownBeats(beatCount);
+      
+      if (beatCount >= beatsPerMeasure) {
+        clearInterval(countdownInterval);
+        setIsCountingDown(false);
+        callback(); // Start the actual practice or recording
+      }
+    }, interval);
+    
+    toast({
+      title: "Get Ready",
+      description: `1 measure countdown (${beatsPerMeasure} beats)`
+    });
+  };
+
   const startPractice = async () => {
     try {
-      setIsPlaying(true);
-      
       if (metronomeEnabled) {
-        startMetronome();
-      }
-      
-      if (pianoEnabled) {
-        // Simulate piano accompaniment
-        toast({
-          title: "Practice Started",
-          description: "Piano accompaniment and metronome are playing"
+        // Start with countdown
+        startCountdown(() => {
+          actuallyStartPractice();
         });
       } else {
-        toast({
-          title: "Practice Started", 
-          description: "Metronome is playing"
-        });
+        actuallyStartPractice();
       }
-      
-      // Simulate practice duration
-      let time = 0;
-      playbackTimerRef.current = setInterval(() => {
-        time += 1;
-        setPlaybackTime(time);
-        if (time >= 30) { // 30 second practice
-          stopPractice();
-        }
-      }, 1000);
-      
     } catch (error) {
       console.error('Error starting practice:', error);
       toast({
@@ -126,6 +138,33 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         variant: "destructive"
       });
     }
+  };
+
+  const actuallyStartPractice = () => {
+    setIsPlaying(true);
+    
+    if (pianoEnabled) {
+      // Simulate piano accompaniment
+      toast({
+        title: "Practice Started",
+        description: "Piano accompaniment and metronome are playing"
+      });
+    } else {
+      toast({
+        title: "Practice Started", 
+        description: "Metronome is playing"
+      });
+    }
+    
+    // Simulate practice duration
+    let time = 0;
+    playbackTimerRef.current = setInterval(() => {
+      time += 1;
+      setPlaybackTime(time);
+      if (time >= 30) { // 30 second practice
+        stopPractice();
+      }
+    }, 1000);
   };
 
   const stopPractice = () => {
@@ -201,6 +240,26 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   const startRecording = async () => {
     try {
+      if (metronomeEnabled) {
+        // Start with countdown
+        startCountdown(() => {
+          actuallyStartRecording();
+        });
+      } else {
+        actuallyStartRecording();
+      }
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start recording session",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const actuallyStartRecording = async () => {
+    try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 44100,
@@ -236,11 +295,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       setIsRecording(true);
       setRecordingTime(0);
       
-      // Start metronome for recording
-      if (metronomeEnabled) {
-        startMetronome();
-      }
-      
       // Recording timer
       recordingTimerRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
@@ -252,7 +306,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       });
       
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error('Error accessing microphone:', error);
       toast({
         title: "Error",
         description: "Failed to access microphone",
@@ -443,6 +497,21 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
               </div>
             )}
           </div>
+          
+          {/* Countdown Display */}
+          {isCountingDown && (
+            <div className="flex items-center justify-center gap-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <Timer className="h-6 w-6 text-yellow-600 animate-pulse" />
+              <div className="text-center">
+                <div className="text-lg font-semibold text-yellow-800">
+                  Get Ready! Beat {countdownBeats} of {exerciseMetadata.timeSignature.split('/')[0]}
+                </div>
+                <div className="text-sm text-yellow-600">
+                  Practice/recording will start after this measure
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
