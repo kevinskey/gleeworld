@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -12,17 +12,13 @@ serve(async (req) => {
   }
 
   try {
-    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
     
-    console.log("=== TEST FUNCTION DEBUG ===");
-    console.log("OpenAI API Key exists:", !!openaiKey);
-    console.log("OpenAI API Key length:", openaiKey?.length || 0);
-    
-    if (!openaiKey) {
-      return new Response(JSON.stringify({ 
-        error: "OpenAI API key not configured",
-        debug: { hasKey: false }
-      }), {
+    console.log("API Key exists:", !!apiKey);
+    console.log("API Key length:", apiKey?.length || 0);
+
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: "OpenAI API key not found" }), {
         status: 500,
         headers: {
           "Access-Control-Allow-Origin": "*",
@@ -31,51 +27,35 @@ serve(async (req) => {
       });
     }
 
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${openaiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "user", content: "Say 'Hello World' in a simple MusicXML format" }
+          { role: "user", content: "Say 'Hello World'" }
         ],
-        max_tokens: 100,
+        max_tokens: 64,
       }),
     });
 
-    const result = await openaiRes.json();
+    const data = await aiRes.json();
     
-    console.log("OpenAI response status:", openaiRes.status);
-    console.log("OpenAI response ok:", openaiRes.ok);
+    console.log("OpenAI response status:", aiRes.status);
+    console.log("OpenAI response:", data);
 
-    if (!openaiRes.ok) {
-      return new Response(JSON.stringify({ 
-        error: "OpenAI API failed",
-        details: result 
-      }), {
-        status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
-        },
-      });
-    }
-
-    return new Response(JSON.stringify({ 
-      success: true,
-      message: "OpenAI API test successful",
-      result: result 
-    }), {
+    return new Response(JSON.stringify(data), {
+      status: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Content-Type": "application/json",
       },
     });
   } catch (err) {
-    console.error("Error in test function:", err);
+    console.error("Error:", err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: {
