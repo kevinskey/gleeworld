@@ -291,7 +291,7 @@ const UserDashboard = React.memo(() => {
   return (
     <UniversalLayout 
       containerized={false} 
-      className="min-h-screen relative"
+      className="min-h-screen"
       viewMode={viewMode}
       onViewModeChange={setViewMode}
     >
@@ -345,7 +345,7 @@ const UserDashboard = React.memo(() => {
               <h2 className="text-2xl font-bold text-brand-800 tracking-wide">EXECUTIVE BOARD DASHBOARD</h2>
               <p className="text-sm text-muted-foreground">Role: {profile?.exec_board_role}</p>
             </div>
-            <div className="bg-background border rounded-lg p-6 max-h-[80vh] overflow-y-auto">
+            <div className="bg-background border rounded-lg p-6">
               {(() => {
                 console.log('UserDashboard: Rendering Executive Board for user:', user.email, 'exec role:', profile?.exec_board_role);
                 return null;
