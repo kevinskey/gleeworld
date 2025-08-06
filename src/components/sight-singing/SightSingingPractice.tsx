@@ -756,19 +756,13 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Practice Controls */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Music className="h-5 w-5" />
-            Practice Controls
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Single Line Practice Controls */}
-          <div className="flex items-center justify-between gap-3 p-4 bg-muted/20 rounded-lg border">
-            {/* Left Side - Piano Switch */}
+    <div className="space-y-4">
+      {/* Top Ribbon - Practice Controls */}
+      <div className="bg-gradient-to-r from-muted/50 to-muted/30 border border-border rounded-lg p-3">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          {/* Left Group - Toggles */}
+          <div className="flex items-center gap-6">
+            {/* Melody Toggle */}
             <div className="flex items-center space-x-2">
               <Switch
                 id="piano"
@@ -776,14 +770,13 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 onCheckedChange={setPianoEnabled}
                 className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
               />
-              <Label htmlFor="piano" className="flex items-center gap-2 cursor-pointer">
-                <Piano className="h-4 w-4" />
+              <Label htmlFor="piano" className="flex items-center gap-1 cursor-pointer text-sm">
+                <Piano className="h-3.5 w-3.5" />
                 Melody
               </Label>
             </div>
             
-            
-            {/* Solfege Toggle */}
+            {/* Solfège Toggle */}
             <div className="flex items-center space-x-2">
               <Switch
                 id="solfege"
@@ -791,50 +784,44 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 onCheckedChange={setSolfegeEnabled}
                 className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
               />
-              <Label htmlFor="solfege" className="flex items-center gap-2 cursor-pointer">
-                <GraduationCap className="h-4 w-4" />
+              <Label htmlFor="solfege" className="flex items-center gap-1 cursor-pointer text-sm">
+                <GraduationCap className="h-3.5 w-3.5" />
                 Solfège
               </Label>
             </div>
             
-            {/* Center - Metronome with Vertical Tempo */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="metronome"
-                  checked={metronomeEnabled}
-                  onCheckedChange={setMetronomeEnabled}
-                  className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
-                />
-                <Label htmlFor="metronome" className="flex items-center gap-2 cursor-pointer">
-                  <Timer className="h-4 w-4" />
-                  Metronome
-                </Label>
-              </div>
-              
-              {/* Tempo Slider */}
-              <div className="flex flex-col items-center space-y-2">
-                <Label className="text-xs">Tempo</Label>
-                <div className="flex flex-col items-center">
-                  <input
-                    type="range"
-                    min="60"
-                    max="200"
-                    value={tempo}
-                    onChange={(e) => setTempo(Number(e.target.value))}
-                    className="w-20 h-2 bg-gray-200 rounded-lg cursor-pointer range-slider"
-                    style={{
-                      background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((tempo - 60) / (200 - 60)) * 100}%, #e5e7eb ${((tempo - 60) / (200 - 60)) * 100}%, #e5e7eb 100%)`
-                    }}
-                  />
-                   <span className="text-xs text-muted-foreground mt-1">{tempo}</span>
-                </div>
-              </div>
+            {/* Metronome Toggle */}
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="metronome"
+                checked={metronomeEnabled}
+                onCheckedChange={setMetronomeEnabled}
+                className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
+              />
+              <Label htmlFor="metronome" className="flex items-center gap-1 cursor-pointer text-sm">
+                <Timer className="h-3.5 w-3.5" />
+                Metronome
+              </Label>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
+          
+          {/* Right Group - Tempo Control */}
+          <div className="flex items-center gap-3">
+            <Label className="text-sm font-medium">Tempo:</Label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="60"
+                max="200"
+                value={tempo}
+                onChange={(e) => setTempo(parseInt(e.target.value))}
+                className="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+              />
+              <span className="text-sm font-mono min-w-[3rem] text-center">{tempo}</span>
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Practice Aids - Solfège */}
       {solfegeEnabled && (
         <Card>
