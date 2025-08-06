@@ -124,14 +124,6 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
 
   return (
     <div className="space-y-6 p-4 bg-gradient-to-br from-spelman-blue-light/5 to-primary/10 min-h-screen">
-      {/* Bulk Selection Controls */}
-      <BulkSelectControls
-        users={filteredAndSortedUsers}
-        selectedUsers={selectedUsers}
-        onSelectionChange={setSelectedUsers}
-        onBulkActionComplete={onRefetch}
-      />
-
       {/* Main User Management Card */}
       <Card>
         <CardHeader>
