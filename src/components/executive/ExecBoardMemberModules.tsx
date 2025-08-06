@@ -136,13 +136,38 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
   };
 
   const handleModuleClick = (moduleId: string) => {
-    const moduleConfig = ModuleRegistry.getModule(moduleId);
+    console.log('ExecBoardMemberModules - Attempting to access module:', moduleId);
+    
+    // Map database module names to actual module IDs in the registry
+    const moduleMapping: Record<string, string> = {
+      'core': 'user-management',
+      'member': 'user-management', 
+      'events': 'calendar-management',
+      'communications': 'notifications',
+      'notifications': 'notifications',
+      'email-management': 'email-management',
+      'pr-coordinator': 'pr-coordinator',
+      'media': 'pr-coordinator',
+      'finance': 'budgets',
+      'contracts': 'contracts',
+      'auditions': 'auditions',
+      'records': 'user-management',
+      'booking-forms': 'booking-forms',
+      'tour-management': 'tour-management'
+    };
+    
+    const mappedModuleId = moduleMapping[moduleId] || moduleId;
+    console.log('ExecBoardMemberModules - Mapped module ID:', mappedModuleId);
+    
+    const moduleConfig = ModuleRegistry.getModule(mappedModuleId);
     if (moduleConfig) {
-      setSelectedModule(moduleId);
+      setSelectedModule(mappedModuleId);
+      console.log('ExecBoardMemberModules - Successfully loaded module:', mappedModuleId);
     } else {
+      console.log('ExecBoardMemberModules - Module not found in registry:', mappedModuleId);
       toast({
         title: "Module Unavailable",
-        description: "This module is not yet implemented",
+        description: `This module (${moduleId}) is not yet implemented`,
         variant: "destructive",
       });
     }
