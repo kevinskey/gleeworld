@@ -29,11 +29,14 @@ export const MicTester: React.FC<MicTesterProps> = ({ className = '' }) => {
   const [isPlayingTest, setIsPlayingTest] = useState(false);
   const [testRecording, setTestRecording] = useState<Blob | null>(null);
   const [deviceInfo, setDeviceInfo] = useState<{ label: string; id: string } | null>(null);
+  const [inputVolume, setInputVolume] = useState(1.0); // Input gain level (0.0 to 2.0)
   
   // Refs
   const streamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const testAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -96,13 +99,20 @@ export const MicTester: React.FC<MicTesterProps> = ({ className = '' }) => {
         setDeviceInfo({ label: currentDevice.label, id: currentDevice.deviceId });
       }
 
-      // Set up audio context and analyser
+      // Set up audio context and analyser with gain control
       audioContextRef.current = new AudioContext();
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 256;
       
+      // Create gain node for volume control
+      gainNodeRef.current = audioContextRef.current.createGain();
+      gainNodeRef.current.gain.value = inputVolume;
+      
+      // Connect: source -> gain -> analyser
       const source = audioContextRef.current.createMediaStreamSource(stream);
-      source.connect(analyserRef.current);
+      sourceNodeRef.current = source;
+      source.connect(gainNodeRef.current);
+      gainNodeRef.current.connect(analyserRef.current);
       
       // Start monitoring audio levels
       monitorAudioLevel();
@@ -142,6 +152,16 @@ export const MicTester: React.FC<MicTesterProps> = ({ className = '' }) => {
       animationFrameRef.current = null;
     }
     
+    if (sourceNodeRef.current) {
+      sourceNodeRef.current.disconnect();
+      sourceNodeRef.current = null;
+    }
+    
+    if (gainNodeRef.current) {
+      gainNodeRef.current.disconnect();
+      gainNodeRef.current = null;
+    }
+    
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -157,6 +177,20 @@ export const MicTester: React.FC<MicTesterProps> = ({ className = '' }) => {
     setAudioLevel(0);
     setIsRecordingTest(false);
     setIsPlayingTest(false);
+  };
+
+  // Handle input volume change
+  const handleVolumeChange = (newVolume: number) => {
+    setInputVolume(newVolume);
+    
+    // Apply volume change to gain node if available
+    if (gainNodeRef.current && audioContextRef.current) {
+      gainNodeRef.current.gain.setValueAtTime(
+        newVolume,
+        audioContextRef.current.currentTime
+      );
+      console.log('Input volume changed to:', newVolume);
+    }
   };
 
   // Record test audio
@@ -285,24 +319,51 @@ export const MicTester: React.FC<MicTesterProps> = ({ className = '' }) => {
           </div>
         )}
 
-        {/* Audio Level Meter */}
+        {/* Volume Control and Audio Level Display */}
         {isTestingMic && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Audio Level:</span>
-              <span className="text-sm font-mono">{Math.round(audioLevel)}%</span>
+          <div className="space-y-4">
+            {/* Input Volume Control */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Input Volume:</span>
+                <span className="text-sm font-mono">{Math.round(inputVolume * 100)}%</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Volume2 className="h-4 w-4 text-muted-foreground" />
+                <input
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  value={inputVolume}
+                  onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <span className="text-xs text-muted-foreground w-8">200%</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Adjust if your microphone is too quiet or too loud
+              </div>
             </div>
-            <div className="relative">
-              <Progress value={audioLevel} className="h-3" />
-              <div 
-                className={`absolute top-0 left-0 h-3 rounded transition-all duration-150 ${getAudioLevelColor()}`}
-                style={{ width: `${audioLevel}%` }}
-              />
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {audioLevel < 10 && "Too quiet - speak louder"}
-              {audioLevel >= 10 && audioLevel < 80 && "Good level"}
-              {audioLevel >= 80 && "Too loud - adjust input volume"}
+            
+            {/* Audio Level Display */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Audio Level:</span>
+                <span className="text-sm font-mono">{Math.round(audioLevel)}%</span>
+              </div>
+              <div className="relative">
+                <Progress value={audioLevel} className="h-3" />
+                <div 
+                  className={`absolute top-0 left-0 h-3 rounded transition-all duration-150 ${getAudioLevelColor()}`}
+                  style={{ width: `${audioLevel}%` }}
+                />
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {audioLevel < 10 && "Too quiet - try increasing input volume"}
+                {audioLevel >= 10 && audioLevel < 80 && "Good level"}
+                {audioLevel >= 80 && "Too loud - try decreasing input volume"}
+              </div>
             </div>
           </div>
         )}
