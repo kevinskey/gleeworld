@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { VirtualPiano } from './VirtualPiano';
+import { SolfegeDisplay } from './SolfegeDisplay';
+import { Metronome } from './Metronome';
 import { 
   Play, 
   Pause, 
@@ -74,6 +77,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [metronomeEnabled, setMetronomeEnabled] = useState(true);
   const [tempo, setTempo] = useState(120);
   const [solfegeEnabled, setSolfegeEnabled] = useState(false);
+  const [currentNote, setCurrentNote] = useState<string | undefined>();
+  
+  // Voice range detection (soprano/alto based on key signature and exercise data)
+  const voiceRange = exerciseMetadata.keySignature?.includes('♭') || 
+                     exerciseMetadata.keySignature?.toLowerCase().includes('f') ? 'alto' : 'soprano';
   
   // Pitch pipe state
   const [currentPitch, setCurrentPitch] = useState<string | null>(null);
@@ -283,21 +291,18 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const actuallyStartPractice = () => {
     setIsPlaying(true);
     
-    // Start metronome if enabled
+    // Start metronome if enabled - this is now handled by the Metronome component
     if (metronomeEnabled) {
-      startMetronome();
+      toast({
+        title: "Practice Started",
+        description: "Metronome and practice aids are now active"
+      });
     }
     
     if (pianoEnabled) {
-      // Simulate piano accompaniment
       toast({
         title: "Practice Started",
-        description: "Piano accompaniment and metronome are playing"
-      });
-    } else {
-      toast({
-        title: "Practice Started", 
-        description: metronomeEnabled ? "Metronome is playing" : "Practice session started"
+        description: "Virtual piano is available for reference"
       });
     }
     
@@ -680,47 +685,69 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                       background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((tempo - 60) / (200 - 60)) * 100}%, #e5e7eb ${((tempo - 60) / (200 - 60)) * 100}%, #e5e7eb 100%)`
                     }}
                   />
-                  <span className="text-xs text-muted-foreground mt-1">{tempo}</span>
+                   <span className="text-xs text-muted-foreground mt-1">{tempo}</span>
                 </div>
               </div>
             </div>
-            
-            
-            {/* Volume Control for Pitch Pipe */}
-            <div className="flex flex-col items-center space-y-2">
-              <Label className="text-xs">Volume</Label>
-              <div className="flex flex-col items-center">
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={pitchPipeVolume}
-                  onChange={(e) => {
-                    const newVolume = Number(e.target.value);
-                    console.log('Volume changed to:', newVolume);
-                    setPitchPipeVolume(newVolume);
-                    
-                    // Update volume of currently playing pitch if any
-                    if (pitchGainNodeRef.current && audioContextRef.current) {
-                      pitchGainNodeRef.current.gain.setValueAtTime(
-                        pitchPipeMuted ? 0 : newVolume,
-                        audioContextRef.current.currentTime
-                      );
-                    }
-                  }}
-                  className="w-20 h-2 bg-gray-200 rounded-lg cursor-pointer range-slider"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${pitchPipeVolume * 100}%, #e5e7eb ${pitchPipeVolume * 100}%, #e5e7eb 100%)`
-                  }}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Practice Aids - Piano and Solfège */}
+      {(pianoEnabled || solfegeEnabled) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Practice Aids</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {pianoEnabled && (
+                <VirtualPiano
+                  isEnabled={pianoEnabled}
+                  keySignature={exerciseMetadata.keySignature}
+                  voiceRange={voiceRange}
+                  className="h-fit"
                 />
-                <div className="flex items-center gap-1 mt-1">
-                  <Volume2 className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">{Math.round(pitchPipeVolume * 100)}%</span>
-                </div>
-              </div>
+              )}
+              
+              {solfegeEnabled && (
+                <SolfegeDisplay
+                  isEnabled={solfegeEnabled}
+                  keySignature={exerciseMetadata.keySignature}
+                  voiceRange={voiceRange}
+                  currentNote={currentNote}
+                  className="h-fit"
+                />
+              )}
             </div>
-            
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Enhanced Metronome */}
+      {metronomeEnabled && (
+        <Card>
+          <CardContent className="pt-6">
+            <Metronome
+              isEnabled={metronomeEnabled}
+              tempo={tempo}
+              timeSignature={exerciseMetadata.timeSignature}
+              isPlaying={isPlaying}
+              onPlayingChange={(playing) => {
+                if (!playing && isPlaying) {
+                  stopPractice();
+                }
+              }}
+              className="max-w-md mx-auto"
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Main Practice Controls */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
             {/* Right Side - Pitch Pipe */}
             <div className="flex flex-col items-center space-y-2">
               <div className="relative">
@@ -801,13 +828,93 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 </Button>
               )}
             </div>
+
+            {/* Practice Session Controls */}
+            <div className="flex justify-center gap-3">
+              <Button
+                onClick={isPlaying ? stopPractice : startPractice}
+                variant={isPlaying ? "destructive" : "default"}
+                className="flex items-center gap-2"
+              >
+                {isPlaying ? (
+                  <>
+                    <Square className="h-4 w-4" />
+                    Stop Practice
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" />
+                    Start Practice
+                  </>
+                )}
+              </Button>
+
+              <Button
+                onClick={isRecording ? stopRecording : startRecording}
+                variant={isRecording ? "destructive" : "secondary"}
+                className="flex items-center gap-2"
+              >
+                {isRecording ? (
+                  <>
+                    <MicOff className="h-4 w-4" />
+                    Stop Recording
+                  </>
+                ) : (
+                  <>
+                    <Mic className="h-4 w-4" />
+                    Record Performance
+                  </>
+                )}
+              </Button>
+
+              {audioBlob && !isAssessing && (
+                <Button
+                  onClick={submitForAssessment}
+                  className="flex items-center gap-2"
+                >
+                  <Star className="h-4 w-4" />
+                  Get AI Assessment
+                </Button>
+              )}
+
+              {isAssessing && (
+                <Button disabled className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                  Assessing...
+                </Button>
+              )}
+            </div>
+
+            {/* Status Display */}
+            <div className="flex justify-center items-center gap-6 text-sm text-muted-foreground">
+              {isPlaying && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  Practice: {formatTime(playbackTime)}
+                </div>
+              )}
+              {isRecording && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                  Recording: {formatTime(recordingTime)}
+                </div>
+              )}
+              {audioBlob && !isRecording && (
+                <div className="flex items-center gap-2">
+                  <Save className="h-4 w-4" />
+                  Recording ready for assessment
+                </div>
+              )}
+            </div>
           </div>
-          
-          
-          
-          {/* Countdown Display */}
-          {isCountingDown && (
-            <div className="flex items-center justify-center gap-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+        </CardContent>
+      </Card>
+
+      {/* Countdown Display */}
+      {isCountingDown && (
+        <Card className="border-yellow-500 bg-yellow-50/50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center gap-4">
               <Timer className="h-6 w-6 text-yellow-600 animate-pulse" />
               <div className="text-center">
                 <div className="text-lg font-semibold text-yellow-800">
@@ -818,9 +925,9 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 </div>
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Assessment Results */}
       {assessmentScore !== null && (
