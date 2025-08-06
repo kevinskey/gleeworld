@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { VirtualPiano } from './VirtualPiano';
 import { SolfegeDisplay } from './SolfegeDisplay';
 import { Metronome } from './Metronome';
+import { MelodyPlayer } from './MelodyPlayer';
 import { 
   Play, 
   Pause, 
@@ -61,6 +62,12 @@ interface SightSingingPracticeProps {
   onSolfegeChange?: (enabled: boolean) => void;
 }
 
+interface Note {
+  note: string;
+  time: number;
+  duration?: number;
+}
+
 export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   musicXML,
   exerciseMetadata,
@@ -78,6 +85,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [tempo, setTempo] = useState(120);
   const [solfegeEnabled, setSolfegeEnabled] = useState(false);
   const [currentNote, setCurrentNote] = useState<string | undefined>();
+  const [extractedMelody, setExtractedMelody] = useState<Note[]>([]);
   
   // Voice range detection (soprano/alto based on key signature and exercise data)
   const voiceRange = exerciseMetadata.keySignature?.includes('♭') || 
@@ -228,13 +236,60 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     setCurrentPitch(null);
   }, []);
 
-  // Reset solfege when new exercise starts
+  // Extract melody from musicXML and reset solfege when new exercise starts
   React.useEffect(() => {
+    // Extract melody from MusicXML
+    const melody = extractMelodyFromMusicXML(musicXML);
+    setExtractedMelody(melody);
+    
     // Notify parent about solfege setting change
     if (onSolfegeChange) {
       onSolfegeChange(solfegeEnabled);
     }
   }, [musicXML, solfegeEnabled]);
+
+  // Function to extract melody from MusicXML
+  const extractMelodyFromMusicXML = (xml: string): Note[] => {
+    if (!xml) return [];
+    
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xml, 'application/xml');
+      const notes = doc.querySelectorAll('note');
+      const melody: Note[] = [];
+      let currentTime = 0;
+      const beatDuration = 0.5; // Half second per beat (120 BPM)
+      
+      notes.forEach((noteElement, index) => {
+        const pitchElement = noteElement.querySelector('pitch');
+        if (pitchElement) {
+          const step = pitchElement.querySelector('step')?.textContent || 'C';
+          const octave = pitchElement.querySelector('octave')?.textContent || '4';
+          const alter = pitchElement.querySelector('alter')?.textContent;
+          
+          let noteName = step + octave;
+          if (alter === '1') noteName = step + '#' + octave;
+          if (alter === '-1') noteName = step + 'b' + octave;
+          
+          const duration = noteElement.querySelector('duration')?.textContent;
+          const durationValue = duration ? parseFloat(duration) / 4 * beatDuration : beatDuration;
+          
+          melody.push({
+            note: noteName,
+            time: currentTime,
+            duration: durationValue
+          });
+          
+          currentTime += durationValue;
+        }
+      });
+      
+      return melody;
+    } catch (error) {
+      console.error('Error extracting melody from MusicXML:', error);
+      return [];
+    }
+  };
 
   const startCountdown = (callback: () => void) => {
     setIsCountingDown(true);
@@ -302,7 +357,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     if (pianoEnabled) {
       toast({
         title: "Practice Started",
-        description: "Virtual piano is available for reference"
+        description: "Melody playback is available for reference"
       });
     }
     
@@ -636,7 +691,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
               />
               <Label htmlFor="piano" className="flex items-center gap-2 cursor-pointer">
                 <Piano className="h-4 w-4" />
-                Piano
+                Melody
               </Label>
             </div>
             
@@ -701,12 +756,12 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {pianoEnabled && (
-                <VirtualPiano
-                  isEnabled={pianoEnabled}
-                  keySignature={exerciseMetadata.keySignature}
-                  voiceRange={voiceRange}
-                  className="h-fit"
+              {pianoEnabled && extractedMelody.length > 0 && (
+                <MelodyPlayer 
+                  melody={extractedMelody} 
+                  tempo={tempo}
+                  className="w-full"
+                  autoPlay={false}
                 />
               )}
               
