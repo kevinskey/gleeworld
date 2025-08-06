@@ -16,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { Save, UserCog, Shield, Crown, User, Edit2, X } from 'lucide-react';
+import { Save, UserCog, Shield, Crown, User, Edit2, X, Key } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -75,7 +75,38 @@ export const UserRoleEditor = ({ user, onUpdate }: UserRoleEditorProps) => {
   });
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
   const { toast } = useToast();
+
+  const handlePasswordReset = async () => {
+    try {
+      setResettingPassword(true);
+
+      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+        body: {
+          user_id: user.id,
+          user_email: user.email
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password Reset Sent",
+        description: "A password reset email has been sent to the user",
+      });
+
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send password reset email. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setResettingPassword(false);
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -276,6 +307,33 @@ export const UserRoleEditor = ({ user, onUpdate }: UserRoleEditorProps) => {
         </CardContent>
       </Card>
 
+      {/* Password Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Password Management</CardTitle>
+          <CardDescription>Send password reset email to user</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            variant="outline" 
+            onClick={handlePasswordReset}
+            disabled={resettingPassword}
+            className="w-full"
+          >
+            {resettingPassword ? (
+              <>
+                <LoadingSpinner size="sm" className="mr-2" />
+                Sending Reset Email...
+              </>
+            ) : (
+              <>
+                <Key className="h-4 w-4 mr-2" />
+                Send Password Reset Email
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Save Button */}
       <div className="flex justify-end pt-4">
