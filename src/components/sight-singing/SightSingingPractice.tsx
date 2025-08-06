@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import './slider-styles.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { VirtualPiano } from './VirtualPiano';
-import { SolfegeDisplay } from './SolfegeDisplay';
+import { SolfegeAnnotations } from './SolfegeAnnotations';
 import { Metronome } from './Metronome';
 import { 
   Play, 
@@ -118,10 +119,13 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   // Refs
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const playbackTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Audio and music display refs
   const audioContextRef = useRef<AudioContext | null>(null);
   const metronomeRef = useRef<any>(null);
   const pitchOscillatorRef = useRef<OscillatorNode | null>(null);
   const pitchGainNodeRef = useRef<GainNode | null>(null);
+  const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
+  const sheetMusicRef = useRef<HTMLDivElement>(null);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -269,6 +273,67 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       onSolfegeChange(solfegeEnabled);
     }
   }, [musicXML, solfegeEnabled]);
+
+  // Initialize OSMD and render sheet music
+  useEffect(() => {
+    if (sheetMusicRef.current && musicXML) {
+      renderSheetMusic();
+    }
+  }, [musicXML]);
+
+  const renderSheetMusic = async () => {
+    if (!sheetMusicRef.current || !musicXML) return;
+
+    try {
+      // Clear previous content
+      sheetMusicRef.current.innerHTML = '';
+
+      // Initialize OSMD
+      osmdRef.current = new OpenSheetMusicDisplay(sheetMusicRef.current, {
+        autoResize: true,
+        backend: 'svg',
+        drawTitle: false,
+        drawComposer: false,
+        drawCredits: false,
+        drawLyrics: false,
+        drawPartNames: false,
+        coloringMode: 0,
+        followCursor: false,
+        cursorsOptions: [],
+        pageFormat: 'A4_P',
+        pageBackgroundColor: '#FFFFFF',
+        renderSingleHorizontalStaffline: false,
+        defaultFontFamily: 'Times New Roman',
+        spacingFactorSoftmax: 5,
+        spacingBetweenTextLines: 0.5,
+      });
+
+      // Create blob URL from XML content
+      const blob = new Blob([musicXML], { type: 'application/xml' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      try {
+        await osmdRef.current.load(blobUrl);
+        await osmdRef.current.render();
+        console.log('Sheet music rendered successfully');
+      } finally {
+        // Clean up blob URL
+        URL.revokeObjectURL(blobUrl);
+      }
+    } catch (error) {
+      console.error('Error rendering sheet music:', error);
+      if (sheetMusicRef.current) {
+        sheetMusicRef.current.innerHTML = `
+          <div class="flex items-center justify-center h-64 text-muted-foreground">
+            <div class="text-center">
+              <p class="font-medium">Failed to render sheet music</p>
+              <p class="text-sm mt-1">Please try generating a new exercise</p>
+            </div>
+          </div>
+        `;
+      }
+    }
+  };
 
   // Function to extract melody from MusicXML
   const extractMelodyFromMusicXML = (xml: string): Note[] => {
@@ -883,27 +948,36 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           </div>
         </div>
       </div>
-      {/* Practice Aids - Solfège */}
-      {solfegeEnabled && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Practice Aids</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {solfegeEnabled && (
-                <SolfegeDisplay
-                  isEnabled={solfegeEnabled}
-                  keySignature={exerciseMetadata.keySignature}
-                  voiceRange={voiceRange}
-                  currentNote={currentNote}
-                  className="h-fit"
-                />
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      
+      {/* Sheet Music Display */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Music className="h-5 w-5" />
+            Practice Exercise
+            {solfegeEnabled && (
+              <Badge variant="secondary" className="ml-2 text-xs">
+                Solfège Mode Active
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <div 
+              ref={sheetMusicRef}
+              className="bg-white rounded-md border p-4 min-h-[300px] sheet-music-container"
+            />
+            {solfegeEnabled && (
+              <SolfegeAnnotations 
+                notes={extractedMelody}
+                keySignature={exerciseMetadata.keySignature}
+                className="absolute inset-0 pointer-events-none"
+              />
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
 
       {/* Countdown Display */}
