@@ -55,53 +55,76 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
   }, [profile?.exec_board_role, isExecutiveBoard]);
 
   const fetchExecModulePermissions = async () => {
-    if (!profile?.exec_board_role) return;
+    if (!profile?.exec_board_role) {
+      console.log('ExecBoardMemberModules - No exec_board_role found');
+      return;
+    }
 
     try {
       setLoading(true);
       console.log('ExecBoardMemberModules - Fetching for position:', profile.exec_board_role);
       
-      // Use a more direct query approach
-      const { data, error } = await supabase
+      // First, let's get all active functions for this position
+      const { data: positionFunctions, error: positionError } = await supabase
         .from('gw_executive_position_functions')
-        .select(`
-          function_id,
-          can_access,
-          can_manage,
-          gw_app_functions!inner (
-            id,
-            name,
-            description,
-            category,
-            module,
-            is_active
-          )
-        `)
-        .eq('position', profile.exec_board_role as any)
-        .eq('gw_app_functions.is_active', true);
+        .select('function_id, can_access, can_manage')
+        .eq('position', profile.exec_board_role as any);
 
-      console.log('ExecBoardMemberModules - Raw query result:', data);
-      console.log('ExecBoardMemberModules - Query error:', error);
+      console.log('ExecBoardMemberModules - Position functions result:', positionFunctions);
+      console.log('ExecBoardMemberModules - Position functions error:', positionError);
 
-      if (error) throw error;
+      if (positionError) throw positionError;
 
-      const modules = data
-        ?.filter(item => item.gw_app_functions && (item.can_access || item.can_manage))
-        .map(item => ({
-          function_id: item.gw_app_functions.id,
-          function_name: item.gw_app_functions.name,
-          function_description: item.gw_app_functions.description,
-          function_category: item.gw_app_functions.category,
-          module: item.gw_app_functions.module,
-          can_access: item.can_access,
-          can_manage: item.can_manage
-      })) || [];
+      if (!positionFunctions || positionFunctions.length === 0) {
+        console.log('ExecBoardMemberModules - No position functions found');
+        setExecModules([]);
+        return;
+      }
 
-      console.log('ExecBoardMemberModules - Processed modules:', modules);
+      // Get the function IDs that this position has access to
+      const accessibleFunctionIds = positionFunctions
+        .filter(pf => pf.can_access || pf.can_manage)
+        .map(pf => pf.function_id);
+
+      console.log('ExecBoardMemberModules - Accessible function IDs:', accessibleFunctionIds);
+
+      if (accessibleFunctionIds.length === 0) {
+        console.log('ExecBoardMemberModules - No accessible functions found');
+        setExecModules([]);
+        return;
+      }
+
+      // Now get the function details
+      const { data: functions, error: functionsError } = await supabase
+        .from('gw_app_functions')
+        .select('id, name, description, category, module')
+        .in('id', accessibleFunctionIds)
+        .eq('is_active', true);
+
+      console.log('ExecBoardMemberModules - Functions result:', functions);
+      console.log('ExecBoardMemberModules - Functions error:', functionsError);
+
+      if (functionsError) throw functionsError;
+
+      // Combine the data
+      const modules = functions?.map(func => {
+        const permission = positionFunctions.find(pf => pf.function_id === func.id);
+        return {
+          function_id: func.id,
+          function_name: func.name,
+          function_description: func.description,
+          function_category: func.category,
+          module: func.module,
+          can_access: permission?.can_access || false,
+          can_manage: permission?.can_manage || false
+        };
+      }) || [];
+
+      console.log('ExecBoardMemberModules - Final modules:', modules);
       console.log('ExecBoardMemberModules - Loaded modules count:', modules.length);
       setExecModules(modules);
     } catch (error) {
-      console.error('Error fetching exec module permissions:', error);
+      console.error('ExecBoardMemberModules - Error fetching exec module permissions:', error);
       toast({
         title: "Error",
         description: "Failed to load executive modules",
