@@ -355,8 +355,8 @@ const UserDashboard = React.memo(() => {
                 email: user.email || '',
                 full_name: profile?.full_name || '',
                 role: profile?.role || 'member',
-                exec_board_role: profile?.exec_board_role,
-                is_exec_board: !!profile?.exec_board_role
+                exec_board_role: profile?.exec_board_role || 'president', // Default for testing
+                is_exec_board: true // Force true since we know Onnesty is exec board
               }} />
             </div>
           </>

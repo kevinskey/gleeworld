@@ -33,42 +33,40 @@ interface ExecModulePermission {
 
 export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) => {
   const { toast } = useToast();
-  const { profile, isExecutiveBoard } = useUserRole();
   const [loading, setLoading] = useState(true);
   const [execModules, setExecModules] = useState<ExecModulePermission[]>([]);
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
   console.log('ExecBoardMemberModules - User:', user);
-  console.log('ExecBoardMemberModules - Profile:', profile);
-  console.log('ExecBoardMemberModules - isExecutiveBoard():', isExecutiveBoard());
-  console.log('ExecBoardMemberModules - exec_board_role:', profile?.exec_board_role);
+  console.log('ExecBoardMemberModules - user.exec_board_role:', user.exec_board_role);
+  console.log('ExecBoardMemberModules - user.is_exec_board:', user.is_exec_board);
 
   useEffect(() => {
     console.log('ExecBoardMemberModules - useEffect triggered');
-    if (isExecutiveBoard() && profile?.exec_board_role) {
-      console.log('ExecBoardMemberModules - Fetching permissions for:', profile.exec_board_role);
+    if (user.is_exec_board && user.exec_board_role) {
+      console.log('ExecBoardMemberModules - Fetching permissions for:', user.exec_board_role);
       fetchExecModulePermissions();
     } else {
       console.log('ExecBoardMemberModules - No executive board access, stopping loading');
       setLoading(false);
     }
-  }, [profile?.exec_board_role, isExecutiveBoard]);
+  }, [user.exec_board_role, user.is_exec_board]);
 
   const fetchExecModulePermissions = async () => {
-    if (!profile?.exec_board_role) {
+    if (!user.exec_board_role) {
       console.log('ExecBoardMemberModules - No exec_board_role found');
       return;
     }
 
     try {
       setLoading(true);
-      console.log('ExecBoardMemberModules - Fetching for position:', profile.exec_board_role);
+      console.log('ExecBoardMemberModules - Fetching for position:', user.exec_board_role);
       
       // First, let's get all active functions for this position
       const { data: positionFunctions, error: positionError } = await supabase
         .from('gw_executive_position_functions')
         .select('function_id, can_access, can_manage')
-        .eq('position', profile.exec_board_role as any);
+        .eq('position', user.exec_board_role as any);
 
       console.log('ExecBoardMemberModules - Position functions result:', positionFunctions);
       console.log('ExecBoardMemberModules - Position functions error:', positionError);
@@ -226,7 +224,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     return categoryConfig?.icon;
   };
 
-  if (!isExecutiveBoard()) {
+  if (!user.is_exec_board) {
     return null;
   }
 
@@ -266,9 +264,9 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
             <Crown className="h-5 w-5 text-brand-600" />
             <div>
               <CardTitle>Executive Board Modules</CardTitle>
-              <CardDescription>
-                Role: {profile?.exec_board_role} • {execModules.length} modules available
-              </CardDescription>
+            <CardDescription>
+              Role: {user.exec_board_role} • {execModules.length} modules available
+            </CardDescription>
             </div>
           </div>
           <Badge variant="secondary" className="bg-brand-50 text-brand-700 border-brand-200">
