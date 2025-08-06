@@ -63,13 +63,34 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
       setLoading(true);
       
       const { data, error } = await supabase
-        .from('booking_requests')
+        .from('gw_booking_requests')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      setRequests((data || []) as BookingRequest[]);
+      // Transform the data to match our interface
+      const transformedData: BookingRequest[] = (data || []).map(item => ({
+        id: item.id,
+        organization_name: item.organization_name,
+        contact_name: item.contact_person_name,
+        contact_email: item.contact_email,
+        contact_phone: item.contact_phone,
+        event_date: item.event_date_start,
+        event_time: item.performance_time,
+        event_location: item.venue_name && item.venue_address ? `${item.venue_name}, ${item.venue_address}` : (item.venue_name || item.venue_address || 'TBD'),
+        event_type: item.venue_type || 'Performance',
+        event_description: item.event_description || item.theme_occasion || 'Performance request',
+        estimated_audience: item.expected_attendance || 0,
+        budget_range: item.honorarium_offered && item.honorarium_amount ? `$${item.honorarium_amount}` : 'TBD',
+        special_requests: item.notes_for_choir || item.notes_for_director,
+        status: item.status === 'pending' ? 'new' : (item.status as BookingRequest['status']),
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        notes: item.notes_for_director
+      }));
+      
+      setRequests(transformedData);
     } catch (error) {
       console.error('Error loading booking requests:', error);
       
