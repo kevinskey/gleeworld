@@ -483,12 +483,29 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     console.log('Starting practice - pianoEnabled:', pianoEnabled, 'extractedMelody length:', extractedMelody.length);
     
-    // Metronome continues running from countdown through practice
-    if (metronomeEnabled) {
+    // Start melody playback synchronized with metronome
+    if (pianoEnabled && extractedMelody.length > 0) {
+      console.log('Starting synchronized melody playback with', extractedMelody.length, 'notes');
+      // Add small delay to let metronome establish rhythm
+      setTimeout(() => {
+        if (isPlaying) {
+          playMelodySequence();
+        }
+      }, 100); // Start melody slightly after practice starts for better sync
+      
       toast({
         title: "Practice Started",
-        description: "Practicing with metronome and melody playback"
+        description: "Melody and metronome synchronized"
       });
+    } else {
+      console.log('Melody playback skipped - pianoEnabled:', pianoEnabled, 'melody length:', extractedMelody.length);
+      
+      if (metronomeEnabled) {
+        toast({
+          title: "Practice Started", 
+          description: "Metronome only"
+        });
+      }
     }
     
     if (pianoEnabled && extractedMelody.length > 0) {
@@ -530,15 +547,14 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     }, 1000);
   };
 
-  // Play melody notes in sequence synchronized with tempo
+  // Play melody notes in sequence synchronized with metronome tempo
   const playMelodySequence = () => {
     if (!pianoEnabled || extractedMelody.length === 0) {
       console.log('playMelodySequence aborted - pianoEnabled:', pianoEnabled, 'melody length:', extractedMelody.length);
       return;
     }
 
-    console.log('Playing melody sequence with', extractedMelody.length, 'notes at tempo', tempo);
-    const tempoMultiplier = 120 / tempo; // Adjust timing based on current tempo
+    console.log('Playing melody sequence with', extractedMelody.length, 'notes synchronized with metronome tempo', tempo);
     
     // Clear any existing melody timeouts
     melodyTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
@@ -548,15 +564,23 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     setPlaybackProgress(0);
     setCurrentNoteIndex(-1);
     
+    // Calculate metronome beat interval in milliseconds
+    const beatInterval = 60000 / tempo; // ms per beat
+    console.log('Beat interval:', beatInterval, 'ms');
+    
+    // Synchronize melody with metronome beats
     extractedMelody.forEach((note, index) => {
-      const delayMs = note.time * 1000 * tempoMultiplier;
-      const duration = (note.duration || 0.5) * tempoMultiplier;
+      // Calculate delay based on note's position and metronome timing
+      // Use the note's original time but align to metronome tempo
+      const beatPosition = note.time * (tempo / 120); // Adjust for tempo relative to 120 BPM
+      const delayMs = beatPosition * beatInterval;
+      const duration = (note.duration || 0.5) * (60 / tempo); // Duration adjusted for tempo
       
-      console.log(`Scheduling note ${index + 1}/${extractedMelody.length}: ${note.note} at ${delayMs}ms`);
+      console.log(`Scheduling note ${index + 1}/${extractedMelody.length}: ${note.note} at beat ${beatPosition.toFixed(2)} (${delayMs.toFixed(0)}ms)`);
       
       const noteTimeout = setTimeout(() => {
         if (isPlaying) { // Only play if still in practice mode
-          console.log(`Playing note: ${note.note}`);
+          console.log(`Playing note: ${note.note} in sync with metronome`);
           setCurrentNoteIndex(index);
           setCurrentNote(note.note);
           
@@ -584,7 +608,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     });
 
     // Reset progress when melody completes
-    const totalDuration = extractedMelody[extractedMelody.length - 1]?.time * 1000 * tempoMultiplier + 1000;
+    const lastNote = extractedMelody[extractedMelody.length - 1];
+    const totalDuration = (lastNote?.time || 0) * (tempo / 120) * beatInterval + 2000;
     const resetTimeout = setTimeout(() => {
       if (isPlaying) {
         setPlaybackProgress(0);
