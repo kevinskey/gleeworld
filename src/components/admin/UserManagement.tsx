@@ -119,8 +119,8 @@ export const UserManagement = () => {
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = !searchTerm || 
-      user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     
