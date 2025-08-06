@@ -14,26 +14,26 @@ export function BasicInfoPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="text-center mb-4">
-        <h2 className="text-lg md:text-xl font-bold text-gray-900">Basic Information</h2>
-        <p className="text-xs md:text-sm text-gray-600 mt-1">Tell us your contact details</p>
+    <div className="space-y-2 md:space-y-4">
+      <div className="text-center mb-2 md:mb-4">
+        <h2 className="text-base md:text-xl font-bold text-gray-900">Basic Information</h2>
+        <p className="text-xs text-gray-600 mt-1">Contact details</p>
       </div>
 
-      {/* Compact mobile layout */}
-      <div className="space-y-3">
+      {/* Ultra-compact mobile layout */}
+      <div className="space-y-2 md:space-y-3">
         <FormField
           control={form.control}
           name="firstName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm font-medium text-gray-700">First Name</FormLabel>
+              <FormLabel className="text-xs md:text-sm font-medium text-gray-700">First Name</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="First name" 
                   {...field}
                   onChange={(e) => field.onChange(capitalizeInput(e.target.value))}
-                  className="h-10 text-sm"
+                  className="h-8 md:h-10 text-sm"
                 />
               </FormControl>
               <FormMessage />
@@ -46,13 +46,13 @@ export function BasicInfoPage() {
           name="lastName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm font-medium text-gray-700">Last Name</FormLabel>
+              <FormLabel className="text-xs md:text-sm font-medium text-gray-700">Last Name</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="Last name" 
                   {...field}
                   onChange={(e) => field.onChange(capitalizeInput(e.target.value))}
-                  className="h-10 text-sm"
+                  className="h-8 md:h-10 text-sm"
                 />
               </FormControl>
               <FormMessage />
@@ -65,13 +65,13 @@ export function BasicInfoPage() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm font-medium text-gray-700">Email</FormLabel>
+              <FormLabel className="text-xs md:text-sm font-medium text-gray-700">Email</FormLabel>
               <FormControl>
                 <Input 
                   type="email" 
                   placeholder="Email address" 
                   {...field}
-                  className="h-10 text-sm"
+                  className="h-8 md:h-10 text-sm"
                 />
               </FormControl>
               <FormMessage />
@@ -84,12 +84,12 @@ export function BasicInfoPage() {
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm font-medium text-gray-700">Phone</FormLabel>
+              <FormLabel className="text-xs md:text-sm font-medium text-gray-700">Phone</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="Phone number" 
                   {...field}
-                  className="h-10 text-sm"
+                  className="h-8 md:h-10 text-sm"
                 />
               </FormControl>
               <FormMessage />
