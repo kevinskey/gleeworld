@@ -229,6 +229,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const playMelody = async () => {
     if (melodyPlaysRemaining <= 0 || isPlayingMelody) {
       console.log('Cannot play melody - remaining plays:', melodyPlaysRemaining, 'already playing:', isPlayingMelody);
+      toast({
+        title: "Cannot Play",
+        description: melodyPlaysRemaining <= 0 ? "No plays remaining" : "Already playing melody",
+        variant: "destructive"
+      });
       return;
     }
     
@@ -237,28 +242,52 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     setMelodyPlaysRemaining(prev => prev - 1);
     
     try {
-      // Initialize audio context
-      const audioContext = await initPitchAudioContext();
-      console.log('Audio context initialized for melody:', audioContext.state);
+      // Initialize audio context with user interaction
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
       
-      // Extract notes from exercise (simplified - in real implementation would parse musicXML)
+      const audioContext = audioContextRef.current;
+      
+      // Ensure audio context is running
+      if (audioContext.state === 'suspended') {
+        console.log('Resuming suspended audio context');
+        await audioContext.resume();
+      }
+      
+      console.log('Audio context state:', audioContext.state);
+      
+      if (audioContext.state !== 'running') {
+        throw new Error(`Audio context not running. State: ${audioContext.state}`);
+      }
+      
+      // Extract notes from exercise
       const exerciseNotes = extractNotesFromExercise();
-      console.log('Exercise notes extracted:', exerciseNotes.length, 'notes');
+      console.log('Exercise notes extracted:', exerciseNotes);
+      
+      if (exerciseNotes.length === 0) {
+        throw new Error('No notes to play');
+      }
       
       toast({
-        title: "Playing Exercise Melody",
-        description: `Playing ${exerciseNotes.length} notes with piano sound. Plays remaining: ${melodyPlaysRemaining - 1}/2`
+        title: "🎹 Playing Exercise Melody",
+        description: `Playing ${exerciseNotes.length} notes. Plays remaining: ${melodyPlaysRemaining - 1}/2`
       });
       
-      // Play notes sequentially with piano sound
+      // Play notes sequentially with improved piano sound
       await playNotesSequentially(exerciseNotes, audioContext);
-      console.log('Melody playback completed');
+      console.log('Melody playback completed successfully');
+      
+      toast({
+        title: "✅ Melody Complete",
+        description: "Exercise melody finished playing"
+      });
       
     } catch (error) {
       console.error('Error playing melody:', error);
       toast({
-        title: "Playback Error",
-        description: "Failed to play exercise melody",
+        title: "🔊 Playback Error",
+        description: `Failed to play melody: ${error.message}. Try clicking the melody button first to enable audio.`,
         variant: "destructive"
       });
     } finally {
@@ -268,45 +297,66 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   };
 
   const extractNotesFromExercise = () => {
-    // Simplified note extraction - in real implementation would parse musicXML
-    // For now, return a sample melody based on key signature
+    // Extract notes based on exercise metadata
     const keySignature = exerciseMetadata.keySignature;
+    const measures = exerciseMetadata.measures || 4;
+    const difficulty = exerciseMetadata.difficulty;
     
+    console.log('Extracting notes for:', { keySignature, measures, difficulty });
+    
+    // Generate appropriate melody based on parameters
     if (keySignature.includes('C major')) {
-      return [
-        { frequency: 261.63, duration: 500 }, // C4
-        { frequency: 293.66, duration: 500 }, // D4
-        { frequency: 329.63, duration: 500 }, // E4
-        { frequency: 349.23, duration: 500 }, // F4
-        { frequency: 392.00, duration: 500 }, // G4
-        { frequency: 440.00, duration: 500 }, // A4
-        { frequency: 493.88, duration: 500 }, // B4
-        { frequency: 523.25, duration: 1000 }, // C5
+      const cMajorScale = [
+        { frequency: 261.63, note: 'C4' }, // C4
+        { frequency: 293.66, note: 'D4' }, // D4
+        { frequency: 329.63, note: 'E4' }, // E4
+        { frequency: 349.23, note: 'F4' }, // F4
+        { frequency: 392.00, note: 'G4' }, // G4
+        { frequency: 440.00, note: 'A4' }, // A4
+        { frequency: 493.88, note: 'B4' }, // B4
+        { frequency: 523.25, note: 'C5' }, // C5
       ];
+      
+      // Create a simple melody based on measures
+      const notesPerMeasure = 4;
+      const totalNotes = Math.min(measures * notesPerMeasure, 16);
+      const melody = [];
+      
+      for (let i = 0; i < totalNotes; i++) {
+        const scaleIndex = i % cMajorScale.length;
+        melody.push({
+          frequency: cMajorScale[scaleIndex].frequency,
+          duration: difficulty === 'beginner' ? 600 : difficulty === 'intermediate' ? 500 : 400,
+          note: cMajorScale[scaleIndex].note
+        });
+      }
+      
+      return melody;
     } else if (keySignature.includes('G major')) {
       return [
-        { frequency: 392.00, duration: 500 }, // G4
-        { frequency: 440.00, duration: 500 }, // A4
-        { frequency: 493.88, duration: 500 }, // B4
-        { frequency: 523.25, duration: 500 }, // C5
-        { frequency: 587.33, duration: 500 }, // D5
-        { frequency: 659.25, duration: 500 }, // E5
-        { frequency: 740.00, duration: 500 }, // F#5
-        { frequency: 783.99, duration: 1000 }, // G5
+        { frequency: 392.00, duration: 500, note: 'G4' }, // G4
+        { frequency: 440.00, duration: 500, note: 'A4' }, // A4
+        { frequency: 493.88, duration: 500, note: 'B4' }, // B4
+        { frequency: 523.25, duration: 500, note: 'C5' }, // C5
+        { frequency: 587.33, duration: 500, note: 'D5' }, // D5
+        { frequency: 659.25, duration: 500, note: 'E5' }, // E5
+        { frequency: 740.00, duration: 500, note: 'F#5' }, // F#5
+        { frequency: 783.99, duration: 800, note: 'G5' }, // G5
       ];
     } else {
-      // Default scale
+      // Default simple melody
       return [
-        { frequency: 261.63, duration: 500 }, // C4
-        { frequency: 293.66, duration: 500 }, // D4
-        { frequency: 329.63, duration: 500 }, // E4
-        { frequency: 261.63, duration: 1000 }, // C4
+        { frequency: 261.63, duration: 600, note: 'C4' }, // C4
+        { frequency: 293.66, duration: 600, note: 'D4' }, // D4
+        { frequency: 329.63, duration: 600, note: 'E4' }, // E4
+        { frequency: 261.63, duration: 800, note: 'C4' }, // C4
       ];
     }
   };
 
-  const playNotesSequentially = async (notes: { frequency: number; duration: number }[], audioContext: AudioContext) => {
+  const playNotesSequentially = async (notes: { frequency: number; duration: number; note?: string }[], audioContext: AudioContext) => {
     console.log('Playing notes sequentially:', notes.length, 'notes');
+    
     for (let i = 0; i < notes.length; i++) {
       if (!isPlayingMelody) {
         console.log('Melody playback cancelled at note', i);
@@ -314,71 +364,80 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       }
       
       const note = notes[i];
-      console.log(`Playing note ${i + 1}/${notes.length}: ${note.frequency}Hz for ${note.duration}ms`);
-      await playPianoNote(note.frequency, note.duration, audioContext);
+      console.log(`Playing note ${i + 1}/${notes.length}: ${note.note || 'Unknown'} (${note.frequency}Hz) for ${note.duration}ms`);
       
-      // Small gap between notes
-      await new Promise(resolve => setTimeout(resolve, 50));
+      try {
+        await playPianoNote(note.frequency, note.duration, audioContext);
+        console.log(`Note ${i + 1} completed successfully`);
+      } catch (noteError) {
+        console.error(`Error playing note ${i + 1}:`, noteError);
+        // Continue with next note even if one fails
+      }
+      
+      // Small gap between notes (only if not the last note)
+      if (i < notes.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
     }
     console.log('Notes sequence completed');
   };
 
   const playPianoNote = async (frequency: number, duration: number, audioContext: AudioContext) => {
-    return new Promise<void>((resolve) => {
-      // Create a more piano-like sound using multiple oscillators
-      const fundamental = audioContext.createOscillator();
-      const harmonic2 = audioContext.createOscillator();
-      const harmonic3 = audioContext.createOscillator();
-      
-      const gainNode = audioContext.createGain();
-      const gain2 = audioContext.createGain();
-      const gain3 = audioContext.createGain();
-      const masterGain = audioContext.createGain();
-      
-      // Set up fundamental frequency
-      fundamental.frequency.value = frequency;
-      fundamental.type = 'sine';
-      
-      // Set up harmonics for piano-like timbre
-      harmonic2.frequency.value = frequency * 2;
-      harmonic2.type = 'sine';
-      
-      harmonic3.frequency.value = frequency * 3;
-      harmonic3.type = 'sine';
-      
-      // Connect and set volumes
-      fundamental.connect(gainNode);
-      harmonic2.connect(gain2);
-      harmonic3.connect(gain3);
-      
-      gainNode.connect(masterGain);
-      gain2.connect(masterGain);
-      gain3.connect(masterGain);
-      masterGain.connect(audioContext.destination);
-      
-      // Set volumes for piano-like sound
-      const volume = pianoEnabled ? 0.3 : 0.15;
-      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-      gain2.gain.setValueAtTime(volume * 0.3, audioContext.currentTime);
-      gain3.gain.setValueAtTime(volume * 0.1, audioContext.currentTime);
-      
-      // Piano-like envelope (quick attack, slower decay)
-      masterGain.gain.setValueAtTime(0, audioContext.currentTime);
-      masterGain.gain.linearRampToValueAtTime(1, audioContext.currentTime + 0.01);
-      masterGain.gain.exponentialRampToValueAtTime(0.7, audioContext.currentTime + 0.1);
-      masterGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
-      
-      // Start oscillators
-      fundamental.start(audioContext.currentTime);
-      harmonic2.start(audioContext.currentTime);
-      harmonic3.start(audioContext.currentTime);
-      
-      // Stop oscillators
-      fundamental.stop(audioContext.currentTime + duration / 1000);
-      harmonic2.stop(audioContext.currentTime + duration / 1000);
-      harmonic3.stop(audioContext.currentTime + duration / 1000);
-      
-      setTimeout(resolve, duration);
+    return new Promise<void>((resolve, reject) => {
+      try {
+        // Validate inputs
+        if (!frequency || frequency <= 0) {
+          throw new Error(`Invalid frequency: ${frequency}`);
+        }
+        if (!duration || duration <= 0) {
+          throw new Error(`Invalid duration: ${duration}`);
+        }
+        if (!audioContext || audioContext.state !== 'running') {
+          throw new Error(`Invalid audio context state: ${audioContext?.state}`);
+        }
+
+        // Create a single, cleaner oscillator for better reliability
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        // Connect audio graph
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Configure oscillator
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine'; // Simple sine wave for reliability
+        
+        // Configure volume envelope for piano-like sound
+        const volume = pianoEnabled ? 0.4 : 0.2;
+        const currentTime = audioContext.currentTime;
+        const noteDuration = duration / 1000; // Convert to seconds
+        
+        // Envelope: quick attack, gradual decay
+        gainNode.gain.setValueAtTime(0, currentTime);
+        gainNode.gain.linearRampToValueAtTime(volume, currentTime + 0.02); // 20ms attack
+        gainNode.gain.exponentialRampToValueAtTime(volume * 0.3, currentTime + 0.1); // Quick initial decay
+        gainNode.gain.exponentialRampToValueAtTime(0.001, currentTime + noteDuration); // Gradual decay
+        
+        // Start and stop oscillator
+        oscillator.start(currentTime);
+        oscillator.stop(currentTime + noteDuration);
+        
+        // Handle cleanup and resolve
+        oscillator.onended = () => {
+          console.log(`Note ${frequency}Hz completed`);
+          resolve();
+        };
+        
+        // Fallback timeout in case onended doesn't fire
+        setTimeout(() => {
+          resolve();
+        }, duration + 50);
+        
+      } catch (error) {
+        console.error('Error in playPianoNote:', error);
+        reject(error);
+      }
     });
   };
 
@@ -846,11 +905,14 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
             {/* Melody Player */}
             <div className="flex items-center gap-2">
               <Button
-                onClick={playMelody}
+                onClick={() => {
+                  console.log('Melody button clicked, plays remaining:', melodyPlaysRemaining, 'is playing:', isPlayingMelody);
+                  playMelody();
+                }}
                 disabled={melodyPlaysRemaining <= 0 || isPlayingMelody}
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2"
+                className={`flex items-center gap-2 ${isPlayingMelody ? 'animate-pulse bg-blue-100' : ''}`}
               >
                 <PianoIcon className="h-4 w-4" />
                 {isPlayingMelody ? 'Playing...' : 'Play Melody'}
