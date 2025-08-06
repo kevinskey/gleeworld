@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { UserDetailPanel } from "./UserDetailPanel";
 import { BulkSelectControls } from "./BulkSelectControls";
-import { BulkExecBoardActions } from "./BulkExecBoardActions";
+
 import { User } from "@/hooks/useUsers";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -146,8 +146,6 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
         </div>
       </div>
 
-      {/* Bulk Executive Board Actions */}
-      <BulkExecBoardActions onActionComplete={onRefetch} />
 
       {/* Bulk Selection Controls */}
       <BulkSelectControls
