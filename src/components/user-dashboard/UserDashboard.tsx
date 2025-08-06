@@ -206,6 +206,13 @@ const UserDashboard = React.memo(() => {
   // Get user's actual name from profile, fallback to email username
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'Member';
   const isHonesty = user.email === 'onnestypeele@spelman.edu';
+  
+  console.log('UserDashboard: Debug info for user:', {
+    userEmail: user.email,
+    isHonesty,
+    profileEmail: profile?.email,
+    fullName: profile?.full_name
+  });
 
   // Get user dashboard data from context
   const { dashboardData, payments, notifications, loading: dashboardLoading } = useUserDashboardContext();
