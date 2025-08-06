@@ -77,7 +77,7 @@ const SightReadingPreview = () => {
           
           <div className="space-y-2">
             <h1 className="text-3xl font-bebas tracking-wide">
-              Sight Reading Preview
+              Sight Reading Generator
             </h1>
             <p className="text-muted-foreground">
               Preview and analyze MusicXML sheet music with professional notation rendering.

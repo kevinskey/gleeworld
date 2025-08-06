@@ -293,7 +293,7 @@ export const moduleCategories: ModuleCategory[] = [
       },
       {
         id: "sight-reading-preview",
-        title: "Sight Reading Preview",
+        title: "Sight Reading Generator",
         description: "Preview and analyze MusicXML sheet music with professional notation",
         icon: Music,
         iconColor: "purple",

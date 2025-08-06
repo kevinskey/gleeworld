@@ -18,7 +18,7 @@ export const SightReadingPreviewModule: React.FC<ModuleProps> = ({
   return (
     <ModuleWrapper
       id="sight-reading-preview"
-      title="Sight Reading Preview"
+      title="Sight Reading Generator"
       description="Preview and analyze MusicXML sheet music with professional notation"
       icon={Music}
       fullPage={isFullPage}
@@ -45,7 +45,7 @@ export const SightReadingPreviewModule: React.FC<ModuleProps> = ({
             className="w-full"
           >
             <ExternalLink className="h-4 w-4 mr-2" />
-            Open Sight Reading Preview
+            Open Sight Reading Generator
           </Button>
         </div>
       </div>
