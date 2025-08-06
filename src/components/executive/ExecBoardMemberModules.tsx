@@ -311,42 +311,42 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
                     <div className="flex-1 h-px bg-border" />
                   </div>
                   
-                  <div className="grid gap-2">
-                    {modules.map((module) => (
-                      <Card key={module.function_id} className="cursor-pointer hover:bg-muted/50 transition-colors">
-                        <CardContent className="p-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h5 className="font-medium text-sm">{module.function_name}</h5>
-                                <div className="flex gap-1">
-                                  {module.can_access && (
-                                    <Badge variant="outline" className="text-xs px-1 py-0">
-                                      View
-                                    </Badge>
-                                  )}
-                                  {module.can_manage && (
-                                    <Badge variant="outline" className="text-xs px-1 py-0 bg-brand-50 border-brand-200">
-                                      Manage
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                              <p className="text-xs text-muted-foreground line-clamp-2">
-                                {module.function_description}
-                              </p>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 ml-2"
-                              onClick={() => handleModuleClick(module.module)}
-                            >
-                              <Settings className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
+                   <div className="grid gap-2">
+                     {modules.map((module) => (
+                       <Card 
+                         key={module.function_id} 
+                         className="cursor-pointer hover:bg-muted/50 transition-colors"
+                         onClick={() => {
+                           console.log('Card clicked for module:', module.module);
+                           handleModuleClick(module.module);
+                         }}
+                       >
+                         <CardContent className="p-3">
+                           <div className="flex items-start justify-between">
+                             <div className="flex-1">
+                               <div className="flex items-center gap-2 mb-1">
+                                 <h5 className="font-medium text-sm">{module.function_name}</h5>
+                                 <div className="flex gap-1">
+                                   {module.can_access && (
+                                     <Badge variant="outline" className="text-xs px-1 py-0">
+                                       View
+                                     </Badge>
+                                   )}
+                                   {module.can_manage && (
+                                     <Badge variant="outline" className="text-xs px-1 py-0 bg-brand-50 border-brand-200">
+                                       Manage
+                                     </Badge>
+                                   )}
+                                 </div>
+                               </div>
+                               <p className="text-xs text-muted-foreground line-clamp-2">
+                                 {module.function_description}
+                               </p>
+                             </div>
+                             <Settings className="h-3 w-3 ml-2 opacity-50" />
+                           </div>
+                         </CardContent>
+                       </Card>
                     ))}
                   </div>
                 </div>
