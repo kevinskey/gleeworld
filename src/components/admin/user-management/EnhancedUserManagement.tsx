@@ -157,67 +157,61 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
         onBulkActionComplete={onRefetch}
       />
 
-      {/* Search and Filters */}
+      {/* User Management */}
       <Card>
         <CardHeader>
-          <CardTitle>Search & Filter</CardTitle>
-          <CardDescription>
-            Find users by name, email, role, or status
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="relative">
-              <Input
-                type="search"
-                placeholder="Search users..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="flex flex-col space-y-4">
+            <div>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>
+                Search, filter, and manage user accounts across the platform
+              </CardDescription>
             </div>
+            
+            {/* Search and Filter Controls */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="relative">
+                <Input
+                  type="search"
+                  placeholder="Search users..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              </div>
 
-            <div className="flex items-center space-x-4">
-              <Select value={selectedRole || 'all'} onValueChange={(value) => setSelectedRole(value === 'all' ? undefined : value)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Filter by Role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="guest">Guest</SelectItem>
-                  <SelectItem value="fan">Fan</SelectItem>
-                  <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="alumna">Alumna</SelectItem>
-                  <SelectItem value="executive">Executive</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="super-admin">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center space-x-4">
+                <Select value={selectedRole || 'all'} onValueChange={(value) => setSelectedRole(value === 'all' ? undefined : value)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Filter by Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem value="guest">Guest</SelectItem>
+                    <SelectItem value="fan">Fan</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="alumna">Alumna</SelectItem>
+                    <SelectItem value="executive">Executive</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="super-admin">Super Admin</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={selectedStatus || 'all'} onValueChange={(value) => setSelectedStatus(value === 'all' ? 'all' : value as UserFilter['status'])}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Filter by Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="verified">Verified</SelectItem>
-                  <SelectItem value="unverified">Unverified</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={selectedStatus || 'all'} onValueChange={(value) => setSelectedStatus(value === 'all' ? 'all' : value as UserFilter['status'])}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Filter by Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="verified">Verified</SelectItem>
+                    <SelectItem value="unverified">Unverified</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* User List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>User List</CardTitle>
-          <CardDescription>
-            View and manage user accounts
-          </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
