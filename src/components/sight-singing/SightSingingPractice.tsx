@@ -507,12 +507,18 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     console.log('Practice duration calculated:', practiceSeconds, 'seconds for', exerciseMetadata.measures, 'measures');
     
+    // Clear any existing timer before starting a new one
+    if (playbackTimerRef.current) {
+      clearInterval(playbackTimerRef.current);
+      playbackTimerRef.current = null;
+    }
+    
     // Timer for visual feedback and auto-stop
     let time = 0;
     playbackTimerRef.current = setInterval(() => {
       time += 1;
       setPlaybackTime(time);
-      if (time >= practiceSeconds) {
+      if (time >= practiceSeconds && isPlaying) { // Only auto-stop if still playing
         console.log('Practice time completed, auto-stopping practice');
         stopPractice();
         // Dispatch event to update the parent component's state
@@ -647,15 +653,25 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   const stopPractice = () => {
     console.log('Stopping practice session');
+    
+    // Prevent multiple calls by checking if already stopped
+    if (!isPlaying) {
+      console.log('Practice already stopped, ignoring duplicate call');
+      return;
+    }
+    
     setIsPlaying(false);
     setPlaybackTime(0);
     setPlaybackProgress(0);
     setCurrentNoteIndex(-1);
     setCurrentNote(undefined);
+    
+    // Clear timer
     if (playbackTimerRef.current) {
       clearInterval(playbackTimerRef.current);
       playbackTimerRef.current = null;
     }
+    
     // Always stop metronome when practice stops
     stopMetronome();
     
