@@ -125,7 +125,7 @@ export default function SchedulingPage() {
         {/* Header Section */}
         <div className="text-center py-16 px-4">
           <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
-            Spelman Glee Club Scheduling
+            Glee World Scheduler
           </h1>
           <p className="text-lg text-primary-foreground/80 max-w-3xl mx-auto mb-8">
             Experience the ease of scheduling rehearsals, lessons, and coaching sessions with just a few clicks. 
