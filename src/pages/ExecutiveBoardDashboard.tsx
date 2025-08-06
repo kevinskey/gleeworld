@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { ExecBoardModulePanel } from '@/components/executive/ExecBoardModulePanel';
+import { ExecBoardMemberModules } from '@/components/executive/ExecBoardMemberModules';
 import { ExecutiveToursLogistics } from '@/components/executive/modules/ExecutiveToursLogistics';
 import { ExecutiveConcertManagement } from '@/components/executive/modules/ExecutiveConcertManagement';
 import { ExecutiveTaskManager } from '@/components/executive/modules/ExecutiveTaskManager';
@@ -66,7 +67,14 @@ const ExecutiveBoardDashboard = () => {
           {/* Module Panel Sidebar */}
           <ResizablePanel defaultSize={22} minSize={18} maxSize={30}>
             <div className="h-full bg-background border-r p-4">
-              <ExecBoardModulePanel userEmail={user.email} />
+              <ExecBoardMemberModules user={{
+                id: user.id,
+                email: user.email || '',
+                full_name: userProfile?.full_name || user.email || '',
+                role: userProfile?.role || 'member',
+                exec_board_role: userProfile?.exec_board_role,
+                is_exec_board: userProfile?.is_exec_board
+              }} />
             </div>
           </ResizablePanel>
           
