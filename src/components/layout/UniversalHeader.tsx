@@ -32,7 +32,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   
   
   // Check if user has PR access (PR coordinator or admin)
-  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
+  const isAdmin = userProfile?.is_admin === true || userProfile?.is_super_admin === true;
   const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
   const canAccessPR = isAdmin || isPRCoordinator;
   const isExecBoardMember = userProfile?.exec_board_role && userProfile.exec_board_role.trim() !== '';
@@ -204,8 +204,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     <DropdownMenuLabel>Dashboard Views</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     
-                    {/* Admin View - only for admins/executives */}
-                    {(isAdmin || hasExecBoardPerms) && (
+                    {/* Admin View - only for actual admins */}
+                    {isAdmin && (
                       <DropdownMenuItem 
                         onClick={() => {
                           navigate('/admin');
@@ -215,6 +215,20 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       >
                         <Shield className="mr-2 h-4 w-4" />
                         Admin
+                      </DropdownMenuItem>
+                    )}
+                    
+                    {/* Executive Board Dashboard - only for executive board members */}
+                    {isExecBoardMember && !isAdmin && (
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          navigate('/executive-board-dashboard');
+                          onViewModeChange?.('admin');
+                        }}
+                        className={`cursor-pointer ${viewMode === 'admin' ? 'bg-accent' : ''}`}
+                      >
+                        <Crown className="mr-2 h-4 w-4" />
+                        Executive Board
                       </DropdownMenuItem>
                     )}
                     
