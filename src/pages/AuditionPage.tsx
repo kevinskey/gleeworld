@@ -61,38 +61,43 @@ function AuditionFormContent() {
           .join(' ');
       };
 
-      // Save audition data to database - using any type to bypass type check temporarily
+      // Save audition data to database - fix table and field mapping
       console.log('💾 Attempting to save to database...');
+      
+      // First get an active audition session
+      const { data: activeSessions, error: sessionError } = await supabase
+        .from('audition_sessions')
+        .select('id')
+        .eq('is_active', true)
+        .limit(1);
+
+      if (sessionError || !activeSessions || activeSessions.length === 0) {
+        throw new Error('No active audition session found. Please contact administration.');
+      }
       
       const submissionData = {
         user_id: user.id,
-        first_name: capitalizeNames(data.firstName),
-        last_name: capitalizeNames(data.lastName),
+        session_id: activeSessions[0].id,
+        full_name: `${capitalizeNames(data.firstName)} ${capitalizeNames(data.lastName)}`,
         email: data.email,
-        phone: data.phone,
-        sang_in_middle_school: data.sangInMiddleSchool,
-        sang_in_high_school: data.sangInHighSchool,
-        high_school_years: data.highSchoolYears,
-        plays_instrument: data.playsInstrument,
-        instrument_details: data.instrumentDetails,
-        is_soloist: data.isSoloist,
-        soloist_rating: data.soloistRating ? parseInt(data.soloistRating) : null,
-        high_school_section: data.highSchoolSection,
-        reads_music: data.readsMusic,
-        interested_in_voice_lessons: data.interestedInVoiceLessons,
-        interested_in_music_fundamentals: data.interestedInMusicFundamentals,
-        personality_description: data.personalityDescription,
-        interested_in_leadership: data.interestedInLeadership,
-        additional_info: data.additionalInfo,
-        audition_date: data.auditionDate.toISOString(),
-        audition_time: data.auditionTime,
-        selfie_url: capturedImage,
+        phone_number: data.phone,
+        profile_image_url: capturedImage,
+        previous_choir_experience: data.sangInHighSchool ? 'High School Choir' : 'No previous experience',
+        voice_part_preference: data.highSchoolSection || null,
+        years_of_vocal_training: data.isSoloist ? 1 : 0,
+        instruments_played: data.playsInstrument && data.instrumentDetails ? [data.instrumentDetails] : [],
+        music_theory_background: data.readsMusic ? 'Basic' : 'None',
+        sight_reading_level: data.readsMusic ? 'beginner' : 'none',
+        why_glee_club: data.personalityDescription,
+        vocal_goals: data.additionalInfo || 'General vocal improvement',
+        audition_time_slot: new Date(`${data.auditionDate.toISOString().split('T')[0]}T${data.auditionTime}:00`).toISOString(),
+        status: 'submitted'
       };
       
       console.log('📋 Submission data prepared:', submissionData);
       
-      const { error } = await (supabase as any)
-        .from('gw_auditions')
+      const { error } = await supabase
+        .from('audition_applications')
         .insert(submissionData);
 
       if (error) {
