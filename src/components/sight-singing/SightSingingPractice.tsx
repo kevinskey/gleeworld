@@ -19,7 +19,7 @@ import {
   Save,
   Music,
   Star,
-  Volume1
+  Piano as PianoIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -190,22 +190,146 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   }, []);
 
   // Melody player functions
-  const playMelody = () => {
+  const playMelody = async () => {
     if (melodyPlaysRemaining <= 0 || isPlayingMelody) return;
     
     setIsPlayingMelody(true);
     setMelodyPlaysRemaining(prev => prev - 1);
     
-    // Simulate melody playback
-    toast({
-      title: "Playing Melody",
-      description: `Plays remaining: ${melodyPlaysRemaining - 1}/2`
-    });
-    
-    // Stop melody after 10 seconds (example duration)
-    setTimeout(() => {
+    try {
+      // Initialize audio context
+      const audioContext = initPitchAudioContext();
+      
+      // Extract notes from exercise (simplified - in real implementation would parse musicXML)
+      const exerciseNotes = extractNotesFromExercise();
+      
+      toast({
+        title: "Playing Exercise Melody",
+        description: `Playing ${exerciseNotes.length} notes with piano sound. Plays remaining: ${melodyPlaysRemaining - 1}/2`
+      });
+      
+      // Play notes sequentially with piano sound
+      await playNotesSequentially(exerciseNotes, audioContext);
+      
+    } catch (error) {
+      console.error('Error playing melody:', error);
+      toast({
+        title: "Playback Error",
+        description: "Failed to play exercise melody",
+        variant: "destructive"
+      });
+    } finally {
       setIsPlayingMelody(false);
-    }, 10000);
+    }
+  };
+
+  const extractNotesFromExercise = () => {
+    // Simplified note extraction - in real implementation would parse musicXML
+    // For now, return a sample melody based on key signature
+    const keySignature = exerciseMetadata.keySignature;
+    
+    if (keySignature.includes('C major')) {
+      return [
+        { frequency: 261.63, duration: 500 }, // C4
+        { frequency: 293.66, duration: 500 }, // D4
+        { frequency: 329.63, duration: 500 }, // E4
+        { frequency: 349.23, duration: 500 }, // F4
+        { frequency: 392.00, duration: 500 }, // G4
+        { frequency: 440.00, duration: 500 }, // A4
+        { frequency: 493.88, duration: 500 }, // B4
+        { frequency: 523.25, duration: 1000 }, // C5
+      ];
+    } else if (keySignature.includes('G major')) {
+      return [
+        { frequency: 392.00, duration: 500 }, // G4
+        { frequency: 440.00, duration: 500 }, // A4
+        { frequency: 493.88, duration: 500 }, // B4
+        { frequency: 523.25, duration: 500 }, // C5
+        { frequency: 587.33, duration: 500 }, // D5
+        { frequency: 659.25, duration: 500 }, // E5
+        { frequency: 740.00, duration: 500 }, // F#5
+        { frequency: 783.99, duration: 1000 }, // G5
+      ];
+    } else {
+      // Default scale
+      return [
+        { frequency: 261.63, duration: 500 }, // C4
+        { frequency: 293.66, duration: 500 }, // D4
+        { frequency: 329.63, duration: 500 }, // E4
+        { frequency: 261.63, duration: 1000 }, // C4
+      ];
+    }
+  };
+
+  const playNotesSequentially = async (notes: { frequency: number; duration: number }[], audioContext: AudioContext) => {
+    for (let i = 0; i < notes.length; i++) {
+      if (!isPlayingMelody) break; // Stop if melody was cancelled
+      
+      const note = notes[i];
+      await playPianoNote(note.frequency, note.duration, audioContext);
+      
+      // Small gap between notes
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+  };
+
+  const playPianoNote = async (frequency: number, duration: number, audioContext: AudioContext) => {
+    return new Promise<void>((resolve) => {
+      // Create a more piano-like sound using multiple oscillators
+      const fundamental = audioContext.createOscillator();
+      const harmonic2 = audioContext.createOscillator();
+      const harmonic3 = audioContext.createOscillator();
+      
+      const gainNode = audioContext.createGain();
+      const gain2 = audioContext.createGain();
+      const gain3 = audioContext.createGain();
+      const masterGain = audioContext.createGain();
+      
+      // Set up fundamental frequency
+      fundamental.frequency.value = frequency;
+      fundamental.type = 'sine';
+      
+      // Set up harmonics for piano-like timbre
+      harmonic2.frequency.value = frequency * 2;
+      harmonic2.type = 'sine';
+      
+      harmonic3.frequency.value = frequency * 3;
+      harmonic3.type = 'sine';
+      
+      // Connect and set volumes
+      fundamental.connect(gainNode);
+      harmonic2.connect(gain2);
+      harmonic3.connect(gain3);
+      
+      gainNode.connect(masterGain);
+      gain2.connect(masterGain);
+      gain3.connect(masterGain);
+      masterGain.connect(audioContext.destination);
+      
+      // Set volumes for piano-like sound
+      const volume = pianoEnabled ? 0.3 : 0.15;
+      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+      gain2.gain.setValueAtTime(volume * 0.3, audioContext.currentTime);
+      gain3.gain.setValueAtTime(volume * 0.1, audioContext.currentTime);
+      
+      // Piano-like envelope (quick attack, slower decay)
+      masterGain.gain.setValueAtTime(0, audioContext.currentTime);
+      masterGain.gain.linearRampToValueAtTime(1, audioContext.currentTime + 0.01);
+      masterGain.gain.exponentialRampToValueAtTime(0.7, audioContext.currentTime + 0.1);
+      masterGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+      
+      // Start oscillators
+      fundamental.start(audioContext.currentTime);
+      harmonic2.start(audioContext.currentTime);
+      harmonic3.start(audioContext.currentTime);
+      
+      // Stop oscillators
+      fundamental.stop(audioContext.currentTime + duration / 1000);
+      harmonic2.stop(audioContext.currentTime + duration / 1000);
+      harmonic3.stop(audioContext.currentTime + duration / 1000);
+      
+      setTimeout(resolve, duration);
+    });
   };
 
   // Reset melody plays when new exercise starts
@@ -623,7 +747,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 size="sm"
                 className="flex items-center gap-2"
               >
-                <Volume1 className="h-4 w-4" />
+                <PianoIcon className="h-4 w-4" />
                 {isPlayingMelody ? 'Playing...' : 'Play Melody'}
               </Button>
               <div className="text-xs text-muted-foreground">
