@@ -98,19 +98,15 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
 
       console.log('Loading MusicXML directly...');
       
-      // Try to load XML directly using OSMD's loadXML method if available
+      // Try different methods to load the XML directly without blob URLs
       if (typeof osmdRef.current.loadXML === 'function') {
         await osmdRef.current.loadXML(musicXML);
+      } else if (typeof osmdRef.current.load === 'function') {
+        // Create a data URL instead of blob URL to avoid CSP issues
+        const dataUrl = 'data:application/xml;charset=utf-8,' + encodeURIComponent(musicXML);
+        await osmdRef.current.load(dataUrl);
       } else {
-        // Fallback: create a blob URL and load it
-        const blob = new Blob([musicXML], { type: 'application/xml' });
-        const objectUrl = URL.createObjectURL(blob);
-        
-        try {
-          await osmdRef.current.load(objectUrl);
-        } finally {
-          URL.revokeObjectURL(objectUrl);
-        }
+        throw new Error('No suitable loading method found in OSMD');
       }
       
       // Final check before rendering
