@@ -8,153 +8,143 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarDays, Clock, MapPin, Users, Plus, Edit, X, AlertCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { CalendarDays, Clock, MapPin, Users, Plus, Edit, X, AlertCircle, Settings, Download, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, startOfWeek, addDays, isSameDay, parseISO } from "date-fns";
 import { toast } from "sonner";
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
-  location?: string;
-  description?: string;
-  type: 'rehearsal' | 'performance' | 'meeting' | 'blocked' | 'appointment';
-  attendees?: number;
-  status: 'scheduled' | 'confirmed' | 'cancelled';
-}
+import { supabase } from "@/integrations/supabase/client";
+import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
+import { CalendarManager } from "@/components/calendar/CalendarManager";
+import { CalendarExport } from "@/components/calendar/CalendarExport";
+import { AppointmentScheduler } from "@/components/appointments/AppointmentScheduler";
 
 export const MasterCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [activeTab, setActiveTab] = useState('calendar');
   const [showEventDialog, setShowEventDialog] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [newEvent, setNewEvent] = useState<Partial<CalendarEvent>>({
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  const [newEvent, setNewEvent] = useState({
     title: '',
-    date: new Date(),
-    startTime: '09:00',
-    endTime: '10:00',
-    location: '',
     description: '',
-    type: 'rehearsal',
-    status: 'scheduled'
+    start_date: new Date().toISOString().split('T')[0],
+    end_date: new Date().toISOString().split('T')[0],
+    start_time: '09:00',
+    end_time: '10:00',
+    location: '',
+    event_type: 'rehearsal',
+    is_public: true,
+    rsvp_required: false,
+    calendar_id: ''
   });
+  
+  const { events, loading, fetchEvents } = useGleeWorldEvents();
 
-  // Sample events for demo
+  // Get default calendar ID
+  const getDefaultCalendarId = async () => {
+    const { data } = await supabase
+      .from('gw_calendars')
+      .select('id')
+      .eq('is_default', true)
+      .single();
+    
+    return data?.id || '';
+  };
+
   useEffect(() => {
-    const sampleEvents: CalendarEvent[] = [
-      {
-        id: '1',
-        title: 'Weekly Rehearsal',
-        date: new Date(),
-        startTime: '19:00',
-        endTime: '21:00',
-        location: 'Sisters Chapel',
-        description: 'Regular weekly rehearsal',
-        type: 'rehearsal',
-        attendees: 45,
-        status: 'confirmed'
-      },
-      {
-        id: '2',
-        title: 'Concert Performance',
-        date: addDays(new Date(), 3),
-        startTime: '20:00',
-        endTime: '22:00',
-        location: 'MLK Jr. International Chapel',
-        description: 'Spring Concert',
-        type: 'performance',
-        attendees: 500,
-        status: 'confirmed'
-      },
-      {
-        id: '3',
-        title: 'Block - Rehearsal Space Unavailable',
-        date: addDays(new Date(), 1),
-        startTime: '18:00',
-        endTime: '22:00',
-        location: 'Sisters Chapel',
-        description: 'Space blocked for maintenance',
-        type: 'blocked',
-        status: 'confirmed'
-      }
-    ];
-    setEvents(sampleEvents);
+    const setDefaultCalendar = async () => {
+      const calendarId = await getDefaultCalendarId();
+      setNewEvent(prev => ({ ...prev, calendar_id: calendarId }));
+    };
+    setDefaultCalendar();
   }, []);
 
-  const handleCreateEvent = () => {
-    if (!newEvent.title || !newEvent.date) {
+  const handleCreateEvent = async () => {
+    if (!newEvent.title || !newEvent.start_date) {
       toast.error('Please fill in required fields');
       return;
     }
 
-    const event: CalendarEvent = {
-      id: Date.now().toString(),
-      title: newEvent.title,
-      date: newEvent.date,
-      startTime: newEvent.startTime || '09:00',
-      endTime: newEvent.endTime || '10:00',
-      location: newEvent.location,
-      description: newEvent.description,
-      type: newEvent.type || 'rehearsal',
-      attendees: newEvent.attendees,
-      status: newEvent.status || 'scheduled'
-    };
+    try {
+      const calendarId = newEvent.calendar_id || await getDefaultCalendarId();
+      const eventData = {
+        ...newEvent,
+        calendar_id: calendarId,
+        start_date: `${newEvent.start_date}T${newEvent.start_time}:00`,
+        end_date: `${newEvent.end_date}T${newEvent.end_time}:00`,
+        created_by: (await supabase.auth.getUser()).data.user?.id
+      };
 
-    setEvents([...events, event]);
-    setNewEvent({
-      title: '',
-      date: new Date(),
-      startTime: '09:00',
-      endTime: '10:00',
-      location: '',
-      description: '',
-      type: 'rehearsal',
-      status: 'scheduled'
-    });
-    setShowEventDialog(false);
-    toast.success('Event created successfully');
+      const { error } = await supabase
+        .from('gw_events')
+        .insert([eventData]);
+
+      if (error) throw error;
+
+      toast.success('Event created successfully');
+      setShowEventDialog(false);
+      setNewEvent({
+        title: '',
+        description: '',
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: new Date().toISOString().split('T')[0],
+        start_time: '09:00',
+        end_time: '10:00',
+        location: '',
+        event_type: 'rehearsal',
+        is_public: true,
+        rsvp_required: false,
+        calendar_id: calendarId
+      });
+      fetchEvents();
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast.error('Failed to create event');
+    }
   };
 
-  const handleDeleteEvent = (eventId: string) => {
-    setEvents(events.filter(e => e.id !== eventId));
-    setSelectedEvent(null);
-    toast.success('Event deleted successfully');
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_events')
+        .delete()
+        .eq('id', eventId);
+
+      if (error) throw error;
+      
+      toast.success('Event deleted successfully');
+      setSelectedEvent(null);
+      fetchEvents();
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast.error('Failed to delete event');
+    }
   };
 
   const getEventTypeStyle = (type: string) => {
     switch (type) {
       case 'rehearsal':
-        return 'bg-event-rehearsal text-event-rehearsal-fg border-event-rehearsal-fg/20';
+        return 'bg-primary/10 text-primary border-primary/20';
       case 'performance':
-        return 'bg-event-performance text-event-performance-fg border-event-performance-fg/20';
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
       case 'meeting':
-        return 'bg-event-meeting text-event-meeting-fg border-event-meeting-fg/20';
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'blocked':
-        return 'bg-status-cancelled text-status-cancelled-fg border-status-cancelled-fg/20';
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'appointment':
-        return 'bg-event-voice-lesson text-event-voice-lesson-fg border-event-voice-lesson-fg/20';
+        return 'bg-purple-100 text-purple-800 border-purple-200';
       default:
-        return 'bg-event-general text-event-general-fg border-event-general-fg/20';
-    }
-  };
-
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'bg-status-confirmed text-status-confirmed-fg';
-      case 'cancelled':
-        return 'bg-status-cancelled text-status-cancelled-fg';
-      default:
-        return 'bg-status-scheduled text-status-scheduled-fg';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getEventsForDate = (date: Date) => {
-    return events.filter(event => isSameDay(event.date, date));
+    return events.filter(event => {
+      const eventDate = new Date(event.start_date);
+      return isSameDay(eventDate, date);
+    });
   };
 
   const renderWeekView = () => {
@@ -176,13 +166,13 @@ export const MasterCalendar = () => {
                     key={event.id}
                     className={cn(
                       "p-2 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity",
-                      getEventTypeStyle(event.type)
+                      getEventTypeStyle(event.event_type)
                     )}
                     onClick={() => setSelectedEvent(event)}
                   >
                     <div className="font-medium truncate">{event.title}</div>
                     <div className="text-xs opacity-75">
-                      {event.startTime} - {event.endTime}
+                      {format(new Date(event.start_date), 'HH:mm')} - {format(new Date(event.end_date), 'HH:mm')}
                     </div>
                   </div>
                 ))}
@@ -208,8 +198,8 @@ export const MasterCalendar = () => {
         <div className="p-4 max-h-[600px] overflow-y-auto">
           {hours.map((hour) => {
             const hourEvents = dayEvents.filter(event => {
-              const eventHour = parseInt(event.startTime.split(':')[0]);
-              return eventHour === hour;
+              const eventDate = new Date(event.start_date);
+              return eventDate.getHours() === hour;
             });
 
             return (
@@ -223,13 +213,13 @@ export const MasterCalendar = () => {
                       key={event.id}
                       className={cn(
                         "p-2 rounded mb-1 cursor-pointer hover:opacity-80 transition-opacity",
-                        getEventTypeStyle(event.type)
+                        getEventTypeStyle(event.event_type)
                       )}
                       onClick={() => setSelectedEvent(event)}
                     >
                       <div className="font-medium">{event.title}</div>
                       <div className="text-sm opacity-75">
-                        {event.startTime} - {event.endTime}
+                        {format(new Date(event.start_date), 'HH:mm')} - {format(new Date(event.end_date), 'HH:mm')}
                         {event.location && (
                           <span className="ml-2">📍 {event.location}</span>
                         )}
@@ -246,117 +236,118 @@ export const MasterCalendar = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-primary">Master Calendar</h1>
+          <h1 className="text-3xl font-bold text-primary">Master Calendar Management</h1>
           <p className="text-muted-foreground">
-            Manage rehearsals, performances, and schedule blocks
+            Complete calendar system with events, appointments, and scheduling
           </p>
         </div>
         
         <div className="flex flex-wrap gap-2">
-          <div className="flex rounded-lg border border-border bg-background">
-            {(['month', 'week', 'day'] as const).map((mode) => (
-              <Button
-                key={mode}
-                variant={viewMode === mode ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode(mode)}
-                className="capitalize"
-              >
-                {mode}
-              </Button>
-            ))}
-          </div>
-          
           <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
-                New Event
+                Quick Event
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md bg-background border-border">
+            <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle className="text-foreground">Create New Event</DialogTitle>
-                <DialogDescription className="text-muted-foreground">
-                  Add a new event or block time on the calendar
+                <DialogTitle>Quick Event Creation</DialogTitle>
+                <DialogDescription>
+                  Create a new event quickly
                 </DialogDescription>
               </DialogHeader>
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="title" className="text-foreground">Title *</Label>
+                  <Label htmlFor="title">Title *</Label>
                   <Input
                     id="title"
                     value={newEvent.title}
                     onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
                     placeholder="Event title"
-                    className="bg-background border-border text-foreground"
                   />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label htmlFor="startTime" className="text-foreground">Start Time</Label>
+                    <Label htmlFor="start_date">Start Date</Label>
                     <Input
-                      id="startTime"
-                      type="time"
-                      value={newEvent.startTime}
-                      onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
-                      className="bg-background border-border text-foreground"
+                      id="start_date"
+                      type="date"
+                      value={newEvent.start_date}
+                      onChange={(e) => setNewEvent({ ...newEvent, start_date: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="endTime" className="text-foreground">End Time</Label>
+                    <Label htmlFor="end_date">End Date</Label>
                     <Input
-                      id="endTime"
+                      id="end_date"
+                      type="date"
+                      value={newEvent.end_date}
+                      onChange={(e) => setNewEvent({ ...newEvent, end_date: e.target.value })}
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="start_time">Start Time</Label>
+                    <Input
+                      id="start_time"
                       type="time"
-                      value={newEvent.endTime}
-                      onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
-                      className="bg-background border-border text-foreground"
+                      value={newEvent.start_time}
+                      onChange={(e) => setNewEvent({ ...newEvent, start_time: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="end_time">End Time</Label>
+                    <Input
+                      id="end_time"
+                      type="time"
+                      value={newEvent.end_time}
+                      onChange={(e) => setNewEvent({ ...newEvent, end_time: e.target.value })}
                     />
                   </div>
                 </div>
                 
                 <div>
-                  <Label htmlFor="type" className="text-foreground">Event Type</Label>
-                  <Select value={newEvent.type} onValueChange={(value) => setNewEvent({ ...newEvent, type: value as any })}>
-                    <SelectTrigger className="bg-background border-border text-foreground">
+                  <Label htmlFor="event_type">Event Type</Label>
+                  <Select value={newEvent.event_type} onValueChange={(value) => setNewEvent({ ...newEvent, event_type: value })}>
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-background border-border">
+                    <SelectContent>
                       <SelectItem value="rehearsal">Rehearsal</SelectItem>
                       <SelectItem value="performance">Performance</SelectItem>
                       <SelectItem value="meeting">Meeting</SelectItem>
-                      <SelectItem value="appointment">Appointment</SelectItem>
-                      <SelectItem value="blocked">Block Time</SelectItem>
+                      <SelectItem value="social">Social Event</SelectItem>
+                      <SelectItem value="workshop">Workshop</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <div>
-                  <Label htmlFor="location" className="text-foreground">Location</Label>
+                  <Label htmlFor="location">Location</Label>
                   <Input
                     id="location"
                     value={newEvent.location}
                     onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
                     placeholder="Event location"
-                    className="bg-background border-border text-foreground"
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="description" className="text-foreground">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={newEvent.description}
-                    onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                    placeholder="Event description"
-                    className="bg-background border-border text-foreground"
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="is_public"
+                    checked={newEvent.is_public}
+                    onCheckedChange={(checked) => setNewEvent({ ...newEvent, is_public: checked })}
                   />
+                  <Label htmlFor="is_public">Public Event</Label>
                 </div>
                 
                 <div className="flex gap-2">
@@ -373,125 +364,221 @@ export const MasterCalendar = () => {
         </div>
       </div>
 
-      {/* Main Calendar Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Mini Calendar */}
-        <Card className="lg:col-span-1 bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-card-foreground">Calendar</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              className="w-full pointer-events-auto"
-              modifiers={{
-                hasEvents: events.map(e => e.date)
-              }}
-              modifiersStyles={{
-                hasEvents: {
-                  backgroundColor: 'hsl(var(--primary))',
-                  color: 'hsl(var(--primary-foreground))',
-                  borderRadius: '4px'
-                }
-              }}
-            />
-          </CardContent>
-        </Card>
+      {/* Tabbed Interface */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="calendar">Calendar View</TabsTrigger>
+          <TabsTrigger value="events">Event List</TabsTrigger>
+          <TabsTrigger value="appointments">Appointments</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="calendar" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <Card className="lg:col-span-1">
+              <CardHeader>
+                <CardTitle>Calendar Navigation</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  className="w-full"
+                  modifiers={{
+                    hasEvents: events.map(e => new Date(e.start_date))
+                  }}
+                />
+                
+                <div className="mt-4 space-y-2">
+                  <div className="text-sm font-medium">View Mode</div>
+                  <div className="flex gap-1">
+                    {(['month', 'week', 'day'] as const).map((mode) => (
+                      <Button
+                        key={mode}
+                        variant={viewMode === mode ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setViewMode(mode)}
+                        className="capitalize flex-1"
+                      >
+                        {mode}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Main View */}
-        <div className="lg:col-span-3">
-          {viewMode === 'month' && (
-            <Card className="bg-card border-border">
+            <div className="lg:col-span-3">
+              {viewMode === 'month' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>
+                      {format(selectedDate, 'MMMM yyyy')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {renderWeekView()}
+                  </CardContent>
+                </Card>
+              )}
+              
+              {viewMode === 'week' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>
+                      Week of {format(startOfWeek(selectedDate), 'MMMM dd, yyyy')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {renderWeekView()}
+                  </CardContent>
+                </Card>
+              )}
+              
+              {viewMode === 'day' && renderDayView()}
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="events" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>All Events</CardTitle>
+              <CardDescription>Manage all calendar events</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-8">Loading events...</div>
+              ) : (
+                <div className="space-y-2">
+                  {events.map((event) => (
+                    <div
+                      key={event.id}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                      onClick={() => setSelectedEvent(event)}
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium">{event.title}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {format(new Date(event.start_date), 'PPP')} at {format(new Date(event.start_date), 'p')}
+                        </div>
+                        {event.location && (
+                          <div className="text-sm text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {event.location}
+                          </div>
+                        )}
+                      </div>
+                      <Badge className={getEventTypeStyle(event.event_type)}>
+                        {event.event_type}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="appointments" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Appointment Scheduling</CardTitle>
+              <CardDescription>Manage appointments and bookings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AppointmentScheduler />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="settings" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-card-foreground">
-                  {format(selectedDate, 'MMMM yyyy')}
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Calendar Management
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {renderWeekView()}
+                <CalendarManager />
               </CardContent>
             </Card>
-          )}
-          
-          {viewMode === 'week' && (
-            <Card className="bg-card border-border">
+            
+            <Card>
               <CardHeader>
-                <CardTitle className="text-card-foreground">
-                  Week of {format(startOfWeek(selectedDate), 'MMMM dd, yyyy')}
+                <CardTitle className="flex items-center gap-2">
+                  <Download className="h-5 w-5" />
+                  Export & Import
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                {renderWeekView()}
+              <CardContent className="space-y-4">
+                <CalendarExport />
+                <div className="border-t pt-4">
+                  <Button variant="outline" className="w-full">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import Calendar
+                  </Button>
+                </div>
               </CardContent>
             </Card>
-          )}
-          
-          {viewMode === 'day' && renderDayView()}
-        </div>
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Event Details Modal */}
       {selectedEvent && (
         <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-          <DialogContent className="max-w-md bg-background border-border">
+          <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-foreground">{selectedEvent.title}</DialogTitle>
-              <DialogDescription className="text-muted-foreground">
-                {format(selectedEvent.date, 'EEEE, MMMM dd, yyyy')}
+              <DialogTitle>{selectedEvent.title}</DialogTitle>
+              <DialogDescription>
+                {format(new Date(selectedEvent.start_date), 'EEEE, MMMM dd, yyyy')}
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4">
               <div className="flex gap-2">
-                <Badge className={getEventTypeStyle(selectedEvent.type)}>
-                  {selectedEvent.type}
+                <Badge className={getEventTypeStyle(selectedEvent.event_type)}>
+                  {selectedEvent.event_type}
                 </Badge>
-                <Badge className={getStatusStyle(selectedEvent.status)}>
-                  {selectedEvent.status}
-                </Badge>
+                {selectedEvent.is_public && (
+                  <Badge variant="outline">Public</Badge>
+                )}
               </div>
               
               <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-foreground">
+                <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  {selectedEvent.startTime} - {selectedEvent.endTime}
+                  {format(new Date(selectedEvent.start_date), 'p')} - {format(new Date(selectedEvent.end_date), 'p')}
                 </div>
                 
                 {selectedEvent.location && (
-                  <div className="flex items-center gap-2 text-foreground">
+                  <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
                     {selectedEvent.location}
-                  </div>
-                )}
-                
-                {selectedEvent.attendees && (
-                  <div className="flex items-center gap-2 text-foreground">
-                    <Users className="h-4 w-4" />
-                    {selectedEvent.attendees} attendees
                   </div>
                 )}
               </div>
               
               {selectedEvent.description && (
                 <div>
-                  <Label className="text-foreground">Description</Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {selectedEvent.description}
-                  </p>
+                  <h4 className="font-medium mb-1">Description</h4>
+                  <p className="text-sm text-muted-foreground">{selectedEvent.description}</p>
                 </div>
               )}
               
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button variant="outline" className="flex-1">
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
                 <Button 
                   variant="destructive" 
-                  size="sm" 
                   onClick={() => handleDeleteEvent(selectedEvent.id)}
+                  className="flex-1"
                 >
                   <X className="h-4 w-4 mr-2" />
                   Delete
@@ -504,17 +591,18 @@ export const MasterCalendar = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-card border-border">
+        <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <CalendarDays className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">This Week</p>
-                <p className="text-xl font-bold text-card-foreground">
+                <p className="text-xl font-bold">
                   {events.filter(e => {
                     const start = startOfWeek(new Date());
                     const end = addDays(start, 6);
-                    return e.date >= start && e.date <= end;
+                    const eventDate = new Date(e.start_date);
+                    return eventDate >= start && eventDate <= end;
                   }).length}
                 </p>
               </div>
@@ -522,42 +610,42 @@ export const MasterCalendar = () => {
           </CardContent>
         </Card>
         
-        <Card className="bg-card border-border">
+        <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-status-cancelled-fg" />
-              <div>
-                <p className="text-sm text-muted-foreground">Blocked</p>
-                <p className="text-xl font-bold text-card-foreground">
-                  {events.filter(e => e.type === 'blocked').length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-event-performance-fg" />
+              <Users className="h-5 w-5 text-emerald-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Performances</p>
-                <p className="text-xl font-bold text-card-foreground">
-                  {events.filter(e => e.type === 'performance').length}
+                <p className="text-xl font-bold">
+                  {events.filter(e => e.event_type === 'performance').length}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-card border-border">
+        <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-event-rehearsal-fg" />
+              <Clock className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Rehearsals</p>
-                <p className="text-xl font-bold text-card-foreground">
-                  {events.filter(e => e.type === 'rehearsal').length}
+                <p className="text-xl font-bold">
+                  {events.filter(e => e.event_type === 'rehearsal').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-orange-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Meetings</p>
+                <p className="text-xl font-bold">
+                  {events.filter(e => e.event_type === 'meeting').length}
                 </p>
               </div>
             </div>
