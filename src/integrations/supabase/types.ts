@@ -3814,6 +3814,104 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_document_shares: {
+        Row: {
+          document_id: string | null
+          expires_at: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          is_active: boolean | null
+          permission_type: string
+          user_id: string | null
+        }
+        Insert: {
+          document_id?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission_type?: string
+          user_id?: string | null
+        }
+        Update: {
+          document_id?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_document_shares_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "gw_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_documents: {
+        Row: {
+          content_preview: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          document_type: string | null
+          google_doc_id: string | null
+          google_doc_url: string | null
+          id: string
+          last_synced_at: string | null
+          owner_id: string | null
+          permissions: Json | null
+          shared_with: string[] | null
+          status: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content_preview?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          document_type?: string | null
+          google_doc_id?: string | null
+          google_doc_url?: string | null
+          id?: string
+          last_synced_at?: string | null
+          owner_id?: string | null
+          permissions?: Json | null
+          shared_with?: string[] | null
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content_preview?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          document_type?: string | null
+          google_doc_id?: string | null
+          google_doc_url?: string | null
+          id?: string
+          last_synced_at?: string | null
+          owner_id?: string | null
+          permissions?: Json | null
+          shared_with?: string[] | null
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gw_dues_payment_plans: {
         Row: {
           auto_debit: boolean | null
