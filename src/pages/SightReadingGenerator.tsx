@@ -34,8 +34,15 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
     setError(null);
 
     try {
-      // Dynamic import of OSMD
-      const { OpenSheetMusicDisplay } = await import('opensheetmusicdisplay');
+      console.log('Starting OSMD rendering...');
+      
+      // Dynamic import of OSMD with better error handling
+      const { OpenSheetMusicDisplay } = await import('opensheetmusicdisplay').catch((importError) => {
+        console.error('Failed to import OpenSheetMusicDisplay:', importError);
+        throw new Error('Failed to load music notation library');
+      });
+      
+      console.log('OSMD imported successfully');
       
       // Clear container
       containerRef.current.innerHTML = '';
@@ -52,11 +59,16 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
         coloringMode: 0,
       });
 
+      console.log('OSMD instance created');
+
       // Create blob from MusicXML string
       const blob = new Blob([musicXML], { type: 'application/xml' });
       const blobUrl = URL.createObjectURL(blob);
 
+      console.log('Loading MusicXML...');
       await osmdRef.current.load(blobUrl);
+      
+      console.log('Rendering sheet music...');
       osmdRef.current.render();
 
       // Clean up blob URL
@@ -65,7 +77,7 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
       console.log('MusicXML rendered successfully');
     } catch (err) {
       console.error('Error rendering MusicXML:', err);
-      setError('Invalid MusicXML — please regenerate.');
+      setError('Failed to render sheet music. Please try again.');
     } finally {
       setIsLoading(false);
     }
