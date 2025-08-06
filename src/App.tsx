@@ -108,6 +108,7 @@ import RecurringOptions from "./pages/booking/RecurringOptions";
 import CustomerInfo from "./pages/booking/CustomerInfo";
 import BookingConfirmation from "./pages/booking/BookingConfirmation";
 import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
+import GoogleDocsPage from "./pages/GoogleDocs";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -836,14 +837,22 @@ const App = () => {
                                           </ProtectedRoute>
                                          } 
                                        />
-                                        <Route 
-                                          path="/executive-board-dashboard" 
-                                          element={
-                                            <ProtectedRoute>
-                                              <ExecutiveBoardDashboard />
-                                            </ProtectedRoute>
-                                          } 
-                                        />
+                                         <Route 
+                                           path="/executive-board-dashboard" 
+                                           element={
+                                             <ProtectedRoute>
+                                               <ExecutiveBoardDashboard />
+                                             </ProtectedRoute>
+                                           } 
+                                         />
+                                         <Route 
+                                           path="/google-docs" 
+                                           element={
+                                             <ProtectedRoute>
+                                               <GoogleDocsPage />
+                                             </ProtectedRoute>
+                                           } 
+                                         />
                       </Routes>
                    <GlobalMusicPlayer />
                 </div>
