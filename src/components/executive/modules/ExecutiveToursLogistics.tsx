@@ -69,69 +69,74 @@ export const ExecutiveToursLogistics = () => {
 
   const fetchToursAndLogistics = async () => {
     try {
-      // For now, using mock data - would integrate with actual database
-      const mockTours: Tour[] = [
-        {
-          id: '1',
-          name: 'Spring Concert Tour 2024',
-          start_date: '2024-03-15',
-          end_date: '2024-03-22',
-          status: 'planning',
-          venues: 5,
-          participants: 45,
-          budget: 25000,
-          notes: 'Annual spring tour visiting regional universities'
-        },
-        {
-          id: '2',
-          name: 'Holiday Concert Series',
-          start_date: '2024-12-10',
-          end_date: '2024-12-18',
-          status: 'confirmed',
-          venues: 3,
-          participants: 40,
-          budget: 15000,
-          notes: 'Local holiday performances in Atlanta area'
-        }
-      ];
+      setLoading(true);
+      
+      // Fetch tours from Supabase
+      const { data: toursData, error: toursError } = await supabase
+        .from('gw_tours')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      const mockLogistics: ConcertLogistics[] = [
-        {
-          id: '1',
-          tour_id: '1',
-          venue_name: 'Clark Atlanta University - CAU Art Gallery',
-          location: 'Atlanta, GA',
-          date: '2024-03-16',
-          time: '19:00',
-          setup_time: '16:00',
-          soundcheck_time: '17:30',
-          capacity: 200,
-          technical_requirements: 'Piano, sound system, stage lighting',
-          catering_arranged: true,
-          transportation_arranged: false,
-          accommodation_arranged: true,
-          status: 'confirmed'
-        },
-        {
-          id: '2',
-          tour_id: '1',
-          venue_name: 'Morehouse College - King Chapel',
-          location: 'Atlanta, GA',
-          date: '2024-03-18',
-          time: '18:30',
-          setup_time: '15:30',
-          soundcheck_time: '17:00',
-          capacity: 300,
-          technical_requirements: 'Organ, microphones, choir risers',
-          catering_arranged: false,
-          transportation_arranged: true,
-          accommodation_arranged: false,
-          status: 'pending'
-        }
-      ];
+      if (toursError) {
+        console.error('Error fetching tours:', toursError);
+        toast({
+          title: "Error",
+          description: "Failed to load tours data",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      setTours(mockTours);
-      setLogistics(mockLogistics);
+      // Transform the data to match our interface
+      const transformedTours: Tour[] = toursData.map(tour => ({
+        id: tour.id,
+        name: tour.name,
+        start_date: tour.start_date,
+        end_date: tour.end_date,
+        status: tour.status as 'planning' | 'confirmed' | 'in_progress' | 'completed',
+        venues: 0, // We'll calculate this from logistics
+        participants: tour.number_of_singers || 0,
+        budget: Number(tour.budget) || 0,
+        notes: tour.notes || ''
+      }));
+
+      // Fetch tour logistics from Supabase
+      const { data: logisticsData, error: logisticsError } = await supabase
+        .from('gw_tour_logistics')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (logisticsError) {
+        console.error('Error fetching logistics:', logisticsError);
+        // Don't return early, still show tours even if logistics fails
+      }
+
+      // Transform logistics data
+      const transformedLogistics: ConcertLogistics[] = logisticsData?.map(logistics => ({
+        id: logistics.id,
+        tour_id: logistics.tour_city_id, // Using tour_city_id as tour reference
+        venue_name: logistics.venue_name || 'Unknown Venue',
+        location: logistics.venue_address || '',
+        date: logistics.show_time ? new Date(logistics.show_time).toISOString().split('T')[0] : '',
+        time: logistics.show_time ? new Date(logistics.show_time).toTimeString().slice(0,5) : '',
+        setup_time: logistics.rehearsal_time ? new Date(logistics.rehearsal_time).toTimeString().slice(0,5) : '',
+        soundcheck_time: '', // Not available in current schema
+        capacity: logistics.estimated_audience_size || 0,
+        technical_requirements: '', // Not available in current schema
+        catering_arranged: !!logistics.meal_arrangements,
+        transportation_arranged: !!logistics.transport_notes,
+        accommodation_arranged: !!logistics.lodging_name,
+        status: 'pending' as 'pending' | 'confirmed' | 'completed'
+      })) || [];
+
+      setTours(transformedTours);
+      setLogistics(transformedLogistics);
+      
+      toast({
+        title: "Data Loaded",
+        description: `Loaded ${transformedTours.length} tours and ${transformedLogistics.length} logistics entries`,
+      });
+
     } catch (error) {
       console.error('Error fetching tours and logistics:', error);
       toast({
