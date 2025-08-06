@@ -830,20 +830,32 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
             </div>
           </div>
           
-          {/* Right Group - Tempo Control */}
-          <div className="flex items-center gap-3">
-            <Label className="text-sm font-medium">Tempo:</Label>
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min="60"
-                max="200"
-                value={tempo}
-                onChange={(e) => setTempo(parseInt(e.target.value))}
-                className="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-              />
-              <span className="text-sm font-mono min-w-[3rem] text-center">{tempo}</span>
+          {/* Right Group - Tempo Control and Play Button */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Label className="text-sm font-medium">Tempo:</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="60"
+                  max="200"
+                  value={tempo}
+                  onChange={(e) => setTempo(parseInt(e.target.value))}
+                  className="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+                <span className="text-sm font-mono min-w-[3rem] text-center">{tempo}</span>
+              </div>
             </div>
+            
+            {/* Play Button */}
+            <Button 
+              onClick={startPractice}
+              disabled={!musicXML || extractedMelody.length === 0}
+              className="flex items-center gap-2"
+            >
+              <Play className="h-4 w-4" />
+              Play
+            </Button>
           </div>
         </div>
       </div>
