@@ -52,6 +52,7 @@ const EXEC_BOARD_ROLES = [
   { label: 'Historian', value: 'historian' },
   { label: 'PR Coordinator', value: 'pr_coordinator' },
   { label: 'Chaplain', value: 'chaplain' },
+  { label: 'Merchandise Manager', value: 'merchandise_manager' },
   { label: 'Data Analyst', value: 'data_analyst' },
   { label: 'Assistant Chaplain', value: 'assistant_chaplain' },
   { label: 'Fundraising Manager', value: 'fundraising_manager' },

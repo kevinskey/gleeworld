@@ -286,6 +286,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
       {showDetailPanel && selectedUser && (
         <UserDetailPanel
           user={selectedUser}
+          isOpen={showDetailPanel}
           onClose={() => {
             setShowDetailPanel(false);
             setSelectedUser(null);

@@ -12,6 +12,7 @@ export interface User {
   exec_board_role?: string | null;
   is_exec_board?: boolean;
   avatar_url?: string | null;
+  verified?: boolean;
   // Additional profile fields
   phone?: string | null;
   voice_part?: string | null;
@@ -48,7 +49,7 @@ export const useUsers = () => {
           id, user_id, email, full_name, first_name, last_name, role,
           exec_board_role, is_exec_board, avatar_url, phone, voice_part, 
           class_year, join_date, status, dues_paid, notes, is_admin, 
-          is_super_admin, title, bio, graduation_year, created_at
+          is_super_admin, title, bio, graduation_year, verified, created_at
         `)
         .order('created_at', { ascending: false });
 
@@ -83,6 +84,7 @@ export const useUsers = () => {
           exec_board_role: profile.exec_board_role || null,
           is_exec_board: profile.is_exec_board || false,
           avatar_url: profile.avatar_url || null,
+          verified: profile.verified || false,
           phone: profile.phone || null,
           voice_part: profile.voice_part || null,
           class_year: profile.class_year || null,

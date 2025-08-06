@@ -52,6 +52,7 @@ const EXEC_BOARD_ROLES = [
   'Assistant Music Director',
   'Business Manager',
   'Publicity Manager',
+  'Merchandise Manager',
   'Social Chair',
   'Librarian'
 ];
