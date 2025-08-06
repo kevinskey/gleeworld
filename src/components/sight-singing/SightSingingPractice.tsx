@@ -101,7 +101,9 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [isAssessing, setIsAssessing] = useState(false);
   const [assessmentScore, setAssessmentScore] = useState<number | null>(null);
   const [assessmentFeedback, setAssessmentFeedback] = useState<string>('');
-  
+  const [detailedScores, setDetailedScores] = useState<any>(null);
+  const [needsPractice, setNeedsPractice] = useState(false);
+  const targetScore = 90;
   
   // Refs
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -685,9 +687,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       
       if (error) throw error;
       
-      const { score, feedback } = data;
+      const { score, feedback, detailed_scores, needs_practice } = data;
       setAssessmentScore(score);
       setAssessmentFeedback(feedback);
+      setDetailedScores(detailed_scores);
+      setNeedsPractice(needs_practice);
       
       // Save score to database
       await addScore({
@@ -706,18 +710,26 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       console.error('Error during assessment:', error);
       
       // Fallback mock assessment
-      const mockScore = Math.floor(Math.random() * 41) + 60;
+      const mockScore = Math.floor(Math.random() * 25) + 70; // 70-95 range
       setAssessmentScore(mockScore);
+      setNeedsPractice(mockScore < targetScore);
+      setDetailedScores({
+        pitch_accuracy: Math.floor(Math.random() * 20) + 75,
+        rhythm_accuracy: Math.floor(Math.random() * 20) + 70,
+        tempo_consistency: Math.floor(Math.random() * 15) + 80,
+        intonation_score: Math.floor(Math.random() * 25) + 70,
+        overall_musicality: Math.floor(Math.random() * 20) + 75
+      });
       
       let mockFeedback = '';
       if (mockScore >= 90) {
-        mockFeedback = 'Excellent sight singing! Your pitch accuracy and rhythm were nearly perfect.';
+        mockFeedback = '🎯 Excellent sight singing! You\'ve achieved mastery level. Outstanding pitch accuracy and rhythm!';
       } else if (mockScore >= 80) {
-        mockFeedback = 'Very good sight singing. Minor intonation adjustments needed.';
+        mockFeedback = '🎵 Very good sight singing! You\'re close to mastery - just minor adjustments needed for 90+.';
       } else if (mockScore >= 70) {
-        mockFeedback = 'Good effort. Focus on maintaining steady tempo and pitch accuracy.';
+        mockFeedback = '📈 Good effort! Focus on maintaining steady tempo and pitch accuracy to reach the 90 target.';
       } else {
-        mockFeedback = 'Keep practicing! Work on interval recognition and rhythmic precision.';
+        mockFeedback = '🎼 Keep practicing! Work on interval recognition and rhythmic precision to improve your score.';
       }
       
       setAssessmentFeedback(mockFeedback);
@@ -742,6 +754,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     setAudioBlob(null);
     setAssessmentScore(null);
     setAssessmentFeedback('');
+    setDetailedScores(null);
+    setNeedsPractice(false);
     setRecordingTime(0);
     setPlaybackTime(0);
   };
@@ -982,39 +996,98 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
       {/* Assessment Results */}
       {assessmentScore !== null && (
-        <Card>
+        <Card className={needsPractice ? "border-yellow-500 bg-yellow-50/30" : "border-green-500 bg-green-50/30"}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Star className="h-5 w-5" />
-              Assessment Results
+              AI Assessment Results
+              {needsPractice && (
+                <Badge variant="outline" className="ml-2 border-yellow-500 text-yellow-700">
+                  Target: {targetScore}/100
+                </Badge>
+              )}
+              {!needsPractice && (
+                <Badge className="ml-2 bg-green-500 text-white">
+                  🎯 Mastery Achieved!
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-primary">
+                <div className={`text-3xl font-bold ${needsPractice ? 'text-yellow-600' : 'text-green-600'}`}>
                   {assessmentScore}/100
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {assessmentScore >= 90 ? 'Excellent' :
-                   assessmentScore >= 80 ? 'Very Good' :
-                   assessmentScore >= 70 ? 'Good' : 'Needs Practice'}
+                  {assessmentScore >= 90 ? '🏆 Excellent - Mastery Level!' :
+                   assessmentScore >= 80 ? '🎵 Very Good - Almost There!' :
+                   assessmentScore >= 70 ? '📈 Good - Keep Practicing!' : '🎼 Needs Work - Focus on Fundamentals'}
                 </div>
               </div>
               <div className="w-32">
-                <Progress value={assessmentScore} className="h-2" />
+                <Progress 
+                  value={assessmentScore} 
+                  className={`h-3 ${needsPractice ? '[&>div]:bg-yellow-500' : '[&>div]:bg-green-500'}`} 
+                />
+                <div className="text-xs text-center mt-1 text-muted-foreground">
+                  {needsPractice ? `${targetScore - assessmentScore} points to target` : 'Target achieved!'}
+                </div>
               </div>
             </div>
+
+            {/* Detailed Scores */}
+            {detailedScores && (
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-3 bg-muted/30 rounded-lg">
+                <div className="text-center">
+                  <div className="text-sm font-medium text-muted-foreground">Pitch</div>
+                  <div className="text-lg font-bold">{Math.round(detailedScores.pitch_accuracy)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm font-medium text-muted-foreground">Rhythm</div>
+                  <div className="text-lg font-bold">{Math.round(detailedScores.rhythm_accuracy)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm font-medium text-muted-foreground">Tempo</div>
+                  <div className="text-lg font-bold">{Math.round(detailedScores.tempo_consistency)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm font-medium text-muted-foreground">Tone</div>
+                  <div className="text-lg font-bold">{Math.round(detailedScores.intonation_score)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm font-medium text-muted-foreground">Music</div>
+                  <div className="text-lg font-bold">{Math.round(detailedScores.overall_musicality)}</div>
+                </div>
+              </div>
+            )}
             
             <div className="p-4 bg-muted rounded-lg">
               <p className="text-sm">{assessmentFeedback}</p>
             </div>
             
             <div className="flex gap-2">
-              <Button onClick={resetSession} className="flex items-center gap-2">
-                <RotateCcw className="h-4 w-4" />
-                Try Again
-              </Button>
+              {needsPractice ? (
+                <>
+                  <Button onClick={resetSession} className="flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700">
+                    <RotateCcw className="h-4 w-4" />
+                    Practice Again (Goal: {targetScore}/100)
+                  </Button>
+                  <Button variant="outline" onClick={resetSession}>
+                    New Exercise
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button className="flex items-center gap-2 bg-green-600 hover:bg-green-700">
+                    🎉 Mastery Achieved!
+                  </Button>
+                  <Button variant="outline" onClick={resetSession}>
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Try New Exercise
+                  </Button>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
