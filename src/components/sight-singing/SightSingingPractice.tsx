@@ -703,6 +703,15 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   const startMetronome = async () => {
     try {
+      console.log('startMetronome called - current metronome exists:', !!metronomeRef.current);
+      
+      // Always stop any existing metronome first
+      if (metronomeRef.current) {
+        console.log('Stopping existing metronome before starting new one');
+        clearInterval(metronomeRef.current);
+        metronomeRef.current = null;
+      }
+      
       // Initialize audio context if needed
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -716,11 +725,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       }
       
       const interval = 60000 / tempo; // Convert BPM to milliseconds
-      
-      // Clear any existing metronome
-      if (metronomeRef.current) {
-        clearInterval(metronomeRef.current);
-      }
+      console.log('Starting metronome with interval:', interval, 'ms for tempo:', tempo);
       
       metronomeRef.current = setInterval(() => {
         try {
@@ -756,11 +761,14 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   };
 
   const stopMetronome = () => {
-    console.log('Stopping metronome');
+    console.log('stopMetronome called - metronomeRef.current:', !!metronomeRef.current);
     if (metronomeRef.current) {
+      console.log('Clearing metronome interval:', metronomeRef.current);
       clearInterval(metronomeRef.current);
       metronomeRef.current = null;
-      console.log('Metronome stopped and cleared');
+      console.log('Metronome stopped and cleared successfully');
+    } else {
+      console.log('No metronome interval to clear');
     }
   };
 
@@ -1014,11 +1022,16 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 id="metronome"
                 checked={metronomeEnabled}
                 onCheckedChange={(checked) => {
+                  console.log('Metronome toggle clicked:', checked);
                   setMetronomeEnabled(checked);
                   if (!checked) {
+                    console.log('Metronome toggled off - stopping metronome');
                     stopMetronome();
                   } else if (isPlaying || isRecording) {
+                    console.log('Metronome toggled on during active session - starting metronome');
                     startMetronome();
+                  } else {
+                    console.log('Metronome toggled on but no active session');
                   }
                 }}
                 className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
