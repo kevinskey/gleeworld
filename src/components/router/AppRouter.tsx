@@ -34,6 +34,7 @@ import SendNotificationPage from "@/pages/SendNotificationPage";
 import SetupAdmin from "@/pages/SetupAdmin";
 import PublicCalendar from "@/pages/PublicCalendar";
 import VoiceRangeAssessmentPage from "@/pages/VoiceRangeAssessmentPage";
+import ExecutiveBoardDashboard from "@/pages/ExecutiveBoardDashboard";
 
 export const router = createBrowserRouter([
   {
@@ -151,6 +152,10 @@ export const router = createBrowserRouter([
   {
     path: "/voice-assessment",
     element: <VoiceRangeAssessmentPage />,
+  },
+  {
+    path: "/executive-board-dashboard",
+    element: <ExecutiveBoardDashboard />,
   },
   {
     path: "*",
