@@ -16,7 +16,6 @@ export const useMediaLibrary = () => {
       const { data, error } = await supabase
         .from('gw_media_library')
         .select('*')
-        .eq('is_active', true)
         .eq('category', 'service-image')
         .order('created_at', { ascending: false });
 
@@ -90,13 +89,13 @@ export const useDeleteMedia = () => {
 
       if (storageError) throw storageError;
 
-      // Mark as inactive in media library
-      const { error: updateError } = await supabase
+      // Delete from media library
+      const { error: deleteError } = await supabase
         .from('gw_media_library')
-        .update({ is_active: false })
+        .delete()
         .eq('id', mediaId);
 
-      if (updateError) throw updateError;
+      if (deleteError) throw deleteError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['media-library'] });
