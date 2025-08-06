@@ -67,11 +67,11 @@ const ExecutiveBoardDashboard = () => {
 
   return (
     <UniversalLayout containerized={false}>
-      <div className="h-full">
-        <ResizablePanelGroup direction="horizontal" className="min-h-screen">
+      <div className="h-screen w-full overflow-hidden">
+        <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Module Panel Sidebar */}
           <ResizablePanel defaultSize={22} minSize={18} maxSize={30}>
-            <div className="h-full bg-background border-r p-4">
+            <div className="h-full bg-background border-r p-4 overflow-y-auto">
               <ExecBoardMemberModules user={{
                 id: user.id,
                 email: user.email || '',
@@ -87,7 +87,7 @@ const ExecutiveBoardDashboard = () => {
           
           {/* Main Content */}
           <ResizablePanel defaultSize={78}>
-            <div className="h-full overflow-auto">
+            <div className="h-full overflow-y-auto bg-background">
               <div className="space-y-6 px-4 md:px-6 py-6">
                 {/* Header */}
                 <div className="text-center space-y-4">
