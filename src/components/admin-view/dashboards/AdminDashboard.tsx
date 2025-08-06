@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -48,7 +48,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 
 // Import existing admin components
-import { UserManagement } from "@/components/admin/UserManagement";
+import { EnhancedUserManagement } from "@/components/admin/user-management/EnhancedUserManagement";
+import { useUsers } from "@/hooks/useUsers";
 import { ContractManagement } from "@/components/admin/ContractManagement";
 import { ActivityLogs } from "@/components/admin/ActivityLogs";
 import { AdminSummaryStats } from "@/components/admin/AdminSummaryStats";
@@ -72,51 +73,38 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard = ({ user }: AdminDashboardProps) => {
-  const [selectedCategory, setSelectedCategory] = useState("communications");
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
-  const [users, setUsers] = useState<any[]>([]);
+  const [searchParams] = useSearchParams();
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || "communications");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(searchParams.get('subcategory') || null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  
+  // Use the useUsers hook for EnhancedUserManagement
+  const { users, loading: usersLoading, error: usersError, refetch: refetchUsers } = useUsers();
   
   // Fetch activity logs with the hook
   const { logs: activityLogs, loading: logsLoading } = useActivityLogs(true);
 
-  // Fetch users data for the overview stats
+  // Set loading state based on users loading
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        console.log('AdminDashboard: Fetching users...');
-        setLoading(true);
-        
-        // First check if we're authenticated
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('AdminDashboard: Current session:', session?.user?.id);
-        
-        const { data, error } = await supabase
-          .from('gw_profiles')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        console.log('AdminDashboard: Query result:', { data, error });
-        
-        if (error) {
-          console.error('AdminDashboard: Error fetching users:', error);
-          throw error;
-        }
-        
-        console.log('AdminDashboard: Successfully fetched', data?.length || 0, 'users');
-        setUsers(data || []);
-      } catch (err) {
-        console.error('AdminDashboard: Error in fetchUsers:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(usersLoading);
+  }, [usersLoading]);
 
-    if (user) {
-      fetchUsers();
+  // Update URL when category/subcategory changes
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedCategory !== "communications") {
+      params.set('category', selectedCategory);
     }
-  }, [user]);
+    if (selectedSubcategory) {
+      params.set('subcategory', selectedSubcategory);
+    }
+    const newSearch = params.toString();
+    const currentSearch = window.location.search.substring(1);
+    if (newSearch !== currentSearch) {
+      navigate(`/admin${newSearch ? `?${newSearch}` : ''}`, { replace: true });
+    }
+  }, [selectedCategory, selectedSubcategory, navigate]);
 
   // Category definitions
   const categories = [
@@ -323,7 +311,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const renderSubcategoryContent = (subcategory: string) => {
     switch (subcategory) {
       case "user-management":
-        return <UserManagement />;
+        return <EnhancedUserManagement users={users} loading={usersLoading} error={usersError} onRefetch={refetchUsers} />;
       case "permissions":
         return <PermissionManagement />;
       case "auditions":

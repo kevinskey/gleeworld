@@ -179,7 +179,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         Admin Controls
                       </DropdownMenuLabel>
                       <DropdownMenuItem onClick={() => navigate('/admin')}>⚙️ Admin Dashboard</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/admin/users')}>👥 User Management</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin?category=member-management&subcategory=user-management')}>👥 User Management</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/admin/financial')}>💳 Financial Management</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/admin/communications')}>📧 Communications</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/admin/analytics')}>📈 Analytics</DropdownMenuItem>

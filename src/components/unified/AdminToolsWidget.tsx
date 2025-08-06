@@ -40,7 +40,7 @@ export const AdminToolsWidget = ({ onNavigateToTab }: AdminToolsWidgetProps = {}
       title: "User Management",
       description: "Manage member accounts, roles, and permissions",
       icon: Users,
-      route: "/admin/users",
+      route: "/admin?category=member-management&subcategory=user-management",
       status: 'active',
       badge: "Core"
     },

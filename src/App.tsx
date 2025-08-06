@@ -69,7 +69,6 @@ import { SectionalManagement } from "./pages/SectionalManagement";
 import { SRFManagement } from "./pages/SRFManagement";
 
 // Admin module pages
-import UserManagement from "./pages/admin/UserManagement";
 import FinancialManagement from "./pages/admin/FinancialManagement";
 import EventManagement from "./pages/admin/EventManagement";
 import MediaLibrary from "./pages/admin/MediaLibrary";
@@ -499,15 +498,7 @@ const App = () => {
                                </ProtectedRoute>
                              } 
                             />
-                              {/* Admin module routes */}
-                              <Route 
-                                path="/admin/users" 
-                                element={
-                                  <ProtectedRoute>
-                                    <UserManagement />
-                                  </ProtectedRoute>
-                                } 
-                              />
+                               {/* Admin module routes */}
                               <Route 
                                 path="/admin/finance" 
                                 element={
