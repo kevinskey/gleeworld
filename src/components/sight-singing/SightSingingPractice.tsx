@@ -308,14 +308,16 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     console.log('Practice duration calculated:', practiceSeconds, 'seconds for', exerciseMetadata.measures, 'measures');
     
-    // Timer for visual feedback
+    // Timer for visual feedback and auto-stop
     let time = 0;
     playbackTimerRef.current = setInterval(() => {
       time += 1;
       setPlaybackTime(time);
       if (time >= practiceSeconds) {
-        console.log('Practice time completed, stopping practice');
+        console.log('Practice time completed, auto-stopping practice');
         stopPractice();
+        // Dispatch event to update the parent component's state
+        window.dispatchEvent(new CustomEvent('practiceAutoStopped'));
       }
     }, 1000);
   };

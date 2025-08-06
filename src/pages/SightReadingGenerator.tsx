@@ -425,6 +425,19 @@ const SightReadingGeneratorPage = () => {
     window.dispatchEvent(new CustomEvent('resetPractice'));
   };
 
+  // Listen for practice auto-stop to update button state
+  React.useEffect(() => {
+    const handlePracticeAutoStopped = () => {
+      setIsPlayingExercise(false);
+    };
+    
+    window.addEventListener('practiceAutoStopped', handlePracticeAutoStopped);
+    
+    return () => {
+      window.removeEventListener('practiceAutoStopped', handlePracticeAutoStopped);
+    };
+  }, []);
+
   return (
     <UniversalLayout>
       <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -487,18 +500,6 @@ const SightReadingGeneratorPage = () => {
                           const practiceEvent = new CustomEvent('startPractice');
                           window.dispatchEvent(practiceEvent);
                           setIsPlayingExercise(true);
-                          
-                          // Auto-stop after the number of measures * beats per measure * tempo
-                          const [beatsPerMeasure] = timeSignature.split('/').map(Number);
-                          const totalBeats = measures[0] * beatsPerMeasure;
-                          const tempo = 120; // Default tempo, could be made configurable
-                          const duration = (totalBeats * 60) / tempo * 1000; // Convert to milliseconds
-                          
-                          setTimeout(() => {
-                            const stopEvent = new CustomEvent('stopPractice');
-                            window.dispatchEvent(stopEvent);
-                            setIsPlayingExercise(false);
-                          }, duration);
                         }
                       }}
                       className="flex items-center gap-2"
