@@ -102,17 +102,7 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
       if (typeof osmdRef.current.loadXML === 'function') {
         await osmdRef.current.loadXML(musicXML);
       } else {
-        // Fallback: create a temporary file and load it
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(musicXML, 'text/xml');
-        
-        // Check for parsing errors
-        const parseError = xmlDoc.querySelector('parsererror');
-        if (parseError) {
-          throw new Error('Invalid MusicXML format');
-        }
-        
-        // Create a proper blob URL without encoding
+        // Fallback: create a blob URL and load it
         const blob = new Blob([musicXML], { type: 'application/xml' });
         const objectUrl = URL.createObjectURL(blob);
         
