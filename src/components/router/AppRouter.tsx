@@ -17,6 +17,7 @@ import Announcements from "@/pages/Announcements";
 import BudgetApprovals from "@/pages/BudgetApprovals";
 import W9FormPage from "@/pages/W9FormPage";
 import NotFound from "@/pages/NotFound";
+import UserManagement from "@/pages/UserManagement";
 
 import AlumnaeLanding from "@/pages/AlumnaeLanding";
 import AlumnaeLegacyLounge from "@/pages/AlumnaeLegacyLounge";
@@ -33,8 +34,6 @@ import SendNotificationPage from "@/pages/SendNotificationPage";
 import SetupAdmin from "@/pages/SetupAdmin";
 import PublicCalendar from "@/pages/PublicCalendar";
 import VoiceRangeAssessmentPage from "@/pages/VoiceRangeAssessmentPage";
-
-
 
 export const router = createBrowserRouter([
   {
@@ -104,6 +103,10 @@ export const router = createBrowserRouter([
   {
     path: "/w9-form",
     element: <W9FormPage />,
+  },
+  {
+    path: "/user-management",
+    element: <UserManagement />,
   },
   {
     path: "/alumnae",
