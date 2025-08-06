@@ -56,6 +56,7 @@ import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
 import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
 import { SchedulingModule } from '@/components/modules/SchedulingModule';
+import ServiceManagement from '@/components/admin/ServiceManagement';
 import { BudgetsModule } from '@/components/modules/BudgetsModule';
 import { DuesCollectionModule } from '@/components/modules/DuesCollectionModule';
 import { ContractsModule } from '@/components/modules/ContractsModule';
@@ -136,6 +137,15 @@ export const moduleCategories: ModuleCategory[] = [
         iconColor: "cyan",
         category: "communications",
         component: SchedulingModule,
+      },
+      {
+        id: "service-management",
+        title: "Service Management",
+        description: "Manage scheduler services, badges, and booking settings",
+        icon: Settings,
+        iconColor: "blue",
+        category: "communications",
+        component: ServiceManagement,
       },
       {
         id: "calendar-management",
