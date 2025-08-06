@@ -7320,6 +7320,119 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_service_availability: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_active: boolean
+          service_id: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_active?: boolean
+          service_id: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          service_id?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_service_availability_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "gw_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_services: {
+        Row: {
+          advance_booking_days: number | null
+          badge_color: string | null
+          badge_text: string | null
+          booking_buffer_minutes: number | null
+          capacity_max: number | null
+          capacity_min: number | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_minutes: number
+          id: string
+          image_url: string | null
+          instructor: string | null
+          is_active: boolean
+          location: string | null
+          name: string
+          price_amount: number | null
+          price_display: string | null
+          requires_approval: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          advance_booking_days?: number | null
+          badge_color?: string | null
+          badge_text?: string | null
+          booking_buffer_minutes?: number | null
+          capacity_max?: number | null
+          capacity_min?: number | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          image_url?: string | null
+          instructor?: string | null
+          is_active?: boolean
+          location?: string | null
+          name: string
+          price_amount?: number | null
+          price_display?: string | null
+          requires_approval?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          advance_booking_days?: number | null
+          badge_color?: string | null
+          badge_text?: string | null
+          booking_buffer_minutes?: number | null
+          capacity_max?: number | null
+          capacity_min?: number | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          image_url?: string | null
+          instructor?: string | null
+          is_active?: boolean
+          location?: string | null
+          name?: string
+          price_amount?: number | null
+          price_display?: string | null
+          requires_approval?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_setlist_items: {
         Row: {
           created_at: string
