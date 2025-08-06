@@ -228,7 +228,7 @@ const SightReadingGeneratorPage = () => {
       return { valid: false, error: 'Missing score-partwise element' };
     }
     
-    if (!xml.includes('<part>')) {
+    if (!xml.includes('<part')) {
       return { valid: false, error: 'Missing part element' };
     }
     
