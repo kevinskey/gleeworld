@@ -123,7 +123,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
   const noUsersState = !loading && users.length === 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 bg-gradient-to-br from-spelman-blue-light/5 to-primary/10 min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
@@ -219,50 +219,60 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
           ) : error ? (
             <div className="text-red-500">Error: {error}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
+            <div className="overflow-x-auto border-2 border-primary/20 rounded-lg">
+              <table className="min-w-full divide-y divide-primary/10">
+                <thead className="bg-gradient-to-r from-primary/5 to-secondary/5">
                   <tr>
-                    <th className="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                      <Button variant="ghost" onClick={() => setSortBy('full_name')} className="w-full justify-start">
+                    <th className="px-6 py-3 text-left text-xs leading-4 font-medium text-primary uppercase tracking-wider border-r border-primary/10">
+                      <Button variant="ghost" onClick={() => setSortBy('full_name')} className="w-full justify-start hover:bg-primary/10">
                         Name
                       </Button>
                     </th>
-                    <th className="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                      <Button variant="ghost" onClick={() => setSortBy('email')} className="w-full justify-start">
+                    <th className="px-6 py-3 text-left text-xs leading-4 font-medium text-primary uppercase tracking-wider border-r border-primary/10">
+                      <Button variant="ghost" onClick={() => setSortBy('email')} className="w-full justify-start hover:bg-primary/10">
                         Email
                       </Button>
                     </th>
-                    <th className="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs leading-4 font-medium text-primary uppercase tracking-wider border-r border-primary/10">
                       Role
                     </th>
-                    <th className="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs leading-4 font-medium text-primary uppercase tracking-wider border-r border-primary/10">
                       Status
                     </th>
-                    <th className="px-6 py-3 bg-gray-50"></th>
+                    <th className="px-6 py-3 bg-secondary/5"></th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredAndSortedUsers.map(user => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-no-wrap">
-                        <div className="text-sm leading-5 font-medium text-gray-900">{user.full_name}</div>
+                <tbody className="bg-white divide-y divide-primary/10">
+                  {filteredAndSortedUsers.map((user, index) => (
+                    <tr 
+                      key={user.id} 
+                      className={`hover:bg-primary/5 transition-colors border-l-4 ${
+                        index % 2 === 0 ? 'border-l-primary/20' : 'border-l-secondary/20'
+                      }`}
+                    >
+                      <td className="px-6 py-4 whitespace-no-wrap border-r border-primary/5">
+                        <div className="text-sm leading-5 font-medium text-foreground">{user.full_name}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-no-wrap">
-                        <div className="text-sm leading-5 text-gray-500">{user.email}</div>
+                      <td className="px-6 py-4 whitespace-no-wrap border-r border-primary/5">
+                        <div className="text-sm leading-5 text-muted-foreground">{user.email}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-no-wrap">
-                        <Badge variant="secondary">{user.role}</Badge>
+                      <td className="px-6 py-4 whitespace-no-wrap border-r border-primary/5">
+                        <Badge 
+                          variant={user.role === 'admin' || user.role === 'super-admin' ? 'default' : 'secondary'}
+                          className={user.role === 'admin' || user.role === 'super-admin' ? 'bg-primary text-primary-foreground' : ''}
+                        >
+                          {user.role}
+                        </Badge>
                       </td>
-                      <td className="px-6 py-4 whitespace-no-wrap">
+                      <td className="px-6 py-4 whitespace-no-wrap border-r border-primary/5">
                         {user.verified ? (
                           <CheckCircle className="h-5 w-5 text-green-500" />
                         ) : (
                           <XCircle className="h-5 w-5 text-red-500" />
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-no-wrap text-right text-sm leading-5 font-medium">
-                        <Button variant="outline" size="sm" onClick={() => handleUserClick(user)}>
+                      <td className="px-6 py-4 whitespace-no-wrap text-right text-sm leading-5 font-medium bg-secondary/5">
+                        <Button variant="outline" size="sm" onClick={() => handleUserClick(user)} className="border-primary/20 hover:bg-primary hover:text-primary-foreground">
                           <Eye className="h-4 w-4 mr-2" />
                           View
                         </Button>
