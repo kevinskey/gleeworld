@@ -762,14 +762,28 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   const stopMetronome = () => {
     console.log('stopMetronome called - metronomeRef.current:', !!metronomeRef.current);
+    
+    // Force clear the interval
     if (metronomeRef.current) {
       console.log('Clearing metronome interval:', metronomeRef.current);
       clearInterval(metronomeRef.current);
       metronomeRef.current = null;
-      console.log('Metronome stopped and cleared successfully');
+      console.log('Metronome interval cleared');
     } else {
       console.log('No metronome interval to clear');
     }
+    
+    // Also try to close the audio context to force stop any playing audio
+    try {
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        console.log('Suspending audio context to stop metronome audio');
+        audioContextRef.current.suspend();
+      }
+    } catch (error) {
+      console.log('Error suspending audio context:', error);
+    }
+    
+    console.log('stopMetronome completed');
   };
 
   const startRecording = async () => {
@@ -1022,17 +1036,24 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 id="metronome"
                 checked={metronomeEnabled}
                 onCheckedChange={(checked) => {
+                  console.log('=== METRONOME TOGGLE ===');
                   console.log('Metronome toggle clicked:', checked);
+                  console.log('Current metronome state - isPlaying:', isPlaying, 'isRecording:', isRecording);
+                  console.log('Current metronomeRef.current:', !!metronomeRef.current);
+                  
                   setMetronomeEnabled(checked);
+                  
                   if (!checked) {
-                    console.log('Metronome toggled off - stopping metronome');
+                    console.log('Metronome toggled OFF - force stopping metronome');
                     stopMetronome();
                   } else if (isPlaying || isRecording) {
-                    console.log('Metronome toggled on during active session - starting metronome');
+                    console.log('Metronome toggled ON during active session - starting metronome');
                     startMetronome();
                   } else {
-                    console.log('Metronome toggled on but no active session');
+                    console.log('Metronome toggled ON but no active session');
                   }
+                  
+                  console.log('=== END METRONOME TOGGLE ===');
                 }}
                 className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
               />
