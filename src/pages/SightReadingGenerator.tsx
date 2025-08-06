@@ -20,23 +20,41 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
   const [error, setError] = useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const osmdRef = React.useRef<any>(null);
+  const isMountedRef = React.useRef(true);
+
+  // Track component mount status
+  React.useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   React.useEffect(() => {
-    // Add a small delay to ensure DOM is fully mounted
-    const timer = setTimeout(() => {
-      if (musicXML && containerRef.current) {
-        renderMusicXML();
-      }
-    }, 100);
+    if (musicXML && containerRef.current && isMountedRef.current) {
+      // Add a longer delay and check mounting status
+      const timer = setTimeout(() => {
+        if (isMountedRef.current && containerRef.current) {
+          renderMusicXML();
+        }
+      }, 200);
 
-    return () => clearTimeout(timer);
+      return () => clearTimeout(timer);
+    }
   }, [musicXML]);
 
   const renderMusicXML = async () => {
+    // Early exit if component is unmounted
+    if (!isMountedRef.current) {
+      console.log('Component unmounted, skipping render');
+      return;
+    }
+
     if (!containerRef.current || !musicXML) {
       console.log('renderMusicXML: Missing refs or musicXML', {
         hasContainer: !!containerRef.current,
-        hasMusicXML: !!musicXML
+        hasMusicXML: !!musicXML,
+        isMounted: isMountedRef.current
       });
       return;
     }
@@ -47,6 +65,9 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
     try {
       console.log('Starting OSMD rendering...');
       
+      // Store container reference to prevent it from changing
+      const container = containerRef.current;
+      
       // Dynamic import of OSMD with better error handling
       const { OpenSheetMusicDisplay } = await import('opensheetmusicdisplay').catch((importError) => {
         console.error('Failed to import OpenSheetMusicDisplay:', importError);
@@ -55,14 +76,17 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
       
       console.log('OSMD imported successfully');
       
-      // Double-check container is still available and clear it
-      if (!containerRef.current) {
-        throw new Error('Container element became unavailable during rendering');
+      // Check again after async import
+      if (!isMountedRef.current || !container || container !== containerRef.current) {
+        console.log('Component state changed during import, aborting');
+        return;
       }
-      containerRef.current.innerHTML = '';
+      
+      // Clear container safely
+      container.innerHTML = '';
       
       // Create new OSMD instance
-      osmdRef.current = new OpenSheetMusicDisplay(containerRef.current, {
+      osmdRef.current = new OpenSheetMusicDisplay(container, {
         autoResize: true,
         backend: 'svg',
         drawTitle: true,
@@ -75,12 +99,25 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
 
       console.log('OSMD instance created');
 
+      // Check mounting status before continuing
+      if (!isMountedRef.current) {
+        console.log('Component unmounted during OSMD creation, aborting');
+        return;
+      }
+
       // Create blob from MusicXML string
       const blob = new Blob([musicXML], { type: 'application/xml' });
       const blobUrl = URL.createObjectURL(blob);
 
       console.log('Loading MusicXML...');
       await osmdRef.current.load(blobUrl);
+      
+      // Final check before rendering
+      if (!isMountedRef.current) {
+        console.log('Component unmounted during loading, aborting');
+        URL.revokeObjectURL(blobUrl);
+        return;
+      }
       
       console.log('Rendering sheet music...');
       osmdRef.current.render();
@@ -91,9 +128,13 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
       console.log('MusicXML rendered successfully');
     } catch (err) {
       console.error('Error rendering MusicXML:', err);
-      setError('Failed to render sheet music. Please try again.');
+      if (isMountedRef.current) {
+        setError('Failed to render sheet music. Please try again.');
+      }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
