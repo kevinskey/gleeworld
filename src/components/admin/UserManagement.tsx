@@ -51,6 +51,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { UserRoleEditor } from './UserRoleEditor';
+import { BulkExecBoardActions } from './user-management/BulkExecBoardActions';
 
 interface UserProfile {
   id: string;
@@ -225,6 +226,9 @@ export const UserManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Bulk Executive Board Actions */}
+      <BulkExecBoardActions onActionComplete={fetchUsers} />
+
       {/* Controls */}
       <Card>
         <CardHeader>
@@ -255,12 +259,14 @@ export const UserManagement = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="super-admin">Super Admin</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="executive">Executive</SelectItem>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="alumna">Alumna</SelectItem>
+                <SelectItem value="guest">Guest</SelectItem>
                 <SelectItem value="fan">Fan</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="alumna">Alumna</SelectItem>
+                <SelectItem value="executive">Executive</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="super-admin">Super Admin</SelectItem>
                 <SelectItem value="auditioner">Auditioner</SelectItem>
               </SelectContent>
             </Select>
