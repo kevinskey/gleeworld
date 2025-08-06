@@ -151,14 +151,6 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
         </div>
         
         <div className="text-center space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Click a note to hear its reference pitch (A440 tuning)
-          </p>
-          <div className="flex justify-center gap-4 text-xs text-muted-foreground">
-            <span>• Tones play for 3 seconds</span>
-            <span>• Click again to stop</span>
-            <span>• Great for tuning and pitch reference</span>
-          </div>
           {isPlaying && (
             <Button
               variant="secondary"
