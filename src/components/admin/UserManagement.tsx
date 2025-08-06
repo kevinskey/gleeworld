@@ -45,7 +45,9 @@ import {
   Mail,
   Calendar,
   Edit,
-  MoreHorizontal
+  MoreHorizontal,
+  ChevronLeft,
+  Maximize2
 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -72,6 +74,7 @@ export const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [fullscreenEdit, setFullscreenEdit] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -155,8 +158,14 @@ export const UserManagement = () => {
       user.id === updatedUser.id ? updatedUser : user
     ));
     setEditDialogOpen(false);
+    setFullscreenEdit(false);
     setSelectedUser(null);
     await fetchUsers(); // Refresh to get latest data
+  };
+
+  const handleFullscreenEdit = (user: UserProfile) => {
+    setSelectedUser(user);
+    setFullscreenEdit(true);
   };
 
   const handleQuickRoleChange = async (userId: string, newRole: string) => {
@@ -220,6 +229,46 @@ export const UserManagement = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <LoadingSpinner size="lg" text="Loading users..." />
+      </div>
+    );
+  }
+
+  // If in fullscreen edit mode, show only the editor
+  if (fullscreenEdit && selectedUser) {
+    return (
+      <div className="space-y-6">
+        {/* Fullscreen Header */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFullscreenEdit(false)}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Back to User List
+                </Button>
+                <div>
+                  <CardTitle className="text-lg">
+                    Editing: {selectedUser.full_name || 'No name set'}
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-1">
+                    <Mail className="h-3 w-3" />
+                    {selectedUser.email}
+                  </CardDescription>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+
+        {/* Fullscreen Editor */}
+        <UserRoleEditor 
+          user={selectedUser}
+          onUpdate={handleUserUpdate}
+        />
       </div>
     );
   }
@@ -410,6 +459,16 @@ export const UserManagement = () => {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+
+                      {/* Fullscreen Edit Button */}
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleFullscreenEdit(user)}
+                        className="hidden md:inline-flex"
+                      >
+                        <Maximize2 className="h-4 w-4" />
+                      </Button>
 
                       {/* Full Edit Dialog */}
                       <Dialog open={editDialogOpen && selectedUser?.id === user.id} onOpenChange={setEditDialogOpen}>
