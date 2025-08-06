@@ -1,448 +1,310 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useMemo, useRef, useCallback } from 'react';
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/hooks/useUsers";
-import { UserActionBar } from "./UserActionBar";
-import { UserCard } from "./UserCard";
-import { ComprehensiveUserForm } from "./ComprehensiveUserForm";
-import { MobileUserForm } from "./MobileUserForm";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { UserDetailPanel } from "./UserDetailPanel";
-import { BulkOperationsPanel } from "./BulkOperationsPanel";
 import { BulkSelectControls } from "./BulkSelectControls";
-import { Users, RefreshCw, UserPlus } from "lucide-react";
+import { BulkExecBoardActions } from "./BulkExecBoardActions";
+import { User } from "@/hooks/useUsers";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Search, 
+  Users, 
+  Filter, 
+  RefreshCw, 
+  Eye,
+  Settings,
+  Shield,
+  Crown,
+  Star,
+  CheckCircle,
+  XCircle,
+  Clock,
+  UserPlus,
+  AlertCircle,
+  ChevronRight,
+  Music
+} from "lucide-react";
 
 interface EnhancedUserManagementProps {
   users: User[];
   loading: boolean;
-  error: string | null;
+  error: any;
   onRefetch: () => void;
 }
 
-export const EnhancedUserManagement = ({ 
-  users, 
-  loading, 
-  error, 
-  onRefetch 
-}: EnhancedUserManagementProps) => {
-  console.log('EnhancedUserManagement rendering with:', { usersCount: users.length, loading, error });
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [activeTab, setActiveTab] = useState("list");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showDetailPanel, setShowDetailPanel] = useState(false);
-  const [showBulkPanel, setShowBulkPanel] = useState(false);
+interface UserFilter {
+  role?: string;
+  status?: 'verified' | 'unverified' | 'all';
+  query?: string;
+}
+
+export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: EnhancedUserManagementProps) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRole, setSelectedRole] = useState<string | undefined>(undefined);
+  const [selectedStatus, setSelectedStatus] = useState<UserFilter['status']>('all');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [showBulkSelect, setShowBulkSelect] = useState(false);
-  const [userPaymentData, setUserPaymentData] = useState<{
-    readyToPay: Record<string, boolean>;
-    stipendAmounts: Record<string, number>;
-    paidStatus: Record<string, boolean>;
-  }>({
-    readyToPay: {},
-    stipendAmounts: {},
-    paidStatus: {}
-  });
+  const [showDetailPanel, setShowDetailPanel] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<'full_name' | 'email'>('full_name');
   const { toast } = useToast();
 
-  // Filter and sort users
-  const filteredAndSortedUsers = users
-    .filter(user => user && user.id) // Filter out any null/undefined users first
-    .filter(user => {
-      const matchesSearch = !searchTerm || 
-        user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesRole = roleFilter === "all" || 
-        user.role === roleFilter ||
-        (roleFilter === "executive-board" && user.is_exec_board);
-        
-      return matchesSearch && matchesRole;
-    })
-    .sort((a, b) => {
-      let aValue, bValue;
-      switch (sortBy) {
-        case 'full_name':
-          aValue = a.full_name || '';
-          bValue = b.full_name || '';
-          break;
-        case 'email':
-          aValue = a.email || '';
-          bValue = b.email || '';
-          break;
-        case 'role':
-          aValue = a.role;
-          bValue = b.role;
-          break;
-        default:
-          aValue = a.created_at;
-          bValue = b.created_at;
-      }
-      
-      if (sortOrder === 'asc') {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-      }
-    });
-
-  // Load payment data for users
-  useEffect(() => {
-    if (users.length > 0 && !loading) {
-      loadUserPaymentData();
-    }
-  }, [users, loading]);
-
-  const loadUserPaymentData = async () => {
-    try {
-      const readyToPayMap: Record<string, boolean> = {};
-      const stipendMap: Record<string, number> = {};
-      const paidMap: Record<string, boolean> = {};
-      
-      for (const user of users) {
-        // Check for completed contracts
-        const { data: contractData } = await supabase
-          .from('contracts_v2')
-          .select(`
-            stipend_amount,
-            contract_signatures_v2!inner(status)
-          `)
-          .eq('created_by', user.id)
-          .eq('contract_signatures_v2.status', 'completed')
-          .not('stipend_amount', 'is', null)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (contractData && contractData.length > 0) {
-          stipendMap[user.id] = Number(contractData[0].stipend_amount);
-        }
-
-        // Check for W9 forms
-        const { data: w9Data } = await supabase
-          .from('w9_forms')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('status', 'submitted');
-
-        // Check payment status
-        const { data: paymentsData } = await supabase
-          .from('user_payments')
-          .select('id')
-          .eq('user_id', user.id);
-
-        const hasContracts = contractData && contractData.length > 0;
-        const hasW9s = w9Data && w9Data.length > 0;
-        const hasPayments = paymentsData && paymentsData.length > 0;
-        
-        readyToPayMap[user.id] = hasContracts && hasW9s;
-        paidMap[user.id] = hasPayments;
-      }
-      
-      setUserPaymentData({
-        readyToPay: readyToPayMap,
-        stipendAmounts: stipendMap,
-        paidStatus: paidMap
-      });
-    } catch (error) {
-      // Silent error handling - log only in development
-    }
-  };
-
-  const handleUserClick = (user: User) => {
-    navigate(`/dashboard/member-view/${user.id}`);
-  };
-
-  const handleUserEdit = (user: User) => {
-    setSelectedUser(user);
-    setShowDetailPanel(true);
-  };
-
-  const handleUserDelete = (user: User) => {
-    setSelectedUser(user);
-    setShowDetailPanel(true);
-  };
-
-  const handleUserView = (user: User) => {
-    setSelectedUser(user);
-    setShowDetailPanel(true);
-  };
-
-  const handleUserPayout = (user: User) => {
-    const amount = userPaymentData.stipendAmounts[user.id];
-    toast({
-      title: "Payout Initiated", 
-      description: `Processing ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)} payout for ${user.full_name || user.email}`,
-    });
-  };
-
-  const handleCreateSuccess = () => {
-    setShowCreateForm(false);
-    onRefetch();
-  };
-
   const handleUpdateSuccess = () => {
-    setShowDetailPanel(false);
-    setSelectedUser(null);
-    onRefetch();
+    toast({
+      title: "Success",
+      description: "User updated successfully",
+    });
   };
 
   const handleDeleteSuccess = () => {
-    setShowDetailPanel(false);
-    setSelectedUser(null);
-    onRefetch();
+    toast({
+      title: "Success",
+      description: "User deleted successfully",
+    });
   };
 
-  const handleBulkOperationComplete = () => {
-    setShowBulkPanel(false);
-    onRefetch();
+  const handleUserClick = (user: User) => {
+    setSelectedUser(user);
+    setShowDetailPanel(true);
   };
 
-  const handleUserSelection = (userId: string, selected: boolean) => {
-    if (selected) {
-      setSelectedUsers(prev => [...prev, userId]);
-    } else {
-      setSelectedUsers(prev => prev.filter(id => id !== userId));
+  const filteredUsers = useMemo(() => {
+    let filtered = [...users];
+
+    if (searchQuery) {
+      const lowerCaseQuery = searchQuery.toLowerCase();
+      filtered = filtered.filter(user =>
+        user.full_name.toLowerCase().includes(lowerCaseQuery) ||
+        user.email.toLowerCase().includes(lowerCaseQuery)
+      );
     }
-  };
 
-  const handleBulkSelectComplete = () => {
-    setSelectedUsers([]);
-    setShowBulkSelect(false);
-    onRefetch();
-  };
+    if (selectedRole) {
+      filtered = filtered.filter(user => user.role === selectedRole);
+    }
 
-  if (loading) {
-    return (
-      <Card className="border-2 border-slate-300 shadow-sm">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
-          <CardTitle className="flex items-center gap-2 text-slate-800">
-            <Users className="h-5 w-5" />
-            User Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <RefreshCw className="h-6 w-6 animate-spin text-slate-600" />
-            <span className="ml-2 text-slate-700 font-medium">Loading users...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+    if (selectedStatus && selectedStatus !== 'all') {
+      filtered = filtered.filter(user => {
+        const isVerified = user.verified === true;
+        return selectedStatus === 'verified' ? isVerified : !isVerified;
+      });
+    }
 
-  if (error) {
-    return (
-      <Card className="border-2 border-red-300 shadow-sm">
-        <CardHeader className="bg-gradient-to-r from-red-50 to-rose-100 border-b border-red-200">
-          <CardTitle className="flex items-center gap-2 text-red-800">
-            <Users className="h-5 w-5" />
-            User Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-red-700 mb-4 font-medium">{error}</p>
-            <Button onClick={onRefetch} variant="secondary" className="border-2 border-red-300">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Retry
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+    return filtered;
+  }, [users, searchQuery, selectedRole, selectedStatus]);
+
+  const sortedUsers = useMemo(() => {
+    const sorted = [...filteredUsers];
+
+    sorted.sort((a, b) => {
+      const aValue = a[sortBy];
+      const bValue = b[sortBy];
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      } else {
+        return 0;
+      }
+    });
+
+    return sorted;
+  }, [filteredUsers, sortBy, sortOrder]);
+
+  const filteredAndSortedUsers = useMemo(() => sortedUsers, [sortedUsers]);
+
+  const noUsersState = !loading && users.length === 0;
 
   return (
     <div className="space-y-6">
-      
-      {/* Action Bar */}
-      <UserActionBar
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        roleFilter={roleFilter}
-        onRoleFilterChange={setRoleFilter}
-        sortBy={sortBy}
-        onSortByChange={setSortBy}
-        sortOrder={sortOrder}
-        onSortOrderChange={setSortOrder}
-        onCreateUser={() => setShowCreateForm(!showCreateForm)}
-        onBulkOperations={() => setShowBulkPanel(true)}
-        onBulkSelect={() => setShowBulkSelect(!showBulkSelect)}
-        onRefresh={onRefetch}
-        userCount={users.length}
-        filteredCount={filteredAndSortedUsers.length}
-        loading={loading}
-        showBulkSelect={showBulkSelect}
-      />
-
-      {/* Main Content */}
-      <div className="space-y-6">
-        {/* Show Create Form at Top When Active */}
-        {showCreateForm && (
-          <div className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-6 shadow-lg">
-            <div className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
-              Add New User
-            </div>
-            <div className="block md:hidden">
-              <MobileUserForm
-                mode="create"
-                onSuccess={handleCreateSuccess}
-                onCancel={() => setShowCreateForm(false)}
-              />
-            </div>
-            <div className="hidden md:block">
-              <ComprehensiveUserForm
-                mode="create"
-                onSuccess={handleCreateSuccess}
-                onCancel={() => setShowCreateForm(false)}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Bulk Select Controls */}
-        {showBulkSelect && (
-          <BulkSelectControls
-            users={filteredAndSortedUsers}
-            selectedUsers={selectedUsers}
-            onSelectionChange={setSelectedUsers}
-            onBulkActionComplete={handleBulkSelectComplete}
-          />
-        )}
-
-        {/* Users List */}
-        <div className="w-full space-y-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="list">List View</TabsTrigger>
-              <TabsTrigger value="grid">Grid View</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="list" className="space-y-3 mt-4">
-              {filteredAndSortedUsers.length === 0 ? (
-                <Card className="border-2 border-slate-300">
-                  <CardContent className="text-center py-12">
-                    <Users className="h-12 w-12 mx-auto mb-4 text-slate-400" />
-                    <h3 className="text-lg font-semibold mb-2 text-slate-800">No users found</h3>
-                    <p className="text-sm text-slate-600 mb-4 font-medium">
-                      {searchTerm || roleFilter !== "all" 
-                        ? "Try adjusting your search or filters" 
-                        : "Get started by adding your first user"
-                      }
-                    </p>
-                    {!searchTerm && roleFilter === "all" && (
-                      <Button 
-                        onClick={() => setShowCreateForm(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium border-2 border-blue-500"
-                      >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Add First User
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              ) : (
-                filteredAndSortedUsers.map((user) => (
-                  <UserCard
-                    key={user.id}
-                    user={user}
-                    onEdit={handleUserEdit}
-                    onDelete={handleUserDelete}
-                    onView={handleUserView}
-                    onClick={handleUserClick}
-                    showPaymentStatus={true}
-                    isPaid={userPaymentData.paidStatus[user.id]}
-                    stipendAmount={userPaymentData.stipendAmounts[user.id]}
-                    onPayout={handleUserPayout}
-                    showSelection={showBulkSelect}
-                    isSelected={selectedUsers.includes(user.id)}
-                    onSelectionChange={handleUserSelection}
-                  />
-                ))
-              )}
-            </TabsContent>
-
-            <TabsContent value="grid" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-4">
-              {filteredAndSortedUsers.length === 0 ? (
-                <div className="col-span-full">
-                  <Card className="border-2 border-slate-300">
-                    <CardContent className="text-center py-12">
-                      <Users className="h-12 w-12 mx-auto mb-4 text-slate-400" />
-                      <h3 className="text-lg font-semibold mb-2 text-slate-800">No users found</h3>
-                      <p className="text-sm text-slate-600 mb-4 font-medium">
-                        {searchTerm || roleFilter !== "all" 
-                          ? "Try adjusting your search or filters" 
-                          : "Get started by adding your first user"
-                        }
-                      </p>
-                      {!searchTerm && roleFilter === "all" && (
-                        <Button 
-                          onClick={() => setShowCreateForm(true)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium border-2 border-blue-500"
-                        >
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          Add First User
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              ) : (
-                filteredAndSortedUsers
-                  .filter(user => user && user.id) // Filter out any null/undefined users or users without IDs
-                  .map((user) => (
-                    <UserCard
-                      key={user.id}
-                      user={user}
-                      onEdit={handleUserEdit}
-                      onDelete={handleUserDelete}
-                      onView={handleUserView}
-                      onClick={handleUserClick}
-                      showPaymentStatus={true}
-                      isPaid={userPaymentData.paidStatus[user.id]}
-                      stipendAmount={userPaymentData.stipendAmounts[user.id]}
-                      onPayout={handleUserPayout}
-                      showSelection={showBulkSelect}
-                      isSelected={selectedUsers.includes(user.id)}
-                      onSelectionChange={handleUserSelection}
-                    />
-                  ))
-              )}
-            </TabsContent>
-          </Tabs>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-bold tracking-tight">User Management</h2>
+          <p className="text-muted-foreground">
+            Manage user accounts, roles, and permissions across the platform
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={onRefetch}
+            disabled={loading}
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
       </div>
 
-      {/* Side Panels */}
-      <UserDetailPanel
-        user={selectedUser}
-        isOpen={showDetailPanel}
-        onClose={() => {
-          setShowDetailPanel(false);
-          setSelectedUser(null);
-        }}
-        onUserUpdated={() => {
-          // Force immediate refetch for UI update
-          onRefetch();
-          handleUpdateSuccess();
-        }}
-        onUserDeleted={handleDeleteSuccess}
+      {/* Bulk Executive Board Actions */}
+      <BulkExecBoardActions onActionComplete={onRefetch} />
+
+      {/* Bulk Selection Controls */}
+      <BulkSelectControls
+        users={filteredAndSortedUsers}
+        selectedUsers={selectedUsers}
+        onSelectionChange={setSelectedUsers}
+        onBulkActionComplete={onRefetch}
       />
 
-      <BulkOperationsPanel
-        isOpen={showBulkPanel}
-        onClose={() => setShowBulkPanel(false)}
-        onOperationComplete={handleBulkOperationComplete}
-        totalUsers={users.length}
-      />
+      {/* Search and Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Search & Filter</CardTitle>
+          <CardDescription>
+            Find users by name, email, role, or status
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
+              <Input
+                type="search"
+                placeholder="Search users..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <Select value={selectedRole || 'all'} onValueChange={(value) => setSelectedRole(value === 'all' ? undefined : value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filter by Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="fan">Fan</SelectItem>
+                  <SelectItem value="member">Member</SelectItem>
+                  <SelectItem value="alumna">Alumna</SelectItem>
+                  <SelectItem value="executive">Executive</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="super-admin">Super Admin</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedStatus || 'all'} onValueChange={(value) => setSelectedStatus(value === 'all' ? 'all' : value as UserFilter['status'])}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="verified">Verified</SelectItem>
+                  <SelectItem value="unverified">Unverified</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* User List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>User List</CardTitle>
+          <CardDescription>
+            View and manage user accounts
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center h-32">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : error ? (
+            <div className="text-red-500">Error: {error}</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                      <Button variant="ghost" onClick={() => setSortBy('full_name')} className="w-full justify-start">
+                        Name
+                      </Button>
+                    </th>
+                    <th className="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                      <Button variant="ghost" onClick={() => setSortBy('email')} className="w-full justify-start">
+                        Email
+                      </Button>
+                    </th>
+                    <th className="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th className="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 bg-gray-50"></th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredAndSortedUsers.map(user => (
+                    <tr key={user.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-no-wrap">
+                        <div className="text-sm leading-5 font-medium text-gray-900">{user.full_name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-no-wrap">
+                        <div className="text-sm leading-5 text-gray-500">{user.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-no-wrap">
+                        <Badge variant="secondary">{user.role}</Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-no-wrap">
+                        {user.verified ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-no-wrap text-right text-sm leading-5 font-medium">
+                        <Button variant="outline" size="sm" onClick={() => handleUserClick(user)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* User Detail Panel */}
+      {showDetailPanel && selectedUser && (
+        <UserDetailPanel
+          user={selectedUser}
+          onClose={() => {
+            setShowDetailPanel(false);
+            setSelectedUser(null);
+          }}
+          onUserUpdated={() => {
+            // Force immediate refetch for UI update
+            onRefetch();
+            handleUpdateSuccess();
+          }}
+          onUserDeleted={handleDeleteSuccess}
+        />
+      )}
+
+      {noUsersState && (
+        <div className="text-center py-8">
+          <AlertCircle className="h-10 w-10 mx-auto text-gray-400 mb-2" />
+          <p className="text-lg text-gray-500">No users found.</p>
+        </div>
+      )}
     </div>
   );
 };
