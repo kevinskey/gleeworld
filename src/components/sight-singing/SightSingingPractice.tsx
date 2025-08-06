@@ -539,7 +539,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           console.log(`Playing note: ${note.note}`);
           setCurrentNoteIndex(index);
           setCurrentNote(note.note);
-          playMelodyNote(note.note, duration);
+          
+          // Play the note asynchronously to handle AudioContext state properly
+          playMelodyNote(note.note, duration).catch((error) => {
+            console.error(`Failed to play note ${note.note}:`, error);
+          });
           
           // Update progress
           const progress = ((index + 1) / extractedMelody.length) * 100;
@@ -569,25 +573,27 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     console.log('playMelodyNote called with:', noteName, 'duration:', duration);
     
     try {
-      // Initialize audio context if needed
-      if (!audioContextRef.current) {
-        console.log('Creating new AudioContext');
+      // Ensure we have a fresh, active AudioContext for each note
+      if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+        console.log('Creating new AudioContext for note playback');
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        console.log('AudioContext created, state:', audioContextRef.current.state);
       }
       
-      // Resume audio context if suspended (required for user interaction)
+      // Always resume the audio context before playing
       if (audioContextRef.current.state === 'suspended') {
         console.log('Resuming suspended AudioContext');
         await audioContextRef.current.resume();
-        console.log('AudioContext resumed, new state:', audioContextRef.current.state);
       }
       
-      // Double-check the audio context is running
+      // Verify audio context is ready
       if (audioContextRef.current.state !== 'running') {
-        console.error('AudioContext is not running, state:', audioContextRef.current.state);
-        return;
+        console.error('AudioContext failed to start, state:', audioContextRef.current.state);
+        // Try to create a new one
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        await audioContextRef.current.resume();
       }
+      
+      console.log('AudioContext state before playing note:', audioContextRef.current.state);
 
       // Note frequencies for melody playback
       const frequencies: { [key: string]: number } = {
