@@ -693,7 +693,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Single Line Practice Controls */}
-          <div className="flex items-center justify-between gap-6 p-4 bg-muted/20 rounded-lg border">
+          <div className="flex items-center justify-between gap-4 p-4 bg-muted/20 rounded-lg border">
             {/* Left Side - Piano Switch */}
             <div className="flex items-center space-x-2">
               <Switch
@@ -752,6 +752,27 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
               </Button>
               <div className="text-xs text-muted-foreground">
                 {melodyPlaysRemaining}/2
+              </div>
+            </div>
+            
+            
+            {/* Volume Control for Pitch Pipe */}
+            <div className="flex flex-col items-center space-y-2">
+              <Label className="text-xs">Volume</Label>
+              <div className="flex flex-col items-center h-24">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={pitchPipeVolume}
+                  onChange={(e) => setPitchPipeVolume(Number(e.target.value))}
+                  className="h-20 w-2 bg-gray-200 rounded-lg appearance-none cursor-pointer transform rotate-90"
+                />
+                <div className="flex items-center gap-1 mt-1">
+                  <Volume2 className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{Math.round(pitchPipeVolume * 100)}%</span>
+                </div>
               </div>
             </div>
             
