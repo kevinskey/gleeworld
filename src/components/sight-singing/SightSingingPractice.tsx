@@ -258,8 +258,10 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   // Extract melody from musicXML and reset solfege when new exercise starts
   React.useEffect(() => {
+    console.log('MusicXML changed, extracting melody. XML length:', musicXML.length);
     // Extract melody from MusicXML
     const melody = extractMelodyFromMusicXML(musicXML);
+    console.log('Extracted melody:', melody.length, 'notes');
     setExtractedMelody(melody);
     
     // Notify parent about solfege setting change
@@ -366,6 +368,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const actuallyStartPractice = () => {
     setIsPlaying(true);
     
+    console.log('Starting practice - pianoEnabled:', pianoEnabled, 'extractedMelody length:', extractedMelody.length);
+    
     // Start metronome if enabled - this is now handled by the Metronome component
     if (metronomeEnabled) {
       toast({
@@ -375,12 +379,15 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     }
     
     if (pianoEnabled && extractedMelody.length > 0) {
+      console.log('Starting melody playback with', extractedMelody.length, 'notes');
       // Play melody synchronized with tempo
       playMelodySequence();
       toast({
         title: "Practice Started",
         description: "Melody playback and practice aids are now active"
       });
+    } else {
+      console.log('Melody playback skipped - pianoEnabled:', pianoEnabled, 'melody length:', extractedMelody.length);
     }
     
     // Calculate practice duration based on exercise measures and tempo
@@ -406,16 +413,23 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   // Play melody notes in sequence synchronized with tempo
   const playMelodySequence = () => {
-    if (!pianoEnabled || extractedMelody.length === 0) return;
+    if (!pianoEnabled || extractedMelody.length === 0) {
+      console.log('playMelodySequence aborted - pianoEnabled:', pianoEnabled, 'melody length:', extractedMelody.length);
+      return;
+    }
 
+    console.log('Playing melody sequence with', extractedMelody.length, 'notes at tempo', tempo);
     const tempoMultiplier = 120 / tempo; // Adjust timing based on current tempo
     
     extractedMelody.forEach((note, index) => {
       const delayMs = note.time * 1000 * tempoMultiplier;
       const duration = (note.duration || 0.5) * tempoMultiplier;
       
+      console.log(`Scheduling note ${index + 1}/${extractedMelody.length}: ${note.note} at ${delayMs}ms`);
+      
       setTimeout(() => {
         if (isPlaying) { // Only play if still in practice mode
+          console.log(`Playing note: ${note.note}`);
           playMelodyNote(note.note, duration);
         }
       }, delayMs);
@@ -424,12 +438,16 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   // Play a single melody note using Web Audio API
   const playMelodyNote = async (noteName: string, duration: number = 0.5) => {
+    console.log('playMelodyNote called with:', noteName, 'duration:', duration);
+    
     try {
       if (!audioContextRef.current) {
+        console.log('Creating new AudioContext');
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
       
       if (audioContextRef.current.state === 'suspended') {
+        console.log('Resuming suspended AudioContext');
         await audioContextRef.current.resume();
       }
 
@@ -445,7 +463,12 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       };
 
       const frequency = frequencies[noteName];
-      if (!frequency) return;
+      if (!frequency) {
+        console.error('No frequency found for note:', noteName);
+        return;
+      }
+
+      console.log('Playing frequency:', frequency, 'for note:', noteName);
 
       const oscillator = audioContextRef.current.createOscillator();
       const gainNode = audioContextRef.current.createGain();
@@ -464,6 +487,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
       oscillator.start(audioContextRef.current.currentTime);
       oscillator.stop(audioContextRef.current.currentTime + duration);
+      
+      console.log('Note played successfully:', noteName);
     } catch (error) {
       console.error('Error playing melody note:', error);
     }
