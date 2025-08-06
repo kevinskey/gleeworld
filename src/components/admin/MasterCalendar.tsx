@@ -369,13 +369,25 @@ export const MasterCalendar = () => {
         </div>
       </div>
 
-      {/* Tabbed Interface */}
+      {/* Mobile-Friendly Tabbed Interface */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
-          <TabsTrigger value="calendar" className="text-xs sm:text-sm">Calendar</TabsTrigger>
-          <TabsTrigger value="events" className="text-xs sm:text-sm">Events</TabsTrigger>
-          <TabsTrigger value="appointments" className="text-xs sm:text-sm">Appointments</TabsTrigger>
-          <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-12 sm:h-10">
+          <TabsTrigger value="calendar" className="text-sm sm:text-sm px-2 py-3">
+            <span className="block sm:hidden">📅</span>
+            <span className="hidden sm:block">Calendar</span>
+          </TabsTrigger>
+          <TabsTrigger value="events" className="text-sm sm:text-sm px-2 py-3">
+            <span className="block sm:hidden">📋</span>
+            <span className="hidden sm:block">Events</span>
+          </TabsTrigger>
+          <TabsTrigger value="appointments" className="text-sm sm:text-sm px-2 py-3">
+            <span className="block sm:hidden">⏰</span>
+            <span className="hidden sm:block">Appointments</span>
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="text-sm sm:text-sm px-2 py-3">
+            <span className="block sm:hidden">⚙️</span>
+            <span className="hidden sm:block">Settings</span>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="calendar" className="space-y-4">
