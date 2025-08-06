@@ -22,24 +22,15 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
   const osmdRef = React.useRef<any>(null);
   const isMountedRef = React.useRef(true);
 
-  // Track component mount status
   React.useEffect(() => {
-    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
     };
   }, []);
 
   React.useEffect(() => {
-    if (musicXML && containerRef.current && isMountedRef.current) {
-      // Add a longer delay and check mounting status
-      const timer = setTimeout(() => {
-        if (isMountedRef.current && containerRef.current) {
-          renderMusicXML();
-        }
-      }, 200);
-
-      return () => clearTimeout(timer);
+    if (musicXML && containerRef.current) {
+      renderMusicXML();
     }
   }, [musicXML]);
 
@@ -77,7 +68,7 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
       console.log('OSMD imported successfully');
       
       // Check again after async import
-      if (!isMountedRef.current || !container || container !== containerRef.current) {
+      if (!isMountedRef.current || !container) {
         console.log('Component state changed during import, aborting');
         return;
       }
