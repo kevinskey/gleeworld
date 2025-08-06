@@ -171,7 +171,9 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     // Auto-stop after 3 seconds
     setTimeout(() => {
-      stopPitch();
+      if (pitchOscillatorRef.current === oscillator) {
+        stopPitch();
+      }
     }, 3000);
   }, [pitchPipeVolume, pitchPipeMuted, initPitchAudioContext]);
 
