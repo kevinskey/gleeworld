@@ -71,6 +71,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   
   // Pitch pipe state
   const [currentPitch, setCurrentPitch] = useState<string | null>(null);
+  const [pitchPipeExpanded, setPitchPipeExpanded] = useState(false);
   const [pitchPipeVolume, setPitchPipeVolume] = useState(0.3);
   const [pitchPipeMuted, setPitchPipeMuted] = useState(false);
   
@@ -136,11 +137,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   }, []);
 
   const playPitch = useCallback((frequency: number, note: string) => {
-    if (currentPitch === note) {
-      stopPitch();
-      return;
-    }
-
     stopPitch(); // Stop any currently playing pitch
     
     const audioContext = initPitchAudioContext();
@@ -167,11 +163,9 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     // Auto-stop after 3 seconds
     setTimeout(() => {
-      if (currentPitch === note) {
-        stopPitch();
-      }
+      stopPitch();
     }, 3000);
-  }, [currentPitch, pitchPipeVolume, pitchPipeMuted, initPitchAudioContext]);
+  }, [pitchPipeVolume, pitchPipeMuted, initPitchAudioContext]);
 
   const stopPitch = useCallback(() => {
     if (pitchOscillatorRef.current && pitchGainNodeRef.current && audioContextRef.current) {
@@ -567,37 +561,86 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
             
             {/* Interactive Round Pitch Pipe */}
             <div className="flex flex-col items-center justify-center space-y-2">
-              <div 
-                className="relative cursor-pointer group"
-                onClick={() => {
-                  // Cycle through common starting pitches when clicked
-                  const commonPitches = ['C', 'D', 'F', 'G', 'A'];
-                  const currentIndex = currentPitch ? commonPitches.indexOf(currentPitch) : -1;
-                  const nextIndex = (currentIndex + 1) % commonPitches.length;
-                  const nextPitch = pitches.find(p => p.note === commonPitches[nextIndex]);
-                  if (nextPitch) {
-                    playPitch(nextPitch.frequency, nextPitch.note);
-                  }
-                }}
-              >
-                <div className={`w-16 h-16 bg-gradient-to-br from-amber-200 to-amber-400 rounded-full border-4 border-amber-500 shadow-lg flex items-center justify-center transition-all duration-200 ${
-                  currentPitch ? 'scale-110 shadow-xl ring-4 ring-amber-300' : 'group-hover:scale-105'
-                }`}>
-                  <div className="w-6 h-6 bg-amber-800 rounded-full shadow-inner">
-                    <div className="w-full h-full bg-black rounded-full opacity-40"></div>
+              <div className="relative">
+                {/* Main Pitch Pipe */}
+                <div 
+                  className="relative cursor-pointer group z-10"
+                  onClick={() => setPitchPipeExpanded(!pitchPipeExpanded)}
+                >
+                  <div className={`w-16 h-16 bg-gradient-to-br from-amber-200 to-amber-400 rounded-full border-4 border-amber-500 shadow-lg flex items-center justify-center transition-all duration-300 ${
+                    pitchPipeExpanded ? 'scale-110 shadow-xl ring-4 ring-amber-300' : 'group-hover:scale-105'
+                  }`}>
+                    <div className="w-6 h-6 bg-amber-800 rounded-full shadow-inner">
+                      <div className="w-full h-full bg-black rounded-full opacity-40"></div>
+                    </div>
                   </div>
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-3 bg-amber-400 rounded-b-full border-l-2 border-r-2 border-b-2 border-amber-500"></div>
+                  {currentPitch && (
+                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded animate-fade-in">
+                      {currentPitch}
+                    </div>
+                  )}
                 </div>
-                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-3 bg-amber-400 rounded-b-full border-l-2 border-r-2 border-b-2 border-amber-500"></div>
-                {currentPitch && (
-                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded">
-                    {currentPitch}
+
+                {/* Flower Pattern Notes */}
+                {pitchPipeExpanded && (
+                  <div className="absolute inset-0 w-16 h-16">
+                    {pitches.map((pitch, index) => {
+                      const angle = (index * 30) - 90; // 30 degrees apart, starting from top
+                      const radius = 45; // Distance from center
+                      const x = Math.cos(angle * Math.PI / 180) * radius;
+                      const y = Math.sin(angle * Math.PI / 180) * radius;
+                      
+                      return (
+                        <Button
+                          key={pitch.note}
+                          variant={currentPitch === pitch.note ? "default" : "outline"}
+                          size="sm"
+                          className={`absolute w-8 h-8 p-0 text-xs font-medium rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 animate-scale-in ${
+                            currentPitch === pitch.note 
+                              ? "bg-amber-600 text-white shadow-lg scale-110" 
+                              : "bg-white hover:bg-amber-100 hover:scale-110 shadow-md border-amber-300"
+                          }`}
+                          style={{
+                            left: `50%`,
+                            top: `50%`,
+                            transform: `translate(${x}px, ${y}px) translate(-50%, -50%)`,
+                            animationDelay: `${index * 50}ms`
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            playPitch(pitch.frequency, pitch.note);
+                          }}
+                        >
+                          {pitch.note.replace('♯', '#')}
+                        </Button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
+              
               <Label className="text-xs text-center">
                 Pitch Pipe
-                <div className="text-xs text-muted-foreground">Click to play</div>
+                <div className="text-xs text-muted-foreground">
+                  {pitchPipeExpanded ? 'Select a note' : 'Click to expand'}
+                </div>
               </Label>
+              
+              {/* Close button when expanded */}
+              {pitchPipeExpanded && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setPitchPipeExpanded(false);
+                    stopPitch();
+                  }}
+                  className="text-xs animate-fade-in"
+                >
+                  Close
+                </Button>
+              )}
             </div>
           </div>
           
@@ -618,38 +661,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
             </div>
           </div>
           
-          
-          {/* Pitch Selection Grid - appears when pitch pipe is active */}
-          {currentPitch && (
-            <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-              <div className="text-sm font-medium mb-2 text-center">Select a pitch:</div>
-              <div className="grid grid-cols-6 gap-1">
-                {pitches.map((pitch) => (
-                  <Button
-                    key={pitch.note}
-                    variant={currentPitch === pitch.note ? "default" : "outline"}
-                    size="sm"
-                    className={`text-xs ${
-                      currentPitch === pitch.note 
-                        ? "bg-amber-600 text-white" 
-                        : "hover:bg-amber-100"
-                    }`}
-                    onClick={() => playPitch(pitch.frequency, pitch.note)}
-                  >
-                    {pitch.note}
-                  </Button>
-                ))}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={stopPitch}
-                className="w-full mt-2 text-xs"
-              >
-                Stop
-              </Button>
-            </div>
-          )}
           
           
           <div className="flex items-center gap-4">
