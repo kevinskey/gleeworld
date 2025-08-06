@@ -134,7 +134,11 @@ const SightReadingGeneratorPage = () => {
   const testOpenAI = async () => {
     try {
       console.log('Testing OpenAI connection...');
-      const { data, error } = await supabase.functions.invoke('test-openai');
+      const { data, error } = await supabase.functions.invoke('test-openai', {
+        body: { 
+          prompt: "Generate a 4-bar melody in C major" 
+        }
+      });
       
       if (error) {
         console.error('Test function error:', error);
@@ -147,11 +151,19 @@ const SightReadingGeneratorPage = () => {
       }
       
       console.log('Test function response:', data);
-      toast({
-        title: data.success ? "OpenAI Test Successful" : "OpenAI Test Failed",
-        description: data.message || JSON.stringify(data),
-        variant: data.success ? "default" : "destructive"
-      });
+      
+      if (data.error) {
+        toast({
+          title: "OpenAI Test Failed",
+          description: data.error,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "OpenAI Test Successful!",
+          description: "API key is working correctly",
+        });
+      }
     } catch (error) {
       console.error('Test error:', error);
       toast({
