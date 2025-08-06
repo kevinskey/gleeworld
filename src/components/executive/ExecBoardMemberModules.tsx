@@ -1,0 +1,275 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2, Crown, Settings } from 'lucide-react';
+import { useUserRole } from "@/hooks/useUserRole";
+import { ModuleRegistry } from "@/utils/moduleRegistry";
+import { moduleCategories } from "@/config/modules";
+
+interface ExecBoardMemberModulesProps {
+  user: {
+    id: string;
+    email: string;
+    full_name: string;
+    role: string;
+    exec_board_role?: string;
+    is_exec_board?: boolean;
+  };
+}
+
+interface ExecModulePermission {
+  function_id: string;
+  function_name: string;
+  function_description: string;
+  function_category: string;
+  module: string;
+  can_access: boolean;
+  can_manage: boolean;
+}
+
+export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) => {
+  const { toast } = useToast();
+  const { profile, isExecutiveBoard } = useUserRole();
+  const [loading, setLoading] = useState(true);
+  const [execModules, setExecModules] = useState<ExecModulePermission[]>([]);
+  const [selectedModule, setSelectedModule] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isExecutiveBoard() && profile?.exec_board_role) {
+      fetchExecModulePermissions();
+    } else {
+      setLoading(false);
+    }
+  }, [profile?.exec_board_role, isExecutiveBoard]);
+
+  const fetchExecModulePermissions = async () => {
+    if (!profile?.exec_board_role) return;
+
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('gw_executive_position_functions')
+        .select(`
+          gw_app_functions (
+            id,
+            name,
+            description,
+            category,
+            module,
+            is_active
+          ),
+          can_access,
+          can_manage
+        `)
+        .eq('position', profile.exec_board_role as any)
+        .eq('gw_app_functions.is_active', true);
+
+      if (error) throw error;
+
+      const modules = data
+        ?.filter(item => item.gw_app_functions && (item.can_access || item.can_manage))
+        .map(item => ({
+          function_id: item.gw_app_functions.id,
+          function_name: item.gw_app_functions.name,
+          function_description: item.gw_app_functions.description,
+          function_category: item.gw_app_functions.category,
+          module: item.gw_app_functions.module,
+          can_access: item.can_access,
+          can_manage: item.can_manage
+        })) || [];
+
+      setExecModules(modules);
+    } catch (error) {
+      console.error('Error fetching exec module permissions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load executive modules",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleModuleClick = (moduleId: string) => {
+    const moduleConfig = ModuleRegistry.getModule(moduleId);
+    if (moduleConfig) {
+      setSelectedModule(moduleId);
+    } else {
+      toast({
+        title: "Module Unavailable",
+        description: "This module is not yet implemented",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const renderModuleComponent = () => {
+    if (!selectedModule) return null;
+    
+    const moduleConfig = ModuleRegistry.getModule(selectedModule);
+    if (!moduleConfig) return null;
+
+    const Component = moduleConfig.component;
+    return (
+      <div className="mt-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">{moduleConfig.title}</h3>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setSelectedModule(null)}
+          >
+            Close
+          </Button>
+        </div>
+        <Component user={user} />
+      </div>
+    );
+  };
+
+  // Group modules by category
+  const modulesByCategory = execModules.reduce((acc, module) => {
+    const category = module.function_category || 'Other';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(module);
+    return acc;
+  }, {} as Record<string, ExecModulePermission[]>);
+
+  const getCategoryColor = (category: string) => {
+    const colors = {
+      'Communications': 'blue',
+      'Financial': 'green',
+      'Tours': 'purple',
+      'Attendance': 'orange',
+      'Musical': 'indigo',
+      'Other': 'gray'
+    };
+    return colors[category] || 'gray';
+  };
+
+  const getCategoryIcon = (category: string) => {
+    const categoryConfig = moduleCategories.find(c => 
+      c.title.toLowerCase().includes(category.toLowerCase())
+    );
+    return categoryConfig?.icon;
+  };
+
+  if (!isExecutiveBoard()) {
+    return null;
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+        <span>Loading executive modules...</span>
+      </div>
+    );
+  }
+
+  if (execModules.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Crown className="h-5 w-5 text-brand-600" />
+            <CardTitle>Executive Board Modules</CardTitle>
+          </div>
+          <CardDescription>
+            No modules have been assigned to your executive position yet.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Crown className="h-5 w-5 text-brand-600" />
+            <div>
+              <CardTitle>Executive Board Modules</CardTitle>
+              <CardDescription>
+                Role: {profile?.exec_board_role} • {execModules.length} modules available
+              </CardDescription>
+            </div>
+          </div>
+          <Badge variant="secondary" className="bg-brand-50 text-brand-700 border-brand-200">
+            Executive Access
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-96">
+          <div className="space-y-4">
+            {Object.entries(modulesByCategory).map(([category, modules]) => {
+              const IconComponent = getCategoryIcon(category);
+              
+              return (
+                <div key={category}>
+                  <div className="flex items-center gap-2 mb-3">
+                    {IconComponent && <IconComponent className="h-4 w-4" />}
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                      {category}
+                    </h4>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    {modules.map((module) => (
+                      <Card key={module.function_id} className="cursor-pointer hover:bg-muted/50 transition-colors">
+                        <CardContent className="p-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h5 className="font-medium text-sm">{module.function_name}</h5>
+                                <div className="flex gap-1">
+                                  {module.can_access && (
+                                    <Badge variant="outline" className="text-xs px-1 py-0">
+                                      View
+                                    </Badge>
+                                  )}
+                                  {module.can_manage && (
+                                    <Badge variant="outline" className="text-xs px-1 py-0 bg-brand-50 border-brand-200">
+                                      Manage
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {module.function_description}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 ml-2"
+                              onClick={() => handleModuleClick(module.module)}
+                            >
+                              <Settings className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+        
+        {renderModuleComponent()}
+      </CardContent>
+    </Card>
+  );
+};
