@@ -339,18 +339,29 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   // Function to extract melody from MusicXML
   const extractMelodyFromMusicXML = (xml: string): Note[] => {
-    if (!xml) return [];
+    console.log('extractMelodyFromMusicXML called with XML length:', xml ? xml.length : 0);
+    if (!xml) {
+      console.log('No XML provided to extractMelodyFromMusicXML');
+      return [];
+    }
     
     try {
       const parser = new DOMParser();
       const doc = parser.parseFromString(xml, 'application/xml');
+      console.log('Parsed MusicXML document:', doc);
+      
       const notes = doc.querySelectorAll('note');
+      console.log('Found notes in MusicXML:', notes.length);
+      
       const melody: Note[] = [];
       let currentTime = 0;
       const beatDuration = 0.5; // Half second per beat (120 BPM)
       
       notes.forEach((noteElement, index) => {
+        console.log(`Processing note ${index + 1}:`, noteElement);
         const pitchElement = noteElement.querySelector('pitch');
+        console.log('Pitch element found:', !!pitchElement);
+        
         if (pitchElement) {
           const step = pitchElement.querySelector('step')?.textContent || 'C';
           const octave = pitchElement.querySelector('octave')?.textContent || '4';
@@ -363,6 +374,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           const duration = noteElement.querySelector('duration')?.textContent;
           const durationValue = duration ? parseFloat(duration) / 4 * beatDuration : beatDuration;
           
+          console.log(`Adding note to melody: ${noteName} at time ${currentTime} with duration ${durationValue}`);
+          
           melody.push({
             note: noteName,
             time: currentTime,
@@ -370,9 +383,12 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           });
           
           currentTime += durationValue;
+        } else {
+          console.log('Note element has no pitch - might be a rest');
         }
       });
       
+      console.log('Final extracted melody:', melody);
       return melody;
     } catch (error) {
       console.error('Error extracting melody from MusicXML:', error);
@@ -447,6 +463,12 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   };
 
   const actuallyStartPractice = () => {
+    console.log('=== STARTING PRACTICE SESSION ===');
+    console.log('Piano enabled:', pianoEnabled);
+    console.log('Extracted melody length:', extractedMelody.length);
+    console.log('Extracted melody:', extractedMelody);
+    console.log('Metronome enabled:', metronomeEnabled);
+    
     setIsPlaying(true);
     
     console.log('Starting practice - pianoEnabled:', pianoEnabled, 'extractedMelody length:', extractedMelody.length);
