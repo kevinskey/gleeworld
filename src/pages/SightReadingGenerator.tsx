@@ -202,24 +202,23 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
+        <div 
+          ref={containerRef}
+          className="w-full border rounded-lg bg-white p-4"
+          style={{ 
+            minHeight: '400px',
+            minWidth: '800px',
+            width: '100%',
+            height: '400px',
+            overflow: 'hidden',
+            display: 'block'
+          }}
+        />
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
             <RefreshCw className="h-8 w-8 animate-spin" />
             <span className="ml-2">Rendering sheet music...</span>
           </div>
-        ) : (
-          <div 
-            ref={containerRef}
-            className="w-full border rounded-lg bg-white p-4"
-            style={{ 
-              minHeight: '400px',
-              minWidth: '800px',
-              width: '100%',
-              height: '400px',
-              overflow: 'hidden', // Prevent scroll issues during render
-              display: 'block'
-            }}
-          />
         )}
       </CardContent>
     </Card>
