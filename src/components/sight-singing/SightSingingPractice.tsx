@@ -627,8 +627,9 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 id="piano"
                 checked={pianoEnabled}
                 onCheckedChange={setPianoEnabled}
+                className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
               />
-              <Label htmlFor="piano" className="flex items-center gap-2">
+              <Label htmlFor="piano" className="flex items-center gap-2 cursor-pointer">
                 <Piano className="h-4 w-4" />
                 Piano
               </Label>
@@ -641,8 +642,9 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 id="solfege"
                 checked={solfegeEnabled}
                 onCheckedChange={setSolfegeEnabled}
+                className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
               />
-              <Label htmlFor="solfege" className="flex items-center gap-2">
+              <Label htmlFor="solfege" className="flex items-center gap-2 cursor-pointer">
                 <GraduationCap className="h-4 w-4" />
                 Solfège
               </Label>
@@ -655,8 +657,9 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                   id="metronome"
                   checked={metronomeEnabled}
                   onCheckedChange={setMetronomeEnabled}
+                  className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
                 />
-                <Label htmlFor="metronome" className="flex items-center gap-2">
+                <Label htmlFor="metronome" className="flex items-center gap-2 cursor-pointer">
                   <Timer className="h-4 w-4" />
                   Metronome
                 </Label>
