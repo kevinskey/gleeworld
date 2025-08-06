@@ -30,7 +30,10 @@ serve(async (req) => {
         }
       }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json'
+        }
       });
     }
 
@@ -64,7 +67,10 @@ serve(async (req) => {
         details: error
       }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json'
+        }
       });
     }
 
@@ -80,7 +86,11 @@ serve(async (req) => {
         responseLength: data.choices[0].message.content.length
       }
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
+      }
     });
 
   } catch (error) {
@@ -90,7 +100,10 @@ serve(async (req) => {
       stack: error.stack
     }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
+      }
     });
   }
 });

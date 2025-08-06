@@ -22,7 +22,10 @@ serve(async (req) => {
       console.error('OpenAI API key not found in environment');
       return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json'
+        }
       });
     }
 
@@ -83,7 +86,13 @@ Return ONLY valid MusicXML 3.1 format.`;
     if (!response.ok) {
       const error = await response.json();
       console.error('OpenAI API error:', error);
-      throw new Error(error.error?.message || 'Failed to generate MusicXML');
+      return new Response(JSON.stringify({ error: error.error?.message || 'Failed to generate MusicXML' }), {
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json'
+        }
+      });
     }
 
     const data = await response.json();
@@ -92,13 +101,20 @@ Return ONLY valid MusicXML 3.1 format.`;
     console.log('Generated MusicXML length:', musicXML.length);
 
     return new Response(JSON.stringify({ musicXML }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
+      }
     });
   } catch (error) {
     console.error('Error in generate-musicxml function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
+      }
     });
   }
 });
