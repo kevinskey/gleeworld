@@ -185,8 +185,10 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="guest">Guest</SelectItem>
                   <SelectItem value="fan">Fan</SelectItem>
                   <SelectItem value="member">Member</SelectItem>
+                  <SelectItem value="user">User</SelectItem>
                   <SelectItem value="alumna">Alumna</SelectItem>
                   <SelectItem value="executive">Executive</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
