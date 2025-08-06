@@ -11941,6 +11941,19 @@ export type Database = {
         }
         Returns: Json
       }
+      book_appointment: {
+        Args: {
+          p_service_id: string
+          p_appointment_date: string
+          p_start_time: string
+          p_customer_name: string
+          p_customer_email: string
+          p_customer_phone?: string
+          p_attendee_count?: number
+          p_special_requests?: string
+        }
+        Returns: Json
+      }
       bootstrap_initial_admin: {
         Args: { user_email_param: string }
         Returns: boolean
@@ -11948,6 +11961,15 @@ export type Database = {
       calculate_event_budget_totals: {
         Args: { event_id_param: string }
         Returns: undefined
+      }
+      check_appointment_availability: {
+        Args: {
+          p_service_id: string
+          p_appointment_date: string
+          p_start_time: string
+          p_duration_minutes: number
+        }
+        Returns: Json
       }
       check_executive_board_access: {
         Args: Record<PropertyKey, never>
@@ -12079,6 +12101,14 @@ export type Database = {
           full_name: string
           role: string
           created_at: string
+        }[]
+      }
+      get_available_time_slots: {
+        Args: { p_service_id: string; p_date: string }
+        Returns: {
+          start_time: string
+          end_time: string
+          available: boolean
         }[]
       }
       get_avatar_url: {

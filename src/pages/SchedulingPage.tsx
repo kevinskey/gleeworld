@@ -5,110 +5,51 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
-interface Service {
-  id: string;
-  name: string;
-  image: string;
-  duration: string;
-  capacity: string;
-  price: string;
-  description: string;
-  location: string;
-  instructor: string;
-  badge?: 'Popular' | 'Premium' | 'New';
-  badgeColor?: string;
-}
-
-const services: Service[] = [
-  {
-    id: '1',
-    name: 'Voice Coaching',
-    image: '/src/assets/voice-coaching.jpg',
-    duration: '45min',
-    capacity: '1-1',
-    price: '$75',
-    description: 'Individual voice coaching session',
-    location: 'Music Room A',
-    instructor: 'Dr. Johnson',
-    badge: 'Popular',
-    badgeColor: 'bg-blue-500'
-  },
-  {
-    id: '2',
-    name: 'Section Rehearsal',
-    image: '/src/assets/section-rehearsal.jpg',
-    duration: '1h 30min',
-    capacity: '8-12',
-    price: 'Free',
-    description: 'Soprano section practice',
-    location: 'Rehearsal Hall',
-    instructor: 'Section Leader',
-    badge: 'Premium',
-    badgeColor: 'bg-yellow-500'
-  },
-  {
-    id: '3',
-    name: 'Audition Prep',
-    image: '/src/assets/audition-prep.jpg',
-    duration: '1h',
-    capacity: '1-4',
-    price: '$45',
-    description: 'Prepare for upcoming auditions',
-    location: 'Practice Room 3',
-    instructor: 'Ms. Williams'
-  },
-  {
-    id: '4',
-    name: 'Piano Accompaniment',
-    image: '/src/assets/piano-accompaniment.jpg',
-    duration: '30min',
-    capacity: '1-2',
-    price: '$40',
-    description: 'Piano accompaniment session',
-    location: 'Music Room B',
-    instructor: 'Piano Faculty',
-    badge: 'New',
-    badgeColor: 'bg-green-500'
-  },
-  {
-    id: '5',
-    name: 'Music Theory',
-    image: '/src/assets/music-theory.jpg',
-    duration: '45min',
-    capacity: '1-6',
-    price: '$50',
-    description: 'Music theory fundamentals',
-    location: 'Classroom 101',
-    instructor: 'Theory Instructor'
-  },
-  {
-    id: '6',
-    name: 'Ensemble Rehearsal',
-    image: '/src/assets/ensemble-rehearsal.jpg',
-    duration: '2h',
-    capacity: '40-60',
-    price: 'Free',
-    description: 'Full Glee Club rehearsal',
-    location: 'Main Concert Hall',
-    instructor: 'Director',
-    badge: 'Popular',
-    badgeColor: 'bg-blue-500'
-  }
-];
+import { useServices } from '@/hooks/useServices';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export default function SchedulingPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInstructor, setSelectedInstructor] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All categories');
+  
+  const { data: services, isLoading, error } = useServices();
+  const navigate = useNavigate();
 
-  const filteredServices = services.filter(service => {
+  const filteredServices = services?.filter(service => {
     const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesInstructor = !selectedInstructor || selectedInstructor === 'all' || service.instructor === selectedInstructor;
     const matchesLocation = !selectedLocation || selectedLocation === 'all' || service.location === selectedLocation;
-    return matchesSearch && matchesInstructor && matchesLocation;
-  });
+    const matchesCategory = selectedCategory === 'All categories' || service.category === selectedCategory;
+    return matchesSearch && matchesInstructor && matchesLocation && matchesCategory;
+  }) || [];
+
+  const uniqueInstructors = services ? [...new Set(services.map(s => s.instructor).filter(Boolean))] : [];
+  const uniqueLocations = services ? [...new Set(services.map(s => s.location).filter(Boolean))] : [];
+  const uniqueCategories = services ? [...new Set(services.map(s => s.category).filter(Boolean))] : [];
+
+  const handleBookNow = (serviceId: string) => {
+    navigate(`/booking/service-selection?service=${serviceId}`);
+  };
+
+  const formatCapacity = (min: number, max: number) => {
+    if (min === max) return min.toString();
+    return `${min}-${max}`;
+  };
+
+  const formatDuration = (minutes: number) => {
+    if (minutes < 60) return `${minutes}min`;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) return `${hours}h`;
+    return `${hours}h ${remainingMinutes}min`;
+  };
+
+  if (error) {
+    toast.error('Failed to load services');
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary">
@@ -133,8 +74,8 @@ export default function SchedulingPage() {
           </p>
           <Button 
             size="lg" 
-            className="bg-blue-400 hover:bg-blue-500 text-white px-8 py-3 rounded-md font-semibold"
-            onClick={() => window.location.href = '/booking'}
+            className="bg-sky-400 hover:bg-sky-500 text-white px-8 py-3 rounded-md font-semibold"
+            onClick={() => navigate('/booking/service-selection')}
           >
             Book Now
           </Button>
@@ -182,10 +123,11 @@ export default function SchedulingPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Instructors</SelectItem>
-                  <SelectItem value="Dr. Johnson">Dr. Johnson</SelectItem>
-                  <SelectItem value="Ms. Williams">Ms. Williams</SelectItem>
-                  <SelectItem value="Section Leader">Section Leader</SelectItem>
-                  <SelectItem value="Piano Faculty">Piano Faculty</SelectItem>
+                  {uniqueInstructors.map((instructor) => (
+                    <SelectItem key={instructor} value={instructor}>
+                      {instructor}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -196,85 +138,127 @@ export default function SchedulingPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Locations</SelectItem>
-                  <SelectItem value="Music Room A">Music Room A</SelectItem>
-                  <SelectItem value="Music Room B">Music Room B</SelectItem>
-                  <SelectItem value="Rehearsal Hall">Rehearsal Hall</SelectItem>
-                  <SelectItem value="Main Concert Hall">Main Concert Hall</SelectItem>
+                  {uniqueLocations.map((location) => (
+                    <SelectItem key={location} value={location}>
+                      {location}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
-              <Button 
-                variant={selectedCategory === 'All categories' ? 'default' : 'outline'}
-                className="lg:w-48 bg-blue-400 hover:bg-blue-500 text-white border-blue-400"
-              >
-                {selectedCategory}
-              </Button>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="lg:w-48 bg-card border-border text-card-foreground">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All categories">All categories</SelectItem>
+                  {uniqueCategories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* Loading State */}
+            {isLoading && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i} className="bg-card border-border overflow-hidden animate-pulse">
+                    <div className="w-full h-48 bg-muted"></div>
+                    <CardContent className="p-4">
+                      <div className="h-6 bg-muted rounded mb-2"></div>
+                      <div className="h-4 bg-muted rounded mb-4"></div>
+                      <div className="h-4 bg-muted rounded mb-4"></div>
+                      <div className="flex gap-2">
+                        <div className="h-8 bg-muted rounded flex-1"></div>
+                        <div className="h-8 bg-muted rounded flex-1"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
 
             {/* Services Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredServices.map((service) => (
-                <Card key={service.id} className="bg-card border-border overflow-hidden hover:bg-card/90 transition-colors depth-hover">
-                  <div className="relative">
-                    <img 
-                      src={service.image} 
-                      alt={service.name}
-                      className="w-full h-48 object-cover"
-                    />
-                    {service.badge && (
-                      <Badge className={`absolute top-3 left-3 ${service.badgeColor} text-white`}>
-                        {service.badge}
-                      </Badge>
-                    )}
-                    <div className="absolute top-3 right-3 bg-black/50 text-white px-2 py-1 rounded text-sm font-semibold">
-                      {service.price}
+            {!isLoading && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredServices.map((service) => (
+                  <Card key={service.id} className="bg-card border-border overflow-hidden hover:bg-card/90 transition-colors depth-hover">
+                    <div className="relative">
+                      <img 
+                        src={service.image_url || '/placeholder.svg'} 
+                        alt={service.name}
+                        className="w-full h-48 object-cover"
+                      />
+                      {service.badge_text && (
+                        <Badge className={`absolute top-3 left-3 ${service.badge_color || 'bg-blue-500'} text-white`}>
+                          {service.badge_text}
+                        </Badge>
+                      )}
+                      <div className="absolute top-3 right-3 bg-black/50 text-white px-2 py-1 rounded text-sm font-semibold">
+                        {service.price_display}
+                      </div>
                     </div>
-                  </div>
-                  
-                  <CardContent className="p-4">
-                    <h3 className="text-card-foreground font-semibold text-lg mb-2">{service.name}</h3>
-                    <p className="text-muted-foreground text-sm mb-4">{service.description}</p>
                     
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>Duration: {service.duration}</span>
+                    <CardContent className="p-4">
+                      <h3 className="text-card-foreground font-semibold text-lg mb-2">{service.name}</h3>
+                      <p className="text-muted-foreground text-sm mb-4">{service.description}</p>
+                      
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          <span>Duration: {formatDuration(service.duration_minutes)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4" />
+                          <span>Capacity: {formatCapacity(service.capacity_min, service.capacity_max)}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        <span>Capacity: {service.capacity}</span>
-                      </div>
-                    </div>
 
-                    <div className="space-y-2 mb-4">
-                      <div className="text-sm text-muted-foreground">No reviews yet</div>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        <span>{service.location}</span>
+                      <div className="space-y-2 mb-4">
+                        <div className="text-sm text-muted-foreground">No reviews yet</div>
+                        {service.location && (
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <MapPin className="h-4 w-4" />
+                            <span>{service.location}</span>
+                          </div>
+                        )}
+                        {service.instructor && (
+                          <div className="text-sm text-muted-foreground">{service.instructor}</div>
+                        )}
                       </div>
-                      <div className="text-sm text-muted-foreground">{service.instructor}</div>
-                    </div>
 
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1 border-border text-muted-foreground hover:text-foreground hover:bg-accent hover:text-accent-foreground"
-                      >
-                        Learn more
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="flex-1 bg-blue-400 hover:bg-blue-500 text-white"
-                        onClick={() => window.location.href = '/booking'}
-                      >
-                        Book Now
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1 border-border text-muted-foreground hover:text-foreground hover:bg-accent hover:text-accent-foreground"
+                        >
+                          Learn more
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="flex-1 bg-sky-400 hover:bg-sky-500 text-white"
+                          onClick={() => handleBookNow(service.id)}
+                        >
+                          Book Now
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* No Results */}
+            {!isLoading && filteredServices.length === 0 && (
+              <div className="text-center py-12">
+                <h3 className="text-xl font-semibold text-primary-foreground mb-2">No services found</h3>
+                <p className="text-primary-foreground/80">Try adjusting your search criteria</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
