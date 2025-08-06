@@ -836,14 +836,14 @@ const App = () => {
                                           </ProtectedRoute>
                                          } 
                                        />
-                                       <Route 
-                                         path="/executive-dashboard" 
-                                         element={
-                                           <ProtectedRoute>
-                                             <ExecutiveBoardDashboard />
-                                           </ProtectedRoute>
-                                         } 
-                                       />
+                                        <Route 
+                                          path="/executive-board-dashboard" 
+                                          element={
+                                            <ProtectedRoute>
+                                              <ExecutiveBoardDashboard />
+                                            </ProtectedRoute>
+                                          } 
+                                        />
                       </Routes>
                    <GlobalMusicPlayer />
                 </div>
