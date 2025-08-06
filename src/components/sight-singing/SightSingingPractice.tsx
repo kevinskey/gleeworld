@@ -222,17 +222,23 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   // Melody player functions
   const playMelody = async () => {
-    if (melodyPlaysRemaining <= 0 || isPlayingMelody) return;
+    if (melodyPlaysRemaining <= 0 || isPlayingMelody) {
+      console.log('Cannot play melody - remaining plays:', melodyPlaysRemaining, 'already playing:', isPlayingMelody);
+      return;
+    }
     
+    console.log('Starting melody playback');
     setIsPlayingMelody(true);
     setMelodyPlaysRemaining(prev => prev - 1);
     
     try {
       // Initialize audio context
       const audioContext = await initPitchAudioContext();
+      console.log('Audio context initialized for melody:', audioContext.state);
       
       // Extract notes from exercise (simplified - in real implementation would parse musicXML)
       const exerciseNotes = extractNotesFromExercise();
+      console.log('Exercise notes extracted:', exerciseNotes.length, 'notes');
       
       toast({
         title: "Playing Exercise Melody",
@@ -241,6 +247,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       
       // Play notes sequentially with piano sound
       await playNotesSequentially(exerciseNotes, audioContext);
+      console.log('Melody playback completed');
       
     } catch (error) {
       console.error('Error playing melody:', error);
@@ -251,6 +258,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       });
     } finally {
       setIsPlayingMelody(false);
+      console.log('Melody playback finished, isPlayingMelody set to false');
     }
   };
 
@@ -293,15 +301,21 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   };
 
   const playNotesSequentially = async (notes: { frequency: number; duration: number }[], audioContext: AudioContext) => {
+    console.log('Playing notes sequentially:', notes.length, 'notes');
     for (let i = 0; i < notes.length; i++) {
-      if (!isPlayingMelody) break; // Stop if melody was cancelled
+      if (!isPlayingMelody) {
+        console.log('Melody playback cancelled at note', i);
+        break; // Stop if melody was cancelled
+      }
       
       const note = notes[i];
+      console.log(`Playing note ${i + 1}/${notes.length}: ${note.frequency}Hz for ${note.duration}ms`);
       await playPianoNote(note.frequency, note.duration, audioContext);
       
       // Small gap between notes
       await new Promise(resolve => setTimeout(resolve, 50));
     }
+    console.log('Notes sequence completed');
   };
 
   const playPianoNote = async (frequency: number, duration: number, audioContext: AudioContext) => {
@@ -427,6 +441,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const actuallyStartPractice = () => {
     setIsPlaying(true);
     
+    // Start metronome if enabled
+    if (metronomeEnabled) {
+      startMetronome();
+    }
+    
     if (pianoEnabled) {
       // Simulate piano accompaniment
       toast({
@@ -436,7 +455,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     } else {
       toast({
         title: "Practice Started", 
-        description: "Metronome is playing"
+        description: metronomeEnabled ? "Metronome is playing" : "Practice session started"
       });
     }
     
@@ -445,25 +464,35 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     const totalBeats = exerciseMetadata.measures * beatsPerMeasure;
     const practiceSeconds = Math.ceil((totalBeats * 60) / tempo);
     
+    console.log('Practice duration calculated:', practiceSeconds, 'seconds for', exerciseMetadata.measures, 'measures');
+    
     // Timer for visual feedback
     let time = 0;
     playbackTimerRef.current = setInterval(() => {
       time += 1;
       setPlaybackTime(time);
       if (time >= practiceSeconds) {
+        console.log('Practice time completed, stopping practice');
         stopPractice();
       }
     }, 1000);
   };
 
   const stopPractice = () => {
+    console.log('Stopping practice session');
     setIsPlaying(false);
     setPlaybackTime(0);
     if (playbackTimerRef.current) {
       clearInterval(playbackTimerRef.current);
       playbackTimerRef.current = null;
     }
+    // Always stop metronome when practice stops
     stopMetronome();
+    
+    toast({
+      title: "Practice Stopped",
+      description: "Practice session ended"
+    });
   };
 
   const startMetronome = async () => {
@@ -521,9 +550,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   };
 
   const stopMetronome = () => {
+    console.log('Stopping metronome');
     if (metronomeRef.current) {
       clearInterval(metronomeRef.current);
       metronomeRef.current = null;
+      console.log('Metronome stopped and cleared');
     }
   };
 
