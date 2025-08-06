@@ -24,7 +24,7 @@ const services: Service[] = [
   {
     id: '1',
     name: 'Voice Coaching',
-    image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
+    image: '/src/assets/voice-coaching.jpg',
     duration: '45min',
     capacity: '1-1',
     price: '$75',
@@ -37,7 +37,7 @@ const services: Service[] = [
   {
     id: '2',
     name: 'Section Rehearsal',
-    image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
+    image: '/src/assets/section-rehearsal.jpg',
     duration: '1h 30min',
     capacity: '8-12',
     price: 'Free',
@@ -50,7 +50,7 @@ const services: Service[] = [
   {
     id: '3',
     name: 'Audition Prep',
-    image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
+    image: '/src/assets/audition-prep.jpg',
     duration: '1h',
     capacity: '1-4',
     price: '$45',
@@ -61,7 +61,7 @@ const services: Service[] = [
   {
     id: '4',
     name: 'Piano Accompaniment',
-    image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
+    image: '/src/assets/piano-accompaniment.jpg',
     duration: '30min',
     capacity: '1-2',
     price: '$40',
@@ -74,7 +74,7 @@ const services: Service[] = [
   {
     id: '5',
     name: 'Music Theory',
-    image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
+    image: '/src/assets/music-theory.jpg',
     duration: '45min',
     capacity: '1-6',
     price: '$50',
@@ -85,7 +85,7 @@ const services: Service[] = [
   {
     id: '6',
     name: 'Ensemble Rehearsal',
-    image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
+    image: '/src/assets/ensemble-rehearsal.jpg',
     duration: '2h',
     capacity: '40-60',
     price: 'Free',
