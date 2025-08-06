@@ -21,32 +21,76 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const osmdRef = React.useRef<any>(null);
   const isMountedRef = React.useRef(true);
+  const cleanupTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  React.useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
+  // Cleanup function to properly dispose of OSMD
+  const cleanup = React.useCallback(() => {
+    if (cleanupTimeoutRef.current) {
+      clearTimeout(cleanupTimeoutRef.current);
+      cleanupTimeoutRef.current = null;
+    }
+
+    if (osmdRef.current) {
+      try {
+        // Try to dispose OSMD instance properly
+        if (typeof osmdRef.current.clear === 'function') {
+          osmdRef.current.clear();
+        }
+        if (typeof osmdRef.current.dispose === 'function') {
+          osmdRef.current.dispose();
+        }
+      } catch (cleanupError) {
+        console.warn('Error during OSMD cleanup:', cleanupError);
+      }
+      osmdRef.current = null;
+    }
+
+    // Clear container safely without triggering React DOM errors
+    if (containerRef.current) {
+      try {
+        // Use React-safe method to clear content
+        const container = containerRef.current;
+        while (container.firstChild) {
+          container.removeChild(container.firstChild);
+        }
+      } catch (clearError) {
+        console.warn('Error clearing container:', clearError);
+      }
+    }
   }, []);
 
+  // Mount/unmount tracking
   React.useEffect(() => {
-    if (musicXML && containerRef.current) {
-      renderMusicXML();
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      cleanup();
+    };
+  }, [cleanup]);
+
+  // Render when musicXML changes
+  React.useEffect(() => {
+    if (musicXML && containerRef.current && isMountedRef.current) {
+      // Cleanup previous instance before rendering new one
+      cleanup();
+      // Small delay to ensure cleanup is complete
+      cleanupTimeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          renderMusicXML();
+        }
+      }, 100);
     }
-  }, [musicXML]);
+    
+    return () => {
+      if (cleanupTimeoutRef.current) {
+        clearTimeout(cleanupTimeoutRef.current);
+        cleanupTimeoutRef.current = null;
+      }
+    };
+  }, [musicXML, cleanup]);
 
   const renderMusicXML = async () => {
-    // Early exit if component is unmounted
-    if (!isMountedRef.current) {
-      console.log('Component unmounted, skipping render');
-      return;
-    }
-
-    if (!containerRef.current || !musicXML) {
-      console.log('renderMusicXML: Missing refs or musicXML', {
-        hasContainer: !!containerRef.current,
-        hasMusicXML: !!musicXML,
-        isMounted: isMountedRef.current
-      });
+    if (!isMountedRef.current || !containerRef.current || !musicXML) {
       return;
     }
 
@@ -54,107 +98,65 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
     setError(null);
 
     try {
-      console.log('Starting OSMD rendering...');
-      
-      // Store container reference to prevent it from changing
       const container = containerRef.current;
       
-      // Dynamic import of OSMD with better error handling
-      const { OpenSheetMusicDisplay } = await import('opensheetmusicdisplay').catch((importError) => {
-        console.error('Failed to import OpenSheetMusicDisplay:', importError);
-        throw new Error('Failed to load music notation library');
-      });
-      
-      console.log('OSMD imported successfully');
-      
-      // Check again after async import
-      if (!isMountedRef.current || !container) {
-        console.log('Component state changed during import, aborting');
-        return;
+      // Ensure container has proper dimensions before OSMD initialization
+      if (container.offsetWidth === 0 || container.offsetHeight === 0) {
+        console.warn('Container has zero dimensions, forcing layout');
+        container.style.width = '800px';
+        container.style.height = '400px';
+        // Force a reflow
+        container.offsetHeight;
       }
+
+      const { OpenSheetMusicDisplay } = await import('opensheetmusicdisplay');
       
-      // Clear container safely
-      container.innerHTML = '';
-      
-      // Create new OSMD instance with better sizing options
+      if (!isMountedRef.current) return;
+
+      // Create OSMD with more conservative settings to prevent width errors
       osmdRef.current = new OpenSheetMusicDisplay(container, {
-        autoResize: true,
+        autoResize: false, // Disable auto-resize to prevent conflicts
         backend: 'svg',
-        drawTitle: true,
+        drawTitle: false, // Disable title to reduce complexity
         drawCredits: false,
         pageBackgroundColor: '#FFFFFF',
-        pageFormat: 'Endless',
+        pageFormat: 'A4_P', // Use standard page format instead of Endless
         autoBeam: true,
         coloringMode: 0,
         defaultFontFamily: 'Arial',
         renderSingleHorizontalStaffline: false,
         spacingBetweenTextLines: 5,
-      });
+        // Simplified options to prevent width calculation issues
+        followCursor: false
+      } as any); // Type assertion to handle OSMD version differences
 
-      console.log('OSMD instance created');
+      if (!isMountedRef.current) return;
 
-      // Check mounting status before continuing
-      if (!isMountedRef.current) {
-        console.log('Component unmounted during OSMD creation, aborting');
-        return;
-      }
-
-      console.log('Loading MusicXML directly...');
-      console.log('MusicXML preview:', musicXML.substring(0, 200));
-      
-      // Try different methods to load the XML with better error handling
-      let loadingMethod = 'unknown';
+      // Load and render with proper error handling
       try {
-        // Method 1: Try loadXML if available
-        if (osmdRef.current.loadXML && typeof osmdRef.current.loadXML === 'function') {
-          console.log('Using loadXML method');
-          loadingMethod = 'loadXML';
-          await osmdRef.current.loadXML(musicXML);
-        } else {
-          console.log('loadXML not available, using load method with XML document');
-          loadingMethod = 'load with XMLDocument';
-          // Method 2: Use the load method with proper XML handling
-          const parser = new DOMParser();
-          const xmlDoc = parser.parseFromString(musicXML, 'application/xml');
-          
-          // Check for parsing errors
-          const parseError = xmlDoc.querySelector('parsererror');
-          if (parseError) {
-            throw new Error(`XML parsing failed: ${parseError.textContent}`);
-          }
-          
-          await osmdRef.current.load(xmlDoc);
-        }
-      } catch (xmlError) {
-        console.log(`Loading failed with ${loadingMethod}:`, xmlError);
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(musicXML, 'application/xml');
         
-        // Check if this is a known OSMD error about note initialization
-        if (xmlError.message && xmlError.message.includes('Invalid note initialization object')) {
-          throw new Error(`The generated music contains formatting issues that cannot be displayed. This may be due to invalid note data in the MusicXML. Please try generating a new exercise with different parameters.`);
+        const parseError = xmlDoc.querySelector('parsererror');
+        if (parseError) {
+          throw new Error(`XML parsing failed: ${parseError.textContent}`);
         }
         
-        // If it's a different error, try one more fallback
-        try {
-          console.log('Trying direct string load as final fallback');
-          await osmdRef.current.load(musicXML);
-        } catch (finalError) {
-          console.error('All loading methods failed:', finalError);
-          throw new Error(`Failed to load music notation: ${finalError.message || 'Unknown error'}. The generated MusicXML may be incompatible with the display library.`);
-        }
+        await osmdRef.current.load(xmlDoc);
+        
+        if (!isMountedRef.current) return;
+        
+        // Render with additional safety checks
+        osmdRef.current.render();
+        
+        console.log('MusicXML rendered successfully');
+      } catch (renderError) {
+        console.error('OSMD render error:', renderError);
+        throw new Error(`Failed to render music: ${renderError.message}`);
       }
       
-      // Final check before rendering
-      if (!isMountedRef.current) {
-        console.log('Component unmounted during loading, aborting');
-        return;
-      }
-      
-      console.log('Rendering sheet music...');
-      osmdRef.current.render();
-      
-      console.log('MusicXML rendered successfully');
     } catch (err) {
-      console.error('Error rendering MusicXML:', err);
+      console.error('Error in renderMusicXML:', err);
       if (isMountedRef.current) {
         setError('Failed to render sheet music. Please try again.');
       }
@@ -172,6 +174,18 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
           <div className="text-center text-destructive">
             <Music className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p className="text-lg font-medium">{error}</p>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setError(null);
+                if (musicXML && isMountedRef.current) {
+                  renderMusicXML();
+                }
+              }}
+              className="mt-4"
+            >
+              Try Again
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -195,11 +209,13 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title }) => {
         ) : (
           <div 
             ref={containerRef}
-            className="min-h-[400px] w-full overflow-x-auto border rounded-lg bg-white p-4"
+            className="w-full border rounded-lg bg-white p-4"
             style={{ 
               minHeight: '400px',
               minWidth: '800px',
               width: '100%',
+              height: '400px',
+              overflow: 'hidden', // Prevent scroll issues during render
               display: 'block'
             }}
           />
