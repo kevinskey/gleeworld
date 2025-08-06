@@ -51,10 +51,9 @@ const ExecutiveBoardDashboard = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  // For demo purposes, allow access for onnestypeele@spelman.edu
-  const isDemoUser = user.email === 'onnestypeele@spelman.edu';
-  const isExecBoard = userProfile?.is_exec_board || isDemoUser;
-  const execRole = userProfile?.exec_board_role || (isDemoUser ? 'tour_manager' : null);
+  // Check if user has executive board access
+  const isExecBoard = userProfile?.is_exec_board;
+  const execRole = userProfile?.exec_board_role;
 
   if (!isExecBoard) {
     return <Navigate to="/dashboard" replace />;
@@ -92,14 +91,9 @@ const ExecutiveBoardDashboard = () => {
                       <User className="h-5 w-5 text-muted-foreground" />
                       <span className="font-medium">{userProfile?.full_name || user.email}</span>
                     </div>
-                    <Badge variant="outline" className="text-purple-700 border-purple-300">
-                      {execRole?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Executive Board'}
-                    </Badge>
-                    {isDemoUser && (
-                      <Badge variant="secondary" className="text-orange-700 border-orange-300">
-                        Demo Access
-                      </Badge>
-                    )}
+                     <Badge variant="outline" className="text-purple-700 border-purple-300">
+                       {execRole?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Executive Board'}
+                     </Badge>
                   </div>
                   
                   <p className="text-muted-foreground max-w-2xl mx-auto">

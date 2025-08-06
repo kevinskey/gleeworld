@@ -14,7 +14,7 @@ interface MemberDashboardProps {
 }
 
 export const MemberDashboard = ({ user }: MemberDashboardProps) => {
-  const isExecBoard = user.is_exec_board || user.email === 'onnestypeele@spelman.edu';
+  const isExecBoard = user.is_exec_board;
   
   return (
     <div className="min-h-screen bg-muted/30 p-6 -m-6">
