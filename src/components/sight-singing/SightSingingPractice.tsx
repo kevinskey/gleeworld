@@ -114,17 +114,20 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     };
   }, []);
 
-  // Add event listeners for external recording control
+  // Add event listeners for external recording and practice control
   React.useEffect(() => {
     const handleStartRecording = () => startRecording();
     const handleStopRecording = () => stopRecording();
+    const handleStartPractice = () => startPractice();
     
     window.addEventListener('startRecording', handleStartRecording);
     window.addEventListener('stopRecording', handleStopRecording);
+    window.addEventListener('startPractice', handleStartPractice);
     
     return () => {
       window.removeEventListener('startRecording', handleStartRecording);
       window.removeEventListener('stopRecording', handleStopRecording);
+      window.removeEventListener('startPractice', handleStartPractice);
     };
   }, []);
 

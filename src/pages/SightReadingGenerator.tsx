@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Music, RefreshCw, ArrowLeft, Mic, Square } from 'lucide-react';
+import { Music, RefreshCw, ArrowLeft, Mic, Square, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -430,6 +430,20 @@ const SightReadingGeneratorPage = () => {
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
+                    {/* Practice Button */}
+                    <Button 
+                      onClick={() => {
+                        const practiceEvent = new CustomEvent('startPractice');
+                        window.dispatchEvent(practiceEvent);
+                      }}
+                      className="flex items-center gap-2"
+                      variant="secondary"
+                    >
+                      <Play className="h-4 w-4" />
+                      Practice
+                    </Button>
+                    
+                    {/* Recording Button */}
                     <RecordingButton 
                       isRecording={isRecording}
                       onStartRecording={() => {
