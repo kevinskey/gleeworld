@@ -293,6 +293,7 @@ export default function BookingPage() {
                     <Button 
                       className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold py-3"
                       disabled={!bookingDetails.service}
+                      onClick={() => window.location.href = '/booking/service-selection'}
                     >
                       Continue to Payment
                     </Button>

@@ -103,6 +103,11 @@ import SightReadingPreview from "./pages/SightReadingPreview";
 import SightReadingGenerator from "./pages/SightReadingGenerator";
 import SchedulingPage from "./pages/SchedulingPage";
 import BookingPage from "./pages/BookingPage";
+import ServiceSelection from "./pages/booking/ServiceSelection";
+import DateTimeSelection from "./pages/booking/DateTimeSelection";
+import RecurringOptions from "./pages/booking/RecurringOptions";
+import CustomerInfo from "./pages/booking/CustomerInfo";
+import BookingConfirmation from "./pages/booking/BookingConfirmation";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -799,7 +804,47 @@ const App = () => {
                                          </ProtectedRoute>
                                        } 
                                      />
-                     </Routes>
+                                     <Route 
+                                       path="/booking/service-selection" 
+                                       element={
+                                         <ProtectedRoute>
+                                           <ServiceSelection />
+                                         </ProtectedRoute>
+                                       } 
+                                     />
+                                     <Route 
+                                       path="/booking/datetime" 
+                                       element={
+                                         <ProtectedRoute>
+                                           <DateTimeSelection />
+                                         </ProtectedRoute>
+                                       } 
+                                     />
+                                     <Route 
+                                       path="/booking/recurring" 
+                                       element={
+                                         <ProtectedRoute>
+                                           <RecurringOptions />
+                                         </ProtectedRoute>
+                                       } 
+                                     />
+                                     <Route 
+                                       path="/booking/customer-info" 
+                                       element={
+                                         <ProtectedRoute>
+                                           <CustomerInfo />
+                                         </ProtectedRoute>
+                                       } 
+                                     />
+                                     <Route 
+                                       path="/booking/confirmation" 
+                                       element={
+                                         <ProtectedRoute>
+                                           <BookingConfirmation />
+                                         </ProtectedRoute>
+                                        } 
+                                      />
+                      </Routes>
                    <GlobalMusicPlayer />
                 </div>
               </MusicPlayerProvider>
