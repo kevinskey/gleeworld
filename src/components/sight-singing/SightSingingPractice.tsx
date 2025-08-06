@@ -347,6 +347,20 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   const startPractice = async () => {
     try {
+      // Initialize audio context on user interaction
+      if (!audioContextRef.current) {
+        console.log('Initializing AudioContext on user interaction');
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        console.log('AudioContext initialized, state:', audioContextRef.current.state);
+      }
+      
+      // Resume audio context if suspended
+      if (audioContextRef.current.state === 'suspended') {
+        console.log('Resuming AudioContext');
+        await audioContextRef.current.resume();
+        console.log('AudioContext resumed, state:', audioContextRef.current.state);
+      }
+      
       if (metronomeEnabled) {
         // Start with countdown
         startCountdown(() => {
@@ -441,14 +455,24 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     console.log('playMelodyNote called with:', noteName, 'duration:', duration);
     
     try {
+      // Initialize audio context if needed
       if (!audioContextRef.current) {
         console.log('Creating new AudioContext');
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        console.log('AudioContext created, state:', audioContextRef.current.state);
       }
       
+      // Resume audio context if suspended (required for user interaction)
       if (audioContextRef.current.state === 'suspended') {
         console.log('Resuming suspended AudioContext');
         await audioContextRef.current.resume();
+        console.log('AudioContext resumed, new state:', audioContextRef.current.state);
+      }
+      
+      // Double-check the audio context is running
+      if (audioContextRef.current.state !== 'running') {
+        console.error('AudioContext is not running, state:', audioContextRef.current.state);
+        return;
       }
 
       // Note frequencies for melody playback
