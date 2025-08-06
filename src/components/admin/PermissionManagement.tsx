@@ -7,6 +7,7 @@ import { PermissionGroupManager } from './PermissionGroupManager';
 import { UserGroupAssignment } from './UserGroupAssignment';
 import { AdvancedPermissionPanels } from './AdvancedPermissionPanels';
 import { ExecutiveBoardPermissionPanel } from './ExecutiveBoardPermissionPanel';
+import { PermissionErrorBoundary } from './PermissionErrorBoundary';
 import { usePermissionGroups } from '@/hooks/usePermissionGroups';
 
 const PermissionOverview = () => {
@@ -130,6 +131,8 @@ const PermissionOverview = () => {
 };
 
 export const PermissionManagement = () => {
+  console.log('PermissionManagement component loading...');
+  
   return (
     <div className="space-y-6">
       <div>
@@ -161,11 +164,15 @@ export const PermissionManagement = () => {
         </TabsContent>
         
         <TabsContent value="executive" className="space-y-4">
-          <ExecutiveBoardPermissionPanel />
+          <PermissionErrorBoundary>
+            <ExecutiveBoardPermissionPanel />
+          </PermissionErrorBoundary>
         </TabsContent>
         
         <TabsContent value="advanced" className="space-y-4">
-          <AdvancedPermissionPanels />
+          <PermissionErrorBoundary>
+            <AdvancedPermissionPanels />
+          </PermissionErrorBoundary>
         </TabsContent>
       </Tabs>
     </div>
