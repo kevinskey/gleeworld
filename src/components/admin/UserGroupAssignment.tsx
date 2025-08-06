@@ -144,16 +144,42 @@ export const UserGroupAssignment = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('Fetching users for group assignments...');
       
-      // First get all users
+      // First get all users with valid user_ids
       const { data: usersData, error: usersError } = await supabase
         .from('gw_profiles')
-        .select('user_id, email, full_name, role');
+        .select('user_id, email, full_name, role')
+        .not('user_id', 'is', null); // Filter out null user_ids
 
-      if (usersError) throw usersError;
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+        throw usersError;
+      }
+
+      console.log('Fetched users:', usersData?.length || 0);
+
+      if (!usersData || usersData.length === 0) {
+        console.log('No users found');
+        setUsers([]);
+        return;
+      }
 
       // Then get their group assignments
-      const userIds = usersData?.map(u => u.user_id) || [];
+      const userIds = usersData.map(u => u.user_id).filter(Boolean);
+      console.log('User IDs for assignments:', userIds.length);
+
+      if (userIds.length === 0) {
+        setUsers(usersData.map(user => ({
+          id: user.user_id,
+          email: user.email,
+          full_name: user.full_name,
+          role: user.role,
+          user_permission_groups: []
+        })) as UserWithGroups[]);
+        return;
+      }
+
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('user_permission_groups')
         .select(`
@@ -171,20 +197,27 @@ export const UserGroupAssignment = () => {
         .in('user_id', userIds)
         .eq('is_active', true);
 
-      if (assignmentsError) throw assignmentsError;
+      if (assignmentsError) {
+        console.error('Error fetching assignments:', assignmentsError);
+        // Don't throw - just continue without assignments
+      }
+
+      console.log('Fetched assignments:', assignmentsData?.length || 0);
 
       // Combine the data
-      const usersWithGroups = usersData?.map(user => ({
+      const usersWithGroups = usersData.map(user => ({
         id: user.user_id,
         email: user.email,
         full_name: user.full_name,
         role: user.role,
         user_permission_groups: assignmentsData?.filter(a => a.user_id === user.user_id) || []
-      })) || [];
+      }));
 
+      console.log('Combined users with groups:', usersWithGroups.length);
       setUsers(usersWithGroups as UserWithGroups[]);
     } catch (err: any) {
-      console.error('Error fetching users:', err);
+      console.error('Error in fetchUsers:', err);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -248,7 +281,23 @@ export const UserGroupAssignment = () => {
       </div>
 
       <div className="space-y-4">
-        {filteredUsers.map(user => (
+        {filteredUsers.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Users Found</h3>
+              <p className="text-muted-foreground">
+                {searchTerm ? 'No users match your search criteria.' : 'No users available for group assignment.'}
+              </p>
+              {!searchTerm && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Make sure users have valid profiles in the system.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          filteredUsers.map(user => (
           <Card key={user.id}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -311,7 +360,8 @@ export const UserGroupAssignment = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
+          ))
+        )}
       </div>
 
       <AssignGroupDialog
