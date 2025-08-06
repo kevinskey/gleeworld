@@ -31,6 +31,11 @@ const ExecutiveBoardDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const { userProfile, loading: profileLoading } = useUserProfile(user);
 
+  console.log('ExecutiveBoardDashboard - Auth Loading:', authLoading);
+  console.log('ExecutiveBoardDashboard - Profile Loading:', profileLoading);
+  console.log('ExecutiveBoardDashboard - User:', user);
+  console.log('ExecutiveBoardDashboard - UserProfile:', userProfile);
+
   useEffect(() => {
     document.title = 'Executive Board Dashboard | Glee Club';
   }, []);
