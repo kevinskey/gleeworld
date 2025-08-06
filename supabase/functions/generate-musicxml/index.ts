@@ -50,8 +50,17 @@ CRITICAL REQUIREMENTS:
 7. Generate melodic, singable patterns suitable for sight-reading
 8. ALWAYS complete the entire XML structure - never truncate
 9. End with proper closing tags: </part></score-partwise>
+10. MAINTAIN CONSISTENT KEY SIGNATURE throughout the entire exercise
+11. Only include key signature in the first measure's attributes
+12. Do NOT change key signatures within the exercise unless specifically requested for multi-meter examples
 
-EXAMPLE STRUCTURE FOR 1 MEASURE:
+KEY SIGNATURE CONSISTENCY RULES:
+- Set the key signature only in measure 1
+- All subsequent measures should NOT include <key> elements in their <attributes>
+- All notes must conform to the specified key signature throughout
+- No accidentals unless part of the melodic pattern within the key
+
+EXAMPLE STRUCTURE FOR MULTI-MEASURE EXERCISE:
 <?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="3.1">
   <part-list>
@@ -72,13 +81,22 @@ EXAMPLE STRUCTURE FOR 1 MEASURE:
       <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><type>quarter</type></note>
       <note><pitch><step>F</step><octave>4</octave></pitch><duration>4</duration><type>quarter</type></note>
     </measure>
+    <measure number="2">
+      <attributes>
+        <divisions>4</divisions>
+      </attributes>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><type>quarter</type></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>4</duration><type>quarter</type></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>4</duration><type>quarter</type></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><type>quarter</type></note>
+    </measure>
   </part>
 </score-partwise>
 
 OUTPUT ONLY VALID MUSICXML - NO EXPLANATIONS OR MARKDOWN.`;
 
     const userPrompt = `Generate a ${difficulty} sight-reading exercise with:
-- Key: ${keySignature}
+- Key: ${keySignature} (SET ONLY IN MEASURE 1, maintain throughout entire exercise)
 - Time signature: ${timeSignature} 
 - ${measures} measures total
 - Note range: ${noteRange}
@@ -87,8 +105,11 @@ OUTPUT ONLY VALID MUSICXML - NO EXPLANATIONS OR MARKDOWN.`;
 - Stepwise motion with occasional small leaps
 - COMPLETE XML structure with all ${measures} measures
 - Ensure proper closing tags
+- CONSISTENT key signature - no key changes within the exercise
+- Only include <key> element in measure 1's <attributes>
+- All notes must fit within the specified key signature
 
-Generate COMPLETE MusicXML 3.1 format with ALL ${measures} measures.`;
+Generate COMPLETE MusicXML 3.1 format with ALL ${measures} measures using consistent ${keySignature} throughout.`;
 
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
