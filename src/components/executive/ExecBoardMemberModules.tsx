@@ -151,7 +151,25 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
       'auditions': 'auditions',
       'records': 'user-management',
       'booking-forms': 'booking-forms',
-      'tour-management': 'tour-management'
+      'tours': 'tour-management',
+      'admin': 'user-management',
+      'alumnae': 'user-management',
+      'approval-system': 'approval-system',
+      'budgets': 'budgets',
+      'dues-collection': 'dues-collection',
+      'glee-ledger': 'glee-ledger',
+      'inventory': 'user-management',
+      'music': 'student-conductor',
+      'scheduling-module': 'scheduling-module',
+      'section-leader': 'section-leader',
+      'service': 'service-management',
+      'sight-reading-preview': 'sight-reading-preview',
+      'sight-singing-management': 'sight-singing-management',
+      'sisterhood': 'buckets-of-love',
+      'student-conductor': 'student-conductor',
+      'user-management': 'user-management',
+      'wardrobe': 'user-management',
+      'wellness': 'buckets-of-love'
     };
     
     const mappedModuleId = moduleMapping[moduleId] || moduleId;
