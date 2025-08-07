@@ -565,7 +565,7 @@ export const PDFViewerWithAnnotations = ({
                 </div>
               </div>
               <iframe
-                src={`https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(signedUrl)}`}
+                src={signedUrl}
                 className="w-full h-full border-0 block"
                 onLoad={handleIframeLoad}
                 onError={handleIframeError}
