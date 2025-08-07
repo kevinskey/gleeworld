@@ -36,6 +36,8 @@ export const HomeRoute = () => {
   const { userProfile, loading: profileLoading } = useUserProfile(user);
   const [selectedModule, setSelectedModule] = useState<string>('email');
   const [showMessageCompose, setShowMessageCompose] = useState(false);
+  const [selectedRecipientType, setSelectedRecipientType] = useState<string>('');
+  const [selectedIndividual, setSelectedIndividual] = useState<string>('');
 
   // Show loading while auth is being determined for logged in users
   if (authLoading || (user && profileLoading)) {
@@ -97,11 +99,16 @@ export const HomeRoute = () => {
                 <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Send To:</label>
-                    <Select>
+                    <Select value={selectedRecipientType} onValueChange={(value) => {
+                      setSelectedRecipientType(value);
+                      if (value !== 'individual') {
+                        setSelectedIndividual(''); // Clear individual selection when changing recipient type
+                      }
+                    }}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select recipients..." />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-50 bg-background border shadow-lg">
                         <SelectItem value="all-members">All Members</SelectItem>
                         <SelectItem value="executive-board">Executive Board</SelectItem>
                         <SelectItem value="section-leaders">Section Leaders</SelectItem>
@@ -110,6 +117,28 @@ export const HomeRoute = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  {/* Individual Member Selector - only show when "individual" is selected */}
+                  {selectedRecipientType === 'individual' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Select Member:</label>
+                      <Select value={selectedIndividual} onValueChange={setSelectedIndividual}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a member..." />
+                        </SelectTrigger>
+                        <SelectContent className="z-50 bg-background border shadow-lg">
+                          <SelectItem value="sarah-williams">Sarah Williams (S1)</SelectItem>
+                          <SelectItem value="maria-johnson">Maria Johnson (S2)</SelectItem>
+                          <SelectItem value="jessica-brown">Jessica Brown (A1)</SelectItem>
+                          <SelectItem value="amanda-davis">Amanda Davis (A2)</SelectItem>
+                          <SelectItem value="emily-wilson">Emily Wilson (President)</SelectItem>
+                          <SelectItem value="nicole-taylor">Nicole Taylor (Vice President)</SelectItem>
+                          <SelectItem value="jasmine-lee">Jasmine Lee (Secretary)</SelectItem>
+                          <SelectItem value="destiny-clark">Destiny Clark (Treasurer)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Message Type:</label>
@@ -144,7 +173,11 @@ export const HomeRoute = () => {
                       <Send className="w-4 h-4 mr-2" />
                       Send Message
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setShowMessageCompose(false)}>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setShowMessageCompose(false);
+                      setSelectedRecipientType('');
+                      setSelectedIndividual('');
+                    }}>
                       Cancel
                     </Button>
                   </div>
