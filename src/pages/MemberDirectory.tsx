@@ -65,13 +65,15 @@ const MemberDirectory = () => {
 
   return (
     <UniversalLayout>
-      <PageHeader
-        title="Glee World Directory"
-        description="Browse and connect with Glee Club members across all roles and generations"
-        showBackButton={true}
-        backTo="/"
-        backgroundVariant="gradient"
-      />
+      <div className="mb-6">
+        <PageHeader
+          title="Glee World Directory"
+          description="Browse and connect with Glee Club members across all roles and generations"
+          showBackButton={true}
+          backTo="/"
+          backgroundVariant="gradient"
+        />
+      </div>
       <div className="container mx-auto p-6 space-y-6">
 
         {/* Search and Filter */}
