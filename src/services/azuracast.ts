@@ -96,6 +96,7 @@ class AzuraCastService {
   private baseUrl = 'http://134.199.204.155';
   private stationId = 'glee_world_radio';
   private directStreamUrl = 'http://134.199.204.155/listen/glee_world_radio/radio.mp3';
+  private proxyBaseUrl = 'https://aqbopijztqwnrmqsyatp.functions.supabase.co/radio-proxy';
 
   async getNowPlaying(): Promise<AzuraCastNowPlaying | null> {
     try {
@@ -158,11 +159,11 @@ class AzuraCastService {
     return `${this.baseUrl}/public/${this.stationId}`;
   }
 
-  // Get alternative stream URLs
+  // Get alternative stream URLs through proxy for HTTPS compatibility
   getStreamUrls(): string[] {
     return [
-      this.directStreamUrl, // Direct MP3 stream
-      this.getPublicStreamUrl(), // Public stream URL
+      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.directStreamUrl)}`, // Proxied direct stream
+      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.getPublicStreamUrl())}`, // Proxied public stream
     ];
   }
 }
