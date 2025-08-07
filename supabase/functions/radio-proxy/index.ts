@@ -17,6 +17,7 @@ serve(async (req) => {
     const streamUrl = url.searchParams.get('url')
 
     if (!streamUrl) {
+      console.error('Missing stream URL parameter')
       return new Response(
         JSON.stringify({ error: 'Missing stream URL parameter' }),
         { 
@@ -26,24 +27,63 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Proxying radio stream: ${streamUrl}`)
+    console.log(`Attempting to proxy radio stream: ${streamUrl}`)
 
-    // Fetch the radio stream with timeout and proper headers
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    // Test if the stream URL is reachable first
+    let response
+    try {
+      // Fetch the radio stream with timeout and proper headers
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => {
+        console.error(`Timeout reached for stream: ${streamUrl}`)
+        controller.abort()
+      }, 15000) // 15 second timeout
 
-    const response = await fetch(streamUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; GleeWorld Radio Player)',
-        'Accept': 'audio/*,*/*;q=0.1',
-        'Range': req.headers.get('range') || '',
-        'Connection': 'keep-alive',
-      },
-      signal: controller.signal
-    }).finally(() => clearTimeout(timeoutId))
+      response = await fetch(streamUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; GleeWorld Radio Player)',
+          'Accept': 'audio/*,*/*;q=0.1',
+          'Range': req.headers.get('range') || '',
+          'Connection': 'keep-alive',
+        },
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      
+      console.log(`Stream response status: ${response.status}`)
+      console.log(`Stream response headers:`, Object.fromEntries(response.headers.entries()))
+      
+    } catch (fetchError) {
+      console.error(`Fetch error for ${streamUrl}:`, fetchError)
+      
+      // Return a more helpful error response
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to fetch radio stream',
+          details: fetchError.message,
+          streamUrl: streamUrl,
+          timestamp: new Date().toISOString()
+        }),
+        { 
+          status: 502, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
 
     if (!response.ok) {
-      throw new Error(`Stream fetch failed: ${response.status} ${response.statusText}`)
+      console.error(`Stream returned status ${response.status}: ${response.statusText}`)
+      return new Response(
+        JSON.stringify({ 
+          error: `Stream unavailable: ${response.status} ${response.statusText}`,
+          streamUrl: streamUrl 
+        }),
+        { 
+          status: 502, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
     }
 
     // Create response headers
@@ -72,8 +112,7 @@ serve(async (req) => {
       }
     })
 
-    console.log(`Stream response status: ${response.status}`)
-    console.log(`Content-Type: ${response.headers.get('content-type')}`)
+    console.log(`Successfully proxying stream. Content-Type: ${response.headers.get('content-type')}`)
 
     // Return the proxied stream
     return new Response(response.body, {
