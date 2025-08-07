@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import { azuraCastService, type AzuraCastNowPlaying } from '@/services/azuracast';
 
 export interface RadioTrack {
   title: string;
   artist: string;
+  album?: string;
+  art?: string;
 }
 
 export interface RadioPlayerState {
@@ -13,6 +16,7 @@ export interface RadioPlayerState {
   currentTrack: RadioTrack | null;
   isLive: boolean;
   volume: number;
+  streamerName?: string;
 }
 
 export const useRadioPlayer = () => {
@@ -23,16 +27,15 @@ export const useRadioPlayer = () => {
     currentTrack: null,
     isLive: false,
     volume: 0.7,
+    streamerName: undefined,
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
-  
-  // Radio stream URLs using Supabase Edge Function proxy for Glee World Radio only
-  const RADIO_STREAM_URLS = [
-    'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/radio-proxy?url=' + encodeURIComponent('https://134.199.204.155/public/glee_world_radio'),
-    'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/radio-proxy?url=' + encodeURIComponent('http://134.199.204.155/public/glee_world_radio'),
-  ];
+  const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Get stream URLs from AzuraCast service
+  const RADIO_STREAM_URLS = azuraCastService.getStreamUrls();
 
   useEffect(() => {
     // Initialize audio element
@@ -82,10 +85,12 @@ export const useRadioPlayer = () => {
 
     const handlePlay = () => {
       setState(prev => ({ ...prev, isPlaying: true }));
+      startDataUpdates();
     };
 
     const handlePause = () => {
       setState(prev => ({ ...prev, isPlaying: false }));
+      stopDataUpdates();
     };
 
     audio.addEventListener('loadstart', handleLoadStart);
@@ -102,8 +107,51 @@ export const useRadioPlayer = () => {
       audio.removeEventListener('pause', handlePause);
       audio.pause();
       audio.src = '';
+      stopDataUpdates();
     };
   }, [toast]);
+
+  // Fetch real-time data from AzuraCast
+  const updateNowPlaying = async () => {
+    try {
+      const nowPlaying = await azuraCastService.getNowPlaying();
+      if (nowPlaying) {
+        setState(prev => ({
+          ...prev,
+          listenerCount: nowPlaying.listeners.current,
+          isLive: nowPlaying.live.is_live,
+          streamerName: nowPlaying.live.streamer_name,
+          currentTrack: nowPlaying.now_playing.song ? {
+            title: nowPlaying.now_playing.song.title || 'Unknown Title',
+            artist: nowPlaying.now_playing.song.artist || 'Unknown Artist',
+            album: nowPlaying.now_playing.song.album,
+            art: nowPlaying.now_playing.song.art,
+          } : null,
+        }));
+        console.log('Updated now playing data:', nowPlaying.now_playing.song);
+      }
+    } catch (error) {
+      console.error('Error updating now playing data:', error);
+    }
+  };
+
+  const startDataUpdates = () => {
+    // Update immediately
+    updateNowPlaying();
+    
+    // Then update every 15 seconds
+    if (updateIntervalRef.current) {
+      clearInterval(updateIntervalRef.current);
+    }
+    updateIntervalRef.current = setInterval(updateNowPlaying, 15000);
+  };
+
+  const stopDataUpdates = () => {
+    if (updateIntervalRef.current) {
+      clearInterval(updateIntervalRef.current);
+      updateIntervalRef.current = null;
+    }
+  };
 
   const play = async () => {
     if (!audioRef.current) return;
@@ -168,24 +216,6 @@ export const useRadioPlayer = () => {
       audioRef.current.volume = clampedVolume;
     }
   };
-
-  // Mock updating current track info (would be from stats endpoint)
-  useEffect(() => {
-    if (state.isPlaying) {
-      const interval = setInterval(() => {
-        setState(prev => ({
-          ...prev,
-          listenerCount: Math.floor(Math.random() * 50) + 100,
-          currentTrack: {
-            title: "Spelman College Glee Club Performance",
-            artist: "Live from Atlanta"
-          }
-        }));
-      }, 30000); // Update every 30 seconds
-
-      return () => clearInterval(interval);
-    }
-  }, [state.isPlaying]);
 
   return {
     ...state,
