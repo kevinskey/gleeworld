@@ -54,7 +54,7 @@ export const UserHero = () => {
   return (
     <div className="bg-gradient-to-r from-background to-muted/30 border-b border-border py-8 px-6 h-[300px] relative">
       <div className="container mx-auto h-full">
-        <div className="grid grid-cols-3 items-center h-full">
+        <div className="grid grid-cols-3 items-start h-full pt-4">
           {/* Left Column - Avatar */}
           <div className="flex justify-start">
             <div className="relative">
