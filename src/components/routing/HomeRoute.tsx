@@ -68,8 +68,8 @@ export const HomeRoute = () => {
         {/* User Hero Section */}
         <UserHero />
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-2 gap-6 p-6">
+        {/* Two Column Layout - stacks on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
           {/* Left Column - Messages */}
           <Card className="border-2 border-black">
             <CardHeader className="pb-4">
