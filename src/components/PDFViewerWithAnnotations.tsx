@@ -565,11 +565,12 @@ export const PDFViewerWithAnnotations = ({
                 </div>
               </div>
               <iframe
-                src={signedUrl}
+                src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
                 className="w-full h-full border-0 block"
                 onLoad={handleIframeLoad}
                 onError={handleIframeError}
                 title={`PDF Viewer for ${musicTitle}`}
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
                 style={{ minHeight: '600px', display: 'block' }}
               />
             </div>
