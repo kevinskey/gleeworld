@@ -28,11 +28,10 @@ export const useRadioPlayer = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
   
-  // Multiple stream URLs with fallbacks
+  // Radio stream URLs using Supabase Edge Function proxy to bypass CSP
   const RADIO_STREAM_URLS = [
-    'https://134.199.204.155/public/glee_world_radio', // HTTPS version
-    'https://stream.zeno.fm/your-station-id', // Example backup stream
-    'https://ice1.somafm.com/groovesalad-256-mp3' // Demo stream for testing
+    'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/radio-proxy?url=' + encodeURIComponent('https://134.199.204.155/public/glee_world_radio'),
+    'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/radio-proxy?url=' + encodeURIComponent('https://ice1.somafm.com/groovesalad-256-mp3'),
   ];
 
   useEffect(() => {
