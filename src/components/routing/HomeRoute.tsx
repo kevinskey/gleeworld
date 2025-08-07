@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
+import LandingPage from '@/pages/LandingPage';
 import { ModuleSelector } from '@/components/dashboard/ModuleSelector';
 
 export const HomeRoute = () => {
@@ -19,13 +20,13 @@ export const HomeRoute = () => {
     );
   }
 
-  // Show public landing page for everyone, with modules for authenticated users
-  return (
-    <div className="min-h-screen">
-      <GleeWorldLanding />
-      
-      {/* Modules Section at Bottom - Only for authenticated users */}
-      {user && (
+  // For authenticated users, show GleeWorldLanding with modules at bottom
+  if (user) {
+    return (
+      <div className="min-h-screen">
+        <GleeWorldLanding />
+        
+        {/* Modules Section at Bottom - Only for authenticated users */}
         <section className="py-16 px-4 bg-muted/30">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-8">
@@ -41,7 +42,10 @@ export const HomeRoute = () => {
             </div>
           </div>
         </section>
-      )}
-    </div>
-  );
+      </div>
+    );
+  }
+
+  // For public users, show the public landing page
+  return <LandingPage />;
 };
