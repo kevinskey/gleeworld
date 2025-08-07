@@ -6,7 +6,10 @@ import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Mail, Music, Calendar, Shirt, DollarSign, Users } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Mail, Music, Calendar, Shirt, DollarSign, Users, Send, X } from 'lucide-react';
 import { ModuleDisplay } from '@/components/dashboard/ModuleDisplay';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
 import { UserHero } from '@/components/dashboard/UserHero';
@@ -32,7 +35,7 @@ export const HomeRoute = () => {
   const { user, loading: authLoading } = useAuth();
   const { userProfile, loading: profileLoading } = useUserProfile(user);
   const [selectedModule, setSelectedModule] = useState<string>('email');
-  const [showMessages, setShowMessages] = useState(false);
+  const [showMessageCompose, setShowMessageCompose] = useState(false);
 
   // Show loading while auth is being determined for logged in users
   if (authLoading || (user && profileLoading)) {
@@ -74,22 +77,91 @@ export const HomeRoute = () => {
           <Card className="border-2 border-black">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-xl">
-                <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center">
-                  <Plus className="h-4 w-4 text-white" />
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 rounded-full bg-black hover:bg-black/80 p-0"
+                  onClick={() => setShowMessageCompose(!showMessageCompose)}
+                >
+                  {showMessageCompose ? (
+                    <X className="h-4 w-4 text-white" />
+                  ) : (
+                    <Plus className="h-4 w-4 text-white" />
+                  )}
+                </Button>
                 MESSAGES
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockMessages.map((message) => (
-                <div key={message.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded">
-                  <div className={`w-4 h-4 ${message.color} rounded`}></div>
-                  <span className="text-sm">{message.text}</span>
+              {showMessageCompose ? (
+                <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Send To:</label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select recipients..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all-members">All Members</SelectItem>
+                        <SelectItem value="executive-board">Executive Board</SelectItem>
+                        <SelectItem value="section-leaders">Section Leaders</SelectItem>
+                        <SelectItem value="alumnae">Alumnae</SelectItem>
+                        <SelectItem value="individual">Individual Member</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Message Type:</label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select message type..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sms">SMS Text Message</SelectItem>
+                        <SelectItem value="internal">Internal Message</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="announcement">Announcement</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Subject:</label>
+                    <Input placeholder="Enter subject..." />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Message:</label>
+                    <Textarea 
+                      placeholder="Type your message here..." 
+                      className="min-h-[100px]"
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button className="flex-1" size="sm">
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Message
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setShowMessageCompose(false)}>
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
-              ))}
-              <div className="pt-4 border-t">
-                <h3 className="text-lg font-bold italic">Old Messages</h3>
-              </div>
+              ) : (
+                <>
+                  {mockMessages.map((message) => (
+                    <div key={message.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded">
+                      <div className={`w-4 h-4 ${message.color} rounded`}></div>
+                      <span className="text-sm">{message.text}</span>
+                    </div>
+                  ))}
+                  <div className="pt-4 border-t">
+                    <h3 className="text-lg font-bold italic">Old Messages</h3>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
