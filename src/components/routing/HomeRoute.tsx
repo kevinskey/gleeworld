@@ -1,18 +1,16 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
 import { ModuleSelector } from '@/components/dashboard/ModuleSelector';
-import { useState } from 'react';
 
 export const HomeRoute = () => {
   const { user, loading: authLoading } = useAuth();
   const { userProfile, loading: profileLoading } = useUserProfile(user);
   const [selectedModule, setSelectedModule] = useState<string>('email');
 
-  // Show loading while auth is being determined
+  // Show loading while auth is being determined for logged in users
   if (authLoading || (user && profileLoading)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center">
@@ -21,13 +19,13 @@ export const HomeRoute = () => {
     );
   }
 
-  // For authenticated users, show landing page with modules at bottom
-  if (user) {
-    return (
-      <div className="min-h-screen">
-        <GleeWorldLanding />
-        
-        {/* Modules Section at Bottom */}
+  // Show public landing page for everyone, with modules for authenticated users
+  return (
+    <div className="min-h-screen">
+      <GleeWorldLanding />
+      
+      {/* Modules Section at Bottom - Only for authenticated users */}
+      {user && (
         <section className="py-16 px-4 bg-muted/30">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-8">
@@ -43,10 +41,7 @@ export const HomeRoute = () => {
             </div>
           </div>
         </section>
-      </div>
-    );
-  }
-
-  // If not authenticated, redirect to auth page
-  return <Navigate to="/auth" replace />;
+      )}
+    </div>
+  );
 };
