@@ -11,6 +11,8 @@ import { GlobalMusicPlayer } from "@/components/music/GlobalMusicPlayer";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
 
+import { HomeRoute } from "@/components/routing/HomeRoute";
+
 import Index from "./pages/Index";
 import DirectoryPage from "./pages/DirectoryPage";
 import Auth from "./pages/Auth";
@@ -726,8 +728,12 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                     />
-                     <Route 
+                      <Route 
                         path="/" 
+                        element={<HomeRoute />} 
+                      />
+                      <Route 
+                        path="/directory" 
                         element={
                           <PublicRoute>
                             <DirectoryPage />
