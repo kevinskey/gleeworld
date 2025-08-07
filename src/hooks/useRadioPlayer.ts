@@ -205,18 +205,29 @@ export const useRadioPlayer = () => {
   }, []);
 
   const play = async () => {
-    if (!audioRef.current) return;
+    console.log('Radio play() called');
+    if (!audioRef.current) {
+      console.log('No audio ref available');
+      return;
+    }
 
+    console.log('Setting loading state and starting stream attempt...');
     setState(prev => ({ ...prev, isLoading: true }));
 
     // Try each stream URL until one works
     for (const streamUrl of RADIO_STREAM_URLS) {
       try {
         console.log(`Attempting to play stream: ${streamUrl}`);
+        console.log('Audio ref state:', {
+          src: audioRef.current.src,
+          readyState: audioRef.current.readyState,
+          networkState: audioRef.current.networkState
+        });
         
         audioRef.current.src = streamUrl;
         audioRef.current.volume = state.volume;
         
+        console.log('Calling audio.play()...');
         await audioRef.current.play();
         
         toast({
