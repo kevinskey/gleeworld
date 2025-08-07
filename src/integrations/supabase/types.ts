@@ -6949,6 +6949,60 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_radio_station_state: {
+        Row: {
+          created_at: string
+          current_song_album: string | null
+          current_song_art: string | null
+          current_song_artist: string | null
+          current_song_title: string | null
+          id: string
+          is_live: boolean | null
+          is_online: boolean | null
+          last_event_type: string | null
+          last_updated: string
+          listener_count: number | null
+          song_started_at: string | null
+          station_id: string
+          station_name: string | null
+          streamer_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_song_album?: string | null
+          current_song_art?: string | null
+          current_song_artist?: string | null
+          current_song_title?: string | null
+          id?: string
+          is_live?: boolean | null
+          is_online?: boolean | null
+          last_event_type?: string | null
+          last_updated?: string
+          listener_count?: number | null
+          song_started_at?: string | null
+          station_id: string
+          station_name?: string | null
+          streamer_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_song_album?: string | null
+          current_song_art?: string | null
+          current_song_artist?: string | null
+          current_song_title?: string | null
+          id?: string
+          is_live?: boolean | null
+          is_online?: boolean | null
+          last_event_type?: string | null
+          last_updated?: string
+          listener_count?: number | null
+          song_started_at?: string | null
+          station_id?: string
+          station_name?: string | null
+          streamer_name?: string | null
+        }
+        Relationships: []
+      }
       gw_radio_stats: {
         Row: {
           created_at: string | null

@@ -1,6 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { azuraCastService, type AzuraCastNowPlaying } from '@/services/azuracast';
+import { supabase } from "@/integrations/supabase/client";
+
+interface RadioStationState {
+  id: string;
+  station_id: string;
+  station_name: string | null;
+  is_online: boolean;
+  is_live: boolean;
+  streamer_name: string | null;
+  listener_count: number;
+  current_song_title: string | null;
+  current_song_artist: string | null;
+  current_song_album: string | null;
+  current_song_art: string | null;
+  song_started_at: string | null;
+  last_event_type: string | null;
+  last_updated: string;
+  created_at: string;
+}
 
 export interface RadioTrack {
   title: string;
@@ -51,21 +70,7 @@ export const useRadioPlayer = () => {
 
     const handleCanPlay = () => {
       console.log('Radio stream can play - checking if live...');
-      setState(prev => ({ ...prev, isLoading: false, isLive: true }));
-      
-      // Additional check to see if stream is actually broadcasting
-      if (audioRef.current) {
-        setTimeout(() => {
-          // If we can get duration or the stream is playing, it's likely live
-          const isActuallyLive = audioRef.current && (
-            audioRef.current.duration === Infinity || // Live streams often have infinite duration
-            !audioRef.current.paused ||
-            audioRef.current.readyState >= 3 // HAVE_FUTURE_DATA or better
-          );
-          console.log('Live status check:', isActuallyLive, 'Duration:', audioRef.current?.duration, 'ReadyState:', audioRef.current?.readyState);
-          setState(prev => ({ ...prev, isLive: isActuallyLive }));
-        }, 1000);
-      }
+      setState(prev => ({ ...prev, isLoading: false }));
     };
 
     const handleError = (e: ErrorEvent) => {
@@ -85,12 +90,10 @@ export const useRadioPlayer = () => {
 
     const handlePlay = () => {
       setState(prev => ({ ...prev, isPlaying: true }));
-      startDataUpdates();
     };
 
     const handlePause = () => {
       setState(prev => ({ ...prev, isPlaying: false }));
-      stopDataUpdates();
     };
 
     audio.addEventListener('loadstart', handleLoadStart);
@@ -107,51 +110,89 @@ export const useRadioPlayer = () => {
       audio.removeEventListener('pause', handlePause);
       audio.pause();
       audio.src = '';
-      stopDataUpdates();
     };
   }, [toast]);
 
-  // Fetch real-time data from AzuraCast
-  const updateNowPlaying = async () => {
-    try {
-      const nowPlaying = await azuraCastService.getNowPlaying();
-      if (nowPlaying) {
-        setState(prev => ({
-          ...prev,
-          listenerCount: nowPlaying.listeners.current,
-          isLive: nowPlaying.live.is_live,
-          streamerName: nowPlaying.live.streamer_name,
-          currentTrack: nowPlaying.now_playing.song ? {
-            title: nowPlaying.now_playing.song.title || 'Unknown Title',
-            artist: nowPlaying.now_playing.song.artist || 'Unknown Artist',
-            album: nowPlaying.now_playing.song.album,
-            art: nowPlaying.now_playing.song.art,
-          } : null,
-        }));
-        console.log('Updated now playing data:', nowPlaying.now_playing.song);
+  // Subscribe to real-time radio station updates
+  useEffect(() => {
+    console.log('Setting up real-time radio station subscription...');
+
+    // Initial fetch of station state
+    const fetchInitialState = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('gw_radio_station_state')
+          .select('*')
+          .eq('station_id', 'glee_world_radio')
+          .single();
+
+        if (error) {
+          console.error('Error fetching initial station state:', error);
+          return;
+        }
+
+        if (data) {
+          console.log('Initial station state:', data);
+          setState(prev => ({
+            ...prev,
+            listenerCount: data.listener_count || 0,
+            isLive: data.is_live || false,
+            streamerName: data.streamer_name || undefined,
+            currentTrack: data.current_song_title ? {
+              title: data.current_song_title,
+              artist: data.current_song_artist || 'Unknown Artist',
+              album: data.current_song_album || undefined,
+              art: data.current_song_art || undefined,
+            } : null,
+          }));
+        }
+      } catch (error) {
+        console.error('Error in initial station state fetch:', error);
       }
-    } catch (error) {
-      console.error('Error updating now playing data:', error);
-    }
-  };
+    };
 
-  const startDataUpdates = () => {
-    // Update immediately
-    updateNowPlaying();
-    
-    // Then update every 15 seconds
-    if (updateIntervalRef.current) {
-      clearInterval(updateIntervalRef.current);
-    }
-    updateIntervalRef.current = setInterval(updateNowPlaying, 15000);
-  };
+    fetchInitialState();
 
-  const stopDataUpdates = () => {
-    if (updateIntervalRef.current) {
-      clearInterval(updateIntervalRef.current);
-      updateIntervalRef.current = null;
-    }
-  };
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('radio-station-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'gw_radio_station_state',
+          filter: 'station_id=eq.glee_world_radio'
+        },
+        (payload) => {
+          console.log('Real-time radio update received:', payload);
+          
+          if (payload.new) {
+            const data = payload.new as RadioStationState;
+            setState(prev => ({
+              ...prev,
+              listenerCount: data.listener_count || 0,
+              isLive: data.is_live || false,
+              streamerName: data.streamer_name || undefined,
+              currentTrack: data.current_song_title ? {
+                title: data.current_song_title,
+                artist: data.current_song_artist || 'Unknown Artist',
+                album: data.current_song_album || undefined,
+                art: data.current_song_art || undefined,
+              } : null,
+            }));
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('Radio subscription status:', status);
+      });
+
+    return () => {
+      console.log('Cleaning up radio subscription...');
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const play = async () => {
     if (!audioRef.current) return;
