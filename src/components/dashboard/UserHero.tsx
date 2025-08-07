@@ -72,11 +72,11 @@ export const UserHero = () => {
           </div>
 
           {/* Center Column - User Info */}
-          <div className="flex flex-col space-y-2">
-            <h1 className="text-4xl font-bold text-foreground">
+          <div className="flex flex-col space-y-2 pl-8">
+            <h1 className="text-8xl font-bold text-foreground">
               {getDisplayName()}
             </h1>
-            <div className="flex items-center gap-2 text-lg text-muted-foreground">
+            <div className="flex items-center gap-2 text-2xl text-muted-foreground">
               <span>{getRole()}</span>
               {getExecBoardRole() && (
                 <>
