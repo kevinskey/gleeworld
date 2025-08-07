@@ -61,17 +61,17 @@ export const DashboardTemplate = ({
     <UniversalLayout>
       <div className="min-h-screen bg-background">
         {/* Header Card */}
-        <Card className="mb-6 relative overflow-hidden min-h-[200px] border-primary/20">
+        <Card className="mb-6 relative overflow-hidden min-h-[180px] sm:min-h-[200px] border-primary/20">
           {backgroundImage && (
             <div 
               className="absolute inset-0 bg-cover bg-center opacity-20"
               style={{ backgroundImage: `url(${backgroundImage})` }}
             />
           )}
-          <CardHeader className="relative">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Avatar className="h-12 w-12 sm:h-16 sm:w-16">
+          <CardHeader className="relative p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <Avatar className="h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0">
                 <AvatarImage src={user.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.full_name || user.email || 'Admin'}`} />
                 <AvatarFallback className="text-sm sm:text-lg font-semibold">
                   {getInitials(user.full_name || user.email || 'Admin')}
@@ -97,12 +97,12 @@ export const DashboardTemplate = ({
                 </div>
               </div>
             </div>
-              {headerActions && (
-                <div className="flex items-center gap-2">
-                  {headerActions}
-                </div>
-              )}
-            </div>
+            {headerActions && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {headerActions}
+              </div>
+            )}
+          </div>
           </CardHeader>
         </Card>
 

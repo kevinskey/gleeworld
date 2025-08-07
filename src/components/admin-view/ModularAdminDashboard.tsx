@@ -88,7 +88,7 @@ export const ModularAdminDashboard = ({ user }: ModularAdminDashboardProps) => {
           </div>
           
           {/* Modules grid */}
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {category.modules.map((module) => (
               <ModuleCard
                 key={module.id}
@@ -117,7 +117,7 @@ export const ModularAdminDashboard = ({ user }: ModularAdminDashboardProps) => {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {ModuleRegistry.getCategories().map((category) => {
           console.log('ModularAdminDashboard: Rendering category:', category.title, 'modules:', category.modules.length, 'id:', category.id);
           const CategoryIcon = category.icon;
