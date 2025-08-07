@@ -98,7 +98,7 @@ const DirectoryPage = () => {
     {
       title: "Sheet Music Library",
       description: "Digital sheet music collection and annotations",
-      route: "/sheet-music",
+      route: "/music-library",
       icon: <Music className="h-5 w-5" />,
       category: "Music",
       status: "active"
