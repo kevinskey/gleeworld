@@ -2,6 +2,8 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PublicLayout } from "@/components/layout/PublicLayout";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, 
@@ -225,13 +227,14 @@ const DirectoryPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold">GleeWorld Directory</h1>
-        <p className="text-lg text-muted-foreground">
-          Complete navigation to all modules and features
-        </p>
-      </div>
+    <PublicLayout>
+      <PageHeader
+        title="GleeWorld Directory"
+        description="Complete navigation to all modules and features - Your gateway to 100+ years of musical excellence"
+        showBackButton={false}
+        backgroundVariant="gradient"
+      />
+      <div className="container mx-auto p-6 space-y-8">
 
       {categories.map(category => (
         <div key={category} className="space-y-4">
@@ -280,7 +283,8 @@ const DirectoryPage = () => {
           </div>
         </div>
       ))}
-    </div>
+      </div>
+    </PublicLayout>
   );
 };
 
