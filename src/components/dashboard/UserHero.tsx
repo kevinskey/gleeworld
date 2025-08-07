@@ -52,7 +52,7 @@ export const UserHero = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-background to-muted/30 border-b border-border py-8 px-6 h-[300px] relative">
+    <div className="bg-gradient-to-r from-background to-muted/30 border-b border-border py-8 px-6 h-[400px] relative">
       <div className="container mx-auto h-full">
         <div className="grid items-start h-full pt-4" style={{ gridTemplateColumns: '20% 60% 20%' }}>
           {/* Left Column - Avatar */}
