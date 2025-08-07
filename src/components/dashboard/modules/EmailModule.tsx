@@ -12,7 +12,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 export const EmailModule = () => {
+  const { toast } = useToast();
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [showCompose, setShowCompose] = useState(false);
   const [archivedEmails, setArchivedEmails] = useState<string[]>([]);
@@ -21,6 +23,9 @@ export const EmailModule = () => {
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
 
   // Fetch real users from database
   useEffect(() => {
@@ -129,6 +134,102 @@ export const EmailModule = () => {
     setDeletedEmails(prev => [...prev, emailId]);
     if (selectedEmail === emailId) {
       setSelectedEmail(null);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!selectedRecipients.length) {
+      toast({
+        title: "Error",
+        description: "Please select at least one recipient",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!subject.trim()) {
+      toast({
+        title: "Error", 
+        description: "Please enter a subject",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!message.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a message",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSending(true);
+
+    try {
+      // Get recipient emails
+      const recipientEmails = selectedRecipients.map(recipientId => {
+        const user = users.find(u => u.id === recipientId);
+        return user?.email;
+      }).filter(Boolean);
+
+      if (!recipientEmails.length) {
+        throw new Error("No valid recipient emails found");
+      }
+
+      // Send email using the existing edge function
+      const { error } = await supabase.functions.invoke('gw-send-email', {
+        body: {
+          to: recipientEmails,
+          subject: subject,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 20px;">
+                <h1 style="color: #2563eb; margin: 0;">GleeWorld</h1>
+                <p style="color: #666; margin: 5px 0 0 0;">Spelman College Glee Club</p>
+              </div>
+              
+              <h2 style="color: #333; margin-bottom: 20px;">${subject}</h2>
+              
+              <div style="line-height: 1.6; color: #333; white-space: pre-wrap;">
+                ${message}
+              </div>
+              
+              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 14px;">
+                <p>Sent via GleeWorld</p>
+                <p>Spelman College Glee Club</p>
+              </div>
+            </div>
+          `,
+          from: "GleeWorld <noreply@gleeworld.org>"
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: `Email sent to ${recipientEmails.length} recipient${recipientEmails.length > 1 ? 's' : ''}`,
+      });
+
+      // Clear form
+      setSelectedRecipients([]);
+      setSubject('');
+      setMessage('');
+      setShowCompose(false);
+
+    } catch (error: any) {
+      console.error('Error sending email:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send email",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
     }
   };
 
@@ -261,14 +362,31 @@ export const EmailModule = () => {
                   </div>
                   <div>
                     <Label htmlFor="subject">Subject</Label>
-                    <Input id="subject" placeholder="Email subject..." className="mt-1" />
+                    <Input 
+                      id="subject" 
+                      placeholder="Email subject..." 
+                      className="mt-1" 
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                    />
                   </div>
                   <div>
                     <Label htmlFor="message">Message</Label>
-                    <Textarea id="message" placeholder="Write your message..." className="mt-1 h-40" />
+                    <Textarea 
+                      id="message" 
+                      placeholder="Write your message..." 
+                      className="mt-1 h-40" 
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                    />
                   </div>
                   <div className="flex gap-2 pt-4">
-                    <Button>Send</Button>
+                    <Button 
+                      onClick={handleSendEmail}
+                      disabled={sending}
+                    >
+                      {sending ? 'Sending...' : 'Send'}
+                    </Button>
                     <Button variant="outline">Save Draft</Button>
                   </div>
                 </div>
