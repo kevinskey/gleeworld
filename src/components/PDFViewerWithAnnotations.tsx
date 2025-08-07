@@ -572,11 +572,24 @@ export const PDFViewerWithAnnotations = ({
                 </div>
               </div>
               <div className="h-full">
-                <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js`}>
-                  <Viewer
-                    fileUrl={signedUrl}
-                    plugins={[defaultLayoutPluginInstance]}
-                  />
+                <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                  <div 
+                    style={{ height: '750px' }}
+                    onLoad={() => {
+                      console.log('PDF Viewer loaded successfully');
+                      setIsLoading(false);
+                    }}
+                    onError={(error) => {
+                      console.error('PDF Viewer error:', error);
+                      setError('Failed to load PDF viewer');
+                      setIsLoading(false);
+                    }}
+                  >
+                    <Viewer
+                      fileUrl={signedUrl}
+                      plugins={[defaultLayoutPluginInstance]}
+                    />
+                  </div>
                 </Worker>
               </div>
             </div>
