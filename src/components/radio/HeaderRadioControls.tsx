@@ -75,7 +75,7 @@ export const HeaderRadioControls = () => {
         </div>
       </PopoverTrigger>
 
-      <PopoverContent className="w-80 p-4" align="end">
+      <PopoverContent className="w-80 p-4 z-50" align="end">
         <div className="space-y-4">
           {/* Header */}
           <div className="flex items-center justify-between">
