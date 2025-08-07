@@ -3,10 +3,14 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
+import { ModuleSelector } from '@/components/dashboard/ModuleSelector';
+import { useState } from 'react';
 
 export const HomeRoute = () => {
   const { user, loading: authLoading } = useAuth();
   const { userProfile, loading: profileLoading } = useUserProfile(user);
+  const [selectedModule, setSelectedModule] = useState<string>('email');
 
   // Show loading while auth is being determined
   if (authLoading || (user && profileLoading)) {
@@ -17,12 +21,32 @@ export const HomeRoute = () => {
     );
   }
 
-  // If not authenticated, redirect to auth page
-  if (!user) {
-    return <Navigate to="/auth" replace />;
+  // For authenticated users, show landing page with modules at bottom
+  if (user) {
+    return (
+      <div className="min-h-screen">
+        <GleeWorldLanding />
+        
+        {/* Modules Section at Bottom */}
+        <section className="py-16 px-4 bg-muted/30">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-foreground mb-2">Quick Access Modules</h2>
+              <p className="text-muted-foreground">Access your dashboard tools and resources</p>
+            </div>
+            
+            <div className="max-w-4xl mx-auto">
+              <ModuleSelector 
+                selectedModule={selectedModule}
+                onSelectModule={setSelectedModule}
+              />
+            </div>
+          </div>
+        </section>
+      </div>
+    );
   }
 
-  // Redirect authenticated users to their appropriate dashboard based on role
-  const redirectPath = userProfile?.role === 'admin' || userProfile?.is_admin ? '/admin' : '/dashboard';
-  return <Navigate to={redirectPath} replace />;
+  // If not authenticated, redirect to auth page
+  return <Navigate to="/auth" replace />;
 };
