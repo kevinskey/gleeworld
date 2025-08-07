@@ -1,8 +1,8 @@
 import React from 'react';
-import { AdminViewDashboard } from '@/components/admin-view/AdminViewDashboard';
+import { FreshAdminDashboard } from '@/components/admin/FreshAdminDashboard';
 
 const AdminDashboard = () => {
-  return <AdminViewDashboard />;
+  return <FreshAdminDashboard />;
 };
 
 export default AdminDashboard;
