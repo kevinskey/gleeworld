@@ -88,7 +88,7 @@ export const UserHero = () => {
           </div>
 
           {/* Right Column - Vocal Section */}
-          <div className="flex items-center justify-end pr-12" style={{ height: '85%', fontSize: '16rem', fontWeight: 'bold', color: 'hsl(var(--muted-foreground) / 0.15)' }}>
+          <div className="flex items-center justify-center h-48" style={{ fontSize: '12rem', fontWeight: 'bold', color: 'hsl(var(--muted-foreground) / 0.15)' }}>
             {getVocalSection()}
           </div>
         </div>
