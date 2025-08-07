@@ -22,11 +22,7 @@ export const HomeRoute = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  // If authenticated but no profile, redirect to profile setup
-  if (!userProfile) {
-    return <Navigate to="/profile/setup" replace />;
-  }
-
-  // Redirect authenticated users to their appropriate dashboard
-  return <Navigate to="/dashboard" replace />;
+  // Redirect authenticated users to their appropriate dashboard based on role
+  const redirectPath = userProfile?.role === 'admin' || userProfile?.is_admin ? '/admin' : '/dashboard';
+  return <Navigate to={redirectPath} replace />;
 };
