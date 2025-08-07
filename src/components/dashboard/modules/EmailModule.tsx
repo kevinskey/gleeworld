@@ -271,7 +271,7 @@ export const EmailModule = () => {
           </div>
 
           <div className="flex gap-2">
-            <Dialog>
+            <Dialog open={showCompose} onOpenChange={setShowCompose}>
               <DialogTrigger asChild>
                 <Button size="sm" className="flex-1">
                   Compose
