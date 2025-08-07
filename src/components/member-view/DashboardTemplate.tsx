@@ -61,7 +61,7 @@ export const DashboardTemplate = ({
     <UniversalLayout>
       <div className="min-h-screen bg-background">
         {/* Header Card */}
-        <Card className="mb-6 relative overflow-hidden min-h-[1000px] flex items-center bg-red-500 border-8 border-yellow-500">
+        <Card className="mb-6 relative overflow-hidden border-0 bg-gradient-to-r from-primary/10 to-secondary/10">
           {backgroundImage && (
             <div 
               className="absolute inset-0 bg-cover bg-center opacity-20"
@@ -69,38 +69,38 @@ export const DashboardTemplate = ({
             />
           )}
           <CardHeader className="relative">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Avatar className="h-12 w-12 sm:h-16 sm:w-16">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0">
                 <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.full_name}`} />
                 <AvatarFallback className="text-sm sm:text-lg font-semibold">
                   {getInitials(user.full_name)}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                <CardTitle className="text-lg sm:text-2xl truncate">{title}</CardTitle>
-                <CardDescription className="text-sm sm:text-base mt-1 truncate">
+                <CardTitle className="text-lg sm:text-2xl line-clamp-1">{title}</CardTitle>
+                <CardDescription className="text-sm sm:text-base mt-1 line-clamp-1">
                   {subtitle}
                 </CardDescription>
-                <div className="flex items-center gap-1 sm:gap-2 mt-2 flex-wrap">
-                  <Badge className={`${getRoleBadgeColor(user.role)} text-xs px-1 sm:px-2`}>
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <Badge className={`${getRoleBadgeColor(user.role)} text-xs px-2 py-1`}>
                     <span className="sm:hidden">{user.role.split('-')[0].toUpperCase()}</span>
                     <span className="hidden sm:inline">{user.role.replace('-', ' ').toUpperCase()}</span>
                   </Badge>
                   {user.is_exec_board && user.exec_board_role && (
-                    <Badge variant="outline" className="border-primary/20 text-xs px-1 sm:px-2 truncate max-w-[120px] sm:max-w-none">
+                    <Badge variant="outline" className="border-primary/20 text-xs px-2 py-1 max-w-[120px] sm:max-w-none">
                       <span className="truncate">{user.exec_board_role}</span>
                     </Badge>
                   )}
                 </div>
               </div>
             </div>
-              {headerActions && (
-                <div className="flex items-center gap-2">
-                  {headerActions}
-                </div>
-              )}
-            </div>
+            {headerActions && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {headerActions}
+              </div>
+            )}
+          </div>
           </CardHeader>
         </Card>
 

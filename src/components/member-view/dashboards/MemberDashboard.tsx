@@ -18,8 +18,8 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
   const { isExecutiveBoard } = useUserRole();
   
   return (
-    <div className="min-h-screen bg-muted/30 p-6 -m-6">
-      <div className="space-y-6">
+    <div className="min-h-screen bg-muted/30 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <CommunityHubWidget />
         
         {/* Executive Board Modules - Show only for exec board members */}
