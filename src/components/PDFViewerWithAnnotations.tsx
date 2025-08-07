@@ -416,7 +416,7 @@ export const PDFViewerWithAnnotations = ({
   const colors = ["#ff0000", "#000000", "#0000ff", "#008000", "#800080", "#ffa500"];
 
   return (
-    <Card className={cn("w-full max-w-6xl mx-auto", className)}>
+    <Card className={cn("w-full", className)}>
       {/* Annotation Toolbar */}
       <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded-t-lg border-b">
         {/* Annotation Toggle */}
@@ -537,7 +537,7 @@ export const PDFViewerWithAnnotations = ({
 
       {/* PDF Content */}
       <CardContent className="p-0">
-        <div className="relative h-[800px] w-full">
+        <div className="relative h-[600px] md:h-[700px] lg:h-[800px] w-full">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
               <div className="flex flex-col items-center space-y-2">
