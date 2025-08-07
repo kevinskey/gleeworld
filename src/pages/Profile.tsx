@@ -279,7 +279,7 @@ const Profile = () => {
           dietary_restrictions: selectedDietaryRestrictions,
           allergies: data.allergies,
           parent_guardian_contact: data.parent_guardian_contact,
-          join_date: data.join_date,
+          join_date: data.join_date === "" ? null : data.join_date,
           mentor_opt_in: data.mentor_opt_in,
           reunion_rsvp: data.reunion_rsvp,
           
@@ -328,7 +328,7 @@ const Profile = () => {
           dietary_restrictions: selectedDietaryRestrictions,
           allergies: data.allergies,
           parent_guardian_contact: data.parent_guardian_contact,
-          join_date: data.join_date,
+          join_date: data.join_date === "" ? null : data.join_date,
           mentor_opt_in: data.mentor_opt_in,
           reunion_rsvp: data.reunion_rsvp,
           
