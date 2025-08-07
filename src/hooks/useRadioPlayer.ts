@@ -47,7 +47,22 @@ export const useRadioPlayer = () => {
     };
 
     const handleCanPlay = () => {
+      console.log('Radio stream can play - checking if live...');
       setState(prev => ({ ...prev, isLoading: false, isLive: true }));
+      
+      // Additional check to see if stream is actually broadcasting
+      if (audioRef.current) {
+        setTimeout(() => {
+          // If we can get duration or the stream is playing, it's likely live
+          const isActuallyLive = audioRef.current && (
+            audioRef.current.duration === Infinity || // Live streams often have infinite duration
+            !audioRef.current.paused ||
+            audioRef.current.readyState >= 3 // HAVE_FUTURE_DATA or better
+          );
+          console.log('Live status check:', isActuallyLive, 'Duration:', audioRef.current?.duration, 'ReadyState:', audioRef.current?.readyState);
+          setState(prev => ({ ...prev, isLive: isActuallyLive }));
+        }, 1000);
+      }
     };
 
     const handleError = (e: ErrorEvent) => {
