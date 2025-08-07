@@ -34,6 +34,7 @@ export interface RadioPlayerState {
   listenerCount: number;
   currentTrack: RadioTrack | null;
   isLive: boolean;
+  isOnline: boolean;
   volume: number;
   streamerName?: string;
 }
@@ -45,6 +46,7 @@ export const useRadioPlayer = () => {
     listenerCount: 0,
     currentTrack: null,
     isLive: false,
+    isOnline: false,
     volume: 0.7,
     streamerName: undefined,
   });
@@ -120,6 +122,7 @@ export const useRadioPlayer = () => {
     // Initial fetch of station state
     const fetchInitialState = async () => {
       try {
+        console.log('Fetching initial radio station state...');
         const { data, error } = await supabase
           .from('gw_radio_station_state')
           .select('*')
@@ -132,11 +135,12 @@ export const useRadioPlayer = () => {
         }
 
         if (data) {
-          console.log('Initial station state:', data);
+          console.log('Initial station state from DB:', data);
           setState(prev => ({
             ...prev,
             listenerCount: data.listener_count || 0,
             isLive: data.is_live || false,
+            isOnline: data.is_online || false, // Add online status
             streamerName: data.streamer_name || undefined,
             currentTrack: data.current_song_title ? {
               title: data.current_song_title,
@@ -145,6 +149,7 @@ export const useRadioPlayer = () => {
               art: data.current_song_art || undefined,
             } : null,
           }));
+          console.log('Updated radio player state with DB data');
         }
       } catch (error) {
         console.error('Error in initial station state fetch:', error);
@@ -169,10 +174,12 @@ export const useRadioPlayer = () => {
           
           if (payload.new) {
             const data = payload.new as RadioStationState;
+            console.log('Updating radio state with real-time data:', data);
             setState(prev => ({
               ...prev,
               listenerCount: data.listener_count || 0,
               isLive: data.is_live || false,
+              isOnline: data.is_online || false,
               streamerName: data.streamer_name || undefined,
               currentTrack: data.current_song_title ? {
                 title: data.current_song_title,
@@ -186,6 +193,9 @@ export const useRadioPlayer = () => {
       )
       .subscribe((status) => {
         console.log('Radio subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to radio updates');
+        }
       });
 
     return () => {

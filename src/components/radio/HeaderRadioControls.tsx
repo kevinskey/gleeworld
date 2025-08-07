@@ -13,6 +13,7 @@ export const HeaderRadioControls = () => {
     isPlaying, 
     isLoading, 
     isLive, 
+    isOnline,
     listenerCount, 
     currentTrack, 
     volume, 
@@ -27,7 +28,7 @@ export const HeaderRadioControls = () => {
       <PopoverTrigger asChild>
         <div className="flex items-center gap-2">
           <EnhancedTooltip 
-            content={`Glee World Radio ${isLive ? '(LIVE)' : '(Offline)'}`}
+            content={`Glee World Radio ${isOnline ? (isLive ? '(LIVE DJ)' : '(Online)') : '(Offline)'}`}
           >
             <Button
               variant="ghost"
@@ -77,15 +78,15 @@ export const HeaderRadioControls = () => {
               <h3 className="font-semibold">Glee World Radio</h3>
             </div>
             <Badge 
-              variant={isLive ? "default" : "secondary"}
-              className={isLive ? "bg-red-500 hover:bg-red-600" : ""}
+              variant={isOnline ? (isLive ? "default" : "secondary") : "outline"}
+              className={isLive ? "bg-red-500 hover:bg-red-600" : isOnline ? "bg-green-500 hover:bg-green-600" : ""}
             >
-              {isLive ? 'LIVE' : 'OFFLINE'}
+              {isLive ? 'LIVE DJ' : isOnline ? 'ONLINE' : 'OFFLINE'}
             </Badge>
           </div>
 
           {/* Now Playing */}
-          {currentTrack && isPlaying && (
+          {currentTrack && isOnline && (
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">NOW PLAYING</p>
               <p className="font-medium text-sm">{currentTrack.title}</p>
