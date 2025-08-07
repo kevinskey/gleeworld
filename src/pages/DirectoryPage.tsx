@@ -228,13 +228,15 @@ const DirectoryPage = () => {
 
   return (
     <PublicLayout>
-      <PageHeader
-        title="GleeWorld Directory"
-        description="Complete navigation to all modules and features - Your gateway to 100+ years of musical excellence"
-        showBackButton={false}
-        backgroundVariant="gradient"
-      />
-      <div className="container mx-auto px-8 py-6 space-y-8">
+      <div className="px-4 sm:px-0">
+        <PageHeader
+          title="GleeWorld Directory"
+          description="Complete navigation to all modules and features"
+          showBackButton={false}
+          backgroundVariant="gradient"
+        />
+      </div>
+      <div className="container mx-auto px-4 sm:px-8 py-6 space-y-8">
 
       {categories.map(category => (
         <div key={category} className="space-y-4">
