@@ -56,9 +56,9 @@ export const UserHero = () => {
       <div className="container mx-auto h-full">
         <div className="grid grid-cols-3 items-center h-full">
           {/* Left Column - Avatar */}
-          <div className="flex justify-center">
+          <div className="flex justify-start">
             <div className="relative">
-              <Avatar className="w-36 h-36 border-4 border-primary/20">
+              <Avatar className="w-48 h-48 border-4 border-primary/20">
                 <AvatarImage 
                   src={userProfile?.avatar_url || undefined} 
                   alt={getDisplayName()}
@@ -75,11 +75,11 @@ export const UserHero = () => {
           </div>
 
           {/* Center Column - User Info */}
-          <div className="flex flex-col space-y-2 text-center">
+          <div className="flex flex-col space-y-2">
             <h1 className="text-4xl font-bold text-foreground">
               {getDisplayName()}
             </h1>
-            <div className="flex items-center justify-center gap-2 text-lg text-muted-foreground">
+            <div className="flex items-center gap-2 text-lg text-muted-foreground">
               <span>{getRole()}</span>
               {getExecBoardRole() && (
                 <>
@@ -91,7 +91,7 @@ export const UserHero = () => {
           </div>
 
           {/* Right Column - Vocal Section */}
-          <div className="flex items-center justify-center pr-12" style={{ height: '85%', fontSize: '16rem', fontWeight: 'bold', color: 'hsl(var(--muted-foreground) / 0.15)' }}>
+          <div className="flex items-center justify-end pr-12" style={{ height: '85%', fontSize: '16rem', fontWeight: 'bold', color: 'hsl(var(--muted-foreground) / 0.15)' }}>
             {getVocalSection()}
           </div>
         </div>
