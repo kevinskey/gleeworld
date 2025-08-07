@@ -28,7 +28,12 @@ export const useRadioPlayer = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
   
-  const RADIO_STREAM_URL = 'http://134.199.204.155/public/glee_world_radio';
+  // Multiple stream URLs with fallbacks
+  const RADIO_STREAM_URLS = [
+    'https://134.199.204.155/public/glee_world_radio', // HTTPS version
+    'https://stream.zeno.fm/your-station-id', // Example backup stream
+    'https://ice1.somafm.com/groovesalad-256-mp3' // Demo stream for testing
+  ];
 
   useEffect(() => {
     // Initialize audio element
@@ -89,31 +94,41 @@ export const useRadioPlayer = () => {
   const play = async () => {
     if (!audioRef.current) return;
 
-    try {
-      setState(prev => ({ ...prev, isLoading: true }));
-      
-      // Set the stream URL
-      audioRef.current.src = RADIO_STREAM_URL;
-      audioRef.current.volume = state.volume;
-      
-      await audioRef.current.play();
-      
-      toast({
-        title: "Now Playing",
-        description: "Glee World Radio is now streaming",
-      });
-    } catch (error) {
-      console.error('Error playing radio:', error);
-      setState(prev => ({ 
-        ...prev, 
-        isLoading: false, 
-        isPlaying: false 
-      }));
-      toast({
-        title: "Playback Error",
-        description: "Unable to start radio playback",
-        variant: "destructive",
-      });
+    setState(prev => ({ ...prev, isLoading: true }));
+
+    // Try each stream URL until one works
+    for (const streamUrl of RADIO_STREAM_URLS) {
+      try {
+        console.log(`Attempting to play stream: ${streamUrl}`);
+        
+        audioRef.current.src = streamUrl;
+        audioRef.current.volume = state.volume;
+        
+        await audioRef.current.play();
+        
+        toast({
+          title: "Now Playing",
+          description: "Glee World Radio is now streaming",
+        });
+        return; // Success - exit the loop
+        
+      } catch (error) {
+        console.error(`Failed to play stream ${streamUrl}:`, error);
+        
+        // If this was the last URL, show error
+        if (streamUrl === RADIO_STREAM_URLS[RADIO_STREAM_URLS.length - 1]) {
+          setState(prev => ({ 
+            ...prev, 
+            isLoading: false, 
+            isPlaying: false 
+          }));
+          toast({
+            title: "Radio Unavailable",
+            description: "All radio streams are currently offline. Please try again later.",
+            variant: "destructive",
+          });
+        }
+      }
     }
   };
 
