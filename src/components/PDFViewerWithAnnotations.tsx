@@ -550,27 +550,26 @@ export const PDFViewerWithAnnotations = ({
             </div>
           )}
           
-          {/* Google Docs PDF Viewer - Show when not in annotation mode */}
+          {/* PDF.js PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
             <div className="w-full h-full bg-white">
               <div className="text-xs text-muted-foreground p-2 bg-muted/20 flex justify-between items-center">
-                <span>Loading: {musicTitle}</span>
+                <span>Viewing: {musicTitle}</span>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => setAnnotationMode(true)}>
-                    Try Annotation Mode
+                    Switch to Annotation Mode
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => window.open(signedUrl, '_blank')}>
-                    Open Direct
+                    Open in New Tab
                   </Button>
                 </div>
               </div>
               <iframe
-                src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
+                src={`https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(signedUrl)}`}
                 className="w-full h-full border-0 block"
                 onLoad={handleIframeLoad}
                 onError={handleIframeError}
-                title="PDF Viewer"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                title={`PDF Viewer for ${musicTitle}`}
                 style={{ minHeight: '600px', display: 'block' }}
               />
             </div>
