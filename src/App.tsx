@@ -166,6 +166,15 @@ const App = () => {
                   <Toaster />
                   <Sonner />
                   <Routes>
+                    {/* Root route */}
+                    <Route 
+                      path="/" 
+                      element={
+                        <PublicRoute>
+                          <HomeRoute />
+                        </PublicRoute>
+                      } 
+                    />
               <Route 
                 path="/auth" 
                 element={
@@ -735,20 +744,16 @@ const App = () => {
                                        <ProtectedRoute>
                                          <ShoutcastManagement />
                                        </ProtectedRoute>
-                                     } 
+                                      } 
                                     />
-                      <Route 
-                        path="/" 
-                        element={<HomeRoute />} 
-                      />
-                      <Route 
-                        path="/directory" 
-                        element={
-                          <PublicRoute>
-                            <DirectoryPage />
-                          </PublicRoute>
-                        } 
-                      />
+                       <Route 
+                         path="/directory" 
+                         element={
+                           <PublicRoute>
+                             <DirectoryPage />
+                           </PublicRoute>
+                         } 
+                       />
                     <Route 
                       path="/admin" 
                       element={
