@@ -6,7 +6,7 @@ import { SheetMusicLibrary } from './SheetMusicLibrary';
 import { SetlistBuilder } from './SetlistBuilder';
 import { SetlistDiagnostics } from './SetlistDiagnostics';
 import { SetlistPlayer } from './SetlistPlayer';
-import { PDFViewer } from '@/components/PDFViewer';
+import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
 import { Settings, Home, Users, Calendar, FileText, Activity, ArrowLeft, Music } from 'lucide-react';
 
 export const MusicLibrary = () => {
@@ -140,8 +140,9 @@ export const MusicLibrary = () => {
         <div className={`xl:col-span-${selectedPdf ? '7' : '5'} space-y-4`}>
           <h2 className="text-lg font-semibold">PDF Viewer</h2>
           {selectedPdf ? (
-            <PDFViewer 
+            <PDFViewerWithAnnotations 
               pdfUrl={selectedPdf.url}
+              musicTitle={selectedPdf.title}
               className="w-full"
             />
           ) : (
