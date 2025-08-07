@@ -46,6 +46,9 @@ export const PDFViewerWithAnnotations = ({
 }: PDFViewerWithAnnotationsProps) => {
   const { user } = useAuth();
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
+  
+  console.log('PDFViewerWithAnnotations: Props received:', { pdfUrl, musicTitle });
+  console.log('PDFViewerWithAnnotations: URL processing result:', { signedUrl, urlLoading, urlError });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);

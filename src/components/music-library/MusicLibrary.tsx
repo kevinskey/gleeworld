@@ -20,6 +20,7 @@ export const MusicLibrary = () => {
     console.log('MusicLibrary: handlePdfSelect called with URL:', pdfUrl, 'Title:', title);
     console.log('MusicLibrary: Setting selectedPdf to:', { url: pdfUrl, title });
     setSelectedPdf({ url: pdfUrl, title });
+    console.log('MusicLibrary: selectedPdf state should now be:', { url: pdfUrl, title });
   };
 
   const handleOpenSetlistPlayer = (setlistId: string) => {
@@ -140,11 +141,14 @@ export const MusicLibrary = () => {
         <div className={`${selectedPdf ? 'lg:col-span-8' : 'lg:col-span-6'} space-y-4`}>
           <h2 className="text-lg font-semibold">PDF Viewer</h2>
           {selectedPdf ? (
-            <PDFViewerWithAnnotations 
-              pdfUrl={selectedPdf.url}
-              musicTitle={selectedPdf.title}
-              className="w-full"
-            />
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">Loading: {selectedPdf.title}</p>
+              <PDFViewerWithAnnotations 
+                pdfUrl={selectedPdf.url}
+                musicTitle={selectedPdf.title}
+                className="w-full"
+              />
+            </div>
           ) : (
             <div className="p-8 border-2 border-dashed border-muted rounded-lg text-center text-muted-foreground min-h-[400px] flex items-center justify-center">
               <div>
