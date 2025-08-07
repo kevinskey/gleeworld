@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -13,6 +13,7 @@ import { Plus, Mail, Music, Calendar, Shirt, DollarSign, Users, Send, X } from '
 import { ModuleDisplay } from '@/components/dashboard/ModuleDisplay';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
 import { UserHero } from '@/components/dashboard/UserHero';
+import { supabase } from '@/integrations/supabase/client';
 
 const mockMessages = [
   { id: 1, color: 'bg-red-500', text: 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum' },
@@ -38,6 +39,39 @@ export const HomeRoute = () => {
   const [showMessageCompose, setShowMessageCompose] = useState(false);
   const [selectedRecipientType, setSelectedRecipientType] = useState<string>('');
   const [selectedIndividual, setSelectedIndividual] = useState<string>('');
+  const [members, setMembers] = useState<any[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+
+  // Fetch real members from database
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!user) return;
+      
+      setLoadingMembers(true);
+      try {
+        const { data, error } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, email, role, voice_part, exec_board_role')
+          .not('full_name', 'is', null)
+          .order('full_name');
+
+        if (error) {
+          console.error('Error fetching members:', error);
+          return;
+        }
+
+        setMembers(data || []);
+      } catch (error) {
+        console.error('Error fetching members:', error);
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+
+    if (user && showMessageCompose && selectedRecipientType === 'individual') {
+      fetchMembers();
+    }
+  }, [user, showMessageCompose, selectedRecipientType]);
 
   // Show loading while auth is being determined for logged in users
   if (authLoading || (user && profileLoading)) {
@@ -127,14 +161,20 @@ export const HomeRoute = () => {
                           <SelectValue placeholder="Choose a member..." />
                         </SelectTrigger>
                         <SelectContent className="z-50 bg-background border shadow-lg">
-                          <SelectItem value="sarah-williams">Sarah Williams (S1)</SelectItem>
-                          <SelectItem value="maria-johnson">Maria Johnson (S2)</SelectItem>
-                          <SelectItem value="jessica-brown">Jessica Brown (A1)</SelectItem>
-                          <SelectItem value="amanda-davis">Amanda Davis (A2)</SelectItem>
-                          <SelectItem value="emily-wilson">Emily Wilson (President)</SelectItem>
-                          <SelectItem value="nicole-taylor">Nicole Taylor (Vice President)</SelectItem>
-                          <SelectItem value="jasmine-lee">Jasmine Lee (Secretary)</SelectItem>
-                          <SelectItem value="destiny-clark">Destiny Clark (Treasurer)</SelectItem>
+                          {loadingMembers ? (
+                            <SelectItem value="" disabled>Loading members...</SelectItem>
+                          ) : members.length > 0 ? (
+                            members.map((member) => {
+                              const displayText = `${member.full_name}${member.voice_part ? ` (${member.voice_part})` : ''}${member.exec_board_role ? ` - ${member.exec_board_role}` : ''}`;
+                              return (
+                                <SelectItem key={member.user_id} value={member.user_id}>
+                                  {displayText}
+                                </SelectItem>
+                              );
+                            })
+                          ) : (
+                            <SelectItem value="" disabled>No members found</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
