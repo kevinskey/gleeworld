@@ -54,17 +54,17 @@ export const UserHero = () => {
   return (
     <div className="bg-gradient-to-r from-background to-muted/30 border-b border-border py-8 px-6 h-[300px] relative">
       <div className="container mx-auto h-full">
-        <div className="flex items-center justify-between h-full">
-          {/* Left side - Avatar */}
-          <div className="flex items-center gap-6">
+        <div className="grid grid-cols-3 items-center h-full">
+          {/* Left Column - Avatar */}
+          <div className="flex justify-center">
             <div className="relative">
-              <Avatar className="w-24 h-24 border-4 border-primary/20">
+              <Avatar className="w-36 h-36 border-4 border-primary/20">
                 <AvatarImage 
                   src={userProfile?.avatar_url || undefined} 
                   alt={getDisplayName()}
                   className="object-cover"
                 />
-                <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
+                <AvatarFallback className="bg-primary text-primary-foreground text-4xl font-bold">
                   {getInitials()}
                 </AvatarFallback>
               </Avatar>
@@ -72,25 +72,25 @@ export const UserHero = () => {
                 AVATAR
               </div>
             </div>
+          </div>
 
-            {/* Center - User Info */}
-            <div className="flex flex-col space-y-2">
-              <h1 className="text-4xl font-bold text-foreground">
-                {getDisplayName()}
-              </h1>
-              <div className="flex items-center gap-2 text-lg text-muted-foreground">
-                <span>{getRole()}</span>
-                {getExecBoardRole() && (
-                  <>
-                    <span>-</span>
-                    <span className="text-primary font-medium">{getExecBoardRole()}</span>
-                  </>
-                )}
-              </div>
+          {/* Center Column - User Info */}
+          <div className="flex flex-col space-y-2 text-center">
+            <h1 className="text-4xl font-bold text-foreground">
+              {getDisplayName()}
+            </h1>
+            <div className="flex items-center justify-center gap-2 text-lg text-muted-foreground">
+              <span>{getRole()}</span>
+              {getExecBoardRole() && (
+                <>
+                  <span>-</span>
+                  <span className="text-primary font-medium">{getExecBoardRole()}</span>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Right side - Vocal Section */}
+          {/* Right Column - Vocal Section */}
           <div className="flex items-center justify-center pr-12" style={{ height: '85%', fontSize: '16rem', fontWeight: 'bold', color: 'hsl(var(--muted-foreground) / 0.15)' }}>
             {getVocalSection()}
           </div>
