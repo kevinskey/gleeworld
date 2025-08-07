@@ -1,15 +1,7 @@
-import { LibraryManagement } from "@/components/music-library/LibraryManagement";
-import { MusicLibraryHeader } from "@/components/music-library/MusicLibraryHeader";
+import { MusicLibrary } from "@/components/music-library/MusicLibrary";
 
 const MusicLibraryPage = () => {
-  return (
-    <div className="min-h-screen bg-background">
-      <MusicLibraryHeader />
-      <main>
-        <LibraryManagement />
-      </main>
-    </div>
-  );
+  return <MusicLibrary />;
 };
 
 export default MusicLibraryPage;
