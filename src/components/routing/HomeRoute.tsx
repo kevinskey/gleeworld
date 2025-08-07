@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Mail, Music, Calendar, Shirt, DollarSign, Users } from 'lucide-react';
 import { ModuleDisplay } from '@/components/dashboard/ModuleDisplay';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { Header } from '@/components/Header';
 
 const mockMessages = [
   { id: 1, color: 'bg-red-500', text: 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum' },
@@ -63,8 +63,9 @@ export const HomeRoute = () => {
     return (
       <div className="min-h-screen bg-background">
         {/* Header */}
-        <DashboardHeader 
-          user={user} 
+        <Header 
+          activeTab={selectedModule}
+          onTabChange={setSelectedModule}
           onToggleMessages={() => setShowMessages(!showMessages)}
           showMessages={showMessages}
         />
