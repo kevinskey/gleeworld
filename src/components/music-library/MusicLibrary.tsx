@@ -126,9 +126,9 @@ export const MusicLibrary = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-10 gap-6">
-        {/* Setlists Column - Smaller when PDF is active */}
-        <div className={`xl:col-span-${selectedPdf ? '3' : '5'} space-y-4`}>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Setlists Column */}
+        <div className={`${selectedPdf ? 'lg:col-span-4' : 'lg:col-span-6'} space-y-4`}>
           <h2 className="text-lg font-semibold">Setlist Builder</h2>
           <SetlistBuilder 
             onPdfSelect={handlePdfSelect} 
@@ -136,8 +136,8 @@ export const MusicLibrary = () => {
           />
         </div>
 
-        {/* PDF Viewer Column - Takes most space when active */}
-        <div className={`xl:col-span-${selectedPdf ? '7' : '5'} space-y-4`}>
+        {/* PDF Viewer Column */}
+        <div className={`${selectedPdf ? 'lg:col-span-8' : 'lg:col-span-6'} space-y-4`}>
           <h2 className="text-lg font-semibold">PDF Viewer</h2>
           {selectedPdf ? (
             <PDFViewerWithAnnotations 
@@ -146,7 +146,7 @@ export const MusicLibrary = () => {
               className="w-full"
             />
           ) : (
-            <div className="p-8 border-2 border-dashed border-muted rounded-lg text-center text-muted-foreground">
+            <div className="p-8 border-2 border-dashed border-muted rounded-lg text-center text-muted-foreground min-h-[400px] flex items-center justify-center">
               <div>
                 <Music className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p className="text-lg font-medium">Select sheet music to view PDF</p>
