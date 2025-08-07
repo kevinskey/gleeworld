@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Search, Archive, Trash2, Reply, Forward, MoreHorizontal, Paperclip, Star } from 'lucide-react';
+import { Mail, Search, Archive, Trash2, Reply, Forward, MoreHorizontal, Paperclip, Star, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,12 +9,27 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 export const EmailModule = () => {
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [showCompose, setShowCompose] = useState(false);
   const [archivedEmails, setArchivedEmails] = useState<string[]>([]);
   const [deletedEmails, setDeletedEmails] = useState<string[]>([]);
   const [currentView, setCurrentView] = useState<'inbox' | 'archived'>('inbox');
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+
+  // Mock user list for recipients
+  const users = [
+    { id: '1', name: 'Dr. Johnson', email: 'dr.johnson@spelman.edu', role: 'Director' },
+    { id: '2', name: 'Sarah Williams', email: 'sarah.williams@spelman.edu', role: 'Executive Board' },
+    { id: '3', name: 'Maya Thompson', email: 'maya.thompson@spelman.edu', role: 'Member' },
+    { id: '4', name: 'Jordan Davis', email: 'jordan.davis@spelman.edu', role: 'Member' },
+    { id: '5', name: 'Alicia Brown', email: 'alicia.brown@spelman.edu', role: 'Alumna' },
+    { id: '6', name: 'Executive Board', email: 'exec@gleeworld.org', role: 'Group' },
+    { id: '7', name: 'All Members', email: 'members@gleeworld.org', role: 'Group' },
+    { id: '8', name: 'Music Library', email: 'library@gleeworld.org', role: 'Department' }
+  ];
 
   const emails = [
     {
@@ -136,7 +151,81 @@ export const EmailModule = () => {
                 <div className="space-y-4 pt-4">
                   <div>
                     <Label htmlFor="to">To</Label>
-                    <Input id="to" placeholder="Select recipients..." className="mt-1" />
+                    <div className="mt-1">
+                      <div className="border rounded-md p-2 bg-background">
+                        {selectedRecipients.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {selectedRecipients.map((recipientId) => {
+                              const user = users.find(u => u.id === recipientId);
+                              return user ? (
+                                <Badge key={recipientId} variant="secondary" className="text-xs">
+                                  {user.name}
+                                  <button
+                                    onClick={() => setSelectedRecipients(prev => prev.filter(id => id !== recipientId))}
+                                    className="ml-1 hover:text-destructive"
+                                  >
+                                    ×
+                                  </button>
+                                </Badge>
+                              ) : null;
+                            })}
+                          </div>
+                        )}
+                        <Select 
+                          onValueChange={(value) => {
+                            if (!selectedRecipients.includes(value)) {
+                              setSelectedRecipients(prev => [...prev, value]);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="border-0 shadow-none p-0 h-auto">
+                            <SelectValue placeholder="Select recipients..." />
+                          </SelectTrigger>
+                          <SelectContent className="z-50 bg-background border shadow-lg">
+                            <div className="p-2 text-xs font-medium text-muted-foreground border-b">Individual Users</div>
+                            {users.filter(u => ['Director', 'Executive Board', 'Member', 'Alumna'].includes(u.role)).map((user) => (
+                              <SelectItem 
+                                key={user.id} 
+                                value={user.id}
+                                disabled={selectedRecipients.includes(user.id)}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="w-6 h-6">
+                                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                                      {user.name.charAt(0)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <div className="font-medium">{user.name}</div>
+                                    <div className="text-xs text-muted-foreground">{user.email}</div>
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                            <div className="p-2 text-xs font-medium text-muted-foreground border-b border-t">Groups</div>
+                            {users.filter(u => ['Group', 'Department'].includes(u.role)).map((user) => (
+                              <SelectItem 
+                                key={user.id} 
+                                value={user.id}
+                                disabled={selectedRecipients.includes(user.id)}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="w-6 h-6">
+                                    <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
+                                      {user.name.charAt(0)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <div className="font-medium">{user.name}</div>
+                                    <div className="text-xs text-muted-foreground">{user.email}</div>
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="subject">Subject</Label>
