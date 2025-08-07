@@ -278,7 +278,10 @@ const DirectoryPage = () => {
                         ))}
                       </div>
                       <Button 
-                        onClick={() => navigate(module.route)}
+                        onClick={() => {
+                          console.log('Navigating to:', module.route);
+                          navigate(module.route);
+                        }}
                         size="sm"
                       >
                         Open
