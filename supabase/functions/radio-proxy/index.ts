@@ -7,6 +7,8 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log(`Radio proxy request: ${req.method} ${req.url}`)
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -16,8 +18,10 @@ serve(async (req) => {
     const url = new URL(req.url)
     const streamUrl = url.searchParams.get('url')
 
+    console.log(`Stream URL parameter: ${streamUrl}`)
+
     if (!streamUrl) {
-      console.error('Missing stream URL parameter')
+      console.error('No stream URL provided')
       return new Response(
         JSON.stringify({ error: 'Missing stream URL parameter' }),
         { 
@@ -27,53 +31,21 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Attempting to proxy radio stream: ${streamUrl}`)
+    console.log(`Fetching stream from: ${streamUrl}`)
 
-    // Test if the stream URL is reachable first
-    let response
-    try {
-      // Fetch the radio stream with timeout and proper headers
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => {
-        console.error(`Timeout reached for stream: ${streamUrl}`)
-        controller.abort()
-      }, 15000) // 15 second timeout
+    // Simple fetch with basic headers
+    const response = await fetch(streamUrl, {
+      headers: {
+        'User-Agent': 'GleeWorld-Radio-Player',
+        'Accept': '*/*',
+      }
+    })
 
-      response = await fetch(streamUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; GleeWorld Radio Player)',
-          'Accept': 'audio/*,*/*;q=0.1',
-          'Range': req.headers.get('range') || '',
-          'Connection': 'keep-alive',
-        },
-        signal: controller.signal
-      })
-      
-      clearTimeout(timeoutId)
-      
-      console.log(`Stream response status: ${response.status}`)
-      console.log(`Stream response headers:`, Object.fromEntries(response.headers.entries()))
-      
-    } catch (fetchError) {
-      console.error(`Fetch error for ${streamUrl}:`, fetchError)
-      
-      // Return a more helpful error response
-      return new Response(
-        JSON.stringify({ 
-          error: 'Failed to fetch radio stream',
-          details: fetchError.message,
-          streamUrl: streamUrl,
-          timestamp: new Date().toISOString()
-        }),
-        { 
-          status: 502, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
+    console.log(`Stream response status: ${response.status}`)
+    console.log(`Stream content-type: ${response.headers.get('content-type')}`)
 
     if (!response.ok) {
-      console.error(`Stream returned status ${response.status}: ${response.statusText}`)
+      console.error(`Stream fetch failed: ${response.status} ${response.statusText}`)
       return new Response(
         JSON.stringify({ 
           error: `Stream unavailable: ${response.status} ${response.statusText}`,
@@ -89,30 +61,18 @@ serve(async (req) => {
     // Create response headers
     const responseHeaders = new Headers(corsHeaders)
     
-    // Copy important headers from the original response
-    const headersToProxy = [
-      'content-type',
-      'content-length', 
-      'content-range',
-      'accept-ranges',
-      'cache-control',
-      'icy-br',
-      'icy-description',
-      'icy-genre',
-      'icy-name',
-      'icy-pub',
-      'icy-url',
-      'icy-metaint'
-    ]
+    // Copy essential headers
+    const contentType = response.headers.get('content-type')
+    if (contentType) {
+      responseHeaders.set('content-type', contentType)
+    }
 
-    headersToProxy.forEach(header => {
-      const value = response.headers.get(header)
-      if (value) {
-        responseHeaders.set(header, value)
-      }
-    })
+    const contentLength = response.headers.get('content-length')
+    if (contentLength) {
+      responseHeaders.set('content-length', contentLength)
+    }
 
-    console.log(`Successfully proxying stream. Content-Type: ${response.headers.get('content-type')}`)
+    console.log(`Proxying stream successfully`)
 
     // Return the proxied stream
     return new Response(response.body, {
@@ -121,7 +81,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('Radio proxy error:', error)
+    console.error('Radio proxy error:', error.message)
     
     return new Response(
       JSON.stringify({ 
