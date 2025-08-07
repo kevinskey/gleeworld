@@ -52,9 +52,9 @@ export const UserHero = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-background to-muted/30 border-b border-border py-8 px-6">
-      <div className="container mx-auto">
-        <div className="flex items-center justify-between">
+    <div className="bg-gradient-to-r from-background to-muted/30 border-b border-border py-8 px-6 h-[300px] relative">
+      <div className="container mx-auto h-full">
+        <div className="flex items-center justify-between h-full">
           {/* Left side - Avatar */}
           <div className="flex items-center gap-6">
             <div className="relative">
@@ -97,7 +97,7 @@ export const UserHero = () => {
           </div>
 
           {/* Right side - Vocal Section */}
-          <div className="text-[20rem] font-bold text-muted-foreground/20 pr-12 flex items-center" style={{ height: '85vh' }}>
+          <div className="flex items-center justify-center pr-12" style={{ height: '85%', fontSize: '16rem', fontWeight: 'bold', color: 'hsl(var(--muted-foreground) / 0.15)' }}>
             {getVocalSection()}
           </div>
         </div>
