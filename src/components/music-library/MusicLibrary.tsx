@@ -90,7 +90,7 @@ export const MusicLibrary = () => {
         </div>
       </header>
 
-    <div className="container mx-auto px-4 py-4 h-screen flex flex-col">
+    <div className="container mx-auto px-4 py-4">
       <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
@@ -126,9 +126,9 @@ export const MusicLibrary = () => {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col xl:grid xl:grid-cols-10 gap-6 min-h-0">
+      <div className="grid grid-cols-1 xl:grid-cols-10 gap-6">
         {/* Setlists Column - Smaller when PDF is active */}
-        <div className={`xl:col-span-${selectedPdf ? '3' : '5'} space-y-4 overflow-y-auto`}>
+        <div className={`xl:col-span-${selectedPdf ? '3' : '5'} space-y-4`}>
           <h2 className="text-lg font-semibold">Setlist Builder</h2>
           <SetlistBuilder 
             onPdfSelect={handlePdfSelect} 
@@ -137,17 +137,15 @@ export const MusicLibrary = () => {
         </div>
 
         {/* PDF Viewer Column - Takes most space when active */}
-        <div className={`xl:col-span-${selectedPdf ? '7' : '5'} space-y-4 flex flex-col min-h-0`}>
+        <div className={`xl:col-span-${selectedPdf ? '7' : '5'} space-y-4`}>
           <h2 className="text-lg font-semibold">PDF Viewer</h2>
           {selectedPdf ? (
-            <div className="flex-1 min-h-0">
-              <PDFViewer 
-                pdfUrl={selectedPdf.url}
-                className="h-full"
-              />
-            </div>
+            <PDFViewer 
+              pdfUrl={selectedPdf.url}
+              className="w-full"
+            />
           ) : (
-            <div className="flex-1 p-8 border-2 border-dashed border-muted rounded-lg flex items-center justify-center text-center text-muted-foreground">
+            <div className="p-8 border-2 border-dashed border-muted rounded-lg text-center text-muted-foreground">
               <div>
                 <Music className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p className="text-lg font-medium">Select sheet music to view PDF</p>
