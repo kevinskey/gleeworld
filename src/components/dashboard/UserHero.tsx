@@ -73,7 +73,7 @@ export const UserHero = () => {
 
           {/* Center Column - User Info */}
           <div className="flex flex-col space-y-2 pl-8">
-            <h1 className="text-8xl font-bold text-foreground normal-case">
+            <h1 className="text-6xl font-semibold text-foreground normal-case tracking-tight leading-tight">
               {getDisplayName()}
             </h1>
             <div className="flex items-center gap-2 text-2xl text-muted-foreground">
