@@ -6,6 +6,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 export const EmailModule = () => {
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [showCompose, setShowCompose] = useState(false);
@@ -55,37 +58,6 @@ export const EmailModule = () => {
 
   const selectedEmailData = emails.find(email => email.id === selectedEmail);
 
-  if (showCompose) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Compose Email</h2>
-          <Button variant="outline" onClick={() => setShowCompose(false)}>
-            Back to Inbox
-          </Button>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-2 block">To</label>
-            <input className="w-full p-2 border rounded" placeholder="Select recipients..." />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-2 block">Subject</label>
-            <input className="w-full p-2 border rounded" placeholder="Email subject..." />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-2 block">Message</label>
-            <textarea className="w-full p-2 border rounded h-40" placeholder="Write your message..."></textarea>
-          </div>
-          <div className="flex gap-2">
-            <Button>Send</Button>
-            <Button variant="outline">Save Draft</Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="h-full flex">
       {/* Email List */}
@@ -102,9 +74,36 @@ export const EmailModule = () => {
           </div>
 
           <div className="flex gap-2">
-            <Button size="sm" className="flex-1" onClick={() => setShowCompose(true)}>
-              Compose
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" className="flex-1">
+                  Compose
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Compose Email</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div>
+                    <Label htmlFor="to">To</Label>
+                    <Input id="to" placeholder="Select recipients..." className="mt-1" />
+                  </div>
+                  <div>
+                    <Label htmlFor="subject">Subject</Label>
+                    <Input id="subject" placeholder="Email subject..." className="mt-1" />
+                  </div>
+                  <div>
+                    <Label htmlFor="message">Message</Label>
+                    <Textarea id="message" placeholder="Write your message..." className="mt-1 h-40" />
+                  </div>
+                  <div className="flex gap-2 pt-4">
+                    <Button>Send</Button>
+                    <Button variant="outline">Save Draft</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button variant="outline" size="sm">
               <Archive className="w-4 h-4" />
             </Button>
