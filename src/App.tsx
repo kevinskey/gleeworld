@@ -27,7 +27,7 @@ import ActivityLogs from "./pages/ActivityLogs";
 import W9FormPage from "./pages/W9FormPage";
 import NotFound from "./pages/NotFound";
 import Accounting from "./pages/Accounting";
-import UserDashboard from "./pages/UserDashboard";
+import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
 import { MemberViewDashboard } from "./components/member-view/MemberViewDashboard";
 
 import EventPlanner from "./pages/EventPlanner";
@@ -209,7 +209,7 @@ const App = () => {
                 path="/dashboard" 
                 element={
                   <ProtectedRoute>
-                    <UserDashboard />
+                    <UnifiedDashboard />
                   </ProtectedRoute>
                  } 
                />
