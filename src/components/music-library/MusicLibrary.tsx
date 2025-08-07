@@ -7,7 +7,7 @@ import { SetlistBuilder } from './SetlistBuilder';
 import { SetlistDiagnostics } from './SetlistDiagnostics';
 import { SetlistPlayer } from './SetlistPlayer';
 import { PDFViewer } from '@/components/PDFViewer';
-import { Settings, Home, Users, Calendar, FileText, Activity, ArrowLeft } from 'lucide-react';
+import { Settings, Home, Users, Calendar, FileText, Activity, ArrowLeft, Music } from 'lucide-react';
 
 export const MusicLibrary = () => {
   const navigate = useNavigate();
@@ -90,8 +90,8 @@ export const MusicLibrary = () => {
         </div>
       </header>
 
-    <div className="container mx-auto px-4 py-6">
-      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="container mx-auto px-4 py-4 h-screen flex flex-col">
+      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <Button
@@ -104,8 +104,8 @@ export const MusicLibrary = () => {
               Back to Menu
             </Button>
           </div>
-          <h1 className="text-2xl font-bold mb-2">Music Library</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold mb-1">Music Library</h1>
+          <p className="text-muted-foreground text-sm">
             Manage your sheet music collection and create performance setlists
           </p>
         </div>
@@ -121,14 +121,14 @@ export const MusicLibrary = () => {
       </div>
 
       {showDiagnostics && (
-        <div className="mb-6">
+        <div className="mb-4">
           <SetlistDiagnostics />
         </div>
       )}
 
-      <div className="flex flex-col xl:grid xl:grid-cols-10 gap-6">
-        {/* Setlists Column - 30% on desktop, full width on mobile */}
-        <div className="xl:col-span-4 space-y-4">
+      <div className="flex-1 flex flex-col xl:grid xl:grid-cols-10 gap-6 min-h-0">
+        {/* Setlists Column - Smaller when PDF is active */}
+        <div className={`xl:col-span-${selectedPdf ? '3' : '5'} space-y-4 overflow-y-auto`}>
           <h2 className="text-lg font-semibold">Setlist Builder</h2>
           <SetlistBuilder 
             onPdfSelect={handlePdfSelect} 
@@ -136,19 +136,23 @@ export const MusicLibrary = () => {
           />
         </div>
 
-        {/* PDF Viewer Column - 70% on desktop, full width on mobile */}
-        <div className="xl:col-span-6 space-y-4">
+        {/* PDF Viewer Column - Takes most space when active */}
+        <div className={`xl:col-span-${selectedPdf ? '7' : '5'} space-y-4 flex flex-col min-h-0`}>
           <h2 className="text-lg font-semibold">PDF Viewer</h2>
           {selectedPdf ? (
-            <div className="sticky top-6">
+            <div className="flex-1 min-h-0">
               <PDFViewer 
                 pdfUrl={selectedPdf.url}
-                className="min-h-[500px] md:min-h-[600px]"
+                className="h-full"
               />
             </div>
           ) : (
-            <div className="sticky top-6 p-8 border-2 border-dashed border-muted rounded-lg text-center text-muted-foreground">
-              <p className="text-sm">Select sheet music to view PDF</p>
+            <div className="flex-1 p-8 border-2 border-dashed border-muted rounded-lg flex items-center justify-center text-center text-muted-foreground">
+              <div>
+                <Music className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p className="text-lg font-medium">Select sheet music to view PDF</p>
+                <p className="text-sm">Choose a song from the setlist builder to display the score</p>
+              </div>
             </div>
           )}
         </div>
