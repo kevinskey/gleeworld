@@ -28,10 +28,10 @@ export const useRadioPlayer = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
   
-  // Radio stream URLs using Supabase Edge Function proxy to bypass CSP
+  // Radio stream URLs using Supabase Edge Function proxy for Glee World Radio only
   const RADIO_STREAM_URLS = [
     'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/radio-proxy?url=' + encodeURIComponent('https://134.199.204.155/public/glee_world_radio'),
-    'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/radio-proxy?url=' + encodeURIComponent('https://ice1.somafm.com/groovesalad-256-mp3'),
+    'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/radio-proxy?url=' + encodeURIComponent('http://134.199.204.155/public/glee_world_radio'),
   ];
 
   useEffect(() => {
