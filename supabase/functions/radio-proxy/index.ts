@@ -28,14 +28,19 @@ serve(async (req) => {
 
     console.log(`Proxying radio stream: ${streamUrl}`)
 
-    // Fetch the radio stream
+    // Fetch the radio stream with timeout and proper headers
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
     const response = await fetch(streamUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; GleeWorld Radio Player)',
         'Accept': 'audio/*,*/*;q=0.1',
         'Range': req.headers.get('range') || '',
-      }
-    })
+        'Connection': 'keep-alive',
+      },
+      signal: controller.signal
+    }).finally(() => clearTimeout(timeoutId))
 
     if (!response.ok) {
       throw new Error(`Stream fetch failed: ${response.status} ${response.statusText}`)
