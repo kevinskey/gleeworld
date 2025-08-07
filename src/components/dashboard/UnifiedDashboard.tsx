@@ -46,14 +46,12 @@ export const UnifiedDashboard = () => {
               </div>
             </div>
             
-            {/* Selected Module Display Below - only if not email or community-hub */}
-            {selectedModule !== 'email' && selectedModule !== 'community-hub' && (
-              <div className="flex-1 p-4">
-                <div className="h-full bg-background/50 border border-border rounded-lg">
-                  <ModuleDisplay selectedModule={selectedModule} />
-                </div>
+            {/* Selected Module Display Below - Full Width */}
+            <div className="flex-1 p-4">
+              <div className="h-full bg-background/50 border border-border rounded-lg">
+                <ModuleDisplay selectedModule={selectedModule} />
               </div>
-            )}
+            </div>
           </div>
           
           {/* Messages Panel Overlay */}
