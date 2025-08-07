@@ -1,5 +1,6 @@
 import React from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -64,14 +65,14 @@ const MemberDirectory = () => {
 
   return (
     <UniversalLayout>
+      <PageHeader
+        title="Glee World Directory"
+        description="Browse and connect with Glee Club members across all roles and generations"
+        showBackButton={true}
+        backTo="/"
+        backgroundVariant="gradient"
+      />
       <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-4">
-          <Users className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Member Directory</h1>
-            <p className="text-muted-foreground">Browse and connect with Glee Club members</p>
-          </div>
-        </div>
 
         {/* Search and Filter */}
         <Card>
