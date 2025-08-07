@@ -1,0 +1,163 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Slider } from '@/components/ui/slider';
+import { Badge } from '@/components/ui/badge';
+import { Radio, Play, Pause, Volume2, VolumeX, Users } from 'lucide-react';
+import { useRadioPlayer } from '@/hooks/useRadioPlayer';
+import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
+
+export const HeaderRadioControls = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { 
+    isPlaying, 
+    isLoading, 
+    isLive, 
+    listenerCount, 
+    currentTrack, 
+    volume, 
+    togglePlayPause, 
+    setVolume 
+  } = useRadioPlayer();
+
+  const isMuted = volume === 0;
+
+  return (
+    <Popover open={isExpanded} onOpenChange={setIsExpanded}>
+      <PopoverTrigger asChild>
+        <div className="flex items-center gap-2">
+          <EnhancedTooltip 
+            content={`Glee World Radio ${isLive ? '(LIVE)' : '(Offline)'}`}
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePlayPause();
+              }}
+              disabled={isLoading}
+              className="relative h-8 w-8 p-0 rounded-full hover:bg-accent/20"
+            >
+              {isLoading ? (
+                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="h-4 w-4 ml-0.5" />
+              )}
+              
+              {isLive && (
+                <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-pulse">
+                  <div className="h-2 w-2 bg-white rounded-full absolute top-0.5 left-0.5" />
+                </div>
+              )}
+            </Button>
+          </EnhancedTooltip>
+
+          <EnhancedTooltip content="Glee World Radio Controls">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 hover:bg-accent/20"
+            >
+              <Radio className="h-4 w-4 mr-1" />
+              <span className="text-xs font-medium">Radio</span>
+            </Button>
+          </EnhancedTooltip>
+        </div>
+      </PopoverTrigger>
+
+      <PopoverContent className="w-80 p-4" align="end">
+        <div className="space-y-4">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Radio className="h-5 w-5" />
+              <h3 className="font-semibold">Glee World Radio</h3>
+            </div>
+            <Badge 
+              variant={isLive ? "default" : "secondary"}
+              className={isLive ? "bg-red-500 hover:bg-red-600" : ""}
+            >
+              {isLive ? 'LIVE' : 'OFFLINE'}
+            </Badge>
+          </div>
+
+          {/* Now Playing */}
+          {currentTrack && isPlaying && (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">NOW PLAYING</p>
+              <p className="font-medium text-sm">{currentTrack.title}</p>
+              <p className="text-sm text-muted-foreground">{currentTrack.artist}</p>
+            </div>
+          )}
+
+          {/* Stats */}
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>{listenerCount} listeners</span>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Est. 1924 • 100+ Years
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={togglePlayPause}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                ) : isPlaying ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4 ml-0.5" />
+                )}
+                <span className="ml-2">
+                  {isLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Play'}
+                </span>
+              </Button>
+            </div>
+
+            {/* Volume Control */}
+            <div className="flex items-center gap-2 flex-1 max-w-[120px]">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setVolume(isMuted ? 0.7 : 0)}
+              >
+                {isMuted ? (
+                  <VolumeX className="h-4 w-4" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
+              </Button>
+              <Slider
+                value={[volume]}
+                onValueChange={([value]) => setVolume(value)}
+                max={1}
+                step={0.1}
+                className="flex-1"
+              />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center pt-2 border-t">
+            <p className="text-xs text-muted-foreground">
+              "To Amaze and Inspire" • Official Spelman Glee Club Radio
+            </p>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
