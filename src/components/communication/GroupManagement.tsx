@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { RecipientGroup, RECIPIENT_GROUPS } from '@/types/communication';
 import { Plus, Edit, Trash2, Users } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
 
 interface GroupManagementProps {
   groups: RecipientGroup[];
