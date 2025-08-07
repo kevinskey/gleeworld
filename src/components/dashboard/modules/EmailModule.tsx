@@ -143,6 +143,7 @@ export const EmailModule = () => {
       });
 
       fetchDrafts(); // Refresh drafts list
+      setShowCompose(false); // Close the compose dialog
     } catch (error: any) {
       console.error('Error saving draft:', error);
       toast({
