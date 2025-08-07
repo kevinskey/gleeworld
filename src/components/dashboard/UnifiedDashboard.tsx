@@ -9,7 +9,7 @@ import { EmailModule } from './modules/EmailModule';
 
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
-  const [selectedModule, setSelectedModule] = useState<string>('email');
+  const [selectedModule, setSelectedModule] = useState<string>('music-studio');
   const [showMessages, setShowMessages] = useState(false);
 
   return (
