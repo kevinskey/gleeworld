@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Mail, Music, Calendar, Shirt, DollarSign, Users } from 'lucide-react';
 import { ModuleDisplay } from '@/components/dashboard/ModuleDisplay';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
+import { UserHero } from '@/components/dashboard/UserHero';
 
 const mockMessages = [
   { id: 1, color: 'bg-red-500', text: 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum' },
@@ -64,6 +65,9 @@ export const HomeRoute = () => {
       <div className="min-h-screen bg-background">
         {/* Header */}
         <UniversalHeader />
+        
+        {/* User Hero Section */}
+        <UserHero />
 
         {/* Two Column Layout */}
         <div className="grid grid-cols-2 gap-6 p-6">
