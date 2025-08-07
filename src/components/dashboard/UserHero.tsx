@@ -97,7 +97,7 @@ export const UserHero = () => {
           </div>
 
           {/* Right side - Vocal Section */}
-          <div className="text-8xl font-bold text-muted-foreground/40">
+          <div className="text-[20rem] font-bold text-muted-foreground/20 pr-12 flex items-center" style={{ height: '85vh' }}>
             {getVocalSection()}
           </div>
         </div>
