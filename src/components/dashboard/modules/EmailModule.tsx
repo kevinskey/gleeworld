@@ -12,6 +12,9 @@ import { Label } from '@/components/ui/label';
 export const EmailModule = () => {
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [showCompose, setShowCompose] = useState(false);
+  const [archivedEmails, setArchivedEmails] = useState<string[]>([]);
+  const [deletedEmails, setDeletedEmails] = useState<string[]>([]);
+  const [currentView, setCurrentView] = useState<'inbox' | 'archived'>('inbox');
 
   const emails = [
     {
@@ -56,6 +59,32 @@ export const EmailModule = () => {
     }
   ];
 
+  // Filter emails based on current view and deleted status
+  const filteredEmails = emails.filter(email => {
+    if (deletedEmails.includes(email.id)) return false;
+    
+    if (currentView === 'inbox') {
+      return !archivedEmails.includes(email.id);
+    } else if (currentView === 'archived') {
+      return archivedEmails.includes(email.id);
+    }
+    return true;
+  });
+
+  const handleArchiveEmail = (emailId: string) => {
+    setArchivedEmails(prev => [...prev, emailId]);
+    if (selectedEmail === emailId) {
+      setSelectedEmail(null);
+    }
+  };
+
+  const handleDeleteEmail = (emailId: string) => {
+    setDeletedEmails(prev => [...prev, emailId]);
+    if (selectedEmail === emailId) {
+      setSelectedEmail(null);
+    }
+  };
+
   const selectedEmailData = emails.find(email => email.id === selectedEmail);
 
   return (
@@ -66,6 +95,26 @@ export const EmailModule = () => {
           <div className="flex items-center gap-2 mb-4">
             <Mail className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-semibold">Email</h2>
+          </div>
+          
+          {/* View Selector */}
+          <div className="flex gap-1 mb-4 p-1 bg-muted rounded-lg">
+            <Button
+              variant={currentView === 'inbox' ? 'default' : 'ghost'}
+              size="sm"
+              className="flex-1"
+              onClick={() => setCurrentView('inbox')}
+            >
+              Inbox ({currentView === 'inbox' ? filteredEmails.length : emails.filter(e => !archivedEmails.includes(e.id) && !deletedEmails.includes(e.id)).length})
+            </Button>
+            <Button
+              variant={currentView === 'archived' ? 'default' : 'ghost'}
+              size="sm"
+              className="flex-1"
+              onClick={() => setCurrentView('archived')}
+            >
+              Archived ({archivedEmails.length})
+            </Button>
           </div>
           
           <div className="relative mb-4">
@@ -104,10 +153,20 @@ export const EmailModule = () => {
                 </div>
               </DialogContent>
             </Dialog>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => selectedEmail && handleArchiveEmail(selectedEmail)}
+              disabled={!selectedEmail || currentView === 'archived'}
+            >
               <Archive className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => selectedEmail && handleDeleteEmail(selectedEmail)}
+              disabled={!selectedEmail}
+            >
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
@@ -115,7 +174,7 @@ export const EmailModule = () => {
 
         <ScrollArea className="flex-1">
           <div className="p-2">
-            {emails.map((email) => (
+            {filteredEmails.map((email) => (
               <Card 
                 key={email.id}
                 className={`p-4 mb-2 cursor-pointer transition-colors hover:bg-muted/50 ${
