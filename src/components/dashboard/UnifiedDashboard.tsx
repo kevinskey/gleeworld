@@ -4,6 +4,8 @@ import { MessagesPanel } from './MessagesPanel';
 import { ModuleSelector } from './ModuleSelector';
 import { ModuleDisplay } from './ModuleDisplay';
 import { useAuth } from '@/contexts/AuthContext';
+import { CommunityHubModule } from './modules/CommunityHubModule';
+import { EmailModule } from './modules/EmailModule';
 
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
@@ -30,7 +32,23 @@ export const UnifiedDashboard = () => {
 
         {/* Main Content */}
         <div className="flex-1 relative">
-          <ModuleDisplay selectedModule={selectedModule} />
+          {/* Top Two-Column Layout */}
+          <div className="grid grid-cols-2 gap-4 p-4 border-b border-border">
+            {/* Community Hub Column */}
+            <div className="h-80 border border-border rounded-lg bg-background/50">
+              <CommunityHubModule />
+            </div>
+            
+            {/* Email Column */}
+            <div className="h-80 border border-border rounded-lg bg-background/50">
+              <EmailModule />
+            </div>
+          </div>
+          
+          {/* Main Module Display */}
+          <div className="h-[calc(100%-352px)]">
+            <ModuleDisplay selectedModule={selectedModule} />
+          </div>
           
           {/* Messages Panel Overlay */}
           {showMessages && (

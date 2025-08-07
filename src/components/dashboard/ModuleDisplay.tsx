@@ -11,6 +11,7 @@ import { DirectoryModule } from './modules/DirectoryModule';
 import { MediaModule } from './modules/MediaModule';
 import { ExecutiveModule } from './modules/ExecutiveModule';
 import { SettingsModule } from './modules/SettingsModule';
+import { CommunityHubModule } from './modules/CommunityHubModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -21,6 +22,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
     switch (selectedModule) {
       case 'email':
         return <EmailModule />;
+      case 'community-hub':
+        return <CommunityHubModule />;
       case 'music-library':
         return <MusicLibraryModule />;
       case 'calendar':
