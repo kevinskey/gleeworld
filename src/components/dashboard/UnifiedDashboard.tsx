@@ -31,28 +31,30 @@ export const UnifiedDashboard = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 relative overflow-y-auto">
-          {/* Top Two-Column Layout - Always Visible */}
-          <div className="grid grid-cols-2 gap-4 p-4 border-b border-border bg-background/50">
-            {/* Community Hub Column */}
-            <div className="h-80 border border-border rounded-lg bg-background/50">
-              <CommunityHubModule />
-            </div>
-            
-            {/* Email Column */}
-            <div className="h-80 border border-border rounded-lg bg-background/50">
-              <EmailModule />
-            </div>
-          </div>
-          
-          {/* Selected Module Display Below - only if not email or community-hub */}
-          {selectedModule !== 'email' && selectedModule !== 'community-hub' && (
-            <div className="p-4">
-              <div className="bg-background/50 border border-border rounded-lg">
-                <ModuleDisplay selectedModule={selectedModule} />
+        <div className="flex-1 relative">
+          <div className="flex flex-col h-full">
+            {/* Top Two-Column Layout - Always Visible */}
+            <div className="grid grid-cols-2 gap-4 p-4 border-b border-border bg-background/50">
+              {/* Community Hub Column */}
+              <div className="h-80 border border-border rounded-lg bg-background/50">
+                <CommunityHubModule />
+              </div>
+              
+              {/* Email Column */}
+              <div className="h-80 border border-border rounded-lg bg-background/50">
+                <EmailModule />
               </div>
             </div>
-          )}
+            
+            {/* Selected Module Display Below - only if not email or community-hub */}
+            {selectedModule !== 'email' && selectedModule !== 'community-hub' && (
+              <div className="flex-1 p-4">
+                <div className="h-full bg-background/50 border border-border rounded-lg">
+                  <ModuleDisplay selectedModule={selectedModule} />
+                </div>
+              </div>
+            )}
+          </div>
           
           {/* Messages Panel Overlay */}
           {showMessages && (
