@@ -1,4 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { Viewer, Worker } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +50,9 @@ export const PDFViewerWithAnnotations = ({
 }: PDFViewerWithAnnotationsProps) => {
   const { user } = useAuth();
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
+  
+  // Initialize the default layout plugin
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
   
   console.log('PDFViewerWithAnnotations: Props received:', { pdfUrl, musicTitle });
   console.log('PDFViewerWithAnnotations: URL processing result:', { signedUrl, urlLoading, urlError });
@@ -550,7 +557,7 @@ export const PDFViewerWithAnnotations = ({
             </div>
           )}
           
-          {/* PDF.js PDF Viewer - Show when not in annotation mode */}
+          {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
             <div className="w-full h-full bg-white">
               <div className="text-xs text-muted-foreground p-2 bg-muted/20 flex justify-between items-center">
@@ -564,15 +571,14 @@ export const PDFViewerWithAnnotations = ({
                   </Button>
                 </div>
               </div>
-              <iframe
-                src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
-                className="w-full h-full border-0 block"
-                onLoad={handleIframeLoad}
-                onError={handleIframeError}
-                title={`PDF Viewer for ${musicTitle}`}
-                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                style={{ minHeight: '600px', display: 'block' }}
-              />
+              <div className="h-full">
+                <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js`}>
+                  <Viewer
+                    fileUrl={signedUrl}
+                    plugins={[defaultLayoutPluginInstance]}
+                  />
+                </Worker>
+              </div>
             </div>
           )}
 
