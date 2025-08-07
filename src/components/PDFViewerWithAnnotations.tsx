@@ -552,14 +552,17 @@ export const PDFViewerWithAnnotations = ({
           
           {/* Google Docs PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
-            <iframe
-              src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
-              className="w-full h-full border-0"
-              onLoad={handleIframeLoad}
-              onError={handleIframeError}
-              title="PDF Viewer"
-              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-            />
+            <div className="w-full h-full bg-white">
+              <iframe
+                src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
+                className="w-full h-full border-0 block"
+                onLoad={handleIframeLoad}
+                onError={handleIframeError}
+                title="PDF Viewer"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                style={{ minHeight: '600px', display: 'block' }}
+              />
+            </div>
           )}
 
           {/* PDF Canvas for Annotation Mode */}
