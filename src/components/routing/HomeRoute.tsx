@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
-import LandingPage from '@/pages/LandingPage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -151,6 +150,6 @@ export const HomeRoute = () => {
     );
   }
 
-  // For public users, show the public landing page
-  return <LandingPage />;
+  // For public users, show the Glee World landing page with audition card
+  return <GleeWorldLanding />;
 };
