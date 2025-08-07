@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, Bell, Search, Settings, LogOut } from 'lucide-react';
+import { MessageCircle, Bell, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -36,13 +36,6 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
           </div>
         </div>
         
-        <div className="relative w-96 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input 
-            placeholder="Search modules, messages, events..." 
-            className="pl-10 bg-muted/50"
-          />
-        </div>
       </div>
 
       {/* Right side - Actions and profile */}
