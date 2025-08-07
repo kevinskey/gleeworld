@@ -45,10 +45,12 @@ export const UnifiedDashboard = () => {
             </div>
           </div>
           
-          {/* Selected Module Display Below */}
-          <div className="p-4">
-            <ModuleDisplay selectedModule={selectedModule} />
-          </div>
+          {/* Selected Module Display Below - only if not email or community-hub */}
+          {selectedModule !== 'email' && selectedModule !== 'community-hub' && (
+            <div className="p-4">
+              <ModuleDisplay selectedModule={selectedModule} />
+            </div>
+          )}
           
           {/* Messages Panel Overlay */}
           {showMessages && (
