@@ -742,7 +742,7 @@ const Profile = () => {
                     <SelectValue placeholder="Select your voice part" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border-border z-50">
-                    <SelectItem value="" className="text-foreground hover:bg-muted">None</SelectItem>
+                    <SelectItem value="none" className="text-foreground hover:bg-muted">None</SelectItem>
                     <SelectItem value="S1" className="text-foreground hover:bg-muted">Soprano 1 (S1)</SelectItem>
                     <SelectItem value="S2" className="text-foreground hover:bg-muted">Soprano 2 (S2)</SelectItem>
                     <SelectItem value="A1" className="text-foreground hover:bg-muted">Alto 1 (A1)</SelectItem>
