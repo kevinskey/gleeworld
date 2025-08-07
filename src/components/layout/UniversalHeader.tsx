@@ -357,8 +357,12 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         <Link 
                           to="/profile" 
                           className="flex items-center"
-                          onClick={() => {
+                          onClick={(e) => {
                             console.log('🔗 Profile link clicked in header');
+                            console.log('🔗 Event details:', e);
+                            console.log('🔗 Current location:', location.pathname);
+                            console.log('🔗 User:', user);
+                            console.log('🔗 UserProfile:', userProfile);
                           }}
                         >
                           <User className="mr-1.5 h-3 w-3" />
