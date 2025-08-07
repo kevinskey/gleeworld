@@ -12,6 +12,7 @@ import { MediaModule } from './modules/MediaModule';
 import { ExecutiveModule } from './modules/ExecutiveModule';
 import { SettingsModule } from './modules/SettingsModule';
 import { CommunityHubModule } from './modules/CommunityHubModule';
+import { AuditionsModule } from '../modules/AuditionsModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -46,6 +47,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <ExecutiveModule />;
       case 'settings':
         return <SettingsModule />;
+      case 'auditions-management':
+        return <AuditionsModule />;
       default:
         return <EmailModule />;
     }
