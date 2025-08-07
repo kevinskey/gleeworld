@@ -23,6 +23,7 @@ export const useSheetMusicUrl = (pdfUrl: string | null) => {
       try {
         // Check if this is a public storage URL (no signed URL needed)
         if (pdfUrl.includes('/storage/v1/object/public/')) {
+          console.log('useSheetMusicUrl: Using public URL directly:', pdfUrl);
           setSignedUrl(pdfUrl);
           return;
         }

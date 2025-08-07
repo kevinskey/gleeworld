@@ -18,6 +18,7 @@ export const MusicLibrary = () => {
 
   const handlePdfSelect = (pdfUrl: string, title: string) => {
     console.log('MusicLibrary: handlePdfSelect called with URL:', pdfUrl, 'Title:', title);
+    console.log('MusicLibrary: Setting selectedPdf to:', { url: pdfUrl, title });
     setSelectedPdf({ url: pdfUrl, title });
   };
 

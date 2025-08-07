@@ -853,12 +853,19 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                   className="text-xs"
                 />
                 <div className="max-h-96 overflow-y-auto space-y-2">
-                  {filteredSheetMusic.map((music) => (
-                    <div 
-                      key={music.id} 
-                      className="flex items-center justify-between p-2 border rounded cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors"
-                      onClick={() => music.pdf_url && onPdfSelect(music.pdf_url, music.title)}
-                    >
+                   {filteredSheetMusic.map((music) => (
+                     <div 
+                       key={music.id} 
+                       className="flex items-center justify-between p-2 border rounded cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors"
+                       onClick={() => {
+                         console.log('SetlistBuilder: Sheet music clicked:', music.title, music.pdf_url);
+                         if (music.pdf_url) {
+                           onPdfSelect(music.pdf_url, music.title);
+                         } else {
+                           console.log('SetlistBuilder: No PDF URL for this music');
+                         }
+                       }}
+                     >
                        <div className="flex-1 min-w-0">
                          <SheetMusicHoverCard music={music}>
                            <h4 className="text-sm font-medium truncate hover:underline">{music.title}</h4>

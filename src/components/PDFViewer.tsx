@@ -18,8 +18,8 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
 
-  console.log('PDFViewer: Props:', { pdfUrl });
-  console.log('PDFViewer: URL Hook:', { signedUrl, urlLoading, urlError });
+  console.log('PDFViewer: Props received:', { pdfUrl });
+  console.log('PDFViewer: URL Hook result:', { signedUrl, urlLoading, urlError });
 
   const handleLoad = () => {
     console.log('PDFViewer: PDF loaded successfully');
