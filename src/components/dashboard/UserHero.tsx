@@ -87,12 +87,6 @@ export const UserHero = () => {
                   </>
                 )}
               </div>
-              {isDashboardView() && (
-                <div className="mt-4">
-                  <h2 className="text-2xl font-bold text-primary">Super Admin Dashboard</h2>
-                  <p className="text-muted-foreground">Manage the Spelman College Glee Club platform</p>
-                </div>
-              )}
             </div>
           </div>
 
