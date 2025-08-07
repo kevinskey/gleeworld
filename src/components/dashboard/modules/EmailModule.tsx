@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Search, Archive, Trash2, Reply, Forward, MoreHorizontal, Paperclip, Star, ChevronDown } from 'lucide-react';
+import { Mail, Search, Archive, Trash2, Reply, Forward, MoreHorizontal, Paperclip, Star, ChevronDown, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -378,9 +378,9 @@ export const EmailModule = () => {
   const selectedEmailData = emails.find(email => email.id === selectedEmail);
 
   return (
-    <div className="h-full flex">
+    <div className="h-full flex flex-col md:flex-row">
       {/* Email List */}
-      <div className="w-96 border-r border-border bg-background/50">
+      <div className={`${selectedEmail ? 'hidden md:block' : 'block'} w-full md:w-96 border-r border-border bg-background/50`}>
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-2 mb-4">
             <Mail className="w-5 h-5 text-primary" />
@@ -671,10 +671,22 @@ export const EmailModule = () => {
       </div>
 
       {/* Email Content */}
-      <div className="flex-1 flex flex-col">
+      <div className={`${selectedEmail ? 'block' : 'hidden md:block'} flex-1 flex flex-col`}>
         {selectedEmailData ? (
           <>
             <div className="p-6 border-b border-border bg-background">
+              {/* Mobile back button */}
+              <div className="md:hidden mb-4">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedEmail(null)}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Inbox
+                </Button>
+              </div>
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start gap-4">
                   <Avatar className="w-12 h-12">
