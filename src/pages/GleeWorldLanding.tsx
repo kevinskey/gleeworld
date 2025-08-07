@@ -102,25 +102,7 @@ export const GleeWorldLanding = () => {
 
   // Remove hardcoded sample tracks - they're now handled by the edge function
 
-  // Fast admin redirect with fallback
-  useEffect(() => {
-    if (!authLoading && user) {
-      // Immediate admin check to avoid redirect loops
-      const fastAdminRedirect = async () => {
-        const { data: profile } = await supabase
-          .from('gw_profiles')
-          .select('is_admin, is_super_admin, role')
-          .eq('user_id', user.id)
-          .single();
-          
-        if (profile?.is_admin || profile?.is_super_admin || profile?.role === 'super-admin') {
-          navigate('/admin', { replace: true });
-        }
-      };
-      
-      fastAdminRedirect();
-    }
-  }, [user, authLoading, navigate]);
+   // Remove admin redirect - let users stay on home page
 
   useEffect(() => {
     
