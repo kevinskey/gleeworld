@@ -144,6 +144,7 @@ export const MusicLibrary = () => {
             <div>
               <p className="text-xs text-muted-foreground mb-2">Loading: {selectedPdf.title}</p>
               <PDFViewerWithAnnotations 
+                key={selectedPdf.url} // Force re-render when URL changes
                 pdfUrl={selectedPdf.url}
                 musicTitle={selectedPdf.title}
                 className="w-full"
