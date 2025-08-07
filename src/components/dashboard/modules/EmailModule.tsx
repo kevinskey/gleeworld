@@ -6,9 +6,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CommunicationHub } from '@/components/communication/CommunicationHub';
 
 export const EmailModule = () => {
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
+  const [showCompose, setShowCompose] = useState(false);
 
   const emails = [
     {
@@ -55,6 +57,10 @@ export const EmailModule = () => {
 
   const selectedEmailData = emails.find(email => email.id === selectedEmail);
 
+  if (showCompose) {
+    return <CommunicationHub />;
+  }
+
   return (
     <div className="h-full flex">
       {/* Email List */}
@@ -71,7 +77,7 @@ export const EmailModule = () => {
           </div>
 
           <div className="flex gap-2">
-            <Button size="sm" className="flex-1">
+            <Button size="sm" className="flex-1" onClick={() => setShowCompose(true)}>
               Compose
             </Button>
             <Button variant="outline" size="sm">
