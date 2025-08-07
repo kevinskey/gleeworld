@@ -68,9 +68,6 @@ export const UserHero = () => {
                   {getInitials()}
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute -top-2 -left-2 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-bold">
-                AVATAR
-              </div>
             </div>
           </div>
 
