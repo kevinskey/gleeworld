@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Mail, Music, Calendar, Shirt, DollarSign, Users } from 'lucide-react';
 import { ModuleDisplay } from '@/components/dashboard/ModuleDisplay';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 
 const mockMessages = [
   { id: 1, color: 'bg-red-500', text: 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum' },
@@ -31,6 +32,7 @@ export const HomeRoute = () => {
   const { user, loading: authLoading } = useAuth();
   const { userProfile, loading: profileLoading } = useUserProfile(user);
   const [selectedModule, setSelectedModule] = useState<string>('email');
+  const [showMessages, setShowMessages] = useState(false);
 
   // Show loading while auth is being determined for logged in users
   if (authLoading || (user && profileLoading)) {
@@ -61,36 +63,11 @@ export const HomeRoute = () => {
     return (
       <div className="min-h-screen bg-background">
         {/* Header */}
-        <div className="border-b border-border bg-muted/20 px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Left - Logo */}
-            <div className="flex items-center space-x-3">
-              <div className="text-xs font-bold">
-                <div>SPELMAN</div>
-                <div>COLLEGE</div>
-                <div>GLEE</div>
-                <div>CLUB</div>
-              </div>
-              <div className="text-2xl font-bold">GLEE WORLD</div>
-              <div className="text-sm text-muted-foreground">SPELMAN COLLEGE GLEE CLUB</div>
-            </div>
-            
-            {/* Center */}
-            <div className="text-4xl font-bold">HEADER</div>
-            
-            {/* Right - User Info */}
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <div className="text-2xl font-bold">{getUserDisplayName()}</div>
-                <div className="text-sm text-muted-foreground">{getUserRole()}</div>
-              </div>
-              <div className="h-16 w-16 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg">
-                {getUserInitials()}
-              </div>
-              <div className="text-6xl font-bold text-muted-foreground/20">S1</div>
-            </div>
-          </div>
-        </div>
+        <DashboardHeader 
+          user={user} 
+          onToggleMessages={() => setShowMessages(!showMessages)}
+          showMessages={showMessages}
+        />
 
         {/* Two Column Layout */}
         <div className="grid grid-cols-2 gap-6 p-6">
