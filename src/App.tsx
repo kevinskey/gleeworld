@@ -78,6 +78,7 @@ import MediaLibrary from "./pages/admin/MediaLibrary";
 import Communications from "./pages/admin/Communications";
 import InventoryShop from "./pages/admin/InventoryShop";
 import Analytics from "./pages/admin/Analytics";
+import Settings from "./pages/Settings";
 import SystemSettings from "./pages/admin/SystemSettings";
 import AccessControl from "./pages/admin/AccessControl";
 import DatabaseAdmin from "./pages/admin/DatabaseAdmin";
@@ -270,14 +271,22 @@ const App = () => {
                       <ProfileSetup />
                     </ProtectedRoute>
                   } 
-                />
-               <Route
-                 path="/notifications" 
-                 element={
-                   <ProtectedRoute>
-                     <Notifications />
-                   </ProtectedRoute>
-                 } 
+                 />
+                <Route
+                  path="/settings" 
+                  element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  } 
+                 />
+                <Route
+                  path="/notifications" 
+                  element={
+                    <ProtectedRoute>
+                      <Notifications />
+                    </ProtectedRoute>
+                  } 
                  />
                 <Route
                   path="/notifications/send" 
