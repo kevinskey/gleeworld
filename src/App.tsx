@@ -12,6 +12,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
 
 import Index from "./pages/Index";
+import DirectoryPage from "./pages/DirectoryPage";
 import Auth from "./pages/Auth";
 import FanDashboard from "./pages/FanDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -729,7 +730,7 @@ const App = () => {
                         path="/" 
                         element={
                           <PublicRoute>
-                            <GleeWorldLanding />
+                            <DirectoryPage />
                           </PublicRoute>
                         } 
                       />
