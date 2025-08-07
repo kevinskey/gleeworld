@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DashboardHeader } from './DashboardHeader';
+import { Header } from '../Header';
 import { MessagesPanel } from './MessagesPanel';
 import { ModuleSelector } from './ModuleSelector';
 import { ModuleDisplay } from './ModuleDisplay';
@@ -12,13 +12,14 @@ export const UnifiedDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      <DashboardHeader 
-        user={user}
+      <Header 
+        activeTab={selectedModule}
+        onTabChange={setSelectedModule}
         onToggleMessages={() => setShowMessages(!showMessages)}
         showMessages={showMessages}
       />
       
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex h-[calc(100vh-72px)]">
         {/* Left Sidebar - Module Selector */}
         <div className="w-80 border-r border-border bg-background/50 backdrop-blur-sm">
           <ModuleSelector 

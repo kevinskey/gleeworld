@@ -45,9 +45,11 @@ interface HeaderProps {
   onTabChange: (tab: string) => void;
   isRadioPlaying?: boolean;
   onRadioToggle?: () => void;
+  onToggleMessages?: () => void;
+  showMessages?: boolean;
 }
 
-export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadioToggle }: HeaderProps) => {
+export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadioToggle, onToggleMessages, showMessages = false }: HeaderProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { userProfile, displayName } = useUserProfile(user);
@@ -141,7 +143,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
           {/* Logo */}
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
             <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary truncate">
-              Contract Manager
+              GleeWorld
             </h1>
           </div>
 
@@ -210,6 +212,22 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
 
           {/* Right side actions */}
           <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
+            {/* Messages Toggle */}
+            {onToggleMessages && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onToggleMessages}
+                className={`relative text-primary hover:bg-primary/10 ${showMessages ? 'bg-primary/20' : ''}`}
+              >
+                <MessageSquare className="w-4 h-4" />
+                {unreadCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-1 -right-1 w-5 h-5 rounded-full p-0 flex items-center justify-center text-xs">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </Button>
+            )}
 
             {/* Dashboard Views Dropdown - Only for admins */}
             {isAdmin && (
