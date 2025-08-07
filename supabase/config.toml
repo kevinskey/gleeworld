@@ -130,3 +130,6 @@ verify_jwt = true
 
 [functions.test-openai]
 verify_jwt = true
+
+[functions.radio-proxy]
+verify_jwt = false
