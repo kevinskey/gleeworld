@@ -52,31 +52,29 @@ export const UserHero = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-background to-muted/30 border-b border-border py-8 px-6 h-[400px] relative">
+    <div className="bg-gradient-to-r from-background to-muted/30 border-b border-border py-6 px-6 h-[200px] relative">
       <div className="container mx-auto h-full">
-        <div className="grid items-start h-full pt-4" style={{ gridTemplateColumns: '20% 60% 20%' }}>
-          {/* Left Column - Avatar */}
-          <div className="flex justify-start">
-            <div className="relative">
-              <Avatar className="w-48 h-48 border-4 border-primary/20">
-                <AvatarImage 
-                  src={userProfile?.avatar_url || undefined} 
-                  alt={getDisplayName()}
-                  className="object-cover"
-                />
-                <AvatarFallback className="bg-primary text-primary-foreground text-4xl font-bold">
-                  {getInitials()}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+        <div className="flex items-center h-full gap-8">
+          {/* Avatar */}
+          <div className="flex-shrink-0">
+            <Avatar className="w-24 h-24 border-2 border-primary/20">
+              <AvatarImage 
+                src={userProfile?.avatar_url || undefined} 
+                alt={getDisplayName()}
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
+                {getInitials()}
+              </AvatarFallback>
+            </Avatar>
           </div>
 
-          {/* Center Column - User Info */}
-          <div className="flex flex-col space-y-2 pl-8">
-            <h1 className="text-6xl font-semibold text-foreground normal-case tracking-tight leading-tight">
+          {/* Name and Description */}
+          <div className="flex-grow flex flex-col justify-center space-y-1">
+            <h1 className="text-4xl font-semibold text-foreground normal-case tracking-tight leading-tight">
               {getDisplayName()}
             </h1>
-            <div className="flex items-center gap-2 text-2xl text-muted-foreground">
+            <div className="flex items-center gap-2 text-lg text-muted-foreground">
               <span>{getRole()}</span>
               {getExecBoardRole() && (
                 <>
@@ -87,8 +85,8 @@ export const UserHero = () => {
             </div>
           </div>
 
-          {/* Right Column - Vocal Section */}
-          <div className="flex items-center justify-center h-48 font-dancing" style={{ fontSize: '12rem', fontWeight: 'bold', color: 'hsl(var(--muted-foreground) / 0.15)' }}>
+          {/* Section */}
+          <div className="flex-shrink-0 text-6xl font-bold text-muted-foreground/20 font-dancing">
             {getVocalSection()}
           </div>
         </div>
