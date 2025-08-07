@@ -38,6 +38,14 @@ interface ModuleInfo {
 const DirectoryPage = () => {
   const navigate = useNavigate();
 
+  // Add debugging to track component lifecycle
+  React.useEffect(() => {
+    console.log('DirectoryPage mounted');
+    return () => {
+      console.log('DirectoryPage unmounting');
+    };
+  }, []);
+
   const modules: ModuleInfo[] = [
     // Admin Modules
     {
