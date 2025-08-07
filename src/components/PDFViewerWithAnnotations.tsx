@@ -553,6 +553,9 @@ export const PDFViewerWithAnnotations = ({
           {/* Google Docs PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
             <div className="w-full h-full bg-white">
+              <div className="text-xs text-muted-foreground p-2 bg-muted/20">
+                Loading: {musicTitle} | URL: {signedUrl?.substring(0, 80)}...
+              </div>
               <iframe
                 src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
                 className="w-full h-full border-0 block"
@@ -562,6 +565,9 @@ export const PDFViewerWithAnnotations = ({
                 sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
                 style={{ minHeight: '600px', display: 'block' }}
               />
+              <div className="text-xs text-center p-2 text-muted-foreground">
+                If PDF doesn't load, try the <Button variant="link" size="sm" onClick={() => window.open(signedUrl, '_blank')} className="p-0 h-auto">direct link</Button>
+              </div>
             </div>
           )}
 
