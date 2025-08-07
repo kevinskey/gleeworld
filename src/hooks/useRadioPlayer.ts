@@ -224,12 +224,19 @@ export const useRadioPlayer = () => {
           networkState: audioRef.current.networkState
         });
         
+        // Clear any previous source first
+        audioRef.current.src = '';
+        audioRef.current.load();
+        
+        // Set new source and load
         audioRef.current.src = streamUrl;
         audioRef.current.volume = state.volume;
+        audioRef.current.load(); // Force load the new source
         
         console.log('Calling audio.play()...');
         await audioRef.current.play();
         
+        console.log('Successfully started playing stream:', streamUrl);
         toast({
           title: "Now Playing",
           description: "Glee World Radio is now streaming",
@@ -238,6 +245,11 @@ export const useRadioPlayer = () => {
         
       } catch (error) {
         console.error(`Failed to play stream ${streamUrl}:`, error);
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          code: error.code
+        });
         
         // If this was the last URL, show error
         if (streamUrl === RADIO_STREAM_URLS[RADIO_STREAM_URLS.length - 1]) {
