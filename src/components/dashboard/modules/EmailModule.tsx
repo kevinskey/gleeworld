@@ -19,13 +19,16 @@ export const EmailModule = () => {
   const [showCompose, setShowCompose] = useState(false);
   const [archivedEmails, setArchivedEmails] = useState<string[]>([]);
   const [deletedEmails, setDeletedEmails] = useState<string[]>([]);
-  const [currentView, setCurrentView] = useState<'inbox' | 'archived'>('inbox');
+  const [currentView, setCurrentView] = useState<'inbox' | 'archived' | 'drafts'>('inbox');
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [drafts, setDrafts] = useState<any[]>([]);
+  const [loadingDrafts, setLoadingDrafts] = useState(false);
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
 
   // Fetch real users from database
   useEffect(() => {
@@ -66,7 +69,138 @@ export const EmailModule = () => {
     };
 
     fetchUsers();
+    fetchDrafts();
   }, []);
+
+  // Fetch drafts from database
+  const fetchDrafts = async () => {
+    try {
+      setLoadingDrafts(true);
+      const { data, error } = await supabase
+        .from('gw_email_drafts')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching drafts:', error);
+        return;
+      }
+
+      setDrafts(data || []);
+    } catch (error) {
+      console.error('Error fetching drafts:', error);
+    } finally {
+      setLoadingDrafts(false);
+    }
+  };
+
+  // Save draft to database
+  const handleSaveDraft = async () => {
+    if (!selectedRecipients.length && !subject.trim() && !message.trim()) {
+      toast({
+        title: "Nothing to save",
+        description: "Please add recipients, subject, or message to save a draft",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const draftData = {
+        recipients: selectedRecipients,
+        subject: subject,
+        message: message,
+        user_id: (await supabase.auth.getUser()).data.user?.id
+      };
+
+      let result;
+      if (currentDraftId) {
+        // Update existing draft
+        result = await supabase
+          .from('gw_email_drafts')
+          .update(draftData)
+          .eq('id', currentDraftId);
+      } else {
+        // Create new draft
+        result = await supabase
+          .from('gw_email_drafts')
+          .insert(draftData)
+          .select()
+          .single();
+        
+        if (result.data) {
+          setCurrentDraftId(result.data.id);
+        }
+      }
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      toast({
+        title: "Draft saved",
+        description: currentDraftId ? "Draft updated successfully" : "Draft saved successfully",
+      });
+
+      fetchDrafts(); // Refresh drafts list
+    } catch (error: any) {
+      console.error('Error saving draft:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save draft",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Load draft for editing
+  const handleLoadDraft = (draft: any) => {
+    setSelectedRecipients(draft.recipients || []);
+    setSubject(draft.subject || '');
+    setMessage(draft.message || '');
+    setCurrentDraftId(draft.id);
+    setShowCompose(true);
+  };
+
+  // Clear form and reset draft ID
+  const clearForm = () => {
+    setSelectedRecipients([]);
+    setSubject('');
+    setMessage('');
+    setCurrentDraftId(null);
+  };
+
+  // Delete draft
+  const handleDeleteDraft = async (draftId: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_email_drafts')
+        .delete()
+        .eq('id', draftId);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Draft deleted",
+        description: "Draft deleted successfully",
+      });
+
+      fetchDrafts(); // Refresh drafts list
+      
+      if (currentDraftId === draftId) {
+        clearForm();
+      }
+    } catch (error: any) {
+      console.error('Error deleting draft:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete draft",
+        variant: "destructive",
+      });
+    }
+  };
 
   const emails = [
     {
@@ -215,10 +349,17 @@ export const EmailModule = () => {
         description: `Email sent to ${recipientEmails.length} recipient${recipientEmails.length > 1 ? 's' : ''}`,
       });
 
+      // Delete draft if it was being edited
+      if (currentDraftId) {
+        await supabase
+          .from('gw_email_drafts')
+          .delete()
+          .eq('id', currentDraftId);
+        fetchDrafts();
+      }
+
       // Clear form
-      setSelectedRecipients([]);
-      setSubject('');
-      setMessage('');
+      clearForm();
       setShowCompose(false);
 
     } catch (error: any) {
@@ -262,6 +403,14 @@ export const EmailModule = () => {
               onClick={() => setCurrentView('archived')}
             >
               Archived ({archivedEmails.length})
+            </Button>
+            <Button
+              variant={currentView === 'drafts' ? 'default' : 'ghost'}
+              size="sm"
+              className="flex-1"
+              onClick={() => setCurrentView('drafts')}
+            >
+              Drafts ({drafts.length})
             </Button>
           </div>
           
@@ -387,7 +536,7 @@ export const EmailModule = () => {
                     >
                       {sending ? 'Sending...' : 'Send'}
                     </Button>
-                    <Button variant="outline">Save Draft</Button>
+                    <Button variant="outline" onClick={handleSaveDraft}>Save Draft</Button>
                   </div>
                 </div>
               </DialogContent>
@@ -413,47 +562,109 @@ export const EmailModule = () => {
 
         <ScrollArea className="flex-1">
           <div className="p-2">
-            {filteredEmails.map((email) => (
-              <Card 
-                key={email.id}
-                className={`p-4 mb-2 cursor-pointer transition-colors hover:bg-muted/50 ${
-                  selectedEmail === email.id ? 'bg-muted border-primary' : ''
-                } ${email.unread ? 'border-l-4 border-l-primary' : ''}`}
-                onClick={() => setSelectedEmail(email.id)}
-              >
-                <div className="space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <Avatar className="w-8 h-8">
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          {email.sender.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <p className={`text-sm truncate ${email.unread ? 'font-semibold' : 'font-normal'}`}>
-                          {email.sender}
-                        </p>
-                        <span className="text-xs text-muted-foreground">{email.timestamp}</span>
+            {currentView === 'drafts' ? (
+              // Display drafts
+              drafts.map((draft) => {
+                const recipientNames = draft.recipients?.map((recipientId: string) => {
+                  const user = users.find(u => u.id === recipientId);
+                  return user?.name;
+                }).filter(Boolean).join(', ') || 'No recipients';
+
+                return (
+                  <Card 
+                    key={draft.id}
+                    className="p-4 mb-2 cursor-pointer transition-colors hover:bg-muted/50"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-muted-foreground mb-1">
+                            To: {recipientNames}
+                          </p>
+                          <p className="text-sm font-semibold mb-1">
+                            {draft.subject || 'No subject'}
+                          </p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {draft.message || 'No message'}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(draft.updated_at).toLocaleDateString()} {new Date(draft.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        
+                        <div className="flex items-center gap-1 ml-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLoadDraft(draft);
+                            }}
+                            className="text-xs h-6 px-2"
+                          >
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteDraft(draft.id);
+                            }}
+                            className="text-xs h-6 px-2 text-destructive hover:text-destructive"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })
+            ) : (
+              // Display regular emails
+              filteredEmails.map((email) => (
+                <Card 
+                  key={email.id}
+                  className={`p-4 mb-2 cursor-pointer transition-colors hover:bg-muted/50 ${
+                    selectedEmail === email.id ? 'bg-muted border-primary' : ''
+                  } ${email.unread ? 'border-l-4 border-l-primary' : ''}`}
+                  onClick={() => setSelectedEmail(email.id)}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Avatar className="w-8 h-8">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                            {email.sender.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-sm truncate ${email.unread ? 'font-semibold' : 'font-normal'}`}>
+                            {email.sender}
+                          </p>
+                          <span className="text-xs text-muted-foreground">{email.timestamp}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-1">
+                        {email.starred && <Star className="w-4 h-4 text-yellow-500 fill-current" />}
+                        {email.hasAttachment && <Paperclip className="w-4 h-4 text-muted-foreground" />}
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-1">
-                      {email.starred && <Star className="w-4 h-4 text-yellow-500 fill-current" />}
-                      {email.hasAttachment && <Paperclip className="w-4 h-4 text-muted-foreground" />}
+                    <div>
+                      <p className={`text-sm mb-1 ${email.unread ? 'font-medium' : 'font-normal'}`}>
+                        {email.subject}
+                      </p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {email.preview}
+                      </p>
                     </div>
                   </div>
-                  
-                  <div>
-                    <p className={`text-sm mb-1 ${email.unread ? 'font-medium' : 'font-normal'}`}>
-                      {email.subject}
-                    </p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {email.preview}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))
+            )}
           </div>
         </ScrollArea>
       </div>
