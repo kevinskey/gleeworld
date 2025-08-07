@@ -31,7 +31,7 @@ export const UnifiedDashboard = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative overflow-y-auto">
           {/* Top Two-Column Layout */}
           <div className="grid grid-cols-2 gap-4 p-4 border-b border-border">
             {/* Community Hub Column */}
@@ -45,8 +45,8 @@ export const UnifiedDashboard = () => {
             </div>
           </div>
           
-          {/* Main Module Display */}
-          <div className="h-[calc(100%-352px)]">
+          {/* Selected Module Display Below */}
+          <div className="p-4">
             <ModuleDisplay selectedModule={selectedModule} />
           </div>
           
