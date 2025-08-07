@@ -59,7 +59,7 @@ export const HeaderRadioControls = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-2 hover:bg-accent/20"
+              className="h-8 px-2 hover:bg-accent/20 hidden sm:flex"
             >
               <Radio className="h-4 w-4 mr-1" />
               <span className="text-xs font-medium">Radio</span>
