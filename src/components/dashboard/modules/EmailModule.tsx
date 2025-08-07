@@ -6,8 +6,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CommunicationHub } from '@/components/communication/CommunicationHub';
-
 export const EmailModule = () => {
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [showCompose, setShowCompose] = useState(false);
@@ -58,7 +56,34 @@ export const EmailModule = () => {
   const selectedEmailData = emails.find(email => email.id === selectedEmail);
 
   if (showCompose) {
-    return <CommunicationHub />;
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Compose Email</h2>
+          <Button variant="outline" onClick={() => setShowCompose(false)}>
+            Back to Inbox
+          </Button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">To</label>
+            <input className="w-full p-2 border rounded" placeholder="Select recipients..." />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Subject</label>
+            <input className="w-full p-2 border rounded" placeholder="Email subject..." />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Message</label>
+            <textarea className="w-full p-2 border rounded h-40" placeholder="Write your message..."></textarea>
+          </div>
+          <div className="flex gap-2">
+            <Button>Send</Button>
+            <Button variant="outline">Save Draft</Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
