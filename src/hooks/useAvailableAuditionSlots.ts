@@ -29,16 +29,19 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
 
         const dates: Date[] = [];
         timeBlocks?.forEach(block => {
-          // Convert UTC time to Eastern timezone to get the correct local date
-          const blockDate = toZonedTime(new Date(block.start_date), EASTERN_TZ);
+          // Use the local date from the database timestamp
+          const blockDate = new Date(block.start_date);
+          
+          // Create a clean date object (midnight local time) for the date
+          const cleanDate = new Date(blockDate.getFullYear(), blockDate.getMonth(), blockDate.getDate());
           
           // Only add the date if it's not already in the array
           const dateExists = dates.some(date => 
-            date.toDateString() === blockDate.toDateString()
+            date.toDateString() === cleanDate.toDateString()
           );
           
           if (!dateExists) {
-            dates.push(new Date(blockDate.getFullYear(), blockDate.getMonth(), blockDate.getDate()));
+            dates.push(cleanDate);
           }
         });
 
@@ -62,8 +65,8 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
     const fetchAvailableSlots = async () => {
       setLoading(true);
       try {
-        // Find audition blocks for the selected date
-        const selectedDateString = selectedDate.toISOString().split('T')[0]; // Get just the date part
+        // Get the selected date in YYYY-MM-DD format in the user's local timezone
+        const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
         
         const { data: auditionBlocks, error: blockError } = await supabase
           .from('audition_time_blocks')
@@ -75,10 +78,10 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
           throw blockError;
         }
 
-        // Filter blocks that match the selected date (compare in Eastern timezone)
+        // Filter blocks that match the selected date (compare local dates)
         const matchingBlocks = auditionBlocks?.filter(block => {
-          const blockDate = toZonedTime(new Date(block.start_date), EASTERN_TZ);
-          const blockDateString = formatInTimeZone(blockDate, EASTERN_TZ, 'yyyy-MM-dd');
+          const blockStartDate = new Date(block.start_date);
+          const blockDateString = format(blockStartDate, 'yyyy-MM-dd');
           return blockDateString === selectedDateString;
         }) || [];
 
@@ -106,29 +109,25 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
         const appointmentDuration = auditionBlock.appointment_duration_minutes || 30;
         const slots: TimeSlot[] = [];
         
-        // Convert UTC times to Eastern timezone
+        // Get the actual start and end times from the audition block
         const blockStartUTC = new Date(auditionBlock.start_date);
         const blockEndUTC = new Date(auditionBlock.end_date);
         
-        // Convert to Eastern time
-        const blockStartET = toZonedTime(blockStartUTC, EASTERN_TZ);
-        const blockEndET = toZonedTime(blockEndUTC, EASTERN_TZ);
-        
-        // For the selected date, use the time from the Eastern converted block times
+        // Create the start and end times for the selected date using local time
         const startTime = new Date(selectedDate);
-        startTime.setHours(blockStartET.getHours(), blockStartET.getMinutes(), 0, 0);
+        startTime.setHours(blockStartUTC.getHours(), blockStartUTC.getMinutes(), 0, 0);
         
         const endTime = new Date(selectedDate);
-        endTime.setHours(blockEndET.getHours(), blockEndET.getMinutes(), 0, 0);
+        endTime.setHours(blockEndUTC.getHours(), blockEndUTC.getMinutes(), 0, 0);
         
-        console.log('UTC times:', blockStartUTC, 'to', blockEndUTC);
-        console.log('Eastern times:', blockStartET, 'to', blockEndET);
-        console.log('Generating slots from', startTime, 'to', endTime, 'with duration', appointmentDuration);
+        console.log('Block times (UTC):', blockStartUTC, 'to', blockEndUTC);
+        console.log('Generated slot times for', selectedDateString, ':', startTime, 'to', endTime);
+        console.log('Appointment duration:', appointmentDuration, 'minutes');
         
         const currentTime = new Date(startTime);
         
         while (currentTime < endTime) {
-          const timeString = formatInTimeZone(currentTime, EASTERN_TZ, 'h:mm a');
+          const timeString = format(currentTime, 'h:mm a');
           
           // Check if this slot is already taken
           const isAvailable = !existingAppointments?.some(apt => {

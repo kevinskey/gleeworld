@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { format } from 'date-fns';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -511,7 +512,7 @@ export const AuditionsManagement = () => {
 
       // Date filter
       if (filterByDate) {
-        const appDate = new Date(app.audition_date).toISOString().split('T')[0];
+        const appDate = format(new Date(app.audition_date), 'yyyy-MM-dd');
         if (appDate !== filterByDate) return false;
       }
 
