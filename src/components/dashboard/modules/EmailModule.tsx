@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Search, Archive, Trash2, Reply, Forward, MoreHorizontal, Paperclip, Star, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/integrations/supabase/client';
 export const EmailModule = () => {
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [showCompose, setShowCompose] = useState(false);
@@ -18,18 +19,49 @@ export const EmailModule = () => {
   const [deletedEmails, setDeletedEmails] = useState<string[]>([]);
   const [currentView, setCurrentView] = useState<'inbox' | 'archived'>('inbox');
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock user list for recipients
-  const users = [
-    { id: '1', name: 'Dr. Johnson', email: 'dr.johnson@spelman.edu', role: 'Director' },
-    { id: '2', name: 'Sarah Williams', email: 'sarah.williams@spelman.edu', role: 'Executive Board' },
-    { id: '3', name: 'Maya Thompson', email: 'maya.thompson@spelman.edu', role: 'Member' },
-    { id: '4', name: 'Jordan Davis', email: 'jordan.davis@spelman.edu', role: 'Member' },
-    { id: '5', name: 'Alicia Brown', email: 'alicia.brown@spelman.edu', role: 'Alumna' },
-    { id: '6', name: 'Executive Board', email: 'exec@gleeworld.org', role: 'Group' },
-    { id: '7', name: 'All Members', email: 'members@gleeworld.org', role: 'Group' },
-    { id: '8', name: 'Music Library', email: 'library@gleeworld.org', role: 'Department' }
-  ];
+  // Fetch real users from database
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const { data: profiles, error } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, email, role')
+          .not('full_name', 'is', null)
+          .order('full_name');
+
+        if (error) {
+          console.error('Error fetching users:', error);
+          return;
+        }
+
+        // Transform database users to match expected format
+        const transformedUsers = profiles.map(profile => ({
+          id: profile.user_id,
+          name: profile.full_name,
+          email: profile.email,
+          role: profile.role || 'member'
+        }));
+
+        // Add predefined groups
+        const groups = [
+          { id: 'exec-group', name: 'Executive Board', email: 'exec@gleeworld.org', role: 'Group' },
+          { id: 'all-members', name: 'All Members', email: 'members@gleeworld.org', role: 'Group' },
+          { id: 'music-library', name: 'Music Library', email: 'library@gleeworld.org', role: 'Department' }
+        ];
+
+        setUsers([...transformedUsers, ...groups]);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const emails = [
     {
@@ -183,7 +215,7 @@ export const EmailModule = () => {
                           </SelectTrigger>
                           <SelectContent className="z-50 bg-background border shadow-lg">
                             <div className="p-2 text-xs font-medium text-muted-foreground border-b">Individual Users</div>
-                            {users.filter(u => ['Director', 'Executive Board', 'Member', 'Alumna'].includes(u.role)).map((user) => (
+                            {users.filter(u => ['fan', 'member', 'alumna', 'admin', 'super-admin'].includes(u.role)).map((user) => (
                               <SelectItem 
                                 key={user.id} 
                                 value={user.id}
