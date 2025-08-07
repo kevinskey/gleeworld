@@ -234,7 +234,7 @@ const DirectoryPage = () => {
         showBackButton={false}
         backgroundVariant="gradient"
       />
-      <div className="container mx-auto p-6 space-y-8">
+      <div className="container mx-auto px-8 py-6 space-y-8">
 
       {categories.map(category => (
         <div key={category} className="space-y-4">
