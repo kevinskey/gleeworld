@@ -29,7 +29,7 @@ export const AppointmentDashboard = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Dashboard
@@ -37,10 +37,6 @@ export const AppointmentDashboard = () => {
           <TabsTrigger value="calendar" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Calendar
-          </TabsTrigger>
-          <TabsTrigger value="day-schedule" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Day View
           </TabsTrigger>
           <TabsTrigger value="schedule" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
@@ -69,10 +65,6 @@ export const AppointmentDashboard = () => {
         </TabsContent>
 
         <TabsContent value="calendar" className="space-y-6">
-          <AppointmentCalendarView />
-        </TabsContent>
-
-        <TabsContent value="day-schedule" className="space-y-6">
           <DayScheduleView />
         </TabsContent>
 
