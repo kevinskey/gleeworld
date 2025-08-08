@@ -9,6 +9,15 @@ import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
 export const HomeRoute = () => {
   const { user, loading: authLoading } = useAuth();
   
+  // Debug logging for auth state
+  console.log('🏠 HomeRoute render:', {
+    hasUser: !!user,
+    userId: user?.id,
+    email: user?.email,
+    authLoading,
+    timestamp: new Date().toISOString()
+  });
+  
   // Use the role-based redirect hook to handle automatic redirection
   useRoleBasedRedirect();
 
