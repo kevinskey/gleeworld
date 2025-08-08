@@ -39,10 +39,5 @@ export const HomeRoute = () => {
     shouldShowLanding: true
   });
   
-  return (
-    <>
-      <RouteDebugger />
-      <GleeWorldLanding />
-    </>
-  );
+  return <GleeWorldLanding />;
 };
