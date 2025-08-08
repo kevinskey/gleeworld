@@ -245,9 +245,9 @@ const App = () => {
               <Route 
                 path="/dashboard/auditioner" 
                 element={
-                  <ProtectedRoute>
+                  <PublicRoute>
                     <AuditionerDashboardPage />
-                  </ProtectedRoute>
+                  </PublicRoute>
                 } 
               />
               <Route 

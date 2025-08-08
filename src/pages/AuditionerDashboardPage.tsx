@@ -3,33 +3,36 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserById } from '@/hooks/useUserById';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { AuditionerDashboard } from '@/components/member-view/dashboards/AuditionerDashboard';
-import { Navigate } from 'react-router-dom';
+import { PublicLayout } from '@/components/layout/PublicLayout';
 
 const AuditionerDashboardPage = () => {
   const { user, loading } = useAuth();
   const { user: profile, loading: profileLoading } = useUserById(user?.id);
 
-  if (loading || profileLoading) {
+  if (loading || (user && profileLoading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner text="Loading Auditioner Dashboard..." />
-      </div>
+      <PublicLayout>
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <LoadingSpinner text="Loading Auditioner Dashboard..." />
+        </div>
+      </PublicLayout>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  // If not logged in, render a public-friendly dashboard with a guest auditioner context
+  const guestAuditioner = {
+    id: 'guest',
+    email: '',
+    full_name: 'Prospective Student',
+    role: 'auditioner',
+    created_at: new Date().toISOString(),
+  } as any;
 
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner text="Preparing profile..." />
-      </div>
-    );
-  }
-
-  return <AuditionerDashboard user={profile} />;
+  return (
+    <PublicLayout>
+      <AuditionerDashboard user={(profile as any) || guestAuditioner} />
+    </PublicLayout>
+  );
 };
 
 export default AuditionerDashboardPage;
