@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Clock, Users, Settings, History, RotateCcw } from 'lucide-react';
 import { AppointmentsList } from './AppointmentsList';
 import { AppointmentScheduler } from './AppointmentScheduler';
+import { AppointmentCalendarView } from './AppointmentCalendarView';
 import { AppointmentTypeManager } from './AppointmentTypeManager';
 import { AppointmentAvailabilityManager } from './AppointmentAvailabilityManager';
 import { AppointmentHistory } from './AppointmentHistory';
@@ -12,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export const AppointmentDashboard = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('calendar');
 
   return (
     <div className="space-y-6">
@@ -27,21 +28,21 @@ export const AppointmentDashboard = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
+          <TabsTrigger value="calendar" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            Overview
+            Calendar
           </TabsTrigger>
           <TabsTrigger value="schedule" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
             Schedule
           </TabsTrigger>
-          <TabsTrigger value="availability" className="flex items-center gap-2">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Availability
+            Overview
           </TabsTrigger>
-          <TabsTrigger value="types" className="flex items-center gap-2">
+          <TabsTrigger value="availability" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Types
+            Availability
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <History className="h-4 w-4" />
@@ -49,9 +50,13 @@ export const AppointmentDashboard = () => {
           </TabsTrigger>
           <TabsTrigger value="sync" className="flex items-center gap-2">
             <RotateCcw className="h-4 w-4" />
-            Calendar Sync
+            Sync
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="calendar" className="space-y-6">
+          <AppointmentCalendarView />
+        </TabsContent>
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
