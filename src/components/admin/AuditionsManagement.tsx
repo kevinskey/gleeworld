@@ -37,6 +37,7 @@ import { MobileScoreWindow } from "@/components/scoring/MobileScoreWindow";
 import { SightReadingScoreWindow } from "@/components/scoring/SightReadingScoreWindow";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AuditionFilters } from "@/components/audition/AuditionFilters";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 interface AuditionSession {
   id: string;
@@ -561,27 +562,25 @@ export const AuditionsManagement = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="text-center sm:text-left">
-          <h2 className="text-2xl sm:text-3xl font-bold text-primary">Auditions Management</h2>
-          <p className="text-sm sm:text-base text-muted-foreground">Manage audition sessions, applications, and evaluations</p>
-        </div>
-        <div className="flex gap-2 justify-center sm:justify-end">
-          <Select value={selectedSession} onValueChange={setSelectedSession}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filter by session" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Sessions</SelectItem>
-              {sessions.map((session) => (
-                <SelectItem key={session.id} value={session.id}>
-                  {session.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <PageHeader
+        title="Auditions Management"
+        description="Manage audition sessions, applications, and evaluations"
+        showBackButton={false}
+      >
+        <Select value={selectedSession} onValueChange={setSelectedSession}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Filter by session" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Sessions</SelectItem>
+            {sessions.map((session) => (
+              <SelectItem key={session.id} value={session.id}>
+                {session.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </PageHeader>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Mobile optimized tab list */}
