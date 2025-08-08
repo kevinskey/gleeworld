@@ -172,7 +172,12 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     {/* Auditioner View */}
                     <DropdownMenuItem 
                       onClick={() => {
-                        navigate('/auditions');
+                        if (user?.id) {
+                          navigate(`/dashboard/member-view/${user.id}`);
+                          onViewModeChange?.('member');
+                        } else {
+                          navigate('/auditions');
+                        }
                       }}
                       className="cursor-pointer"
                     >
