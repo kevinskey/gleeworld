@@ -10006,6 +10006,273 @@ export type Database = {
           },
         ]
       }
+      host_interactions: {
+        Row: {
+          attachments: Json | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          host_id: string
+          id: string
+          interaction_date: string
+          interaction_type: string
+          next_follow_up_date: string | null
+          outcome: string | null
+          subject: string | null
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          host_id: string
+          id?: string
+          interaction_date?: string
+          interaction_type: string
+          next_follow_up_date?: string | null
+          outcome?: string | null
+          subject?: string | null
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          host_id?: string
+          id?: string
+          interaction_date?: string
+          interaction_type?: string
+          next_follow_up_date?: string | null
+          outcome?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "host_interactions_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "hosts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      host_performances: {
+        Row: {
+          audience_size: number | null
+          contract_id: string | null
+          created_at: string
+          event_id: string | null
+          event_title: string | null
+          expenses: number | null
+          host_feedback: string | null
+          host_id: string
+          id: string
+          net_income: number | null
+          performance_date: string
+          performer_feedback: string | null
+          rating: number | null
+          repertoire: string[] | null
+          revenue: number | null
+          special_requirements: string | null
+          technical_notes: string | null
+          updated_at: string
+          venue_name: string | null
+        }
+        Insert: {
+          audience_size?: number | null
+          contract_id?: string | null
+          created_at?: string
+          event_id?: string | null
+          event_title?: string | null
+          expenses?: number | null
+          host_feedback?: string | null
+          host_id: string
+          id?: string
+          net_income?: number | null
+          performance_date: string
+          performer_feedback?: string | null
+          rating?: number | null
+          repertoire?: string[] | null
+          revenue?: number | null
+          special_requirements?: string | null
+          technical_notes?: string | null
+          updated_at?: string
+          venue_name?: string | null
+        }
+        Update: {
+          audience_size?: number | null
+          contract_id?: string | null
+          created_at?: string
+          event_id?: string | null
+          event_title?: string | null
+          expenses?: number | null
+          host_feedback?: string | null
+          host_id?: string
+          id?: string
+          net_income?: number | null
+          performance_date?: string
+          performer_feedback?: string | null
+          rating?: number | null
+          repertoire?: string[] | null
+          revenue?: number | null
+          special_requirements?: string | null
+          technical_notes?: string | null
+          updated_at?: string
+          venue_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "host_performances_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "hosts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hosts: {
+        Row: {
+          accessibility_features: string | null
+          booking_lead_time_months: number | null
+          booking_request_id: string | null
+          budget_range_max: number | null
+          budget_range_min: number | null
+          city: string | null
+          contact_email: string | null
+          contact_name: string
+          contact_phone: string | null
+          contract_id: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          first_contact_date: string | null
+          has_piano: boolean | null
+          has_sound_system: boolean | null
+          id: string
+          internal_notes: string | null
+          last_contact_date: string | null
+          last_performance_date: string | null
+          notes: string | null
+          organization_name: string | null
+          organization_type: string | null
+          preferred_event_types: string[] | null
+          preferred_seasons: string[] | null
+          priority_level: number | null
+          secondary_contact_email: string | null
+          secondary_contact_name: string | null
+          secondary_contact_phone: string | null
+          source: Database["public"]["Enums"]["host_source"]
+          state: string | null
+          status: Database["public"]["Enums"]["host_status"]
+          street_address: string | null
+          total_performances: number | null
+          typical_audience_size: number | null
+          updated_at: string
+          updated_by: string | null
+          venue_capacity: number | null
+          venue_name: string | null
+          venue_type: string | null
+          website_url: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          accessibility_features?: string | null
+          booking_lead_time_months?: number | null
+          booking_request_id?: string | null
+          budget_range_max?: number | null
+          budget_range_min?: number | null
+          city?: string | null
+          contact_email?: string | null
+          contact_name: string
+          contact_phone?: string | null
+          contract_id?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          first_contact_date?: string | null
+          has_piano?: boolean | null
+          has_sound_system?: boolean | null
+          id?: string
+          internal_notes?: string | null
+          last_contact_date?: string | null
+          last_performance_date?: string | null
+          notes?: string | null
+          organization_name?: string | null
+          organization_type?: string | null
+          preferred_event_types?: string[] | null
+          preferred_seasons?: string[] | null
+          priority_level?: number | null
+          secondary_contact_email?: string | null
+          secondary_contact_name?: string | null
+          secondary_contact_phone?: string | null
+          source: Database["public"]["Enums"]["host_source"]
+          state?: string | null
+          status?: Database["public"]["Enums"]["host_status"]
+          street_address?: string | null
+          total_performances?: number | null
+          typical_audience_size?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          venue_capacity?: number | null
+          venue_name?: string | null
+          venue_type?: string | null
+          website_url?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          accessibility_features?: string | null
+          booking_lead_time_months?: number | null
+          booking_request_id?: string | null
+          budget_range_max?: number | null
+          budget_range_min?: number | null
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string
+          contact_phone?: string | null
+          contract_id?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          first_contact_date?: string | null
+          has_piano?: boolean | null
+          has_sound_system?: boolean | null
+          id?: string
+          internal_notes?: string | null
+          last_contact_date?: string | null
+          last_performance_date?: string | null
+          notes?: string | null
+          organization_name?: string | null
+          organization_type?: string | null
+          preferred_event_types?: string[] | null
+          preferred_seasons?: string[] | null
+          priority_level?: number | null
+          secondary_contact_email?: string | null
+          secondary_contact_name?: string | null
+          secondary_contact_phone?: string | null
+          source?: Database["public"]["Enums"]["host_source"]
+          state?: string | null
+          status?: Database["public"]["Enums"]["host_status"]
+          street_address?: string | null
+          total_performances?: number | null
+          typical_audience_size?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          venue_capacity?: number | null
+          venue_name?: string | null
+          venue_type?: string | null
+          website_url?: string | null
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hosts_booking_request_id_fkey"
+            columns: ["booking_request_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       id_document_submissions: {
         Row: {
           created_at: string
@@ -12934,6 +13201,29 @@ export type Database = {
         Args: { auditioner_user_id: string; audition_application_id: string }
         Returns: boolean
       }
+      search_hosts: {
+        Args: {
+          search_term?: string
+          filter_status?: Database["public"]["Enums"]["host_status"]
+          filter_source?: Database["public"]["Enums"]["host_source"]
+          filter_state?: string
+          limit_count?: number
+        }
+        Returns: {
+          id: string
+          contact_name: string
+          organization_name: string
+          contact_email: string
+          contact_phone: string
+          city: string
+          state: string
+          status: Database["public"]["Enums"]["host_status"]
+          source: Database["public"]["Enums"]["host_source"]
+          last_contact_date: string
+          total_performances: number
+          priority_level: number
+        }[]
+      }
       secure_bulk_update_user_roles: {
         Args: { target_user_ids: string[]; new_role: string; reason?: string }
         Returns: Json
@@ -13063,6 +13353,8 @@ export type Database = {
         | "Diction"
         | "Posture"
         | "Energy"
+      host_source: "booking_request" | "contract" | "manual_entry"
+      host_status: "active" | "inactive" | "potential" | "blacklisted"
       hydration_level_enum: "Low" | "Normal" | "High"
       payment_method_enum: "zelle" | "cashapp" | "venmo" | "apple_pay" | "check"
       performer_status: "draft" | "submitted" | "approved"
@@ -13236,6 +13528,8 @@ export const Constants = {
         "Posture",
         "Energy",
       ],
+      host_source: ["booking_request", "contract", "manual_entry"],
+      host_status: ["active", "inactive", "potential", "blacklisted"],
       hydration_level_enum: ["Low", "Normal", "High"],
       payment_method_enum: ["zelle", "cashapp", "venmo", "apple_pay", "check"],
       performer_status: ["draft", "submitted", "approved"],
