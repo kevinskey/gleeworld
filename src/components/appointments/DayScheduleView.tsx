@@ -107,6 +107,15 @@ export const DayScheduleView = () => {
       console.log('Fetching for date:', selectedDate.toDateString());
       console.log('Date range:', dayStart.toISOString(), 'to', dayEnd.toISOString());
 
+      // First check if there are any auditions at all to help with debugging
+      const { data: allAuditions } = await supabase
+        .from('gw_auditions')
+        .select('audition_date, first_name, last_name')
+        .order('audition_date', { ascending: true })
+        .limit(5);
+      
+      console.log('Sample auditions in database:', allAuditions);
+
       // Fetch auditions for selected day
       const { data: auditions, error: auditionsError } = await supabase
         .from('gw_auditions')
