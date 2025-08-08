@@ -79,12 +79,9 @@ export const useRoleBasedRedirect = () => {
 
     // Streamlined redirect logic with admin priority
     const handleRedirect = async () => {
-      // TEMPORARY: Allow admins to view public landing page
-      // Skip auto-redirect if admin is on home page (let them see public view)
-      if (location.pathname === '/') {
-        console.log('🏠 useRoleBasedRedirect: Allowing admin to view public page at /');
-        return;
-      }
+      // Check if this is coming from auth/login (sessionStorage indicator)
+      const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
+      const isPostLogin = redirectAfterAuth !== null || location.pathname === '/auth';
       
       // PRIORITY 1: Admin/Super Admin (direct check)
       const isAdmin = userProfile.is_admin || userProfile.is_super_admin || 
@@ -95,13 +92,22 @@ export const useRoleBasedRedirect = () => {
         is_super_admin: userProfile.is_super_admin,
         role: userProfile.role,
         isAdmin,
+        isPostLogin,
+        redirectAfterAuth,
+        currentPath: location.pathname,
         fullProfile: userProfile
       });
       
       if (isAdmin) {
-        console.log('🚀 useRoleBasedRedirect: ADMIN detected - direct redirect to /admin');
-        navigate('/admin', { replace: true });
-        return;
+        // Always redirect admins after login, but allow manual navigation to /
+        if (isPostLogin || location.pathname !== '/') {
+          console.log('🚀 useRoleBasedRedirect: ADMIN detected - redirect to /admin');
+          navigate('/admin', { replace: true });
+          return;
+        } else {
+          console.log('🏠 useRoleBasedRedirect: Admin manually navigated to /, allowing public view');
+          return;
+        }
       }
       
       // PRIORITY 2: Alumna
