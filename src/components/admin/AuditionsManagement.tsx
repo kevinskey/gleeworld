@@ -1291,7 +1291,152 @@ export const AuditionsManagement = () => {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6 mt-8">
-          {/* Key Analytics Cards */}
+          {/* Cumulative Scores Top Window */}
+          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-blue-900 flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Cumulative Audition Scores Dashboard
+              </CardTitle>
+              <CardDescription className="text-blue-700">
+                Real-time audition performance metrics and scoring analytics
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+                <div className="bg-white rounded-lg p-4 border shadow-sm">
+                  <div className="text-sm font-medium text-gray-600">Total Evaluations</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {analytics.reduce((sum, app) => sum + app.evaluation_count, 0)}
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border shadow-sm">
+                  <div className="text-sm font-medium text-gray-600">Avg Overall Score</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {analytics.length > 0 
+                      ? (analytics.reduce((sum, app) => sum + (app.avg_overall_score || 0), 0) / analytics.length).toFixed(1)
+                      : '0.0'
+                    }
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border shadow-sm">
+                  <div className="text-sm font-medium text-gray-600">Technical Avg</div>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {analytics.length > 0 
+                      ? (analytics.reduce((sum, app) => sum + (app.avg_technical_score || 0), 0) / analytics.length).toFixed(1)
+                      : '0.0'
+                    }
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border shadow-sm">
+                  <div className="text-sm font-medium text-gray-600">Artistic Avg</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {analytics.length > 0 
+                      ? (analytics.reduce((sum, app) => sum + (app.avg_artistic_score || 0), 0) / analytics.length).toFixed(1)
+                      : '0.0'
+                    }
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border shadow-sm">
+                  <div className="text-sm font-medium text-gray-600">Pending Reviews</div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {analytics.filter(app => app.status === 'pending').length}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Real-time Audition Results */}
+              <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+                <div className="px-4 py-3 bg-gray-50 border-b">
+                  <h4 className="font-medium text-gray-900">Latest Audition Results</h4>
+                </div>
+                <div className="max-h-48 overflow-y-auto">
+                  {analytics.slice(0, 5).map((app) => (
+                    <div key={app.id} className="p-4 border-b last:border-b-0 hover:bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={app.profile_image_url} />
+                            <AvatarFallback className="text-xs">
+                              {app.full_name?.split(' ').map(n => n[0]).join('') || 'NA'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium text-sm">{app.full_name}</div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(app.application_date).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm">
+                          <div className="text-center">
+                            <div className="font-medium text-blue-600">{app.avg_overall_score?.toFixed(1) || 'N/A'}</div>
+                            <div className="text-xs text-gray-500">Overall</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-medium">{app.evaluation_count}</div>
+                            <div className="text-xs text-gray-500">Evals</div>
+                          </div>
+                          <Badge className={app.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                                          app.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                          'bg-yellow-100 text-yellow-800'}>
+                            {app.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Data Center Module Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Data Analysis Modules
+              </CardTitle>
+              <CardDescription>
+                Select a module to view detailed analytics and reporting
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-2 hover:bg-blue-50">
+                  <Star className="h-6 w-6 text-blue-600" />
+                  <span className="font-medium">Score Analytics</span>
+                  <span className="text-xs text-gray-500">Detailed scoring breakdown</span>
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-2 hover:bg-green-50">
+                  <Users className="h-6 w-6 text-green-600" />
+                  <span className="font-medium">Applicant Demographics</span>
+                  <span className="text-xs text-gray-500">Geographic & academic data</span>
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-2 hover:bg-purple-50">
+                  <TrendingUp className="h-6 w-6 text-purple-600" />
+                  <span className="font-medium">Performance Trends</span>
+                  <span className="text-xs text-gray-500">Historical comparisons</span>
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-2 hover:bg-orange-50">
+                  <Music className="h-6 w-6 text-orange-600" />
+                  <span className="font-medium">Voice Part Analysis</span>
+                  <span className="text-xs text-gray-500">Section distribution</span>
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-2 hover:bg-red-50">
+                  <Clock className="h-6 w-6 text-red-600" />
+                  <span className="font-medium">Adjudicator Reports</span>
+                  <span className="text-xs text-gray-500">Evaluator insights</span>
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-2 hover:bg-indigo-50">
+                  <Download className="h-6 w-6 text-indigo-600" />
+                  <span className="font-medium">Export Data</span>
+                  <span className="text-xs text-gray-500">CSV/PDF reports</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
