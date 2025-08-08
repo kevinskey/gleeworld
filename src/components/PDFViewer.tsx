@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader2, ExternalLink } from 'lucide-react';
@@ -18,21 +18,59 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
 
+  const [useGoogle, setUseGoogle] = useState(false);
+  const timerRef = useRef<number | null>(null);
+
   console.log('PDFViewer: Props received:', { pdfUrl });
   console.log('PDFViewer: URL Hook result:', { signedUrl, urlLoading, urlError });
 
+  useEffect(() => {
+    // Reset on URL change
+    setUseGoogle(false);
+    setIsLoading(true);
+    setError(null);
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    if (signedUrl) {
+      timerRef.current = window.setTimeout(() => {
+        // Fallback to Google viewer if still loading after timeout
+        setUseGoogle(true);
+      }, 4500);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [signedUrl]);
+
   const handleLoad = () => {
     console.log('PDFViewer: PDF loaded successfully');
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
     setIsLoading(false);
     setError(null);
   };
 
   const handleError = () => {
     console.error('PDFViewer: Failed to load PDF:', signedUrl);
+    if (!useGoogle) {
+      // Try Google viewer as a fallback
+      setUseGoogle(true);
+      setIsLoading(true);
+      return;
+    }
     setIsLoading(false);
     setError('Failed to load PDF. The file might be corrupted or inaccessible.');
   };
-
   // Show loading while getting signed URL
   if (!pdfUrl) {
     return (
@@ -133,7 +171,8 @@ if (error) {
           )}
           
           <iframe
-            src={signedUrl || ''}
+            key={`${useGoogle ? 'g' : 'd'}-${signedUrl}`}
+            src={useGoogle ? `https://docs.google.com/gview?url=${encodeURIComponent(signedUrl!)}&embedded=true` : (signedUrl || '')}
             className="w-full h-full border-0"
             onLoad={handleLoad}
             onError={handleError}
