@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Play, 
   Pause, 
@@ -26,10 +27,17 @@ import {
   FolderOpen,
   Images,
   History,
-  Users
+  Users,
+  X,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Document, Page, pdfjs } from 'react-pdf';
+
+// Set up PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface MediaFile {
   id: string;
@@ -65,6 +73,10 @@ export const MediaLibrary = ({
   const [sortBy, setSortBy] = useState<'title' | 'date' | 'size'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedPdf, setSelectedPdf] = useState<MediaFile | null>(null);
+  const [pdfNumPages, setPdfNumPages] = useState<number>(0);
+  const [pdfPageNumber, setPdfPageNumber] = useState<number>(1);
+  const [pdfScale, setPdfScale] = useState<number>(1.0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -309,6 +321,76 @@ export const MediaLibrary = ({
         </CardContent>
       </Card>
     );
+  };
+
+  const renderPdfCard = (file: MediaFile) => {
+    return (
+      <Card key={file.id} className="mb-3 hover:shadow-md transition-all bg-background/50 backdrop-blur-sm border-border/50">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            {/* PDF Icon */}
+            <div className="flex-shrink-0 p-2 bg-red-100 dark:bg-red-900/30 rounded-md">
+              <FileText className="h-4 w-4 text-red-600 dark:text-red-400" />
+            </div>
+
+            {/* File Info */}
+            <div className="flex-1 min-w-0">
+              <h4 className="font-medium text-foreground truncate">
+                {file.title}
+              </h4>
+              {file.description && (
+                <p className="text-sm text-muted-foreground truncate">
+                  {file.description}
+                </p>
+              )}
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="text-xs">
+                  PDF
+                </Badge>
+                {file.file_size && (
+                  <span className="text-xs text-muted-foreground">
+                    {formatFileSize(file.file_size)}
+                  </span>
+                )}
+                {file.category && (
+                  <Badge variant="secondary" className="text-xs">
+                    {file.category}
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex-shrink-0 flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedPdf(file)}
+                className="text-xs h-8 px-3 bg-primary/10 hover:bg-primary/20 border-primary/30 text-primary hover:text-primary"
+              >
+                <Eye className="h-3 w-3 mr-1" />
+                View PDF
+              </Button>
+              
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.open(file.file_url, '_blank')}
+                className="text-xs h-8 px-3"
+              >
+                <Download className="h-3 w-3 mr-1" />
+                Download
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const onPdfLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setPdfNumPages(numPages);
+    setPdfPageNumber(1);
   };
 
   if (loading) {
@@ -557,7 +639,7 @@ export const MediaLibrary = ({
           <ScrollArea className="h-96">
             {pdfFiles.length > 0 ? (
               <div className="space-y-2">
-                {pdfFiles.map(renderMediaCard)}
+                {pdfFiles.map(renderPdfCard)}
               </div>
             ) : (
               <div className="text-center py-12">
@@ -587,6 +669,112 @@ export const MediaLibrary = ({
           </ScrollArea>
         </TabsContent>
       </Tabs>
+
+      {/* PDF Viewer Dialog */}
+      {selectedPdf && (
+        <Dialog open={!!selectedPdf} onOpenChange={() => setSelectedPdf(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-between">
+                <span className="truncate">{selectedPdf.title}</span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPdfScale(prev => Math.max(0.5, prev - 0.25))}
+                    disabled={pdfScale <= 0.5}
+                  >
+                    <ZoomOut className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm text-muted-foreground min-w-[60px] text-center">
+                    {Math.round(pdfScale * 100)}%
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPdfScale(prev => Math.min(2.0, prev + 0.25))}
+                    disabled={pdfScale >= 2.0}
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedPdf(null)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="flex-1 overflow-auto">
+              <div className="flex justify-center">
+                <Document
+                  file={selectedPdf.file_url}
+                  onLoadSuccess={onPdfLoadSuccess}
+                  loading={
+                    <div className="flex items-center justify-center p-8">
+                      <div className="text-center">
+                        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
+                        <p className="text-muted-foreground">Loading PDF...</p>
+                      </div>
+                    </div>
+                  }
+                  error={
+                    <div className="flex items-center justify-center p-8">
+                      <div className="text-center">
+                        <FileText className="h-12 w-12 text-destructive mx-auto mb-4" />
+                        <p className="text-destructive">Failed to load PDF</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(selectedPdf.file_url, '_blank')}
+                          className="mt-2"
+                        >
+                          Open in new tab
+                        </Button>
+                      </div>
+                    </div>
+                  }
+                >
+                  <Page
+                    pageNumber={pdfPageNumber}
+                    scale={pdfScale}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                  />
+                </Document>
+              </div>
+            </div>
+
+            {/* PDF Navigation */}
+            {pdfNumPages > 1 && (
+              <div className="flex items-center justify-center gap-4 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPdfPageNumber(prev => Math.max(1, prev - 1))}
+                  disabled={pdfPageNumber <= 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {pdfPageNumber} of {pdfNumPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPdfPageNumber(prev => Math.min(pdfNumPages, prev + 1))}
+                  disabled={pdfPageNumber >= pdfNumPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
