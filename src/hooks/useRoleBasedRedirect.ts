@@ -79,6 +79,13 @@ export const useRoleBasedRedirect = () => {
 
     // Streamlined redirect logic with admin priority
     const handleRedirect = async () => {
+      // TEMPORARY: Allow admins to view public landing page
+      // Skip auto-redirect if admin is on home page (let them see public view)
+      if (location.pathname === '/') {
+        console.log('🏠 useRoleBasedRedirect: Allowing admin to view public page at /');
+        return;
+      }
+      
       // PRIORITY 1: Admin/Super Admin (direct check)
       const isAdmin = userProfile.is_admin || userProfile.is_super_admin || 
                      userProfile.role === 'admin' || userProfile.role === 'super-admin';
