@@ -8,6 +8,8 @@ import { Music, Image, Video, Upload, FileText, ArrowLeft, Loader2, ExternalLink
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { Document as PdfDocument, Page as PdfPage, pdfjs } from 'react-pdf';
+(pdfjs as any).GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface MediaItem {
   id: string;
@@ -35,7 +37,7 @@ const MediaLibrary = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeKind, setActiveKind] = useState<'all'|'image'|'audio'|'video'|'pdf'|'other'>('all');
+  const [activeKind, setActiveKind] = useState<'all'|'image'|'audio'|'video'|'pdf'|'documents'|'other'>('all');
   const [query, setQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -72,15 +74,36 @@ const MediaLibrary = () => {
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
+    const isDoc = (i: MediaItem) => {
+      const mt = (i.mime_type || '').toLowerCase();
+      const cat = (i.category || '').toLowerCase();
+      const ft = (i.file_type || '').toLowerCase();
+      return mt.includes('pdf') || mt.includes('msword') || mt.includes('officedocument') || ft === 'document' || cat.includes('document');
+    };
     return items.filter(i => {
       const kind = MIME_TO_KIND(i.mime_type, i.file_type);
-      const matchesKind = activeKind === 'all' ? true : kind === activeKind;
+      const matchesKind = activeKind === 'all'
+        ? true
+        : activeKind === 'documents'
+          ? isDoc(i)
+          : kind === activeKind;
       const matchesQuery = !q || [i.filename, i.original_filename, i.category]
         .filter(Boolean)
         .some(v => (v as string).toLowerCase().includes(q));
       return matchesKind && matchesQuery;
     });
   }, [items, activeKind, query]);
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedItem = useMemo(() => filtered.find(i => i.id === selectedId) || null, [filtered, selectedId]);
+
+  useEffect(() => {
+    if (!selectedId && filtered.length) {
+      setSelectedId(filtered[0].id);
+    } else if (selectedId && !filtered.some(i => i.id === selectedId) && filtered.length) {
+      setSelectedId(filtered[0].id);
+    }
+  }, [filtered, selectedId]);
 
   const onUploadClick = () => fileInputRef.current?.click();
 
@@ -155,6 +178,7 @@ const MediaLibrary = () => {
                   <TabsTrigger value="audio">Audio</TabsTrigger>
                   <TabsTrigger value="video">Video</TabsTrigger>
                   <TabsTrigger value="pdf">PDF</TabsTrigger>
+                  <TabsTrigger value="documents">Documents</TabsTrigger>
                   <TabsTrigger value="other">Other</TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -166,50 +190,87 @@ const MediaLibrary = () => {
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading...
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filtered.map((m) => {
-                  const kind = MIME_TO_KIND(m.mime_type, m.file_type);
-                  return (
-                    <Card key={m.id} className="overflow-hidden border-border bg-background/40">
-                      <CardContent className="p-0">
-                        <div className="aspect-video w-full bg-muted flex items-center justify-center overflow-hidden">
-                          {kind === 'image' && m.file_url ? (
-                            <img src={m.file_url} alt={m.filename || 'media'} className="w-full h-full object-cover" loading="lazy" />
-                          ) : kind === 'audio' ? (
-                            <div className="flex items-center gap-2 text-muted-foreground"><Music className="h-5 w-5" /> Audio</div>
-                          ) : kind === 'video' ? (
-                            <div className="flex items-center gap-2 text-muted-foreground"><Video className="h-5 w-5" /> Video</div>
-                          ) : kind === 'pdf' ? (
-                            <div className="flex items-center gap-2 text-muted-foreground"><FileText className="h-5 w-5" /> PDF</div>
-                          ) : (
-                            <div className="flex items-center gap-2 text-muted-foreground"><FileText className="h-5 w-5" /> File</div>
-                          )}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-1 border border-border rounded-md bg-background/40 max-h-[70vh] overflow-y-auto divide-y divide-border/60">
+                  {filtered.map((m) => {
+                    const kind = MIME_TO_KIND(m.mime_type, m.file_type);
+                    const active = m.id === selectedId;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => setSelectedId(m.id)}
+                        className={`w-full text-left flex items-center gap-3 px-3 py-2 ${active ? 'bg-primary/10' : 'hover:bg-muted/60'}`}
+                      >
+                        {kind === 'image' ? (
+                          <Image className="h-4 w-4 text-primary" />
+                        ) : kind === 'audio' ? (
+                          <Music className="h-4 w-4 text-primary" />
+                        ) : kind === 'video' ? (
+                          <Video className="h-4 w-4 text-primary" />
+                        ) : kind === 'pdf' ? (
+                          <FileText className="h-4 w-4 text-primary" />
+                        ) : (
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate text-sm font-medium">{m.original_filename || m.filename}</div>
+                          <div className="text-xs text-muted-foreground">{(kind || 'file').toUpperCase()}</div>
                         </div>
-                        <div className="p-3">
+                        {m.category && <Badge variant="outline" className="text-[10px]">{m.category}</Badge>}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="lg:col-span-2 border border-border rounded-md bg-background/40 min-h-[50vh] p-3">
+                  {!selectedItem ? (
+                    <div className="text-sm text-muted-foreground">Select an item from the list to preview.</div>
+                  ) : (
+                    (() => {
+                      const kind = MIME_TO_KIND(selectedItem.mime_type, selectedItem.file_type);
+                      const isPdf = (selectedItem.mime_type || '').toLowerCase().includes('pdf');
+                      return (
+                        <div className="space-y-3">
                           <div className="flex items-center justify-between gap-2">
-                            <div className="truncate font-medium text-sm" title={m.original_filename || m.filename || ''}>
-                              {m.original_filename || m.filename}
+                            <div className="font-medium truncate" title={selectedItem.original_filename || selectedItem.filename || ''}>
+                              {selectedItem.original_filename || selectedItem.filename}
                             </div>
-                            {m.category && <Badge variant="outline" className="text-xs">{m.category}</Badge>}
-                          </div>
-                          <div className="mt-2 flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">{kind.toUpperCase()}</span>
-                            {m.file_url && (
-                              <a href={m.file_url} target="_blank" rel="noopener noreferrer" className="text-xs inline-flex items-center gap-1 text-primary hover:underline">
-                                View <ExternalLink className="h-3.5 w-3.5" />
+                            {selectedItem.file_url && (
+                              <a href={selectedItem.file_url} target="_blank" rel="noopener noreferrer" className="text-sm inline-flex items-center gap-1 text-primary hover:underline">
+                                Open <ExternalLink className="h-4 w-4" />
                               </a>
                             )}
                           </div>
+                          <div className="w-full">
+                            {kind === 'image' && selectedItem.file_url ? (
+                              <img src={selectedItem.file_url} alt={selectedItem.filename || 'media'} className="w-full max-h-[70vh] object-contain" />
+                            ) : kind === 'audio' && selectedItem.file_url ? (
+                              <audio controls className="w-full">
+                                <source src={selectedItem.file_url} />
+                                Your browser does not support the audio element.
+                              </audio>
+                            ) : kind === 'video' && selectedItem.file_url ? (
+                              <video controls className="w-full max-h-[70vh]">
+                                <source src={selectedItem.file_url} />
+                                Your browser does not support the video tag.
+                              </video>
+                            ) : (kind === 'pdf' || isPdf) && selectedItem.file_url ? (
+                              <div className="w-full flex justify-center">
+                                <PdfDocument file={selectedItem.file_url} loading={<div className="text-sm text-muted-foreground">Loading PDF...</div>}>
+                                  <PdfPage pageNumber={1} width={800} />
+                                </PdfDocument>
+                              </div>
+                            ) : selectedItem.file_url ? (
+                              <div className="text-sm text-muted-foreground">Preview not available. Use the Open link above to view or download.</div>
+                            ) : (
+                              <div className="text-sm text-muted-foreground">No file URL available.</div>
+                            )}
+                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                      );
+                    })()
+                  )}
+                </div>
               </div>
-            )}
-
-            {!loading && filtered.length === 0 && (
-              <div className="text-sm text-muted-foreground">No media found. Try a different filter or upload new media.</div>
             )}
           </CardContent>
         </Card>
