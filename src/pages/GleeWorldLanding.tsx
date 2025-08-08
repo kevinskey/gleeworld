@@ -266,7 +266,25 @@ export const GleeWorldLanding = () => {
   // };
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen w-full bg-gradient-to-br from-background via-background/95 to-primary/10 relative">
+      {/* Background pattern overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(255,255,255,0.15)_1px,_transparent_0)] bg-[length:20px_20px] opacity-20" />
+      
+      {/* Musical note decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-10 left-10 text-primary/20 transform rotate-12">
+          <Music className="w-8 h-8" />
+        </div>
+        <div className="absolute top-32 right-16 text-primary/15 transform -rotate-12">
+          <Music className="w-6 h-6" />
+        </div>
+        <div className="absolute bottom-20 left-20 text-primary/10 transform rotate-45">
+          <Music className="w-10 h-10" />
+        </div>
+        <div className="absolute bottom-40 right-8 text-primary/15 transform -rotate-30">
+          <Music className="w-5 h-5" />
+        </div>
+      </div>
       
       <PublicLayout>
 
