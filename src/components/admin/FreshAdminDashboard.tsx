@@ -40,10 +40,14 @@ const adminModules = [
 export const FreshAdminDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      <UniversalHeader viewMode="admin" />
+      <UniversalHeader 
+        viewMode={viewMode} 
+        onViewModeChange={setViewMode}
+      />
       
       <div className="container mx-auto px-6 py-6">
         <Card className="mb-8 bg-background/50 border-border">
