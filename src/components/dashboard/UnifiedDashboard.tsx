@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Header } from '../Header';
+import { PersistentHeader } from '../PersistentHeader';
 import { MessagesPanel } from './MessagesPanel';
 import { ModuleSelector } from './ModuleSelector';
 import { ModuleDisplay } from './ModuleDisplay';
@@ -22,7 +22,7 @@ export const UnifiedDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      <Header 
+      <PersistentHeader 
         activeTab={selectedModule}
         onTabChange={setSelectedModule}
         onToggleMessages={() => setShowMessages(!showMessages)}
