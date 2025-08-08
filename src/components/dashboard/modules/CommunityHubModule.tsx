@@ -132,38 +132,92 @@ export const CommunityHubModule = () => {
               )}
             </div>
 
-            {/* Send new bucket form */}
-            <Card className="p-4 bg-pink-50/50 border-pink-200">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-pink-500" />
-                  <span className="font-medium text-pink-700">Send a Bucket of Love</span>
+            {/* Send new bucket form - Redesigned */}
+            <Card className="relative p-6 bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 border-2 border-pink-200/50 shadow-xl hover:shadow-2xl transition-all duration-300 animate-fade-in overflow-hidden">
+              {/* Decorative background elements */}
+              <div className="absolute -top-2 -right-2 w-16 h-16 bg-pink-200/30 rounded-full blur-xl"></div>
+              <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-rose-200/20 rounded-full blur-2xl"></div>
+              
+              <div className="relative space-y-4">
+                {/* Header with animated icon */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-pink-200 rounded-full animate-pulse opacity-50"></div>
+                    <div className="relative p-2 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full shadow-lg">
+                      <Heart className="w-5 h-5 text-white animate-pulse" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
+                      Send a Bucket of Love
+                    </h3>
+                    <p className="text-sm text-pink-600/70">Spread positivity and encouragement</p>
+                  </div>
                 </div>
-                <Textarea
-                  placeholder="Share some love and encouragement..."
-                  value={newBucketMessage}
-                  onChange={(e) => setNewBucketMessage(e.target.value)}
-                  className="bg-white border-pink-200 focus:border-pink-300"
-                />
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={isAnonymous}
-                      onChange={(e) => setIsAnonymous(e.target.checked)}
-                      className="rounded border-pink-300"
-                    />
-                    Send anonymously
+                
+                {/* Enhanced textarea */}
+                <div className="relative">
+                  <Textarea
+                    placeholder="Write your message of love and encouragement here... ✨"
+                    value={newBucketMessage}
+                    onChange={(e) => setNewBucketMessage(e.target.value)}
+                    className="min-h-[100px] bg-white/80 backdrop-blur-sm border-2 border-pink-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 rounded-xl text-gray-700 placeholder:text-pink-400/60 resize-none transition-all duration-300 shadow-inner"
+                    style={{
+                      backgroundImage: 'linear-gradient(135deg, rgba(251, 207, 232, 0.1) 0%, rgba(251, 207, 232, 0.05) 100%)'
+                    }}
+                  />
+                  <div className="absolute bottom-3 right-3 text-xs text-pink-400">
+                    {newBucketMessage.length}/500
+                  </div>
+                </div>
+                
+                {/* Enhanced controls */}
+                <div className="flex items-center justify-between pt-2">
+                  <label className="flex items-center gap-3 text-sm group cursor-pointer">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={isAnonymous}
+                        onChange={(e) => setIsAnonymous(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-5 h-5 border-2 rounded-md transition-all duration-200 ${
+                        isAnonymous 
+                          ? 'bg-pink-500 border-pink-500 shadow-inner' 
+                          : 'bg-white border-pink-300 group-hover:border-pink-400'
+                      }`}>
+                        {isAnonymous && (
+                          <svg className="w-3 h-3 text-white absolute top-0.5 left-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-pink-700 font-medium group-hover:text-pink-800 transition-colors">
+                      Send anonymously
+                    </span>
                   </label>
+                  
                   <Button 
                     onClick={handleSendBucket}
                     disabled={!newBucketMessage.trim()}
-                    size="sm"
-                    className="bg-pink-500 hover:bg-pink-600 text-white"
+                    size="lg"
+                    className="bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:via-rose-600 hover:to-pink-700 text-white border-0 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none px-6 py-2.5 font-semibold"
                   >
                     <Send className="w-4 h-4 mr-2" />
                     Send Love
+                    <div className="absolute inset-0 bg-white/20 rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                   </Button>
+                </div>
+                
+                {/* Character count and tips */}
+                <div className="pt-2 border-t border-pink-200/50">
+                  <div className="flex items-center justify-between text-xs text-pink-600/60">
+                    <span>💝 Your message will brighten someone's day</span>
+                    <span className={newBucketMessage.length > 400 ? 'text-rose-500 font-medium' : ''}>
+                      {500 - newBucketMessage.length} characters remaining
+                    </span>
+                  </div>
                 </div>
               </div>
             </Card>
