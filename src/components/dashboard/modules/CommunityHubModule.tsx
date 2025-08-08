@@ -42,8 +42,9 @@ export const CommunityHubModule = () => {
       </div>
       
       <Tabs defaultValue="buckets" className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-4 m-2">
+        <TabsList className="grid w-full grid-cols-5 m-2">
           <TabsTrigger value="buckets">Buckets of Love</TabsTrigger>
+          <TabsTrigger value="wellness">Wellness</TabsTrigger>
           <TabsTrigger value="feed">Activity Feed</TabsTrigger>
           <TabsTrigger value="announcements">Announcements</TabsTrigger>
           <TabsTrigger value="directory">Directory</TabsTrigger>
@@ -58,6 +59,22 @@ export const CommunityHubModule = () => {
               <Heart className="w-4 h-4 mr-2" />
               Send Bucket of Love
             </Button>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="wellness" className="flex-1 p-4">
+          <div className="text-center text-muted-foreground">
+            <Heart className="w-8 h-8 mx-auto mb-2 text-green-500" />
+            <p className="mb-2 font-medium">Wellness & Mental Health</p>
+            <p className="text-sm mb-4">Support your well-being and connect with resources</p>
+            <div className="space-y-2">
+              <Button variant="outline" size="sm" className="w-full bg-green-50 border-green-200 text-green-700 hover:bg-green-100">
+                Daily Check-in
+              </Button>
+              <Button variant="outline" size="sm" className="w-full">
+                Wellness Resources
+              </Button>
+            </div>
           </div>
         </TabsContent>
         
