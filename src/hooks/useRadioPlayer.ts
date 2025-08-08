@@ -40,6 +40,8 @@ export interface RadioPlayerState {
 }
 
 export const useRadioPlayer = () => {
+  console.log('useRadioPlayer: Hook starting...');
+  
   const [state, setState] = useState<RadioPlayerState>({
     isPlaying: false,
     isLoading: false,
@@ -55,8 +57,16 @@ export const useRadioPlayer = () => {
   const { toast } = useToast();
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  console.log('useRadioPlayer: Getting stream URLs...');
   // Get stream URLs from AzuraCast service
-  const RADIO_STREAM_URLS = azuraCastService.getStreamUrls();
+  let RADIO_STREAM_URLS: string[] = [];
+  try {
+    RADIO_STREAM_URLS = azuraCastService.getStreamUrls();
+    console.log('useRadioPlayer: Stream URLs:', RADIO_STREAM_URLS);
+  } catch (error) {
+    console.error('useRadioPlayer: Error getting stream URLs:', error);
+    RADIO_STREAM_URLS = [];
+  }
 
   useEffect(() => {
     // Initialize audio element
