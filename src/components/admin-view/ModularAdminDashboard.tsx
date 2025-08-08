@@ -17,7 +17,6 @@ interface ModularAdminDashboardProps {
 }
 
 export const ModularAdminDashboard = ({ user }: ModularAdminDashboardProps) => {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
   // If a module is selected, render it in full page mode
@@ -38,10 +37,7 @@ export const ModularAdminDashboard = ({ user }: ModularAdminDashboardProps) => {
             <ChevronRight className="h-4 w-4" />
             <span 
               className="cursor-pointer hover:text-foreground"
-              onClick={() => {
-                setSelectedModule(null);
-                setSelectedCategory(module.category);
-              }}
+              onClick={() => setSelectedModule(null)}
             >
               {ModuleRegistry.getCategory(module.category)?.title}
             </span>
@@ -59,55 +55,7 @@ export const ModularAdminDashboard = ({ user }: ModularAdminDashboardProps) => {
     }
   }
 
-  // If a category is selected, show its modules
-  if (selectedCategory) {
-    const category = ModuleRegistry.getCategory(selectedCategory);
-    if (category) {
-      const CategoryIcon = category.icon;
-      return (
-        <div className="space-y-4">
-          {/* Breadcrumb navigation */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-            <span 
-              className="cursor-pointer hover:text-foreground"
-              onClick={() => setSelectedCategory(null)}
-            >
-              Admin Dashboard
-            </span>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground font-medium">{category.title}</span>
-          </div>
-
-          {/* Category header */}
-          <div className="border-l-4 border-primary pl-4">
-            <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
-              <CategoryIcon className={`h-5 w-5 text-${category.color}-600`} />
-              {category.title}
-            </h2>
-            <p className="text-xs text-muted-foreground">{category.description}</p>
-          </div>
-          
-          {/* Modules grid */}
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {category.modules.map((module) => (
-              <ModuleCard
-                key={module.id}
-                title={module.title}
-                description={module.description}
-                icon={module.icon}
-                iconColor={module.iconColor}
-                isNew={module.isNew}
-                onClick={() => setSelectedModule(module.id)}
-              />
-            ))}
-          </div>
-        </div>
-      );
-    }
-  }
-
-  // Main dashboard view - show categories
-  
+  // Main dashboard view - show categories with modules below each category
   return (
     <div className="space-y-6">
       <div className="border-l-4 border-primary pl-4">
@@ -117,23 +65,39 @@ export const ModularAdminDashboard = ({ user }: ModularAdminDashboardProps) => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {ModuleRegistry.getCategories().map((category) => {
-          console.log('ModularAdminDashboard: Rendering category:', category.title, 'modules:', category.modules.length, 'id:', category.id);
-          const CategoryIcon = category.icon;
-          return (
-            <ModuleCard
-              key={category.id}
-              title={category.title}
-              description={category.description}
-              icon={CategoryIcon}
-              iconColor={category.color}
-              onClick={() => setSelectedCategory(category.id)}
-              className="h-full"
-            />
-          );
-        })}
-      </div>
+      {/* Render each category with its modules */}
+      {ModuleRegistry.getCategories().map((category) => {
+        console.log('ModularAdminDashboard: Rendering category:', category.title, 'modules:', category.modules.length, 'id:', category.id);
+        const CategoryIcon = category.icon;
+        
+        return (
+          <div key={category.id} className="space-y-4">
+            {/* Category Header */}
+            <div className="border-l-4 border-primary pl-4">
+              <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                <CategoryIcon className={`h-5 w-5 text-${category.color}-600`} />
+                {category.title}
+              </h2>
+              <p className="text-xs text-muted-foreground">{category.description}</p>
+            </div>
+            
+            {/* Modules Grid for this category */}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {category.modules.map((module) => (
+                <ModuleCard
+                  key={module.id}
+                  title={module.title}
+                  description={module.description}
+                  icon={module.icon}
+                  iconColor={module.iconColor}
+                  isNew={module.isNew}
+                  onClick={() => setSelectedModule(module.id)}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
