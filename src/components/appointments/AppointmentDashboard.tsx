@@ -9,11 +9,12 @@ import { AppointmentTypeManager } from './AppointmentTypeManager';
 import { AppointmentAvailabilityManager } from './AppointmentAvailabilityManager';
 import { AppointmentHistory } from './AppointmentHistory';
 import { AppointmentCalendarSync } from './AppointmentCalendarSync';
+import { ProviderDashboard } from './ProviderDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const AppointmentDashboard = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('calendar');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
     <div className="space-y-6">
@@ -27,7 +28,11 @@ export const AppointmentDashboard = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="dashboard" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Dashboard
+          </TabsTrigger>
           <TabsTrigger value="calendar" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Calendar
@@ -53,6 +58,10 @@ export const AppointmentDashboard = () => {
             Sync
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard" className="space-y-6">
+          <ProviderDashboard />
+        </TabsContent>
 
         <TabsContent value="calendar" className="space-y-6">
           <AppointmentCalendarView />
