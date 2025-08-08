@@ -188,7 +188,11 @@ export const DayScheduleView = () => {
     fetchDaySchedule();
   }, [selectedDate]);
 
-  const navigateDay = (direction: 'prev' | 'next') => {
+  const navigateDay = (direction: 'prev' | 'next', event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     setSelectedDate(prev => 
       direction === 'prev' ? subDays(prev, 1) : addDays(prev, 1)
     );
@@ -438,13 +442,16 @@ export const DayScheduleView = () => {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => setSelectedDate(new Date())}
+            onClick={(e) => {
+              e.preventDefault();
+              setSelectedDate(new Date());
+            }}
           >
             Today
           </Button>
           
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigateDay('prev')}>
+            <Button variant="ghost" size="sm" onClick={(e) => navigateDay('prev', e)}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             
@@ -452,7 +459,7 @@ export const DayScheduleView = () => {
               {format(selectedDate, 'EEEE, MMMM d, yyyy')}
             </h2>
             
-            <Button variant="ghost" size="sm" onClick={() => navigateDay('next')}>
+            <Button variant="ghost" size="sm" onClick={(e) => navigateDay('next', e)}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -530,7 +537,10 @@ export const DayScheduleView = () => {
               variant={viewMode === 'month' ? 'default' : 'ghost'} 
               size="sm"
               className="rounded-r-none"
-              onClick={() => setViewMode('month')}
+              onClick={(e) => {
+                e.preventDefault();
+                setViewMode('month');
+              }}
             >
               Month
             </Button>
@@ -538,7 +548,10 @@ export const DayScheduleView = () => {
               variant={viewMode === 'week' ? 'default' : 'ghost'} 
               size="sm"
               className="rounded-none"
-              onClick={() => setViewMode('week')}
+              onClick={(e) => {
+                e.preventDefault();
+                setViewMode('week');
+              }}
             >
               Week
             </Button>
@@ -546,7 +559,10 @@ export const DayScheduleView = () => {
               variant={viewMode === 'day' ? 'default' : 'ghost'} 
               size="sm"
               className="rounded-l-none"
-              onClick={() => setViewMode('day')}
+              onClick={(e) => {
+                e.preventDefault();
+                setViewMode('day');
+              }}
             >
               Day
             </Button>
