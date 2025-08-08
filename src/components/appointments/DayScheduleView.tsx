@@ -290,10 +290,10 @@ export const DayScheduleView = () => {
               <div className="text-lg font-bold text-gray-900">{format(day, 'd')}</div>
             </div>
           ))}
-          {timeSlots.slice(0, 12).map(timeSlot => (
+          {timeSlots.map(timeSlot => (
             <React.Fragment key={timeSlot}>
-              <div className="bg-white p-2 text-sm text-gray-600 font-medium border-r">
-                {timeSlot}
+              <div className="bg-white p-2 text-xs text-gray-600 font-medium border-r min-h-[30px]">
+                {timeFormat === '24h' ? format(parse(timeSlot, 'h:mm a', new Date()), 'HH:mm') : timeSlot}
               </div>
               {days.map(day => {
                 const dayEvents = filteredEvents.filter(event => isSameDay(day, selectedDate));
@@ -305,10 +305,11 @@ export const DayScheduleView = () => {
                 });
                 
                 return (
-                  <div key={`${day.toISOString()}-${timeSlot}`} className="bg-white p-1 min-h-[40px] hover:bg-gray-50">
+                  <div key={`${day.toISOString()}-${timeSlot}`} className="bg-white p-1 min-h-[30px] hover:bg-gray-50 border-b border-gray-100">
                     {appointment && (
-                      <div className={`p-1 rounded text-xs ${getStatusColor(appointment.status, appointment.type)}`}>
-                        {appointment.title}
+                      <div className={`p-1 rounded text-xs truncate ${getStatusColor(appointment.status, appointment.type)}`}>
+                        <div className="font-medium">{appointment.title}</div>
+                        <div className="text-xs opacity-75">{appointment.clientName}</div>
                       </div>
                     )}
                   </div>
