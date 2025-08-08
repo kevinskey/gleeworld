@@ -33,12 +33,12 @@ export const UnifiedDashboard = () => {
         {/* Top Two-Column Layout - Community Hub & Email */}
         <div className="grid grid-cols-2 gap-6">
           {/* Community Hub Column */}
-          <div className="h-96 border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm">
+          <div className="h-[500px] border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm">
             <CommunityHubModule />
           </div>
           
           {/* Email Column */}
-          <div className="h-96 border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm">
+          <div className="h-[500px] border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm">
             <EmailModule />
           </div>
         </div>
