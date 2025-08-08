@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserById } from '@/hooks/useUserById';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -8,6 +8,10 @@ import { PublicLayout } from '@/components/layout/PublicLayout';
 const AuditionerDashboardPage = () => {
   const { user, loading } = useAuth();
   const { user: profile, loading: profileLoading } = useUserById(user?.id);
+
+  useEffect(() => {
+    document.title = 'GleeWorld Auditions | Spelman College Glee Club';
+  }, []);
 
   if (loading || (user && profileLoading)) {
     return (
