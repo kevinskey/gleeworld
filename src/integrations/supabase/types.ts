@@ -6959,6 +6959,59 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_radio_now_playing: {
+        Row: {
+          album: string | null
+          artist: string | null
+          artwork_url: string | null
+          created_at: string
+          duration_seconds: number | null
+          fetched_at: string
+          id: string
+          source_payload: Json | null
+          started_at: string | null
+          station_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          album?: string | null
+          artist?: string | null
+          artwork_url?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          fetched_at?: string
+          id?: string
+          source_payload?: Json | null
+          started_at?: string | null
+          station_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          album?: string | null
+          artist?: string | null
+          artwork_url?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          fetched_at?: string
+          id?: string
+          source_payload?: Json | null
+          started_at?: string | null
+          station_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_radio_now_playing_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "gw_radio_stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_radio_playlist_items: {
         Row: {
           audio_archive_id: string | null
@@ -7101,6 +7154,48 @@ export type Database = {
           station_id?: string
           station_name?: string | null
           streamer_name?: string | null
+        }
+        Relationships: []
+      }
+      gw_radio_stations: {
+        Row: {
+          api_endpoint: string | null
+          api_provider: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          is_public: boolean
+          name: string
+          slug: string | null
+          stream_url: string
+          updated_at: string
+        }
+        Insert: {
+          api_endpoint?: string | null
+          api_provider?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_public?: boolean
+          name: string
+          slug?: string | null
+          stream_url: string
+          updated_at?: string
+        }
+        Update: {
+          api_endpoint?: string | null
+          api_provider?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_public?: boolean
+          name?: string
+          slug?: string | null
+          stream_url?: string
+          updated_at?: string
         }
         Relationships: []
       }
