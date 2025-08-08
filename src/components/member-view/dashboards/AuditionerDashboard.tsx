@@ -26,6 +26,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
   const [checking, setChecking] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [triedList, setTriedList] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -72,6 +73,31 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
     resolveFirstAvailable();
     return () => { isMounted = false; };
   }, []);
+
+  // Fallback: list bucket to find any matching PDF if direct names fail
+  useEffect(() => {
+    if (pdfUrl || triedList) return;
+    let isMounted = true;
+    const run = async () => {
+      try {
+        const { data, error } = await supabase.storage.from('audition-docs').list('', { limit: 100 });
+        console.log('Auditions: storage list', { data, error });
+        if (error || !data) return;
+        const lower = (name: string) => name.toLowerCase();
+        const match = data.find((f: any) => f?.name && lower(f.name).includes('come') && lower(f.name).endsWith('.pdf'));
+        const anyPdf = data.find((f: any) => f?.name && lower(f.name).endsWith('.pdf'));
+        const pick = match || anyPdf;
+        if (pick) {
+          const { data: pub } = supabase.storage.from('audition-docs').getPublicUrl(pick.name);
+          if (pub?.publicUrl && isMounted) setPdfUrl(pub.publicUrl);
+        }
+      } finally {
+        if (isMounted) setTriedList(true);
+      }
+    };
+    run();
+    return () => { isMounted = false; };
+  }, [pdfUrl, triedList]);
 
   const handleStartManage = async () => {
     if (!user?.id || (user as any).id === 'guest') {
