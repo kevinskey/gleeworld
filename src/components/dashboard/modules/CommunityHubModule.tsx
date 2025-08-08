@@ -1,12 +1,42 @@
 import React, { useState } from 'react';
-import { Users, MessageSquare, Calendar, Heart } from 'lucide-react';
+import { Users, MessageSquare, Calendar, Heart, Send, Plus, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
+import { useBucketsOfLove } from '@/hooks/useBucketsOfLove';
+import { useAuth } from '@/contexts/AuthContext';
+import { formatDistanceToNow } from 'date-fns';
 
 export const CommunityHubModule = () => {
   const [activeTab, setActiveTab] = useState('buckets');
+  const [newBucketMessage, setNewBucketMessage] = useState('');
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  const { user } = useAuth();
+  const { buckets, loading, sendBucketOfLove } = useBucketsOfLove();
+
+  const handleSendBucket = async () => {
+    if (!newBucketMessage.trim()) return;
+    
+    const result = await sendBucketOfLove(newBucketMessage, 'pink', isAnonymous);
+    if (result.success) {
+      setNewBucketMessage('');
+      setIsAnonymous(false);
+    }
+  };
+
+  const getNoteColorClass = (color: string) => {
+    switch (color) {
+      case 'pink': return 'bg-pink-50 border-pink-200 text-pink-800';
+      case 'blue': return 'bg-blue-50 border-blue-200 text-blue-800';
+      case 'yellow': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+      case 'green': return 'bg-green-50 border-green-200 text-green-800';
+      case 'purple': return 'bg-purple-50 border-purple-200 text-purple-800';
+      default: return 'bg-pink-50 border-pink-200 text-pink-800';
+    }
+  };
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/10">
@@ -26,14 +56,95 @@ export const CommunityHubModule = () => {
         </TabsList>
         
         <TabsContent value="buckets" className="flex-1 p-4 bg-gradient-to-b from-pink-50/50 to-background">
-          <div className="text-center text-muted-foreground">
-            <Heart className="w-12 h-12 mx-auto mb-3 text-pink-500" />
-            <p className="mb-2 font-medium text-pink-700">Spread Love & Encouragement</p>
-            <p className="text-sm mb-4">Send appreciation messages to fellow members</p>
-            <Button variant="outline" size="sm" className="bg-pink-50 border-pink-200 text-pink-700 hover:bg-pink-100 hover:border-pink-300">
-              <Heart className="w-4 h-4 mr-2" />
-              Send Bucket of Love
-            </Button>
+          <div className="space-y-4">
+            {/* Send new bucket form */}
+            <Card className="p-4 bg-pink-50/50 border-pink-200">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-pink-500" />
+                  <span className="font-medium text-pink-700">Send a Bucket of Love</span>
+                </div>
+                <Textarea
+                  placeholder="Share some love and encouragement..."
+                  value={newBucketMessage}
+                  onChange={(e) => setNewBucketMessage(e.target.value)}
+                  className="bg-white border-pink-200 focus:border-pink-300"
+                />
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={isAnonymous}
+                      onChange={(e) => setIsAnonymous(e.target.checked)}
+                      className="rounded border-pink-300"
+                    />
+                    Send anonymously
+                  </label>
+                  <Button 
+                    onClick={handleSendBucket}
+                    disabled={!newBucketMessage.trim()}
+                    size="sm"
+                    className="bg-pink-500 hover:bg-pink-600 text-white"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Love
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            {/* Buckets list */}
+            <ScrollArea className="h-64">
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Heart className="w-8 h-8 mx-auto mb-2 animate-pulse text-pink-400" />
+                  <p>Loading buckets of love...</p>
+                </div>
+              ) : buckets.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Heart className="w-8 h-8 mx-auto mb-2 text-pink-400" />
+                  <p>No buckets of love yet</p>
+                  <p className="text-sm">Be the first to share some love!</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {buckets.map((bucket) => (
+                    <Card key={bucket.id} className={`p-3 border-2 ${getNoteColorClass(bucket.note_color)}`}>
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">{bucket.message}</p>
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            {bucket.is_anonymous ? (
+                              <span className="flex items-center gap-1">
+                                <User className="w-3 h-3" />
+                                Anonymous
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <User className="w-3 h-3" />
+                                {bucket.sender_name || 'Unknown'}
+                              </span>
+                            )}
+                            {bucket.recipient_name && (
+                              <span>→ {bucket.recipient_name}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {bucket.likes > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Heart className="w-3 h-3 fill-current" />
+                                {bucket.likes}
+                              </span>
+                            )}
+                            <span>{formatDistanceToNow(new Date(bucket.created_at), { addSuffix: true })}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
           </div>
         </TabsContent>
         
