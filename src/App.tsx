@@ -93,8 +93,6 @@ import { ProductManagement } from "./pages/ProductManagement";
 import PRHubPage from "./pages/PRHubPage";
 import { SharedAnnotation } from "./pages/SharedAnnotation";
 import MobileScoring from "./pages/MobileScoring";
-import LibrarianDashboard from "./pages/LibrarianDashboard";
-import HistorianDashboard from "./pages/HistorianDashboard";
 import MemberDirectory from "./pages/MemberDirectory";
 import { AmazonShoppingModule } from "./components/shopping/AmazonShoppingModule";
 import { RadioStationPage } from "./components/radio/RadioStationPage";
