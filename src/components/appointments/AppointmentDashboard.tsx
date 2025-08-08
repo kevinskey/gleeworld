@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Clock, Users, Settings, History, RotateCcw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, Clock, Users, Settings, History, RotateCcw, Plus } from 'lucide-react';
 import { AppointmentsList } from './AppointmentsList';
 import { AppointmentScheduler } from './AppointmentScheduler';
 import { AppointmentCalendarView } from './AppointmentCalendarView';
@@ -11,6 +12,7 @@ import { AppointmentHistory } from './AppointmentHistory';
 import { AppointmentCalendarSync } from './AppointmentCalendarSync';
 import { ProviderDashboard } from './ProviderDashboard';
 import { DayScheduleView } from './DayScheduleView';
+import { AppointmentsTableView } from './AppointmentsTableView';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const AppointmentDashboard = () => {
@@ -40,7 +42,7 @@ export const AppointmentDashboard = () => {
           </TabsTrigger>
           <TabsTrigger value="schedule" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            Schedule
+            Appointments
           </TabsTrigger>
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -126,17 +128,7 @@ export const AppointmentDashboard = () => {
         </TabsContent>
 
         <TabsContent value="schedule" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Schedule New Appointment</CardTitle>
-              <CardDescription>
-                Create new appointments and manage existing ones
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AppointmentScheduler />
-            </CardContent>
-          </Card>
+          <AppointmentsTableView />
         </TabsContent>
 
         <TabsContent value="availability" className="space-y-6">
