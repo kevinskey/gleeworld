@@ -129,7 +129,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="container mx-auto px-6 py-6 space-y-6">
         {/* Welcome Section */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-3xl blur-3xl"></div>
@@ -157,13 +157,13 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
         </div>
 
         {/* Enhanced Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-blue-50/80 to-blue-100/60 dark:from-blue-950/20 dark:to-blue-900/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="relative pt-6 pb-4">
+            <CardContent className="relative p-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">12</p>
+                  <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">0</p>
                   <p className="text-sm text-blue-600/80 dark:text-blue-400/80 font-medium">New Requests</p>
                 </div>
                 <div className="relative">
@@ -175,7 +175,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               </div>
               <div className="mt-3 flex items-center gap-2 text-xs">
                 <TrendingUp className="h-3 w-3 text-green-500" />
-                <span className="text-green-600 font-medium">+23%</span>
+                <span className="text-green-600 font-medium">+0%</span>
                 <span className="text-muted-foreground">from last month</span>
               </div>
             </CardContent>
@@ -183,10 +183,10 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
 
           <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-green-50/80 to-green-100/60 dark:from-green-950/20 dark:to-green-900/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="relative pt-6 pb-4">
+            <CardContent className="relative p-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-3xl font-bold text-green-700 dark:text-green-300">8</p>
+                  <p className="text-3xl font-bold text-green-700 dark:text-green-300">0</p>
                   <p className="text-sm text-green-600/80 dark:text-green-400/80 font-medium">Active Contracts</p>
                 </div>
                 <div className="relative">
@@ -198,18 +198,18 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               </div>
               <div className="mt-3 flex items-center gap-2 text-xs">
                 <CheckCircle2 className="h-3 w-3 text-green-500" />
-                <span className="text-green-600 font-medium">6 signed</span>
-                <span className="text-muted-foreground">2 pending</span>
+                <span className="text-green-600 font-medium">0 signed</span>
+                <span className="text-muted-foreground">0 pending</span>
               </div>
             </CardContent>
           </Card>
 
           <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-purple-50/80 to-purple-100/60 dark:from-purple-950/20 dark:to-purple-900/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="relative pt-6 pb-4">
+            <CardContent className="relative p-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">3</p>
+                  <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">0</p>
                   <p className="text-sm text-purple-600/80 dark:text-purple-400/80 font-medium">Planned Routes</p>
                 </div>
                 <div className="relative">
@@ -221,18 +221,18 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               </div>
               <div className="mt-3 flex items-center gap-2 text-xs">
                 <Activity className="h-3 w-3 text-purple-500" />
-                <span className="text-purple-600 font-medium">1 optimized</span>
-                <span className="text-muted-foreground">2 planning</span>
+                <span className="text-purple-600 font-medium">0 optimized</span>
+                <span className="text-muted-foreground">0 planning</span>
               </div>
             </CardContent>
           </Card>
 
           <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-orange-50/80 to-orange-100/60 dark:from-orange-950/20 dark:to-orange-900/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="relative pt-6 pb-4">
+            <CardContent className="relative p-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-3xl font-bold text-orange-700 dark:text-orange-300">5</p>
+                  <p className="text-3xl font-bold text-orange-700 dark:text-orange-300">0</p>
                   <p className="text-sm text-orange-600/80 dark:text-orange-400/80 font-medium">Upcoming Tours</p>
                 </div>
                 <div className="relative">
@@ -244,8 +244,8 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               </div>
               <div className="mt-3 flex items-center gap-2 text-xs">
                 <Calendar className="h-3 w-3 text-orange-500" />
-                <span className="text-orange-600 font-medium">Next: Apr 15</span>
-                <span className="text-muted-foreground">14 days</span>
+                <span className="text-orange-600 font-medium">No tours</span>
+                <span className="text-muted-foreground">scheduled</span>
               </div>
             </CardContent>
           </Card>
