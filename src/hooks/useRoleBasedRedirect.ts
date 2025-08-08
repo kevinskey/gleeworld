@@ -38,14 +38,9 @@ export const useRoleBasedRedirect = () => {
       return;
     }
 
-    // If user exists but no profile after loading is complete, try fallback redirect
+    // If user exists but no profile after loading is complete, don't auto-redirect
     if (!userProfile) {
-      console.log('useRoleBasedRedirect: User exists but no profile found, attempting fallback redirect');
-      // Only redirect from root or auth pages to prevent disrupting navigation
-      if (location.pathname === '/' || location.pathname === '/auth') {
-        navigate('/dashboard', { replace: true });
-        window.scrollTo(0, 0);
-      }
+      console.log('useRoleBasedRedirect: User exists but no profile found');
       return;
     }
 
@@ -110,6 +105,12 @@ export const useRoleBasedRedirect = () => {
         }
       }
       
+      // Only redirect automatically from auth page, not from public pages
+      if (!isPostLogin) {
+        console.log('🏠 useRoleBasedRedirect: User on public page, staying put');
+        return;
+      }
+
       // PRIORITY 2: Alumna
       if (userProfile.role === 'alumna') {
         console.log('🎓 useRoleBasedRedirect: Alumna redirect to /alumnae');
