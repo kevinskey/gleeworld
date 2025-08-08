@@ -17,7 +17,6 @@ import {
   DollarSign
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Header } from '../Header';
 
 import { PluginManagementDashboard } from '@/components/admin/PluginManagementDashboard';
 import { SystemModule } from '@/components/admin/SystemModule';
@@ -43,12 +42,6 @@ export const FreshAdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      <Header 
-        activeTab="admin"
-        onTabChange={() => {}}
-        onToggleMessages={() => {}}
-        showMessages={false}
-      />
 
         <div className="container mx-auto px-6 py-6">
         <Card className="mb-8 bg-background/50 border-border">
