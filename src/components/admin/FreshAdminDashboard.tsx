@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
+import { useNavigate } from 'react-router-dom';
 
 import { PluginManagementDashboard } from '@/components/admin/PluginManagementDashboard';
 import { SystemModule } from '@/components/admin/SystemModule';
@@ -26,7 +27,7 @@ const adminModules = [
   { id: 'plugin-management', name: 'Plugin Management', icon: Settings, description: 'Control modular plugins across the platform' },
   { id: 'user-management', name: 'User Management', icon: Users, description: 'Manage users and permissions' },
   { id: 'system', name: 'System', icon: BarChart3, description: 'System stats, health, and monitoring' },
-  { id: 'audition-system', name: 'Audition System', icon: Music, description: 'Manage auditions and auditioner registrations' },
+  { id: 'audition-system', name: 'Auditions', icon: Music, description: 'Manage auditions and auditioner registrations', route: '/admin/auditions' },
   { id: 'analytics', name: 'Analytics', icon: BarChart3, description: 'View platform analytics' },
   { id: 'communications', name: 'Communications', icon: Mail, description: 'Send emails and notifications' },
   { id: 'events', name: 'Events', icon: Calendar, description: 'Manage events and calendar' },
@@ -41,6 +42,7 @@ export const FreshAdminDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
@@ -94,7 +96,7 @@ export const FreshAdminDashboard = () => {
                       ? 'ring-2 ring-primary bg-primary/5' 
                       : 'bg-background/30 hover:bg-background/60'
                   }`}
-                  onClick={() => setSelectedModule(module.id)}
+                  onClick={() => module.route ? navigate(module.route) : setSelectedModule(module.id)}
                 >
                   <CardContent className="p-4 text-center h-full flex flex-col justify-center min-h-[160px]">
                     <div className="mb-3">
