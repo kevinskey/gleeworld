@@ -266,11 +266,11 @@ export const HomeRoute = () => {
                         <SelectValue placeholder="Select recipients..." />
                       </SelectTrigger>
                       <SelectContent className="z-50 bg-background border shadow-lg">
+                        <SelectItem value="individual">Individual Member</SelectItem>
                         <SelectItem value="all-members">All Members</SelectItem>
                         <SelectItem value="executive-board">Executive Board</SelectItem>
                         <SelectItem value="section-leaders">Section Leaders</SelectItem>
                         <SelectItem value="alumnae">Alumnae</SelectItem>
-                        <SelectItem value="individual">Individual Member</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
