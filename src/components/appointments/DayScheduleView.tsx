@@ -225,7 +225,15 @@ export const DayScheduleView = () => {
           <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
         </div>
 
-        <Button className="bg-red-600 hover:bg-red-700 text-white">
+        <Button 
+          className="bg-red-600 hover:bg-red-700 text-white"
+          onClick={() => {
+            toast({
+              title: "Feature Coming Soon",
+              description: "New appointment creation will be available soon",
+            });
+          }}
+        >
           <Plus className="h-4 w-4 mr-2" />
           New Appointment
         </Button>
@@ -258,7 +266,16 @@ export const DayScheduleView = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              toast({
+                title: "Calendar Options",
+                description: "Additional calendar options coming soon",
+              });
+            }}
+          >
             Options <ChevronDown className="h-4 w-4 ml-2" />
           </Button>
           
@@ -289,7 +306,16 @@ export const DayScheduleView = () => {
             </Button>
           </div>
           
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              toast({
+                title: "Filter Options",
+                description: "Calendar filtering options coming soon",
+              });
+            }}
+          >
             <Filter className="h-4 w-4 mr-2" />
             Filters
           </Button>
