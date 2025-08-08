@@ -1,202 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { Plus, Mail, Music, Calendar, Shirt, DollarSign, Users, Send, X } from 'lucide-react';
-import { ModuleDisplay } from '@/components/dashboard/ModuleDisplay';
-import { UniversalHeader } from '@/components/layout/UniversalHeader';
-import { UserHero } from '@/components/dashboard/UserHero';
-import { supabase } from '@/integrations/supabase/client';
-
-const mockMessages = []; // Removed mock data - will use real database messages
-
-const moduleOptions = [
-  { id: 'email', name: 'EMAIL', icon: Mail },
-  { id: 'music-library', name: 'MUSIC LIBRARY', icon: Music },
-  { id: 'calendar', name: 'CALENDAR', icon: Calendar },
-  { id: 'wardrobe', name: 'WARDROBE', icon: Shirt },
-  { id: 'finances', name: 'FINANCES', icon: DollarSign },
-  { id: 'attendance', name: 'ATTENDANCE', icon: Users },
-];
 
 export const HomeRoute = () => {
   const { user, loading: authLoading } = useAuth();
   const { userProfile, loading: profileLoading } = useUserProfile(user);
-  const { toast } = useToast();
-  const [selectedModule, setSelectedModule] = useState<string>('email');
-  const [showMessageCompose, setShowMessageCompose] = useState(false);
-  const [selectedRecipientType, setSelectedRecipientType] = useState<string>('');
-  const [selectedIndividual, setSelectedIndividual] = useState<string>('');
-  const [messageType, setMessageType] = useState<string>('');
-  const [subject, setSubject] = useState<string>('');
-  const [messageContent, setMessageContent] = useState<string>('');
-  const [members, setMembers] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(false);
-  const [loadingMessages, setLoadingMessages] = useState(false);
-  const [sending, setSending] = useState(false);
+  const navigate = useNavigate();
 
-  // Fetch real members from database
+  // Handle automatic redirection for authenticated users
   useEffect(() => {
-    const fetchMembers = async () => {
-      if (!user) return;
+    if (authLoading || !user) return;
+    
+    // Wait for profile to load before redirecting
+    if (profileLoading) return;
+
+    // Redirect authenticated users to their appropriate dashboard
+    if (userProfile) {
+      console.log('🔄 HomeRoute: Redirecting authenticated user from / to appropriate dashboard');
       
-      setLoadingMembers(true);
-      try {
-        const { data, error } = await supabase
-          .from('gw_profiles')
-          .select('user_id, full_name, email, role, voice_part, exec_board_role')
-          .not('full_name', 'is', null)
-          .order('full_name');
-
-        if (error) {
-          console.error('Error fetching members:', error);
-          return;
-        }
-
-        setMembers(data || []);
-      } catch (error) {
-        console.error('Error fetching members:', error);
-      } finally {
-        setLoadingMembers(false);
+      // Priority-based redirection
+      if (userProfile.is_super_admin || userProfile.is_admin) {
+        console.log('🚀 Redirecting admin to /admin');
+        navigate('/admin', { replace: true });
+      } else if (userProfile.role === 'alumna') {
+        console.log('🎓 Redirecting alumna to /alumnae');
+        navigate('/alumnae', { replace: true });
+      } else if (userProfile.role === 'fan') {
+        console.log('🎵 Redirecting fan to /fan');
+        navigate('/fan', { replace: true });
+      } else {
+        console.log('👤 Redirecting member/exec to /dashboard');
+        navigate('/dashboard', { replace: true });
       }
-    };
-
-    if (user && showMessageCompose && selectedRecipientType === 'individual') {
-      fetchMembers();
+    } else if (user && !profileLoading) {
+      // User exists but no profile - redirect to dashboard for profile setup
+      console.log('⚠️ User without profile, redirecting to /dashboard');
+      navigate('/dashboard', { replace: true });
     }
-  }, [user, showMessageCompose, selectedRecipientType]);
+  }, [user, userProfile, authLoading, profileLoading, navigate]);
 
-  // Fetch messages from database
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!user) return;
-      
-      setLoadingMessages(true);
-      try {
-        const { data, error } = await supabase
-          .from('gw_messages')
-          .select(`
-            *,
-            sender:gw_profiles!sender_id (full_name)
-          `)
-          .order('sent_at', { ascending: false })
-          .limit(10);
-
-        if (error) {
-          console.error('Error fetching messages:', error);
-          return;
-        }
-
-        setMessages(data || []);
-      } catch (error) {
-        console.error('Error fetching messages:', error);
-      } finally {
-        setLoadingMessages(false);
-      }
-    };
-
-    if (user) {
-      fetchMessages();
-    }
-  }, [user]);
-
-  // Handle sending message
-  const handleSendMessage = async () => {
-    if (!user || !selectedRecipientType || !subject.trim() || !messageContent.trim()) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (selectedRecipientType === 'individual' && !selectedIndividual) {
-      toast({
-        title: "Error", 
-        description: "Please select a member to send the message to",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSending(true);
-    try {
-      const messageData = {
-        sender_id: user.id,
-        recipient_type: selectedRecipientType,
-        recipient_ids: selectedRecipientType === 'individual' ? [selectedIndividual] : null,
-        message_type: messageType || 'internal',
-        subject: subject,
-        content: messageContent,
-        status: 'sent'
-      };
-
-      const { error } = await supabase
-        .from('gw_messages')
-        .insert(messageData);
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Success",
-        description: "Message sent successfully!",
-      });
-
-      // Clear form and close composer
-      setSubject('');
-      setMessageContent('');
-      setSelectedRecipientType('');
-      setSelectedIndividual('');
-      setMessageType('');
-      setShowMessageCompose(false);
-
-      // Refresh messages
-      const { data } = await supabase
-        .from('gw_messages')
-        .select(`
-          *,
-          sender:gw_profiles!sender_id (full_name)
-        `)
-        .order('sent_at', { ascending: false })
-        .limit(10);
-      
-      setMessages(data || []);
-
-    } catch (error: any) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send message",
-        variant: "destructive",
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  // Clear form when compose dialog closes
-  const handleCloseCompose = () => {
-    setShowMessageCompose(false);
-    setSelectedRecipientType('');
-    setSelectedIndividual('');
-    setMessageType('');
-    setSubject('');
-    setMessageContent('');
-  };
-
-  // Show loading while auth is being determined for logged in users
+  // Show loading while determining auth status
   if (authLoading || (user && profileLoading)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center">
@@ -205,253 +51,7 @@ export const HomeRoute = () => {
     );
   }
 
-  // For authenticated users, show the mockup design
-  if (user) {
-    const getUserDisplayName = () => {
-      return userProfile?.full_name || user?.email?.split('@')[0] || 'User';
-    };
-
-    const getUserRole = () => {
-      if (userProfile?.is_super_admin) return 'Super Admin';
-      if (userProfile?.is_admin) return 'Admin';
-      return userProfile?.role || 'Member';
-    };
-
-    const getUserInitials = () => {
-      const name = getUserDisplayName();
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    };
-
-    return (
-      <div className="min-h-screen bg-background">
-        {/* Header */}
-        <UniversalHeader />
-        
-        {/* User Hero Section */}
-        <UserHero />
-
-        {/* Two Column Layout - stacks on mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-          {/* Left Column - Messages */}
-          <Card className="border-2 border-black">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 rounded-full bg-black hover:bg-black/80 p-0"
-                  onClick={() => setShowMessageCompose(!showMessageCompose)}
-                >
-                  {showMessageCompose ? (
-                    <X className="h-4 w-4 text-white" />
-                  ) : (
-                    <Plus className="h-4 w-4 text-white" />
-                  )}
-                </Button>
-                MESSAGES
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {showMessageCompose ? (
-                <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Send To:</label>
-                    <Select value={selectedRecipientType} onValueChange={(value) => {
-                      setSelectedRecipientType(value);
-                      if (value !== 'individual') {
-                        setSelectedIndividual(''); // Clear individual selection when changing recipient type
-                      }
-                    }}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select recipients..." />
-                      </SelectTrigger>
-                      <SelectContent className="z-50 bg-background border shadow-lg">
-                        <SelectItem value="individual">Individual Member</SelectItem>
-                        <SelectItem value="all-members">All Members</SelectItem>
-                        <SelectItem value="executive-board">Executive Board</SelectItem>
-                        <SelectItem value="section-leaders">Section Leaders</SelectItem>
-                        <SelectItem value="alumnae">Alumnae</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Individual Member Selector - only show when "individual" is selected */}
-                  {selectedRecipientType === 'individual' && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Select Member:</label>
-                      <Select value={selectedIndividual} onValueChange={setSelectedIndividual}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose a member..." />
-                        </SelectTrigger>
-                        <SelectContent className="z-50 bg-background border shadow-lg">
-                          {loadingMembers ? (
-                            <SelectItem value="" disabled>Loading members...</SelectItem>
-                          ) : members.length > 0 ? (
-                            members.map((member) => {
-                              const displayText = `${member.full_name}${member.voice_part ? ` (${member.voice_part})` : ''}${member.exec_board_role ? ` - ${member.exec_board_role}` : ''}`;
-                              return (
-                                <SelectItem key={member.user_id} value={member.user_id}>
-                                  {displayText}
-                                </SelectItem>
-                              );
-                            })
-                          ) : (
-                            <SelectItem value="" disabled>No members found</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Message Type:</label>
-                    <Select value={messageType} onValueChange={setMessageType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select message type..." />
-                      </SelectTrigger>
-                      <SelectContent className="z-50 bg-background border shadow-lg">
-                        <SelectItem value="sms">SMS Text Message</SelectItem>
-                        <SelectItem value="internal">Internal Message</SelectItem>
-                        <SelectItem value="email">Email</SelectItem>
-                        <SelectItem value="announcement">Announcement</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Subject:</label>
-                    <Input 
-                      placeholder="Enter subject..." 
-                      value={subject}
-                      onChange={(e) => setSubject(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Message:</label>
-                    <Textarea 
-                      placeholder="Type your message here..." 
-                      className="min-h-[100px]"
-                      value={messageContent}
-                      onChange={(e) => setMessageContent(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      className="flex-1" 
-                      size="sm" 
-                      onClick={handleSendMessage}
-                      disabled={sending}
-                    >
-                      <Send className="w-4 h-4 mr-2" />
-                      {sending ? 'Sending...' : 'Send Message'}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleCloseCompose}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {loadingMessages ? (
-                    <div className="text-center py-4">
-                      <span className="text-sm text-muted-foreground">Loading messages...</span>
-                    </div>
-                  ) : messages.length > 0 ? (
-                    <>
-                      {messages.map((message) => (
-                        <div key={message.id} className="p-3 bg-muted/50 rounded border-l-4 border-l-primary">
-                          <div className="flex items-start justify-between mb-2">
-                            <span className="font-medium text-sm">{message.sender?.full_name || 'Unknown Sender'}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(message.sent_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <h4 className="font-semibold text-sm mb-1">{message.subject}</h4>
-                          <p className="text-sm text-muted-foreground line-clamp-2">{message.content}</p>
-                          <div className="flex gap-2 mt-2">
-                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                              {message.message_type}
-                            </span>
-                            <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
-                              {message.recipient_type.replace('-', ' ')}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                      <div className="pt-4 border-t">
-                        <h3 className="text-lg font-bold italic">Recent Messages</h3>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">No messages yet.</p>
-                      <p className="text-sm text-muted-foreground">Click the + button to send your first message!</p>
-                    </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Right Column - Module Selector */}
-          <Card className="border-2 border-black">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl font-bold italic">Module Selector</CardTitle>
-              <p className="text-sm text-muted-foreground italic">This element scrolls to show modules</p>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {moduleOptions.map((module) => (
-                <Button
-                  key={module.id}
-                  onClick={() => setSelectedModule(module.id)}
-                  variant={selectedModule === module.id ? "default" : "secondary"}
-                  className={`w-full justify-start text-left font-bold ${
-                    selectedModule === module.id 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted text-foreground'
-                  }`}
-                >
-                  {module.name}
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Full Width Bottom Section - Selected Module */}
-        <div className="px-6 pb-6">
-          <Card className="border-2 border-black bg-muted/30 min-h-96">
-            <CardContent className="p-8">
-              <div className="text-center mb-8">
-                <h2 className="text-6xl font-bold mb-4">FULL MODULE HERE</h2>
-                <h3 className="text-4xl font-bold mb-6">WHEN SELECTED ABOVE</h3>
-                <p className="text-xl text-red-600 font-bold">
-                  THIS MODULE VARIES IN LENGTH<br />
-                  DEPENDING ON THE NEEDS<br />
-                  OF THE MODEL ELEMENTS
-                </p>
-              </div>
-              
-              {/* Actual Module Content */}
-              <div className="mt-8">
-                <ModuleDisplay selectedModule={selectedModule} />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Footer */}
-        <div className="bg-muted/50 border-t border-border py-6">
-          <div className="text-center">
-            <h2 className="text-4xl font-bold">FOOTER</h2>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // For public users, show the Glee World landing page with audition card
+  // For public/non-authenticated users, show the landing page
+  console.log('🌐 Showing public landing page for non-authenticated user');
   return <GleeWorldLanding />;
 };
