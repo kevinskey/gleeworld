@@ -14,7 +14,7 @@ import { Document as PdfDocument, Page as PdfPage, pdfjs } from 'react-pdf';
 interface MediaItem {
   id: string;
   file_url: string | null;
-  filename?: string | null;
+  title?: string | null;
   original_filename?: string | null;
   mime_type?: string | null;
   file_type?: string | null;
@@ -53,9 +53,9 @@ const MediaLibrary = () => {
       const mapped = (data || []).map((r: any) => ({
         id: r.id,
         file_url: r.file_url ?? null,
-        filename: r.filename ?? r.original_filename ?? (r.file_path ? String(r.file_path).split('/').pop() : null),
-        original_filename: r.original_filename ?? null,
-        mime_type: r.mime_type ?? null,
+        title: r.title ?? null,
+        original_filename: r.title ?? null,
+        mime_type: r.file_type ?? null,
         file_type: r.file_type ?? null,
         category: r.category ?? null,
         created_at: r.created_at ?? null,
@@ -87,7 +87,7 @@ const MediaLibrary = () => {
         : activeKind === 'documents'
           ? isDoc(i)
           : kind === activeKind;
-      const matchesQuery = !q || [i.filename, i.original_filename, i.category]
+      const matchesQuery = !q || [i.title, i.original_filename, i.category]
         .filter(Boolean)
         .some(v => (v as string).toLowerCase().includes(q));
       return matchesKind && matchesQuery;
@@ -118,23 +118,34 @@ const MediaLibrary = () => {
       const safeName = file.name.replace(/\s+/g, '-').toLowerCase();
       const filePath = `${user.id}/${ymd}-${crypto.randomUUID()}-${safeName}`;
 
-      // 1) Upload to storage bucket 'service-images' (already in project)
+      // Upload to storage bucket
       const { data: upRes, error: upErr } = await supabase.storage
         .from('service-images')
         .upload(filePath, file, { upsert: false, contentType: file.type });
       if (upErr) throw upErr;
 
-      // 2) Record in media library via RPC (keeps DB consistent and URL public)
-      const { data: rpcData, error: rpcErr } = await supabase.rpc('upload_service_image', {
-        p_filename: safeName,
-        p_original_filename: file.name,
-        p_file_path: filePath,
-        p_file_size: file.size,
-        p_mime_type: file.type,
-        p_description: null,
-      });
-      if (rpcErr) throw rpcErr;
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('service-images')
+        .getPublicUrl(filePath);
 
+      // Insert directly into media library table
+      const { error: insertErr } = await supabase
+        .from('gw_media_library')
+        .insert({
+          title: file.name,
+          description: null,
+          file_url: publicUrl,
+          file_path: filePath,
+          file_type: file.type,
+          file_size: file.size,
+          category: 'general',
+          uploaded_by: user.id,
+          is_public: true,
+          is_featured: false
+        });
+      
+      if (insertErr) throw insertErr;
       await fetchItems();
     } catch (err) {
       console.error('Upload failed:', err);
@@ -213,7 +224,7 @@ const MediaLibrary = () => {
                           <FileText className="h-4 w-4 text-muted-foreground" />
                         )}
                         <div className="flex-1 min-w-0">
-                          <div className="truncate text-sm font-medium">{m.original_filename || m.filename}</div>
+                          <div className="truncate text-sm font-medium">{m.original_filename || m.title}</div>
                           <div className="text-xs text-muted-foreground">{(kind || 'file').toUpperCase()}</div>
                         </div>
                         {m.category && <Badge variant="outline" className="text-[10px]">{m.category}</Badge>}
@@ -231,8 +242,8 @@ const MediaLibrary = () => {
                       return (
                         <div className="space-y-3">
                           <div className="flex items-center justify-between gap-2">
-                            <div className="font-medium truncate" title={selectedItem.original_filename || selectedItem.filename || ''}>
-                              {selectedItem.original_filename || selectedItem.filename}
+                            <div className="font-medium truncate" title={selectedItem.original_filename || selectedItem.title || ''}>
+                              {selectedItem.original_filename || selectedItem.title}
                             </div>
                             {selectedItem.file_url && (
                               <a href={selectedItem.file_url} target="_blank" rel="noopener noreferrer" className="text-sm inline-flex items-center gap-1 text-primary hover:underline">
@@ -242,7 +253,7 @@ const MediaLibrary = () => {
                           </div>
                           <div className="w-full">
                             {kind === 'image' && selectedItem.file_url ? (
-                              <img src={selectedItem.file_url} alt={selectedItem.filename || 'media'} className="w-full max-h-[70vh] object-contain" />
+                              <img src={selectedItem.file_url} alt={selectedItem.title || 'media'} className="w-full max-h-[70vh] object-contain" />
                             ) : kind === 'audio' && selectedItem.file_url ? (
                               <audio controls className="w-full">
                                 <source src={selectedItem.file_url} />

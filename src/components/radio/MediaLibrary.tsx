@@ -36,7 +36,7 @@ interface MediaFile {
   tags?: string[];
   category?: string;
   created_at: string;
-  created_by?: string;
+  uploaded_by?: string;
   is_public?: boolean;
 }
 
