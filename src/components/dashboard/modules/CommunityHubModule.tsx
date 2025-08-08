@@ -62,42 +62,6 @@ export const CommunityHubModule = () => {
         
         <TabsContent value="buckets" className="flex-1 p-4 bg-gradient-to-b from-amber-50/50 to-background">
           <div className="space-y-4">
-            {/* Send new bucket form */}
-            <Card className="p-4 bg-pink-50/50 border-pink-200">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-pink-500" />
-                  <span className="font-medium text-pink-700">Send a Bucket of Love</span>
-                </div>
-                <Textarea
-                  placeholder="Share some love and encouragement..."
-                  value={newBucketMessage}
-                  onChange={(e) => setNewBucketMessage(e.target.value)}
-                  className="bg-white border-pink-200 focus:border-pink-300"
-                />
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={isAnonymous}
-                      onChange={(e) => setIsAnonymous(e.target.checked)}
-                      className="rounded border-pink-300"
-                    />
-                    Send anonymously
-                  </label>
-                  <Button 
-                    onClick={handleSendBucket}
-                    disabled={!newBucketMessage.trim()}
-                    size="sm"
-                    className="bg-pink-500 hover:bg-pink-600 text-white"
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Send Love
-                  </Button>
-                </div>
-              </div>
-            </Card>
-
             {/* Cork board with post-it notes */}
             <div className="relative p-6 bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-lg border-4 border-amber-900 shadow-lg min-h-[400px]" 
                  style={{
@@ -167,6 +131,42 @@ export const CommunityHubModule = () => {
                 </div>
               )}
             </div>
+
+            {/* Send new bucket form */}
+            <Card className="p-4 bg-pink-50/50 border-pink-200">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-pink-500" />
+                  <span className="font-medium text-pink-700">Send a Bucket of Love</span>
+                </div>
+                <Textarea
+                  placeholder="Share some love and encouragement..."
+                  value={newBucketMessage}
+                  onChange={(e) => setNewBucketMessage(e.target.value)}
+                  className="bg-white border-pink-200 focus:border-pink-300"
+                />
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={isAnonymous}
+                      onChange={(e) => setIsAnonymous(e.target.checked)}
+                      className="rounded border-pink-300"
+                    />
+                    Send anonymously
+                  </label>
+                  <Button 
+                    onClick={handleSendBucket}
+                    disabled={!newBucketMessage.trim()}
+                    size="sm"
+                    className="bg-pink-500 hover:bg-pink-600 text-white"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Love
+                  </Button>
+                </div>
+              </div>
+            </Card>
           </div>
         </TabsContent>
         
