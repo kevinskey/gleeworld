@@ -32,6 +32,7 @@ import NotFound from "./pages/NotFound";
 import Accounting from "./pages/Accounting";
 import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
 import { MemberViewDashboard } from "./components/member-view/MemberViewDashboard";
+import AuditionerDashboardPage from "./pages/AuditionerDashboardPage";
 
 import EventPlanner from "./pages/EventPlanner";
 import BudgetApprovals from "./pages/BudgetApprovals";
@@ -238,6 +239,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <MemberViewDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/auditioner" 
+                element={
+                  <ProtectedRoute>
+                    <AuditionerDashboardPage />
                   </ProtectedRoute>
                 } 
               />

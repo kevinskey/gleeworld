@@ -173,7 +173,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     <DropdownMenuItem 
                       onClick={() => {
                         if (user?.id) {
-                          navigate(`/dashboard/member-view/${user.id}`);
+                          navigate('/dashboard/auditioner');
                           onViewModeChange?.('member');
                         } else {
                           navigate('/auditions');
