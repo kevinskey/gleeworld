@@ -38,23 +38,6 @@ export const UnifiedDashboard = () => {
           </div>
         </div>
         
-        {/* Bottom Section - Module Selector & Display */}
-        <div className="flex-1 min-h-0">
-          <div className="h-full bg-background/50 border border-border rounded-xl shadow-sm overflow-hidden">
-            {/* Module Selector at top of card */}
-            <div className="border-b border-border bg-background/30 p-4">
-              <ModuleSelector 
-                selectedModule={selectedModule}
-                onSelectModule={setSelectedModule}
-              />
-            </div>
-            
-            {/* Selected Module Display */}
-            <div className="h-[calc(100%-80px)] p-6">
-              <ModuleDisplay selectedModule={selectedModule} />
-            </div>
-          </div>
-        </div>
         
         {/* Messages Panel Overlay */}
         {showMessages && (
