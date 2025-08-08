@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DashboardHeader } from './DashboardHeader';
+import { UniversalHeader } from '../layout/UniversalHeader';
 import { MessagesPanel } from './MessagesPanel';
 import { ModuleSelector } from './ModuleSelector';
 import { ModuleDisplay } from './ModuleDisplay';
@@ -22,11 +22,7 @@ export const UnifiedDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      <DashboardHeader 
-        user={user}
-        onToggleMessages={() => setShowMessages(!showMessages)}
-        showMessages={showMessages}
-      />
+      <UniversalHeader />
       
       <div className="flex flex-col h-[calc(100vh-72px)] p-6 gap-6">
         {/* Top Two-Column Layout - Community Hub & Email */}
