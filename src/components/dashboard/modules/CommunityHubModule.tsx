@@ -5,19 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Textarea } from '@/components/ui/textarea';
 import { useBucketsOfLove } from '@/hooks/useBucketsOfLove';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { MemberDirectory } from '@/components/directory/MemberDirectory';
+import { MobileBucketCard } from '@/components/buckets-of-love/MobileBucketCard';
+import { MobileComposeSheet } from '@/components/buckets-of-love/MobileComposeSheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const CommunityHubModule = () => {
   const [activeTab, setActiveTab] = useState('buckets');
-  const [newBucketMessage, setNewBucketMessage] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'needs' | 'kudos' | 'wellness' | 'tasks'>('all');
   const { user } = useAuth();
-  const { buckets, loading, sendBucketOfLove } = useBucketsOfLove();
+  const { buckets, loading, fetchBuckets } = useBucketsOfLove();
+  const isMobile = useIsMobile();
 
   const filteredBuckets = useMemo(() => {
     if (!buckets) return [] as typeof buckets;
@@ -44,14 +45,8 @@ export const CommunityHubModule = () => {
       }
     });
   }, [buckets, activeFilter]);
-  const handleSendBucket = async () => {
-    if (!newBucketMessage.trim()) return;
-    
-    const result = await sendBucketOfLove(newBucketMessage, 'pink', isAnonymous);
-    if (result.success) {
-      setNewBucketMessage('');
-      setIsAnonymous(false);
-    }
+  const handleBucketSent = () => {
+    fetchBuckets();
   };
 
   return (
@@ -64,11 +59,19 @@ export const CommunityHubModule = () => {
       </div>
       
       <Tabs defaultValue="buckets" className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-4 m-2 bg-background/50">
-          <TabsTrigger value="buckets" className="data-[state=active]:bg-pink-100 data-[state=active]:text-pink-700">Buckets of Love</TabsTrigger>
-          <TabsTrigger value="wellness" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-700">Wellness</TabsTrigger>
-          <TabsTrigger value="announcements" className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">Announcements</TabsTrigger>
-          <TabsTrigger value="directory" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700">Directory</TabsTrigger>
+        <TabsList className={`grid w-full grid-cols-4 m-2 bg-background/50 ${isMobile ? 'text-xs' : ''}`}>
+          <TabsTrigger value="buckets" className="data-[state=active]:bg-pink-100 data-[state=active]:text-pink-700">
+            {isMobile ? 'Love' : 'Buckets of Love'}
+          </TabsTrigger>
+          <TabsTrigger value="wellness" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+            Wellness
+          </TabsTrigger>
+          <TabsTrigger value="announcements" className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
+            {isMobile ? 'News' : 'Announcements'}
+          </TabsTrigger>
+          <TabsTrigger value="directory" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700">
+            Directory
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="buckets" className="flex-1 p-3 md:p-4">
@@ -103,76 +106,67 @@ export const CommunityHubModule = () => {
             </header>
 
             <ScrollArea className="flex-1 mt-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3 pr-2 pb-4">
+              <div className={`${isMobile ? 'space-y-3' : 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3'} pr-2 pb-4`}>
                 {loading ? (
-                  <div className="col-span-full flex items-center justify-center py-16 text-muted-foreground">
+                  <div className="flex items-center justify-center py-16 text-muted-foreground">
                     <Heart className="w-5 h-5 mr-2 animate-pulse text-primary" />
                     Loading buckets of love...
                   </div>
                 ) : filteredBuckets.length === 0 ? (
-                  <div className="col-span-full text-center py-12 text-muted-foreground">
+                  <div className="text-center py-12 text-muted-foreground">
                     <Heart className="w-6 h-6 mx-auto mb-2 text-primary" />
                     <p>No messages yet. Be the first to share some love!</p>
                   </div>
                 ) : (
                   filteredBuckets.map((bucket) => (
-                    <article
-                      key={bucket.id}
-                      className="group rounded-lg border border-border bg-card/70 hover:bg-card transition-all shadow-sm p-3 flex flex-col gap-2 hover-scale"
-                    >
-                      <p className="text-xs md:text-sm text-foreground text-overflow-fade pr-6 leading-snug">
-                        {bucket.message}
-                      </p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>
-                          {bucket.is_anonymous ? 'Anonymous' : (bucket.sender_name?.substring(0, 18) || 'Unknown')}
-                        </span>
-                        <div className="flex items-center gap-3">
-                          {bucket.likes > 0 && (
-                            <span className="inline-flex items-center gap-1">
-                              <Heart className="w-3 h-3" />
-                              {bucket.likes}
-                            </span>
-                          )}
+                    isMobile ? (
+                      <MobileBucketCard key={bucket.id} bucket={bucket} />
+                    ) : (
+                      <article
+                        key={bucket.id}
+                        className="group rounded-lg border border-border bg-card/70 hover:bg-card transition-all shadow-sm p-3 flex flex-col gap-2 hover-scale"
+                      >
+                        <p className="text-xs md:text-sm text-foreground text-overflow-fade pr-6 leading-snug">
+                          {bucket.message}
+                        </p>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span>
-                            {formatDistanceToNow(new Date(bucket.created_at), { addSuffix: true })}
+                            {bucket.is_anonymous ? 'Anonymous' : (bucket.sender_name?.substring(0, 18) || 'Unknown')}
                           </span>
+                          <div className="flex items-center gap-3">
+                            {bucket.likes > 0 && (
+                              <span className="inline-flex items-center gap-1">
+                                <Heart className="w-3 h-3" />
+                                {bucket.likes}
+                              </span>
+                            )}
+                            <span>
+                              {formatDistanceToNow(new Date(bucket.created_at), { addSuffix: true })}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </article>
+                      </article>
+                    )
                   ))
                 )}
               </div>
             </ScrollArea>
 
-            <Card className="mt-3 rounded-xl border border-border bg-card/60 shadow-sm">
-              <CardHeader className="pb-2" data-component="card-header">
-                <CardTitle className="text-sm md:text-base">Send a Bucket of Love</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Textarea
-                  placeholder="Write your message of love and encouragement..."
-                  value={newBucketMessage}
-                  onChange={(e) => setNewBucketMessage(e.target.value)}
-                  className="min-h-[100px] resize-none"
-                />
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={isAnonymous}
-                      onChange={(e) => setIsAnonymous(e.target.checked)}
-                      className="accent-current"
-                    />
-                    <span className="text-muted-foreground">Send anonymously</span>
-                  </label>
-                  <Button onClick={handleSendBucket} disabled={!newBucketMessage.trim()}>
-                    <Send className="w-4 h-4 mr-2" />
-                    Send
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Mobile-optimized compose */}
+            {isMobile ? (
+              <div className="mt-3 p-3 bg-background/95 backdrop-blur-sm border-t border-border">
+                <MobileComposeSheet onSent={handleBucketSent} />
+              </div>
+            ) : (
+              <Card className="mt-3 rounded-xl border border-border bg-card/60 shadow-sm">
+                <CardHeader className="pb-2" data-component="card-header">
+                  <CardTitle className="text-sm md:text-base">Send a Bucket of Love</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <MobileComposeSheet onSent={handleBucketSent} />
+                </CardContent>
+              </Card>
+            )}
           </section>
         </TabsContent>
         
