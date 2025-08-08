@@ -45,11 +45,13 @@ export const HeaderRadioControls = () => {
               size="sm"
               onClick={(e) => {
                 console.log('HeaderRadioControls: Play/Pause button clicked');
+                e.preventDefault();
                 e.stopPropagation();
                 togglePlayPause();
               }}
               disabled={isLoading}
               className="relative h-8 w-8 p-0 rounded-full hover:bg-accent/20"
+              type="button"
             >
               {isLoading ? (
                 <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -122,8 +124,14 @@ export const HeaderRadioControls = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={togglePlayPause}
+                onClick={(e) => {
+                  console.log('HeaderRadioControls: Main play button clicked');
+                  e.preventDefault();
+                  e.stopPropagation();
+                  togglePlayPause();
+                }}
                 disabled={isLoading}
+                type="button"
               >
                 {isLoading ? (
                   <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -144,7 +152,12 @@ export const HeaderRadioControls = () => {
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0"
-                onClick={() => setVolume(isMuted ? 0.7 : 0)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setVolume(isMuted ? 0.7 : 0);
+                }}
+                type="button"
               >
                 {isMuted ? (
                   <VolumeX className="h-4 w-4" />
