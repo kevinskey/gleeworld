@@ -69,6 +69,29 @@ export const FreshAdminDashboard = () => {
     document.addEventListener('touchend', handleTouchEnd);
   };
 
+  // Mouse drag detection
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const startY = e.clientY;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaY = startY - e.clientY;
+      
+      if (Math.abs(deltaY) > 10) { // Minimum drag distance
+        setIsAnimating(true);
+        setScrollOffset(prev => prev + deltaY * 0.5);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsAnimating(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
       <UniversalHeader 
@@ -113,8 +136,9 @@ export const FreshAdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div 
-              className="relative h-[600px] overflow-hidden touch-pan-y select-none"
+              className="relative h-[600px] overflow-hidden touch-pan-y select-none cursor-grab active:cursor-grabbing"
               onTouchStart={handleTouchStart}
+              onMouseDown={handleMouseDown}
             >
               <div 
                 className="flex flex-col gap-3 transition-transform duration-300"
