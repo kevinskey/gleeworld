@@ -160,7 +160,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-2xl blur-xl"></div>
-            <TabsList className="relative grid w-full grid-cols-4 bg-card/50 backdrop-blur-sm border border-border/50 p-2 rounded-2xl shadow-lg">
+            <TabsList className="relative grid w-full grid-cols-4 bg-card/50 backdrop-blur-sm border border-border/50 p-2 pb-4 rounded-2xl shadow-lg">
               <TabsTrigger value="booking-requests" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/10 data-[state=active]:to-blue-600/10 data-[state=active]:text-blue-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
                 <div className="relative">
                   <Mail className="h-4 w-4" />
