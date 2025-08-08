@@ -105,7 +105,12 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                 {isAdmin && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="bg-white/10 hover:bg-white/20 border border-white/20">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="bg-white/10 hover:bg-white/20 border border-white/20"
+                        type="button"
+                      >
                         <Crown className="h-4 w-4 mr-2 text-yellow-500" />
                         <span className="hidden sm:inline">Super Monitor</span>
                       </Button>
@@ -203,6 +208,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       variant="ghost" 
                       size="sm" 
                       className="h-7 w-7 sm:h-8 sm:w-8 p-1 rounded-md hover:bg-accent/20"
+                      type="button"
                     >
                       <LayoutDashboard className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
@@ -294,7 +300,9 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         console.log('Camera button clicked - navigating to PR Hub');
                         // Set flag in sessionStorage for backup trigger method
                         sessionStorage.setItem('trigger-pr-quick-capture', 'true');
@@ -306,6 +314,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         }, 500);
                       }}
                       className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 rounded-full hover:bg-accent/20"
+                      type="button"
                     >
                       <img 
                         src="/lovable-uploads/a9348c2b-145b-4530-a755-80ee32c5bf6f.png" 
@@ -320,7 +329,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                  <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 rounded-full p-0">
+                        <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 rounded-full p-0" type="button">
                           <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 border-2 border-border/30">
                             <AvatarImage 
                               src={userProfile?.avatar_url || undefined} 

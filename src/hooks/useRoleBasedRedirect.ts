@@ -66,8 +66,14 @@ export const useRoleBasedRedirect = () => {
     const isOnAuthPage = location.pathname === '/auth';
     const isOnRootPage = location.pathname === '/';
     
-    if (!isOnAuthPage && !isOnRootPage) {
-      console.log('useRoleBasedRedirect: Not on auth or root page, skipping redirect');
+    // Also skip redirect if user is already on their target dashboard
+    const isOnTargetPage = location.pathname.includes('/admin') || 
+                          location.pathname.includes('/dashboard') || 
+                          location.pathname.includes('/fan') || 
+                          location.pathname.includes('/alumnae');
+    
+    if (!isOnAuthPage && !isOnRootPage && isOnTargetPage) {
+      console.log('useRoleBasedRedirect: Already on target page, skipping redirect');
       return;
     }
 
