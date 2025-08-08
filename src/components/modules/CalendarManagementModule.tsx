@@ -1,19 +1,19 @@
 import { ModuleProps } from '@/types/unified-modules';
 import { MasterCalendar } from '@/components/admin/MasterCalendar';
+import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
+import { Calendar as CalendarIcon } from 'lucide-react';
 
 export const CalendarManagementModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
   return (
-    <div className="space-y-6">
-      {!isFullPage && (
-        <div className="border-l-4 border-primary pl-4">
-          <h2 className="text-xl font-semibold text-primary">Calendar Management</h2>
-          <p className="text-sm text-muted-foreground">
-            Master calendar for scheduling and blocking dates/times
-          </p>
-        </div>
-      )}
-      
+    <ModuleWrapper
+      id="calendar-management"
+      title="Calendar Management"
+      description="Master calendar for scheduling and blocking dates/times"
+      icon={CalendarIcon}
+      iconColor="primary"
+      fullPage={!!isFullPage}
+    >
       <MasterCalendar />
-    </div>
+    </ModuleWrapper>
   );
 };

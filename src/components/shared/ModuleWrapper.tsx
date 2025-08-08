@@ -1,7 +1,8 @@
 import React, { ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { LucideIcon, ArrowLeft } from 'lucide-react';
 
 interface ModuleWrapperProps {
   id: string;
@@ -15,6 +16,9 @@ interface ModuleWrapperProps {
   headerActions?: ReactNode;
   className?: string;
   fullPage?: boolean;
+  showBack?: boolean;
+  onBack?: () => void;
+  stickyHeader?: boolean;
 }
 
 export const ModuleWrapper = ({
@@ -28,18 +32,29 @@ export const ModuleWrapper = ({
   isLoading = false,
   headerActions,
   className = "",
-  fullPage = false
+  fullPage = false,
+  showBack = false,
+  onBack,
+  stickyHeader = false
 }: ModuleWrapperProps) => {
   const containerClass = fullPage 
     ? "min-h-screen space-y-4" 
     : "space-y-4";
+  const headerClass = stickyHeader
+    ? "sticky top-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    : "";
 
   const content = (
     <div className={`${containerClass} ${className}`}>
       {/* Standardized Header */}
-      <div className="border-l-4 border-primary pl-4">
+      <div className={`${headerClass} border-l-4 border-primary pl-4`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
+            {showBack && (
+              <Button variant="ghost" size="icon" onClick={onBack} aria-label="Go back">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
             {Icon && <Icon className={`h-5 w-5 text-${iconColor}-600`} />}
             <div>
               <div className="flex items-center gap-2">
