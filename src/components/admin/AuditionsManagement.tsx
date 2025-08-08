@@ -622,10 +622,6 @@ export const AuditionsManagement = () => {
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="sessions" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
-              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Sessions</span>
-            </TabsTrigger>
             <TabsTrigger value="roster" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Roster</span>
@@ -633,6 +629,10 @@ export const AuditionsManagement = () => {
             <TabsTrigger value="evaluations" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
               <Star className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Evaluations</span>
+            </TabsTrigger>
+            <TabsTrigger value="sessions" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Sessions</span>
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
