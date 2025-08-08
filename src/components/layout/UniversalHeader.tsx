@@ -67,7 +67,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             <div className="flex items-center justify-between min-h-12 sm:min-h-16 py-4 sm:py-5">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
-            <EnhancedTooltip content="Go to GleeWorld Home">
+            <EnhancedTooltip content="Go to GleeWorld Home" className="z-[200]">
               <div className="flex items-center gap-1 flex-shrink-0">
                 <Link to="/" className="flex items-center gap-1 hover:scale-105 transition-transform duration-200 relative z-[110]">
                   <div className="relative z-[111]">
