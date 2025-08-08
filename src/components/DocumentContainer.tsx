@@ -8,7 +8,7 @@ interface DocumentContainerProps {
 export const DocumentContainer = ({ children, className = '' }: DocumentContainerProps) => {
   return (
     <div className={`
-      max-w-4xl w-full mx-auto bg-white shadow-lg rounded-lg overflow-hidden
+      max-w-4xl w-full mx-auto bg-background shadow-lg rounded-lg overflow-hidden
       lg:max-w-4xl md:max-w-[90vw] sm:max-w-[95vw] sm:rounded-md
       print:max-w-none print:w-[8.5in] print:shadow-none print:rounded-none
       ${className}

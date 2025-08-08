@@ -25,8 +25,8 @@ const getStatusColor = (status: string) => {
     case "pending_admin_signature": return "bg-yellow-100 text-yellow-800";
     case "pending_recipient": return "bg-orange-100 text-orange-800";
     case "pending_sender": return "bg-red-100 text-red-800";
-    case "draft": return "bg-gray-100 text-gray-800";
-    default: return "bg-gray-100 text-gray-800";
+    case "draft": return "bg-muted text-muted-foreground";
+    default: return "bg-muted text-muted-foreground";
   }
 };
 

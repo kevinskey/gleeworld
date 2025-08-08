@@ -10,6 +10,7 @@ import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { GlobalMusicPlayer } from "@/components/music/GlobalMusicPlayer";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
+import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
 
@@ -165,6 +166,7 @@ const App = () => {
                 <div>
                   <Toaster />
                   <Sonner />
+                  <DesignSystemEnforcer />
                   <Routes>
                     {/* Root route */}
                     <Route 

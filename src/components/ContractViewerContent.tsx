@@ -97,7 +97,7 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
             <div className="border-2 border-green-300 bg-green-50 p-4 rounded-lg">
               <div className="text-green-700 font-medium mb-2">✓ Artist Signature Applied</div>
               {artistSignature.signatureData && artistSignature.signatureData.startsWith('data:image') ? (
-                <div className="bg-white p-2 border rounded inline-block">
+                <div className="bg-background p-2 border rounded inline-block">
                   <img 
                     src={artistSignature.signatureData} 
                     alt="Artist Signature" 
@@ -111,16 +111,16 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
                       if (fallback) fallback.style.display = 'block';
                     }}
                   />
-                  <div className="text-sm text-gray-600 bg-white p-2 border rounded" style={{ display: 'none' }}>
+                  <div className="text-sm text-muted-foreground bg-background p-2 border rounded" style={{ display: 'none' }}>
                     [Artist Signature Applied]
                   </div>
                 </div>
               ) : artistSignature.signatureData ? (
-                <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
+                <div className="font-cursive text-2xl text-foreground bg-background p-2 border rounded inline-block">
                   {artistSignature.signatureData}
                 </div>
               ) : (
-                <div className="text-sm text-gray-600 bg-white p-2 border rounded inline-block">
+                <div className="text-sm text-muted-foreground bg-background p-2 border rounded inline-block">
                   [Artist Signature Applied]
                 </div>
               )}
@@ -142,7 +142,7 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
             <div className="border-2 border-blue-300 bg-blue-50 p-4 rounded-lg">
               <div className="text-blue-700 font-medium mb-2">✓ Admin/Agent Signature Applied</div>
               {adminSignature.signatureData && adminSignature.signatureData.startsWith('data:image') ? (
-                <div className="bg-white p-2 border rounded inline-block">
+                <div className="bg-background p-2 border rounded inline-block">
                   <img 
                     src={adminSignature.signatureData} 
                     alt="Admin Signature" 
@@ -156,16 +156,16 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
                       if (fallback) fallback.style.display = 'block';
                     }}
                   />
-                  <div className="text-sm text-gray-600 bg-white p-2 border rounded" style={{ display: 'none' }}>
+                  <div className="text-sm text-muted-foreground bg-background p-2 border rounded" style={{ display: 'none' }}>
                     [Dr. Kevin P. Johnson - Admin Signature]
                   </div>
                 </div>
               ) : adminSignature.signatureData ? (
-                <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
+                <div className="font-cursive text-2xl text-foreground bg-background p-2 border rounded inline-block">
                   {adminSignature.signatureData}
                 </div>
               ) : (
-                <div className="text-sm text-gray-600 bg-white p-2 border rounded inline-block">
+                <div className="text-sm text-muted-foreground bg-background p-2 border rounded inline-block">
                   [Dr. Kevin P. Johnson - Admin Signature]
                 </div>
               )}
@@ -197,7 +197,7 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
           <div className="border-2 border-green-300 bg-green-50 p-4 rounded-lg">
             <div className="text-green-700 font-medium mb-2">✓ Artist Signature Applied</div>
             {artistSignature.signatureData && artistSignature.signatureData.startsWith('data:image') ? (
-              <div className="bg-white p-2 border rounded inline-block">
+              <div className="bg-background p-2 border rounded inline-block">
                 <img 
                   src={artistSignature.signatureData} 
                   alt="Artist Signature" 
@@ -210,16 +210,16 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
                     if (fallback) fallback.style.display = 'block';
                   }}
                 />
-                <div className="text-sm text-gray-600 bg-white p-2 border rounded" style={{ display: 'none' }}>
+                <div className="text-sm text-muted-foreground bg-background p-2 border rounded" style={{ display: 'none' }}>
                   [Artist Signature Applied]
                 </div>
               </div>
             ) : artistSignature.signatureData ? (
-              <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
+              <div className="font-cursive text-2xl text-foreground bg-background p-2 border rounded inline-block">
                 {artistSignature.signatureData}
               </div>
             ) : (
-              <div className="text-sm text-gray-600 bg-white p-2 border rounded inline-block">
+              <div className="text-sm text-muted-foreground bg-background p-2 border rounded inline-block">
                 [Artist Signature Applied]
               </div>
             )}
@@ -239,7 +239,7 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
           <div className="border-2 border-blue-300 bg-blue-50 p-4 rounded-lg">
             <div className="text-blue-700 font-medium mb-2">✓ Admin/Agent Signature Applied</div>
             {adminSignature.signatureData && adminSignature.signatureData.startsWith('data:image') ? (
-              <div className="bg-white p-2 border rounded inline-block">
+              <div className="bg-background p-2 border rounded inline-block">
                 <img 
                   src={adminSignature.signatureData} 
                   alt="Admin Signature" 
@@ -252,16 +252,16 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
                     if (fallback) fallback.style.display = 'block';
                   }}
                 />
-                <div className="text-sm text-gray-600 bg-white p-2 border rounded" style={{ display: 'none' }}>
+                <div className="text-sm text-muted-foreground bg-background p-2 border rounded" style={{ display: 'none' }}>
                   [Dr. Kevin P. Johnson - Admin Signature]
                 </div>
               </div>
             ) : adminSignature.signatureData ? (
-              <div className="font-cursive text-2xl text-gray-800 bg-white p-2 border rounded inline-block">
+              <div className="font-cursive text-2xl text-foreground bg-background p-2 border rounded inline-block">
                 {adminSignature.signatureData}
               </div>
             ) : (
-              <div className="text-sm text-gray-600 bg-white p-2 border rounded inline-block">
+              <div className="text-sm text-muted-foreground bg-background p-2 border rounded inline-block">
                 [Dr. Kevin P. Johnson - Admin Signature]
               </div>
             )}
@@ -282,16 +282,16 @@ export const ContractViewerContent = ({ contract }: ContractViewerContentProps) 
   // Ensure we have a contract before processing
   if (!contract) {
     console.log('ContractViewerContent: No contract provided');
-    return <div className="p-4 text-gray-500">No contract content available</div>;
+    return <div className="p-4 text-muted-foreground">No contract content available</div>;
   }
 
   if (!contract.content) {
     console.log('ContractViewerContent: Contract has no content');
-    return <div className="p-4 text-gray-500">Contract content is empty</div>;
+    return <div className="p-4 text-muted-foreground">Contract content is empty</div>;
   }
 
   return (
-    <div className="whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-white min-h-[400px]">
+    <div className="whitespace-pre-wrap border rounded-lg p-4 md:p-8 bg-background min-h-[400px]">
       {processContractContent().map((item, index) => (
         <div key={index}>
           {typeof item === 'string' ? (

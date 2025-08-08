@@ -223,7 +223,7 @@ export const ContractsList = ({
 
                   {filteredAndSortedContracts.length === 0 && contracts.length > 0 && (
                     <div className="text-center py-8">
-                      <p className="text-gray-500 mb-4">No contracts match your current filters</p>
+                      <p className="text-muted-foreground mb-4">No contracts match your current filters</p>
                       <Button variant="outline" onClick={() => handleFilterChange({ template: '', type: '', date: '' })}>
                         Clear Filters
                       </Button>

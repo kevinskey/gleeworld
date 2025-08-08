@@ -283,7 +283,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
             {/* Dashboard Toggle for Admins */}
             {isAdmin && (
               <>
-                {!isOnUserDashboard && <div className="h-6 w-px bg-white/20 mx-2" />}
+                {!isOnUserDashboard && <div className="h-6 w-px bg-border mx-2" />}
                 {isOnUserDashboard ? (
                   <Button
                     variant="ghost"
@@ -351,7 +351,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className="text-primary hover:bg-primary/20 bg-white/90 backdrop-blur-sm border border-primary/50 shadow-lg hidden lg:flex items-center gap-2"
+                    className="text-primary hover:bg-primary/20 bg-background/90 backdrop-blur-sm border border-primary/50 shadow-lg hidden lg:flex items-center gap-2"
                   >
                     <Shield className="h-4 w-4" />
                     <span className="text-sm">{getCurrentDashboardView()}</span>
@@ -359,14 +359,14 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
-                  className="w-56 bg-white shadow-lg border border-gray-200 z-50" 
+                  className="w-56 bg-background shadow-lg border border-border z-50" 
                   align="end"
                 >
                   {dashboardViews.map((view) => (
                     <DropdownMenuItem 
                       key={view.id}
                       onClick={() => navigate(view.route)}
-                      className="cursor-pointer hover:bg-gray-50"
+                      className="cursor-pointer hover:bg-muted"
                     >
                       <view.icon className="mr-2 h-4 w-4" />
                       <span>{view.label}</span>
@@ -388,29 +388,29 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                     <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-80 bg-gradient-to-br from-brand-700 via-brand-800 to-slate-900 border-l border-white/20">
+                <SheetContent side="right" className="w-80 bg-gradient-to-br from-primary via-primary to-primary/90 border-l border-border">
                   <SheetHeader>
-                    <SheetTitle className="text-white text-left">Navigation</SheetTitle>
+                    <SheetTitle className="text-primary-foreground text-left">Navigation</SheetTitle>
                   </SheetHeader>
                   <div className="mt-6 space-y-2">
                     {/* Dashboard Views in Mobile Menu */}
                     {isAdmin && (
                       <>
-                        <div className="text-white/80 text-sm font-medium px-3 mb-2">Dashboard Views</div>
+                        <div className="text-primary-foreground/80 text-sm font-medium px-3 mb-2">Dashboard Views</div>
                         {dashboardViews.map((view) => (
                           <Button
                             key={view.id}
                             variant="ghost"
                             onClick={() => handleMobileNavClick('', view.route)}
-                            className={`w-full justify-start text-white hover:bg-white/20 h-12 ${
-                              location.pathname === view.route ? 'bg-white/20' : ''
+                            className={`w-full justify-start text-primary-foreground hover:bg-primary-foreground/20 h-12 ${
+                              location.pathname === view.route ? 'bg-primary-foreground/20' : ''
                             }`}
                           >
                             <view.icon className="h-5 w-5 mr-3" />
                             <span className="text-base">{view.label}</span>
                           </Button>
                         ))}
-                        <div className="h-px bg-white/20 my-3" />
+                        <div className="h-px bg-primary-foreground/20 my-3" />
                       </>
                     )}
                     
@@ -420,8 +420,8 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                         key={item.id}
                         variant="ghost"
                         onClick={() => handleMobileNavClick(item.id)}
-                        className={`w-full justify-start text-white hover:bg-white/20 h-12 ${
-                          activeTab === item.id ? 'bg-white/20' : ''
+                        className={`w-full justify-start text-primary-foreground hover:bg-primary-foreground/20 h-12 ${
+                          activeTab === item.id ? 'bg-primary-foreground/20' : ''
                         }`}
                       >
                         <item.icon className="h-5 w-5 mr-3" />
@@ -433,13 +433,13 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                     {isAdmin && (
                       <>
                         {(isOnUserDashboard || !isOnUserDashboard) && (
-                          <div className="h-px bg-white/20 my-3" />
+                          <div className="h-px bg-primary-foreground/20 my-3" />
                         )}
                         {isOnUserDashboard ? (
                           <Button
                             variant="ghost"
                             onClick={() => handleMobileNavClick('', '/dashboard')}
-                            className="w-full justify-start text-white hover:bg-white/20 bg-blue-500/30 h-12"
+                            className="w-full justify-start text-primary-foreground hover:bg-primary-foreground/20 bg-accent/30 h-12"
                           >
                             <UserCog className="h-5 w-5 mr-3" />
                             <span className="text-base">Admin Panel</span>
@@ -448,7 +448,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                           <Button
                             variant="ghost"
                             onClick={() => handleMobileNavClick('', '/dashboard')}
-                            className="w-full justify-start text-white hover:bg-white/20 bg-green-500/30 h-12"
+                            className="w-full justify-start text-primary-foreground hover:bg-primary-foreground/20 bg-secondary/30 h-12"
                           >
                             <User className="h-5 w-5 mr-3" />
                             <span className="text-base">My Dashboard</span>
@@ -461,8 +461,8 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                             key={item.id}
                             variant="ghost"
                             onClick={() => handleMobileNavClick('', item.route)}
-                            className={`w-full justify-start text-white hover:bg-white/20 h-12 ${
-                              location.pathname === item.route ? 'bg-white/20' : ''
+                            className={`w-full justify-start text-primary-foreground hover:bg-primary-foreground/20 h-12 ${
+                              location.pathname === item.route ? 'bg-primary-foreground/20' : ''
                             }`}
                           >
                             <item.icon className="h-5 w-5 mr-3" />
@@ -486,7 +486,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                       alt={displayName}
                       className="object-cover"
                     />
-                    <AvatarFallback className="bg-spelman-500 text-white">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
                       {getInitials(displayName)}
                     </AvatarFallback>
                   </Avatar>

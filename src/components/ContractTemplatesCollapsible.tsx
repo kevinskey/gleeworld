@@ -60,17 +60,17 @@ export const ContractTemplatesCollapsible = ({ onUseTemplate, onContractCreated 
         <CollapsibleContent>
           <CardContent className="pt-0">
             {loading ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 Loading templates...
               </div>
             ) : (
               <div className="space-y-4">
                 {templates.map((template) => (
-                  <div key={template.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div key={template.id} className="border rounded-lg p-4 hover:bg-muted transition-colors">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-semibold text-lg">{template.name}</h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           {template.contract_type} • Created {new Date(template.created_at).toLocaleDateString()}
                         </p>
                       </div>
@@ -86,7 +86,7 @@ export const ContractTemplatesCollapsible = ({ onUseTemplate, onContractCreated 
                 ))}
                 
                 {templates.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No templates available. Create a template first.
                   </div>
                 )}

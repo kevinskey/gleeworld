@@ -566,7 +566,7 @@ export const DocumentUpload = ({
                     </SelectContent>
                   </Select>
                   {templateContractType && (
-                    <p className="text-sm text-gray-500">Contract type set by template</p>
+                    <p className="text-sm text-muted-foreground">Contract type set by template</p>
                   )}
                 </div>
 
@@ -576,12 +576,12 @@ export const DocumentUpload = ({
                     <SelectTrigger>
                       <SelectValue placeholder={usersLoading ? "Loading users..." : "Select a user to send the contract to"} />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border shadow-lg z-50">
+                    <SelectContent className="bg-background border shadow-lg z-50">
                       {users.map((user) => (
                         <SelectItem key={user.id} value={user.id}>
                           <div className="flex flex-col">
                             <span className="font-medium">{user.full_name || user.email}</span>
-                            <span className="text-sm text-gray-500">{user.email}</span>
+                            <span className="text-sm text-muted-foreground">{user.email}</span>
                           </div>
                         </SelectItem>
                       ))}

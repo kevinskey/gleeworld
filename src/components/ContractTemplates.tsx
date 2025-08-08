@@ -57,8 +57,8 @@ export const ContractTemplates = ({ onUseTemplate, onContractCreated }: Contract
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Contract Templates</h2>
-          <p className="text-gray-600">Create and manage reusable contract templates with custom headers</p>
+          <h2 className="text-2xl font-bold text-foreground">Contract Templates</h2>
+          <p className="text-muted-foreground">Create and manage reusable contract templates with custom headers</p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
