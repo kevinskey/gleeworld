@@ -63,11 +63,11 @@ export const DayScheduleView = () => {
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h');
   const { toast } = useToast();
 
-  // Generate time slots for the day (8 AM to 7 PM in 15-minute intervals)
+  // Generate time slots for the day (6 AM to 10 PM in 15-minute intervals)
   const generateTimeSlots = (): string[] => {
     const slots: string[] = [];
-    const startHour = 8;
-    const endHour = 19;
+    const startHour = 6;
+    const endHour = 22;
     
     for (let hour = startHour; hour <= endHour; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
@@ -323,8 +323,8 @@ export const DayScheduleView = () => {
 
   const renderDayView = () => {
     return (
-      <div className="bg-white rounded-lg border">
-        <div className="divide-y">
+      <div className="bg-white rounded-lg border max-h-[70vh] overflow-y-auto">
+        <div className="divide-y divide-gray-100">
           {timeSlots.map((timeSlot, index) => {
             const appointment = getAppointmentForTimeSlot(timeSlot);
             const isStartOfAppointment = appointment && (index === 0 || 
@@ -336,23 +336,23 @@ export const DayScheduleView = () => {
             }
             
             return (
-              <div key={timeSlot} className="flex min-h-[60px] hover:bg-gray-50">
-                <div className="w-24 p-3 text-sm text-gray-600 font-medium border-r">
+              <div key={timeSlot} className="flex min-h-[40px] hover:bg-gray-50">
+                <div className="w-20 p-2 text-xs text-gray-600 font-medium border-r bg-gray-50/50">
                   {timeFormat === '24h' ? format(parse(timeSlot, 'h:mm a', new Date()), 'HH:mm') : timeSlot}
                 </div>
-                <div className="flex-1 p-3">
+                <div className="flex-1 p-2">
                   {appointment && isStartOfAppointment && (
-                    <div className={`p-3 rounded ${getStatusColor(appointment.status, appointment.type)}`}>
-                      <div className="font-medium text-gray-900 mb-1">
+                    <div className={`p-2 rounded-md ${getStatusColor(appointment.status, appointment.type)}`}>
+                      <div className="font-medium text-gray-900 mb-1 text-sm">
                         {appointment.title.toUpperCase()}
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-xs text-gray-600">
                         {timeFormat === '24h' 
                           ? `${format(parse(appointment.startTime, 'h:mm a', new Date()), 'HH:mm')} - ${format(parse(appointment.endTime, 'h:mm a', new Date()), 'HH:mm')}`
                           : `${appointment.startTime} - ${appointment.endTime}`
                         }
                       </div>
-                      <div className="text-sm text-gray-700 mt-1">
+                      <div className="text-xs text-gray-700 mt-1">
                         {appointment.clientName}
                       </div>
                     </div>
@@ -364,10 +364,10 @@ export const DayScheduleView = () => {
         </div>
         
         {filteredEvents.length === 0 && (
-          <div className="text-center py-12">
-            <Clock className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500 font-medium">No appointments scheduled</p>
-            <p className="text-sm text-gray-400">This day is completely available</p>
+          <div className="text-center py-8">
+            <Clock className="h-8 w-8 mx-auto text-gray-400 mb-3" />
+            <p className="text-gray-500 font-medium text-sm">No appointments scheduled</p>
+            <p className="text-xs text-gray-400">This day is completely available</p>
           </div>
         )}
       </div>
