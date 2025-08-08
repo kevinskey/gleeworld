@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { ModuleCard } from '@/components/shared/ModuleWrapper';
 import { ModuleRegistry } from '@/utils/moduleRegistry';
 import { ModuleProps } from '@/types/unified-modules';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ModularAdminDashboardProps {
   user: {
@@ -70,6 +72,9 @@ export const ModularAdminDashboard = ({ user }: ModularAdminDashboardProps) => {
         console.log('ModularAdminDashboard: Rendering category:', category.title, 'modules:', category.modules.length, 'id:', category.id);
         const CategoryIcon = category.icon;
         
+        // Calculate if we need scrolling (more than 8 modules for 2 rows x 4 cols)
+        const needsScrolling = category.modules.length > 8;
+        
         return (
           <div key={category.id} className="space-y-4">
             {/* Category Header */}
@@ -81,19 +86,38 @@ export const ModularAdminDashboard = ({ user }: ModularAdminDashboardProps) => {
               <p className="text-xs text-muted-foreground">{category.description}</p>
             </div>
             
-            {/* Modules Grid for this category */}
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {category.modules.map((module) => (
-                <ModuleCard
-                  key={module.id}
-                  title={module.title}
-                  description={module.description}
-                  icon={module.icon}
-                  iconColor={module.iconColor}
-                  isNew={module.isNew}
-                  onClick={() => setSelectedModule(module.id)}
-                />
-              ))}
+            {/* Spinnable Module Selector - Max 2 rows */}
+            <div className="relative">
+              <ScrollArea className="w-full">
+                <div className="flex gap-3 pb-4" style={{ 
+                  display: 'grid',
+                  gridTemplateRows: 'repeat(2, 1fr)',
+                  gridAutoFlow: 'column',
+                  gridAutoColumns: 'minmax(280px, 1fr)',
+                  maxHeight: '400px',
+                  overflowX: 'auto'
+                }}>
+                  {category.modules.map((module) => (
+                    <ModuleCard
+                      key={module.id}
+                      title={module.title}
+                      description={module.description}
+                      icon={module.icon}
+                      iconColor={module.iconColor}
+                      isNew={module.isNew}
+                      onClick={() => setSelectedModule(module.id)}
+                      className="w-[280px] h-[180px] flex-shrink-0"
+                    />
+                  ))}
+                </div>
+              </ScrollArea>
+              
+              {/* Scroll indicators */}
+              {needsScrolling && (
+                <div className="absolute right-2 top-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded-md border">
+                  Scroll →
+                </div>
+              )}
             </div>
           </div>
         );
