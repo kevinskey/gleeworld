@@ -5,10 +5,10 @@ import { ArrowLeft } from "lucide-react";
 import { useUserById } from "@/hooks/useUserById";
 import { DashboardTemplate } from "./DashboardTemplate";
 import { MemberDashboard } from "./dashboards/MemberDashboard";
-
 import { AlumnaeDashboard } from "./dashboards/AlumnaeDashboard";
 import { AdminDashboard } from "./dashboards/AdminDashboard";
 import { SuperAdminDashboard } from "./dashboards/SuperAdminDashboard";
+import { AuditionerDashboard } from "./dashboards/AuditionerDashboard";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
@@ -78,6 +78,9 @@ export const MemberViewDashboard = () => {
       case 'alumnae':
         console.log('MemberViewDashboard: Loading AlumnaeDashboard');
         return <AlumnaeDashboard user={user} />;
+      case 'auditioner':
+        console.log('MemberViewDashboard: Loading AuditionerDashboard');
+        return <AuditionerDashboard user={user} />;
       case 'user':
         console.log('MemberViewDashboard: Loading MemberDashboard for user');
         return <MemberDashboard user={user} />;
@@ -95,6 +98,8 @@ export const MemberViewDashboard = () => {
         return 'Admin Dashboard';
       case 'alumnae':
         return 'Alumnae Dashboard';
+      case 'auditioner':
+        return 'Auditioner Dashboard';
       default:
         return 'Member Dashboard';
     }
