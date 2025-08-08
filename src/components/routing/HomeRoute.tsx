@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRoleBasedRedirect } from '@/hooks/useRoleBasedRedirect';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
+import { RouteDebugger } from '@/components/debug/RouteDebugger';
 
 export const HomeRoute = () => {
   const { user, loading: authLoading } = useAuth();
@@ -37,5 +38,11 @@ export const HomeRoute = () => {
     authLoading,
     shouldShowLanding: true
   });
-  return <GleeWorldLanding />;
+  
+  return (
+    <>
+      <RouteDebugger />
+      <GleeWorldLanding />
+    </>
+  );
 };
