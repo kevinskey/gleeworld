@@ -331,24 +331,8 @@ export const ProviderDashboard = () => {
 
       {/* Charts and Recent Appointments */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Weekly Trend Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Weekly Performance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg">
-              <div className="text-center text-gray-500">
-                <TrendingUp className="h-8 w-8 mx-auto mb-2" />
-                <p>Weekly Performance Chart</p>
-                <p className="text-sm">Chart visualization coming soon</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Recent Appointments */}
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Last booked appointments</CardTitle>
@@ -383,6 +367,22 @@ export const ProviderDashboard = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Weekly Trend Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Weekly Performance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg">
+              <div className="text-center text-gray-500">
+                <TrendingUp className="h-8 w-8 mx-auto mb-2" />
+                <p>Weekly Performance Chart</p>
+                <p className="text-sm">Chart visualization coming soon</p>
+              </div>
             </div>
           </CardContent>
         </Card>
