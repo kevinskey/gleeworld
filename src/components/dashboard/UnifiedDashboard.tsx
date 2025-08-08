@@ -29,25 +29,25 @@ export const UnifiedDashboard = () => {
         showMessages={showMessages}
       />
       
-      <div className="flex flex-col h-[calc(100vh-72px)]">
+      <div className="flex flex-col h-[calc(100vh-72px)] p-6 gap-6">
         {/* Top Two-Column Layout - Community Hub & Email */}
-        <div className="grid grid-cols-2 gap-4 p-4 border-b border-border bg-background/50">
+        <div className="grid grid-cols-2 gap-6">
           {/* Community Hub Column */}
-          <div className="h-80 border border-border rounded-lg bg-background/50">
+          <div className="h-96 border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm">
             <CommunityHubModule />
           </div>
           
           {/* Email Column */}
-          <div className="h-80 border border-border rounded-lg bg-background/50">
+          <div className="h-96 border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm">
             <EmailModule />
           </div>
         </div>
         
         {/* Bottom Section - Module Selector & Display */}
-        <div className="flex-1 p-4">
-          <div className="h-full bg-background/50 border border-border rounded-lg">
+        <div className="flex-1 min-h-0">
+          <div className="h-full bg-background/50 border border-border rounded-xl shadow-sm overflow-hidden">
             {/* Module Selector at top of card */}
-            <div className="border-b border-border bg-background/30">
+            <div className="border-b border-border bg-background/30 p-4">
               <ModuleSelector 
                 selectedModule={selectedModule}
                 onSelectModule={setSelectedModule}
@@ -55,7 +55,7 @@ export const UnifiedDashboard = () => {
             </div>
             
             {/* Selected Module Display */}
-            <div className="flex-1 p-4">
+            <div className="h-[calc(100%-80px)] p-6">
               <ModuleDisplay selectedModule={selectedModule} />
             </div>
           </div>
