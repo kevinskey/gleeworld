@@ -49,7 +49,11 @@ const Auth = () => {
   }
 
   if (user) {
-    return null; // Will redirect via useEffect
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Redirecting..." />
+      </div>
+    );
   }
 
   return (
