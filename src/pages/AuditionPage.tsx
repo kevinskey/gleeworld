@@ -16,6 +16,7 @@ import { MusicalBackgroundPage } from "@/components/audition/pages/MusicalBackgr
 import { MusicSkillsPage } from "@/components/audition/pages/MusicSkillsPage";
 import { PersonalInfoPage } from "@/components/audition/pages/PersonalInfoPage";
 import { SchedulingAndSelfiePage } from "@/components/audition/pages/SchedulingAndSelfiePage";
+import { PublicLayout } from "@/components/layout/PublicLayout";
 
 function AuditionFormContent() {
   const { user } = useAuth();
@@ -369,8 +370,10 @@ function AuditionFormContent() {
 
 export default function AuditionPage() {
   return (
-    <AuditionFormProvider>
-      <AuditionFormContent />
-    </AuditionFormProvider>
+    <PublicLayout>
+      <AuditionFormProvider>
+        <AuditionFormContent />
+      </AuditionFormProvider>
+    </PublicLayout>
   );
 }
