@@ -2,17 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Calendar,
   ChevronLeft, 
   ChevronRight,
   Clock,
   Plus,
-  User
+  User,
+  Filter,
+  ChevronDown
 } from 'lucide-react';
 import { format, addDays, subDays, isSameDay, parseISO, parse } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DayEvent {
   id: string;
@@ -36,43 +40,41 @@ interface TimeSlot {
 }
 
 export const DayScheduleView = () => {
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dayEvents, setDayEvents] = useState<DayEvent[]>([]);
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('day');
   const { toast } = useToast();
 
-  // Generate time slots for the day (8 AM to 8 PM in 15-minute intervals)
-  const generateTimeSlots = (events: DayEvent[]): TimeSlot[] => {
-    const slots: TimeSlot[] = [];
+  // Generate time slots for the day (8 AM to 7 PM in 15-minute intervals)
+  const generateTimeSlots = (): string[] => {
+    const slots: string[] = [];
     const startHour = 8;
-    const endHour = 20;
+    const endHour = 19;
     
     for (let hour = startHour; hour <= endHour; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        const displayTime = format(new Date().setHours(hour, minute), 'h:mm a');
-        
-        // Find events that overlap with this time slot
-        const slotEvents = events.filter(event => {
-          const eventStart = parse(event.startTime, 'h:mm a', new Date());
-          const eventEnd = parse(event.endTime, 'h:mm a', new Date());
-          const slotTime = new Date().setHours(hour, minute);
-          
-          return slotTime >= eventStart.getTime() && slotTime < eventEnd.getTime();
-        });
-        
-        slots.push({
-          time: displayTime,
-          hour,
-          minute,
-          events: slotEvents,
-          available: slotEvents.length === 0
-        });
+        const time = new Date();
+        time.setHours(hour, minute, 0, 0);
+        slots.push(format(time, 'h:mm a'));
       }
     }
     
     return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
+
+  // Check if an appointment overlaps with a time slot
+  const getAppointmentForTimeSlot = (timeSlot: string): DayEvent | null => {
+    return dayEvents.find(event => {
+      const slotTime = parse(timeSlot, 'h:mm a', new Date());
+      const eventStart = parse(event.startTime, 'h:mm a', new Date());
+      const eventEnd = parse(event.endTime, 'h:mm a', new Date());
+      
+      return slotTime >= eventStart && slotTime < eventEnd;
+    }) || null;
   };
 
   const fetchDaySchedule = async () => {
@@ -113,7 +115,7 @@ export const DayScheduleView = () => {
 
         return {
           id: audition.id,
-          title: 'Audition',
+          title: 'Glee Club Audition',
           clientName: `${audition.first_name} ${audition.last_name}`,
           startTime,
           endTime,
@@ -150,7 +152,6 @@ export const DayScheduleView = () => {
 
       const allEvents = [...auditionEvents, ...appointmentEvents];
       setDayEvents(allEvents);
-      setTimeSlots(generateTimeSlots(allEvents));
 
     } catch (error) {
       console.error('Error fetching day schedule:', error);
@@ -175,137 +176,159 @@ export const DayScheduleView = () => {
   };
 
   const getStatusColor = (status: string, type: 'audition' | 'appointment') => {
+    // Return background colors for appointment blocks
     if (type === 'audition') {
       switch (status) {
-        case 'confirmed': return 'bg-green-100 text-green-800 border-green-200';
-        case 'pending': return 'bg-orange-100 text-orange-800 border-orange-200';
-        case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-        default: return 'bg-purple-100 text-purple-800 border-purple-200';
+        case 'confirmed': return 'bg-purple-50 border-l-4 border-purple-500';
+        case 'pending': return 'bg-orange-50 border-l-4 border-orange-500';
+        case 'cancelled': return 'bg-red-50 border-l-4 border-red-500';
+        default: return 'bg-purple-50 border-l-4 border-purple-400';
       }
     } else {
       switch (status) {
-        case 'confirmed': return 'bg-green-100 text-green-800 border-green-200';
-        case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-        case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-        default: return 'bg-blue-100 text-blue-800 border-blue-200';
+        case 'confirmed': return 'bg-blue-50 border-l-4 border-blue-500';
+        case 'pending': return 'bg-yellow-50 border-l-4 border-yellow-500';
+        case 'cancelled': return 'bg-red-50 border-l-4 border-red-500';
+        default: return 'bg-blue-50 border-l-4 border-blue-400';
       }
     }
   };
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="text-center py-8">Loading day schedule...</div>
+      <div className="bg-white min-h-screen">
+        <div className="text-center py-8">Loading calendar...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with Date Navigation */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Day Schedule
-            </CardTitle>
-            
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigateDay('prev')}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              
-              <div className="text-lg font-medium min-w-[200px] text-center">
-                {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+    <div className="bg-white min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 bg-white border-b">
+        <div className="flex items-center gap-4">
+          {/* User Profile */}
+          <div className="flex items-center gap-3 bg-orange-100 p-3 rounded-lg">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-orange-200 text-orange-800">
+                {user?.email?.[0]?.toUpperCase() || 'A'}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="font-medium text-sm text-gray-900">
+                {user?.email?.split('@')[0] || 'Provider'}
               </div>
-              
-              <Button variant="outline" size="sm" onClick={() => navigateDay('next')}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setSelectedDate(new Date())}
-              >
-                Today
-              </Button>
+              <div className="text-xs text-gray-600">Glee Club</div>
             </div>
           </div>
-        </CardHeader>
-      </Card>
 
-      {/* Day Schedule Grid */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">
-              Schedule for {format(selectedDate, 'MMM d')}
-            </CardTitle>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-purple-100 rounded border border-purple-200"></div>
-                <span>Auditions</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-blue-100 rounded border border-blue-200"></div>
-                <span>Appointments</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-gray-100 rounded border border-gray-200"></div>
-                <span>Available</span>
-              </div>
-            </div>
+          <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
+        </div>
+
+        <Button className="bg-red-600 hover:bg-red-700 text-white">
+          <Plus className="h-4 w-4 mr-2" />
+          New Appointment
+        </Button>
+      </div>
+
+      {/* Navigation Bar */}
+      <div className="flex items-center justify-between p-6 bg-gray-50 border-b">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setSelectedDate(new Date())}
+          >
+            Today
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigateDay('prev')}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <h2 className="text-lg font-semibold min-w-[200px] text-center">
+              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+            </h2>
+            
+            <Button variant="ghost" size="sm" onClick={() => navigateDay('next')}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
-        </CardHeader>
-        
-        <CardContent>
-          <div className="grid grid-cols-1 gap-0 border rounded-lg overflow-hidden">
-            {/* Time Grid */}
-            {timeSlots.filter((_, index) => index % 4 === 0).map((slot, hourIndex) => {
-              const hourSlots = timeSlots.slice(hourIndex * 4, (hourIndex * 4) + 4);
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm">
+            Options <ChevronDown className="h-4 w-4 ml-2" />
+          </Button>
+          
+          <div className="flex border rounded-md">
+            <Button 
+              variant={viewMode === 'month' ? 'default' : 'ghost'} 
+              size="sm"
+              className="rounded-r-none"
+              onClick={() => setViewMode('month')}
+            >
+              Month
+            </Button>
+            <Button 
+              variant={viewMode === 'week' ? 'default' : 'ghost'} 
+              size="sm"
+              className="rounded-none"
+              onClick={() => setViewMode('week')}
+            >
+              Week
+            </Button>
+            <Button 
+              variant={viewMode === 'day' ? 'default' : 'ghost'} 
+              size="sm"
+              className="rounded-l-none"
+              onClick={() => setViewMode('day')}
+            >
+              Day
+            </Button>
+          </div>
+          
+          <Button variant="outline" size="sm">
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </Button>
+        </div>
+      </div>
+
+      {/* Calendar Content */}
+      <div className="p-6">
+        <div className="bg-white rounded-lg border">
+          {/* Time slots */}
+          <div className="divide-y">
+            {timeSlots.map((timeSlot, index) => {
+              const appointment = getAppointmentForTimeSlot(timeSlot);
+              const isStartOfAppointment = appointment && (index === 0 || 
+                getAppointmentForTimeSlot(timeSlots[index - 1]) !== appointment);
               
               return (
-                <div key={slot.time} className="grid grid-cols-5 border-b last:border-b-0">
-                  {/* Time Column */}
-                  <div className="bg-gray-50 p-3 border-r font-medium text-sm text-gray-600">
-                    {slot.time}
+                <div key={timeSlot} className="flex min-h-[60px] hover:bg-gray-50">
+                  {/* Time column */}
+                  <div className="w-24 p-3 text-sm text-gray-600 font-medium border-r">
+                    {timeSlot}
                   </div>
                   
-                  {/* 15-minute slots for the hour */}
-                  {hourSlots.map((quarterSlot, quarterIndex) => (
-                    <div 
-                      key={`${hourIndex}-${quarterIndex}`}
-                      className={`min-h-[60px] p-2 border-r last:border-r-0 ${
-                        quarterSlot.available ? 'bg-white hover:bg-gray-50' : ''
-                      }`}
-                    >
-                      {quarterSlot.events.map((event) => (
-                        <div
-                          key={event.id}
-                          className={`p-2 rounded text-xs mb-1 ${getStatusColor(event.status, event.type)}`}
-                        >
-                          <div className="font-medium flex items-center gap-1">
-                            {event.type === 'audition' ? '🎵' : '📅'}
-                            {event.title}
-                          </div>
-                          <div className="text-xs opacity-75">
-                            {event.clientName}
-                          </div>
-                          <div className="text-xs opacity-75">
-                            {event.startTime} - {event.endTime}
-                          </div>
+                  {/* Appointment column */}
+                  <div className="flex-1 p-3">
+                    {appointment && isStartOfAppointment && (
+                      <div className={`p-3 rounded ${getStatusColor(appointment.status, appointment.type)}`}>
+                        <div className="font-medium text-gray-900 mb-1">
+                          {appointment.title.toUpperCase()}
                         </div>
-                      ))}
-                      
-                      {quarterSlot.available && quarterIndex === 0 && (
-                        <div className="text-xs text-gray-400 text-center py-2">
-                          Available
+                        <div className="text-sm text-gray-600">
+                          {appointment.startTime} - {appointment.endTime}
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        <div className="text-sm text-gray-700 mt-1">
+                          {appointment.clientName}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -318,39 +341,8 @@ export const DayScheduleView = () => {
               <p className="text-sm text-gray-400">This day is completely available</p>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Daily Summary */}
-      {dayEvents.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Daily Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {dayEvents.filter(e => e.type === 'audition').length}
-                </div>
-                <div className="text-sm text-gray-600">Auditions</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {dayEvents.filter(e => e.type === 'appointment').length}
-                </div>
-                <div className="text-sm text-gray-600">Appointments</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {timeSlots.filter(s => s.available).length}
-                </div>
-                <div className="text-sm text-gray-600">Available Slots</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        </div>
+      </div>
     </div>
   );
 };
