@@ -82,27 +82,37 @@ export const AppointmentsTableView = () => {
       if (appointmentsError) throw appointmentsError;
 
       // Transform auditions to table format
-      const auditionRows: AppointmentRow[] = (auditions || []).map(audition => ({
-        id: audition.id,
-        time: audition.audition_time || '12:00 PM',
-        service: 'GLEE CLUB AUDITION',
-        customer: `${audition.first_name} ${audition.last_name}`,
-        duration: '30min',
-        status: (audition.status as 'approved' | 'pending' | 'cancelled' | 'confirmed') || 'pending',
-        employee: 'Glee Club Director',
-        note: audition.additional_info || '',
-        serviceColor: 'border-l-purple-500 bg-purple-50'
-      }));
+      const auditionRows: AppointmentRow[] = (auditions || []).map(audition => {
+        // Calculate duration from audition time if available, default to 30 min
+        const duration = 30; // Standard audition duration
+        
+        return {
+          id: audition.id,
+          time: audition.audition_time || '12:00 PM',
+          service: 'GLEE CLUB AUDITION',
+          customer: `${audition.first_name} ${audition.last_name}`,
+          duration: `${duration}min`,
+          status: (audition.status as 'approved' | 'pending' | 'cancelled' | 'confirmed') || 'pending',
+          employee: 'Glee Club Director',
+          note: audition.additional_info || '',
+          serviceColor: 'border-l-purple-500 bg-purple-50'
+        };
+      });
 
       // Transform appointments to table format
       const appointmentRows: AppointmentRow[] = (appointments || []).map(apt => {
         const aptDate = parseISO(apt.appointment_date);
+        const startTime = format(aptDate, 'h:mm a');
+        
+        // Calculate actual duration from stored duration_minutes or default to 60
+        const durationMinutes = apt.duration_minutes || 60;
+        
         return {
           id: apt.id,
-          time: format(aptDate, 'h:mm a'),
+          time: startTime,
           service: apt.title || 'APPOINTMENT',
           customer: apt.client_name,
-          duration: `${apt.duration_minutes || 60}min`,
+          duration: `${durationMinutes}min`,
           status: (apt.status as 'approved' | 'pending' | 'cancelled' | 'confirmed') || 'pending',
           employee: 'Provider',
           note: apt.notes || '',
