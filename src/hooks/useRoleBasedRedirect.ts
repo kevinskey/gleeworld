@@ -131,9 +131,9 @@ export const useRoleBasedRedirect = () => {
         return;
       }
       
-      // PRIORITY 5: Default fallback for other roles
-      console.log('👤 useRoleBasedRedirect: Default user redirect to /dashboard');
-      navigate('/dashboard', { replace: true });
+      // PRIORITY 5: Default fallback - NO AUTOMATIC REDIRECT
+      console.log('👤 useRoleBasedRedirect: No matching role, staying on current page');
+      return;
     };
 
     handleRedirect();
