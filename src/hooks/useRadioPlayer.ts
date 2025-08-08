@@ -75,19 +75,20 @@ export const useRadioPlayer = () => {
       setState(prev => ({ ...prev, isLoading: false }));
     };
 
-    const handleError = (e: ErrorEvent) => {
+    const handleError = (e: any) => {
       console.error('Radio stream error:', e);
+      console.error('Audio error details:', {
+        error: e.target?.error,
+        networkState: e.target?.networkState,
+        readyState: e.target?.readyState,
+        src: e.target?.src
+      });
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 
         isPlaying: false, 
         isLive: false 
       }));
-      toast({
-        title: "Radio Stream Error",
-        description: "Unable to connect to Glee World Radio",
-        variant: "destructive",
-      });
     };
 
     const handlePlay = () => {
@@ -214,26 +215,71 @@ export const useRadioPlayer = () => {
     console.log('Setting loading state and starting stream attempt...');
     setState(prev => ({ ...prev, isLoading: true }));
 
+    // Try direct stream first, then proxies
+    const streamUrls = [
+      azuraCastService.getPublicStreamUrl(),
+      ...RADIO_STREAM_URLS
+    ];
+
     // Try each stream URL until one works
-    for (const streamUrl of RADIO_STREAM_URLS) {
+    for (let i = 0; i < streamUrls.length; i++) {
+      const streamUrl = streamUrls[i];
       try {
-        console.log(`Attempting to play stream: ${streamUrl}`);
-        console.log('Audio ref state:', {
-          src: audioRef.current.src,
-          readyState: audioRef.current.readyState,
-          networkState: audioRef.current.networkState
-        });
+        console.log(`Attempting to play stream ${i + 1}/${streamUrls.length}: ${streamUrl}`);
         
         // Clear any previous source first
+        audioRef.current.pause();
         audioRef.current.src = '';
         audioRef.current.load();
+        
+        // Wait a bit for cleanup
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         // Set new source and load
         audioRef.current.src = streamUrl;
         audioRef.current.volume = state.volume;
-        audioRef.current.load(); // Force load the new source
+        audioRef.current.load();
         
-        console.log('Calling audio.play()...');
+        console.log('Waiting for canplay event...');
+        
+        // Wait for the stream to be ready
+        await new Promise((resolve, reject) => {
+          const audio = audioRef.current!;
+          let resolved = false;
+          
+          const handleCanPlay = () => {
+            if (!resolved) {
+              resolved = true;
+              audio.removeEventListener('canplay', handleCanPlay);
+              audio.removeEventListener('error', handleError);
+              resolve(void 0);
+            }
+          };
+          
+          const handleError = (e: any) => {
+            if (!resolved) {
+              resolved = true;
+              audio.removeEventListener('canplay', handleCanPlay);
+              audio.removeEventListener('error', handleError);
+              reject(e);
+            }
+          };
+          
+          audio.addEventListener('canplay', handleCanPlay);
+          audio.addEventListener('error', handleError);
+          
+          // Timeout after 10 seconds
+          setTimeout(() => {
+            if (!resolved) {
+              resolved = true;
+              audio.removeEventListener('canplay', handleCanPlay);
+              audio.removeEventListener('error', handleError);
+              reject(new Error('Stream load timeout'));
+            }
+          }, 10000);
+        });
+        
+        console.log('Stream ready, calling play()...');
         await audioRef.current.play();
         
         console.log('Successfully started playing stream:', streamUrl);
@@ -246,13 +292,13 @@ export const useRadioPlayer = () => {
       } catch (error) {
         console.error(`Failed to play stream ${streamUrl}:`, error);
         console.error('Error details:', {
-          name: error.name,
-          message: error.message,
-          code: error.code
+          name: error instanceof Error ? error.name : 'Unknown',
+          message: error instanceof Error ? error.message : String(error),
+          code: (error as any)?.code
         });
         
         // If this was the last URL, show error
-        if (streamUrl === RADIO_STREAM_URLS[RADIO_STREAM_URLS.length - 1]) {
+        if (i === streamUrls.length - 1) {
           setState(prev => ({ 
             ...prev, 
             isLoading: false, 
