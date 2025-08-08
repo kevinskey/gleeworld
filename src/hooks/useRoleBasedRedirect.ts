@@ -105,9 +105,9 @@ export const useRoleBasedRedirect = () => {
         }
       }
       
-      // Only redirect automatically from auth page, not from public pages
-      if (!isPostLogin) {
-        console.log('🏠 useRoleBasedRedirect: User on public page, staying put');
+      // Only redirect automatically from auth page or root page, not from other public pages
+      if (!isPostLogin && location.pathname !== '/') {
+        console.log('🏠 useRoleBasedRedirect: User on specific public page, staying put');
         return;
       }
 
