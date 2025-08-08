@@ -233,7 +233,7 @@ export const AppointmentCalendarView = () => {
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {format(parseISO(event.appointment_date), 'HH:mm')}
+                    {format(parseISO(event.appointment_date), 'h:mm a')}
                   </div>
                 </div>
               ))}
@@ -270,9 +270,9 @@ export const AppointmentCalendarView = () => {
         <div className="w-20 border-r">
           <div className="h-12 border-b"></div>
           {hours.map(hour => (
-            <div key={hour} className="h-16 border-b p-2 text-sm text-muted-foreground">
-              {format(new Date().setHours(hour, 0), 'HH:mm')}
-            </div>
+                <div key={hour} className="h-16 border-b p-2 text-sm text-muted-foreground">
+                  {format(new Date().setHours(hour, 0), 'h:mm a')}
+                </div>
           ))}
         </div>
         
