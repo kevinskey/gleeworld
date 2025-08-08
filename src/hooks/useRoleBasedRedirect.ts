@@ -98,23 +98,23 @@ export const useRoleBasedRedirect = () => {
         return;
       }
       
-    // PRIORITY 3: Members (all members including exec board get same access with modules at bottom)
-    if (userProfile.role === 'member' || userProfile.is_exec_board) {
-      console.log('👤 useRoleBasedRedirect: Member/Executive redirect to /dashboard');
+      // PRIORITY 3: Fans  
+      if (userProfile.role === 'fan') {
+        console.log('🎵 useRoleBasedRedirect: Fan redirect to /fan');
+        navigate('/fan', { replace: true });
+        return;
+      }
+      
+      // PRIORITY 4: Members (all members including exec board get modular dashboard)
+      if (userProfile.role === 'member' || userProfile.is_exec_board) {
+        console.log('👤 useRoleBasedRedirect: Member/Executive redirect to /dashboard');
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+      
+      // PRIORITY 5: Default fallback for other roles
+      console.log('👤 useRoleBasedRedirect: Default user redirect to /dashboard');
       navigate('/dashboard', { replace: true });
-      return;
-    }
-    
-    // PRIORITY 4: Fans
-    if (userProfile.role === 'fan') {
-      console.log('🎵 useRoleBasedRedirect: Fan redirect to /fan');
-      navigate('/fan', { replace: true });
-      return;
-    }
-    
-    // PRIORITY 5: Default fallback for other roles
-    console.log('👤 useRoleBasedRedirect: Default user redirect to /dashboard');
-    navigate('/dashboard', { replace: true });
     };
 
     handleRedirect();
