@@ -114,6 +114,7 @@ import BookingConfirmation from "./pages/booking/BookingConfirmation";
 import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
 import ModuleAccess from "./pages/admin/ModuleAccess";
+import Appointments from "./pages/Appointments";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -692,14 +693,22 @@ const App = () => {
                                </PublicRoute>
                              } 
                             />
-                             <Route 
-                               path="/tour-planner" 
-                               element={
-                                 <ProtectedRoute>
-                                   <TourPlanner />
-                                 </ProtectedRoute>
-                               } 
-                             />
+                              <Route 
+                                path="/tour-planner" 
+                                element={
+                                  <ProtectedRoute>
+                                    <TourPlanner />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/appointments" 
+                                element={
+                                  <ProtectedRoute>
+                                    <Appointments />
+                                  </ProtectedRoute>
+                                } 
+                              />
                               <Route 
                                 path="/wardrobe" 
                                 element={
