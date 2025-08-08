@@ -5416,6 +5416,35 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_message_reads: {
+        Row: {
+          id: string
+          message_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_message_reads_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "gw_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_message_templates: {
         Row: {
           category: string
@@ -5452,6 +5481,48 @@ export type Database = {
           subject?: string
           updated_at?: string
           variables?: string[]
+        }
+        Relationships: []
+      }
+      gw_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          message_type: string
+          recipient_ids: string[] | null
+          recipient_type: string
+          sender_id: string
+          sent_at: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          message_type: string
+          recipient_ids?: string[] | null
+          recipient_type: string
+          sender_id: string
+          sent_at?: string
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          recipient_ids?: string[] | null
+          recipient_type?: string
+          sender_id?: string
+          sent_at?: string
+          status?: string
+          subject?: string
+          updated_at?: string
         }
         Relationships: []
       }

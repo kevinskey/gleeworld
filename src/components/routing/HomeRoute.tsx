@@ -9,19 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 import { Plus, Mail, Music, Calendar, Shirt, DollarSign, Users, Send, X } from 'lucide-react';
 import { ModuleDisplay } from '@/components/dashboard/ModuleDisplay';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
 import { UserHero } from '@/components/dashboard/UserHero';
 import { supabase } from '@/integrations/supabase/client';
 
-const mockMessages = [
-  { id: 1, color: 'bg-red-500', text: 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum' },
-  { id: 2, color: 'bg-blue-500', text: 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum' },
-  { id: 3, color: 'bg-pink-500', text: 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum' },
-  { id: 4, color: 'bg-green-500', text: 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum' },
-  { id: 5, color: 'bg-yellow-500', text: 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum' },
-];
+const mockMessages = []; // Removed mock data - will use real database messages
 
 const moduleOptions = [
   { id: 'email', name: 'EMAIL', icon: Mail },
@@ -35,12 +30,19 @@ const moduleOptions = [
 export const HomeRoute = () => {
   const { user, loading: authLoading } = useAuth();
   const { userProfile, loading: profileLoading } = useUserProfile(user);
+  const { toast } = useToast();
   const [selectedModule, setSelectedModule] = useState<string>('email');
   const [showMessageCompose, setShowMessageCompose] = useState(false);
   const [selectedRecipientType, setSelectedRecipientType] = useState<string>('');
   const [selectedIndividual, setSelectedIndividual] = useState<string>('');
+  const [messageType, setMessageType] = useState<string>('');
+  const [subject, setSubject] = useState<string>('');
+  const [messageContent, setMessageContent] = useState<string>('');
   const [members, setMembers] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [sending, setSending] = useState(false);
 
   // Fetch real members from database
   useEffect(() => {
@@ -72,6 +74,127 @@ export const HomeRoute = () => {
       fetchMembers();
     }
   }, [user, showMessageCompose, selectedRecipientType]);
+
+  // Fetch messages from database
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!user) return;
+      
+      setLoadingMessages(true);
+      try {
+        const { data, error } = await supabase
+          .from('gw_messages')
+          .select(`
+            *,
+            sender:gw_profiles!sender_id (full_name)
+          `)
+          .order('sent_at', { ascending: false })
+          .limit(10);
+
+        if (error) {
+          console.error('Error fetching messages:', error);
+          return;
+        }
+
+        setMessages(data || []);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      } finally {
+        setLoadingMessages(false);
+      }
+    };
+
+    if (user) {
+      fetchMessages();
+    }
+  }, [user]);
+
+  // Handle sending message
+  const handleSendMessage = async () => {
+    if (!user || !selectedRecipientType || !subject.trim() || !messageContent.trim()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedRecipientType === 'individual' && !selectedIndividual) {
+      toast({
+        title: "Error", 
+        description: "Please select a member to send the message to",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSending(true);
+    try {
+      const messageData = {
+        sender_id: user.id,
+        recipient_type: selectedRecipientType,
+        recipient_ids: selectedRecipientType === 'individual' ? [selectedIndividual] : null,
+        message_type: messageType || 'internal',
+        subject: subject,
+        content: messageContent,
+        status: 'sent'
+      };
+
+      const { error } = await supabase
+        .from('gw_messages')
+        .insert(messageData);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Message sent successfully!",
+      });
+
+      // Clear form and close composer
+      setSubject('');
+      setMessageContent('');
+      setSelectedRecipientType('');
+      setSelectedIndividual('');
+      setMessageType('');
+      setShowMessageCompose(false);
+
+      // Refresh messages
+      const { data } = await supabase
+        .from('gw_messages')
+        .select(`
+          *,
+          sender:gw_profiles!sender_id (full_name)
+        `)
+        .order('sent_at', { ascending: false })
+        .limit(10);
+      
+      setMessages(data || []);
+
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send message",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Clear form when compose dialog closes
+  const handleCloseCompose = () => {
+    setShowMessageCompose(false);
+    setSelectedRecipientType('');
+    setSelectedIndividual('');
+    setMessageType('');
+    setSubject('');
+    setMessageContent('');
+  };
 
   // Show loading while auth is being determined for logged in users
   if (authLoading || (user && profileLoading)) {
@@ -182,11 +305,11 @@ export const HomeRoute = () => {
                   
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Message Type:</label>
-                    <Select>
+                    <Select value={messageType} onValueChange={setMessageType}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select message type..." />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-50 bg-background border shadow-lg">
                         <SelectItem value="sms">SMS Text Message</SelectItem>
                         <SelectItem value="internal">Internal Message</SelectItem>
                         <SelectItem value="email">Email</SelectItem>
@@ -197,7 +320,11 @@ export const HomeRoute = () => {
                   
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Subject:</label>
-                    <Input placeholder="Enter subject..." />
+                    <Input 
+                      placeholder="Enter subject..." 
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                    />
                   </div>
                   
                   <div className="space-y-2">
@@ -205,34 +332,64 @@ export const HomeRoute = () => {
                     <Textarea 
                       placeholder="Type your message here..." 
                       className="min-h-[100px]"
+                      value={messageContent}
+                      onChange={(e) => setMessageContent(e.target.value)}
                     />
                   </div>
                   
                   <div className="flex gap-2">
-                    <Button className="flex-1" size="sm">
+                    <Button 
+                      className="flex-1" 
+                      size="sm" 
+                      onClick={handleSendMessage}
+                      disabled={sending}
+                    >
                       <Send className="w-4 h-4 mr-2" />
-                      Send Message
+                      {sending ? 'Sending...' : 'Send Message'}
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => {
-                      setShowMessageCompose(false);
-                      setSelectedRecipientType('');
-                      setSelectedIndividual('');
-                    }}>
+                    <Button variant="outline" size="sm" onClick={handleCloseCompose}>
                       Cancel
                     </Button>
                   </div>
                 </div>
               ) : (
                 <>
-                  {mockMessages.map((message) => (
-                    <div key={message.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded">
-                      <div className={`w-4 h-4 ${message.color} rounded`}></div>
-                      <span className="text-sm">{message.text}</span>
+                  {loadingMessages ? (
+                    <div className="text-center py-4">
+                      <span className="text-sm text-muted-foreground">Loading messages...</span>
                     </div>
-                  ))}
-                  <div className="pt-4 border-t">
-                    <h3 className="text-lg font-bold italic">Old Messages</h3>
-                  </div>
+                  ) : messages.length > 0 ? (
+                    <>
+                      {messages.map((message) => (
+                        <div key={message.id} className="p-3 bg-muted/50 rounded border-l-4 border-l-primary">
+                          <div className="flex items-start justify-between mb-2">
+                            <span className="font-medium text-sm">{message.sender?.full_name || 'Unknown Sender'}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(message.sent_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <h4 className="font-semibold text-sm mb-1">{message.subject}</h4>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{message.content}</p>
+                          <div className="flex gap-2 mt-2">
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                              {message.message_type}
+                            </span>
+                            <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
+                              {message.recipient_type.replace('-', ' ')}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="pt-4 border-t">
+                        <h3 className="text-lg font-bold italic">Recent Messages</h3>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">No messages yet.</p>
+                      <p className="text-sm text-muted-foreground">Click the + button to send your first message!</p>
+                    </div>
+                  )}
                 </>
               )}
             </CardContent>
