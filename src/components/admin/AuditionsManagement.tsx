@@ -740,87 +740,6 @@ export const AuditionsManagement = () => {
         </TabsContent>
 
         <TabsContent value="sessions" className="space-y-6 mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create New Audition Session</CardTitle>
-              <CardDescription>Set up a new audition period for applicants</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Session Name</Label>
-                  <Input
-                    id="name"
-                    value={newSession.name}
-                    onChange={(e) => setNewSession({...newSession, name: e.target.value})}
-                    placeholder="Fall 2024 Auditions"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="max_applicants">Max Applicants</Label>
-                  <Input
-                    id="max_applicants"
-                    type="number"
-                    value={newSession.max_applicants}
-                    onChange={(e) => setNewSession({...newSession, max_applicants: e.target.value})}
-                    placeholder="50"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="start_date">Start Date</Label>
-                  <Input
-                    id="start_date"
-                    type="date"
-                    value={newSession.start_date}
-                    onChange={(e) => setNewSession({...newSession, start_date: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="end_date">End Date</Label>
-                  <Input
-                    id="end_date"
-                    type="date"
-                    value={newSession.end_date}
-                    onChange={(e) => setNewSession({...newSession, end_date: e.target.value})}
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="application_deadline">Application Deadline</Label>
-                  <Input
-                    id="application_deadline"
-                    type="datetime-local"
-                    value={newSession.application_deadline}
-                    onChange={(e) => setNewSession({...newSession, application_deadline: e.target.value})}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={newSession.description}
-                  onChange={(e) => setNewSession({...newSession, description: e.target.value})}
-                  placeholder="Describe the audition session..."
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="requirements">Requirements</Label>
-                <Textarea
-                  id="requirements"
-                  value={newSession.requirements}
-                  onChange={(e) => setNewSession({...newSession, requirements: e.target.value})}
-                  placeholder="List audition requirements..."
-                />
-              </div>
-
-              <Button onClick={createSession} className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Session
-              </Button>
-            </CardContent>
-          </Card>
 
           <div className="grid gap-4">
             {sessions.map((session) => (
@@ -1099,6 +1018,87 @@ export const AuditionsManagement = () => {
         </TabsContent>
 
         <TabsContent value="evaluations" className="space-y-6 mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Create New Audition Session</CardTitle>
+              <CardDescription>Set up a new audition period for applicants</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Session Name</Label>
+                  <Input
+                    id="name"
+                    value={newSession.name}
+                    onChange={(e) => setNewSession({...newSession, name: e.target.value})}
+                    placeholder="Fall 2024 Auditions"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="max_applicants">Max Applicants</Label>
+                  <Input
+                    id="max_applicants"
+                    type="number"
+                    value={newSession.max_applicants}
+                    onChange={(e) => setNewSession({...newSession, max_applicants: e.target.value})}
+                    placeholder="50"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="start_date">Start Date</Label>
+                  <Input
+                    id="start_date"
+                    type="date"
+                    value={newSession.start_date}
+                    onChange={(e) => setNewSession({...newSession, start_date: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="end_date">End Date</Label>
+                  <Input
+                    id="end_date"
+                    type="date"
+                    value={newSession.end_date}
+                    onChange={(e) => setNewSession({...newSession, end_date: e.target.value})}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Label htmlFor="application_deadline">Application Deadline</Label>
+                  <Input
+                    id="application_deadline"
+                    type="datetime-local"
+                    value={newSession.application_deadline}
+                    onChange={(e) => setNewSession({...newSession, application_deadline: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={newSession.description}
+                  onChange={(e) => setNewSession({...newSession, description: e.target.value})}
+                  placeholder="Describe the audition session..."
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="requirements">Requirements</Label>
+                <Textarea
+                  id="requirements"
+                  value={newSession.requirements}
+                  onChange={(e) => setNewSession({...newSession, requirements: e.target.value})}
+                  placeholder="List audition requirements..."
+                />
+              </div>
+
+              <Button onClick={createSession} className="w-full">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Session
+              </Button>
+            </CardContent>
+          </Card>
           {/* Show Adjudicator Scoring Interface if active */}
           {showAdjudicatorScoring && selectedPerformer ? (
             adjudicatorType === 'sight_reading' ? (
