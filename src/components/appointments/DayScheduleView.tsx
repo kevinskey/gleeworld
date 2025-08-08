@@ -11,9 +11,21 @@ import {
   Plus,
   User,
   Filter,
-  ChevronDown
+  ChevronDown,
+  Settings,
+  Eye,
+  EyeOff
 } from 'lucide-react';
-import { format, addDays, subDays, isSameDay, parseISO, parse } from 'date-fns';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+} from '@/components/ui/dropdown-menu';
+import { format, addDays, subDays, isSameDay, parseISO, parse, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,6 +57,10 @@ export const DayScheduleView = () => {
   const [dayEvents, setDayEvents] = useState<DayEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('day');
+  const [showAuditions, setShowAuditions] = useState(true);
+  const [showAppointments, setShowAppointments] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h');
   const { toast } = useToast();
 
   // Generate time slots for the day (8 AM to 7 PM in 15-minute intervals)
@@ -194,6 +210,170 @@ export const DayScheduleView = () => {
     }
   };
 
+  // Filter events based on current filters
+  const filteredEvents = dayEvents.filter(event => {
+    if (!showAuditions && event.type === 'audition') return false;
+    if (!showAppointments && event.type === 'appointment') return false;
+    if (statusFilter !== 'all' && event.status !== statusFilter) return false;
+    return true;
+  });
+
+  // Handle new appointment creation
+  const handleNewAppointment = () => {
+    toast({
+      title: "New Appointment",
+      description: "Redirecting to appointment scheduler...",
+    });
+    // In a real app, this would navigate to the appointment creation form
+  };
+
+  // Render different views based on viewMode
+  const renderCalendarContent = () => {
+    switch (viewMode) {
+      case 'month':
+        return renderMonthView();
+      case 'week':
+        return renderWeekView();
+      case 'day':
+      default:
+        return renderDayView();
+    }
+  };
+
+  const renderMonthView = () => {
+    const monthStart = startOfMonth(selectedDate);
+    const monthEnd = endOfMonth(selectedDate);
+    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+    return (
+      <div className="bg-white rounded-lg border">
+        <div className="grid grid-cols-7 gap-px bg-gray-200">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            <div key={day} className="bg-gray-50 p-2 text-center text-sm font-medium text-gray-900">
+              {day}
+            </div>
+          ))}
+          {days.map(day => (
+            <div key={day.toISOString()} className="bg-white p-2 min-h-[100px] hover:bg-gray-50">
+              <div className="font-medium text-sm text-gray-900 mb-1">
+                {format(day, 'd')}
+              </div>
+              <div className="space-y-1">
+                {filteredEvents
+                  .filter(event => isSameDay(day, selectedDate))
+                  .slice(0, 2)
+                  .map(event => (
+                    <div key={event.id} className="text-xs p-1 rounded bg-blue-100 text-blue-800 truncate">
+                      {event.title}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderWeekView = () => {
+    const weekStart = startOfWeek(selectedDate);
+    const weekEnd = endOfWeek(selectedDate);
+    const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
+    return (
+      <div className="bg-white rounded-lg border">
+        <div className="grid grid-cols-8 gap-px bg-gray-200">
+          <div className="bg-gray-50 p-2"></div>
+          {days.map(day => (
+            <div key={day.toISOString()} className="bg-gray-50 p-2 text-center">
+              <div className="font-medium text-sm text-gray-900">{format(day, 'EEE')}</div>
+              <div className="text-lg font-bold text-gray-900">{format(day, 'd')}</div>
+            </div>
+          ))}
+          {timeSlots.slice(0, 12).map(timeSlot => (
+            <React.Fragment key={timeSlot}>
+              <div className="bg-white p-2 text-sm text-gray-600 font-medium border-r">
+                {timeSlot}
+              </div>
+              {days.map(day => {
+                const dayEvents = filteredEvents.filter(event => isSameDay(day, selectedDate));
+                const appointment = dayEvents.find(event => {
+                  const slotTime = parse(timeSlot, 'h:mm a', new Date());
+                  const eventStart = parse(event.startTime, 'h:mm a', new Date());
+                  const eventEnd = parse(event.endTime, 'h:mm a', new Date());
+                  return slotTime >= eventStart && slotTime < eventEnd;
+                });
+                
+                return (
+                  <div key={`${day.toISOString()}-${timeSlot}`} className="bg-white p-1 min-h-[40px] hover:bg-gray-50">
+                    {appointment && (
+                      <div className={`p-1 rounded text-xs ${getStatusColor(appointment.status, appointment.type)}`}>
+                        {appointment.title}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDayView = () => {
+    return (
+      <div className="bg-white rounded-lg border">
+        <div className="divide-y">
+          {timeSlots.map((timeSlot, index) => {
+            const appointment = getAppointmentForTimeSlot(timeSlot);
+            const isStartOfAppointment = appointment && (index === 0 || 
+              getAppointmentForTimeSlot(timeSlots[index - 1]) !== appointment);
+            
+            // Check if this appointment should be filtered out
+            if (appointment && !filteredEvents.includes(appointment)) {
+              return null;
+            }
+            
+            return (
+              <div key={timeSlot} className="flex min-h-[60px] hover:bg-gray-50">
+                <div className="w-24 p-3 text-sm text-gray-600 font-medium border-r">
+                  {timeFormat === '24h' ? format(parse(timeSlot, 'h:mm a', new Date()), 'HH:mm') : timeSlot}
+                </div>
+                <div className="flex-1 p-3">
+                  {appointment && isStartOfAppointment && (
+                    <div className={`p-3 rounded ${getStatusColor(appointment.status, appointment.type)}`}>
+                      <div className="font-medium text-gray-900 mb-1">
+                        {appointment.title.toUpperCase()}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {timeFormat === '24h' 
+                          ? `${format(parse(appointment.startTime, 'h:mm a', new Date()), 'HH:mm')} - ${format(parse(appointment.endTime, 'h:mm a', new Date()), 'HH:mm')}`
+                          : `${appointment.startTime} - ${appointment.endTime}`
+                        }
+                      </div>
+                      <div className="text-sm text-gray-700 mt-1">
+                        {appointment.clientName}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        {filteredEvents.length === 0 && (
+          <div className="text-center py-12">
+            <Clock className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <p className="text-gray-500 font-medium">No appointments scheduled</p>
+            <p className="text-sm text-gray-400">This day is completely available</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="bg-white min-h-screen">
@@ -227,12 +407,7 @@ export const DayScheduleView = () => {
 
         <Button 
           className="bg-red-600 hover:bg-red-700 text-white"
-          onClick={() => {
-            toast({
-              title: "Feature Coming Soon",
-              description: "New appointment creation will be available soon",
-            });
-          }}
+          onClick={handleNewAppointment}
         >
           <Plus className="h-4 w-4 mr-2" />
           New Appointment
@@ -266,18 +441,30 @@ export const DayScheduleView = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => {
-              toast({
-                title: "Calendar Options",
-                description: "Additional calendar options coming soon",
-              });
-            }}
-          >
-            Options <ChevronDown className="h-4 w-4 ml-2" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                Options <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Calendar Options</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setTimeFormat(timeFormat === '12h' ? '24h' : '12h')}>
+                <Clock className="mr-2 h-4 w-4" />
+                {timeFormat === '12h' ? 'Switch to 24h' : 'Switch to 12h'}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSelectedDate(new Date())}>
+                <Calendar className="mr-2 h-4 w-4" />
+                Go to Today
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                Calendar Settings
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
           <div className="flex border rounded-md">
             <Button 
@@ -306,68 +493,56 @@ export const DayScheduleView = () => {
             </Button>
           </div>
           
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => {
-              toast({
-                title: "Filter Options",
-                description: "Calendar filtering options coming soon",
-              });
-            }}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Filter className="h-4 w-4 mr-2" />
+                Filters
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Filter Events</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={showAuditions}
+                onCheckedChange={setShowAuditions}
+              >
+                Show Auditions
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={showAppointments}
+                onCheckedChange={setShowAppointments}
+              >
+                Show Appointments
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Status Filter</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => setStatusFilter('all')}>
+                <div className="flex items-center">
+                  {statusFilter === 'all' && <div className="w-2 h-2 bg-blue-500 rounded-full mr-2" />}
+                  All Statuses
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('confirmed')}>
+                <div className="flex items-center">
+                  {statusFilter === 'confirmed' && <div className="w-2 h-2 bg-green-500 rounded-full mr-2" />}
+                  Confirmed Only
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('pending')}>
+                <div className="flex items-center">
+                  {statusFilter === 'pending' && <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2" />}
+                  Pending Only
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
       {/* Calendar Content */}
       <div className="p-6">
-        <div className="bg-white rounded-lg border">
-          {/* Time slots */}
-          <div className="divide-y">
-            {timeSlots.map((timeSlot, index) => {
-              const appointment = getAppointmentForTimeSlot(timeSlot);
-              const isStartOfAppointment = appointment && (index === 0 || 
-                getAppointmentForTimeSlot(timeSlots[index - 1]) !== appointment);
-              
-              return (
-                <div key={timeSlot} className="flex min-h-[60px] hover:bg-gray-50">
-                  {/* Time column */}
-                  <div className="w-24 p-3 text-sm text-gray-600 font-medium border-r">
-                    {timeSlot}
-                  </div>
-                  
-                  {/* Appointment column */}
-                  <div className="flex-1 p-3">
-                    {appointment && isStartOfAppointment && (
-                      <div className={`p-3 rounded ${getStatusColor(appointment.status, appointment.type)}`}>
-                        <div className="font-medium text-gray-900 mb-1">
-                          {appointment.title.toUpperCase()}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {appointment.startTime} - {appointment.endTime}
-                        </div>
-                        <div className="text-sm text-gray-700 mt-1">
-                          {appointment.clientName}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          
-          {dayEvents.length === 0 && (
-            <div className="text-center py-12">
-              <Clock className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500 font-medium">No appointments scheduled</p>
-              <p className="text-sm text-gray-400">This day is completely available</p>
-            </div>
-          )}
-        </div>
+        {renderCalendarContent()}
       </div>
     </div>
   );
