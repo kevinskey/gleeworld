@@ -86,31 +86,54 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
     date: '',
     address: ''
   });
+  const [multipleCities, setMultipleCities] = useState<string[]>(['']);
   const [isOptimizing, setIsOptimizing] = useState(false);
 
   const { toast } = useToast();
 
+  const addCityInput = () => {
+    setMultipleCities(prev => [...prev, '']);
+  };
+
+  const removeCityInput = (index: number) => {
+    if (multipleCities.length > 1) {
+      setMultipleCities(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateCity = (index: number, value: string) => {
+    setMultipleCities(prev => prev.map((city, i) => i === index ? value : city));
+  };
+
   const addStop = () => {
-    if (!currentStop.city || !currentStop.venue || !currentStop.date) {
+    const validCities = multipleCities.filter(city => city.trim() !== '');
+    
+    if (validCities.length === 0 || !currentStop.venue || !currentStop.date) {
       toast({
         title: "Missing information",
-        description: "Please fill in all stop details.",
+        description: "Please fill in at least one city, venue, and date.",
         variant: "destructive"
       });
       return;
     }
 
-    const stop: TourStop = {
-      id: Date.now().toString(),
-      ...currentStop
-    };
+    // Create stops for each city
+    const newStops: TourStop[] = validCities.map(city => ({
+      id: `${Date.now()}-${Math.random()}`,
+      city: city.trim(),
+      venue: currentStop.venue,
+      date: currentStop.date,
+      address: currentStop.address
+    }));
 
     setNewRoute(prev => ({
       ...prev,
-      stops: [...prev.stops, stop]
+      stops: [...prev.stops, ...newStops]
     }));
 
+    // Reset form
     setCurrentStop({ city: '', venue: '', date: '', address: '' });
+    setMultipleCities(['']);
   };
 
   const removeStop = (stopId: string) => {
@@ -255,15 +278,47 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
 
               <div className="space-y-4">
                 <h4 className="font-medium">Add Tour Stops</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">City</label>
-                    <Input
-                      placeholder="e.g., Atlanta, GA"
-                      value={currentStop.city}
-                      onChange={(e) => setCurrentStop(prev => ({ ...prev, city: e.target.value }))}
-                    />
+                
+                {/* Multiple Cities Input */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Cities</label>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={addCityInput}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add City
+                    </Button>
                   </div>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {multipleCities.map((city, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          placeholder="e.g., Atlanta, GA"
+                          value={city}
+                          onChange={(e) => updateCity(index, e.target.value)}
+                          className="flex-1"
+                        />
+                        {multipleCities.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeCityInput(index)}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Other inputs */}
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Venue</label>
                     <Input
@@ -280,18 +335,20 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
                       onChange={(e) => setCurrentStop(prev => ({ ...prev, date: e.target.value }))}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Address</label>
-                    <Input
-                      placeholder="Full address"
-                      value={currentStop.address}
-                      onChange={(e) => setCurrentStop(prev => ({ ...prev, address: e.target.value }))}
-                    />
-                  </div>
                 </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Address</label>
+                  <Input
+                    placeholder="Full address (will be applied to all cities)"
+                    value={currentStop.address}
+                    onChange={(e) => setCurrentStop(prev => ({ ...prev, address: e.target.value }))}
+                  />
+                </div>
+                
                 <Button onClick={addStop} variant="outline" size="sm">
                   <Plus className="h-4 w-4 mr-1" />
-                  Add Stop
+                  Add Stop(s) - {multipleCities.filter(c => c.trim()).length} {multipleCities.filter(c => c.trim()).length === 1 ? 'city' : 'cities'}
                 </Button>
               </div>
 
