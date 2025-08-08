@@ -31,6 +31,11 @@ export const HomeRoute = () => {
   }
 
   // For public/non-authenticated users, show the landing page
-  console.log('🌐 Showing public landing page for non-authenticated user');
+  console.log('🌐 Showing public landing page for user:', {
+    hasUser: !!user,
+    userEmail: user?.email,
+    authLoading,
+    shouldShowLanding: true
+  });
   return <GleeWorldLanding />;
 };
