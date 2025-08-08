@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useBucketsOfLove } from '@/hooks/useBucketsOfLove';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
+import { MemberDirectory } from '@/components/directory/MemberDirectory';
 
 export const CommunityHubModule = () => {
   const [activeTab, setActiveTab] = useState('buckets');
@@ -247,14 +248,8 @@ export const CommunityHubModule = () => {
           </div>
         </TabsContent>
         
-        <TabsContent value="directory" className="flex-1 p-4 bg-gradient-to-b from-purple-50/50 to-background">
-          <div className="text-center text-muted-foreground">
-            <Users className="w-12 h-12 mx-auto mb-3 text-purple-500" />
-            <p className="font-medium text-purple-700 mb-2">Quick member lookup</p>
-            <Button variant="outline" size="sm" className="mt-2 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 hover:border-purple-300">
-              View Full Directory
-            </Button>
-          </div>
+        <TabsContent value="directory" className="flex-1">
+          <MemberDirectory />
         </TabsContent>
       </Tabs>
     </div>
