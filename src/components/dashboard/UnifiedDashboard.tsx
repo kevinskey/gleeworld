@@ -29,26 +29,35 @@ export const UnifiedDashboard = () => {
         showMessages={showMessages}
       />
       
-      <div className="flex h-[calc(100vh-72px)]">
-        {/* Left Column - Modules */}
-        <div className="w-80 border-r border-border bg-background/50 backdrop-blur-sm">
-          <ModuleSelector 
-            selectedModule={selectedModule}
-            onSelectModule={setSelectedModule}
-          />
-        </div>
-
-        {/* Center Column - Community Hub */}
-        <div className="flex-1 border-r border-border bg-background/50 backdrop-blur-sm p-4">
-          <div className="h-full border border-border rounded-lg bg-background/50">
+      <div className="flex flex-col h-[calc(100vh-72px)]">
+        {/* Top Two-Column Layout - Community Hub & Email */}
+        <div className="grid grid-cols-2 gap-4 p-4 border-b border-border bg-background/50">
+          {/* Community Hub Column */}
+          <div className="h-80 border border-border rounded-lg bg-background/50">
             <CommunityHubModule />
           </div>
-        </div>
-
-        {/* Right Column - Email */}
-        <div className="w-80 bg-background/50 backdrop-blur-sm p-4">
-          <div className="h-full border border-border rounded-lg bg-background/50">
+          
+          {/* Email Column */}
+          <div className="h-80 border border-border rounded-lg bg-background/50">
             <EmailModule />
+          </div>
+        </div>
+        
+        {/* Bottom Section - Module Selector & Display */}
+        <div className="flex-1 p-4">
+          <div className="h-full bg-background/50 border border-border rounded-lg">
+            {/* Module Selector at top of card */}
+            <div className="border-b border-border bg-background/30">
+              <ModuleSelector 
+                selectedModule={selectedModule}
+                onSelectModule={setSelectedModule}
+              />
+            </div>
+            
+            {/* Selected Module Display */}
+            <div className="flex-1 p-4">
+              <ModuleDisplay selectedModule={selectedModule} />
+            </div>
           </div>
         </div>
         
