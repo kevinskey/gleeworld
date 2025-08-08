@@ -175,6 +175,9 @@ export const AuditionsManagement = () => {
     requirements: ""
   });
 
+  // State for collapsible sections
+  const [isCreateSessionExpanded, setIsCreateSessionExpanded] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -1019,11 +1022,35 @@ export const AuditionsManagement = () => {
 
         <TabsContent value="evaluations" className="space-y-6 mt-8">
           <Card>
-            <CardHeader>
-              <CardTitle>Create New Audition Session</CardTitle>
-              <CardDescription>Set up a new audition period for applicants</CardDescription>
+            <CardHeader 
+              className="cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => setIsCreateSessionExpanded(!isCreateSessionExpanded)}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plus className="h-5 w-5" />
+                    Create New Audition Session
+                  </CardTitle>
+                  <CardDescription>Set up a new audition period for applicants</CardDescription>
+                </div>
+                <Button variant="ghost" size="sm">
+                  {isCreateSessionExpanded ? (
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm">Collapse</span>
+                      <div className="h-4 w-4 rotate-180 transition-transform">▼</div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm">Expand</span>
+                      <div className="h-4 w-4 transition-transform">▼</div>
+                    </div>
+                  )}
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            {isCreateSessionExpanded && (
+              <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Session Name</Label>
@@ -1098,7 +1125,9 @@ export const AuditionsManagement = () => {
                 Create Session
               </Button>
             </CardContent>
+            )}
           </Card>
+
           {/* Show Adjudicator Scoring Interface if active */}
           {showAdjudicatorScoring && selectedPerformer ? (
             adjudicatorType === 'sight_reading' ? (
@@ -1220,12 +1249,13 @@ export const AuditionsManagement = () => {
                         </div>
                       </div>
                     ))}
-                  </div>
-                </CardContent>
-              </Card>
+                   </div>
+               </CardContent>
+            </>
+          )}
 
-              {/* Evaluation Summary */}
-              <Card>
+          {/* Evaluation Summary */}
+          <Card>
                 <CardHeader>
                   <CardTitle>Completed Evaluations</CardTitle>
                   <CardDescription>Summary of professional adjudicator evaluations</CardDescription>
