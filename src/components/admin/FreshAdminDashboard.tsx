@@ -41,6 +41,33 @@ export const FreshAdminDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Touch/swipe detection
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const startY = touch.clientY;
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      const deltaY = startY - touch.clientY;
+      
+      if (Math.abs(deltaY) > 10) { // Minimum swipe distance
+        setIsAnimating(true);
+        setScrollOffset(prev => prev + deltaY * 0.5);
+      }
+    };
+
+    const handleTouchEnd = () => {
+      setIsAnimating(false);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleTouchEnd);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
@@ -85,11 +112,14 @@ export const FreshAdminDashboard = () => {
             </p>
           </CardHeader>
           <CardContent>
-            <div className="relative h-[600px] overflow-hidden">
+            <div 
+              className="relative h-[600px] overflow-hidden touch-pan-y select-none"
+              onTouchStart={handleTouchStart}
+            >
               <div 
-                className="flex flex-col gap-3"
+                className="flex flex-col gap-3 transition-transform duration-300"
                 style={{
-                  animation: 'verticalScroll 20s linear infinite',
+                  transform: `translateY(${scrollOffset}px)`,
                 }}
               >
                 {/* Duplicate modules for seamless loop */}
