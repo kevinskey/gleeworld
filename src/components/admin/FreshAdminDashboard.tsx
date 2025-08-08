@@ -17,7 +17,8 @@ import {
   DollarSign,
   Package,
   ShoppingBag,
-  Radio
+  Radio,
+  ArrowUpDown
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
@@ -61,6 +62,12 @@ export const FreshAdminDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const sortedModules = React.useMemo(() => {
+    const arr = [...adminModules].sort((a, b) => a.name.localeCompare(b.name));
+    if (sortOrder === 'desc') arr.reverse();
+    return arr;
+  }, [sortOrder]);
   const navigate = useNavigate();
 
   return (
@@ -99,15 +106,28 @@ export const FreshAdminDashboard = () => {
 
         {/* Admin Modules Grid */}
         <Card className="bg-background/50 border-border">
-          <CardHeader>
-            <CardTitle className="text-lg">Administration Modules</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Select a module to manage different aspects of the platform
-            </p>
+          <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle className="text-lg">Administration Modules</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Select a module to manage different aspects of the platform
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                aria-label={sortOrder === 'asc' ? 'Sort Z–A' : 'Sort A–Z'}
+              >
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                Sort {sortOrder === 'asc' ? 'A–Z' : 'Z–A'}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {adminModules.map((module) => (
+              {sortedModules.map((module) => (
                 <Card 
                   key={module.id}
                   className={`cursor-pointer transition-all hover:shadow-md border-border ${
