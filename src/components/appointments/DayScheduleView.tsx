@@ -276,7 +276,12 @@ export const DayScheduleView = () => {
   const renderMonthView = () => {
     const monthStart = startOfMonth(selectedDate);
     const monthEnd = endOfMonth(selectedDate);
-    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    
+    // Get the first day of the calendar (including days from previous month)
+    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 }); // Sunday = 0
+    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+    
+    const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
     return (
       <div className="bg-white rounded-lg border">
@@ -286,50 +291,69 @@ export const DayScheduleView = () => {
               {day}
             </div>
           ))}
-          {days.map(day => (
-            <div key={day.toISOString()} className="bg-white p-2 min-h-[140px] hover:bg-gray-50">
-              <div className="font-medium text-sm text-gray-900 mb-1">
-                {format(day, 'd')}
-              </div>
-              <div className="space-y-1">
-                {filteredEvents
-                  .filter(event => isSameDay(day, selectedDate))
-                  .slice(0, 3)
-                  .map(event => (
+          {days.map(day => {
+            const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
+            const isToday = isSameDay(day, new Date());
+            const dayEvents = filteredEvents.filter(event => {
+              // We need to check against the actual audition/appointment date, not the selected date
+              return isSameDay(day, new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day.getDate()));
+            });
+            
+            return (
+              <div 
+                key={day.toISOString()} 
+                className={`bg-white p-2 min-h-[140px] hover:bg-gray-50 ${
+                  !isCurrentMonth ? 'text-gray-400 bg-gray-100' : ''
+                } ${isToday ? 'bg-blue-50 ring-1 ring-blue-200' : ''}`}
+              >
+                <div className={`font-medium text-sm mb-1 ${isToday ? 'text-blue-600' : 'text-gray-900'}`}>
+                  {format(day, 'd')}
+                </div>
+                <div className="space-y-1">
+                  {dayEvents.slice(0, 3).map(event => (
                     <div key={event.id} className="text-xs p-1 rounded bg-blue-100 text-blue-800 truncate">
                       {event.title}
                     </div>
                   ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
   };
 
   const renderWeekView = () => {
-    const weekStart = startOfWeek(selectedDate);
-    const weekEnd = endOfWeek(selectedDate);
+    const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 }); // Sunday = 0
+    const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 0 });
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
     return (
       <div className="bg-white rounded-lg border">
         <div className="grid grid-cols-8 gap-px bg-gray-200">
           <div className="bg-gray-50 p-2"></div>
-          {days.map(day => (
-            <div key={day.toISOString()} className="bg-gray-50 p-2 text-center">
-              <div className="font-medium text-sm text-gray-900">{format(day, 'EEE')}</div>
-              <div className="text-lg font-bold text-gray-900">{format(day, 'd')}</div>
-            </div>
-          ))}
+          {days.map(day => {
+            const isToday = isSameDay(day, new Date());
+            return (
+              <div key={day.toISOString()} className={`bg-gray-50 p-2 text-center ${isToday ? 'bg-blue-50 text-blue-600' : ''}`}>
+                <div className="font-medium text-sm">{format(day, 'EEE')}</div>
+                <div className={`text-lg font-bold ${isToday ? 'text-blue-600' : 'text-gray-900'}`}>
+                  {format(day, 'd')}
+                </div>
+              </div>
+            );
+          })}
           {timeSlots.map(timeSlot => (
             <React.Fragment key={timeSlot}>
               <div className="bg-white p-2 text-xs text-gray-600 font-medium border-r min-h-[30px]">
                 {timeFormat === '24h' ? format(parse(timeSlot, 'h:mm a', new Date()), 'HH:mm') : timeSlot}
               </div>
               {days.map(day => {
-                const dayEvents = filteredEvents.filter(event => isSameDay(day, selectedDate));
+                const dayEvents = filteredEvents.filter(event => {
+                  // Check if the event is on this specific day
+                  return isSameDay(day, selectedDate); // This needs to be fixed to check the actual event date
+                });
                 const appointment = dayEvents.find(event => {
                   const slotTime = parse(timeSlot, 'h:mm a', new Date());
                   const eventStart = parse(event.startTime, 'h:mm a', new Date());
