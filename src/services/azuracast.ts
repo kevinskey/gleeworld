@@ -93,9 +93,9 @@ interface AzuraCastNowPlaying {
 }
 
 class AzuraCastService {
-  private baseUrl = 'http://134.199.204.155';
+  private baseUrl = 'https://radio.gleeworld.org';
   private stationId = 'glee_world_radio';
-  private directStreamUrl = 'http://134.199.204.155/listen/glee_world_radio/radio.mp3';
+  private directStreamUrl = 'https://radio.gleeworld.org/listen/glee_world_radio/radio.mp3';
   private proxyBaseUrl = 'https://aqbopijztqwnrmqsyatp.functions.supabase.co/radio-proxy';
 
   async getNowPlaying(): Promise<AzuraCastNowPlaying | null> {

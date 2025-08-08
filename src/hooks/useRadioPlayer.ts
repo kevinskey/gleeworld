@@ -227,8 +227,8 @@ export const useRadioPlayer = () => {
 
     // Try direct stream first, then proxies
     const streamUrls = [
-      azuraCastService.getPublicStreamUrl(),
-      ...RADIO_STREAM_URLS
+      ...RADIO_STREAM_URLS, // Prefer HTTPS-proxied streams first
+      azuraCastService.getPublicStreamUrl()
     ];
 
     // Try each stream URL until one works
