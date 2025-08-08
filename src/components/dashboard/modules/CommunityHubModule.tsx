@@ -6,31 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const CommunityHubModule = () => {
-  const [activeTab, setActiveTab] = useState('feed');
-
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'announcement',
-      title: 'Spring Concert Details Released',
-      time: '2 hours ago',
-      author: 'Dr. Johnson'
-    },
-    {
-      id: 2,
-      type: 'achievement',
-      title: 'Sarah M. completed Sight Reading Level 3',
-      time: '4 hours ago',
-      author: 'System'
-    },
-    {
-      id: 3,
-      type: 'event',
-      title: 'Sectional rehearsal scheduled for tomorrow',
-      time: '6 hours ago',
-      author: 'Section Leader'
-    }
-  ];
+  const [activeTab, setActiveTab] = useState('buckets');
 
   return (
     <div className="h-full flex flex-col">
@@ -42,10 +18,9 @@ export const CommunityHubModule = () => {
       </div>
       
       <Tabs defaultValue="buckets" className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-5 m-2">
+        <TabsList className="grid w-full grid-cols-4 m-2">
           <TabsTrigger value="buckets">Buckets of Love</TabsTrigger>
           <TabsTrigger value="wellness">Wellness</TabsTrigger>
-          <TabsTrigger value="feed">Activity Feed</TabsTrigger>
           <TabsTrigger value="announcements">Announcements</TabsTrigger>
           <TabsTrigger value="directory">Directory</TabsTrigger>
         </TabsList>
@@ -76,22 +51,6 @@ export const CommunityHubModule = () => {
               </Button>
             </div>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="feed" className="flex-1 p-4 space-y-3 overflow-y-auto">
-          {recentActivity.map((item) => (
-            <Card key={item.id} className="p-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">by {item.author} • {item.time}</p>
-                </div>
-                <Badge variant="outline" className="text-xs">
-                  {item.type}
-                </Badge>
-              </div>
-            </Card>
-          ))}
         </TabsContent>
         
         <TabsContent value="announcements" className="flex-1 p-4">
