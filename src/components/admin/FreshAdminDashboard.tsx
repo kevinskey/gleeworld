@@ -41,56 +41,6 @@ export const FreshAdminDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
-  const [scrollOffset, setScrollOffset] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  // Touch/swipe detection
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    const startY = touch.clientY;
-    
-    const handleTouchMove = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      const deltaY = startY - touch.clientY;
-      
-      if (Math.abs(deltaY) > 10) { // Minimum swipe distance
-        setIsAnimating(true);
-        setScrollOffset(prev => prev + deltaY * 0.5);
-      }
-    };
-
-    const handleTouchEnd = () => {
-      setIsAnimating(false);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-    };
-
-    document.addEventListener('touchmove', handleTouchMove);
-    document.addEventListener('touchend', handleTouchEnd);
-  };
-
-  // Mouse drag detection
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const startY = e.clientY;
-    
-    const handleMouseMove = (e: MouseEvent) => {
-      const deltaY = startY - e.clientY;
-      
-      if (Math.abs(deltaY) > 10) { // Minimum drag distance
-        setIsAnimating(true);
-        setScrollOffset(prev => prev + deltaY * 0.5);
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsAnimating(false);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
@@ -135,44 +85,28 @@ export const FreshAdminDashboard = () => {
             </p>
           </CardHeader>
           <CardContent>
-            <div 
-              className="relative h-[600px] overflow-hidden touch-pan-y select-none cursor-grab active:cursor-grabbing"
-              onTouchStart={handleTouchStart}
-              onMouseDown={handleMouseDown}
-            >
-              <div 
-                className="flex flex-col gap-3 transition-transform duration-300"
-                style={{
-                  transform: `translateY(${scrollOffset}px)`,
-                }}
-              >
-                {/* Duplicate modules for seamless loop */}
-                {[...adminModules, ...adminModules].map((module, index) => (
-                  <Card 
-                    key={`${module.id}-${index}`}
-                    className={`cursor-pointer transition-all hover:shadow-md border-border w-full h-[180px] flex-shrink-0 ${
-                      selectedModule === module.id 
-                        ? 'ring-2 ring-primary bg-primary/5' 
-                        : 'bg-background/30 hover:bg-background/60'
-                    }`}
-                    onClick={() => setSelectedModule(module.id)}
-                  >
-                    <CardContent className="p-4 text-center h-full flex flex-col justify-center">
-                      <div className="mb-3">
-                        <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
-                          <module.icon className="h-6 w-6 text-primary" />
-                        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {adminModules.map((module) => (
+                <Card 
+                  key={module.id}
+                  className={`cursor-pointer transition-all hover:shadow-md border-border ${
+                    selectedModule === module.id 
+                      ? 'ring-2 ring-primary bg-primary/5' 
+                      : 'bg-background/30 hover:bg-background/60'
+                  }`}
+                  onClick={() => setSelectedModule(module.id)}
+                >
+                  <CardContent className="p-4 text-center h-full flex flex-col justify-center min-h-[160px]">
+                    <div className="mb-3">
+                      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
+                        <module.icon className="h-6 w-6 text-primary" />
                       </div>
-                      <h3 className="font-medium text-foreground mb-1">{module.name}</h3>
-                      <p className="text-xs text-muted-foreground">{module.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              
-              {/* Gradient overlays for seamless effect */}
-              <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-background to-transparent pointer-events-none z-10" />
-              <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent pointer-events-none z-10" />
+                    </div>
+                    <h3 className="font-medium text-foreground mb-1">{module.name}</h3>
+                    <p className="text-xs text-muted-foreground">{module.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </CardContent>
         </Card>
