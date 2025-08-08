@@ -12,8 +12,20 @@ export const UnifiedDashboard = () => {
   const [selectedModule, setSelectedModule] = useState<string>('music-studio');
   const [showMessages, setShowMessages] = useState(false);
 
+  // Debug logging
+  console.log('🎯 UnifiedDashboard rendering:', {
+    user: !!user,
+    userEmail: user?.email,
+    selectedModule,
+    timestamp: new Date().toISOString()
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+      {/* Debug indicator */}
+      <div className="fixed top-0 left-0 bg-green-500 text-white p-2 z-[999] text-xs">
+        UNIFIED DASHBOARD ACTIVE
+      </div>
       <Header 
         activeTab={selectedModule}
         onTabChange={setSelectedModule}
