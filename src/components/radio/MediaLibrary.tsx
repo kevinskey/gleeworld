@@ -21,7 +21,12 @@ import {
   Download,
   Eye,
   ArrowUpDown,
-  Filter
+  Filter,
+  Folder,
+  FolderOpen,
+  Images,
+  History,
+  Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,10 +61,10 @@ export const MediaLibrary = ({
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('mp3');
+  const [activeTab, setActiveTab] = useState('images');
   const [sortBy, setSortBy] = useState<'title' | 'date' | 'size'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -126,7 +131,7 @@ export const MediaLibrary = ({
       const matchesSearch = !searchQuery || 
         file.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         file.description?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = categoryFilter === 'all' || file.category === categoryFilter;
+      const matchesCategory = !selectedCategory || file.category === selectedCategory;
       
       return matchesType && matchesSearch && matchesCategory;
     });
@@ -153,10 +158,32 @@ export const MediaLibrary = ({
     return filtered;
   };
 
-  // Get unique categories for filter dropdown
+  // Get unique categories for folder navigation
   const getCategories = () => {
     const categories = new Set(mediaFiles.map(file => file.category).filter(Boolean));
-    return Array.from(categories);
+    return Array.from(categories).sort();
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'events':
+        return <Images className="h-4 w-4" />;
+      case 'hero-slides':
+        return <Users className="h-4 w-4" />;
+      case 'historic':
+        return <History className="h-4 w-4" />;
+      case 'products':
+        return <File className="h-4 w-4" />;
+      default:
+        return <Folder className="h-4 w-4" />;
+    }
+  };
+
+  const getCategoryCount = (category: string, type: string) => {
+    return mediaFiles.filter(file => {
+      const fileType = getFileTypeFromUrl(file.file_url);
+      return file.category === category && fileType === type;
+    }).length;
   };
 
   const formatFileSize = (bytes?: number) => {
@@ -295,10 +322,15 @@ export const MediaLibrary = ({
     );
   }
 
+  const imageFiles = filterAndSortMedia('other').filter(file => 
+    file.file_url.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)
+  );
   const mp3Files = filterAndSortMedia('mp3');
   const videoFiles = filterAndSortMedia('video');
   const pdfFiles = filterAndSortMedia('pdf');
-  const otherFiles = filterAndSortMedia('other');
+  const otherFiles = filterAndSortMedia('other').filter(file => 
+    !file.file_url.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)
+  );
 
   return (
     <div className="space-y-6">
@@ -312,7 +344,7 @@ export const MediaLibrary = ({
         </p>
       </div>
 
-      {/* Search and Filters */}
+      {/* Search and Sort */}
       <Card className="bg-card/50 backdrop-blur-sm border-border/50">
         <CardContent className="p-4 space-y-4">
           {/* Search */}
@@ -326,23 +358,8 @@ export const MediaLibrary = ({
             />
           </div>
           
-          {/* Filters and Sort */}
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {getCategories().map(category => (
-                    <SelectItem key={category} value={category}>{category}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
+          {/* Sort Controls */}
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
               <Select value={sortBy} onValueChange={(value: 'title' | 'date' | 'size') => setSortBy(value)}>
@@ -365,13 +382,33 @@ export const MediaLibrary = ({
                 {sortOrder === 'asc' ? '↑' : '↓'}
               </Button>
             </div>
+
+            {/* Breadcrumb */}
+            {selectedCategory && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedCategory(null)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  All Files
+                </Button>
+                <span className="text-muted-foreground">/</span>
+                <span className="text-foreground font-medium">{selectedCategory}</span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
       {/* Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 bg-muted/50">
+        <TabsList className="grid w-full grid-cols-5 bg-muted/50">
+          <TabsTrigger value="images" className="flex items-center gap-2">
+            <Images className="h-4 w-4" />
+            Images ({imageFiles.length})
+          </TabsTrigger>
           <TabsTrigger value="mp3" className="flex items-center gap-2">
             <Headphones className="h-4 w-4" />
             Audio ({mp3Files.length})
@@ -389,6 +426,98 @@ export const MediaLibrary = ({
             Other ({otherFiles.length})
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="images" className="mt-6">
+          <ScrollArea className="h-96">
+            {!selectedCategory ? (
+              // Show folder view
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {getCategories().map(category => {
+                  const categoryImageCount = getCategoryCount(category, 'other');
+                  const sampleImage = mediaFiles.find(file => 
+                    file.category === category && 
+                    file.file_url.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)
+                  );
+                  
+                  return (
+                    <Card 
+                      key={category} 
+                      className="cursor-pointer hover:shadow-lg transition-all group bg-background/50 backdrop-blur-sm border-border/50"
+                      onClick={() => setSelectedCategory(category)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="aspect-square bg-muted/50 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                          {sampleImage ? (
+                            <img 
+                              src={sampleImage.file_url} 
+                              alt={category}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="text-muted-foreground">
+                              {getCategoryIcon(category)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="font-medium text-foreground capitalize text-sm">
+                            {category.replace('-', ' ')}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            {categoryImageCount} images
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              // Show images in selected category
+              imageFiles.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {imageFiles.map(file => (
+                    <Card key={file.id} className="overflow-hidden hover:shadow-lg transition-all bg-background/50 backdrop-blur-sm border-border/50">
+                      <div className="aspect-square overflow-hidden">
+                        <img 
+                          src={file.file_url} 
+                          alt={file.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                          onClick={() => window.open(file.file_url, '_blank')}
+                        />
+                      </div>
+                      <CardContent className="p-3">
+                        <h4 className="font-medium text-foreground text-sm truncate mb-1">
+                          {file.title}
+                        </h4>
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className="text-xs">
+                            {file.category}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => window.open(file.file_url, '_blank')}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Download className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Images className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    {searchQuery ? 'No images found matching your search' : 'No images available in this category'}
+                  </p>
+                </div>
+              )
+            )}
+          </ScrollArea>
+        </TabsContent>
 
         <TabsContent value="mp3" className="mt-6">
           <ScrollArea className="h-96">
