@@ -205,9 +205,21 @@ export const DayScheduleView = () => {
       event.preventDefault();
       event.stopPropagation();
     }
-    setSelectedDate(prev => 
-      direction === 'prev' ? subDays(prev, 1) : addDays(prev, 1)
-    );
+    
+    setSelectedDate(prev => {
+      if (viewMode === 'week') {
+        // Navigate by weeks when in week view
+        return direction === 'prev' ? subDays(prev, 7) : addDays(prev, 7);
+      } else if (viewMode === 'month') {
+        // Navigate by months when in month view
+        return direction === 'prev' 
+          ? new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
+          : new Date(prev.getFullYear(), prev.getMonth() + 1, 1);
+      } else {
+        // Navigate by days when in day view
+        return direction === 'prev' ? subDays(prev, 1) : addDays(prev, 1);
+      }
+    });
   };
 
   const getStatusColor = (status: string, type: 'audition' | 'appointment') => {
@@ -492,7 +504,12 @@ export const DayScheduleView = () => {
             </Button>
             
             <h2 className="text-lg font-semibold min-w-[200px] text-center">
-              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+              {viewMode === 'week' 
+                ? `${format(startOfWeek(selectedDate, { weekStartsOn: 0 }), 'MMM d')} - ${format(endOfWeek(selectedDate, { weekStartsOn: 0 }), 'MMM d, yyyy')}`
+                : viewMode === 'month'
+                ? format(selectedDate, 'MMMM yyyy')
+                : format(selectedDate, 'EEEE, MMMM d, yyyy')
+              }
             </h2>
             
             <Button variant="ghost" size="sm" onClick={(e) => navigateDay('next', e)}>
