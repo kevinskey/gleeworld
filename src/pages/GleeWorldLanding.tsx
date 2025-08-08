@@ -14,6 +14,7 @@ import gleeClubFallback from "@/assets/glee-club-fallback.jpg";
 import gleeWorldBackground from "@/assets/glee-world-background.jpg";
 import { AlbumModal } from "@/components/music/AlbumModal";
 import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
+import { useUserRole } from "@/hooks/useUserRole";
 
 import { CountdownTimer } from "@/components/landing/CountdownTimer";
 import { FeaturedProducts } from "@/components/products/FeaturedProducts";
@@ -183,6 +184,8 @@ export const GleeWorldLanding = () => {
 
 
   const currentHeroSlide = heroSlides[currentSlide];
+  const { isAdmin } = useUserRole();
+  const auditionsHref = isAdmin() ? '/admin/auditions' : '/auditions';
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -290,7 +293,7 @@ export const GleeWorldLanding = () => {
                 </p>
               </div>
               
-              <Link to="/auditions">
+              <Link to={auditionsHref}>
                 <Button 
                   size="lg"
                   className="w-full max-w-xs sm:max-w-sm md:max-w-none px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 text-sm sm:text-base md:text-lg font-bold bg-gradient-to-b from-spelman-blue-light via-spelman-blue-light/90 to-spelman-blue-dark hover:from-spelman-blue-light/80 hover:via-spelman-blue-light/70 hover:to-spelman-blue-dark/90 text-white border-2 border-spelman-blue-light shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
