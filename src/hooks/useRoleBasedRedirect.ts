@@ -99,13 +99,13 @@ export const useRoleBasedRedirect = () => {
       });
       
       if (isAdmin) {
-        // Always redirect admins after login, but allow manual navigation to /
-        if (isPostLogin || location.pathname !== '/') {
-          console.log('🚀 useRoleBasedRedirect: ADMIN detected - redirect to /admin');
+        // Only redirect admins from auth page or if explicitly requested
+        if (isPostLogin) {
+          console.log('🚀 useRoleBasedRedirect: ADMIN detected after login - redirect to /admin');
           navigate('/admin', { replace: true });
           return;
         } else {
-          console.log('🏠 useRoleBasedRedirect: Admin manually navigated to /, allowing public view');
+          console.log('🏠 useRoleBasedRedirect: Admin on public page, staying put');
           return;
         }
       }
