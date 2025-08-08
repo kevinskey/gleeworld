@@ -24,7 +24,8 @@ import { format,
   isSameDay,
   parseISO,
   getHours,
-  getMinutes
+  getMinutes,
+  parse
 } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -97,20 +98,41 @@ export const AppointmentCalendarView = () => {
       }));
 
       // Transform auditions to calendar events
-      const auditionEvents: CalendarEvent[] = (auditionsData || []).map(audition => ({
-        id: audition.id,
-        title: 'Audition',
-        description: `${audition.first_name} ${audition.last_name} - Audition`,
-        appointment_date: audition.audition_date,
-        duration_minutes: 30, // Default audition duration
-        status: audition.status || 'scheduled',
-        type: 'audition' as const,
-        client_name: `${audition.first_name} ${audition.last_name}`,
-        client_email: audition.email,
-        client_phone: audition.phone,
-        notes: audition.additional_info,
-        created_at: audition.created_at
-      }));
+      const auditionEvents: CalendarEvent[] = (auditionsData || []).map(audition => {
+        // Combine audition_date and audition_time properly
+        let combinedDateTime: Date;
+        try {
+          const dateOnly = audition.audition_date.split('T')[0]; // Get just the date part
+          const timeString = audition.audition_time || '12:00 PM';
+          
+          // Parse the time string (e.g., "4:00 PM") and combine with date
+          const timeParsed = parse(timeString, 'h:mm a', new Date());
+          const hours = timeParsed.getHours();
+          const minutes = timeParsed.getMinutes();
+          
+          // Create combined datetime
+          combinedDateTime = new Date(dateOnly + 'T00:00:00');
+          combinedDateTime.setHours(hours, minutes, 0, 0);
+        } catch (error) {
+          console.error('Error parsing audition time:', error);
+          combinedDateTime = parseISO(audition.audition_date);
+        }
+
+        return {
+          id: audition.id,
+          title: 'Audition',
+          description: `${audition.first_name} ${audition.last_name} - Audition`,
+          appointment_date: combinedDateTime.toISOString(),
+          duration_minutes: 30, // Default audition duration
+          status: audition.status || 'scheduled',
+          type: 'audition' as const,
+          client_name: `${audition.first_name} ${audition.last_name}`,
+          client_email: audition.email,
+          client_phone: audition.phone,
+          notes: audition.additional_info,
+          created_at: audition.created_at
+        };
+      });
 
       // Combine and sort all events
       const allEvents = [...appointmentEvents, ...auditionEvents].sort(
