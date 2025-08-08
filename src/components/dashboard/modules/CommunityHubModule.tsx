@@ -128,22 +128,22 @@ export const CommunityHubModule = () => {
                       className={`relative ${getRandomRotation(parseInt(bucket.id))} transform transition-all duration-200 hover:scale-105 hover:z-10 cursor-pointer`}
                       style={{ gridRow: `span ${Math.ceil(bucket.message.length / 30) + 1}` }}
                     >
-                      <div className={`p-3 w-32 h-32 ${getNoteColorClass(bucket.note_color)} shadow-lg border-none relative overflow-hidden`}>
+                      <div className={`p-3 w-40 h-40 ${getNoteColorClass(bucket.note_color)} shadow-lg border-none relative overflow-hidden`}>
                         {/* Tape effect at top */}
                         <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-8 h-4 bg-white/60 border border-gray-200 shadow-sm"></div>
                         
-                        <div className="h-full flex flex-col justify-between text-xs">
-                          <p className="font-medium leading-tight overflow-hidden" style={{ fontSize: '10px' }}>
-                            {bucket.message.length > 60 ? `${bucket.message.substring(0, 60)}...` : bucket.message}
+                        <div className="h-full flex flex-col justify-between text-sm">
+                          <p className="font-medium leading-tight overflow-hidden text-sm">
+                            {bucket.message.length > 50 ? `${bucket.message.substring(0, 50)}...` : bucket.message}
                           </p>
                           
                           <div className="space-y-1">
                             <div className="flex items-center gap-1">
                               {bucket.is_anonymous ? (
-                                <span className="text-[8px] opacity-70">Anonymous</span>
+                                <span className="text-xs opacity-70">Anonymous</span>
                               ) : (
-                                <span className="text-[8px] opacity-70">
-                                  {bucket.sender_name?.substring(0, 10) || 'Unknown'}
+                                <span className="text-xs opacity-70">
+                                  {bucket.sender_name?.substring(0, 12) || 'Unknown'}
                                 </span>
                               )}
                             </div>
@@ -151,11 +151,11 @@ export const CommunityHubModule = () => {
                             <div className="flex items-center justify-between">
                               {bucket.likes > 0 && (
                                 <span className="flex items-center gap-1">
-                                  <Heart className="w-2 h-2 fill-current" />
-                                  <span className="text-[8px]">{bucket.likes}</span>
+                                  <Heart className="w-3 h-3 fill-current" />
+                                  <span className="text-xs">{bucket.likes}</span>
                                 </span>
                               )}
-                              <span className="text-[7px] opacity-60">
+                              <span className="text-xs opacity-60">
                                 {formatDistanceToNow(new Date(bucket.created_at), { addSuffix: true })}
                               </span>
                             </div>
