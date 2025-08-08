@@ -59,6 +59,9 @@ export const DayScheduleView = () => {
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('day');
   const [showAuditions, setShowAuditions] = useState(true);
   const [showAppointments, setShowAppointments] = useState(true);
+  const [showPendingAppointments, setShowPendingAppointments] = useState(true);
+  const [showGoogleCalendarEvents, setShowGoogleCalendarEvents] = useState(false);
+  const [appointmentTitleDisplay, setAppointmentTitleDisplay] = useState<'service' | 'employee' | 'customer'>('service');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h');
   const { toast } = useToast();
@@ -214,9 +217,23 @@ export const DayScheduleView = () => {
   const filteredEvents = dayEvents.filter(event => {
     if (!showAuditions && event.type === 'audition') return false;
     if (!showAppointments && event.type === 'appointment') return false;
+    if (!showPendingAppointments && event.status === 'pending') return false;
     if (statusFilter !== 'all' && event.status !== statusFilter) return false;
     return true;
   });
+
+  // Get display title based on selected option
+  const getDisplayTitle = (event: DayEvent) => {
+    switch (appointmentTitleDisplay) {
+      case 'employee':
+        return 'Provider'; // Could be dynamic based on provider data
+      case 'customer':
+        return event.clientName;
+      case 'service':
+      default:
+        return event.title;
+    }
+  };
 
   // Handle new appointment creation
   const handleNewAppointment = () => {
@@ -345,7 +362,7 @@ export const DayScheduleView = () => {
                   {appointment && isStartOfAppointment && (
                     <div className={`p-2 rounded-md ${getStatusColor(appointment.status, appointment.type)}`}>
                       <div className="font-medium text-gray-900 mb-1 text-sm">
-                        {appointment.title.toUpperCase()}
+                        {getDisplayTitle(appointment).toUpperCase()}
                       </div>
                       <div className="text-xs text-gray-600">
                         {timeFormat === '24h' 
@@ -448,21 +465,62 @@ export const DayScheduleView = () => {
                 Options <ChevronDown className="h-4 w-4 ml-2" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Calendar Options</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-64 bg-white border shadow-lg z-50">
+              <DropdownMenuLabel className="text-gray-600 text-sm">Choose what to show</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuCheckboxItem
+                checked={showPendingAppointments}
+                onCheckedChange={setShowPendingAppointments}
+                className="text-gray-700"
+              >
+                Show Pending Appointments
+              </DropdownMenuCheckboxItem>
+              
+              <DropdownMenuCheckboxItem
+                checked={showGoogleCalendarEvents}
+                onCheckedChange={setShowGoogleCalendarEvents}
+                className="text-red-600"
+              >
+                Show Google Calendar Events
+              </DropdownMenuCheckboxItem>
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-gray-600 text-sm">Show appointment titles as</DropdownMenuLabel>
+              
+              <DropdownMenuItem 
+                onClick={() => setAppointmentTitleDisplay('service')}
+                className={appointmentTitleDisplay === 'service' ? 'bg-red-50 text-red-600' : 'text-gray-700'}
+              >
+                <div className="flex items-center justify-between w-full">
+                  Service name
+                  {appointmentTitleDisplay === 'service' && <ChevronDown className="h-4 w-4" />}
+                </div>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem 
+                onClick={() => setAppointmentTitleDisplay('employee')}
+                className={appointmentTitleDisplay === 'employee' ? 'bg-red-50 text-red-600' : 'text-gray-700'}
+              >
+                Employee name
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem 
+                onClick={() => setAppointmentTitleDisplay('customer')}
+                className={appointmentTitleDisplay === 'customer' ? 'bg-red-50 text-red-600' : 'text-gray-700'}
+              >
+                Customer Name
+              </DropdownMenuItem>
+              
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setTimeFormat(timeFormat === '12h' ? '24h' : '12h')}>
                 <Clock className="mr-2 h-4 w-4" />
                 {timeFormat === '12h' ? 'Switch to 24h' : 'Switch to 12h'}
               </DropdownMenuItem>
+              
               <DropdownMenuItem onClick={() => setSelectedDate(new Date())}>
                 <Calendar className="mr-2 h-4 w-4" />
                 Go to Today
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Calendar Settings
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
