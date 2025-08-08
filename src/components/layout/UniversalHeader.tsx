@@ -101,84 +101,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             <HeaderRadioControls />
             {user && (
               <>
-                {/* Super Admin Monitoring Dashboard */}
-                {isAdmin && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="bg-white/10 hover:bg-white/20 border border-white/20"
-                        type="button"
-                      >
-                        <Crown className="h-4 w-4 mr-2 text-yellow-500" />
-                        <span className="hidden sm:inline">Super Monitor</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto bg-popover/95 backdrop-blur-lg border border-border">
-                      <DropdownMenuLabel className="text-center font-bold text-lg">🔥 Super Admin Monitor</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      
-                      {/* Public View */}
-                      <DropdownMenuLabel className="flex items-center gap-2 text-blue-600">
-                        <Globe className="h-4 w-4" />
-                        Public View
-                      </DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => navigate('/')}>🏠 Public Landing</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/about')}>ℹ️ About Page</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/shop')}>🛍️ Public Shop</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/public-calendar')}>📅 Public Calendar</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/press-kit')}>📰 Press Kit</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/booking-request')}>📋 Booking Requests</DropdownMenuItem>
-                      
-                      <DropdownMenuSeparator />
-                      
-                      {/* Auditioner View */}
-                      <DropdownMenuLabel className="flex items-center gap-2 text-green-600">
-                        <Music className="h-4 w-4" />
-                        Auditioner View
-                      </DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => navigate('/auditions')}>🎵 Auditions Portal</DropdownMenuItem>
-                      
-                      <DropdownMenuSeparator />
-                      
-                      {/* Fan View */}
-                      <DropdownMenuLabel className="flex items-center gap-2 text-pink-600">
-                        <Heart className="h-4 w-4" />
-                        Fan View
-                      </DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => navigate('/fan')}>💖 Fan Dashboard</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/notifications')}>🔔 Fan Notifications</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/events')}>🎭 Fan Events</DropdownMenuItem>
-                      
-                      <DropdownMenuSeparator />
-                      
-                      {/* Member View */}
-                      <DropdownMenuLabel className="flex items-center gap-2 text-emerald-600">
-                        <User className="h-4 w-4" />
-                        Member View
-                      </DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => navigate('/dashboard')}>🏡 Member Dashboard</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/music-library')}>🎼 Music Library</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/calendar')}>📅 Member Calendar</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/attendance')}>✅ Attendance</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/performance')}>🎭 Performance Suite</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/wellness')}>🧘 Wellness Suite</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/wardrobe')}>👗 Wardrobe</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/contracts')}>📄 Contracts</DropdownMenuItem>
-                      
-                      <DropdownMenuSeparator />
-                      
-                      {/* Alumnae View */}
-                      <DropdownMenuLabel className="flex items-center gap-2 text-purple-600">
-                        <GraduationCap className="h-4 w-4" />
-                        Alumnae View
-                      </DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => navigate('/alumnae')}>🎓 Alumnae Landing</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/admin/alumnae')}>⚙️ Alumnae Admin</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
 
                 {/* Dashboard Dropdown for logged-in users */}
                 <DropdownMenu>
@@ -245,6 +167,17 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     >
                       <Heart className="mr-2 h-4 w-4" />
                       Fan
+                    </DropdownMenuItem>
+                    
+                    {/* Auditioner View */}
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        navigate('/auditions');
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Music className="mr-2 h-4 w-4" />
+                      Auditioner
                     </DropdownMenuItem>
                     
                     {/* Alumnae View */}
