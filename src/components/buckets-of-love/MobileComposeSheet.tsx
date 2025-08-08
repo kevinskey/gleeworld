@@ -85,15 +85,16 @@ export const MobileComposeSheet = ({ trigger, onSent }: MobileComposeSheetProps)
         )}
       </SheetTrigger>
       
-      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl">
-        <SheetHeader className="pb-6">
+      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl flex flex-col">
+        <SheetHeader className="pb-4 shrink-0">
           <SheetTitle className="flex items-center gap-2 text-center">
             <Heart className="h-5 w-5 text-pink-500" />
             Send a Bucket of Love
           </SheetTitle>
         </SheetHeader>
 
-        <div className="space-y-6 h-full overflow-y-auto pb-20">
+        <div className="flex-1 overflow-y-auto px-1">
+          <div className="space-y-6 pb-6">
           {/* Message */}
           <div className="space-y-2">
             <Label htmlFor="message" className="text-sm font-medium">Your message</Label>
@@ -157,10 +158,11 @@ export const MobileComposeSheet = ({ trigger, onSent }: MobileComposeSheetProps)
               onCheckedChange={setIsAnonymous}
             />
           </div>
+          </div>
         </div>
 
         {/* Fixed bottom actions */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-background border-t border-border">
+        <div className="shrink-0 p-4 bg-background border-t border-border">
           <div className="flex gap-3">
             <Button
               variant="outline"
