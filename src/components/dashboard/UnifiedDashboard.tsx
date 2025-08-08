@@ -26,7 +26,7 @@ export const UnifiedDashboard = () => {
       
       <div className="flex flex-col h-[calc(100vh-72px)] p-6 gap-6">
         {/* Top Two-Column Layout - Community Hub & Email */}
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-6">
           {/* Community Hub Column */}
           <div className="h-[500px] border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm">
             <CommunityHubModule />
