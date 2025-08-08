@@ -82,7 +82,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     GleeWorld
                   </span>
                 </Link>
-                <HeaderClock className="text-sm ml-3" />
+                <HeaderClock className="text-sm ml-3 md:mr-5" />
               </div>
             </EnhancedTooltip>
           </div>
