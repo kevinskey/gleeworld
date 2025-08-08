@@ -616,7 +616,7 @@ export const AuditionsManagement = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Mobile optimized tab list */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto mb-8">
           <TabsList className="grid w-full min-w-[600px] grid-cols-5 h-auto sm:h-12">
             <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
