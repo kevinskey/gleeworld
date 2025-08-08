@@ -15,7 +15,7 @@ import {
   MoreHorizontal,
   Filter
 } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, parse, parseISO } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -74,16 +74,7 @@ export const ProviderDashboard = () => {
       const weekStart = startOfWeek(new Date());
       const weekEnd = endOfWeek(new Date());
       
-      // Fetch appointments for the current week
-      const { data: appointments, error } = await supabase
-        .from('gw_appointments')
-        .select('*')
-        .gte('appointment_date', weekStart.toISOString())
-        .lte('appointment_date', weekEnd.toISOString());
-
-      if (error) throw error;
-
-      // Fetch auditions for the current week
+      // Fetch auditions as primary appointments
       const { data: auditions, error: auditionsError } = await supabase
         .from('gw_auditions')
         .select('*')
@@ -92,22 +83,74 @@ export const ProviderDashboard = () => {
 
       if (auditionsError) throw auditionsError;
 
-      // Calculate stats
-      const totalAppointments = (appointments?.length || 0) + (auditions?.length || 0);
-      const cancelledCount = appointments?.filter(apt => apt.status === 'cancelled').length || 0;
+      // Fetch regular appointments
+      const { data: appointments, error } = await supabase
+        .from('gw_appointments')
+        .select('*')
+        .gte('appointment_date', weekStart.toISOString())
+        .lte('appointment_date', weekEnd.toISOString());
+
+      if (error) throw error;
+
+      // Transform auditions to appointment format (primary)
+      const auditionAppointments: RecentAppointment[] = (auditions || []).map(audition => {
+        // Combine audition_date and audition_time properly
+        let combinedDateTime: Date;
+        try {
+          const dateOnly = audition.audition_date.split('T')[0];
+          const timeString = audition.audition_time || '12:00 PM';
+          
+          const timeParsed = parse(timeString, 'h:mm a', new Date());
+          const hours = timeParsed.getHours();
+          const minutes = timeParsed.getMinutes();
+          
+          combinedDateTime = new Date(dateOnly + 'T00:00:00');
+          combinedDateTime.setHours(hours, minutes, 0, 0);
+        } catch (error) {
+          console.error('Error parsing audition time:', error);
+          combinedDateTime = parseISO(audition.audition_date);
+        }
+
+        return {
+          id: audition.id,
+          date: format(combinedDateTime, 'MMMM d, yyyy'),
+          time: audition.audition_time || format(combinedDateTime, 'h:mm a'),
+          service: 'Audition Appointment',
+          clientName: `${audition.first_name} ${audition.last_name}`,
+          status: audition.status || 'scheduled',
+          avatar: ''
+        };
+      });
+
+      // Transform regular appointments (secondary)
+      const regularAppointments: RecentAppointment[] = (appointments || []).map(apt => ({
+        id: apt.id,
+        date: format(new Date(apt.appointment_date), 'MMMM d, yyyy'),
+        time: format(new Date(apt.appointment_date), 'h:mm a'),
+        service: apt.title || 'General Appointment',
+        clientName: apt.client_name,
+        status: apt.status,
+        avatar: ''
+      }));
+
+      // Calculate stats (auditions as primary appointments)
+      const totalAppointments = (auditions?.length || 0) + (appointments?.length || 0);
+      const cancelledCount = (auditions?.filter(aud => aud.status === 'cancelled').length || 0) + 
+                           (appointments?.filter(apt => apt.status === 'cancelled').length || 0);
+      
       const bookedCount = totalAppointments - cancelledCount;
       
-      // Generate daily occupancy data
+      // Generate daily occupancy data (auditions as primary)
       const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
       const occupancyData = daysInWeek.map(day => {
-        const dayAppointments = [
-          ...(appointments?.filter(apt => isSameDay(new Date(apt.appointment_date), day)) || []),
-          ...(auditions?.filter(aud => isSameDay(new Date(aud.audition_date), day)) || [])
-        ];
+        const dayAuditions = auditions?.filter(aud => isSameDay(new Date(aud.audition_date), day)) || [];
+        const dayAppointments = appointments?.filter(apt => isSameDay(new Date(apt.appointment_date), day)) || [];
+        const totalDayAppointments = dayAuditions.length + dayAppointments.length;
         
-        // Assuming 8 hours per day, 30-minute slots = 16 possible slots
-        const maxSlots = 16;
-        const occupancy = Math.min((dayAppointments.length / maxSlots) * 100, 100);
+        
+        // Assuming 8 hours per day, 15-minute audition slots = 32 possible slots
+        const maxSlots = 32;
+        const occupancy = Math.min((totalDayAppointments / maxSlots) * 100, 100);
         
         return {
           date: format(day, 'yyyy-MM-dd'),
@@ -115,57 +158,40 @@ export const ProviderDashboard = () => {
         };
       });
 
-      // Generate weekly trend data
+      // Generate weekly trend data (auditions focused)
       const trendData = daysInWeek.map(day => {
-        const dayAppointments = [
-          ...(appointments?.filter(apt => isSameDay(new Date(apt.appointment_date), day)) || []),
-          ...(auditions?.filter(aud => isSameDay(new Date(aud.audition_date), day)) || [])
-        ];
+        const dayAuditions = auditions?.filter(aud => isSameDay(new Date(aud.audition_date), day)) || [];
+        const dayAppointments = appointments?.filter(apt => isSameDay(new Date(apt.appointment_date), day)) || [];
+        
+        const totalDaily = dayAuditions.length + dayAppointments.length;
         
         return {
           day: format(day, 'EEE'),
-          appointments: dayAppointments.length,
-          revenue: dayAppointments.length * 150 // Estimated revenue per appointment
+          appointments: totalDaily,
+          revenue: totalDaily * 150 // Estimated revenue per appointment
         };
       });
 
-      // Format recent appointments
-      const recentAppts: RecentAppointment[] = [
-        ...(appointments?.slice(0, 5).map(apt => ({
-          id: apt.id,
-          date: format(new Date(apt.appointment_date), 'MMMM d, yyyy'),
-          time: format(new Date(apt.appointment_date), 'h:mm a'),
-          service: apt.title || 'Appointment',
-          clientName: apt.client_name,
-          status: apt.status,
-          avatar: ''
-        })) || []),
-        ...(auditions?.slice(0, 3).map(aud => ({
-          id: aud.id,
-          date: format(new Date(aud.audition_date), 'MMMM d, yyyy'),
-          time: aud.audition_time || '12:00 PM',
-          service: 'Audition',
-          clientName: `${aud.first_name} ${aud.last_name}`,
-          status: aud.status || 'scheduled',
-          avatar: ''
-        })) || [])
-      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 6);
+      // Combine all appointments (auditions first, then regular appointments)
+      const allRecentAppointments = [...auditionAppointments, ...regularAppointments]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 8);
 
       const avgOccupancy = Math.round(occupancyData.reduce((sum, day) => sum + day.occupancy, 0) / occupancyData.length);
-      const estimatedRevenue = bookedCount * 150; // $150 per appointment estimate
+      const estimatedRevenue = bookedCount * 75; // $75 per audition appointment estimate
 
       setStats({
-        newCustomers: Math.floor(totalAppointments * 0.3), // Estimate 30% new customers
+        newCustomers: Math.floor(auditions?.length * 0.8 || 0), // Most auditioners are new students
         weeklyRevenue: estimatedRevenue,
         occupancyRate: avgOccupancy,
         bookedAppointments: bookedCount,
         cancelledAppointments: cancelledCount,
-        revenueChange: 12.5, // Mock data for demo
-        customerChange: -5.2, // Mock data for demo
-        occupancyChange: 0 // Stable
+        revenueChange: 12.5,
+        customerChange: -5.2,
+        occupancyChange: 0
       });
 
-      setRecentAppointments(recentAppts);
+      setRecentAppointments(allRecentAppointments);
       setDailyOccupancy(occupancyData);
       setWeeklyData(trendData);
       
