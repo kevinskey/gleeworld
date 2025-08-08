@@ -116,14 +116,17 @@ export const DayScheduleView = () => {
       
       console.log('Sample auditions in database:', allAuditions);
 
-      // Fetch auditions for selected day
+      // Fetch auditions for selected day - use date-only comparison to avoid timezone issues
+      const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+      console.log('Looking for auditions on date:', selectedDateStr);
+      
       const { data: auditions, error: auditionsError } = await supabase
         .from('gw_auditions')
         .select('*')
-        .gte('audition_date', dayStart.toISOString())
-        .lte('audition_date', dayEnd.toISOString());
+        .gte('audition_date', `${selectedDateStr}T00:00:00.000Z`)
+        .lt('audition_date', `${format(addDays(selectedDate, 1), 'yyyy-MM-dd')}T00:00:00.000Z`);
 
-      console.log('Auditions found:', auditions);
+      console.log('Auditions found for', selectedDateStr, ':', auditions);
 
       if (auditionsError) throw auditionsError;
 
