@@ -133,12 +133,11 @@ if (error) {
           )}
           
           <iframe
-            src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
+            src={signedUrl || ''}
             className="w-full h-full border-0"
             onLoad={handleLoad}
             onError={handleError}
             title="PDF Viewer"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
           />
         </div>
       </CardContent>
