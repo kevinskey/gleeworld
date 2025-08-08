@@ -19,10 +19,12 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 
 import { PluginManagementDashboard } from '@/components/admin/PluginManagementDashboard';
+import { SystemModule } from '@/components/admin/SystemModule';
 
 const adminModules = [
   { id: 'plugin-management', name: 'Plugin Management', icon: Settings, description: 'Control modular plugins across the platform' },
   { id: 'user-management', name: 'User Management', icon: Users, description: 'Manage users and permissions' },
+  { id: 'system', name: 'System', icon: BarChart3, description: 'System stats, health, and monitoring' },
   { id: 'audition-system', name: 'Audition System', icon: Music, description: 'Manage auditions and auditioner registrations' },
   { id: 'analytics', name: 'Analytics', icon: BarChart3, description: 'View platform analytics' },
   { id: 'communications', name: 'Communications', icon: Mail, description: 'Send emails and notifications' },
@@ -37,13 +39,6 @@ const adminModules = [
 export const FreshAdminDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
-
-  const stats = [
-    { title: 'Total Users', value: '1,247', change: '+12%', icon: Users },
-    { title: 'Active Sessions', value: '89', change: '+5%', icon: Shield },
-    { title: 'Monthly Revenue', value: '$24,567', change: '+18%', icon: DollarSign },
-    { title: 'System Health', value: '99.9%', change: 'Stable', icon: BarChart3 },
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
@@ -70,25 +65,6 @@ export const FreshAdminDashboard = () => {
       </div>
 
       <div className="container mx-auto px-6 py-6">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <Card key={index} className="bg-background/50 border-border">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                    <p className="text-xs text-green-600">{stat.change}</p>
-                  </div>
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <stat.icon className="h-6 w-6 text-primary" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
 
         {/* Quick Actions */}
         <Card className="mb-8 bg-background/50 border-border">
@@ -163,6 +139,8 @@ export const FreshAdminDashboard = () => {
             <CardContent className="p-6">
               {selectedModule === 'plugin-management' ? (
                 <PluginManagementDashboard />
+              ) : selectedModule === 'system' ? (
+                <SystemModule />
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4">
