@@ -4107,6 +4107,51 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_error_logs: {
+        Row: {
+          additional_context: Json | null
+          component: string | null
+          created_at: string
+          error_message: string
+          error_type: string
+          id: string
+          session_id: string | null
+          stack_trace: string | null
+          timestamp_occurred: string
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          additional_context?: Json | null
+          component?: string | null
+          created_at?: string
+          error_message: string
+          error_type: string
+          id?: string
+          session_id?: string | null
+          stack_trace?: string | null
+          timestamp_occurred?: string
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          additional_context?: Json | null
+          component?: string | null
+          created_at?: string
+          error_message?: string
+          error_type?: string
+          id?: string
+          session_id?: string | null
+          stack_trace?: string | null
+          timestamp_occurred?: string
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       gw_event_attendance: {
         Row: {
           attendance_status: string
@@ -12921,6 +12966,15 @@ export type Database = {
       trigger_scholarship_update: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      update_audition_status_with_logging: {
+        Args: {
+          p_audition_id: string
+          p_new_status: string
+          p_updated_by: string
+          p_notes?: string
+        }
+        Returns: Json
       }
       update_google_sheets_scope: {
         Args: Record<PropertyKey, never>
