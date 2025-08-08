@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Route, Mail, FileText, MapPin, Calendar, Users, TrendingUp, Activity, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Route, Mail, FileText, MapPin, Calendar, Users, TrendingUp, Activity, CheckCircle2, ArrowRight, Bell, Settings, Search, Plus, Menu, Home } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
@@ -23,34 +25,133 @@ interface TourManagerDashboardProps {
 export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
   const [activeTab, setActiveTab] = useState('booking-requests');
 
+  const getUserInitials = (name?: string) => {
+    if (!name) return 'TM';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Enhanced Header */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-3xl blur-3xl"></div>
-          <div className="relative bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm border border-border/50 rounded-2xl p-8 shadow-2xl">
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-4 mb-6">
+      {/* Tour Manager Header */}
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {/* Left Section - Logo & Navigation */}
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl"></div>
-                  <div className="relative bg-gradient-to-br from-primary to-primary/80 p-4 rounded-full shadow-lg">
-                    <Route className="h-8 w-8 text-primary-foreground" />
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-lg"></div>
+                  <div className="relative bg-gradient-to-br from-primary to-primary/80 p-3 rounded-full shadow-lg">
+                    <Route className="h-6 w-6 text-primary-foreground" />
                   </div>
                 </div>
-                <div className="text-left">
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                     Tour Manager
                   </h1>
-                  <Badge variant="secondary" className="mt-2 text-xs">
-                    Professional Edition
-                  </Badge>
+                  <p className="text-xs text-muted-foreground">Professional Edition</p>
                 </div>
               </div>
-              <p className="text-muted-foreground max-w-3xl mx-auto text-lg leading-relaxed">
-                Comprehensive tour management system for handling booking requests, correspondence, 
-                performer contracts, and intelligent route planning with AI-powered optimization.
-              </p>
+              
+              {/* Quick Navigation */}
+              <nav className="hidden lg:flex items-center gap-1">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  <Home className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Schedule
+                </Button>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Reports
+                </Button>
+              </nav>
+            </div>
+
+            {/* Center Section - Search */}
+            <div className="hidden md:flex items-center gap-4 flex-1 max-w-md mx-8">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search requests, contracts, routes..."
+                  className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border/50 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Right Section - Actions & User */}
+            <div className="flex items-center gap-3">
+              {/* Quick Actions */}
+              <div className="hidden sm:flex items-center gap-2">
+                <Button size="sm" className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Request
+                </Button>
+              </div>
+
+              {/* Notifications */}
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-background">
+                  <div className="h-full w-full bg-red-500 rounded-full animate-pulse"></div>
+                </div>
+              </Button>
+
+              {/* Settings */}
+              <Button variant="ghost" size="icon">
+                <Settings className="h-5 w-5" />
+              </Button>
+
+              {/* User Profile */}
+              <div className="flex items-center gap-3 pl-3 border-l border-border/50">
+                <div className="text-right hidden sm:block">
+                  <p className="text-sm font-medium">{user?.full_name || 'Tour Manager'}</p>
+                  <p className="text-xs text-muted-foreground">{user?.role || 'Administrator'}</p>
+                </div>
+                <Avatar className="h-9 w-9 ring-2 ring-primary/20">
+                  <AvatarImage src="" alt={user?.full_name || 'Tour Manager'} />
+                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-medium">
+                    {getUserInitials(user?.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+
+              {/* Mobile Menu */}
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Welcome Section */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-3xl blur-3xl"></div>
+          <div className="relative bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm border border-border/50 rounded-2xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  Welcome back, {user?.full_name?.split(' ')[0] || 'Tour Manager'}!
+                </h2>
+                <p className="text-muted-foreground">
+                  Here's your tour management overview for today
+                </p>
+              </div>
+              <div className="text-right text-sm text-muted-foreground">
+                <p>{new Date().toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}</p>
+                <p className="text-xs mt-1">Last updated: {new Date().toLocaleTimeString()}</p>
+              </div>
             </div>
           </div>
         </div>
