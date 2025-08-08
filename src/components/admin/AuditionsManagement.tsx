@@ -1250,12 +1250,10 @@ export const AuditionsManagement = () => {
                       </div>
                     ))}
                    </div>
-               </CardContent>
-             </Card>
-           </>
+                </CardContent>
+              </Card>
+            </>
            )}
-
-           {/* Evaluation Summary */}
 
           {/* Evaluation Summary */}
           <Card>
@@ -1319,8 +1317,6 @@ export const AuditionsManagement = () => {
                   </div>
                 </CardContent>
               </Card>
-            </>
-          )}
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6 mt-8">
