@@ -18,7 +18,7 @@ import {
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+// import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface AppointmentStats {
   newCustomers: number;
@@ -271,10 +271,10 @@ export const ProviderDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cancelled appointments</CardTitle>
+            <CardTitle className="text-sm font-medium">Appointments booked | Cancelled appointments</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.cancelledAppointments}</div>
+            <div className="text-2xl font-bold">{stats.bookedAppointments} | {stats.cancelledAppointments}</div>
             <div className="flex items-center text-sm">
               <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
               <span className="text-green-500">200% Increase</span>
@@ -337,21 +337,13 @@ export const ProviderDashboard = () => {
             <CardTitle>Weekly Performance</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="appointments" 
-                  stroke="#ef4444" 
-                  strokeWidth={2}
-                  dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg">
+              <div className="text-center text-gray-500">
+                <TrendingUp className="h-8 w-8 mx-auto mb-2" />
+                <p>Weekly Performance Chart</p>
+                <p className="text-sm">Chart visualization coming soon</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
