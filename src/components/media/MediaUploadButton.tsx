@@ -67,6 +67,7 @@ export const MediaUploadButton = ({
       'audio/*': ['.mp3', '.wav', '.m4a', '.ogg'],
       'application/pdf': ['.pdf']
     },
+    multiple: true, // Enable multiple file selection
     maxSize: 50 * 1024 * 1024, // 50MB max file size
     onDrop: (acceptedFiles, rejectedFiles) => {
       if (rejectedFiles.length > 0) {
