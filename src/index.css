@@ -455,6 +455,15 @@
       transform: translateX(-100%);
     }
   }
+
+  @keyframes verticalScroll {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-100%);
+    }
+  }
 }
 
 /* Import spacing reduction utilities */

@@ -86,7 +86,12 @@ export const FreshAdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="relative h-[600px] overflow-hidden">
-              <div className="flex flex-col gap-3 animate-[scroll_30s_linear_infinite]">
+              <div 
+                className="flex flex-col gap-3"
+                style={{
+                  animation: 'verticalScroll 20s linear infinite',
+                }}
+              >
                 {/* Duplicate modules for seamless loop */}
                 {[...adminModules, ...adminModules].map((module, index) => (
                   <Card 
