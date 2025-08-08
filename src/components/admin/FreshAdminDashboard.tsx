@@ -85,28 +85,44 @@ export const FreshAdminDashboard = () => {
             </p>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {adminModules.map((module) => (
-                <Card 
-                  key={module.id}
-                  className={`cursor-pointer transition-all hover:shadow-md border-border ${
-                    selectedModule === module.id 
-                      ? 'ring-2 ring-primary bg-primary/5' 
-                      : 'bg-background/30 hover:bg-background/60'
-                  }`}
-                  onClick={() => setSelectedModule(module.id)}
-                >
-                  <CardContent className="p-4 text-center">
-                    <div className="mb-3">
-                      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
-                        <module.icon className="h-6 w-6 text-primary" />
+            <div className="relative">
+              <div className="flex gap-3 pb-4" style={{ 
+                display: 'grid',
+                gridTemplateRows: 'repeat(2, 1fr)',
+                gridAutoFlow: 'column',
+                gridAutoColumns: 'minmax(280px, 1fr)',
+                maxHeight: '400px',
+                overflowX: 'auto'
+              }}>
+                {adminModules.map((module) => (
+                  <Card 
+                    key={module.id}
+                    className={`cursor-pointer transition-all hover:shadow-md border-border w-[280px] h-[180px] flex-shrink-0 ${
+                      selectedModule === module.id 
+                        ? 'ring-2 ring-primary bg-primary/5' 
+                        : 'bg-background/30 hover:bg-background/60'
+                    }`}
+                    onClick={() => setSelectedModule(module.id)}
+                  >
+                    <CardContent className="p-4 text-center h-full flex flex-col justify-center">
+                      <div className="mb-3">
+                        <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
+                          <module.icon className="h-6 w-6 text-primary" />
+                        </div>
                       </div>
-                    </div>
-                    <h3 className="font-medium text-foreground mb-1">{module.name}</h3>
-                    <p className="text-xs text-muted-foreground">{module.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
+                      <h3 className="font-medium text-foreground mb-1">{module.name}</h3>
+                      <p className="text-xs text-muted-foreground">{module.description}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              {/* Scroll indicator */}
+              {adminModules.length > 8 && (
+                <div className="absolute right-2 top-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded-md border">
+                  Scroll →
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
