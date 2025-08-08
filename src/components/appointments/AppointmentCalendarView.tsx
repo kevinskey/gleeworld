@@ -31,14 +31,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-interface Appointment {
+interface CalendarEvent {
   id: string;
   title: string;
   description: string | null;
   appointment_date: string;
   duration_minutes: number;
   status: string;
-  appointment_type: string;
+  type: 'appointment' | 'audition';
   client_name: string;
   client_email: string | null;
   client_phone: string | null;
@@ -48,32 +48,81 @@ interface Appointment {
 
 export const AppointmentCalendarView = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const fetchAppointments = async () => {
+  const fetchCalendarData = async () => {
     try {
       const monthStart = startOfMonth(currentDate);
       const monthEnd = endOfMonth(currentDate);
       
-      const { data, error } = await supabase
+      // Fetch appointments
+      const { data: appointmentsData, error: appointmentsError } = await supabase
         .from('gw_appointments')
         .select('*')
         .gte('appointment_date', monthStart.toISOString())
         .lte('appointment_date', monthEnd.toISOString())
         .order('appointment_date', { ascending: true });
 
-      if (error) throw error;
-      setAppointments(data || []);
+      if (appointmentsError) throw appointmentsError;
+
+      // Fetch auditions
+      const { data: auditionsData, error: auditionsError } = await supabase
+        .from('gw_auditions')
+        .select('*')
+        .gte('audition_date', monthStart.toISOString())
+        .lte('audition_date', monthEnd.toISOString())
+        .order('audition_date', { ascending: true });
+
+      if (auditionsError) throw auditionsError;
+
+      // Transform appointments to calendar events
+      const appointmentEvents: CalendarEvent[] = (appointmentsData || []).map(apt => ({
+        id: apt.id,
+        title: apt.title || 'Appointment',
+        description: apt.description,
+        appointment_date: apt.appointment_date,
+        duration_minutes: apt.duration_minutes || 60,
+        status: apt.status,
+        type: 'appointment' as const,
+        client_name: apt.client_name,
+        client_email: apt.client_email,
+        client_phone: apt.client_phone,
+        notes: apt.notes,
+        created_at: apt.created_at
+      }));
+
+      // Transform auditions to calendar events
+      const auditionEvents: CalendarEvent[] = (auditionsData || []).map(audition => ({
+        id: audition.id,
+        title: 'Audition',
+        description: `${audition.first_name} ${audition.last_name} - Audition`,
+        appointment_date: audition.audition_date,
+        duration_minutes: 30, // Default audition duration
+        status: audition.status || 'scheduled',
+        type: 'audition' as const,
+        client_name: `${audition.first_name} ${audition.last_name}`,
+        client_email: audition.email,
+        client_phone: audition.phone,
+        notes: audition.additional_info,
+        created_at: audition.created_at
+      }));
+
+      // Combine and sort all events
+      const allEvents = [...appointmentEvents, ...auditionEvents].sort(
+        (a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime()
+      );
+
+      setEvents(allEvents);
     } catch (error) {
-      console.error('Error fetching appointments:', error);
+      console.error('Error fetching calendar data:', error);
       toast({
         title: "Error",
-        description: "Failed to load appointments",
+        description: "Failed to load calendar data",
         variant: "destructive"
       });
     } finally {
@@ -82,23 +131,34 @@ export const AppointmentCalendarView = () => {
   };
 
   useEffect(() => {
-    fetchAppointments();
+    fetchCalendarData();
   }, [currentDate]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending_approval': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'scheduled': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'confirmed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      case 'completed': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-blue-100 text-blue-800 border-blue-200';
+  const getStatusColor = (status: string, type: 'appointment' | 'audition') => {
+    if (type === 'audition') {
+      switch (status) {
+        case 'pending': return 'bg-orange-100 text-orange-800 border-orange-200';
+        case 'scheduled': return 'bg-purple-100 text-purple-800 border-purple-200';
+        case 'confirmed': return 'bg-green-100 text-green-800 border-green-200';
+        case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
+        case 'completed': return 'bg-gray-100 text-gray-800 border-gray-200';
+        default: return 'bg-purple-100 text-purple-800 border-purple-200';
+      }
+    } else {
+      switch (status) {
+        case 'pending_approval': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        case 'scheduled': return 'bg-blue-100 text-blue-800 border-blue-200';
+        case 'confirmed': return 'bg-green-100 text-green-800 border-green-200';
+        case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
+        case 'completed': return 'bg-gray-100 text-gray-800 border-gray-200';
+        default: return 'bg-blue-100 text-blue-800 border-blue-200';
+      }
     }
   };
 
-  const getAppointmentsForDay = (day: Date) => {
-    return appointments.filter(apt => 
-      isSameDay(parseISO(apt.appointment_date), day)
+  const getEventsForDay = (day: Date) => {
+    return events.filter(event => 
+      isSameDay(parseISO(event.appointment_date), day)
     ).sort((a, b) => 
       new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime()
     );
@@ -122,7 +182,7 @@ export const AppointmentCalendarView = () => {
 
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
-        const dayAppointments = getAppointmentsForDay(day);
+        const dayEvents = getEventsForDay(day);
         const isCurrentMonth = isSameMonth(day, monthStart);
         const isToday = isSameDay(day, new Date());
 
@@ -140,23 +200,25 @@ export const AppointmentCalendarView = () => {
             </div>
             
             <div className="space-y-1">
-              {dayAppointments.slice(0, 3).map((apt) => (
+              {dayEvents.slice(0, 3).map((event) => (
                 <div
-                  key={apt.id}
-                  className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${getStatusColor(apt.status)}`}
-                  onClick={() => setSelectedAppointment(apt)}
+                  key={event.id}
+                  className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${getStatusColor(event.status, event.type)}`}
+                  onClick={() => setSelectedEvent(event)}
                 >
-                  <div className="font-medium truncate">{apt.client_name}</div>
+                  <div className="font-medium truncate">
+                    {event.type === 'audition' ? '🎵' : '📅'} {event.client_name}
+                  </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {format(parseISO(apt.appointment_date), 'HH:mm')}
+                    {format(parseISO(event.appointment_date), 'HH:mm')}
                   </div>
                 </div>
               ))}
               
-              {dayAppointments.length > 3 && (
+              {dayEvents.length > 3 && (
                 <div className="text-xs text-muted-foreground p-1">
-                  +{dayAppointments.length - 3} more
+                  +{dayEvents.length - 3} more
                 </div>
               )}
             </div>
@@ -195,7 +257,7 @@ export const AppointmentCalendarView = () => {
         {/* Days columns */}
         {[0, 1, 2, 3, 4, 5, 6].map(dayOffset => {
           const day = addDays(weekStart, dayOffset);
-          const dayAppointments = getAppointmentsForDay(day);
+          const dayEvents = getEventsForDay(day);
           
           return (
             <div key={dayOffset} className="flex-1 border-r">
@@ -208,22 +270,24 @@ export const AppointmentCalendarView = () => {
                   <div key={hour} className="h-16 border-b"></div>
                 ))}
                 
-                {dayAppointments.map(apt => {
-                  const aptDate = parseISO(apt.appointment_date);
-                  const startHour = getHours(aptDate);
-                  const startMinute = getMinutes(aptDate);
+                {dayEvents.map(event => {
+                  const eventDate = parseISO(event.appointment_date);
+                  const startHour = getHours(eventDate);
+                  const startMinute = getMinutes(eventDate);
                   const top = (startHour * 64) + (startMinute * 64 / 60);
-                  const height = (apt.duration_minutes * 64) / 60;
+                  const height = (event.duration_minutes * 64) / 60;
                   
                   return (
                     <div
-                      key={apt.id}
-                      className={`absolute left-1 right-1 p-1 rounded text-xs cursor-pointer ${getStatusColor(apt.status)}`}
+                      key={event.id}
+                      className={`absolute left-1 right-1 p-1 rounded text-xs cursor-pointer ${getStatusColor(event.status, event.type)}`}
                       style={{ top: `${top}px`, height: `${height}px`, minHeight: '20px' }}
-                      onClick={() => setSelectedAppointment(apt)}
+                      onClick={() => setSelectedEvent(event)}
                     >
-                      <div className="font-medium truncate">{apt.client_name}</div>
-                      <div className="truncate">{apt.title}</div>
+                      <div className="font-medium truncate">
+                        {event.type === 'audition' ? '🎵' : '📅'} {event.client_name}
+                      </div>
+                      <div className="truncate">{event.title}</div>
                     </div>
                   );
                 })}
@@ -289,8 +353,8 @@ export const AppointmentCalendarView = () => {
         </CardHeader>
         
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8">Loading appointments...</div>
+              {loading ? (
+            <div className="text-center py-8">Loading calendar data...</div>
           ) : (
             <>
               {viewMode === 'month' && (
@@ -319,54 +383,61 @@ export const AppointmentCalendarView = () => {
         </CardContent>
       </Card>
 
-      {/* Appointment Details Dialog */}
-      <Dialog open={!!selectedAppointment} onOpenChange={() => setSelectedAppointment(null)}>
+      {/* Event Details Dialog */}
+      <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Appointment Details</DialogTitle>
+            <DialogTitle>
+              {selectedEvent?.type === 'audition' ? 'Audition Details' : 'Appointment Details'}
+            </DialogTitle>
           </DialogHeader>
           
-          {selectedAppointment && (
+          {selectedEvent && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">{selectedAppointment.title}</h3>
-                <Badge className={getStatusColor(selectedAppointment.status)}>
-                  {selectedAppointment.status}
+                <h3 className="font-semibold flex items-center gap-2">
+                  {selectedEvent.type === 'audition' ? '🎵' : '📅'} 
+                  {selectedEvent.title}
+                </h3>
+                <Badge className={getStatusColor(selectedEvent.status, selectedEvent.type)}>
+                  {selectedEvent.status}
                 </Badge>
               </div>
               
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedAppointment.client_name}</span>
+                  <span>{selectedEvent.client_name}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    {format(parseISO(selectedAppointment.appointment_date), 'PPP p')} 
-                    ({selectedAppointment.duration_minutes} min)
+                    {format(parseISO(selectedEvent.appointment_date), 'PPP p')} 
+                    ({selectedEvent.duration_minutes} min)
                   </span>
                 </div>
                 
-                {selectedAppointment.client_phone && (
+                {selectedEvent.client_phone && (
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{selectedAppointment.client_phone}</span>
+                    <span>{selectedEvent.client_phone}</span>
                   </div>
                 )}
                 
-                {selectedAppointment.client_email && (
+                {selectedEvent.client_email && (
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span>{selectedAppointment.client_email}</span>
+                    <span>{selectedEvent.client_email}</span>
                   </div>
                 )}
                 
-                {selectedAppointment.description && (
+                {selectedEvent.description && (
                   <div>
-                    <p className="text-sm font-medium mb-1">Description</p>
-                    <p className="text-sm text-muted-foreground">{selectedAppointment.description}</p>
+                    <p className="text-sm font-medium mb-1">
+                      {selectedEvent.type === 'audition' ? 'Notes' : 'Description'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{selectedEvent.description}</p>
                   </div>
                 )}
               </div>
