@@ -105,10 +105,14 @@ export const useRoleBasedRedirect = () => {
         }
       }
       
-      // Don't redirect from public pages unless coming from auth
+      // For public pages other than root, don't auto-redirect unless coming from auth
       if (!isPostLogin) {
-        console.log('🏠 useRoleBasedRedirect: User on public page, not redirecting automatically');
-        return;
+        if (!isOnRootPage) {
+          console.log('🏠 useRoleBasedRedirect: User on public page (not root), not redirecting automatically');
+          return;
+        } else {
+          console.log('🚀 useRoleBasedRedirect: Authenticated user on root, redirecting to role-based home');
+        }
       }
 
       // PRIORITY 2: Alumna
