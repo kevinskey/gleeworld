@@ -35,7 +35,8 @@ const adminModules = [
   { id: 'security', name: 'Security', icon: Shield, description: 'Security settings and access control' },
   { id: 'database', name: 'Database', icon: Database, description: 'Database management' },
   { id: 'music-library', name: 'Music Library', icon: Music, description: 'Manage music files' },
-  { id: 'finance', name: 'Finance', icon: DollarSign, description: 'Financial management' },
+  { id: 'finance', name: 'Bookkeeping', icon: DollarSign, description: 'Financial management' },
+  { id: 'module-access', name: 'Module Access', icon: Shield, description: 'Assign module visibility to users', route: '/admin/module-access' },
 ];
 
 export const FreshAdminDashboard = () => {

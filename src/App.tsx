@@ -113,6 +113,7 @@ import CustomerInfo from "./pages/booking/CustomerInfo";
 import BookingConfirmation from "./pages/booking/BookingConfirmation";
 import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
+import ModuleAccess from "./pages/admin/ModuleAccess";
 
 const queryClient = new QueryClient({
   defaultOptions: {
