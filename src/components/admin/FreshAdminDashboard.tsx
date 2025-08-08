@@ -14,7 +14,10 @@ import {
   MessageSquare,
   Music,
   GraduationCap,
-  DollarSign
+  DollarSign,
+  Package,
+  ShoppingBag,
+  Radio
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
@@ -25,17 +28,32 @@ import { SystemModule } from '@/components/admin/SystemModule';
 
 const adminModules = [
   { id: 'plugin-management', name: 'Plugin Management', icon: Settings, description: 'Control modular plugins across the platform' },
-  { id: 'user-management', name: 'User Management', icon: Users, description: 'Manage users and permissions' },
-  { id: 'system', name: 'System', icon: BarChart3, description: 'System stats, health, and monitoring' },
-  { id: 'audition-system', name: 'Auditions', icon: Music, description: 'Manage auditions and auditioner registrations', route: '/admin/auditions' },
-  { id: 'analytics', name: 'Analytics', icon: BarChart3, description: 'View platform analytics' },
-  { id: 'communications', name: 'Communications', icon: Mail, description: 'Send emails and notifications' },
-  { id: 'events', name: 'Events', icon: Calendar, description: 'Manage events and calendar' },
-  { id: 'content', name: 'Content', icon: FileText, description: 'Manage site content' },
-  { id: 'security', name: 'Security', icon: Shield, description: 'Security settings and access control' },
-  { id: 'database', name: 'Database', icon: Database, description: 'Database management' },
-  { id: 'music-library', name: 'Music Library', icon: Music, description: 'Manage music files' },
-  { id: 'finance', name: 'Bookkeeping', icon: DollarSign, description: 'Financial management' },
+  { id: 'user-management', name: 'User Management', icon: Users, description: 'Manage users and permissions', route: '/member-directory' },
+  { id: 'auditions', name: 'Auditions', icon: Music, description: 'Manage auditions and registrations', route: '/admin/auditions' },
+  { id: 'attendance', name: 'Attendance', icon: Calendar, description: 'Track rehearsal and event attendance', route: '/attendance' },
+  { id: 'bookkeeping', name: 'Bookkeeping', icon: DollarSign, description: 'Treasurer & finance tools', route: '/treasurer' },
+  { id: 'communications', name: 'Communications', icon: Mail, description: 'Email, SMS, in-app messaging', route: '/admin/communications' },
+  { id: 'calendar', name: 'Calendar', icon: Calendar, description: 'Internal calendar and events', route: '/events' },
+  { id: 'schedules', name: 'Schedules', icon: Calendar, description: 'Scheduling and availability', route: '/scheduling' },
+  { id: 'community-hub', name: 'Community Hub', icon: MessageSquare, description: 'Community features hub', route: '/dashboard' },
+  { id: 'event-planner', name: 'Event Planner', icon: Calendar, description: 'Plan and manage events', route: '/event-planner' },
+  { id: 'tour-planner', name: 'Tour Planner', icon: Calendar, description: 'Plan tours and routes', route: '/tour-planner' },
+  { id: 'shop', name: 'Shop', icon: ShoppingBag, description: 'Public storefront', route: '/shop' },
+  { id: 'inventory-products', name: 'Inventory & Products', icon: Package, description: 'Admin product management', route: '/admin/products' },
+  { id: 'scholarships', name: 'Scholarships', icon: GraduationCap, description: 'Manage scholarships', route: '/admin/scholarships' },
+  { id: 'contracts', name: 'Contracts', icon: FileText, description: 'Contracts and signatures', route: '/contracts' },
+  { id: 'booking', name: 'Appointments / Booking', icon: Calendar, description: 'Service booking and scheduling', route: '/booking' },
+  { id: 'radio', name: 'Radio', icon: Radio, description: 'Manage radio and streams', route: '/radio' },
+  { id: 'music-library', name: 'Music Library', icon: Music, description: 'Scores and recordings', route: '/music-library' },
+  { id: 'media-library', name: 'Media Library', icon: Music, description: 'Photos, audio, video', route: '/admin/media' },
+  { id: 'member-directory', name: 'Member Directory', icon: Users, description: 'Browse and manage members', route: '/member-directory' },
+  { id: 'wardrobe', name: 'Wardrobe', icon: FileText, description: 'Costumes and attire', route: '/wardrobe' },
+  { id: 'executive-board', name: 'Executive Board', icon: Shield, description: 'Board dashboards', route: '/admin/executive' },
+  { id: 'documents', name: 'Documents & Forms', icon: FileText, description: 'Contracts, W9s, and official paperwork', route: '/admin/documents' },
+  { id: 'access-control', name: 'Access Control', icon: Shield, description: 'Role assignments and security policies', route: '/admin/access' },
+  { id: 'analytics', name: 'Analytics', icon: BarChart3, description: 'Platform analytics', route: '/admin/analytics' },
+  { id: 'database', name: 'Database', icon: Database, description: 'Database management', route: '/admin/database' },
+  { id: 'system-settings', name: 'System Settings', icon: Settings, description: 'Platform configuration', route: '/admin/settings' },
   { id: 'module-access', name: 'Module Access', icon: Shield, description: 'Assign module visibility to users', route: '/admin/module-access' },
 ];
 
