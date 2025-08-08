@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useDropzone } from "react-dropzone";
+import { generateThumbnail, cleanupThumbnail } from "@/utils/thumbnails";
 import { 
   Upload, 
   Image, 
@@ -37,6 +38,7 @@ export const MediaUploadButton = ({
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [fileThumbnails, setFileThumbnails] = useState<Record<string, string>>({});
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("general");
@@ -69,7 +71,7 @@ export const MediaUploadButton = ({
     },
     multiple: true, // Enable multiple file selection
     maxSize: 50 * 1024 * 1024, // 50MB max file size
-    onDrop: (acceptedFiles, rejectedFiles) => {
+    onDrop: async (acceptedFiles, rejectedFiles) => {
       if (rejectedFiles.length > 0) {
         toast({
           title: "Some files were rejected",
@@ -77,11 +79,45 @@ export const MediaUploadButton = ({
           variant: "destructive"
         });
       }
+      
       setSelectedFiles(prev => [...prev, ...acceptedFiles]);
+      
+      // Generate thumbnails for accepted files
+      for (const file of acceptedFiles) {
+        const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+        try {
+          const thumbnail = await generateThumbnail(file);
+          if (thumbnail) {
+            setFileThumbnails(prev => ({ ...prev, [fileKey]: thumbnail }));
+          }
+        } catch (error) {
+          console.error('Failed to generate thumbnail for', file.name, error);
+        }
+      }
     }
   });
 
+  // Cleanup thumbnails on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(fileThumbnails).forEach(cleanupThumbnail);
+    };
+  }, [fileThumbnails]);
+
   const removeFile = (index: number) => {
+    const file = selectedFiles[index];
+    const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+    
+    // Clean up thumbnail
+    if (fileThumbnails[fileKey]) {
+      cleanupThumbnail(fileThumbnails[fileKey]);
+      setFileThumbnails(prev => {
+        const newThumbnails = { ...prev };
+        delete newThumbnails[fileKey];
+        return newThumbnails;
+      });
+    }
+    
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -223,7 +259,9 @@ export const MediaUploadButton = ({
         });
       }
 
-      // Reset form
+      // Reset form and clean up thumbnails
+      Object.values(fileThumbnails).forEach(cleanupThumbnail);
+      setFileThumbnails({});
       setSelectedFiles([]);
       setTitle("");
       setDescription("");
@@ -298,25 +336,44 @@ export const MediaUploadButton = ({
           {selectedFiles.length > 0 && (
             <div>
               <Label>Selected Files ({selectedFiles.length})</Label>
-              <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
-                {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 border rounded">
-                    <div className="flex items-center gap-2">
-                      {getFileIcon(file)}
-                      <span className="text-sm truncate">{file.name}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {formatFileSize(file.size)}
-                      </Badge>
+              <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                {selectedFiles.map((file, index) => {
+                  const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+                  const thumbnail = fileThumbnails[fileKey];
+                  
+                  return (
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        {thumbnail ? (
+                          <div className="w-12 h-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                            <img 
+                              src={thumbnail} 
+                              alt={file.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                            {getFileIcon(file)}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <span className="text-sm font-medium truncate block">{file.name}</span>
+                          <Badge variant="outline" className="text-xs mt-1">
+                            {formatFileSize(file.size)}
+                          </Badge>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
