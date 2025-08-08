@@ -41,14 +41,6 @@ export const FreshAdminDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
-  const [isSpinning, setIsSpinning] = useState(false);
-
-  // Auto-start spinning on mount
-  useEffect(() => {
-    setIsSpinning(true);
-    const timer = setTimeout(() => setIsSpinning(false), 3000); // Stop after 3 seconds
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
@@ -86,20 +78,11 @@ export const FreshAdminDashboard = () => {
 
         {/* Admin Modules Grid */}
         <Card className="bg-background/50 border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">Administration Modules</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Select a module to manage different aspects of the platform
-              </p>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setIsSpinning(!isSpinning)}
-            >
-              {isSpinning ? '🎰 Stop' : '🎰 Spin'}
-            </Button>
+          <CardHeader>
+            <CardTitle className="text-lg">Administration Modules</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Select a module to manage different aspects of the platform
+            </p>
           </CardHeader>
           <CardContent>
             <div className="relative">
@@ -114,18 +97,14 @@ export const FreshAdminDashboard = () => {
                   overflowX: 'auto'
                 }}
               >
-                {adminModules.map((module, index) => (
+                {adminModules.map((module) => (
                   <Card 
                     key={module.id}
                     className={`cursor-pointer transition-all hover:shadow-md border-border w-[280px] h-[180px] flex-shrink-0 ${
                       selectedModule === module.id 
                         ? 'ring-2 ring-primary bg-primary/5' 
                         : 'bg-background/30 hover:bg-background/60'
-                    } ${isSpinning ? 'animate-[spin_0.8s_linear_infinite]' : ''}`}
-                    style={{
-                      transformStyle: 'preserve-3d',
-                      animationDelay: isSpinning ? `${index * 0.1}s` : '0s'
-                    }}
+                    }`}
                     onClick={() => setSelectedModule(module.id)}
                   >
                     <CardContent className="p-4 text-center h-full flex flex-col justify-center">
