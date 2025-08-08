@@ -125,63 +125,102 @@ export const MediaUploadButton = ({
     setUploadProgress(0);
     
     try {
-      const uploadedFiles = [];
       const totalFiles = selectedFiles.length;
+      let completedUploads = 0;
 
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const file = selectedFiles[i];
-        const fileName = `${Date.now()}-${file.name}`;
+      // Create upload promises for simultaneous uploads
+      const uploadPromises = selectedFiles.map(async (file, index) => {
+        const fileName = `${Date.now()}-${index}-${file.name}`;
         const filePath = `${category}/${fileName}`;
 
-        // Upload file to storage
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('media-library')
-          .upload(filePath, file);
+        try {
+          // Upload file to storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('media-library')
+            .upload(filePath, file);
 
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          throw uploadError;
-        }
+          if (uploadError) {
+            console.error('Upload error for file:', file.name, uploadError);
+            throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
+          }
 
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('media-library')
-          .getPublicUrl(filePath);
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from('media-library')
+            .getPublicUrl(filePath);
 
-        // Store metadata in database using direct insert
-        const { data: mediaData, error: dbError } = await supabase
-          .from('gw_media_library')
-          .insert({
-            title: selectedFiles.length === 1 ? title : `${title} - ${file.name}`,
-            description: description || null,
+          // Store metadata in database
+          const { data: mediaData, error: dbError } = await supabase
+            .from('gw_media_library')
+            .insert({
+              title: selectedFiles.length === 1 ? title : `${title} - ${file.name}`,
+              description: description || null,
+              file_url: urlData.publicUrl,
+              file_path: filePath,
+              file_type: file.type,
+              file_size: file.size,
+              category: category,
+              tags: tags.length > 0 ? tags : null,
+              context: context,
+              uploaded_by: user.id,
+              is_public: category === 'hero' || category === 'promotional'
+            })
+            .select()
+            .single();
+
+          if (dbError) {
+            console.error('Database error for file:', file.name, dbError);
+            // Clean up uploaded file if database insert fails
+            await supabase.storage.from('media-library').remove([filePath]);
+            throw new Error(`Failed to save ${file.name}: ${dbError.message}`);
+          }
+
+          // Update progress
+          completedUploads++;
+          setUploadProgress((completedUploads / totalFiles) * 100);
+
+          return { 
+            id: mediaData.id, 
+            title: selectedFiles.length === 1 ? title : `${title} - ${file.name}`, 
             file_url: urlData.publicUrl,
-            file_path: filePath,
-            file_type: file.type,
-            file_size: file.size,
-            category: category,
-            tags: tags.length > 0 ? tags : null,
-            context: context,
-            uploaded_by: user.id,
-            is_public: category === 'hero' || category === 'promotional'
-          })
-          .select()
-          .single();
-
-        if (dbError) {
-          console.error('Database error:', dbError);
-          // Clean up uploaded file if database insert fails
-          await supabase.storage.from('media-library').remove([filePath]);
-          throw dbError;
+            success: true,
+            fileName: file.name
+          };
+        } catch (error) {
+          console.error(`Upload failed for ${file.name}:`, error);
+          completedUploads++;
+          setUploadProgress((completedUploads / totalFiles) * 100);
+          return {
+            success: false,
+            fileName: file.name,
+            error: error.message
+          };
         }
+      });
 
-        uploadedFiles.push({ id: mediaData, title, file_url: urlData.publicUrl });
-        setUploadProgress(((i + 1) / totalFiles) * 100);
+      // Wait for all uploads to complete
+      const results = await Promise.all(uploadPromises);
+      
+      // Separate successful and failed uploads
+      const successfulUploads = results.filter(result => result.success);
+      const failedUploads = results.filter(result => !result.success);
+
+      // Show results
+      if (successfulUploads.length > 0) {
+        toast({
+          title: "Upload completed",
+          description: `Successfully uploaded ${successfulUploads.length} of ${totalFiles} file(s)`
+        });
       }
 
-      toast({
-        title: "Upload successful",
-        description: `Successfully uploaded ${uploadedFiles.length} file(s) to media library`
-      });
+      if (failedUploads.length > 0) {
+        const failedFileNames = failedUploads.map(f => f.fileName).join(', ');
+        toast({
+          title: "Some uploads failed",
+          description: `Failed to upload: ${failedFileNames}`,
+          variant: "destructive"
+        });
+      }
 
       // Reset form
       setSelectedFiles([]);
@@ -192,7 +231,7 @@ export const MediaUploadButton = ({
       
       // Callback for parent component
       if (onUploadComplete) {
-        onUploadComplete(uploadedFiles);
+        onUploadComplete(successfulUploads);
       }
 
     } catch (error) {
