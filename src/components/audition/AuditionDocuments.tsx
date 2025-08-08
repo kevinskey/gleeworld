@@ -1,122 +1,88 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useUserRole } from "@/hooks/useUserRole";
-
-interface FileItem {
-  name: string;
-  publicUrl: string;
-  createdAt?: string;
-}
 
 export const AuditionDocuments: React.FC = () => {
-  const { toast } = useToast();
-  const { isAdmin, isExecutiveBoard } = useUserRole();
-  const [files, setFiles] = useState<FileItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
 
-  const canManage = isAdmin() || isExecutiveBoard();
-
-  const fetchFiles = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.storage
-        .from("audition-docs")
-        .list("", { limit: 100, offset: 0 });
-
-      if (error) throw error;
-
-      const mapped: FileItem[] = (data || [])
-        .filter((f) => f.name.toLowerCase().endsWith(".pdf"))
-        .map((f) => ({
-          name: f.name,
-          publicUrl: supabase.storage.from("audition-docs").getPublicUrl(f.name).data.publicUrl,
-          createdAt: f.created_at,
-        }));
-
-      setFiles(mapped);
-    } catch (e: any) {
-      console.error("Failed to load audition docs", e);
-      toast({ title: "Error", description: e.message || "Failed to load documents", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const candidates = useMemo(
+    () => [
+      "come-thou-fount.pdf",
+      "Come_Thou_Fount.pdf",
+      "Come-Thu-Fount.pdf",
+      "ComeThouFount.pdf",
+    ],
+    []
+  );
 
   useEffect(() => {
-    fetchFiles();
-  }, []);
+    let isMounted = true;
 
-  const onUpload = async (file: File | null) => {
-    if (!file) return;
-    if (file.type !== "application/pdf") {
-      toast({ title: "Invalid file", description: "Please upload a PDF", variant: "destructive" });
-      return;
-    }
+    const resolveFirstAvailable = async () => {
+      setLoading(true);
+      try {
+        for (const name of candidates) {
+          const { data } = supabase.storage
+            .from("audition-docs")
+            .getPublicUrl(name);
+          const url = data?.publicUrl;
+          if (!url) continue;
+          try {
+            const res = await fetch(url, { method: "HEAD" });
+            if (res.ok) {
+              if (isMounted) setFileUrl(url);
+              break;
+            }
+          } catch {}
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
 
-    setUploading(true);
-    try {
-      const fileName = `${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage
-        .from("audition-docs")
-        .upload(fileName, file, { upsert: false });
-      if (error) throw error;
-      toast({ title: "Uploaded", description: "PDF uploaded successfully" });
-      fetchFiles();
-    } catch (e: any) {
-      console.error("Upload failed", e);
-      toast({ title: "Upload failed", description: e.message || "Could not upload PDF", variant: "destructive" });
-    } finally {
-      setUploading(false);
-    }
-  };
+    resolveFirstAvailable();
+    return () => {
+      isMounted = false;
+    };
+  }, [candidates]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Audition Documents</CardTitle>
-        <CardDescription>Upload and share audition-related PDFs</CardDescription>
+        <CardTitle>Come Thou Fount — Audition Edition (PDF)</CardTitle>
+        <CardDescription>
+          Required audition piece. Open the PDF below.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {canManage && (
-          <div className="flex items-center gap-3">
-            <Input
-              type="file"
-              accept="application/pdf"
-              onChange={(e) => onUpload(e.target.files?.[0] || null)}
-              disabled={uploading}
-            />
-            <Button disabled>{uploading ? "Uploading..." : "Upload PDF"}</Button>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Checking for document…</p>
+        ) : fileUrl ? (
+          <div className="space-y-4">
+            <div className="flex gap-3">
+              <Button asChild>
+                <a href={fileUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Come Thou Fount PDF">
+                  Open PDF
+                </a>
+              </Button>
+            </div>
+            <div className="rounded-md overflow-hidden border">
+              <iframe
+                title="Come Thou Fount — Audition Edition"
+                src={fileUrl}
+                className="w-full h-[70vh]"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              The PDF isn’t available yet. We’ll add “Come Thou Fount — Audition Edition” here shortly.
+            </p>
           </div>
         )}
-
-        <div className="space-y-2">
-          {loading ? (
-            <p className="text-sm text-muted-foreground">Loading documents…</p>
-          ) : files.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No audition PDFs yet.</p>
-          ) : (
-            <ul className="list-disc pl-5 space-y-1">
-              {files.map((f) => (
-                <li key={f.name}>
-                  <a
-                    href={f.publicUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline"
-                    aria-label={`Open ${f.name} PDF`}
-                  >
-                    {f.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
       </CardContent>
     </Card>
   );
