@@ -24,16 +24,16 @@ export const UnifiedDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 pt-4">
       <UniversalHeader />
       
-      <div className="flex flex-col h-[calc(100vh-72px)] p-6 gap-6">
+      <div className="flex flex-col h-[calc(100vh-72px)] p-6 gap-4">
         {/* Top Two-Column Layout - Community Hub & Email */}
-        <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-4 flex-1 min-h-0">
           {/* Community Hub Column */}
-          <div className="h-[500px] border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm">
+          <div className="h-full min-h-0 border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
             <CommunityHubModule />
           </div>
           
           {/* Email Column */}
-          <div className="h-[500px] border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm">
+          <div className="h-full min-h-0 border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
             <EmailModule />
           </div>
         </div>
