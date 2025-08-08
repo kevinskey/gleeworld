@@ -21,7 +21,7 @@ export const UnifiedDashboard = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 pt-4">
       <UniversalHeader />
       
       <div className="flex flex-col h-[calc(100vh-72px)] p-6 gap-6">
