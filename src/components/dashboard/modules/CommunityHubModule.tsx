@@ -29,13 +29,18 @@ export const CommunityHubModule = () => {
 
   const getNoteColorClass = (color: string) => {
     switch (color) {
-      case 'pink': return 'bg-pink-50 border-pink-200 text-pink-800';
-      case 'blue': return 'bg-blue-50 border-blue-200 text-blue-800';
-      case 'yellow': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
-      case 'green': return 'bg-green-50 border-green-200 text-green-800';
-      case 'purple': return 'bg-purple-50 border-purple-200 text-purple-800';
-      default: return 'bg-pink-50 border-pink-200 text-pink-800';
+      case 'pink': return 'bg-pink-200 text-pink-900';
+      case 'blue': return 'bg-blue-200 text-blue-900';
+      case 'yellow': return 'bg-yellow-200 text-yellow-900';
+      case 'green': return 'bg-green-200 text-green-900';
+      case 'purple': return 'bg-purple-200 text-purple-900';
+      default: return 'bg-pink-200 text-pink-900';
     }
+  };
+
+  const getRandomRotation = (id: number) => {
+    const rotations = ['rotate-1', '-rotate-1', 'rotate-2', '-rotate-2', 'rotate-0'];
+    return rotations[id % rotations.length];
   };
 
   return (
@@ -55,7 +60,7 @@ export const CommunityHubModule = () => {
           <TabsTrigger value="directory" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700">Directory</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="buckets" className="flex-1 p-4 bg-gradient-to-b from-pink-50/50 to-background">
+        <TabsContent value="buckets" className="flex-1 p-4 bg-gradient-to-b from-amber-50/50 to-background">
           <div className="space-y-4">
             {/* Send new bucket form */}
             <Card className="p-4 bg-pink-50/50 border-pink-200">
@@ -93,58 +98,75 @@ export const CommunityHubModule = () => {
               </div>
             </Card>
 
-            {/* Buckets list */}
-            <ScrollArea className="h-64">
+            {/* Cork board with post-it notes */}
+            <div className="relative p-6 bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-lg border-4 border-amber-900 shadow-lg min-h-[400px]" 
+                 style={{
+                   backgroundImage: `radial-gradient(circle at 25px 25px, rgba(255,255,255,0.1) 2px, transparent 0),
+                                    radial-gradient(circle at 75px 75px, rgba(255,255,255,0.1) 2px, transparent 0)`,
+                   backgroundSize: '100px 100px'
+                 }}>
               {loading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Heart className="w-8 h-8 mx-auto mb-2 animate-pulse text-pink-400" />
-                  <p>Loading buckets of love...</p>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-amber-100">
+                    <Heart className="w-8 h-8 mx-auto mb-2 animate-pulse" />
+                    <p>Loading buckets of love...</p>
+                  </div>
                 </div>
               ) : buckets.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Heart className="w-8 h-8 mx-auto mb-2 text-pink-400" />
-                  <p>No buckets of love yet</p>
-                  <p className="text-sm">Be the first to share some love!</p>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-amber-100">
+                    <Heart className="w-8 h-8 mx-auto mb-2" />
+                    <p>No buckets of love yet</p>
+                    <p className="text-sm">Be the first to share some love!</p>
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {buckets.map((bucket) => (
-                    <Card key={bucket.id} className={`p-3 border-2 ${getNoteColorClass(bucket.note_color)}`}>
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">{bucket.message}</p>
-                        <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-2">
-                            {bucket.is_anonymous ? (
-                              <span className="flex items-center gap-1">
-                                <User className="w-3 h-3" />
-                                Anonymous
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-min">
+                  {buckets.map((bucket, index) => (
+                    <div 
+                      key={bucket.id} 
+                      className={`relative ${getRandomRotation(parseInt(bucket.id))} transform transition-all duration-200 hover:scale-105 hover:z-10 cursor-pointer`}
+                      style={{ gridRow: `span ${Math.ceil(bucket.message.length / 30) + 1}` }}
+                    >
+                      <div className={`p-3 w-32 h-32 ${getNoteColorClass(bucket.note_color)} shadow-lg border-none relative overflow-hidden`}>
+                        {/* Tape effect at top */}
+                        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-8 h-4 bg-white/60 border border-gray-200 shadow-sm"></div>
+                        
+                        <div className="h-full flex flex-col justify-between text-xs">
+                          <p className="font-medium leading-tight overflow-hidden" style={{ fontSize: '10px' }}>
+                            {bucket.message.length > 60 ? `${bucket.message.substring(0, 60)}...` : bucket.message}
+                          </p>
+                          
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              {bucket.is_anonymous ? (
+                                <span className="text-[8px] opacity-70">Anonymous</span>
+                              ) : (
+                                <span className="text-[8px] opacity-70">
+                                  {bucket.sender_name?.substring(0, 10) || 'Unknown'}
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center justify-between">
+                              {bucket.likes > 0 && (
+                                <span className="flex items-center gap-1">
+                                  <Heart className="w-2 h-2 fill-current" />
+                                  <span className="text-[8px]">{bucket.likes}</span>
+                                </span>
+                              )}
+                              <span className="text-[7px] opacity-60">
+                                {formatDistanceToNow(new Date(bucket.created_at), { addSuffix: true })}
                               </span>
-                            ) : (
-                              <span className="flex items-center gap-1">
-                                <User className="w-3 h-3" />
-                                {bucket.sender_name || 'Unknown'}
-                              </span>
-                            )}
-                            {bucket.recipient_name && (
-                              <span>→ {bucket.recipient_name}</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {bucket.likes > 0 && (
-                              <span className="flex items-center gap-1">
-                                <Heart className="w-3 h-3 fill-current" />
-                                {bucket.likes}
-                              </span>
-                            )}
-                            <span>{formatDistanceToNow(new Date(bucket.created_at), { addSuffix: true })}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   ))}
                 </div>
               )}
-            </ScrollArea>
+            </div>
           </div>
         </TabsContent>
         
