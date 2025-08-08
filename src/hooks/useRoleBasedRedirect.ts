@@ -90,17 +90,23 @@ export const useRoleBasedRedirect = () => {
         return;
       }
       
-      // PRIORITY 3: Executive Board (with verification)
-      const isExecBoard = userProfile.is_exec_board && userProfile.verified;
-      if (isExecBoard) {
-        console.log('👔 useRoleBasedRedirect: Executive Board redirect to /dashboard');
-        navigate('/dashboard', { replace: true });
-        return;
-      }
-      
-      // PRIORITY 4: Regular users
-      console.log('👤 useRoleBasedRedirect: Regular user redirect to /user-dashboard');
-      navigate('/user-dashboard', { replace: true });
+    // PRIORITY 3: Members (all members including exec board get same access with modules at bottom)
+    if (userProfile.role === 'member' || userProfile.is_exec_board) {
+      console.log('👤 useRoleBasedRedirect: Member/Executive redirect to /dashboard');
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+    
+    // PRIORITY 4: Fans
+    if (userProfile.role === 'fan') {
+      console.log('🎵 useRoleBasedRedirect: Fan redirect to /fan');
+      navigate('/fan', { replace: true });
+      return;
+    }
+    
+    // PRIORITY 5: Default fallback for other roles
+    console.log('👤 useRoleBasedRedirect: Default user redirect to /dashboard');
+    navigate('/dashboard', { replace: true });
     };
 
     handleRedirect();
