@@ -96,7 +96,7 @@ export const CommunityHubModule = () => {
                       key={bucket.id}
                       className="group rounded-lg border border-border bg-card/70 hover:bg-card transition-all shadow-sm p-3 flex flex-col gap-2 hover-scale"
                     >
-                      <p className="text-sm text-foreground text-overflow-fade pr-6">
+                      <p className="text-xs md:text-sm text-foreground text-overflow-fade pr-6 leading-snug">
                         {bucket.message}
                       </p>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
