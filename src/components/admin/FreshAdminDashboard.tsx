@@ -85,22 +85,13 @@ export const FreshAdminDashboard = () => {
             </p>
           </CardHeader>
           <CardContent>
-            <div className="relative">
-              <div 
-                className="flex gap-3 pb-4" 
-                style={{ 
-                  display: 'grid',
-                  gridTemplateRows: 'repeat(2, 1fr)',
-                  gridAutoFlow: 'column',
-                  gridAutoColumns: 'minmax(280px, 1fr)',
-                  maxHeight: '400px',
-                  overflowX: 'auto'
-                }}
-              >
-                {adminModules.map((module) => (
+            <div className="relative h-[600px] overflow-hidden">
+              <div className="flex flex-col gap-3 animate-[scroll_30s_linear_infinite]">
+                {/* Duplicate modules for seamless loop */}
+                {[...adminModules, ...adminModules].map((module, index) => (
                   <Card 
-                    key={module.id}
-                    className={`cursor-pointer transition-all hover:shadow-md border-border w-[280px] h-[180px] flex-shrink-0 ${
+                    key={`${module.id}-${index}`}
+                    className={`cursor-pointer transition-all hover:shadow-md border-border w-full h-[180px] flex-shrink-0 ${
                       selectedModule === module.id 
                         ? 'ring-2 ring-primary bg-primary/5' 
                         : 'bg-background/30 hover:bg-background/60'
@@ -120,12 +111,9 @@ export const FreshAdminDashboard = () => {
                 ))}
               </div>
               
-              {/* Scroll indicator */}
-              {adminModules.length > 8 && (
-                <div className="absolute right-2 top-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded-md border">
-                  Scroll →
-                </div>
-              )}
+              {/* Gradient overlays for seamless effect */}
+              <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-background to-transparent pointer-events-none z-10" />
+              <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent pointer-events-none z-10" />
             </div>
           </CardContent>
         </Card>
