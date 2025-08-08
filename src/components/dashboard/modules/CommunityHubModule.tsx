@@ -60,10 +60,10 @@ export const CommunityHubModule = () => {
           <TabsTrigger value="directory" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700">Directory</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="buckets" className="flex-1 p-4 bg-gradient-to-b from-amber-50/50 to-background">
+        <TabsContent value="buckets" className="flex-1 p-4">
           <div className="space-y-4">
             {/* Cork board with post-it notes */}
-            <div className="relative p-6 bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-lg border-4 border-amber-900 shadow-lg min-h-[400px]" 
+            <div className="relative p-6 bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-lg border-4 border-amber-900 shadow-lg min-h-[400px]"
                  style={{
                    backgroundImage: `radial-gradient(circle at 25px 25px, rgba(255,255,255,0.1) 2px, transparent 0),
                                     radial-gradient(circle at 75px 75px, rgba(255,255,255,0.1) 2px, transparent 0)`,
