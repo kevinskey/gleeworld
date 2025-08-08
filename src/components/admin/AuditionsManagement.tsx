@@ -562,25 +562,57 @@ export const AuditionsManagement = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <PageHeader
-        title="Auditions Management"
-        description="Manage audition sessions, applications, and evaluations"
-        showBackButton={false}
-      >
-        <Select value={selectedSession} onValueChange={setSelectedSession}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Filter by session" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Sessions</SelectItem>
-            {sessions.map((session) => (
-              <SelectItem key={session.id} value={session.id}>
-                {session.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </PageHeader>
+      {/* Custom Header Design */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 rounded-3xl shadow-xl">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <Music className="h-6 w-6 text-white" />
+                </div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
+                  Auditions Management
+                </h1>
+              </div>
+              <p className="text-white/90 text-base sm:text-lg max-w-2xl">
+                Manage audition sessions, applications, and evaluations
+              </p>
+              <div className="flex items-center gap-4 pt-2">
+                <div className="flex items-center gap-2 text-white/80 text-sm">
+                  <Users className="h-4 w-4" />
+                  <span>{applications.length} Applications</span>
+                </div>
+                <div className="flex items-center gap-2 text-white/80 text-sm">
+                  <Calendar className="h-4 w-4" />
+                  <span>{sessions.length} Sessions</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <Select value={selectedSession} onValueChange={setSelectedSession}>
+                <SelectTrigger className="w-full sm:w-56 bg-white/20 border-white/30 text-white placeholder:text-white/70 hover:bg-white/30 transition-colors">
+                  <SelectValue placeholder="Filter by session" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sessions</SelectItem>
+                  {sessions.map((session) => (
+                    <SelectItem key={session.id} value={session.id}>
+                      {session.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+        
+        {/* Decorative Elements */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Mobile optimized tab list */}
