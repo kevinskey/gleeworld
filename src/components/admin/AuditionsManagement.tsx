@@ -1251,8 +1251,11 @@ export const AuditionsManagement = () => {
                     ))}
                    </div>
                </CardContent>
-            </>
-          )}
+             </Card>
+           </>
+           )}
+
+           {/* Evaluation Summary */}
 
           {/* Evaluation Summary */}
           <Card>
