@@ -17,6 +17,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Header } from '../Header';
 
 import { PluginManagementDashboard } from '@/components/admin/PluginManagementDashboard';
 import { SystemModule } from '@/components/admin/SystemModule';
@@ -42,31 +43,14 @@ export const FreshAdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      {/* Header */}
-      <div className="border-b border-border bg-background/80 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Manage the Spelman College Glee Club platform</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="bg-primary/10 text-primary">
-                Super Admin
-              </Badge>
-              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-xs font-medium text-primary">
-                  {user?.email?.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header 
+        activeTab="admin"
+        onTabChange={() => {}}
+        onToggleMessages={() => {}}
+        showMessages={false}
+      />
 
-      <div className="container mx-auto px-6 py-6">
-
-        {/* Quick Actions */}
+        <div className="container mx-auto px-6 py-6">
         <Card className="mb-8 bg-background/50 border-border">
           <CardHeader>
             <CardTitle className="text-lg">Quick Actions</CardTitle>
