@@ -185,8 +185,7 @@ export const GleeWorldLanding = () => {
 
   const currentHeroSlide = heroSlides[currentSlide];
   const goToAuditions = () => {
-    if (user) navigate('/admin/auditions');
-    else navigate('/auditions');
+    navigate('/dashboard/auditioner');
   };
 
   const formatDate = (dateString: string) => {
