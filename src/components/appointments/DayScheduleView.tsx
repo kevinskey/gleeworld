@@ -104,6 +104,9 @@ export const DayScheduleView = () => {
       const dayEnd = new Date(selectedDate);
       dayEnd.setHours(23, 59, 59, 999);
 
+      console.log('Fetching for date:', selectedDate.toDateString());
+      console.log('Date range:', dayStart.toISOString(), 'to', dayEnd.toISOString());
+
       // Fetch auditions for selected day
       const { data: auditions, error: auditionsError } = await supabase
         .from('gw_auditions')
@@ -111,14 +114,18 @@ export const DayScheduleView = () => {
         .gte('audition_date', dayStart.toISOString())
         .lte('audition_date', dayEnd.toISOString());
 
+      console.log('Auditions found:', auditions);
+
       if (auditionsError) throw auditionsError;
 
-      // Fetch appointments for selected day
+      // Fetch appointments for selected day  
       const { data: appointments, error: appointmentsError } = await supabase
         .from('gw_appointments')
         .select('*')
         .gte('appointment_date', dayStart.toISOString())
         .lte('appointment_date', dayEnd.toISOString());
+
+      console.log('Appointments found:', appointments);
 
       if (appointmentsError) throw appointmentsError;
 
@@ -131,6 +138,8 @@ export const DayScheduleView = () => {
         const start = parse(startTime, 'h:mm a', new Date());
         const end = new Date(start.getTime() + duration * 60000);
         const endTime = format(end, 'h:mm a');
+
+        console.log('Processing audition:', audition.first_name, audition.last_name, 'at', startTime);
 
         return {
           id: audition.id,
@@ -155,6 +164,8 @@ export const DayScheduleView = () => {
         const end = new Date(aptDate.getTime() + duration * 60000);
         const endTime = format(end, 'h:mm a');
 
+        console.log('Processing appointment:', apt.client_name, 'at', startTime);
+
         return {
           id: apt.id,
           title: apt.title || 'Appointment',
@@ -170,6 +181,7 @@ export const DayScheduleView = () => {
       });
 
       const allEvents = [...auditionEvents, ...appointmentEvents];
+      console.log('Total events found:', allEvents.length, allEvents);
       setDayEvents(allEvents);
 
     } catch (error) {
