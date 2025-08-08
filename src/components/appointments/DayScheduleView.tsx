@@ -254,14 +254,14 @@ export const DayScheduleView = () => {
             </div>
           ))}
           {days.map(day => (
-            <div key={day.toISOString()} className="bg-white p-2 min-h-[100px] hover:bg-gray-50">
+            <div key={day.toISOString()} className="bg-white p-2 min-h-[140px] hover:bg-gray-50">
               <div className="font-medium text-sm text-gray-900 mb-1">
                 {format(day, 'd')}
               </div>
               <div className="space-y-1">
                 {filteredEvents
                   .filter(event => isSameDay(day, selectedDate))
-                  .slice(0, 2)
+                  .slice(0, 3)
                   .map(event => (
                     <div key={event.id} className="text-xs p-1 rounded bg-blue-100 text-blue-800 truncate">
                       {event.title}
