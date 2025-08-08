@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Music, Calendar, Shirt, DollarSign, UserCheck, Settings, BookOpen, Users, Camera, Radio, Briefcase, ScanLine } from 'lucide-react';
+import { Mail, Music, Calendar, Shirt, DollarSign, UserCheck, Settings, BookOpen, Users, Camera, Radio, Briefcase, ScanLine, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +59,14 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
       description: 'Check-in & Records',
       notifications: 0,
       category: 'Administration'
+    },
+    {
+      id: 'wellness',
+      name: 'Wellness Suite',
+      icon: Heart,
+      description: 'Mental Health & Well-being',
+      notifications: 0,
+      category: 'Personal'
     },
     {
       id: 'radio',
