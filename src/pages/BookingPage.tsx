@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Search, ChevronDown, Calendar, Clock, MapPin, Users, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -93,7 +94,7 @@ export default function BookingPage() {
             <div className="flex items-center space-x-8">
               <div className="text-primary-foreground font-bold text-xl">GleeWorld</div>
               <nav className="hidden md:flex space-x-6">
-                <a href="/scheduling" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Services</a>
+                <Link to="/scheduling" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Services</Link>
                 <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Instructors</a>
                 <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Locations</a>
                 <a href="#" className="text-secondary font-semibold border-b-2 border-secondary">Book Now</a>
