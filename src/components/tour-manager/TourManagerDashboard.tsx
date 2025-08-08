@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Route, Mail, FileText, MapPin, Calendar, Users } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Route, Mail, FileText, MapPin, Calendar, Users, TrendingUp, Activity, CheckCircle2, ArrowRight } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
@@ -23,140 +24,262 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
   const [activeTab, setActiveTab] = useState('booking-requests');
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Route className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Tour Manager</h1>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Enhanced Header */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-3xl blur-3xl"></div>
+          <div className="relative bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm border border-border/50 rounded-2xl p-8 shadow-2xl">
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl"></div>
+                  <div className="relative bg-gradient-to-br from-primary to-primary/80 p-4 rounded-full shadow-lg">
+                    <Route className="h-8 w-8 text-primary-foreground" />
+                  </div>
+                </div>
+                <div className="text-left">
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                    Tour Manager
+                  </h1>
+                  <Badge variant="secondary" className="mt-2 text-xs">
+                    Professional Edition
+                  </Badge>
+                </div>
+              </div>
+              <p className="text-muted-foreground max-w-3xl mx-auto text-lg leading-relaxed">
+                Comprehensive tour management system for handling booking requests, correspondence, 
+                performer contracts, and intelligent route planning with AI-powered optimization.
+              </p>
+            </div>
           </div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Comprehensive tour management system for handling booking requests, correspondence, 
-            performer contracts, and intelligent route planning.
-          </p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-2">
-                <Mail className="h-5 w-5 text-blue-600" />
-                <div>
-                  <p className="text-2xl font-bold">0</p>
-                  <p className="text-xs text-muted-foreground">New Requests</p>
+        {/* Enhanced Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-blue-50/80 to-blue-100/60 dark:from-blue-950/20 dark:to-blue-900/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <CardContent className="relative pt-6 pb-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">12</p>
+                  <p className="text-sm text-blue-600/80 dark:text-blue-400/80 font-medium">New Requests</p>
                 </div>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-lg"></div>
+                  <div className="relative bg-blue-500/10 p-3 rounded-full">
+                    <Mail className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2 text-xs">
+                <TrendingUp className="h-3 w-3 text-green-500" />
+                <span className="text-green-600 font-medium">+23%</span>
+                <span className="text-muted-foreground">from last month</span>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-2">
-                <FileText className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="text-2xl font-bold">0</p>
-                  <p className="text-xs text-muted-foreground">Active Contracts</p>
+
+          <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-green-50/80 to-green-100/60 dark:from-green-950/20 dark:to-green-900/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <CardContent className="relative pt-6 pb-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-3xl font-bold text-green-700 dark:text-green-300">8</p>
+                  <p className="text-sm text-green-600/80 dark:text-green-400/80 font-medium">Active Contracts</p>
                 </div>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-green-500/20 rounded-full blur-lg"></div>
+                  <div className="relative bg-green-500/10 p-3 rounded-full">
+                    <FileText className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2 text-xs">
+                <CheckCircle2 className="h-3 w-3 text-green-500" />
+                <span className="text-green-600 font-medium">6 signed</span>
+                <span className="text-muted-foreground">2 pending</span>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-5 w-5 text-purple-600" />
-                <div>
-                  <p className="text-2xl font-bold">0</p>
-                  <p className="text-xs text-muted-foreground">Planned Routes</p>
+
+          <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-purple-50/80 to-purple-100/60 dark:from-purple-950/20 dark:to-purple-900/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <CardContent className="relative pt-6 pb-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">3</p>
+                  <p className="text-sm text-purple-600/80 dark:text-purple-400/80 font-medium">Planned Routes</p>
                 </div>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-lg"></div>
+                  <div className="relative bg-purple-500/10 p-3 rounded-full">
+                    <MapPin className="h-6 w-6 text-purple-600" />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2 text-xs">
+                <Activity className="h-3 w-3 text-purple-500" />
+                <span className="text-purple-600 font-medium">1 optimized</span>
+                <span className="text-muted-foreground">2 planning</span>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-orange-600" />
-                <div>
-                  <p className="text-2xl font-bold">0</p>
-                  <p className="text-xs text-muted-foreground">Upcoming Tours</p>
+
+          <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-orange-50/80 to-orange-100/60 dark:from-orange-950/20 dark:to-orange-900/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <CardContent className="relative pt-6 pb-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-3xl font-bold text-orange-700 dark:text-orange-300">5</p>
+                  <p className="text-sm text-orange-600/80 dark:text-orange-400/80 font-medium">Upcoming Tours</p>
                 </div>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-orange-500/20 rounded-full blur-lg"></div>
+                  <div className="relative bg-orange-500/10 p-3 rounded-full">
+                    <Calendar className="h-6 w-6 text-orange-600" />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2 text-xs">
+                <Calendar className="h-3 w-3 text-orange-500" />
+                <span className="text-orange-600 font-medium">Next: Apr 15</span>
+                <span className="text-muted-foreground">14 days</span>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="booking-requests" className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              <span className="hidden sm:inline">Booking Requests</span>
-            </TabsTrigger>
-            <TabsTrigger value="correspondence" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Correspondence</span>
-            </TabsTrigger>
-            <TabsTrigger value="contracts" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Contracts</span>
-            </TabsTrigger>
-            <TabsTrigger value="route-planning" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <span className="hidden sm:inline">Route Planning</span>
-            </TabsTrigger>
-          </TabsList>
+        {/* Enhanced Main Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-2xl blur-xl"></div>
+            <TabsList className="relative grid w-full grid-cols-4 bg-card/50 backdrop-blur-sm border border-border/50 p-2 rounded-2xl shadow-lg">
+              <TabsTrigger value="booking-requests" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/10 data-[state=active]:to-blue-600/10 data-[state=active]:text-blue-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                <div className="relative">
+                  <Mail className="h-4 w-4" />
+                  <div className="absolute -top-1 -right-1 h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
+                </div>
+                <span className="hidden sm:inline font-medium">Requests</span>
+              </TabsTrigger>
+              <TabsTrigger value="correspondence" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/10 data-[state=active]:to-purple-600/10 data-[state=active]:text-purple-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline font-medium">Messages</span>
+              </TabsTrigger>
+              <TabsTrigger value="contracts" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500/10 data-[state=active]:to-green-600/10 data-[state=active]:text-green-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline font-medium">Contracts</span>
+              </TabsTrigger>
+              <TabsTrigger value="route-planning" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/10 data-[state=active]:to-orange-600/10 data-[state=active]:text-orange-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                <MapPin className="h-4 w-4" />
+                <span className="hidden sm:inline font-medium">Routes</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="booking-requests" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5" />
-                  Booking Requests Management
+          <TabsContent value="booking-requests" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-blue-500/10 to-blue-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-blue-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-blue-500/10 p-2 rounded-lg">
+                      <Mail className="h-5 w-5 text-blue-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                      Booking Requests Management
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      Manage incoming performance requests and bookings
+                    </p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-blue-500 ml-auto" />
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <BookingRequestManager user={user} />
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="correspondence" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Public Correspondence
+          <TabsContent value="correspondence" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-purple-500/10 to-purple-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-purple-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-purple-500/10 p-2 rounded-lg">
+                      <Users className="h-5 w-5 text-purple-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">
+                      Public Correspondence
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      Manage communications with organizations and media
+                    </p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-purple-500 ml-auto" />
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <TourCorrespondence user={user} />
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="contracts" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Performer Contracts
+          <TabsContent value="contracts" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-green-500/10 to-green-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-green-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-green-500/10 p-2 rounded-lg">
+                      <FileText className="h-5 w-5 text-green-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+                      Performer Contracts
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      Create, manage, and track contract signatures
+                    </p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-green-500 ml-auto" />
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <ContractManager user={user} />
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="route-planning" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  AI Route Planning
+          <TabsContent value="route-planning" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-orange-500/10 to-orange-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-orange-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-orange-500/10 p-2 rounded-lg">
+                      <MapPin className="h-5 w-5 text-orange-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-orange-600 to-orange-700 bg-clip-text text-transparent">
+                      AI Route Planning
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      Optimize tour routes with intelligent AI planning
+                    </p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-orange-500 ml-auto" />
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <AIRoutePlanner user={user} />
               </CardContent>
             </Card>
