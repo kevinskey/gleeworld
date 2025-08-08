@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +41,14 @@ export const FreshAdminDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  // Auto-start spinning on mount
+  useEffect(() => {
+    setIsSpinning(true);
+    const timer = setTimeout(() => setIsSpinning(false), 3000); // Stop after 3 seconds
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
@@ -78,22 +86,37 @@ export const FreshAdminDashboard = () => {
 
         {/* Admin Modules Grid */}
         <Card className="bg-background/50 border-border">
-          <CardHeader>
-            <CardTitle className="text-lg">Administration Modules</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Select a module to manage different aspects of the platform
-            </p>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">Administration Modules</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Select a module to manage different aspects of the platform
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setIsSpinning(!isSpinning)}
+            >
+              {isSpinning ? '🎰 Stop' : '🎰 Spin'}
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="relative">
-              <div className="flex gap-3 pb-4" style={{ 
-                display: 'grid',
-                gridTemplateRows: 'repeat(2, 1fr)',
-                gridAutoFlow: 'column',
-                gridAutoColumns: 'minmax(280px, 1fr)',
-                maxHeight: '400px',
-                overflowX: 'auto'
-              }}>
+              <div 
+                className={`flex gap-3 pb-4 transition-transform duration-1000 ${
+                  isSpinning ? 'animate-[spin_0.5s_linear_infinite]' : ''
+                }`} 
+                style={{ 
+                  display: 'grid',
+                  gridTemplateRows: 'repeat(2, 1fr)',
+                  gridAutoFlow: 'column',
+                  gridAutoColumns: 'minmax(280px, 1fr)',
+                  maxHeight: '400px',
+                  overflowX: 'auto',
+                  transformStyle: 'preserve-3d'
+                }}
+              >
                 {adminModules.map((module) => (
                   <Card 
                     key={module.id}
