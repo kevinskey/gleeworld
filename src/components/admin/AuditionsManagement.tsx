@@ -617,24 +617,24 @@ export const AuditionsManagement = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Mobile optimized tab list */}
         <div className="overflow-x-auto">
-          <TabsList className="grid w-full min-w-[600px] grid-cols-5 h-auto sm:h-10">
-            <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-4 text-xs sm:text-sm">
+          <TabsList className="grid w-full min-w-[600px] grid-cols-5 h-auto sm:h-12">
+            <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="sessions" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-4 text-xs sm:text-sm">
+            <TabsTrigger value="sessions" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
               <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Sessions</span>
             </TabsTrigger>
-            <TabsTrigger value="roster" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-4 text-xs sm:text-sm">
+            <TabsTrigger value="roster" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Roster</span>
             </TabsTrigger>
-            <TabsTrigger value="evaluations" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-4 text-xs sm:text-sm">
+            <TabsTrigger value="evaluations" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
               <Star className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Evaluations</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-4 text-xs sm:text-sm">
+            <TabsTrigger value="analytics" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Data Center</span>
               <span className="sm:hidden">Data</span>
