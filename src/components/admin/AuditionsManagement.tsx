@@ -642,7 +642,7 @@ export const AuditionsManagement = () => {
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-8 mt-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -739,7 +739,7 @@ export const AuditionsManagement = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="sessions" className="space-y-6">
+        <TabsContent value="sessions" className="space-y-6 mt-8">
           <Card>
             <CardHeader>
               <CardTitle>Create New Audition Session</CardTitle>
@@ -861,7 +861,7 @@ export const AuditionsManagement = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="roster" className="space-y-6">
+        <TabsContent value="roster" className="space-y-6 mt-8">
           <AuditionFilters
             sortBy={sortBy}
             sortOrder={sortOrder}
@@ -1098,7 +1098,7 @@ export const AuditionsManagement = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="evaluations" className="space-y-6">
+        <TabsContent value="evaluations" className="space-y-6 mt-8">
           {/* Show Adjudicator Scoring Interface if active */}
           {showAdjudicatorScoring && selectedPerformer ? (
             adjudicatorType === 'sight_reading' ? (
@@ -1290,7 +1290,7 @@ export const AuditionsManagement = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-6">
+        <TabsContent value="analytics" className="space-y-6 mt-8">
           {/* Key Analytics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
