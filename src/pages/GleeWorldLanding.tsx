@@ -11,6 +11,7 @@ import { useYouTubeVideos } from "@/hooks/useYouTubeVideos";
 
 import { useNavigate, Link } from "react-router-dom";
 import gleeClubFallback from "@/assets/glee-club-fallback.jpg";
+import gleeWorldBackground from "@/assets/glee-world-background.jpg";
 import { AlbumModal } from "@/components/music/AlbumModal";
 import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
 
@@ -266,25 +267,12 @@ export const GleeWorldLanding = () => {
   // };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-background via-background/95 to-primary/10 relative">
-      {/* Background pattern overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(255,255,255,0.15)_1px,_transparent_0)] bg-[length:20px_20px] opacity-20" />
-      
-      {/* Musical note decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 text-primary/20 transform rotate-12">
-          <Music className="w-8 h-8" />
-        </div>
-        <div className="absolute top-32 right-16 text-primary/15 transform -rotate-12">
-          <Music className="w-6 h-6" />
-        </div>
-        <div className="absolute bottom-20 left-20 text-primary/10 transform rotate-45">
-          <Music className="w-10 h-10" />
-        </div>
-        <div className="absolute bottom-40 right-8 text-primary/15 transform -rotate-30">
-          <Music className="w-5 h-5" />
-        </div>
-      </div>
+    <div 
+      className="min-h-screen w-full relative bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url(${gleeWorldBackground})` }}
+    >
+      {/* Background overlay for better text readability */}
+      <div className="absolute inset-0 bg-background/40 backdrop-blur-[0.5px]" />
       
       <PublicLayout>
 
