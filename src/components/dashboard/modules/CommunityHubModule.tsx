@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Users, MessageSquare, Heart, Send } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,8 +18,32 @@ export const CommunityHubModule = () => {
   const [activeFilter, setActiveFilter] = useState<'all' | 'needs' | 'kudos' | 'wellness' | 'tasks'>('all');
   const { user } = useAuth();
   const { buckets, loading, sendBucketOfLove } = useBucketsOfLove();
-  const filteredBuckets = buckets; // Placeholder: apply filter when categories are available
 
+  const filteredBuckets = useMemo(() => {
+    if (!buckets) return [] as typeof buckets;
+    if (activeFilter === 'all') return buckets;
+
+    const contains = (text: string, patterns: string[]) => {
+      const lower = (text || '').toLowerCase();
+      return patterns.some((p) => lower.includes(p));
+    };
+
+    return buckets.filter((b) => {
+      const msg = b.message || '';
+      switch (activeFilter) {
+        case 'needs':
+          return contains(msg, ['?', 'please reply', 'can you', 'need help', 'urgent', 'respond']);
+        case 'kudos':
+          return contains(msg, ['kudos', 'congrats', 'congratulations', 'bravo', 'proud', 'amazing', 'great job', 'well done', 'thank you', 'thanks']);
+        case 'wellness':
+          return contains(msg, ['wellness', 'rest', 'health', 'hydrate', 'sleep', 'vocal', 'voice', 'warmup', 'sick', 'recover']);
+        case 'tasks':
+          return contains(msg, ['task', 'todo', 'to-do', 'deadline', 'due', 'submit', 'action', 'reminder', 'practice', 'rehearsal']);
+        default:
+          return true;
+      }
+    });
+  }, [buckets, activeFilter]);
   const handleSendBucket = async () => {
     if (!newBucketMessage.trim()) return;
     
