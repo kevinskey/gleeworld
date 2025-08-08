@@ -104,27 +104,28 @@ export const FreshAdminDashboard = () => {
           <CardContent>
             <div className="relative">
               <div 
-                className={`flex gap-3 pb-4 transition-transform duration-1000 ${
-                  isSpinning ? 'animate-[spin_0.5s_linear_infinite]' : ''
-                }`} 
+                className="flex gap-3 pb-4" 
                 style={{ 
                   display: 'grid',
                   gridTemplateRows: 'repeat(2, 1fr)',
                   gridAutoFlow: 'column',
                   gridAutoColumns: 'minmax(280px, 1fr)',
                   maxHeight: '400px',
-                  overflowX: 'auto',
-                  transformStyle: 'preserve-3d'
+                  overflowX: 'auto'
                 }}
               >
-                {adminModules.map((module) => (
+                {adminModules.map((module, index) => (
                   <Card 
                     key={module.id}
                     className={`cursor-pointer transition-all hover:shadow-md border-border w-[280px] h-[180px] flex-shrink-0 ${
                       selectedModule === module.id 
                         ? 'ring-2 ring-primary bg-primary/5' 
                         : 'bg-background/30 hover:bg-background/60'
-                    }`}
+                    } ${isSpinning ? 'animate-[spin_0.8s_linear_infinite]' : ''}`}
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      animationDelay: isSpinning ? `${index * 0.1}s` : '0s'
+                    }}
                     onClick={() => setSelectedModule(module.id)}
                   >
                     <CardContent className="p-4 text-center h-full flex flex-col justify-center">
