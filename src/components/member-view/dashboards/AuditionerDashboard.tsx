@@ -37,7 +37,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <Button asChild>
-                  <Link to="/auditions" aria-label="Start or manage your audition application">
+                  <Link to="/dashboard/auditioner" aria-label="Start or manage your audition application on the Auditioner Dashboard">
                     Start/Manage Application
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
