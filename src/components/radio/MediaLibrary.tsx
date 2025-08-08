@@ -73,7 +73,6 @@ export const MediaLibrary = ({
       const { data: mediaData, error: mediaError } = await supabase
         .from('gw_media_library')
         .select('*')
-        .eq('is_public', true)
         .order('created_at', { ascending: false });
 
       if (mediaError) {
