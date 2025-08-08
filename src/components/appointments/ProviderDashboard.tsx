@@ -71,24 +71,34 @@ export const ProviderDashboard = () => {
     if (!user) return;
     
     try {
-      const weekStart = startOfWeek(new Date());
-      const weekEnd = endOfWeek(new Date());
+      // Expand date range to get more data (last 30 days to next 30 days)
+      const monthStart = new Date();
+      monthStart.setDate(monthStart.getDate() - 30);
+      const monthEnd = new Date();
+      monthEnd.setDate(monthEnd.getDate() + 30);
+      
+      console.log('Fetching auditions from:', monthStart.toISOString(), 'to:', monthEnd.toISOString());
       
       // Fetch auditions as primary appointments
       const { data: auditions, error: auditionsError } = await supabase
         .from('gw_auditions')
         .select('*')
-        .gte('audition_date', weekStart.toISOString())
-        .lte('audition_date', weekEnd.toISOString());
+        .gte('audition_date', monthStart.toISOString())
+        .lte('audition_date', monthEnd.toISOString());
 
-      if (auditionsError) throw auditionsError;
+      if (auditionsError) {
+        console.error('Error fetching auditions:', auditionsError);
+        throw auditionsError;
+      }
+
+      console.log('Found auditions:', auditions?.length || 0, auditions);
 
       // Fetch regular appointments
       const { data: appointments, error } = await supabase
         .from('gw_appointments')
         .select('*')
-        .gte('appointment_date', weekStart.toISOString())
-        .lte('appointment_date', weekEnd.toISOString());
+        .gte('appointment_date', monthStart.toISOString())
+        .lte('appointment_date', monthEnd.toISOString());
 
       if (error) throw error;
 
@@ -140,7 +150,9 @@ export const ProviderDashboard = () => {
       
       const bookedCount = totalAppointments - cancelledCount;
       
-      // Generate daily occupancy data (auditions as primary)
+      // Generate daily occupancy data (use current week for display)
+      const weekStart = startOfWeek(new Date());
+      const weekEnd = endOfWeek(new Date());
       const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
       const occupancyData = daysInWeek.map(day => {
         const dayAuditions = auditions?.filter(aud => isSameDay(new Date(aud.audition_date), day)) || [];
@@ -176,6 +188,9 @@ export const ProviderDashboard = () => {
       const allRecentAppointments = [...auditionAppointments, ...regularAppointments]
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 8);
+
+      console.log('Total appointments found:', totalAppointments);
+      console.log('Recent appointments:', allRecentAppointments);
 
       const avgOccupancy = Math.round(occupancyData.reduce((sum, day) => sum + day.occupancy, 0) / occupancyData.length);
       const estimatedRevenue = bookedCount * 75; // $75 per audition appointment estimate
@@ -225,7 +240,11 @@ export const ProviderDashboard = () => {
   };
 
   if (loading) {
-    return <div className="p-6">Loading dashboard...</div>;
+    return (
+      <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
+        <div className="text-center py-8">Loading dashboard data...</div>
+      </div>
+    );
   }
 
   return (
@@ -369,30 +388,38 @@ export const ProviderDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentAppointments.map((appointment) => (
-                <div key={appointment.id} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="text-sm">
-                      <div className="font-medium">{appointment.date}</div>
-                      <div className="text-gray-500">{appointment.time}</div>
+              {recentAppointments.length === 0 ? (
+                <div className="text-center py-8">
+                  <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-500 font-medium">No appointments found</p>
+                  <p className="text-sm text-gray-400">Recent auditions and appointments will appear here</p>
+                </div>
+              ) : (
+                recentAppointments.map((appointment) => (
+                  <div key={appointment.id} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="text-sm">
+                        <div className="font-medium">{appointment.date}</div>
+                        <div className="text-gray-500">{appointment.time}</div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="outline" className="text-xs">
+                          {appointment.service}
+                        </Badge>
+                        <span className="text-sm font-medium">{appointment.clientName}</span>
+                      </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="outline" className="text-xs">
-                        {appointment.service}
-                      </Badge>
-                      <span className="text-sm font-medium">{appointment.clientName}</span>
+                      {getStatusBadge(appointment.status)}
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback className="text-xs">
+                          {appointment.clientName.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {getStatusBadge(appointment.status)}
-                    <Avatar className="h-6 w-6">
-                      <AvatarFallback className="text-xs">
-                        {appointment.clientName.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
