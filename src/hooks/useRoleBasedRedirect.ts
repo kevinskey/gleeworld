@@ -77,6 +77,14 @@ export const useRoleBasedRedirect = () => {
       const isAdmin = userProfile.is_admin || userProfile.is_super_admin || 
                      userProfile.role === 'admin' || userProfile.role === 'super-admin';
       
+      console.log('🔍 Admin check details:', {
+        is_admin: userProfile.is_admin,
+        is_super_admin: userProfile.is_super_admin,
+        role: userProfile.role,
+        isAdmin,
+        fullProfile: userProfile
+      });
+      
       if (isAdmin) {
         console.log('🚀 useRoleBasedRedirect: ADMIN detected - direct redirect to /admin');
         navigate('/admin', { replace: true });
