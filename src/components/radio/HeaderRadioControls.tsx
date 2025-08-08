@@ -10,22 +10,26 @@ import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 export const HeaderRadioControls = () => {
   console.log('HeaderRadioControls: Component rendering');
   
-  const [isExpanded, setIsExpanded] = useState(false);
-  const { 
-    isPlaying, 
-    isLoading, 
-    isLive, 
-    isOnline,
-    listenerCount, 
-    currentTrack, 
-    volume, 
-    togglePlayPause, 
-    setVolume 
-  } = useRadioPlayer();
+  try {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const radioData = useRadioPlayer();
+    console.log('HeaderRadioControls: Radio hook returned:', radioData);
+    
+    const { 
+      isPlaying, 
+      isLoading, 
+      isLive, 
+      isOnline,
+      listenerCount, 
+      currentTrack, 
+      volume, 
+      togglePlayPause, 
+      setVolume 
+    } = radioData;
 
-  console.log('HeaderRadioControls: Radio state:', { 
-    isPlaying, isLoading, isLive, isOnline, listenerCount, currentTrack 
-  });
+    console.log('HeaderRadioControls: Radio state:', { 
+      isPlaying, isLoading, isLive, isOnline, listenerCount, currentTrack 
+    });
 
   const isMuted = volume === 0;
 
@@ -40,6 +44,7 @@ export const HeaderRadioControls = () => {
               variant="ghost"
               size="sm"
               onClick={(e) => {
+                console.log('HeaderRadioControls: Play/Pause button clicked');
                 e.stopPropagation();
                 togglePlayPause();
               }}
@@ -167,4 +172,8 @@ export const HeaderRadioControls = () => {
       </PopoverContent>
     </Popover>
   );
+  } catch (error) {
+    console.error('HeaderRadioControls: Error rendering component:', error);
+    return <div>Radio Error</div>;
+  }
 };
