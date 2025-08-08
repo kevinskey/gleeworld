@@ -37,6 +37,9 @@ import {
 } from 'lucide-react';
 
 // Import all module components
+import { MusicLibraryModule } from '@/components/modules/MusicLibraryModule';
+
+// Import all module components
 import { UserManagementModule } from '@/components/modules/UserManagementModule';
 import { WardrobeModule } from '@/components/modules/WardrobeModule';
 import { AuditionsModule } from '@/components/modules/AuditionsModule';
@@ -469,6 +472,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
   },
 
   // Libraries modules
+  {
+    id: "music-library",
+    name: "music-library", 
+    title: "Music Library",
+    description: "Manage sheet music, recordings, and musical resources",
+    icon: Music,
+    iconColor: "pink",
+    category: "libraries",
+    isActive: true,
+    component: MusicLibraryModule,
+    dbFunctionName: "music-library"
+  },
   {
     id: "radio-management",
     name: "radio-management",
