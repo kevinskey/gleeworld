@@ -86,13 +86,13 @@ export const CommunityHubModule = () => {
                 </div>
               </div>
               <nav aria-label="Buckets filters" className="mt-2">
-                <div className="flex flex-wrap gap-1">
+                <div className="flex gap-1 p-1 bg-muted rounded-lg overflow-x-auto">
                   {(['all','needs','kudos','wellness','tasks'] as const).map((k) => (
                     <Button
                       key={k}
                       size="sm"
-                      variant={activeFilter === k ? 'default' : 'secondary'}
-                      className={`h-7 px-3 ${activeFilter === k ? 'shadow-sm' : ''}`}
+                      variant={activeFilter === k ? 'default' : 'ghost'}
+                      className="text-xs lg:text-sm whitespace-nowrap"
                       onClick={() => setActiveFilter(k)}
                     >
                       {k === 'all' ? 'All' : k === 'needs' ? 'Needs Reply' : k.charAt(0).toUpperCase() + k.slice(1)}
