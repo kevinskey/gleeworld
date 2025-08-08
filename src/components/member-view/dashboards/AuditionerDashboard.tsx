@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mic, FileText, ArrowRight } from "lucide-react";
-import { AuditionDocuments } from "@/components/audition/AuditionDocuments";
+import { PDFViewer } from "@/components/PDFViewer";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AuditionerDashboardProps {
@@ -25,6 +25,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
   const [application, setApplication] = useState<any | null>(null);
   const [checking, setChecking] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -43,6 +44,34 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
     };
     load();
   }, [user?.id]);
+
+  // Resolve audition PDF URL
+  useEffect(() => {
+    let isMounted = true;
+    const candidates = [
+      "come-thou-fount.pdf",
+      "Come_Thou_Fount.pdf",
+      "Come-Thu-Fount.pdf",
+      "ComeThouFount.pdf",
+    ];
+
+    const resolveFirstAvailable = async () => {
+      try {
+        for (const name of candidates) {
+          const { data } = supabase.storage.from('audition-docs').getPublicUrl(name);
+          const url = data?.publicUrl;
+          if (!url) continue;
+          try {
+            const res = await fetch(url, { method: 'HEAD' });
+            if (res.ok) { if (isMounted) setPdfUrl(url); break; }
+          } catch {}
+        }
+      } catch {}
+    };
+
+    resolveFirstAvailable();
+    return () => { isMounted = false; };
+  }, []);
 
   const handleStartManage = async () => {
     if (!user?.id || (user as any).id === 'guest') {
@@ -153,7 +182,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
                   Required Piece: Come Thou Fount — Audition Edition
                 </h2>
               </div>
-              <AuditionDocuments />
+              <PDFViewer pdfUrl={pdfUrl} className="border-0 shadow-none" />
             </CardContent>
           </Card>
         </section>
