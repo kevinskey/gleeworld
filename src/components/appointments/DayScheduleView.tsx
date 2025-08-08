@@ -41,6 +41,7 @@ interface DayEvent {
   duration: number;
   email?: string;
   phone?: string;
+  date?: string; // Add date field for filtering
 }
 
 interface TimeSlot {
@@ -99,13 +100,27 @@ export const DayScheduleView = () => {
   const fetchDaySchedule = async () => {
     setLoading(true);
     try {
-      const dayStart = new Date(selectedDate);
-      dayStart.setHours(0, 0, 0, 0);
-      const dayEnd = new Date(selectedDate);
-      dayEnd.setHours(23, 59, 59, 999);
+      let startDate, endDate;
+      
+      // Determine date range based on view mode
+      if (viewMode === 'month') {
+        const monthStart = startOfMonth(selectedDate);
+        const monthEnd = endOfMonth(selectedDate);
+        startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
+        endDate = endOfWeek(monthEnd, { weekStartsOn: 0 });
+      } else if (viewMode === 'week') {
+        startDate = startOfWeek(selectedDate, { weekStartsOn: 0 });
+        endDate = endOfWeek(selectedDate, { weekStartsOn: 0 });
+      } else {
+        // Day view
+        startDate = new Date(selectedDate);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(selectedDate);
+        endDate.setHours(23, 59, 59, 999);
+      }
 
-      console.log('Fetching for date:', selectedDate.toDateString());
-      console.log('Date range:', dayStart.toISOString(), 'to', dayEnd.toISOString());
+      console.log('Fetching for view mode:', viewMode);
+      console.log('Date range:', format(startDate, 'yyyy-MM-dd'), 'to', format(endDate, 'yyyy-MM-dd'));
 
       // First check if there are any auditions at all to help with debugging
       const { data: allAuditions } = await supabase
@@ -116,28 +131,25 @@ export const DayScheduleView = () => {
       
       console.log('Sample auditions in database:', allAuditions);
 
-      // Fetch auditions for selected day - use date-only comparison to avoid timezone issues
-      const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
-      console.log('Looking for auditions on date:', selectedDateStr);
-      
+      // Fetch auditions for the date range
       const { data: auditions, error: auditionsError } = await supabase
         .from('gw_auditions')
         .select('*')
-        .gte('audition_date', `${selectedDateStr}T00:00:00.000Z`)
-        .lt('audition_date', `${format(addDays(selectedDate, 1), 'yyyy-MM-dd')}T00:00:00.000Z`);
+        .gte('audition_date', `${format(startDate, 'yyyy-MM-dd')}T00:00:00.000Z`)
+        .lt('audition_date', `${format(addDays(endDate, 1), 'yyyy-MM-dd')}T00:00:00.000Z`);
 
-      console.log('Auditions found for', selectedDateStr, ':', auditions);
+      console.log('Auditions found for range:', auditions);
 
       if (auditionsError) throw auditionsError;
 
-      // Fetch appointments for selected day  
+      // Fetch appointments for the date range
       const { data: appointments, error: appointmentsError } = await supabase
         .from('gw_appointments')
         .select('*')
-        .gte('appointment_date', dayStart.toISOString())
-        .lte('appointment_date', dayEnd.toISOString());
+        .gte('appointment_date', `${format(startDate, 'yyyy-MM-dd')}T00:00:00.000Z`)
+        .lt('appointment_date', `${format(addDays(endDate, 1), 'yyyy-MM-dd')}T00:00:00.000Z`);
 
-      console.log('Appointments found:', appointments);
+      console.log('Appointments found for range:', appointments);
 
       if (appointmentsError) throw appointmentsError;
 
@@ -151,7 +163,7 @@ export const DayScheduleView = () => {
         const end = new Date(start.getTime() + duration * 60000);
         const endTime = format(end, 'h:mm a');
 
-        console.log('Processing audition:', audition.first_name, audition.last_name, 'at', startTime);
+        console.log('Processing audition:', audition.first_name, audition.last_name, 'at', startTime, 'on', audition.audition_date);
 
         return {
           id: audition.id,
@@ -163,7 +175,8 @@ export const DayScheduleView = () => {
           type: 'audition' as const,
           duration,
           email: audition.email,
-          phone: audition.phone
+          phone: audition.phone,
+          date: audition.audition_date // Add the actual date for filtering
         };
       });
 
@@ -176,7 +189,7 @@ export const DayScheduleView = () => {
         const end = new Date(aptDate.getTime() + duration * 60000);
         const endTime = format(end, 'h:mm a');
 
-        console.log('Processing appointment:', apt.client_name, 'at', startTime);
+        console.log('Processing appointment:', apt.client_name, 'at', startTime, 'on', apt.appointment_date);
 
         return {
           id: apt.id,
@@ -188,7 +201,8 @@ export const DayScheduleView = () => {
           type: 'appointment' as const,
           duration,
           email: apt.client_email,
-          phone: apt.client_phone
+          phone: apt.client_phone,
+          date: apt.appointment_date // Add the actual date for filtering
         };
       });
 
@@ -210,7 +224,7 @@ export const DayScheduleView = () => {
 
   useEffect(() => {
     fetchDaySchedule();
-  }, [selectedDate]);
+  }, [selectedDate, viewMode]);
 
   const navigateDay = (direction: 'prev' | 'next', event?: React.MouseEvent) => {
     if (event) {
@@ -319,8 +333,9 @@ export const DayScheduleView = () => {
             const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
             const isToday = isSameDay(day, new Date());
             const dayEvents = filteredEvents.filter(event => {
-              // We need to check against the actual audition/appointment date, not the selected date
-              return isSameDay(day, new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day.getDate()));
+              // Check if event is on this specific day
+              if (!event.date) return false;
+              return isSameDay(day, parseISO(event.date));
             });
             
             return (
@@ -376,7 +391,8 @@ export const DayScheduleView = () => {
               {days.map(day => {
                 const dayEvents = filteredEvents.filter(event => {
                   // Check if the event is on this specific day
-                  return isSameDay(day, selectedDate); // This needs to be fixed to check the actual event date
+                  if (!event.date) return false;
+                  return isSameDay(day, parseISO(event.date));
                 });
                 const appointment = dayEvents.find(event => {
                   const slotTime = parse(timeSlot, 'h:mm a', new Date());
