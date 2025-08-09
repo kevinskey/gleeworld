@@ -69,6 +69,7 @@ import { CalendarManagementModule } from '@/components/modules/CalendarManagemen
 import { ReceiptsModule } from "@/components/receipts/ReceiptsModule";
 import { ReimbursementsManager } from "@/components/reimbursements/ReimbursementsManager";
 import { AIFinancialPlanningModule } from "@/components/financial/AIFinancialPlanningModule";
+import { WellnessModule } from '@/components/modules/WellnessModule';
 
 // Single source of truth for all modules
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -297,6 +298,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: PermissionsModule,
     dbFunctionName: "permissions"
+  },
+  {
+    id: "wellness",
+    name: "wellness",
+    title: "Wellness",
+    description: "Wellness & mental health tools for members",
+    icon: Heart,
+    iconColor: "rose",
+    category: "member-management",
+    isActive: true,
+    component: WellnessModule,
+    dbFunctionName: "wellness"
   },
 
   // Musical Leadership modules

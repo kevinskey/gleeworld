@@ -31,7 +31,8 @@ export const ROUTES = {
   SIGHT_READING_PREVIEW: '/sight-reading-preview',
   SIGHT_READING_GENERATOR: '/sight-reading-generator',
   
-  PERMISSIONS: '/admin/permissions'
+  PERMISSIONS: '/admin/permissions',
+  WELLNESS: '/wellness'
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -54,7 +55,8 @@ export const PROTECTED_ROUTES = [
   ROUTES.SIGHT_READING_SUBMISSION,
   ROUTES.SIGHT_READING_PREVIEW,
   ROUTES.SIGHT_READING_GENERATOR,
-  ROUTES.PERMISSIONS
+  ROUTES.PERMISSIONS,
+  ROUTES.WELLNESS
 ] as const;
 
 export const PUBLIC_ROUTES = [
