@@ -207,9 +207,14 @@ export const MarkedScoreManager = ({
   };
 
   const handleDelete = async (score: MarkedScore) => {
-    if (!window.confirm('Are you sure you want to delete this marked score?')) return;
+    if (!window.confirm('Are you sure you want to delete this marked score? This will also remove any shares.')) return;
 
     try {
+      // 1) Remove any shares referencing this score to avoid FK violations
+      await supabase.from('gw_annotation_shares').delete().eq('marked_score_id', score.id);
+      await supabase.from('gw_annotation_public_shares').delete().eq('marked_score_id', score.id);
+
+      // 2) Delete the DB record
       const { error } = await supabase
         .from('gw_marked_scores')
         .delete()
@@ -217,19 +222,27 @@ export const MarkedScoreManager = ({
 
       if (error) throw error;
 
+      // 3) Attempt to delete the storage object (best-effort)
+      try {
+        const url = new URL(score.file_url);
+        const idx = url.pathname.indexOf('/object/public/marked-scores/');
+        if (idx !== -1) {
+          const path = url.pathname.substring(idx + '/object/public/'.length); // yields 'marked-scores/...'
+          const filePath = path.replace('marked-scores/', '');
+          if (filePath) {
+            await supabase.storage.from('marked-scores').remove([filePath]);
+          }
+        }
+      } catch (e) {
+        // ignore storage deletion errors
+        console.warn('Storage delete skipped:', e);
+      }
+
       await fetchMarkedScores();
-      
-      toast({
-        title: "Success",
-        description: "Marked score deleted successfully"
-      });
+      toast({ title: 'Success', description: 'Marked score deleted successfully' });
     } catch (error) {
       console.error('Error deleting marked score:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete marked score",
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: 'Failed to delete marked score', variant: 'destructive' });
     }
   };
 
