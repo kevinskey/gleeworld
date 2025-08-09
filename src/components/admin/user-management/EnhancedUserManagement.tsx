@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { UserDetailPanel } from "./UserDetailPanel";
 import { BulkSelectControls } from "./BulkSelectControls";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { QuickAddUserForm } from "@/components/upload/QuickAddUserForm";
 
 import { User } from "@/hooks/useUsers";
 import { useToast } from "@/hooks/use-toast";
@@ -53,6 +55,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [sortBy, setSortBy] = useState<'full_name' | 'email'>('full_name');
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleUpdateSuccess = () => {
@@ -135,15 +138,21 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                   Find and manage user accounts by name, email, role, or status
                 </CardDescription>
               </div>
-              <Button 
-                variant="outline" 
-                onClick={onRefetch}
-                disabled={loading}
-                className="gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button onClick={() => setAddDialogOpen(true)} className="gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Add User
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={onRefetch}
+                  disabled={loading}
+                  className="gap-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
             </div>
             
             {/* Search and Filter Controls */}
@@ -284,6 +293,21 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
           onUserDeleted={handleDeleteSuccess}
         />
       )}
+      {/* Add User Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+          </DialogHeader>
+          <QuickAddUserForm
+            onUserAdded={() => {
+              onRefetch();
+              setAddDialogOpen(false);
+            }}
+            onCancel={() => setAddDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       {noUsersState && (
         <div className="text-center py-8">
