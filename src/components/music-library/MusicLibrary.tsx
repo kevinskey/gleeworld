@@ -14,10 +14,14 @@ import { SheetMusicViewDialog } from './SheetMusicViewDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 export const MusicLibrary = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
   const [selectedPdf, setSelectedPdf] = useState<{url: string; title: string; id?: string} | null>(null);
   
   const [activeSetlistPlayer, setActiveSetlistPlayer] = useState<string | null>(null);
@@ -105,7 +109,7 @@ export const MusicLibrary = () => {
             title="Music Library"
             description="Digital & Physical Sheet Music Collection"
             showBackButton
-            backTo="/dashboard"
+            backTo={(userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard'}
             backgroundVariant="gradient"
           />
         </div>
