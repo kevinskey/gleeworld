@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Download, FileText, PlusCircle, Edit3, Palette } from 'lucide-react';
+import { Upload, Download, FileText, PlusCircle, Edit3, Palette, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -173,6 +173,37 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
     }
   };
 
+  const handleDelete = async (score: MarkedScore) => {
+    if (!window.confirm('Are you sure you want to delete this marked score? This will also remove any shares.')) return;
+    try {
+      // Remove shares first
+      await supabase.from('gw_annotation_shares').delete().eq('marked_score_id', score.id);
+      await supabase.from('gw_annotation_public_shares').delete().eq('marked_score_id', score.id);
+
+      // Delete DB row
+      const { error } = await supabase.from('gw_marked_scores').delete().eq('id', score.id);
+      if (error) throw error;
+
+      // Best-effort storage delete
+      try {
+        const after = score.file_url.split('/object/public/marked-scores/')[1];
+        if (after) {
+          await supabase.storage.from('marked-scores').remove([after]);
+        }
+      } catch (e) {
+        console.warn('Storage delete skipped:', e);
+      }
+
+      // Optimistic UI update
+      setMarkedScores(prev => prev.filter(s => s.id !== score.id));
+
+      toast({ title: 'Success', description: 'Marked score deleted successfully' });
+    } catch (e) {
+      console.error('Error deleting marked score:', e);
+      toast({ title: 'Error', description: 'Failed to delete marked score', variant: 'destructive' });
+    }
+  };
+
   const annotatedScores = markedScores.filter(score => score.canvas_data);
   const legacyScores = markedScores.filter(score => !score.canvas_data);
   
@@ -255,8 +286,14 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
                               </Badge>
                             )}
                           </CardTitle>
-                          <div className="flex gap-2 w-full sm:w-auto">
-                          </div>
+                            <div className="flex gap-2 w-full sm:w-auto">
+                              <Button variant="outline" size="sm" onClick={() => handleDownload(score)}>
+                                <Download className="h-4 w-4 mr-1" /> Download
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => handleDelete(score)}>
+                                <Trash2 className="h-4 w-4 mr-1" /> Delete
+                              </Button>
+                            </div>
                         </div>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-sm text-muted-foreground">
                           <span className="truncate">Uploaded by {score.uploader_name}</span>
