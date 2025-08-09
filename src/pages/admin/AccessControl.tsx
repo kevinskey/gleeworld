@@ -2,20 +2,27 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Shield, Key, Users, Lock } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 const AccessControl = () => {
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Access Control</h1>
-          <p className="text-muted-foreground">Role assignments and security policies</p>
-        </div>
+      <PageHeader
+        title="Access Control"
+        description="Role assignments and security policies"
+        showBackButton
+        backTo={(userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard'}
+        backgroundVariant="gradient"
+      >
         <Button>
           <Shield className="mr-2 h-4 w-4" />
           New Policy
         </Button>
-      </div>
+      </PageHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
