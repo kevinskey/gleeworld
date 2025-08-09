@@ -21,20 +21,37 @@ export const useSheetMusicUrl = (pdfUrl: string | null) => {
       setError(null);
 
       try {
-        // If already a public or signed storage URL, use as-is
-        if (
-          pdfUrl.includes('/storage/v1/object/public/') ||
-          pdfUrl.includes('/storage/v1/object/sign/')
-        ) {
-          console.log('useSheetMusicUrl: Using storage URL directly:', pdfUrl);
+        const isSupabaseStorage = pdfUrl.includes('.supabase.co/storage/v1/object/');
+        const isHttp = /^https?:\/\//.test(pdfUrl);
+        const isSigned = pdfUrl.includes('/storage/v1/object/sign/');
+
+        // Use signed Supabase storage URL as-is
+        if (isSigned && isSupabaseStorage) {
+          console.log('useSheetMusicUrl: Using signed storage URL directly:', pdfUrl);
           setSignedUrl(pdfUrl);
           return;
         }
 
-        // Extract bucket and path from the URL or storage path
-        // Accepts formats like:
-        // - sheet-music/folder/file.pdf
-        // - https://<domain>/<bucket>/folder/file.pdf
+        if (isSupabaseStorage) {
+          // Normalize Supabase storage URLs (convert public URLs to correct URL based on bucket privacy)
+          const afterBase = pdfUrl.split('/storage/v1/object/')[1]; // e.g., "public/sheet-music/path..."
+          const segments = afterBase.split('/');
+          // segments[0] = "public" | "sign" | other
+          const bucket = segments[1];
+          const path = segments.slice(2).join('/').split('?')[0];
+
+          const url = await getFileUrl(bucket, path);
+          setSignedUrl(url);
+          return;
+        }
+
+        // Non-Supabase absolute URLs: use as-is
+        if (isHttp && !isSupabaseStorage) {
+          setSignedUrl(pdfUrl);
+          return;
+        }
+
+        // Handle storage-style paths like: bucket/folder/file.pdf
         const raw = pdfUrl.replace(/^https?:\/\/[^/]+\//, '');
         const parts = raw.split('/');
         const bucket = parts[0];
