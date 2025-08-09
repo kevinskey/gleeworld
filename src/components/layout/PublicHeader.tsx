@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Music, Settings } from "lucide-react";
 import { ResponsiveNavigation } from "@/components/navigation/ResponsiveNavigation";
 import { HeaderClock } from "@/components/ui/header-clock";
@@ -67,49 +67,36 @@ export const PublicHeader = () => {
               )}
             
             {/* Friendly Mobile Menu - Shows below lg breakpoint */}
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild className="lg:hidden">
+            <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+              <DropdownMenuTrigger asChild className="lg:hidden">
                 <MusicStaffMenu onClick={() => setIsOpen(!isOpen)} />
-              </SheetTrigger>
-              <SheetContent 
-                side="top" 
-                className="max-w-xs w-80 mx-auto mt-16 bg-card border-2 border-border shadow-xl rounded-lg z-[110] data-[state=open]:animate-none data-[state=closed]:animate-none [&_~_[data-radix-dialog-overlay]]:bg-transparent"
-                style={{
-                  position: 'fixed',
-                  top: '4rem',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  height: 'auto',
-                  maxHeight: '70vh',
-                  transition: 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out',
-                  animation: 'none',
-                }}
-                onOpenAutoFocus={(e) => e.preventDefault()}
-                onCloseAutoFocus={(e) => e.preventDefault()}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                side="bottom"
+                sideOffset={8}
+                className="w-80 p-2 bg-popover text-popover-foreground border border-border rounded-lg shadow-xl z-[60]"
               >
-                <div className="flex flex-col gap-2 py-2 animate-fade-in">
-                  <div className="flex items-center justify-center gap-2 pb-1 border-b border-border">
-                    <Music className="h-4 w-4 text-primary" />
-                    <span className="font-semibold text-sm text-foreground">Menu</span>
-                  </div>
-                  
-                  <nav className="flex flex-col gap-0">
-                    {user && (
-                      <Button asChild variant="outline" size="sm" className="mb-2 text-sm justify-start">
-                        <Link to="/dashboard" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
-                          <Settings className="h-4 w-4" />
-                          My Dashboard
-                        </Link>
-                      </Button>
-                    )}
-                    <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
-                  </nav>
+                <div className="flex items-center justify-center gap-2 pb-1 border-b border-border">
+                  <Music className="h-4 w-4 text-primary" />
+                  <span className="font-semibold text-sm text-foreground">Menu</span>
                 </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+                <nav className="flex flex-col gap-0 pt-2">
+                  {user && (
+                    <Button asChild variant="outline" size="sm" className="mb-2 text-sm justify-start">
+                      <Link to="/dashboard" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
+                        <Settings className="h-4 w-4" />
+                        My Dashboard
+                      </Link>
+                    </Button>
+                  )}
+                  <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
+                </nav>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            </div>
+           </div>
         </div>
-      </div>
     </header>
     </>
   );
