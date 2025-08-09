@@ -153,10 +153,10 @@ export const MusicLibrary = () => {
         </div>
       </div>
 
-      {/* Two-column layout: left panels, right PDF viewer */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Two-column layout with fixed height and scrollable columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-8rem)] overflow-hidden">
         {/* Left column */}
-        <div className={`${selectedPdf ? 'lg:col-span-4' : 'lg:col-span-5'} space-y-4`}>
+        <div className={`${selectedPdf ? 'lg:col-span-4' : 'lg:col-span-5'} space-y-4 h-full overflow-y-auto pr-1`}>
           {/* Study Scores */}
           <div className="border rounded">
             <div className="flex items-center justify-between p-2">
