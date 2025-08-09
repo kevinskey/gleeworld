@@ -37,10 +37,8 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
     }
 
     if (signedUrl) {
-      timerRef.current = window.setTimeout(() => {
-        // Fallback to Google viewer if still loading after timeout
-        setUseGoogle(true);
-      }, 4500);
+      // Use Google viewer immediately for reliability across iOS/Safari
+      setUseGoogle(true);
     }
 
     return () => {

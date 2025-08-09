@@ -128,9 +128,8 @@ export const PDFViewerWithAnnotations = ({
       timerRef.current = null;
     }
     if (signedUrl && !annotationMode) {
-      timerRef.current = window.setTimeout(() => {
-        setUseGoogle(true);
-      }, 4500);
+      // Use Google viewer immediately for reliability across iOS/Safari
+      setUseGoogle(true);
     }
     return () => {
       if (timerRef.current) {
