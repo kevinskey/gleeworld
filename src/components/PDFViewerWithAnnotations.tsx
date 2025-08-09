@@ -83,7 +83,7 @@ const scrollModePluginInstance = scrollModePlugin();
   const [useGoogle, setUseGoogle] = useState(false);
   const [googleProvider, setGoogleProvider] = useState<'gview' | 'viewerng'>('gview');
 const timerRef = useRef<number | null>(null);
-const [engine, setEngine] = useState<'google' | 'react'>('google');
+const [engine, setEngine] = useState<'google' | 'react'>('react');
 
   // Handle iframe load
   const handleIframeLoad = () => {
@@ -126,15 +126,29 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   }, [annotationMode, pdf]);
 
   useEffect(() => {
-    setUseGoogle(false);
+    // Reset and prepare loading state whenever source or engine changes (outside annotation mode)
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-    if (signedUrl && !annotationMode) {
-      // Choose viewer engine based on toggle
-      setUseGoogle(engine === 'google');
+
+    if (!signedUrl || annotationMode) return;
+
+    setIsLoading(true);
+
+    if (engine === 'google') {
+      setUseGoogle(true);
+      // Fallback: if Google viewer doesn't fire onLoad within 6s, switch to React viewer
+      timerRef.current = window.setTimeout(() => {
+        console.warn('Google viewer timed out; switching to React viewer');
+        setUseGoogle(false);
+        setEngine('react');
+        setIsLoading(true);
+      }, 6000);
+    } else {
+      setUseGoogle(false);
     }
+
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
