@@ -149,7 +149,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     {/* Member View */}
                     <DropdownMenuItem 
                       onClick={() => {
-                        navigate('/dashboard');
+                        navigate(`/dashboard/member-view/${user?.id}`);
                         onViewModeChange?.('member');
                       }}
                       className={`cursor-pointer ${viewMode === 'member' ? 'bg-accent' : ''}`}
