@@ -154,7 +154,7 @@ export const MusicLibrary = () => {
       </div>
 
       {/* Two-column layout with fixed height and scrollable columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-8rem)] overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-5rem)] overflow-hidden">
         {/* Left column */}
         <div className={`${selectedPdf ? 'lg:col-span-4' : 'lg:col-span-5'} space-y-4 h-full overflow-y-auto pr-1`}>
           {/* Study Scores */}
@@ -251,11 +251,11 @@ export const MusicLibrary = () => {
               />
             </div>
           ) : (
-            <div className="rounded-lg overflow-hidden">
+            <div className="flex-1 relative rounded-lg overflow-hidden">
               <img
                 src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png"
                 alt="Glee World Music Library landing image"
-                className="block w-full h-auto"
+                className="absolute inset-0 w-full h-full object-contain"
                 loading="lazy"
               />
             </div>
