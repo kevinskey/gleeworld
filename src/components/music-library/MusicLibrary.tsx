@@ -251,11 +251,14 @@ export const MusicLibrary = () => {
               />
             </div>
           ) : (
-            <div className="p-8 border-2 border-dashed border-muted rounded-lg text-center text-muted-foreground min-h-[400px] flex items-center justify-center">
-              <div>
-                <Music className="h-12 w-12 mx-auto mb-3" />
-                <p className="text-lg font-medium">Select sheet music to view PDF</p>
-                <p className="text-sm">Choose a song from the left to display the score</p>
+            <div className="p-0 border rounded-lg text-center min-h-[400px] overflow-hidden">
+              <div className="relative w-full aspect-[4/3] md:aspect-[4/3] bg-muted">
+                <img
+                  src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png"
+                  alt="Glee World Music Library landing image"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                />
               </div>
             </div>
           )}
