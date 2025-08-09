@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Download, Eye, Loader2, Lock } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
+import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
 
 interface PDFThumbnailProps {
   pdfUrl: string;
@@ -23,6 +24,7 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
   const elementRef = useRef<HTMLDivElement>(null);
   const { canDownloadPDF, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
+  const { signedUrl } = useSheetMusicUrl(pdfUrl);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -54,7 +56,7 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
       return;
     }
     
-    window.open(pdfUrl, '_blank');
+    window.open(signedUrl || pdfUrl, '_blank');
   };
 
   const handlePreviewLoad = () => {
@@ -102,7 +104,7 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
               </div>
             )}
             <iframe
-              src={`https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
+              src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl || pdfUrl)}&embedded=true`}
               className={`w-full h-full border-0 transition-opacity duration-300 ${
                 previewLoaded ? 'opacity-100' : 'opacity-0'
               }`}
@@ -111,6 +113,8 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
               title={alt}
               style={{ pointerEvents: 'none' }}
               sandbox="allow-scripts allow-same-origin"
+              referrerPolicy="no-referrer"
+              loading="lazy"
             />
           </>
         ) : (

@@ -174,9 +174,13 @@ if (error) {
             key={`${useGoogle ? 'g' : 'd'}-${signedUrl}`}
             src={useGoogle ? `https://docs.google.com/gview?url=${encodeURIComponent(signedUrl!)}&embedded=true` : (signedUrl || '')}
             className="w-full h-full border-0"
+            referrerPolicy="no-referrer"
+            loading="lazy"
+            sandbox={useGoogle ? "allow-scripts allow-same-origin" : undefined}
             onLoad={handleLoad}
             onError={handleError}
             title="PDF Viewer"
+            allow="fullscreen"
           />
         </div>
       </CardContent>
