@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useUserById } from "@/hooks/useUserById";
 import { DashboardTemplate } from "./DashboardTemplate";
-import { MemberDashboard } from "./dashboards/MemberDashboard";
+import { MemberDashboardV2 } from "./dashboards/MemberDashboardV2";
 import { AlumnaeDashboard } from "./dashboards/AlumnaeDashboard";
 import { AdminDashboard } from "./dashboards/AdminDashboard";
 import { SuperAdminDashboard } from "./dashboards/SuperAdminDashboard";
@@ -83,10 +83,10 @@ export const MemberViewDashboard = () => {
         return <AuditionerDashboard user={user} />;
       case 'user':
         console.log('MemberViewDashboard: Loading MemberDashboard for user');
-        return <MemberDashboard user={user} />;
+        return <MemberDashboardV2 user={user} />;
       default:
         console.log('MemberViewDashboard: Loading default MemberDashboard, role was:', user.role);
-        return <MemberDashboard user={user} />;
+        return <MemberDashboardV2 user={user} />;
     }
   };
 
