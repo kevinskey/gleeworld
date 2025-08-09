@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Viewer, Worker, ScrollMode } from '@react-pdf-viewer/core';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+
 import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+
 import { scrollModePlugin } from '@react-pdf-viewer/scroll-mode';
 
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,6 @@ export const PDFViewerWithAnnotations = ({
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
   
   // Initialize the default layout plugin
-const defaultLayoutPluginInstance = defaultLayoutPlugin();
 const scrollModePluginInstance = scrollModePlugin();
   
   console.log('PDFViewerWithAnnotations: Props received:', { pdfUrl, musicTitle });
@@ -521,19 +520,18 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   return (
     <Card className={cn("w-full", className)}>
       {/* Annotation Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded-t-lg border-b">
-        {/* Annotation Toggle */}
-        <Button
-          variant={annotationMode ? "default" : "outline"}
-          size="sm"
-          onClick={() => { setError(null); setIsLoading(true); setAnnotationMode(!annotationMode); }}
-        >
-          <Palette className="h-4 w-4 mr-2" />
-          {annotationMode ? "Exit Annotations" : "Annotate"}
-        </Button>
-
         {annotationMode && (
-          <>
+          <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded-t-lg border-b">
+            {/* Annotation Toggle */}
+            <Button
+              variant={annotationMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => { setError(null); setIsLoading(true); setAnnotationMode(!annotationMode); }}
+            >
+              <Palette className="h-4 w-4 mr-2" />
+              {annotationMode ? "Exit Annotations" : "Annotate"}
+            </Button>
+
             {/* Tool Selection */}
             <div className="flex gap-1">
               <Button
@@ -634,9 +632,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 </AnnotationSharingDialog>
               )}
             </div>
-          </>
+          </div>
         )}
-      </div>
 
       {/* PDF Content */}
       <CardContent className="p-0">
@@ -653,30 +650,6 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
             <div className="w-full h-full bg-white">
-              <div className="text-xs text-muted-foreground p-2 bg-muted/20 flex flex-wrap gap-2 justify-between items-center">
-                <span>Viewing: {musicTitle}</span>
-                <div className="flex flex-wrap gap-2 items-center">
-                  <Button variant="outline" size="sm" onClick={() => setAnnotationMode(true)}>
-                    Switch to Annotation Mode
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => window.open(signedUrl, '_blank')}>
-                    Open in New Tab
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setEngine(engine === 'google' ? 'react' : 'google')}>
-                    {engine === 'google' ? 'Advanced Viewer' : 'Google Viewer'}
-                  </Button>
-                  {engine === 'react' && (
-                    <div className="flex gap-1">
-                      <Button variant="outline" size="sm" onClick={() => scrollModePluginInstance.switchScrollMode(ScrollMode.Page)}>
-                        Page view
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => scrollModePluginInstance.switchScrollMode(ScrollMode.Vertical)}>
-                        Scroll view
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
               <div className="h-full">
                 {useGoogle ? (
                   <iframe
@@ -696,7 +669,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                     <div style={{ height: '100%' }}>
                       <Viewer
                         fileUrl={signedUrl}
-                        plugins={[defaultLayoutPluginInstance, scrollModePluginInstance]}
+                        plugins={[scrollModePluginInstance]}
                         onDocumentLoad={() => {
                           console.log('PDF document loaded successfully');
                           if (timerRef.current) {
