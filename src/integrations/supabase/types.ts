@@ -9007,6 +9007,80 @@ export type Database = {
           },
         ]
       }
+      gw_study_score_collaborators: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          role: string
+          study_score_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          role?: string
+          study_score_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          role?: string
+          study_score_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_study_score_collaborators_study_score_id_fkey"
+            columns: ["study_score_id"]
+            isOneToOne: false
+            referencedRelation: "gw_study_scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_study_scores: {
+        Row: {
+          created_at: string
+          derived_sheet_music_id: string
+          id: string
+          is_active: boolean
+          owner_id: string
+          pdf_url: string
+          source_sheet_music_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          derived_sheet_music_id: string
+          id?: string
+          is_active?: boolean
+          owner_id: string
+          pdf_url: string
+          source_sheet_music_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          derived_sheet_music_id?: string
+          id?: string
+          is_active?: boolean
+          owner_id?: string
+          pdf_url?: string
+          source_sheet_music_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_tour_cities: {
         Row: {
           arrival_date: string | null
@@ -13231,6 +13305,14 @@ export type Database = {
       secure_update_user_role: {
         Args: { target_user_id: string; new_role: string; reason?: string }
         Returns: boolean
+      }
+      share_study_score: {
+        Args: {
+          p_study_score_id: string
+          p_collaborator_email: string
+          p_role?: string
+        }
+        Returns: Json
       }
       simple_admin_bootstrap: {
         Args: Record<PropertyKey, never>

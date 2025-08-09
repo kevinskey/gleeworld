@@ -7,6 +7,7 @@ import { SetlistBuilder } from './SetlistBuilder';
 import { SetlistPlayer } from './SetlistPlayer';
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
 import { Home, Users, Calendar, FileText, Activity, ArrowLeft, Music } from 'lucide-react';
+import { StudyScoresPanel } from './StudyScoresPanel';
 
 export const MusicLibrary = () => {
   const navigate = useNavigate();
@@ -108,11 +109,14 @@ export const MusicLibrary = () => {
         </div>
       </div>
 
-
+      {/* Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Setlists Column */}
+        {/* Left Column: Study Scores + Setlists */}
         <div className={`${selectedPdf ? 'lg:col-span-4' : 'lg:col-span-6'} space-y-4`}>
-          
+          <StudyScoresPanel 
+            currentSelected={selectedPdf}
+            onOpenScore={handlePdfSelect}
+          />
           <SetlistBuilder 
             onPdfSelect={handlePdfSelect} 
             onOpenPlayer={handleOpenSetlistPlayer}
@@ -126,7 +130,7 @@ export const MusicLibrary = () => {
             <div>
               <p className="text-xs text-muted-foreground mb-2">Loading: {selectedPdf.title}</p>
               <PDFViewerWithAnnotations 
-                key={selectedPdf.url} // Force re-render when URL changes
+                key={selectedPdf.url}
                 pdfUrl={selectedPdf.url}
                 musicTitle={selectedPdf.title}
                 musicId={selectedPdf.id}
@@ -136,7 +140,7 @@ export const MusicLibrary = () => {
           ) : (
             <div className="p-8 border-2 border-dashed border-muted rounded-lg text-center text-muted-foreground min-h-[400px] flex items-center justify-center">
               <div>
-                <Music className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <Music className="h-12 w-12 mx-auto mb-3" />
                 <p className="text-lg font-medium">Select sheet music to view PDF</p>
                 <p className="text-sm">Choose a song from the setlist builder to display the score</p>
               </div>
