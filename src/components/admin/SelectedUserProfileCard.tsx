@@ -25,6 +25,7 @@ interface Profile {
   is_admin: boolean | null;
   is_super_admin: boolean | null;
   created_at: string | null;
+  avatar_url: string | null;
 }
 
 export const SelectedUserProfileCard: React.FC<Props> = ({ userId }) => {
@@ -48,7 +49,7 @@ export const SelectedUserProfileCard: React.FC<Props> = ({ userId }) => {
       if (!userId) return;
       const { data } = await supabase
         .from('gw_profiles')
-        .select('email, full_name, role, exec_board_role, is_exec_board, is_admin, is_super_admin, created_at')
+        .select('email, full_name, role, exec_board_role, is_exec_board, is_admin, is_super_admin, created_at, avatar_url')
         .eq('user_id', userId)
         .maybeSingle();
       if (data) {
@@ -63,6 +64,7 @@ export const SelectedUserProfileCard: React.FC<Props> = ({ userId }) => {
           is_admin: !!p.is_admin,
           is_super_admin: !!p.is_super_admin,
         });
+        setAvatarUrl((p as any).avatar_url || null);
       }
 
       try {
@@ -158,7 +160,7 @@ export const SelectedUserProfileCard: React.FC<Props> = ({ userId }) => {
       // Refresh
       const { data } = await supabase
         .from('gw_profiles')
-        .select('email, full_name, role, exec_board_role, is_exec_board, is_admin, is_super_admin, created_at')
+        .select('email, full_name, role, exec_board_role, is_exec_board, is_admin, is_super_admin, created_at, avatar_url')
         .eq('user_id', userId)
         .maybeSingle();
       if (data) {
@@ -173,6 +175,7 @@ export const SelectedUserProfileCard: React.FC<Props> = ({ userId }) => {
           is_admin: !!p.is_admin,
           is_super_admin: !!p.is_super_admin,
         });
+        setAvatarUrl(p.avatar_url || null);
       }
     } catch (e) {
       console.error(e);
@@ -196,6 +199,8 @@ const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (error) throw error;
     const { data } = supabase.storage.from('user-files').getPublicUrl(path);
     setAvatarUrl(data.publicUrl);
+    // Persist on profile for future loads
+    try { await supabase.from('gw_profiles').update({ avatar_url: data.publicUrl }).eq('user_id', userId); } catch (_) {}
     toast.success('Photo uploaded');
   } catch (err) {
     console.error(err);

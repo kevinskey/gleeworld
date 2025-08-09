@@ -257,7 +257,9 @@ const PermissionsPage: React.FC = () => {
             </div>
 
             {selectedUserId && (
-              <SelectedUserProfileCard userId={selectedUserId} />
+              <div className="relative z-50 pointer-events-auto">
+                <SelectedUserProfileCard userId={selectedUserId} />
+              </div>
             )}
           </div>
         </TabsContent>
