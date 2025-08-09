@@ -200,7 +200,7 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
 
   // Fallback to legacy system for uploaded PDFs without original
   return (
-    <div className="space-y-4">
+    <div className="pt-10 space-y-4">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h3 className="text-lg font-semibold">Marked Scores</h3>
