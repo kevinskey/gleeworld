@@ -96,6 +96,7 @@ import PRHubPage from "./pages/PRHubPage";
 import { SharedAnnotation } from "./pages/SharedAnnotation";
 import MobileScoring from "./pages/MobileScoring";
 import MemberDirectory from "./pages/MemberDirectory";
+import UserManagement from "./pages/UserManagement";
 import { AmazonShoppingModule } from "./components/shopping/AmazonShoppingModule";
 import { RadioStationPage } from "./components/radio/RadioStationPage";
 import { AuditionsManagement } from "./components/admin/AuditionsManagement";
@@ -638,14 +639,22 @@ const App = () => {
                                    </ProtectedRoute>
                                  } 
                                />
-                              <Route 
-                                path="/member-directory" 
-                                element={
-                                  <ProtectedRoute>
-                                    <MemberDirectory />
-                                  </ProtectedRoute>
-                                } 
-                              />
+              <Route 
+                path="/member-directory" 
+                element={
+                  <ProtectedRoute>
+                    <MemberDirectory />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/user-management" 
+                element={
+                  <ProtectedRoute>
+                    <UserManagement />
+                  </ProtectedRoute>
+                } 
+              />
                               <Route 
                                 path="/amazon-shopping" 
                                 element={

@@ -84,19 +84,19 @@ export const FreshAdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-3">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => navigate('/user-management')}>
                 <Users className="h-4 w-4 mr-2" />
                 Add New User
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => navigate('/notifications/send')}>
                 <Mail className="h-4 w-4 mr-2" />
                 Send Notification
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => navigate('/event-planner')}>
                 <Calendar className="h-4 w-4 mr-2" />
                 Create Event
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/analytics')}>
                 <FileText className="h-4 w-4 mr-2" />
                 Generate Report
               </Button>
