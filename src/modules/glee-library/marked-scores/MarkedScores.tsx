@@ -248,7 +248,7 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <CardTitle className="text-base flex items-center gap-2 min-w-0">
                             <FileText className="h-4 w-4 flex-shrink-0" />
-                            <span className="truncate">{score.description || `${score.voice_part} Marked Score`}</span>
+                            <span className="line-clamp-2 break-words">{score.description || `${score.voice_part} Marked Score`}</span>
                             {score.canvas_data && (
                               <Badge variant="default" className="text-xs flex-shrink-0">
                                 Annotated

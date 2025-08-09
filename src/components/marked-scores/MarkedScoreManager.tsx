@@ -278,7 +278,7 @@ export const MarkedScoreManager = ({
                   {scores.map((score) => (
                     <div key={score.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{score.description || 'Untitled'}</p>
+                        <p className="font-medium line-clamp-2 leading-snug break-words">{score.description || 'Untitled'}</p>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <User className="h-3 w-3 flex-shrink-0" />
