@@ -650,42 +650,32 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
           )}
 
-          {/* PDF Canvas for Annotation Mode */}
+          {/* Annotation Mode: PDF + Overlay Canvas */}
           {annotationMode && (
-            <div className="w-full h-full flex items-center justify-center overflow-auto bg-gray-100">
-              <canvas 
-                ref={canvasRef}
-                className="max-w-full max-h-full shadow-lg bg-white"
-                style={{ 
-                  display: 'block'
-                }}
-              />
+            <div className="w-full h-full overflow-auto bg-muted/10">
+              <div className="w-full h-full flex items-start justify-center p-4">
+                <div className="relative">
+                  <canvas
+                    ref={canvasRef}
+                    className="max-w-full max-h-full shadow-lg bg-white block"
+                  />
+                  <canvas
+                    ref={drawingCanvasRef}
+                    className={`absolute inset-0 max-w-full max-h-full pointer-events-auto z-20 ${
+                      activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
+                    }`}
+                    onMouseDown={handleStart}
+                    onMouseMove={handleMove}
+                    onMouseUp={handleEnd}
+                    onMouseLeave={() => setIsDrawing(false)}
+                    onTouchStart={handleStart}
+                    onTouchMove={handleMove}
+                    onTouchEnd={handleEnd}
+                    onTouchCancel={() => setIsDrawing(false)}
+                  />
+                </div>
+              </div>
             </div>
-          )}
-
-          {/* Annotation Drawing Canvas */}
-          {annotationMode && (
-            <canvas 
-              ref={drawingCanvasRef}
-              className={`absolute inset-0 w-full h-full pointer-events-auto z-20 ${
-                activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
-              }`}
-              style={{
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                maxWidth: '100%',
-                maxHeight: '100%'
-              }}
-              onMouseDown={handleStart}
-              onMouseMove={handleMove}
-              onMouseUp={handleEnd}
-              onMouseLeave={() => setIsDrawing(false)}
-              onTouchStart={handleStart}
-              onTouchMove={handleMove}
-              onTouchEnd={handleEnd}
-              onTouchCancel={() => setIsDrawing(false)}
-            />
           )}
         </div>
       </CardContent>
