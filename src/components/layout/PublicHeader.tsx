@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -68,13 +68,13 @@ export const PublicHeader = () => {
             
             {/* Friendly Mobile Menu - Shows below lg breakpoint */}
             <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-              <DropdownMenuTrigger asChild className="lg:hidden">
-                <MusicStaffMenu onClick={() => setIsOpen(!isOpen)} />
+              <DropdownMenuTrigger asChild className="xl:hidden">
+                <MusicStaffMenu />
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
                 side="bottom"
-                sideOffset={8}
+                sideOffset={0}
                 className="w-80 p-2 bg-popover text-popover-foreground border border-border rounded-lg shadow-xl z-[60]"
               >
                 <div className="flex items-center justify-center gap-2 pb-1 border-b border-border">
