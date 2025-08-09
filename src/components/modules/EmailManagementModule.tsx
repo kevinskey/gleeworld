@@ -4,8 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Mail, Send, Users, FileText, Clock } from "lucide-react";
 import { ModuleProps } from "@/types/unified-modules";
 import { CommunicationHub } from "@/components/communication/CommunicationHub";
+import { useNavigate } from "react-router-dom";
 
 export const EmailManagementModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
+  const navigate = useNavigate();
   const emailCampaigns = [
     { id: 1, subject: "Spring Concert Announcement", recipients: 245, status: "sent", date: "2024-01-15" },
     { id: 2, subject: "Rehearsal Schedule Update", recipients: 52, status: "draft", date: "2024-01-14" },
@@ -30,6 +32,11 @@ export const EmailManagementModule = ({ user, isFullPage, onNavigate }: ModulePr
           <div className="text-sm">23 campaigns this month</div>
           <div className="text-sm">89% average open rate</div>
           <div className="text-sm">5 scheduled campaigns</div>
+        </div>
+        <div className="mt-4">
+          <Button size="sm" onClick={() => navigate('/admin/communications')}>
+            Open Communications Hub
+          </Button>
         </div>
       </CardContent>
     </Card>

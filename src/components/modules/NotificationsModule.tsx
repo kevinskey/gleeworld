@@ -4,8 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Bell, Mail, Send, Users, Calendar } from "lucide-react";
 import { ModuleProps } from "@/types/unified-modules";
 import { CommunicationHub } from "@/components/communication/CommunicationHub";
+import { useNavigate } from "react-router-dom";
 
 export const NotificationsModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
+  const navigate = useNavigate();
   const notifications = [
     { id: 1, title: "Rehearsal Reminder", message: "Don't forget about tonight's rehearsal at 7pm", type: "reminder", time: "2 hours ago" },
     { id: 2, title: "New Sheet Music", message: "Spring concert music has been uploaded", type: "update", time: "1 day ago" },
@@ -30,6 +32,11 @@ export const NotificationsModule = ({ user, isFullPage, onNavigate }: ModuleProp
           {notifications.slice(0, 3).map((notif) => (
             <div key={notif.id} className="text-sm">{notif.title}</div>
           ))}
+        </div>
+        <div className="mt-4">
+          <Button size="sm" onClick={() => navigate('/admin/communications')}>
+            Open Communications Hub
+          </Button>
         </div>
       </CardContent>
     </Card>
