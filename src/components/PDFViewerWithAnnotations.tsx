@@ -43,13 +43,15 @@ interface PDFViewerWithAnnotationsProps {
   musicId?: string;
   musicTitle?: string;
   className?: string;
+  startInAnnotationMode?: boolean;
 }
 
 export const PDFViewerWithAnnotations = ({ 
   pdfUrl, 
   musicId, 
   musicTitle,
-  className = "" 
+  className = "",
+  startInAnnotationMode = false,
 }: PDFViewerWithAnnotationsProps) => {
   const { user } = useAuth();
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
@@ -84,6 +86,12 @@ const scrollModePluginInstance = scrollModePlugin();
   const [googleProvider, setGoogleProvider] = useState<'gview' | 'viewerng'>('gview');
 const timerRef = useRef<number | null>(null);
 const [engine, setEngine] = useState<'google' | 'react'>('google');
+
+  useEffect(() => {
+    if (startInAnnotationMode && !annotationMode) {
+      setAnnotationMode(true);
+    }
+  }, [startInAnnotationMode]);
 
   // Handle iframe load
   const handleIframeLoad = () => {

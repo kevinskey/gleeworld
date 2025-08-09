@@ -113,6 +113,7 @@ export const SheetMusicViewDialog = ({
                         pdfUrl={item.pdf_url} 
                         musicId={item.id}
                         musicTitle={item.title}
+                        startInAnnotationMode
                         className="w-full"
                       />
                     ) : (
