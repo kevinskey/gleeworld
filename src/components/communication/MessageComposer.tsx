@@ -27,10 +27,14 @@ export const MessageComposer = ({
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
 
   const handleTemplateSelect = (templateId: string) => {
+    if (templateId === 'start_fresh') {
+      setSelectedTemplate('');
+      onTemplateSelect('');
+      return;
+    }
     setSelectedTemplate(templateId);
     onTemplateSelect(templateId);
   };
-
   return (
     <Card>
       <CardHeader>
@@ -59,7 +63,7 @@ export const MessageComposer = ({
               <SelectValue placeholder="Choose a template or start fresh" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Start Fresh</SelectItem>
+              <SelectItem value="start_fresh">Start Fresh</SelectItem>
               {templates.map((template) => (
                 <SelectItem key={template.id} value={template.id}>
                   <div className="flex items-center justify-between w-full">
