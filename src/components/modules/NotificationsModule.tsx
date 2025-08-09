@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Mail, Send, Users, Calendar } from "lucide-react";
 import { ModuleProps } from "@/types/unified-modules";
+import { CommunicationHub } from "@/components/communication/CommunicationHub";
 
 export const NotificationsModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
   const notifications = [
@@ -12,69 +13,7 @@ export const NotificationsModule = ({ user, isFullPage, onNavigate }: ModuleProp
   ];
 
   if (isFullPage) {
-    return (
-      <div className="space-y-6">
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Recent Notifications</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {notifications.map((notif) => (
-                <div key={notif.id} className="flex items-start gap-3 p-3 border rounded">
-                  <Bell className="h-4 w-4 mt-1 text-blue-500" />
-                  <div className="flex-1">
-                    <div className="font-medium">{notif.title}</div>
-                    <div className="text-sm text-muted-foreground">{notif.message}</div>
-                    <div className="text-xs text-muted-foreground mt-1">{notif.time}</div>
-                  </div>
-                  <Badge variant={notif.type === 'alert' ? 'destructive' : 'secondary'}>
-                    {notif.type}
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
-                <Users className="h-4 w-4 mr-2" />
-                Send to All Members
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Mail className="h-4 w-4 mr-2" />
-                Email Notification
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Notification
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Statistics</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="text-2xl font-bold">47</div>
-                <div className="text-sm text-muted-foreground">Notifications sent today</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">92%</div>
-                <div className="text-sm text-muted-foreground">Read rate</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return <CommunicationHub />;
   }
 
   return (
