@@ -20,7 +20,7 @@ export const MusicLibraryHeader = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/dashboard')}
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3"
             >
               <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />

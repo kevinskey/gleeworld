@@ -10,6 +10,7 @@ import { Home, Users, Calendar, FileText, Activity, ArrowLeft, Music, Eye, Chevr
 import { StudyScoresPanel } from './StudyScoresPanel';
 import { MyCollectionsPanel } from './MyCollectionsPanel';
 import { SheetMusicViewDialog } from './SheetMusicViewDialog';
+import { MusicLibraryHeader } from './MusicLibraryHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -96,11 +97,10 @@ export const MusicLibrary = () => {
 
   return (
     <>
-
-    <div className="container mx-auto px-4 py-4">
-
-      {/* Two-column layout with fixed height and scrollable columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-5rem)] overflow-hidden">
+      <MusicLibraryHeader />
+      <div className="container mx-auto px-4 py-4">
+        {/* Two-column layout with fixed height and scrollable columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-5rem)] overflow-hidden">
         {/* Left column */}
         <div className={`${selectedPdf ? 'lg:col-span-4' : 'lg:col-span-5'} space-y-4 h-full overflow-y-auto pr-1`}>
           {/* Study Scores */}
