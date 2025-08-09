@@ -210,7 +210,7 @@ const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     <Card>
       <CardHeader>
         <CardTitle>User Profile</CardTitle>
-        <CardDescription>Details for the selected user</CardDescription>
+        
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-center text-center gap-3">
