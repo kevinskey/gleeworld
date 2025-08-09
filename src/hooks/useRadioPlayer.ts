@@ -217,6 +217,9 @@ export const useRadioPlayer = () => {
 
   const play = async () => {
     console.log('Radio play() called');
+    console.log('Current state:', state);
+    console.log('Available stream URLs:', RADIO_STREAM_URLS);
+    
     if (!audioRef.current) {
       console.log('No audio ref available');
       return;
@@ -230,6 +233,8 @@ export const useRadioPlayer = () => {
       ...RADIO_STREAM_URLS, // Prefer HTTPS-proxied streams first
       azuraCastService.getPublicStreamUrl()
     ];
+
+    console.log('All stream URLs to try:', streamUrls);
 
     // Try each stream URL until one works
     for (let i = 0; i < streamUrls.length; i++) {
@@ -290,7 +295,20 @@ export const useRadioPlayer = () => {
         });
         
         console.log('Stream ready, calling play()...');
-        await audioRef.current.play();
+        
+        // Try to play with user gesture requirement handling
+        try {
+          await audioRef.current.play();
+        } catch (playError: any) {
+          console.error('Audio play error:', playError);
+          
+          // Handle common autoplay restriction
+          if (playError.name === 'NotAllowedError') {
+            throw new Error('Browser blocked audio playback. Please interact with the page first (click anywhere).');
+          } else {
+            throw playError;
+          }
+        }
         
         console.log('Successfully started playing stream:', streamUrl);
         toast({
@@ -304,11 +322,14 @@ export const useRadioPlayer = () => {
         console.error('Error details:', {
           name: error instanceof Error ? error.name : 'Unknown',
           message: error instanceof Error ? error.message : String(error),
-          code: (error as any)?.code
+          code: (error as any)?.code,
+          target: (error as any)?.target,
+          type: (error as any)?.type
         });
         
         // If this was the last URL, show error
         if (i === streamUrls.length - 1) {
+          console.error('All stream URLs failed, showing error to user');
           setState(prev => ({ 
             ...prev, 
             isLoading: false, 
@@ -319,6 +340,8 @@ export const useRadioPlayer = () => {
             description: "All radio streams are currently offline. Please try again later.",
             variant: "destructive",
           });
+        } else {
+          console.log(`Trying next stream URL (${i + 2}/${streamUrls.length})...`);
         }
       }
     }
