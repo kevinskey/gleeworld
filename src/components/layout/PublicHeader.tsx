@@ -68,7 +68,7 @@ export const PublicHeader = () => {
             
             {/* Friendly Mobile Menu - Shows below lg breakpoint */}
             <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-              <DropdownMenuTrigger asChild className="xl:hidden">
+              <DropdownMenuTrigger asChild className="2xl:hidden">
                 <MusicStaffMenu />
               </DropdownMenuTrigger>
               <DropdownMenuContent
