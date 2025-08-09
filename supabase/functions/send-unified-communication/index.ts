@@ -293,6 +293,30 @@ async function getAcademicYearRecipients(supabase: any, academicYearId: string):
 }
 
 async function getSpecialGroupRecipients(supabase: any, groupId: string): Promise<Recipient[]> {
+  if (groupId.startsWith('direct_email:')) {
+    const email = groupId.split(':')[1];
+    if (email) {
+      return [{ email, name: undefined } as Recipient];
+    }
+    return [];
+  }
+
+  if (groupId.startsWith('direct_user:')) {
+    const userId = groupId.split(':')[1];
+    if (!userId) return [];
+    const { data } = await supabase
+      .from('gw_profiles')
+      .select('user_id, email, full_name, first_name, last_name')
+      .eq('user_id', userId)
+      .single();
+    if (!data) return [];
+    return [{
+      user_id: data.user_id,
+      email: data.email,
+      name: data.full_name || `${data.first_name ?? ''} ${data.last_name ?? ''}`.trim()
+    }];
+  }
+
   if (groupId === 'alumnae') {
     const { data } = await supabase
       .from('gw_profiles')

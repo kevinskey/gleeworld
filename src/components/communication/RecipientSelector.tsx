@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { RecipientGroup, RECIPIENT_GROUPS } from '@/types/communication';
 import { GroupManagement } from './GroupManagement';
 import { Users, Search, UserCheck, Settings } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RecipientSelectorProps {
   selectedGroups: RecipientGroup[];
@@ -24,8 +25,35 @@ export const RecipientSelector = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [customGroups, setCustomGroups] = useState<RecipientGroup[]>([]);
   const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
-  
+  // Direct recipient state
+  const [directEmail, setDirectEmail] = useState('');
+  const [userQuery, setUserQuery] = useState('');
+  const [userResults, setUserResults] = useState<Array<{ user_id: string; email: string; full_name?: string; first_name?: string; last_name?: string }>>([]);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
   const allGroups = [...RECIPIENT_GROUPS, ...customGroups];
+
+  // Live search members by name/email for direct messaging
+  useEffect(() => {
+    const term = userQuery.trim();
+    if (term.length < 2) {
+      setUserResults([]);
+      return;
+    }
+    let cancelled = false;
+    setIsSearchingUsers(true);
+    supabase
+      .from('gw_profiles')
+      .select('user_id, email, full_name, first_name, last_name')
+      .or(`email.ilike.%${term}%,full_name.ilike.%${term}%`)
+      .limit(8)
+      .then(({ data, error }) => {
+        if (!cancelled) {
+          if (!error) setUserResults(data || []);
+          setIsSearchingUsers(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [userQuery]);
 
   const groupedRecipients = allGroups.reduce((acc, group) => {
     if (!acc[group.type]) {
@@ -76,6 +104,21 @@ export const RecipientSelector = ({
     if (groupToRemove && selectedGroups.some(g => g.id === groupId)) {
       onGroupToggle(groupToRemove);
     }
+  };
+
+  const addDirectEmail = () => {
+    const email = directEmail.trim().toLowerCase();
+    if (!email || !email.includes('@')) return;
+    const group: RecipientGroup = { id: `direct_email:${email}`, label: email, type: 'special' };
+    onGroupToggle(group);
+    setDirectEmail('');
+  };
+
+  const addDirectUser = (profile: { user_id: string; email: string; full_name?: string; first_name?: string; last_name?: string }) => {
+    const name = profile.full_name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+    const label = name ? `${name} (${profile.email})` : profile.email;
+    const group: RecipientGroup = { id: `direct_user:${profile.user_id}`, label, type: 'special' };
+    onGroupToggle(group);
   };
 
   return (
@@ -145,6 +188,46 @@ export const RecipientSelector = ({
             </div>
           </div>
         )}
+
+        {/* Direct Recipient */}
+        <div className="p-3 rounded-lg border space-y-3">
+          <h4 className="text-sm font-medium">Direct recipient</h4>
+          <div className="flex gap-2">
+            <Input
+              value={directEmail}
+              onChange={(e) => setDirectEmail(e.target.value)}
+              placeholder="name@example.com"
+            />
+            <Button variant="secondary" onClick={addDirectEmail} disabled={!directEmail.includes('@')}>
+              Add email
+            </Button>
+          </div>
+          <div className="space-y-2">
+            <Input
+              value={userQuery}
+              onChange={(e) => setUserQuery(e.target.value)}
+              placeholder="Search member by name or email..."
+            />
+            {isSearchingUsers ? (
+              <div className="text-xs text-muted-foreground">Searching...</div>
+            ) : (
+              userResults.length > 0 && (
+                <div className="space-y-1">
+                  {userResults.map((u) => (
+                    <div key={u.user_id} className="flex items-center justify-between text-sm p-2 rounded border">
+                      <div>
+                        <div className="font-medium">{u.full_name || `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email}</div>
+                        <div className="text-xs text-muted-foreground">{u.email}</div>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => addDirectUser(u)}>Add</Button>
+                    </div>
+                  ))}
+                </div>
+              )
+            )}
+            <p className="text-xs text-muted-foreground">Note: SMS requires a selected profile with a phone number; raw emails are for Email/Mass Email.</p>
+          </div>
+        </div>
 
         {/* Group Selection Tabs */}
         <Tabs defaultValue="role" className="w-full">

@@ -155,6 +155,15 @@ export const useCommunication = () => {
               query = query.eq('role', 'alumna');
             } else if (group.id === 'all_users') {
               query = query.neq('user_id', '00000000-0000-0000-0000-000000000000'); // All users
+            } else if (group.id.startsWith('direct_email:')) {
+              // Count a single direct email (not tied to a user profile)
+              totalCount += 1;
+              continue;
+            } else if (group.id.startsWith('direct_user:')) {
+              // Count a specific user by id (ensure uniqueness)
+              const userId = group.id.split(':')[1];
+              if (userId) processedUserIds.add(userId);
+              continue;
             }
             break;
         }
