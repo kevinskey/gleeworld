@@ -159,9 +159,9 @@ export const UserModuleMatrix: React.FC<Props> = ({ userId }) => {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left">
-                <th className="py-1.5 px-1">Module</th>
-                <th className="py-1.5 px-1">View</th>
-                <th className="py-1.5 px-1">Manage</th>
+                <th className="py-1 px-1">Module</th>
+                <th className="py-1 px-0.5">View</th>
+                <th className="py-1 px-0.5">Manage</th>
               </tr>
             </thead>
             <tbody>
@@ -169,27 +169,25 @@ export const UserModuleMatrix: React.FC<Props> = ({ userId }) => {
                 const state = permMap[m.id] || { view: false, manage: false };
                 return (
                   <tr key={m.id} className="border-b last:border-b-0 hover:bg-muted/40">
-                    <td className="py-1.5 px-1">{titleFor(m.name)}</td>
-                    <td className="py-1.5 px-1">
-                      <div className="flex items-center gap-2">
+                    <td className="py-1 px-1">{titleFor(m.name)}</td>
+                    <td className="py-1 px-0.5">
+                      <div className="flex items-center gap-1">
                         <Switch
                           checked={!!state.view}
                           onCheckedChange={(val) => toggle(m.id, 'view', val)}
                           disabled={loading || isDirector}
                           aria-label={`Toggle view for ${titleFor(m.name)}`}
                         />
-                        <span className="text-xs text-muted-foreground">View</span>
                       </div>
                     </td>
-                    <td className="py-1.5 px-1">
-                      <div className="flex items-center gap-2">
+                    <td className="py-1 px-0.5">
+                      <div className="flex items-center gap-1">
                         <Switch
                           checked={!!state.manage}
                           onCheckedChange={(val) => toggle(m.id, 'manage', val)}
                           disabled={loading || isDirector}
                           aria-label={`Toggle manage for ${titleFor(m.name)}`}
                         />
-                        <span className="text-xs text-muted-foreground">Manage</span>
                       </div>
                     </td>
                   </tr>

@@ -15,6 +15,7 @@ import { UserModuleMatrix } from '@/components/admin/UserModuleMatrix';
 import { USER_ROLES } from '@/constants/permissions';
 import { EXECUTIVE_POSITIONS } from '@/hooks/useExecutivePermissions';
 import { toast } from 'sonner';
+import { SelectedUserProfileCard } from '@/components/admin/SelectedUserProfileCard';
 
 interface PreviewUser {
   id: string;
@@ -162,95 +163,103 @@ const PermissionsPage: React.FC = () => {
         </TabsList>
 
         <TabsContent value="preview" className="space-y-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="min-w-64">
-                  <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                    <SelectTrigger aria-label="Select user">
-                      <SelectValue placeholder="Select a user" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      {users.map(u => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.full_name || u.email} ({u.email})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button onClick={doPreview} disabled={!selectedUserId || fetching}>Preview</Button>
-
-                <div className="min-w-56">
-                  <Select value={selectedRole} onValueChange={setSelectedRole}>
-                    <SelectTrigger aria-label="Select role">
-                      <SelectValue placeholder="Role" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      {roleOptions.map((r) => (
-                        <SelectItem key={r} value={r}>{r === 'super-admin' ? 'Director' : r}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button variant="outline" onClick={updateRole} disabled={!selectedUserId}>Update Role</Button>
-
-                <div className="min-w-56">
-                  <Select value={selectedExec} onValueChange={setSelectedExec}>
-                    <SelectTrigger aria-label="Select executive position">
-                      <SelectValue placeholder="Executive position" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      {EXECUTIVE_POSITIONS.map((p) => (
-                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button variant="outline" onClick={assignExecutive} disabled={!selectedUserId || !selectedExec}>Assign Exec</Button>
-              </div>
-
-              {selectedUserId && (
-                <div className="mt-6 space-y-6">
-                  <UserModuleMatrix userId={selectedUserId} />
-
-                  {effective.length > 0 && (
-                    <div className="overflow-x-auto mt-2">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="text-left">
-                            <th className="py-2 px-2">Module</th>
-                            <th className="py-2 px-2">Access</th>
-                            <th className="py-2 px-2">Manage</th>
-                            <th className="py-2 px-2">Sources</th>
-                            <th className="py-2 px-2">Raw</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {effective.map(row => (
-                            <tr key={row.module_name} className="border-b last:border-b-0">
-                              <td className="py-2 px-2">{row.module_name}</td>
-                              <td className="py-2 px-2">{row.can_access ? 'Yes' : 'No'}</td>
-                              <td className="py-2 px-2">{row.can_manage ? 'Yes' : 'No'}</td>
-                              <td className="py-2 px-2">
-                                <div className="flex gap-2 flex-wrap">
-                                  {row.sources.map(s => (
-                                    <Badge key={s} variant="secondary">{s}</Badge>
-                                  ))}
-                                </div>
-                              </td>
-                              <td className="py-2 px-2">{row.permissions.join(', ')}</td>
-                            </tr>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="min-w-64">
+                      <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                        <SelectTrigger aria-label="Select user">
+                          <SelectValue placeholder="Select a user" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          {users.map(u => (
+                            <SelectItem key={u.id} value={u.id}>
+                              {u.full_name || u.email} ({u.email})
+                            </SelectItem>
                           ))}
-                        </tbody>
-                      </table>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button onClick={doPreview} disabled={!selectedUserId || fetching}>Preview</Button>
+
+                    <div className="min-w-56">
+                      <Select value={selectedRole} onValueChange={setSelectedRole}>
+                        <SelectTrigger aria-label="Select role">
+                          <SelectValue placeholder="Role" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          {roleOptions.map((r) => (
+                            <SelectItem key={r} value={r}>{r === 'super-admin' ? 'Director' : r}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button variant="outline" onClick={updateRole} disabled={!selectedUserId}>Update Role</Button>
+
+                    <div className="min-w-56">
+                      <Select value={selectedExec} onValueChange={setSelectedExec}>
+                        <SelectTrigger aria-label="Select executive position">
+                          <SelectValue placeholder="Executive position" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          {EXECUTIVE_POSITIONS.map((p) => (
+                            <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button variant="outline" onClick={assignExecutive} disabled={!selectedUserId || !selectedExec}>Assign Exec</Button>
+                  </div>
+
+                  {selectedUserId && (
+                    <div className="mt-6 space-y-6">
+                      <UserModuleMatrix userId={selectedUserId} />
+
+                      {effective.length > 0 && (
+                        <div className="overflow-x-auto mt-2">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-left">
+                                <th className="py-2 px-2">Module</th>
+                                <th className="py-2 px-2">Access</th>
+                                <th className="py-2 px-2">Manage</th>
+                                <th className="py-2 px-2">Sources</th>
+                                <th className="py-2 px-2">Raw</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {effective.map(row => (
+                                <tr key={row.module_name} className="border-b last:border-b-0">
+                                  <td className="py-2 px-2">{row.module_name}</td>
+                                  <td className="py-2 px-2">{row.can_access ? 'Yes' : 'No'}</td>
+                                  <td className="py-2 px-2">{row.can_manage ? 'Yes' : 'No'}</td>
+                                  <td className="py-2 px-2">
+                                    <div className="flex gap-2 flex-wrap">
+                                      {row.sources.map(s => (
+                                        <Badge key={s} variant="secondary">{s}</Badge>
+                                      ))}
+                                    </div>
+                                  </td>
+                                  <td className="py-2 px-2">{row.permissions.join(', ')}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </div>
+
+            {selectedUserId && (
+              <SelectedUserProfileCard userId={selectedUserId} />
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="roles" className="space-y-4">
