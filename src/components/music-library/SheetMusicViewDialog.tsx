@@ -5,11 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   FileText, 
-  User, 
   Calendar, 
   Music2, 
   Clock,
-  Languages,
   Star,
   Brain,
   List,
@@ -158,27 +156,6 @@ export const SheetMusicViewDialog = ({
                         </audio>
                       </div>
                     )}
-                    <div className="space-y-3">
-                      <h3 className="text-lg font-semibold">Details</h3>
-                      {item.composer && (
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm"><strong>Composer:</strong> {item.composer}</span>
-                        </div>
-                      )}
-                      {item.arranger && (
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm"><strong>Arranger:</strong> {item.arranger}</span>
-                        </div>
-                      )}
-                      {item.language && (
-                        <div className="flex items-center gap-2">
-                          <Languages className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm"><strong>Language:</strong> {item.language}</span>
-                        </div>
-                      )}
-                    </div>
 
                     {item.voice_parts && item.voice_parts.length > 0 && (
                       <div className="space-y-3">
