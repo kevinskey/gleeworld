@@ -146,32 +146,38 @@ export const RoleModuleMatrix: React.FC = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left">
-                <th className="py-2 px-2">Module</th>
-                <th className="py-2 px-2">View</th>
-                <th className="py-2 px-2">Manage</th>
+                <th className="py-1.5 px-1">Module</th>
+                <th className="py-1.5 px-1">View</th>
+                <th className="py-1.5 px-1">Manage</th>
               </tr>
             </thead>
             <tbody>
               {moduleList.map((m) => {
                 const state = permMap[m.name] || { view: false, manage: false };
                 return (
-                  <tr key={m.name} className="border-b last:border-b-0">
-                    <td className="py-2 px-2">{m.title}</td>
-                    <td className="py-2 px-2">
-                      <Switch
-                        checked={!!state.view}
-                        onCheckedChange={(val) => toggle(m.name, 'view', val)}
-                        disabled={loading}
-                        aria-label={`Toggle view for ${m.title}`}
-                      />
+                  <tr key={m.name} className="border-b last:border-b-0 hover:bg-muted/40">
+                    <td className="py-1.5 px-1">{m.title}</td>
+                    <td className="py-1.5 px-1">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={!!state.view}
+                          onCheckedChange={(val) => toggle(m.name, 'view', val)}
+                          disabled={loading}
+                          aria-label={`Toggle view for ${m.title}`}
+                        />
+                        <span className="text-xs text-muted-foreground">View</span>
+                      </div>
                     </td>
-                    <td className="py-2 px-2">
-                      <Switch
-                        checked={!!state.manage}
-                        onCheckedChange={(val) => toggle(m.name, 'manage', val)}
-                        disabled={loading}
-                        aria-label={`Toggle manage for ${m.title}`}
-                      />
+                    <td className="py-1.5 px-1">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={!!state.manage}
+                          onCheckedChange={(val) => toggle(m.name, 'manage', val)}
+                          disabled={loading}
+                          aria-label={`Toggle manage for ${m.title}`}
+                        />
+                        <span className="text-xs text-muted-foreground">Manage</span>
+                      </div>
                     </td>
                   </tr>
                 );

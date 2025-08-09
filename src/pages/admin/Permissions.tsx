@@ -69,6 +69,9 @@ const PermissionsPage: React.FC = () => {
       <PageHeader 
         title="Permissions"
         description="Simplified role-based controls with user preview and advanced tools."
+        backgroundVariant="gradient"
+        showBackButton
+        backTo="/admin"
       />
 
       <Tabs defaultValue="roles" className="mt-4">
