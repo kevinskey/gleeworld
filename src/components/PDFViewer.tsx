@@ -166,7 +166,7 @@ if (error) {
     <Card className={cn("w-full max-w-6xl mx-auto", className)}>
       {/* PDF Content */}
       <CardContent className="p-0">
-        <div className="relative h-[600px] md:h-[700px] lg:h-[800px] xl:h-[900px] w-full">
+        <div className="relative w-full h-[calc(100dvh-10rem)] min-h-[70vh] md:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-8rem)]">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
               <div className="flex flex-col items-center space-y-2">
