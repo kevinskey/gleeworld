@@ -10,7 +10,7 @@ import { Home, Users, Calendar, FileText, Activity, ArrowLeft, Music, Eye, Chevr
 import { StudyScoresPanel } from './StudyScoresPanel';
 import { MyCollectionsPanel } from './MyCollectionsPanel';
 import { SheetMusicViewDialog } from './SheetMusicViewDialog';
-import { MusicLibraryHeader } from './MusicLibraryHeader';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -97,8 +97,21 @@ export const MusicLibrary = () => {
 
   return (
     <>
-      <MusicLibraryHeader />
+      
       <div className="container mx-auto px-4 pt-16 md:pt-20 pb-6">
+        <div className="mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2"
+            onClick={() => navigate(-1)}
+            aria-label="Go back"
+            title="Go back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </Button>
+        </div>
         {/* Two-column layout with fixed height and scrollable columns */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-5rem)] overflow-hidden">
         {/* Left column */}
