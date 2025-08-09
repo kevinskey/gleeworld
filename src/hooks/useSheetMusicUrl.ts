@@ -21,25 +21,29 @@ export const useSheetMusicUrl = (pdfUrl: string | null) => {
       setError(null);
 
       try {
-        // Check if this is a public storage URL (no signed URL needed)
-        if (pdfUrl.includes('/storage/v1/object/public/')) {
-          console.log('useSheetMusicUrl: Using public URL directly:', pdfUrl);
+        // If already a public or signed storage URL, use as-is
+        if (
+          pdfUrl.includes('/storage/v1/object/public/') ||
+          pdfUrl.includes('/storage/v1/object/sign/')
+        ) {
+          console.log('useSheetMusicUrl: Using storage URL directly:', pdfUrl);
           setSignedUrl(pdfUrl);
           return;
         }
 
-        // Extract bucket and path from the URL for private buckets
-        const urlParts = pdfUrl.split('/');
-        const bucketIndex = urlParts.findIndex(part => part === 'sheet-music');
-        
-        if (bucketIndex === -1) {
-          // If it's not a private sheet-music URL, return as-is
+        // Extract bucket and path from the URL or storage path
+        // Accepts formats like:
+        // - sheet-music/folder/file.pdf
+        // - https://<domain>/<bucket>/folder/file.pdf
+        const raw = pdfUrl.replace(/^https?:\/\/[^/]+\//, '');
+        const parts = raw.split('/');
+        const bucket = parts[0];
+        if (!bucket) {
           setSignedUrl(pdfUrl);
           return;
         }
-
-        const bucket = urlParts[bucketIndex];
-        const path = urlParts.slice(bucketIndex + 1).join('/');
+        const pathWithQuery = parts.slice(1).join('/');
+        const path = pathWithQuery.split('?')[0];
 
         const url = await getFileUrl(bucket, path);
         setSignedUrl(url);
