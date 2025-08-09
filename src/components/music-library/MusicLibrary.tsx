@@ -207,16 +207,13 @@ export const MusicLibrary = () => {
               />
             </div>
           ) : (
-            <div className="group flex-1 relative rounded-xl overflow-hidden [perspective:1200px]">
-              <div className="absolute inset-0 transform-gpu transition-transform duration-500 ease-out [transform:rotateX(0deg)_rotateY(0deg)_scale(1)] group-hover:[transform:rotateX(6deg)_rotateY(-8deg)_scale(1.02)]">
-                <img
-                  src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png"
-                  alt="Glee World Music Library landing image placeholder in 3D tilt"
-                  className="absolute inset-0 w-full h-full object-contain"
-                  loading="lazy"
-                />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/10" />
-              </div>
+            <div className="flex-1 relative rounded-xl overflow-hidden bg-background shadow-xl ring-1 ring-border">
+              <img
+                src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png"
+                alt="Glee World Music Library landing image"
+                className="absolute inset-0 w-full h-full object-contain"
+                loading="lazy"
+              />
             </div>
           )}
         </div>
