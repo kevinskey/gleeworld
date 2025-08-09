@@ -96,7 +96,7 @@ class AzuraCastService {
   private baseUrl = 'https://radio.gleeworld.org';
   private stationId = 'glee_world_radio';
   private directStreamUrl = 'https://radio.gleeworld.org/listen/glee_world_radio/radio.mp3'; // Use HTTPS
-  private proxyBaseUrl = 'https://aqbopijztqwnrmqsyatp.functions.supabase.co/radio-proxy';
+  private proxyBaseUrl = 'https://oopmlreysjzuxzylyheb.functions.supabase.co/radio-proxy';
 
   async getNowPlaying(): Promise<AzuraCastNowPlaying | null> {
     try {
