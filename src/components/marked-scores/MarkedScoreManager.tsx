@@ -13,7 +13,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFileAndGetUrl, getFileUrl } from '@/utils/storage';
 import { 
-  Plus, 
   Edit3, 
   Eye, 
   Download, 
@@ -109,11 +108,6 @@ export const MarkedScoreManager = ({
     }
   };
 
-  const handleCreateNew = () => {
-    setEditingScore(null);
-    setNewScore({ voice_part: '', description: '' });
-    setShowCreateDialog(true);
-  };
 
   const handleEdit = (score: MarkedScore) => {
     setEditingScore(score);
@@ -253,14 +247,7 @@ export const MarkedScoreManager = ({
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h3 className="text-lg font-semibold">Marked Scores</h3>
-          <p className="text-sm text-muted-foreground">
-            Annotate and save marked versions of this sheet music
-          </p>
         </div>
-        <Button onClick={handleCreateNew} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          Create Marked Score
-        </Button>
       </div>
 
       {/* Marked Scores List */}
