@@ -14,16 +14,6 @@ export const EmailManagementModule = ({ user, isFullPage, onNavigate }: ModulePr
   if (isFullPage) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Email Management</h1>
-            <p className="text-muted-foreground">Create and manage email campaigns for members</p>
-          </div>
-          <Button>
-            <Send className="h-4 w-4 mr-2" />
-            New Campaign
-          </Button>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>

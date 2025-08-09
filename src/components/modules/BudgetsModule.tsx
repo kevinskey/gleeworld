@@ -17,16 +17,6 @@ export const BudgetsModule = ({ user, isFullPage, onNavigate }: ModuleProps) => 
   if (isFullPage) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Budget Management</h1>
-            <p className="text-muted-foreground">Create and manage organizational budgets</p>
-          </div>
-          <Button onClick={() => setShowBudgetCreator(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Budget
-          </Button>
-        </div>
 
         {showBudgetCreator && (
           <BudgetCreator 

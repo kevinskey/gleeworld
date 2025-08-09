@@ -36,10 +36,6 @@ export const SetupCrewManagerModule: React.FC<ModuleProps> = ({ user, isFullPage
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Settings className="w-6 h-6 text-primary" />
-        <h2 className="text-2xl font-bold">Setup Crew Manager</h2>
-      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">

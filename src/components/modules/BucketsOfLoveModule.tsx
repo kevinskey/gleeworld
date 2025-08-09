@@ -31,23 +31,6 @@ export const BucketsOfLoveModule = ({ user, isFullPage, onNavigate }: ModuleProp
   if (isFullPage) {
     return (
       <div className="h-full flex flex-col bg-gradient-to-br from-primary/5 to-secondary/10">
-        {/* Mobile-first header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-2">
-              <Heart className="h-5 w-5 text-pink-500" />
-              <h1 className="text-lg md:text-xl font-bold text-foreground">Buckets of Love</h1>
-            </div>
-            <Badge variant="secondary" className="text-xs">
-              {buckets.length} messages
-            </Badge>
-          </div>
-          {!isMobile && (
-            <p className="px-4 pb-3 text-sm text-muted-foreground">
-              Share encouragement and support within the Glee Club community
-            </p>
-          )}
-        </div>
 
         {/* Mobile-optimized content */}
         <div className="flex-1 flex flex-col overflow-hidden">

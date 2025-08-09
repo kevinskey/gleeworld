@@ -43,16 +43,6 @@ export const ApprovalSystemModule = ({ user, isFullPage, onNavigate }: ModulePro
   if (isFullPage) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Financial Approval System</h1>
-            <p className="text-muted-foreground">Review and approve financial requests and expense reports</p>
-          </div>
-          <Button onClick={() => setShowCreateForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Request
-          </Button>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>

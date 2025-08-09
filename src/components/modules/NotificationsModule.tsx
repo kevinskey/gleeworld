@@ -14,16 +14,6 @@ export const NotificationsModule = ({ user, isFullPage, onNavigate }: ModuleProp
   if (isFullPage) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Notifications Center</h1>
-            <p className="text-muted-foreground">Manage and send notifications to members</p>
-          </div>
-          <Button>
-            <Send className="h-4 w-4 mr-2" />
-            Send Notification
-          </Button>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>

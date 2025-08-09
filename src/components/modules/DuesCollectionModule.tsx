@@ -68,47 +68,41 @@ export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModulePro
   if (isFullPage) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Dues Collection</h1>
-            <p className="text-muted-foreground">Track and collect member dues and payments</p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={() => navigate('/dues-management')} variant="outline">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Full Dues Management
-            </Button>
-            <Button onClick={sendBulkReminders} variant="outline">
-              <Bell className="h-4 w-4 mr-2" />
-              Send Reminders
-            </Button>
-            <Dialog open={showCreateDuesDialog} onOpenChange={setShowCreateDuesDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Dues Records
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create Dues Records for Fall 2025</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <p className="text-muted-foreground">
-                    This will create dues records for all current members with a due date of September 15, 2025.
-                  </p>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setShowCreateDuesDialog(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleCreateDuesForSemester}>
-                      Create Records
-                    </Button>
-                  </div>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate('/dues-management')} variant="outline">
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Full Dues Management
+          </Button>
+          <Button onClick={sendBulkReminders} variant="outline">
+            <Bell className="h-4 w-4 mr-2" />
+            Send Reminders
+          </Button>
+          <Dialog open={showCreateDuesDialog} onOpenChange={setShowCreateDuesDialog}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Dues Records
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Dues Records for Fall 2025</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  This will create dues records for all current members with a due date of September 15, 2025.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setShowCreateDuesDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateDuesForSemester}>
+                    Create Records
+                  </Button>
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

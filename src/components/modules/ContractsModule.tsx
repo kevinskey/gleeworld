@@ -40,16 +40,6 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
   if (isFullPage) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Contracts Management</h1>
-            <p className="text-muted-foreground">Create, manage, and track performance contracts</p>
-          </div>
-          <Button onClick={() => setShowContractTypeDialog(true)} className="pr-6">
-            <FileCheck className="h-4 w-4 mr-2" />
-            New Contract
-          </Button>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>

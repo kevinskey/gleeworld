@@ -14,16 +14,6 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
   if (isFullPage) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Scheduling Module</h1>
-            <p className="text-muted-foreground">Schedule and manage rehearsals, events, and meetings</p>
-          </div>
-          <Button>
-            <Calendar className="h-4 w-4 mr-2" />
-            New Event
-          </Button>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
