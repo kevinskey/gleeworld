@@ -23,7 +23,7 @@ export const MusicLibrary = () => {
   const [setlistOpen, setSetlistOpen] = useState(false);
   const [studyOpen, setStudyOpen] = useState(false);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
-  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(true);
   const [studyDialogOpen, setStudyDialogOpen] = useState(false);
   const [studyItem, setStudyItem] = useState<any>(null);
   const { toast } = useToast();

@@ -12,7 +12,7 @@ export const MusicLibraryHeader = () => {
   const navigate = useNavigate();
 
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-12 sm:top-16 z-50">
+    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-2 sm:px-6 py-2 sm:py-4">
         <div className="flex items-center justify-between">
           {/* Left section - Navigation */}
