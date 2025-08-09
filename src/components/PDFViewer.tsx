@@ -37,10 +37,14 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
     }
 
     if (signedUrl) {
-      timerRef.current = window.setTimeout(() => {
-        // Fallback to Google viewer if still loading after timeout
+      const isSupabase = signedUrl.includes('.supabase.co/');
+      if (isSupabase) {
         setUseGoogle(true);
-      }, 4500);
+      } else {
+        timerRef.current = window.setTimeout(() => {
+          setUseGoogle(true);
+        }, 4500);
+      }
     }
 
     return () => {

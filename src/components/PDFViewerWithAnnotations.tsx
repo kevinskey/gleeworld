@@ -128,9 +128,14 @@ export const PDFViewerWithAnnotations = ({
       timerRef.current = null;
     }
     if (signedUrl && !annotationMode) {
-      timerRef.current = window.setTimeout(() => {
+      const isSupabase = signedUrl.includes('.supabase.co/');
+      if (isSupabase) {
         setUseGoogle(true);
-      }, 4500);
+      } else {
+        timerRef.current = window.setTimeout(() => {
+          setUseGoogle(true);
+        }, 4500);
+      }
     }
     return () => {
       if (timerRef.current) {
