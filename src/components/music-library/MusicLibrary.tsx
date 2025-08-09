@@ -96,62 +96,8 @@ export const MusicLibrary = () => {
 
   return (
     <>
-      <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-xl font-bold text-primary">GleeWorld</h1>
-              
-              <nav className="hidden md:flex space-x-6">
-                {navigationItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = location.pathname === item.route || 
-                    (item.route === '/dashboard' && location.pathname === '/');
-                  
-                  return (
-                    <Button
-                      key={item.id}
-                      variant={isActive ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => navigate(item.route)}
-                      className="flex items-center gap-2"
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </Button>
-                  );
-                })}
-                <Button
-                  variant={location.pathname === '/music-library' ? "default" : "ghost"}
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <FileText className="h-4 w-4" />
-                  Music Library
-                </Button>
-              </nav>
-            </div>
-          </div>
-        </div>
-      </header>
 
     <div className="container mx-auto px-4 py-4">
-      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Menu
-            </Button>
-          </div>
-          <h1 className="text-2xl font-bold mb-1">Music Library</h1>
-        </div>
-      </div>
 
       {/* Two-column layout with fixed height and scrollable columns */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-5rem)] overflow-hidden">
