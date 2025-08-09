@@ -231,7 +231,7 @@ export const MusicLibrary = () => {
         </div>
 
         {/* Right column: PDF viewer */}
-        <div className={`${selectedPdf ? 'lg:col-span-8' : 'lg:col-span-7'} space-y-4 h-full overflow-y-auto pl-1`}>
+        <div className={`${selectedPdf ? 'lg:col-span-8' : 'lg:col-span-7'} flex flex-col h-full overflow-hidden pl-1`}>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">PDF Viewer</h2>
             <Button size="sm" variant="outline" className="gap-2" aria-label="Study Mode" title="Study Mode" onClick={openStudyMode}>
