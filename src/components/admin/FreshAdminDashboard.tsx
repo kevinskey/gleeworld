@@ -29,7 +29,7 @@ import { SystemModule } from '@/components/admin/SystemModule';
 
 const adminModules = [
   { id: 'plugin-management', name: 'Plugin Management', icon: Settings, description: 'Control modular plugins across the platform' },
-  { id: 'user-management', name: 'User Management', icon: Users, description: 'Manage users and permissions', route: '/member-directory' },
+  { id: 'user-management', name: 'User Management', icon: Users, description: 'Manage users and permissions', route: '/user-management' },
   { id: 'auditions', name: 'Auditions', icon: Music, description: 'Manage auditions and registrations', route: '/admin/auditions' },
   { id: 'attendance', name: 'Attendance', icon: Calendar, description: 'Track rehearsal and event attendance', route: '/attendance' },
   { id: 'bookkeeping', name: 'Bookkeeping', icon: DollarSign, description: 'Treasurer & finance tools', route: '/treasurer' },
