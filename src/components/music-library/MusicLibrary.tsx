@@ -98,7 +98,7 @@ export const MusicLibrary = () => {
   return (
     <>
       <MusicLibraryHeader />
-      <div className="container mx-auto px-4 pt-8 sm:pt-12 pb-4">
+      <div className="container mx-auto px-4 pt-16 md:pt-20 pb-6">
         {/* Two-column layout with fixed height and scrollable columns */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-5rem)] overflow-hidden">
         {/* Left column */}
