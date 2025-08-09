@@ -530,15 +530,17 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       {/* Annotation Toolbar */}
         {annotationMode && (
           <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded-t-lg border-b">
-            {/* Annotation Toggle */}
-            <Button
-              variant={annotationMode ? "default" : "outline"}
-              size="sm"
-              onClick={() => { setError(null); setIsLoading(true); setAnnotationMode(!annotationMode); }}
-            >
-              <Palette className="h-4 w-4 mr-2" />
-              {annotationMode ? "Exit Annotations" : "Annotate"}
-            </Button>
+            {/* Annotation Toggle - hidden when startInAnnotationMode */}
+            {!startInAnnotationMode && (
+              <Button
+                variant={annotationMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => { setError(null); setIsLoading(true); setAnnotationMode(!annotationMode); }}
+              >
+                <Palette className="h-4 w-4 mr-2" />
+                {annotationMode ? "Exit Annotations" : "Annotate"}
+              </Button>
+            )}
 
             {/* Tool Selection */}
             <div className="flex gap-1">
@@ -625,7 +627,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
-                  Save
+                  Save Marked
                 </Button>
               )}
               {currentMarkedScoreId && musicTitle && (
@@ -655,7 +657,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
           )}
 
-          {!annotationMode && (
+          {!annotationMode && !startInAnnotationMode && (
             <div className="absolute top-3 right-3 z-20">
               <Button
                 size="sm"
