@@ -7741,6 +7741,42 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_role_module_permissions: {
+        Row: {
+          expires_at: string | null
+          granted_at: string
+          granted_by: string
+          id: string
+          is_active: boolean
+          module_name: string
+          permission_type: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          is_active?: boolean
+          module_name: string
+          permission_type: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          is_active?: boolean
+          module_name?: string
+          permission_type?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_running_ledger: {
         Row: {
           amount: number
@@ -13188,6 +13224,16 @@ export type Database = {
         Returns: {
           module_name: string
           permissions: string[]
+        }[]
+      }
+      get_user_modules_combined: {
+        Args: { user_id_param: string }
+        Returns: {
+          module_name: string
+          permissions: string[]
+          can_access: boolean
+          can_manage: boolean
+          sources: string[]
         }[]
       }
       get_user_username_permissions: {
