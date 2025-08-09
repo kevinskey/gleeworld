@@ -237,17 +237,6 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
     return <div className="flex justify-center py-8">Loading marked scores...</div>;
   }
 
-  // Use the new annotation manager if we have original PDF URL
-  if (originalPdfUrl) {
-    return (
-      <MarkedScoreManager
-        musicId={musicId}
-        musicTitle={musicTitle || 'Sheet Music'}
-        originalPdfUrl={originalPdfUrl}
-        voiceParts={voiceParts}
-      />
-    );
-  }
 
   // Fallback to legacy system for uploaded PDFs without original
   return (
@@ -329,10 +318,28 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
         </div>
       )}
 
+      {/* Annotation Manager Modal */}
+      {showAnnotationManager && originalPdfUrl && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg p-4 w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-lg font-semibold">Create Annotated Score</h3>
+              <Button variant="outline" size="sm" onClick={() => setShowAnnotationManager(false)}>Close</Button>
+            </div>
+            <MarkedScoreManager
+              musicId={musicId}
+              musicTitle={musicTitle || 'Sheet Music'}
+              originalPdfUrl={originalPdfUrl}
+              voiceParts={voiceParts}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Legacy Upload Dialog - keeping for backwards compatibility */}
       {showLegacyUpload && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-background rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">Upload Marked Score</h3>
             <div className="space-y-4">
               <div>
