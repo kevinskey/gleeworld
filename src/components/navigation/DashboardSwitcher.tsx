@@ -20,18 +20,18 @@ export const DashboardSwitcher = () => {
     return null;
   }
 
-  const isOnAdminDashboard = location.pathname.startsWith('/dashboard');
-  const isOnUserDashboard = location.pathname === '/dashboard';
+  const isOnMemberDashboard = location.pathname.startsWith('/dashboard/member-view/');
+  const isOnAdminDashboard = location.pathname === '/dashboard' || location.pathname.startsWith('/admin');
 
   const getCurrentContext = () => {
+    if (isOnMemberDashboard) return "Personal View";
     if (isOnAdminDashboard) return "Admin View";
-    if (isOnUserDashboard) return "Personal View";
     return "Dashboard";
   };
 
   const getCurrentIcon = () => {
+    if (isOnMemberDashboard) return <User className="h-5 w-5 sm:h-6 sm:w-6" />;
     if (isOnAdminDashboard) return <Shield className="h-5 w-5 sm:h-6 sm:w-6" />;
-    if (isOnUserDashboard) return <User className="h-5 w-5 sm:h-6 sm:w-6" />;
     return <Home className="h-5 w-5 sm:h-6 sm:w-6" />;
   };
 
@@ -59,10 +59,10 @@ export const DashboardSwitcher = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to="/user-dashboard" className="flex items-center cursor-pointer">
+          <Link to={`/dashboard/member-view/${user?.id}`} className="flex items-center cursor-pointer">
             <User className="mr-2 h-4 w-4" />
             Personal Dashboard
-            {location.pathname === '/user-dashboard' && (
+            {location.pathname.startsWith('/dashboard/member-view/') && (
               <Badge variant="secondary" className="ml-auto text-xs">
                 Current
               </Badge>

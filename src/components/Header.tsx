@@ -213,7 +213,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
   const canAccessPR = isAdmin || isPRCoordinator;
   const isSuperAdmin = userProfile?.role === 'super-admin';
-  const isOnUserDashboard = location.pathname === '/dashboard';
+  const isOnUserDashboard = location.pathname.startsWith('/dashboard/member-view/');
 
   console.log('Header - userProfile:', userProfile);
   console.log('Header - userProfile avatar_url:', userProfile?.avatar_url);
@@ -231,15 +231,15 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
 
   // Dashboard views for super-admin dropdown
   const dashboardViews = [
-    { id: 'personal', label: 'Personal Dashboard', icon: User, route: '/dashboard' },
+    { id: 'personal', label: 'Personal Dashboard', icon: User, route: `/dashboard/member-view/${user?.id}` },
     { id: 'admin', label: 'Admin Panel', icon: Shield, route: '/dashboard' },
     ...(isSuperAdmin ? [{ id: 'alumnae', label: 'Alumnae Portal Admin', icon: GraduationCap, route: '/admin/alumnae' }] : [])
   ];
 
   const getCurrentDashboardView = () => {
-    if (location.pathname === '/dashboard') return 'Personal Dashboard';
-    
+    if (location.pathname.startsWith('/dashboard/member-view/')) return 'Personal Dashboard';
     if (location.pathname === '/admin/alumnae') return 'Alumnae Portal Admin';
+    if (location.pathname === '/dashboard') return 'Admin Panel';
     return 'Dashboard';
   };
 
@@ -296,7 +296,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                 ) : (
                   <Button
                     variant="ghost"
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate(`/dashboard/member-view/${user?.id}`)}
                     className="text-primary hover:bg-accent/20 bg-accent/10 border border-accent/30"
                   >
                     <User className="h-4 w-4 mr-2" />
@@ -447,7 +447,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                         ) : (
                           <Button
                             variant="ghost"
-                            onClick={() => handleMobileNavClick('', '/dashboard')}
+                            onClick={() => handleMobileNavClick('', `/dashboard/member-view/${user?.id}`)}
                             className="w-full justify-start text-primary-foreground hover:bg-primary-foreground/20 bg-secondary/30 h-12"
                           >
                             <User className="h-5 w-5 mr-3" />
@@ -513,7 +513,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                         <span>Admin Panel</span>
                       </DropdownMenuItem>
                     ) : (
-                      <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                      <DropdownMenuItem onClick={() => navigate(`/dashboard/member-view/${user?.id}`)}>
                         <User className="mr-2 h-4 w-4" />
                         <span>My Dashboard</span>
                       </DropdownMenuItem>
