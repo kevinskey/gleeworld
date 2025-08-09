@@ -63,7 +63,7 @@ interface SheetMusic {
 }
 
 interface SetlistBuilderProps {
-  onPdfSelect: (pdfUrl: string, title: string) => void;
+  onPdfSelect: (pdfUrl: string, title: string, id?: string) => void;
   onOpenPlayer?: (setlistId: string) => void;
 }
 
@@ -458,7 +458,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
 
   const handleViewPdf = (item: SetlistItem) => {
     if (item.sheet_music?.pdf_url) {
-      onPdfSelect(item.sheet_music.pdf_url, item.sheet_music.title);
+      onPdfSelect(item.sheet_music.pdf_url, item.sheet_music.title, item.sheet_music.id);
     }
   };
 
@@ -854,10 +854,10 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                      <div 
                        key={music.id} 
                        className="flex items-center justify-between p-2 border rounded cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors"
-                       onClick={() => {
+                     onClick={() => {
                          console.log('SetlistBuilder: Sheet music clicked:', music.title, music.pdf_url);
                          if (music.pdf_url) {
-                           onPdfSelect(music.pdf_url, music.title);
+                           onPdfSelect(music.pdf_url, music.title, music.id);
                          } else {
                            console.log('SetlistBuilder: No PDF URL for this music');
                          }

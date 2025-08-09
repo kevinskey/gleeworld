@@ -11,15 +11,15 @@ import { Home, Users, Calendar, FileText, Activity, ArrowLeft, Music } from 'luc
 export const MusicLibrary = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedPdf, setSelectedPdf] = useState<{url: string; title: string} | null>(null);
+  const [selectedPdf, setSelectedPdf] = useState<{url: string; title: string; id?: string} | null>(null);
   
   const [activeSetlistPlayer, setActiveSetlistPlayer] = useState<string | null>(null);
 
-  const handlePdfSelect = (pdfUrl: string, title: string) => {
+  const handlePdfSelect = (pdfUrl: string, title: string, id?: string) => {
     console.log('MusicLibrary: handlePdfSelect called with URL:', pdfUrl, 'Title:', title);
-    console.log('MusicLibrary: Setting selectedPdf to:', { url: pdfUrl, title });
-    setSelectedPdf({ url: pdfUrl, title });
-    console.log('MusicLibrary: selectedPdf state should now be:', { url: pdfUrl, title });
+    console.log('MusicLibrary: Setting selectedPdf to:', { url: pdfUrl, title, id });
+    setSelectedPdf({ url: pdfUrl, title, id });
+    console.log('MusicLibrary: selectedPdf state should now be:', { url: pdfUrl, title, id });
   };
 
   const handleOpenSetlistPlayer = (setlistId: string) => {
@@ -129,6 +129,7 @@ export const MusicLibrary = () => {
                 key={selectedPdf.url} // Force re-render when URL changes
                 pdfUrl={selectedPdf.url}
                 musicTitle={selectedPdf.title}
+                musicId={selectedPdf.id}
                 className="w-full"
               />
             </div>
