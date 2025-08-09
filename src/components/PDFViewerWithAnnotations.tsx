@@ -83,11 +83,15 @@ const scrollModePluginInstance = scrollModePlugin();
   const [useGoogle, setUseGoogle] = useState(false);
   const [googleProvider, setGoogleProvider] = useState<'gview' | 'viewerng'>('gview');
 const timerRef = useRef<number | null>(null);
-const [engine, setEngine] = useState<'google' | 'react'>('react');
+const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   // Handle iframe load
   const handleIframeLoad = () => {
     console.log('PDFViewerWithAnnotations: Google Docs viewer loaded successfully');
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
     setIsLoading(false);
     setError(null);
   };
