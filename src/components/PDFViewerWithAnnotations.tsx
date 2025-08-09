@@ -77,6 +77,8 @@ export const PDFViewerWithAnnotations = ({
   const [totalPages, setTotalPages] = useState(0);
   const [scale, setScale] = useState(1.2);
   const [pageAnnotations, setPageAnnotations] = useState<Record<number, any[]>>({});
+  const [useGoogle, setUseGoogle] = useState(false);
+  const timerRef = useRef<number | null>(null);
 
   // Handle iframe load
   const handleIframeLoad = () => {
@@ -113,6 +115,25 @@ export const PDFViewerWithAnnotations = ({
     
     return () => observer.disconnect();
   }, [annotationMode, pdf]);
+
+  useEffect(() => {
+    setUseGoogle(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (signedUrl && !annotationMode) {
+      timerRef.current = window.setTimeout(() => {
+        setUseGoogle(true);
+      }, 4500);
+    }
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [signedUrl, annotationMode]);
 
   const redrawAnnotations = (pathsToRedraw?: any[]) => {
     if (!drawingCanvasRef.current) return;
@@ -572,18 +593,36 @@ export const PDFViewerWithAnnotations = ({
                 </div>
               </div>
               <div className="h-full">
-                <Worker workerUrl="https://unpkg.com/pdfjs-dist@5.3.93/build/pdf.worker.min.js">
-                  <div style={{ height: '750px' }}>
-                    <Viewer
-                      fileUrl={signedUrl}
-                      plugins={[defaultLayoutPluginInstance]}
-                      onDocumentLoad={() => {
-                        console.log('PDF document loaded successfully');
-                        setIsLoading(false);
-                      }}
-                    />
-                  </div>
-                </Worker>
+                {useGoogle ? (
+                  <iframe
+                    src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
+                    className="w-full h-full border-0"
+                    referrerPolicy="no-referrer"
+                    loading="lazy"
+                    sandbox="allow-scripts allow-same-origin"
+                    onLoad={handleIframeLoad}
+                    onError={handleIframeError}
+                    title="PDF Viewer"
+                  />
+                ) : (
+                  <Worker workerUrl="https://unpkg.com/pdfjs-dist@5.3.93/build/pdf.worker.min.js">
+                    <div style={{ height: '750px' }}>
+                      <Viewer
+                        fileUrl={signedUrl}
+                        plugins={[defaultLayoutPluginInstance]}
+                        onDocumentLoad={() => {
+                          console.log('PDF document loaded successfully');
+                          if (timerRef.current) {
+                            clearTimeout(timerRef.current);
+                            timerRef.current = null;
+                          }
+                          setUseGoogle(false);
+                          setIsLoading(false);
+                        }}
+                      />
+                    </div>
+                  </Worker>
+                )}
               </div>
             </div>
           )}
