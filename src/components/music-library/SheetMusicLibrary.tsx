@@ -259,7 +259,13 @@ export const SheetMusicLibrary = ({
             className={`group hover:shadow-lg transition-all cursor-pointer ${
               isSelected ? 'ring-2 ring-primary shadow-lg' : ''
             }`}
-            onClick={() => setSelectedItemId(isSelected ? null : item.id)}
+            onClick={() => {
+              const nextId = isSelected ? null : item.id;
+              setSelectedItemId(nextId);
+              if (nextId && item.pdf_url && onPdfSelect) {
+                onPdfSelect(item.pdf_url, item.title);
+              }
+            }}
           >
             <CardHeader className={`${isSelected ? 'pb-2' : 'pb-0 pt-2'}`}>
               <div className="flex items-start justify-between">
@@ -411,7 +417,13 @@ export const SheetMusicLibrary = ({
             className={`hover:shadow-md transition-all cursor-pointer ${
               isSelected ? 'ring-2 ring-primary shadow-lg' : ''
             }`}
-            onClick={() => setSelectedItemId(isSelected ? null : item.id)}
+            onClick={() => {
+              const nextId = isSelected ? null : item.id;
+              setSelectedItemId(nextId);
+              if (nextId && item.pdf_url && onPdfSelect) {
+                onPdfSelect(item.pdf_url, item.title);
+              }
+            }}
           >
             <CardContent className={`${isSelected ? 'p-3' : 'py-1 px-3'}`}>
               <div className="flex items-center gap-2">
