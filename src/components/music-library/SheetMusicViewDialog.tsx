@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Download, 
   FileText, 
   User, 
   Calendar, 
@@ -127,17 +126,6 @@ export const SheetMusicViewDialog = ({
                   </div>
 
                   <div className="xl:col-span-1 space-y-6">
-                    {/* Download button */}
-                    {item.pdf_url && (
-                      <div className="space-y-2">
-                        <Button variant="outline" asChild className="w-full">
-                          <a href={item.pdf_url} download>
-                            <Download className="h-4 w-4 mr-2" />
-                            Download PDF
-                          </a>
-                        </Button>
-                      </div>
-                    )}
 
                     {/* Performance Integration Links */}
                     {isAdmin && (
