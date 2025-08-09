@@ -115,7 +115,7 @@ const PermissionsPage: React.FC = () => {
       .from('gw_executive_board_members')
       .select('*')
       .eq('user_id', selectedUserId)
-      .eq('position', selectedExec)
+      .eq('position', selectedExec as any)
       .eq('academic_year', currentYear)
       .maybeSingle();
 
@@ -189,7 +189,7 @@ const PermissionsPage: React.FC = () => {
                     </SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {roleOptions.map((r) => (
-                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                        <SelectItem key={r} value={r}>{r === 'super-admin' ? 'Director' : r}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

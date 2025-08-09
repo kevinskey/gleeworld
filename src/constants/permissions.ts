@@ -158,17 +158,20 @@ export const DASHBOARD_MODULES = {
 export type DashboardModule = keyof typeof DASHBOARD_MODULES;
 
 export const hasPermission = (userRole: string, permission: string): boolean => {
+  // Treat "director" as alias of super-admin for permissions
+  const normalized = userRole === 'director' ? USER_ROLES.SUPER_ADMIN : userRole;
+
   // Type guard to check if userRole is valid
-  if (!Object.values(USER_ROLES).includes(userRole as UserRole)) {
+  if (!Object.values(USER_ROLES).includes(normalized as UserRole)) {
     return false;
   }
 
-  // Super admin has all permissions
-  if (userRole === USER_ROLES.SUPER_ADMIN) {
+  // Super admin (Director) has all permissions
+  if (normalized === USER_ROLES.SUPER_ADMIN) {
     return true;
   }
   
-  const rolePermissions = ROLE_PERMISSIONS[userRole as UserRole];
+  const rolePermissions = ROLE_PERMISSIONS[normalized as UserRole];
   return rolePermissions.includes(permission as Permission);
 };
 
@@ -287,5 +290,5 @@ const getExecutiveBoardPermissions = (execBoardRole: string): string[] => {
 };
 
 export const isAdmin = (userRole?: string): boolean => {
-  return userRole === USER_ROLES.ADMIN || userRole === USER_ROLES.SUPER_ADMIN;
+  return userRole === USER_ROLES.ADMIN || userRole === USER_ROLES.SUPER_ADMIN || userRole === 'director';
 };

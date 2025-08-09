@@ -59,7 +59,7 @@ export const useUserRole = () => {
 
   const canDownloadMP3 = () => {
     if (!profile) return false;
-    return profile.is_super_admin;
+    return profile.is_super_admin || profile.role === 'director';
   };
 
   const isVisitor = () => {
@@ -94,7 +94,7 @@ export const useUserRole = () => {
 
   const isSuperAdmin = () => {
     if (!profile) return false;
-    return profile.is_super_admin;
+    return profile.is_super_admin || profile.role === 'director';
   };
 
   const isExecutiveBoard = () => {

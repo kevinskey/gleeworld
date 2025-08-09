@@ -13,7 +13,7 @@ export const UserHero = () => {
   };
 
   const getRole = () => {
-    if (userProfile?.is_super_admin) return 'Super Admin';
+    if (userProfile?.is_super_admin) return 'Director';
     if (userProfile?.is_admin) return 'Admin';
     return userProfile?.role || 'Member';
   };
@@ -49,7 +49,7 @@ export const UserHero = () => {
   };
 
   const isDashboardView = () => {
-    return getRole() === 'Super Admin' || getRole() === 'Admin';
+    return getRole() === 'Director' || getRole() === 'Admin';
   };
 
   return (
