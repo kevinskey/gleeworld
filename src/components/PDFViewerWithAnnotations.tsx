@@ -654,6 +654,21 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               </div>
             </div>
           )}
+
+          {!annotationMode && (
+            <div className="absolute top-3 right-3 z-20">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => { setError(null); setIsLoading(true); setAnnotationMode(true); }}
+                aria-label="Enable annotations"
+                title="Annotate"
+              >
+                <Palette className="h-4 w-4 mr-2" />
+                Annotate
+              </Button>
+            </div>
+          )}
           
           {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
