@@ -19,6 +19,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
 
   const [useGoogle, setUseGoogle] = useState(false);
+  const [googleProvider, setGoogleProvider] = useState<'gview' | 'viewerng'>('gview');
   const timerRef = useRef<number | null>(null);
 
   console.log('PDFViewer: Props received:', { pdfUrl });
@@ -61,10 +62,17 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   };
 
   const handleError = () => {
-    console.error('PDFViewer: Failed to load PDF:', signedUrl);
+    console.error('PDFViewer: Failed to load PDF:', signedUrl, 'provider:', useGoogle ? googleProvider : 'direct');
     if (!useGoogle) {
       // Try Google viewer as a fallback
       setUseGoogle(true);
+      setIsLoading(true);
+      setGoogleProvider('gview');
+      return;
+    }
+    if (googleProvider === 'gview') {
+      // Switch to viewerng if gview fails
+      setGoogleProvider('viewerng');
       setIsLoading(true);
       return;
     }
@@ -171,8 +179,12 @@ if (error) {
           )}
           
           <iframe
-            key={`${useGoogle ? 'g' : 'd'}-${signedUrl}`}
-            src={useGoogle ? `https://docs.google.com/gview?url=${encodeURIComponent(signedUrl!)}&embedded=true` : (signedUrl || '')}
+            key={`${useGoogle ? (googleProvider === 'gview' ? 'g' : 'vn') : 'd'}-${signedUrl}`}
+            src={useGoogle 
+              ? (googleProvider === 'gview' 
+                  ? `https://docs.google.com/gview?url=${encodeURIComponent(signedUrl!)}&embedded=true`
+                  : `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(signedUrl!)}`)
+              : (signedUrl || '')}
             className="w-full h-full border-0"
             referrerPolicy="no-referrer"
             loading="lazy"

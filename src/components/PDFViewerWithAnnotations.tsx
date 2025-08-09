@@ -78,6 +78,7 @@ export const PDFViewerWithAnnotations = ({
   const [scale, setScale] = useState(1.2);
   const [pageAnnotations, setPageAnnotations] = useState<Record<number, any[]>>({});
   const [useGoogle, setUseGoogle] = useState(false);
+  const [googleProvider, setGoogleProvider] = useState<'gview' | 'viewerng'>('gview');
   const timerRef = useRef<number | null>(null);
 
   // Handle iframe load
@@ -88,11 +89,15 @@ export const PDFViewerWithAnnotations = ({
   };
 
   const handleIframeError = () => {
-    console.error('PDFViewerWithAnnotations: Google Docs viewer failed to load');
+    console.error('PDFViewerWithAnnotations: Google viewer failed to load', { provider: googleProvider });
+    if (useGoogle && googleProvider === 'gview') {
+      setGoogleProvider('viewerng');
+      setIsLoading(true);
+      return;
+    }
     setIsLoading(false);
     setError('Failed to load PDF viewer');
   };
-
   // Initialize drawing canvas to match PDF canvas size
   useEffect(() => {
     if (!drawingCanvasRef.current || !canvasRef.current || !annotationMode) return;
@@ -595,7 +600,9 @@ export const PDFViewerWithAnnotations = ({
               <div className="h-full">
                 {useGoogle ? (
                   <iframe
-                    src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`}
+                    src={googleProvider === 'gview'
+                      ? `https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`
+                      : `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(signedUrl)}`}
                     className="w-full h-full border-0"
                     referrerPolicy="no-referrer"
                     loading="lazy"

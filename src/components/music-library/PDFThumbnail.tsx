@@ -21,6 +21,7 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
   const [previewLoaded, setPreviewLoaded] = useState(false);
   const [previewError, setPreviewError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [useViewerNg, setUseViewerNg] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
   const { canDownloadPDF, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
@@ -66,6 +67,12 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
   };
 
   const handlePreviewError = () => {
+    if (!useViewerNg) {
+      setUseViewerNg(true);
+      setIsLoading(true);
+      setPreviewError(false);
+      return;
+    }
     setPreviewError(true);
     setIsLoading(false);
   };
@@ -104,7 +111,9 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
               </div>
             )}
             <iframe
-              src={`https://docs.google.com/gview?url=${encodeURIComponent(signedUrl || pdfUrl)}&embedded=true`}
+              src={useViewerNg
+                ? `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(signedUrl || pdfUrl)}`
+                : `https://docs.google.com/gview?url=${encodeURIComponent(signedUrl || pdfUrl)}&embedded=true`}
               className={`w-full h-full border-0 transition-opacity duration-300 ${
                 previewLoaded ? 'opacity-100' : 'opacity-0'
               }`}
