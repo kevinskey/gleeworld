@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Route, Mail, FileText, MapPin, Calendar, Users, TrendingUp, Activity, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Route, Mail, FileText, MapPin, Calendar, Users, TrendingUp, Activity, CheckCircle2, ArrowRight, Building2 } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
 import { TourCorrespondence } from './TourCorrespondence';
+import { HostManager } from './HostManager';
 
 interface TourManagerDashboardProps {
   user?: {
@@ -160,25 +161,29 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-2xl blur-xl"></div>
-            <TabsList className="relative grid w-full grid-cols-4 bg-card/50 backdrop-blur-sm border border-border/50 p-2 pb-4 rounded-2xl shadow-lg">
+            <TabsList className="relative grid w-full grid-cols-5 bg-card/50 backdrop-blur-sm border border-border/50 p-2 pb-4 rounded-2xl shadow-lg">
               <TabsTrigger value="booking-requests" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/10 data-[state=active]:to-blue-600/10 data-[state=active]:text-blue-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
                 <div className="relative">
                   <Mail className="h-4 w-4" />
                   <div className="absolute -top-1 -right-1 h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
                 </div>
-                <span className="hidden sm:inline font-medium">Requests</span>
+                <span className="hidden lg:inline font-medium">Requests</span>
+              </TabsTrigger>
+              <TabsTrigger value="hosts" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/10 data-[state=active]:to-cyan-600/10 data-[state=active]:text-cyan-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                <Building2 className="h-4 w-4" />
+                <span className="hidden lg:inline font-medium">Hosts</span>
               </TabsTrigger>
               <TabsTrigger value="correspondence" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/10 data-[state=active]:to-purple-600/10 data-[state=active]:text-purple-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
                 <Users className="h-4 w-4" />
-                <span className="hidden sm:inline font-medium">Messages</span>
+                <span className="hidden lg:inline font-medium">Messages</span>
               </TabsTrigger>
               <TabsTrigger value="contracts" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500/10 data-[state=active]:to-green-600/10 data-[state=active]:text-green-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
                 <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline font-medium">Contracts</span>
+                <span className="hidden lg:inline font-medium">Contracts</span>
               </TabsTrigger>
               <TabsTrigger value="route-planning" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/10 data-[state=active]:to-orange-600/10 data-[state=active]:text-orange-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
                 <MapPin className="h-4 w-4" />
-                <span className="hidden sm:inline font-medium">Routes</span>
+                <span className="hidden lg:inline font-medium">Routes</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -206,6 +211,33 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               </CardHeader>
               <CardContent className="p-6">
                 <BookingRequestManager user={user} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="hosts" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-cyan-500/10 to-cyan-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-cyan-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-cyan-500/10 p-2 rounded-lg">
+                      <Building2 className="h-5 w-5 text-cyan-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-cyan-600 to-cyan-700 bg-clip-text text-transparent">
+                      Host Database Management
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      Manage performance venues, contacts, and host relationships
+                    </p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-cyan-500 ml-auto" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <HostManager user={user} />
               </CardContent>
             </Card>
           </TabsContent>
