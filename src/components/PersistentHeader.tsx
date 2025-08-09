@@ -85,9 +85,9 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
         </div>
 
         {/* Right Section - User Actions */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-2 md:gap-3 lg:gap-5">
           {/* Notifications */}
-          <Button variant="ghost" size="sm" className="relative">
+          <Button variant="ghost" size="sm" className="relative shrink-0">
             <Bell className="w-5 h-5" />
             <Badge className="absolute -top-1 -right-1 w-5 h-5 rounded-full p-0 flex items-center justify-center text-xs">
               3
@@ -100,7 +100,7 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
               variant="ghost" 
               size="sm" 
               onClick={onToggleMessages}
-              className={showMessages ? "bg-primary/10" : ""}
+              className={`shrink-0 ${showMessages ? "bg-primary/10" : ""}`}
             >
               <MessageSquare className="w-5 h-5" />
             </Button>
@@ -109,7 +109,7 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-2 h-auto p-2">
+              <Button variant="ghost" className="flex items-center space-x-2 h-auto p-2 shrink-0">
                 <Avatar className="w-8 h-8">
                   <AvatarImage src={userProfile?.headshot_url || ''} />
                   <AvatarFallback className="bg-primary text-primary-foreground">
