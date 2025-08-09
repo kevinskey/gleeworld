@@ -3,7 +3,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, range',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, HEAD, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Expose-Headers': 'Accept-Ranges, Content-Length, Content-Range, Content-Type',
 }
 
 serve(async (req) => {
@@ -33,13 +34,17 @@ serve(async (req) => {
 
     console.log(`Fetching stream from: ${streamUrl}`)
 
-    // Simple fetch with basic headers
-    const response = await fetch(streamUrl, {
-      headers: {
-        'User-Agent': 'GleeWorld-Radio-Player',
-        'Accept': '*/*',
-      }
-    })
+    // Forward Range header for streaming compatibility
+    const forwardedHeaders: Record<string, string> = {
+      'User-Agent': 'GleeWorld-Radio-Player',
+      'Accept': '*/*',
+    }
+    const rangeHeader = req.headers.get('range') || req.headers.get('Range')
+    if (rangeHeader) {
+      forwardedHeaders['Range'] = rangeHeader
+    }
+
+    const response = await fetch(streamUrl, { headers: forwardedHeaders })
 
     console.log(`Stream response status: ${response.status}`)
     console.log(`Stream content-type: ${response.headers.get('content-type')}`)
@@ -72,7 +77,28 @@ serve(async (req) => {
       responseHeaders.set('content-length', contentLength)
     }
 
+    const acceptRanges = response.headers.get('accept-ranges')
+    if (acceptRanges) {
+      responseHeaders.set('accept-ranges', acceptRanges)
+    }
+
+    const contentRange = response.headers.get('content-range')
+    if (contentRange) {
+      responseHeaders.set('content-range', contentRange)
+    }
+
+    // Expose useful headers to the browser
+    responseHeaders.set('Access-Control-Expose-Headers', 'Accept-Ranges, Content-Length, Content-Range, Content-Type')
+
     console.log(`Proxying stream successfully`)
+
+    // For HEAD requests, return headers only
+    if (req.method === 'HEAD') {
+      return new Response(null, {
+        status: response.status,
+        headers: responseHeaders
+      })
+    }
 
     // Return the proxied stream
     return new Response(response.body, {

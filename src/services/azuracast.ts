@@ -159,12 +159,12 @@ class AzuraCastService {
     return `${this.baseUrl}/public/${this.stationId}`;
   }
 
-  // Get alternative stream URLs with HTTPS direct first
+  // Get stream URLs - use Supabase proxy first to satisfy CSP, then direct
   getStreamUrls(): string[] {
     return [
-      this.directStreamUrl, // Try HTTPS direct stream first
-      `${this.proxyBaseUrl}?url=${encodeURIComponent('http://radio.gleeworld.org/listen/glee_world_radio/radio.mp3')}`, // Proxied HTTP stream
-      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.getPublicStreamUrl())}`, // Proxied public stream
+      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.directStreamUrl)}`, // Proxied HTTPS direct stream (CSP-safe)
+      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.getPublicStreamUrl())}`, // Proxied public page (CSP-safe)
+      this.directStreamUrl, // Direct HTTPS stream (may be blocked by CSP in preview)
     ];
   }
 }
