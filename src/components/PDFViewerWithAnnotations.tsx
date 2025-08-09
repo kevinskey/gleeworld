@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Viewer, Worker } from '@react-pdf-viewer/core';
+import { Viewer, Worker, ScrollMode } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import { scrollModePlugin } from '@react-pdf-viewer/scroll-mode';
+import '@react-pdf-viewer/scroll-mode/lib/styles/index.css';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +54,8 @@ export const PDFViewerWithAnnotations = ({
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
   
   // Initialize the default layout plugin
-  const defaultLayoutPluginInstance = defaultLayoutPlugin();
+const defaultLayoutPluginInstance = defaultLayoutPlugin();
+const scrollModePluginInstance = scrollModePlugin();
   
   console.log('PDFViewerWithAnnotations: Props received:', { pdfUrl, musicTitle });
   console.log('PDFViewerWithAnnotations: URL processing result:', { signedUrl, urlLoading, urlError });
@@ -79,7 +82,8 @@ export const PDFViewerWithAnnotations = ({
   const [pageAnnotations, setPageAnnotations] = useState<Record<number, any[]>>({});
   const [useGoogle, setUseGoogle] = useState(false);
   const [googleProvider, setGoogleProvider] = useState<'gview' | 'viewerng'>('gview');
-  const timerRef = useRef<number | null>(null);
+const timerRef = useRef<number | null>(null);
+const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   // Handle iframe load
   const handleIframeLoad = () => {
@@ -128,8 +132,8 @@ export const PDFViewerWithAnnotations = ({
       timerRef.current = null;
     }
     if (signedUrl && !annotationMode) {
-      // Use Google viewer immediately for reliability across iOS/Safari
-      setUseGoogle(true);
+      // Choose viewer engine based on toggle
+      setUseGoogle(engine === 'google');
     }
     return () => {
       if (timerRef.current) {
@@ -137,7 +141,7 @@ export const PDFViewerWithAnnotations = ({
         timerRef.current = null;
       }
     };
-  }, [signedUrl, annotationMode]);
+  }, [signedUrl, annotationMode, engine]);
 
   const redrawAnnotations = (pathsToRedraw?: any[]) => {
     if (!drawingCanvasRef.current) return;
@@ -585,15 +589,28 @@ export const PDFViewerWithAnnotations = ({
           {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
             <div className="w-full h-full bg-white">
-              <div className="text-xs text-muted-foreground p-2 bg-muted/20 flex justify-between items-center">
+              <div className="text-xs text-muted-foreground p-2 bg-muted/20 flex flex-wrap gap-2 justify-between items-center">
                 <span>Viewing: {musicTitle}</span>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   <Button variant="outline" size="sm" onClick={() => setAnnotationMode(true)}>
                     Switch to Annotation Mode
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => window.open(signedUrl, '_blank')}>
                     Open in New Tab
                   </Button>
+                  <Button variant="outline" size="sm" onClick={() => setEngine(engine === 'google' ? 'react' : 'google')}>
+                    {engine === 'google' ? 'Advanced Viewer' : 'Google Viewer'}
+                  </Button>
+                  {engine === 'react' && (
+                    <div className="flex gap-1">
+                      <Button variant="outline" size="sm" onClick={() => scrollModePluginInstance.switchScrollMode(ScrollMode.Page)}>
+                        Page view
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => scrollModePluginInstance.switchScrollMode(ScrollMode.Vertical)}>
+                        Scroll view
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="h-full">
@@ -615,7 +632,7 @@ export const PDFViewerWithAnnotations = ({
                     <div style={{ height: '100%' }}>
                       <Viewer
                         fileUrl={signedUrl}
-                        plugins={[defaultLayoutPluginInstance]}
+                        plugins={[defaultLayoutPluginInstance, scrollModePluginInstance]}
                         onDocumentLoad={() => {
                           console.log('PDF document loaded successfully');
                           if (timerRef.current) {
