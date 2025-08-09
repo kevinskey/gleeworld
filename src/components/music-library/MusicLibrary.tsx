@@ -262,6 +262,11 @@ export const MusicLibrary = () => {
         </div>
       </div>
     </div>
+    <SheetMusicViewDialog
+      open={studyDialogOpen}
+      onOpenChange={setStudyDialogOpen}
+      item={studyItem}
+    />
     </>
   );
 };
