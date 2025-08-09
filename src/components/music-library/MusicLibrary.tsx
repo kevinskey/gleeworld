@@ -174,7 +174,7 @@ export const MusicLibrary = () => {
               <div className="p-2">
                 <SheetMusicLibrary 
                   searchQuery=""
-                  selectedCategory="All"
+                  selectedCategory="all"
                   sortBy="title"
                   sortOrder="asc"
                   viewMode="list"
