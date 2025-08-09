@@ -17,6 +17,8 @@ export const MusicLibrary = () => {
   
   const [activeSetlistPlayer, setActiveSetlistPlayer] = useState<string | null>(null);
   const [setlistOpen, setSetlistOpen] = useState(false);
+  const [studyOpen, setStudyOpen] = useState(false);
+  const [collectionsOpen, setCollectionsOpen] = useState(false);
 
   const handlePdfSelect = (pdfUrl: string, title: string, id?: string) => {
     console.log('MusicLibrary: handlePdfSelect called with URL:', pdfUrl, 'Title:', title);
@@ -115,14 +117,36 @@ export const MusicLibrary = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Study Scores + Setlists */}
         <div className={`${selectedPdf ? 'lg:col-span-4' : 'lg:col-span-6'} space-y-4`}>
-          <StudyScoresPanel 
-            currentSelected={selectedPdf}
-            onOpenScore={handlePdfSelect}
-          />
-          <MyCollectionsPanel
-            currentSelected={selectedPdf}
-            onOpenScore={handlePdfSelect}
-          />
+          <div className="border rounded">
+            <div className="flex items-center justify-between p-2">
+              <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setStudyOpen((o) => !o)}>
+                {studyOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Study Scores
+              </button>
+            </div>
+            {studyOpen && (
+              <div className="p-2">
+                <StudyScoresPanel 
+                  currentSelected={selectedPdf}
+                  onOpenScore={handlePdfSelect}
+                />
+              </div>
+            )}
+          </div>
+          <div className="border rounded">
+            <div className="flex items-center justify-between p-2">
+              <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setCollectionsOpen((o) => !o)}>
+                {collectionsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} My Collections
+              </button>
+            </div>
+            {collectionsOpen && (
+              <div className="p-2">
+                <MyCollectionsPanel
+                  currentSelected={selectedPdf}
+                  onOpenScore={handlePdfSelect}
+                />
+              </div>
+            )}
+          </div>
           <div className="border rounded">
             <div className="flex items-center justify-between p-2">
               <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setSetlistOpen((o) => !o)}>
