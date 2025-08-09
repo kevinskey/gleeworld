@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { azuraCastService, type AzuraCastNowPlaying } from '@/services/azuracast';
 import { supabase } from "@/integrations/supabase/client";
@@ -55,33 +56,35 @@ export const useRadioPlayer = () => {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
-  const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  console.log('useRadioPlayer: Getting stream URLs...');
-  // Get stream URLs from AzuraCast service
-  let RADIO_STREAM_URLS: string[] = [];
-  try {
-    RADIO_STREAM_URLS = azuraCastService.getStreamUrls();
-    console.log('useRadioPlayer: Stream URLs:', RADIO_STREAM_URLS);
-  } catch (error) {
-    console.error('useRadioPlayer: Error getting stream URLs:', error);
-    RADIO_STREAM_URLS = [];
-  }
+  // Stable stream URLs - memoize to prevent re-computation
+  const streamUrls = useCallback(() => {
+    try {
+      const urls = azuraCastService.getStreamUrls();
+      console.log('useRadioPlayer: Stream URLs:', urls);
+      return urls;
+    } catch (error) {
+      console.error('useRadioPlayer: Error getting stream URLs:', error);
+      return [];
+    }
+  }, []);
 
   useEffect(() => {
-    // Initialize audio element
-    audioRef.current = new Audio();
-    audioRef.current.crossOrigin = 'anonymous';
-    audioRef.current.preload = 'none';
+    console.log('useRadioPlayer: Initializing audio element...');
     
-    const audio = audioRef.current;
+    // Initialize audio element
+    const audio = new Audio();
+    audio.crossOrigin = 'anonymous';
+    audio.preload = 'none';
+    audioRef.current = audio;
 
     const handleLoadStart = () => {
+      console.log('Radio stream load start');
       setState(prev => ({ ...prev, isLoading: true }));
     };
 
     const handleCanPlay = () => {
-      console.log('Radio stream can play - checking if live...');
+      console.log('Radio stream can play');
       setState(prev => ({ ...prev, isLoading: false }));
     };
 
@@ -102,10 +105,12 @@ export const useRadioPlayer = () => {
     };
 
     const handlePlay = () => {
+      console.log('Radio stream playing');
       setState(prev => ({ ...prev, isPlaying: true }));
     };
 
     const handlePause = () => {
+      console.log('Radio stream paused');
       setState(prev => ({ ...prev, isPlaying: false }));
     };
 
@@ -116,6 +121,7 @@ export const useRadioPlayer = () => {
     audio.addEventListener('pause', handlePause);
 
     return () => {
+      console.log('useRadioPlayer: Cleaning up audio element...');
       audio.removeEventListener('loadstart', handleLoadStart);
       audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('error', handleError);
@@ -123,8 +129,9 @@ export const useRadioPlayer = () => {
       audio.removeEventListener('pause', handlePause);
       audio.pause();
       audio.src = '';
+      audioRef.current = null;
     };
-  }, [toast]);
+  }, []); // Empty dependency array - only run once
 
   // Subscribe to real-time radio station updates
   useEffect(() => {
@@ -151,7 +158,7 @@ export const useRadioPlayer = () => {
             ...prev,
             listenerCount: data.listener_count || 0,
             isLive: data.is_live || false,
-            isOnline: data.is_online || false, // Add online status
+            isOnline: data.is_online || false,
             streamerName: data.streamer_name || undefined,
             currentTrack: data.current_song_title ? {
               title: data.current_song_title,
@@ -213,34 +220,31 @@ export const useRadioPlayer = () => {
       console.log('Cleaning up radio subscription...');
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, []); // Empty dependency array - only run once
 
-  const play = async () => {
+  const play = useCallback(async () => {
     console.log('Radio play() called');
     console.log('Current state:', state);
-    console.log('Available stream URLs:', RADIO_STREAM_URLS);
     
     if (!audioRef.current) {
       console.log('No audio ref available');
       return;
     }
 
+    const urls = streamUrls();
+    console.log('Available stream URLs:', urls);
+    
     console.log('Setting loading state and starting stream attempt...');
     setState(prev => ({ ...prev, isLoading: true }));
 
-    // Try direct stream first, then proxies
-    const streamUrls = [
-      ...RADIO_STREAM_URLS, // Prefer HTTPS-proxied streams first
-      azuraCastService.getPublicStreamUrl()
-    ];
-
-    console.log('All stream URLs to try:', streamUrls);
-
     // Try each stream URL until one works
-    for (let i = 0; i < streamUrls.length; i++) {
-      const streamUrl = streamUrls[i];
+    const allUrls = [...urls, azuraCastService.getPublicStreamUrl()];
+    console.log('All stream URLs to try:', allUrls);
+
+    for (let i = 0; i < allUrls.length; i++) {
+      const streamUrl = allUrls[i];
       try {
-        console.log(`Attempting to play stream ${i + 1}/${streamUrls.length}: ${streamUrl}`);
+        console.log(`Attempting to play stream ${i + 1}/${allUrls.length}: ${streamUrl}`);
         
         // Clear any previous source first
         audioRef.current.pause();
@@ -328,7 +332,7 @@ export const useRadioPlayer = () => {
         });
         
         // If this was the last URL, show error
-        if (i === streamUrls.length - 1) {
+        if (i === allUrls.length - 1) {
           console.error('All stream URLs failed, showing error to user');
           setState(prev => ({ 
             ...prev, 
@@ -341,34 +345,34 @@ export const useRadioPlayer = () => {
             variant: "destructive",
           });
         } else {
-          console.log(`Trying next stream URL (${i + 2}/${streamUrls.length})...`);
+          console.log(`Trying next stream URL (${i + 2}/${allUrls.length})...`);
         }
       }
     }
-  };
+  }, [state.volume, streamUrls, toast]);
 
-  const pause = () => {
+  const pause = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
       setState(prev => ({ ...prev, isPlaying: false }));
     }
-  };
+  }, []);
 
-  const togglePlayPause = () => {
+  const togglePlayPause = useCallback(() => {
     if (state.isPlaying) {
       pause();
     } else {
       play();
     }
-  };
+  }, [state.isPlaying, play, pause]);
 
-  const setVolume = (volume: number) => {
+  const setVolume = useCallback((volume: number) => {
     const clampedVolume = Math.max(0, Math.min(1, volume));
     setState(prev => ({ ...prev, volume: clampedVolume }));
     if (audioRef.current) {
       audioRef.current.volume = clampedVolume;
     }
-  };
+  }, []);
 
   return {
     ...state,
