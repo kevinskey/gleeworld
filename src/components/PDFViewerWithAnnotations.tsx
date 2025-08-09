@@ -342,12 +342,28 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   };
 
   useEffect(() => {
-    if (!annotationMode || !signedUrl || !canvasRef.current) return;
+    if (!annotationMode || !signedUrl) return;
+
+    let cancelled = false;
+
+    const waitForCanvas = async () => {
+      // Wait until the canvas ref is mounted before attempting to render
+      let attempts = 0;
+      while (!cancelled && !canvasRef.current && attempts < 20) {
+        await new Promise((r) => requestAnimationFrame(r));
+        attempts++;
+      }
+      return !!canvasRef.current && !cancelled;
+    };
 
     const loadPdf = async () => {
       try {
         setIsLoading(true);
         console.log('Loading PDF for annotation:', signedUrl);
+
+        // Ensure canvas exists
+        const ready = await waitForCanvas();
+        if (!ready) return;
 
         let doc;
         try {
@@ -361,6 +377,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           doc = await pdfjsLib.getDocument({ data: ab }).promise;
         }
 
+        if (cancelled) return;
         setPdf(doc);
         setTotalPages(doc.numPages);
 
@@ -375,7 +392,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
 
-        const renderContext = { canvasContext: ctx, viewport };
+        const renderContext = { canvasContext: ctx, viewport } as const;
         await page.render(renderContext).promise;
         console.log('PDF page rendered successfully');
         setError(null);
@@ -389,6 +406,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     };
 
     loadPdf();
+
+    return () => {
+      cancelled = true;
+    };
   }, [annotationMode, signedUrl, currentPage, scale]);
 
   // Show loading while getting signed URL
