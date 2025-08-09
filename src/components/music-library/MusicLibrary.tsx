@@ -6,7 +6,7 @@ import { SheetMusicLibrary } from './SheetMusicLibrary';
 import { SetlistBuilder } from './SetlistBuilder';
 import { SetlistPlayer } from './SetlistPlayer';
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
-import { Home, Users, Calendar, FileText, Activity, ArrowLeft, Music, ChevronDown, ChevronRight } from 'lucide-react';
+import { Home, Users, Calendar, FileText, Activity, ArrowLeft, Music, Eye, ChevronDown, ChevronRight } from 'lucide-react';
 import { StudyScoresPanel } from './StudyScoresPanel';
 import { MyCollectionsPanel } from './MyCollectionsPanel';
 
@@ -187,7 +187,13 @@ export const MusicLibrary = () => {
 
         {/* Right column: PDF viewer */}
         <div className={`${selectedPdf ? 'lg:col-span-8' : 'lg:col-span-7'} space-y-4`}>
-          <h2 className="text-lg font-semibold">PDF Viewer</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">PDF Viewer</h2>
+            <Button size="sm" variant="outline" className="gap-2" aria-label="Study Mode" title="Study Mode">
+              <Eye className="h-4 w-4" />
+              <span className="hidden sm:inline">Study Mode</span>
+            </Button>
+          </div>
           {selectedPdf ? (
             <div>
               <p className="text-xs text-muted-foreground mb-2">Loading: {selectedPdf.title}</p>
