@@ -9,6 +9,9 @@ import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations'
 import { Home, Users, Calendar, FileText, Activity, ArrowLeft, Music, Eye, ChevronDown, ChevronRight } from 'lucide-react';
 import { StudyScoresPanel } from './StudyScoresPanel';
 import { MyCollectionsPanel } from './MyCollectionsPanel';
+import { SheetMusicViewDialog } from './SheetMusicViewDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export const MusicLibrary = () => {
   const navigate = useNavigate();
@@ -20,6 +23,9 @@ export const MusicLibrary = () => {
   const [studyOpen, setStudyOpen] = useState(false);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [studyDialogOpen, setStudyDialogOpen] = useState(false);
+  const [studyItem, setStudyItem] = useState<any>(null);
+  const { toast } = useToast();
   const handlePdfSelect = (pdfUrl: string, title: string, id?: string) => {
     setSelectedPdf({ url: pdfUrl, title, id });
   };
@@ -30,6 +36,45 @@ export const MusicLibrary = () => {
 
   const handleCloseSetlistPlayer = () => {
     setActiveSetlistPlayer(null);
+  };
+
+  const openStudyMode = async () => {
+    if (!selectedPdf) {
+      toast({ title: 'Select a piece', description: 'Choose a score to open Study Mode' });
+      return;
+    }
+    let item: any = null;
+    if (selectedPdf.id) {
+      const { data, error } = await supabase
+        .from('gw_sheet_music')
+        .select('*')
+        .eq('id', selectedPdf.id)
+        .maybeSingle();
+      if (!error && data) item = data;
+    }
+    if (!item) {
+      item = {
+        id: selectedPdf.id || 'temp',
+        title: selectedPdf.title,
+        composer: null,
+        arranger: null,
+        key_signature: null,
+        time_signature: null,
+        tempo_marking: null,
+        difficulty_level: null,
+        voice_parts: null,
+        language: null,
+        pdf_url: selectedPdf.url,
+        audio_preview_url: null,
+        thumbnail_url: null,
+        tags: null,
+        is_public: false,
+        created_by: '',
+        created_at: new Date().toISOString(),
+      };
+    }
+    setStudyItem(item);
+    setStudyDialogOpen(true);
   };
 
   if (activeSetlistPlayer) {
@@ -178,7 +223,7 @@ export const MusicLibrary = () => {
                   sortBy="title"
                   sortOrder="asc"
                   viewMode="list"
-                  onPdfSelect={(url: string, title: string) => handlePdfSelect(url, title)}
+                  onPdfSelect={(url: string, title: string, id?: string) => handlePdfSelect(url, title, id)}
                 />
               </div>
             )}
@@ -189,7 +234,7 @@ export const MusicLibrary = () => {
         <div className={`${selectedPdf ? 'lg:col-span-8' : 'lg:col-span-7'} space-y-4`}>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">PDF Viewer</h2>
-            <Button size="sm" variant="outline" className="gap-2" aria-label="Study Mode" title="Study Mode">
+            <Button size="sm" variant="outline" className="gap-2" aria-label="Study Mode" title="Study Mode" onClick={openStudyMode}>
               <Eye className="h-4 w-4" />
               <span className="hidden sm:inline">Study Mode</span>
             </Button>

@@ -50,7 +50,7 @@ interface SheetMusicLibraryProps {
   sortBy: string;
   sortOrder: "asc" | "desc";
   viewMode: "grid" | "list";
-  onPdfSelect?: (pdfUrl: string, title: string) => void;
+  onPdfSelect?: (pdfUrl: string, title: string, id?: string) => void;
 }
 
 export const SheetMusicLibrary = ({
@@ -262,9 +262,9 @@ export const SheetMusicLibrary = ({
             onClick={() => {
               const nextId = isSelected ? null : item.id;
               setSelectedItemId(nextId);
-              if (nextId && item.pdf_url && onPdfSelect) {
-                onPdfSelect(item.pdf_url, item.title);
-              }
+                if (nextId && item.pdf_url && onPdfSelect) {
+                  onPdfSelect(item.pdf_url, item.title, item.id);
+                }
             }}
           >
             <CardHeader className={`${isSelected ? 'pb-2' : 'pb-0 pt-2'}`}>
@@ -358,7 +358,7 @@ export const SheetMusicLibrary = ({
                   handleView(item);
                   if (item.pdf_url && onPdfSelect) {
                     console.log('Calling onPdfSelect with:', item.pdf_url, item.title);
-                    onPdfSelect(item.pdf_url, item.title);
+                    onPdfSelect(item.pdf_url, item.title, item.id);
                   } else {
                     console.log('No PDF URL or onPdfSelect callback available');
                   }
@@ -421,7 +421,7 @@ export const SheetMusicLibrary = ({
               const nextId = isSelected ? null : item.id;
               setSelectedItemId(nextId);
               if (nextId && item.pdf_url && onPdfSelect) {
-                onPdfSelect(item.pdf_url, item.title);
+                onPdfSelect(item.pdf_url, item.title, item.id);
               }
             }}
           >
@@ -479,7 +479,7 @@ export const SheetMusicLibrary = ({
                           handleView(item);
                           if (item.pdf_url && onPdfSelect) {
                             console.log('Calling onPdfSelect (list view) with:', item.pdf_url, item.title);
-                            onPdfSelect(item.pdf_url, item.title);
+                            onPdfSelect(item.pdf_url, item.title, item.id);
                           } else {
                             console.log('No PDF URL or onPdfSelect callback available (list view)');
                           }
