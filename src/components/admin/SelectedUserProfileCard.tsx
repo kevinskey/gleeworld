@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Headshot from '@/components/ui/headshot';
 import { supabase } from '@/integrations/supabase/client';
 import { EXECUTIVE_POSITIONS } from '@/hooks/useExecutivePermissions';
 import { USER_ROLES } from '@/constants/permissions';
@@ -213,13 +214,12 @@ const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-center text-center gap-3">
-          <div className="h-24 w-24 rounded-full overflow-hidden bg-muted">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="User avatar" className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">No Photo</div>
-            )}
-          </div>
+          <Headshot
+            src={avatarUrl}
+            alt={profile?.full_name || profile?.email || 'User'}
+            size="xl"
+            ratio="4/5"
+          />
           <div className="min-w-0">
             <div className="font-medium">{profile?.full_name || profile?.email || '—'}</div>
             <div className="text-xs text-muted-foreground">{profile?.email}</div>
