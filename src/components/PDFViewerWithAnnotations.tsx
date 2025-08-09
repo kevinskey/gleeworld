@@ -298,12 +298,27 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       const { error: uploadError } = await supabase.storage
         .from('marked-scores')
         .upload(filePath, blob);
-      
-      if (uploadError) throw uploadError;
-      
-      const { data: { publicUrl } } = supabase.storage
+      if (uploadError) {
+        console.error('Storage upload failed:', uploadError);
+        throw new Error(`Upload failed: ${uploadError.message || uploadError.name || 'Unknown error'}`);
+      }
+
+      // Generate a signed URL (bucket is private by design)
+      let signedUrl: string | null = null;
+      const { data: signedData, error: signError } = await supabase.storage
         .from('marked-scores')
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 60 * 60 * 24 * 365); // 1 year
+      if (signError) {
+        console.warn('Creating signed URL failed, falling back to public URL (bucket must be public to work):', signError);
+        const { data: pub } = supabase.storage.from('marked-scores').getPublicUrl(filePath);
+        signedUrl = pub.publicUrl;
+      } else {
+        signedUrl = signedData?.signedUrl || null;
+      }
+
+      if (!signedUrl) {
+        throw new Error('Could not generate a URL for the saved annotation image');
+      }
       
       // Save to database
       const { data, error: dbError } = await supabase
@@ -312,31 +327,34 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           music_id: musicId,
           uploader_id: user.id,
           voice_part: 'Annotated',
-          file_url: publicUrl,
+          file_url: signedUrl,
           description: `Annotated ${musicTitle || 'Score'}`,
           canvas_data: JSON.stringify(paths),
           is_shareable: true
         })
         .select()
-        .single();
+        .maybeSingle();
       
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('DB insert failed:', dbError);
+        throw new Error(dbError.message || 'Failed to save metadata');
+      }
       
       // Store the marked score ID for sharing
       if (data) {
-        setCurrentMarkedScoreId(data.id);
+        setCurrentMarkedScoreId((data as any).id);
       }
       
-      toast.success("Annotated score saved successfully!");
+      toast.success('Annotated score saved successfully!');
       
       // Clear annotations after saving
       setPaths([]);
       setHasAnnotations(false);
       redrawAnnotations([]);
       setAnnotationMode(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving annotated score:', error);
-      toast.error("Failed to save annotated score");
+      toast.error(`Failed to save annotated score: ${error?.message || 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }
