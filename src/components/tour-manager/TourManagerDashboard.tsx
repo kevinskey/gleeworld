@@ -50,7 +50,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
             </div>
             <div className="flex items-center gap-4">
               <Button variant="outline" asChild>
-                <a href="/admin">← Back to Admin</a>
+                <a href="/dashboard">← Back to Dashboard</a>
               </Button>
               <Avatar>
                 <AvatarFallback className="bg-primary/10 text-primary">
