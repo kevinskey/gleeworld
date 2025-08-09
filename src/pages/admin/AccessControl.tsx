@@ -51,7 +51,7 @@ const AccessControl = () => {
               </div>
             </div>
             <Button asChild variant="outline" className="w-full mt-4">
-              <a href="#role-manager">Manage Roles</a>
+              <Link to="#role-manager">Manage Roles</Link>
             </Button>
           </CardContent>
         </Card>
@@ -74,7 +74,7 @@ const AccessControl = () => {
               </div>
             </div>
             <Button asChild variant="outline" className="w-full mt-4">
-              <a href="#permissions">Edit Permissions</a>
+              <Link to="#permissions">Edit Permissions</Link>
             </Button>
           </CardContent>
         </Card>
@@ -101,13 +101,13 @@ const AccessControl = () => {
       </div>
 
       {/* Role Manager Section */}
-      <section id="role-manager" aria-labelledby="role-manager-heading" className="space-y-4">
+      <section id="role-manager" aria-labelledby="role-manager-heading" className="space-y-4 scroll-mt-24 animate-fade-in">
         <h2 id="role-manager-heading" className="text-xl font-semibold">Role Manager</h2>
         <RoleTransitionManager />
       </section>
 
       {/* Permissions Section */}
-      <section id="permissions" aria-labelledby="permissions-heading" className="space-y-4">
+      <section id="permissions" aria-labelledby="permissions-heading" className="space-y-4 scroll-mt-24 animate-fade-in">
         <h2 id="permissions-heading" className="text-xl font-semibold">Permissions</h2>
         <PermissionManagement />
       </section>
