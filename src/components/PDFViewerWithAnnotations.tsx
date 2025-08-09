@@ -341,47 +341,53 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     }
   };
 
-  // Load PDF directly when annotation mode is active
   useEffect(() => {
     if (!annotationMode || !signedUrl || !canvasRef.current) return;
-    
+
     const loadPdf = async () => {
       try {
         setIsLoading(true);
         console.log('Loading PDF for annotation:', signedUrl);
-        
-        const pdf = await pdfjsLib.getDocument(signedUrl).promise;
-        setPdf(pdf);
-        setTotalPages(pdf.numPages);
-        
-        // Render first page
-        const page = await pdf.getPage(currentPage);
+
+        let doc;
+        try {
+          // Try loading by URL first
+          doc = await pdfjsLib.getDocument({ url: signedUrl }).promise;
+        } catch (primaryErr) {
+          console.warn('Primary PDF load failed, retrying with ArrayBuffer', primaryErr);
+          const resp = await fetch(signedUrl);
+          if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
+          const ab = await resp.arrayBuffer();
+          doc = await pdfjsLib.getDocument({ data: ab }).promise;
+        }
+
+        setPdf(doc);
+        setTotalPages(doc.numPages);
+
+        // Render current page
+        const page = await doc.getPage(currentPage);
         const canvas = canvasRef.current;
         if (!canvas) return;
-        
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
-        
+
         const viewport = page.getViewport({ scale });
         canvas.width = viewport.width;
         canvas.height = viewport.height;
-        
-        const renderContext = {
-          canvasContext: ctx,
-          viewport: viewport
-        };
-        
+
+        const renderContext = { canvasContext: ctx, viewport };
         await page.render(renderContext).promise;
         console.log('PDF page rendered successfully');
         setError(null);
-      } catch (error) {
-        console.error('Error loading PDF for annotation:', error);
+      } catch (err) {
+        console.error('Error loading PDF for annotation:', err);
+        toast.error('Failed to load PDF for annotation');
         setError('Failed to load PDF for annotation');
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     loadPdf();
   }, [annotationMode, signedUrl, currentPage, scale]);
 
@@ -436,7 +442,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     );
   }
 
-  if (error) {
+  if (error && !annotationMode) {
     return (
       <Card className={cn("w-full max-w-4xl mx-auto", className)}>
         <CardContent className="p-8">
@@ -480,7 +486,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         <Button
           variant={annotationMode ? "default" : "outline"}
           size="sm"
-          onClick={() => setAnnotationMode(!annotationMode)}
+          onClick={() => { setError(null); setIsLoading(true); setAnnotationMode(!annotationMode); }}
         >
           <Palette className="h-4 w-4 mr-2" />
           {annotationMode ? "Exit Annotations" : "Annotate"}
