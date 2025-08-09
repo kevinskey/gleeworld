@@ -40,6 +40,9 @@ export interface RadioPlayerState {
   streamerName?: string;
 }
 
+// Shared audio element to persist across route changes
+let sharedAudio: HTMLAudioElement | null = null;
+
 export const useRadioPlayer = () => {
   console.log('useRadioPlayer: Hook starting...');
   
@@ -77,12 +80,20 @@ export const useRadioPlayer = () => {
   }, []);
 
   useEffect(() => {
-    console.log('useRadioPlayer: Initializing audio element...');
-    
-    // Initialize audio element
-    const audio = new Audio();
-    audio.crossOrigin = 'anonymous';
-    audio.preload = 'none';
+    console.log('useRadioPlayer: Initializing audio element (singleton)...');
+
+    // Ensure a single shared audio element persists across route changes
+    if (!sharedAudio) {
+      const audio = new Audio();
+      audio.crossOrigin = 'anonymous';
+      audio.preload = 'none';
+      sharedAudio = audio;
+      console.log('Created new shared radio audio element');
+    } else {
+      console.log('Reusing existing shared radio audio element');
+    }
+
+    const audio = sharedAudio!;
     audioRef.current = audio;
 
     const handleLoadStart = () => {
@@ -98,10 +109,10 @@ export const useRadioPlayer = () => {
     const handleError = (e: any) => {
       console.error('Radio stream error:', e);
       console.error('Audio error details:', {
-        error: e.target?.error,
-        networkState: e.target?.networkState,
-        readyState: e.target?.readyState,
-        src: e.target?.src
+        error: (e as any).target?.error,
+        networkState: (e as any).target?.networkState,
+        readyState: (e as any).target?.readyState,
+        src: (e as any).target?.src
       });
       setState(prev => ({ 
         ...prev, 
@@ -128,15 +139,13 @@ export const useRadioPlayer = () => {
     audio.addEventListener('pause', handlePause);
 
     return () => {
-      console.log('useRadioPlayer: Cleaning up audio element...');
+      console.log('useRadioPlayer: Cleaning up event listeners (not stopping audio)...');
       audio.removeEventListener('loadstart', handleLoadStart);
       audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
-      audio.pause();
-      audio.src = '';
-      audioRef.current = null;
+      // Do not pause or clear src; keep sharedAudio alive for seamless playback
     };
   }, []); // Empty dependency array - only run once
 
