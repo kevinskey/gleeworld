@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -9,6 +9,7 @@ import { RoleModuleMatrix } from '@/components/admin/RoleModuleMatrix';
 import { PermissionManagement } from '@/components/admin/PermissionManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { UserModuleMatrix } from '@/components/admin/UserModuleMatrix';
@@ -48,12 +49,24 @@ const PermissionsPage: React.FC = () => {
   }, [loading, isAdmin, navigate]);
 
   const [users, setUsers] = useState<PreviewUser[]>([]);
+  const [userSearch, setUserSearch] = useState<string>('');
+  const filteredUsers = useMemo(
+    () =>
+      users.filter((u) => {
+        const q = userSearch.toLowerCase().trim();
+        if (!q) return true;
+        return (
+          (u.full_name || '').toLowerCase().includes(q) ||
+          (u.email || '').toLowerCase().includes(q)
+        );
+      }),
+    [users, userSearch]
+  );
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [effective, setEffective] = useState<CombinedPermRow[]>([]);
   const [fetching, setFetching] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [selectedExec, setSelectedExec] = useState<string>('');
-
   const loadUsers = async () => {
     const { data, error } = await supabase.rpc('get_all_user_profiles');
     if (!error && data) setUsers(data as PreviewUser[]);
@@ -169,16 +182,30 @@ const PermissionsPage: React.FC = () => {
                 <CardContent className="pt-6">
                   <div className="flex flex-wrap items-center gap-4">
                     <div className="min-w-64">
+                      <Input
+                        placeholder="Search users (name or email)"
+                        aria-label="Search users"
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
+                      />
+                    </div>
+                    <div className="min-w-64">
                       <Select value={selectedUserId} onValueChange={setSelectedUserId}>
                         <SelectTrigger aria-label="Select user">
                           <SelectValue placeholder="Select a user" />
                         </SelectTrigger>
                         <SelectContent className="bg-popover z-50">
-                          {users.map(u => (
-                            <SelectItem key={u.id} value={u.id}>
-                              {u.full_name || u.email} ({u.email})
+                          {filteredUsers.length > 0 ? (
+                            filteredUsers.map(u => (
+                              <SelectItem key={u.id} value={u.id}>
+                                {u.full_name || u.email} ({u.email})
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="__no_results__" disabled>
+                              No users found
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
