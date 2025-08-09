@@ -6,8 +6,9 @@ import { SheetMusicLibrary } from './SheetMusicLibrary';
 import { SetlistBuilder } from './SetlistBuilder';
 import { SetlistPlayer } from './SetlistPlayer';
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
-import { Home, Users, Calendar, FileText, Activity, ArrowLeft, Music } from 'lucide-react';
+import { Home, Users, Calendar, FileText, Activity, ArrowLeft, Music, ChevronDown, ChevronRight } from 'lucide-react';
 import { StudyScoresPanel } from './StudyScoresPanel';
+import { MyCollectionsPanel } from './MyCollectionsPanel';
 
 export const MusicLibrary = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export const MusicLibrary = () => {
   const [selectedPdf, setSelectedPdf] = useState<{url: string; title: string; id?: string} | null>(null);
   
   const [activeSetlistPlayer, setActiveSetlistPlayer] = useState<string | null>(null);
+  const [setlistOpen, setSetlistOpen] = useState(false);
 
   const handlePdfSelect = (pdfUrl: string, title: string, id?: string) => {
     console.log('MusicLibrary: handlePdfSelect called with URL:', pdfUrl, 'Title:', title);
@@ -117,10 +119,25 @@ export const MusicLibrary = () => {
             currentSelected={selectedPdf}
             onOpenScore={handlePdfSelect}
           />
-          <SetlistBuilder 
-            onPdfSelect={handlePdfSelect} 
-            onOpenPlayer={handleOpenSetlistPlayer}
+          <MyCollectionsPanel
+            currentSelected={selectedPdf}
+            onOpenScore={handlePdfSelect}
           />
+          <div className="border rounded">
+            <div className="flex items-center justify-between p-2">
+              <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setSetlistOpen((o) => !o)}>
+                {setlistOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Setlists
+              </button>
+            </div>
+            {setlistOpen && (
+              <div className="p-2">
+                <SetlistBuilder 
+                  onPdfSelect={handlePdfSelect} 
+                  onOpenPlayer={handleOpenSetlistPlayer}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* PDF Viewer Column */}

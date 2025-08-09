@@ -5696,6 +5696,81 @@ export type Database = {
           },
         ]
       }
+      gw_music_collection_items: {
+        Row: {
+          collection_id: string
+          created_at: string
+          id: string
+          position: number
+          sheet_music_id: string
+          updated_at: string
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          id?: string
+          position?: number
+          sheet_music_id: string
+          updated_at?: string
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          id?: string
+          position?: number
+          sheet_music_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_music_collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "gw_music_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_music_collection_items_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_music_collections: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_public: boolean
+          is_system: boolean
+          owner_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          is_system?: boolean
+          owner_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          is_system?: boolean
+          owner_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_music_files: {
         Row: {
           album: string | null
