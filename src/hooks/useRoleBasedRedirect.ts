@@ -94,15 +94,14 @@ export const useRoleBasedRedirect = () => {
       });
       
       if (isAdmin) {
-        // Only redirect admins from auth page or if explicitly requested
-        if (isPostLogin) {
-          console.log('🚀 useRoleBasedRedirect: ADMIN detected after login - redirect to /admin');
+        // Redirect admins when coming from login OR when on root page
+        if (isPostLogin || isOnRootPage) {
+          console.log('🚀 useRoleBasedRedirect: Admin redirect to /admin');
           navigate('/admin', { replace: true });
           return;
-        } else {
-          console.log('🏠 useRoleBasedRedirect: Admin on public page, staying put');
-          return;
         }
+        console.log('🏠 useRoleBasedRedirect: Admin on non-root public page, staying put');
+        return;
       }
       
       // For public pages other than root, don't auto-redirect unless coming from auth
