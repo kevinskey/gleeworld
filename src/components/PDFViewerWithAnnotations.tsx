@@ -4,7 +4,7 @@ import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import { scrollModePlugin } from '@react-pdf-viewer/scroll-mode';
-import '@react-pdf-viewer/scroll-mode/lib/styles/index.css';
+
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";

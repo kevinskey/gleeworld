@@ -1,8 +1,8 @@
+@import './styles/spacing-reduction.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 /* Definition of the design system with custom brand colors */
 
 @layer base {
@@ -466,9 +466,7 @@
   }
 }
 
-/* Import spacing reduction utilities */
-@import './styles/spacing-reduction.css';
-
+/* Spacing reduction utilities imported at top */
 /* Mobile viewport stabilization */
 .scrollbar-hide {
   -ms-overflow-style: none;
