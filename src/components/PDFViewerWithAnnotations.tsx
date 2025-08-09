@@ -33,9 +33,10 @@ import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
 import { cn } from '@/lib/utils';
 import { AnnotationSharingDialog } from '@/components/marked-scores/AnnotationSharingDialog';
 import * as pdfjsLib from 'pdfjs-dist';
+import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 
-// Set up PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Configure PDF.js worker locally (Vite + ESM)
+pdfjsLib.GlobalWorkerOptions.workerPort = new PdfJsWorker();
 
 interface PDFViewerWithAnnotationsProps {
   pdfUrl: string | null;
