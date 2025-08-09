@@ -310,69 +310,70 @@ export const MarkedScoreManager = ({
         </div>
       )}
 
-      {/* Create/Edit Dialog */}
-      <Dialog 
-        open={showCreateDialog} 
-        onOpenChange={(open) => {
-          if (!open && hasUnsavedChanges) {
-            if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
-              setShowCreateDialog(false);
-              setHasUnsavedChanges(false);
-            }
-          } else {
-            setShowCreateDialog(open);
-          }
-        }}
-      >
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
-          <DialogHeader>
-            <DialogTitle>
-              {editingScore ? 'Edit Marked Score' : 'Create Marked Score'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            {/* Metadata Form */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="voice_part">Voice Part</Label>
-                <Select 
-                  value={newScore.voice_part} 
-                  onValueChange={(value) => setNewScore({...newScore, voice_part: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select voice part" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {voiceParts.map((part) => (
-                      <SelectItem key={part} value={part}>{part}</SelectItem>
-                    ))}
-                    <SelectItem value="All Parts">All Parts</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+      {/* Inline Create/Edit Panel */}
+      {showCreateDialog && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>{editingScore ? 'Edit Marked Score' : 'Create Marked Score'}</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (hasUnsavedChanges && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+                  return;
+                }
+                setShowCreateDialog(false);
+                setHasUnsavedChanges(false);
+              }}
+            >
+              Close
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Metadata Form */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="voice_part">Voice Part</Label>
+                  <Select 
+                    value={newScore.voice_part} 
+                    onValueChange={(value) => setNewScore({...newScore, voice_part: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select voice part" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {voiceParts.map((part) => (
+                        <SelectItem key={part} value={part}>{part}</SelectItem>
+                      ))}
+                      <SelectItem value="All Parts">All Parts</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    value={newScore.description}
+                    onChange={(e) => setNewScore({...newScore, description: e.target.value})}
+                    placeholder="Brief description of markings..."
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={newScore.description}
-                  onChange={(e) => setNewScore({...newScore, description: e.target.value})}
-                  placeholder="Brief description of markings..."
-                />
-              </div>
-            </div>
 
-            {/* Annotation Canvas */}
-            <AnnotationCanvas
-              backgroundImageUrl={originalPdfUrl}
-              initialAnnotations={editingScore?.canvas_data}
-              onSave={handleSaveAnnotations}
-              onAnnotationChange={setHasUnsavedChanges}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+              {/* Annotation Canvas */}
+              <AnnotationCanvas
+                backgroundImageUrl={originalPdfUrl}
+                initialAnnotations={editingScore?.canvas_data}
+                onSave={handleSaveAnnotations}
+                onAnnotationChange={setHasUnsavedChanges}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
 
       {/* View Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
