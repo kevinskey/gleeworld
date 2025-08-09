@@ -129,9 +129,14 @@ export const useRoleBasedRedirect = () => {
         return;
       }
       
-      // PRIORITY 4: Members (all members including exec board get modular dashboard)
-      if (userProfile.role === 'member' || userProfile.is_exec_board) {
-        console.log('👤 useRoleBasedRedirect: Member/Executive redirect to /dashboard');
+      // PRIORITY 4: Members -> simplified Member Dashboard; Exec Board -> keep dashboard
+      if (userProfile.role === 'member' && !userProfile.is_exec_board) {
+        console.log('👤 useRoleBasedRedirect: Member redirect to member-view dashboard');
+        navigate(`/dashboard/member-view/${user.id}`, { replace: true });
+        return;
+      }
+      if (userProfile.is_exec_board) {
+        console.log('👤 useRoleBasedRedirect: Executive Board redirect to /dashboard');
         navigate('/dashboard', { replace: true });
         return;
       }
