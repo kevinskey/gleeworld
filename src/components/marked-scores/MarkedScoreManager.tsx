@@ -238,6 +238,9 @@ export const MarkedScoreManager = ({
         console.warn('Storage delete skipped:', e);
       }
 
+      // Optimistically update UI
+      setMarkedScores(prev => prev.filter(s => s.id !== score.id));
+
       await fetchMarkedScores();
       toast({ title: 'Success', description: 'Marked score deleted successfully' });
     } catch (error) {

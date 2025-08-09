@@ -90,13 +90,27 @@ export function PracticeLinks({ musicId, voiceParts = [] }: PracticeLinksProps) 
   const getEmbedUrl = (url: string) => {
     try {
       const u = new URL(url)
-      if (u.hostname.includes('youtu.be')) {
-        const id = u.pathname.replace('/', '')
-        return `https://www.youtube.com/embed/${id}`
+      const host = u.hostname
+      const path = u.pathname
+
+      // youtu.be/<id>
+      if (host.includes('youtu.be')) {
+        const id = path.replace('/', '')
+        return id ? `https://www.youtube-nocookie.com/embed/${id}` : null
       }
-      if (u.hostname.includes('youtube.com')) {
-        const id = u.searchParams.get('v')
-        if (id) return `https://www.youtube.com/embed/${id}`
+
+      if (host.includes('youtube.com')) {
+        // /watch?v=<id>
+        const v = u.searchParams.get('v')
+        if (v) return `https://www.youtube-nocookie.com/embed/${v}`
+        // /shorts/<id>
+        if (path.startsWith('/shorts/')) {
+          const id = path.split('/')[2]
+          return id ? `https://www.youtube-nocookie.com/embed/${id}` : null
+        }
+        // playlist -> videoseries
+        const list = u.searchParams.get('list')
+        if (list) return `https://www.youtube-nocookie.com/embed/videoseries?list=${list}`
       }
       return null
     } catch {
@@ -152,12 +166,16 @@ export function PracticeLinks({ musicId, voiceParts = [] }: PracticeLinksProps) 
               {getEmbedUrl(youtubeLinks[0].url) ? (
                 <div className="w-full aspect-video rounded-lg overflow-hidden border">
                   <iframe
-                    src={`${getEmbedUrl(youtubeLinks[0].url)}?rel=0`}
+                    src={`${getEmbedUrl(youtubeLinks[0].url)}&rel=0`}
                     title={youtubeLinks[0].title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
+                    referrerPolicy="strict-origin-when-cross-origin"
                     className="w-full h-full"
                   />
+                  <div className="p-2 text-xs text-muted-foreground">
+                    If playback is blocked by the owner, open on YouTube: <a href={youtubeLinks[0].url} target="_blank" rel="noreferrer" className="underline">{youtubeLinks[0].title}</a>
+                  </div>
                 </div>
               ) : null}
               {/* Thumbnails / list */}
