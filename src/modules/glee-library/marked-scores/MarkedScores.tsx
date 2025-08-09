@@ -200,7 +200,7 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
 
   // Fallback to legacy system for uploaded PDFs without original
   return (
-    <div className="pt-10 space-y-4">
+    <div className="pt-12 md:pt-14 space-y-4">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h3 className="text-lg font-semibold">Marked Scores</h3>
@@ -244,7 +244,7 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
                 <div className="grid gap-3">
                   {groupedScores[voicePart].map(score => (
                     <Card key={score.id}>
-                      <CardHeader className="pb-3">
+                      <CardHeader className="pb-3 border-b">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <CardTitle className="text-base flex items-center gap-2 min-w-0">
                             <FileText className="h-4 w-4 flex-shrink-0" />

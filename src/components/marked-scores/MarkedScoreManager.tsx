@@ -242,7 +242,7 @@ export const MarkedScoreManager = ({
   }, {} as Record<string, MarkedScore[]>);
 
   return (
-    <div className="pt-10 space-y-4">
+    <div className="pt-12 md:pt-14 space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
@@ -265,7 +265,7 @@ export const MarkedScoreManager = ({
         <div className="space-y-4">
           {Object.entries(groupedScores).map(([voicePart, scores]) => (
             <Card key={voicePart}>
-              <CardHeader>
+              <CardHeader className="pb-2 border-b">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Badge variant="outline">{voicePart}</Badge>
                   <span className="text-sm text-muted-foreground">
