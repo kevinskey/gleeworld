@@ -20,6 +20,7 @@ import { SmartToolsSidebar } from '@/modules/glee-library/smart-tools/SmartTools
 import { RehearsalLinks } from '@/modules/glee-library/rehearsal-links/RehearsalLinks';
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
 import { useAuth } from '@/contexts/AuthContext';
+import { SheetMusicHistory } from '@/components/music-library/SheetMusicHistory';
 
 interface SheetMusic {
   id: string;
@@ -129,60 +130,9 @@ export const SheetMusicViewDialog = ({
 
                 <div className="mt-2 space-y-4">
                   {activeTab === 'overview' && (
-                    <>
-                      {isAdmin && (
-                        <div className="p-3 bg-muted/50 rounded-lg space-y-2">
-                          <h4 className="font-medium text-sm">Performance Tools</h4>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" asChild>
-                              <a href="/performance?tab=setlists" target="_blank">
-                                <List className="h-4 w-4 mr-1" />
-                                Add to Setlist
-                              </a>
-                            </Button>
-                            <Button variant="outline" size="sm" asChild>
-                              <a href="/performance?tab=licensing" target="_blank">
-                                <FileCheck className="h-4 w-4 mr-1" />
-                                Manage License
-                              </a>
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-
-                      {item.audio_preview_url && (
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Audio Preview</h4>
-                          <audio controls className="w-full">
-                            <source src={item.audio_preview_url} type="audio/mpeg" />
-                            Your browser does not support the audio element.
-                          </audio>
-                        </div>
-                      )}
-
-                      {item.voice_parts && item.voice_parts.length > 0 && (
-                        <div className="space-y-3">
-                          <h3 className="text-lg font-semibold">Voice Parts</h3>
-                          <div className="flex flex-wrap gap-2">
-                            {item.voice_parts.map((part, index) => (
-                              <Badge key={index} variant="outline">{part}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {item.tags && item.tags.length > 0 && (
-                        <div className="space-y-3">
-                          <h3 className="text-lg font-semibold">Tags</h3>
-                          <div className="flex flex-wrap gap-2">
-                            {item.tags.map((tag, index) => (
-                              <Badge key={index} variant="secondary">{tag}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </>
+                    <SheetMusicHistory musicId={item.id} />
                   )}
+
 
                   {activeTab === 'notes' && (
                     <SheetMusicNotes musicId={item.id} />
