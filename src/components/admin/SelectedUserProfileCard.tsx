@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,8 @@ export const SelectedUserProfileCard: React.FC<Props> = ({ userId }) => {
     is_super_admin: false,
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -177,7 +179,31 @@ export const SelectedUserProfileCard: React.FC<Props> = ({ userId }) => {
     } finally {
       setSaving(false);
     }
-  };
+};
+
+const onUploadClick = () => fileInputRef.current?.click();
+
+const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file || !userId) return;
+  setUploading(true);
+  try {
+    const path = `${userId}/avatars/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage
+      .from('user-files')
+      .upload(path, file, { cacheControl: '3600', upsert: true, contentType: file.type });
+    if (error) throw error;
+    const { data } = supabase.storage.from('user-files').getPublicUrl(path);
+    setAvatarUrl(data.publicUrl);
+    toast.success('Photo uploaded');
+  } catch (err) {
+    console.error(err);
+    toast.error('Upload failed');
+  } finally {
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+};
 
   return (
     <Card>
@@ -209,6 +235,11 @@ export const SelectedUserProfileCard: React.FC<Props> = ({ userId }) => {
           {profile?.created_at && (
             <div className="text-xs text-muted-foreground">Joined: {new Date(profile.created_at).toLocaleDateString()}</div>
           )}
+
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
+          <Button size="sm" variant="outline" onClick={onUploadClick} disabled={uploading}>
+            {uploading ? 'Uploading...' : 'Upload Photo'}
+          </Button>
         </div>
 
         <div className="mt-6 space-y-4">
