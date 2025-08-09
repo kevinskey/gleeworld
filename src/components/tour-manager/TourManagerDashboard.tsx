@@ -33,35 +33,6 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      {/* Header Navigation */}
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Route className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">Tour Manager</h1>
-                  <p className="text-sm text-muted-foreground">Performance booking & host management</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Button variant="outline" asChild>
-                <a href="/dashboard">← Back to Dashboard</a>
-              </Button>
-              <Avatar>
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {getUserInitials(user?.full_name)}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <div className="container mx-auto px-6 py-6 space-y-6">
         {/* Welcome Section */}
