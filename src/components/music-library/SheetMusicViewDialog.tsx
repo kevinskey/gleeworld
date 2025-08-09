@@ -54,10 +54,10 @@ export const SheetMusicViewDialog = ({
   item,
 }: SheetMusicViewDialogProps) => {
   const { user } = useAuth();
-  const [showSmartTools, setShowSmartTools] = useState(false);
+  
   const [setlistInfo, setSetlistInfo] = useState<any>(null);
   const [licenseInfo, setLicenseInfo] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'marked' | 'personal' | 'rehearsals'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'marked' | 'practice' | 'smart'>('overview');
   
   if (!item) return null;
 
@@ -82,19 +82,11 @@ export const SheetMusicViewDialog = ({
               <FileText className="h-5 w-5" />
               {item.title}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowSmartTools(!showSmartTools)}
-            >
-              <Brain className="h-4 w-4 mr-2" />
-              {showSmartTools ? 'Hide' : 'Show'} Smart Tools
-            </Button>
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex gap-4 h-[85vh] overflow-hidden">
-          <div className={`${showSmartTools ? 'flex-1' : 'w-full'} overflow-y-auto`}>
+          <div className="w-full overflow-y-auto">
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               {/* Left: PDF stays fixed */}
               <div className="xl:col-span-2">
@@ -123,8 +115,8 @@ export const SheetMusicViewDialog = ({
                     <TabsTrigger value="overview" className="text-xs md:text-sm py-2 px-1">Overview</TabsTrigger>
                     <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-1">Notes</TabsTrigger>
                     <TabsTrigger value="marked" className="text-xs md:text-sm py-2 px-1">Marked</TabsTrigger>
-                    <TabsTrigger value="personal" className="text-xs md:text-sm py-2 px-1">My Notes</TabsTrigger>
-                    <TabsTrigger value="rehearsals" className="text-xs md:text-sm py-2 px-1">Practice</TabsTrigger>
+                    <TabsTrigger value="practice" className="text-xs md:text-sm py-2 px-1">Practice</TabsTrigger>
+                    <TabsTrigger value="smart" className="text-xs md:text-sm py-2 px-1">Smart Tools</TabsTrigger>
                   </TabsList>
                 </Tabs>
 
@@ -135,7 +127,20 @@ export const SheetMusicViewDialog = ({
 
 
                   {activeTab === 'notes' && (
-                    <SheetMusicNotes musicId={item.id} />
+                    <div className="space-y-2">
+                      <Tabs defaultValue="shared" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                          <TabsTrigger value="shared">Shared</TabsTrigger>
+                          <TabsTrigger value="personal">Personal</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="shared">
+                          <SheetMusicNotes musicId={item.id} />
+                        </TabsContent>
+                        <TabsContent value="personal">
+                          <PersonalNotes musicId={item.id} />
+                        </TabsContent>
+                      </Tabs>
+                    </div>
                   )}
 
                   {activeTab === 'marked' && (
@@ -147,23 +152,18 @@ export const SheetMusicViewDialog = ({
                     />
                   )}
 
-                  {activeTab === 'personal' && (
-                    <PersonalNotes musicId={item.id} />
+                  {activeTab === 'practice' && (
+                    <PracticeLinks musicId={item.id} voiceParts={item.voice_parts || []} />
                   )}
 
-                  {activeTab === 'rehearsals' && (
-                    <PracticeLinks musicId={item.id} voiceParts={item.voice_parts || []} />
+                  {activeTab === 'smart' && (
+                    <SmartToolsSidebar sheetMusic={item} />
                   )}
                 </div>
               </div>
             </div>
           </div>
 
-          {showSmartTools && (
-            <div className="w-80 flex-shrink-0 overflow-y-auto">
-              <SmartToolsSidebar sheetMusic={item} />
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>
