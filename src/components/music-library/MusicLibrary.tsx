@@ -251,15 +251,13 @@ export const MusicLibrary = () => {
               />
             </div>
           ) : (
-            <div className="p-0 border rounded-lg text-center min-h-[400px] overflow-hidden">
-              <div className="relative w-full aspect-[4/3] md:aspect-[4/3] bg-muted">
-                <img
-                  src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png"
-                  alt="Glee World Music Library landing image"
-                  className="absolute inset-0 h-full w-full object-contain"
-                  loading="lazy"
-                />
-              </div>
+            <div className="rounded-lg overflow-hidden">
+              <img
+                src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png"
+                alt="Glee World Music Library landing image"
+                className="block w-full h-auto"
+                loading="lazy"
+              />
             </div>
           )}
         </div>
