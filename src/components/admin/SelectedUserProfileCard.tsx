@@ -186,8 +186,8 @@ export const SelectedUserProfileCard: React.FC<Props> = ({ userId }) => {
         <CardDescription>Details for the selected user</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-full overflow-hidden bg-muted">
+        <div className="flex flex-col items-center text-center gap-3">
+          <div className="h-24 w-24 rounded-full overflow-hidden bg-muted">
             {avatarUrl ? (
               <img src={avatarUrl} alt="User avatar" className="h-full w-full object-cover" />
             ) : (
@@ -195,21 +195,21 @@ export const SelectedUserProfileCard: React.FC<Props> = ({ userId }) => {
             )}
           </div>
           <div className="min-w-0">
-            <div className="font-medium truncate">{profile?.full_name || profile?.email || '—'}</div>
-            <div className="text-xs text-muted-foreground truncate">{profile?.email}</div>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">{displayRole()}</Badge>
-              {profile?.is_exec_board && profile?.exec_board_role ? (
-                <Badge variant="outline">Exec: {profile.exec_board_role}</Badge>
-              ) : null}
-              {profile?.is_admin ? <Badge>Admin</Badge> : null}
-              {profile?.is_super_admin ? <Badge>Director</Badge> : null}
-            </div>
+            <div className="font-medium">{profile?.full_name || profile?.email || '—'}</div>
+            <div className="text-xs text-muted-foreground">{profile?.email}</div>
           </div>
+          <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+            <Badge variant="secondary">{displayRole()}</Badge>
+            {profile?.is_exec_board && profile?.exec_board_role ? (
+              <Badge variant="outline">Exec: {profile.exec_board_role}</Badge>
+            ) : null}
+            {profile?.is_admin ? <Badge>Admin</Badge> : null}
+            {profile?.is_super_admin ? <Badge>Director</Badge> : null}
+          </div>
+          {profile?.created_at && (
+            <div className="text-xs text-muted-foreground">Joined: {new Date(profile.created_at).toLocaleDateString()}</div>
+          )}
         </div>
-        {profile?.created_at && (
-          <div className="mt-4 text-xs text-muted-foreground">Joined: {new Date(profile.created_at).toLocaleDateString()}</div>
-        )}
 
         <div className="mt-6 space-y-4">
           <div>
