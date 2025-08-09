@@ -256,15 +256,6 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
                             )}
                           </CardTitle>
                           <div className="flex gap-2 w-full sm:w-auto">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDownload(score)}
-                              className="w-full sm:w-auto"
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              Download
-                            </Button>
                           </div>
                         </div>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-sm text-muted-foreground">

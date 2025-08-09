@@ -13,8 +13,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFileAndGetUrl, getFileUrl } from '@/utils/storage';
 import { 
-  Edit3, 
-  Eye, 
   Download, 
   Trash2,
   FileImage,
@@ -278,7 +276,7 @@ export const MarkedScoreManager = ({
                   {scores.map((score) => (
                     <div key={score.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium line-clamp-2 leading-snug break-words">{score.description || 'Untitled'}</p>
+                        <button type="button" onClick={() => handleEdit(score)} className="font-medium text-left line-clamp-2 leading-snug break-words underline-offset-2 hover:underline">{score.description || 'Untitled'}</button>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <User className="h-3 w-3 flex-shrink-0" />
@@ -291,35 +289,6 @@ export const MarkedScoreManager = ({
                         </div>
                       </div>
                       <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleView(score)}
-                          className="flex-1 sm:flex-none"
-                        >
-                          <Eye className="h-4 w-4 sm:mr-0" />
-                          <span className="ml-2 sm:hidden">View</span>
-                        </Button>
-                        {score.uploader_id === user?.id && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(score)}
-                            className="flex-1 sm:flex-none"
-                          >
-                            <Edit3 className="h-4 w-4 sm:mr-0" />
-                            <span className="ml-2 sm:hidden">Edit</span>
-                          </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownload(score)}
-                          className="flex-1 sm:flex-none"
-                        >
-                          <Download className="h-4 w-4 sm:mr-0" />
-                          <span className="ml-2 sm:hidden">Download</span>
-                        </Button>
                         {score.uploader_id === user?.id && (
                           <Button
                             variant="outline"
