@@ -29,7 +29,9 @@ export const ROUTES = {
   PR_HUB: '/dashboard/pr-hub',
   SIGHT_READING_SUBMISSION: '/sight-reading-submission',
   SIGHT_READING_PREVIEW: '/sight-reading-preview',
-  SIGHT_READING_GENERATOR: '/sight-reading-generator'
+  SIGHT_READING_GENERATOR: '/sight-reading-generator',
+  
+  PERMISSIONS: '/admin/permissions'
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -51,7 +53,8 @@ export const PROTECTED_ROUTES = [
   ROUTES.PR_HUB,
   ROUTES.SIGHT_READING_SUBMISSION,
   ROUTES.SIGHT_READING_PREVIEW,
-  ROUTES.SIGHT_READING_GENERATOR
+  ROUTES.SIGHT_READING_GENERATOR,
+  ROUTES.PERMISSIONS
 ] as const;
 
 export const PUBLIC_ROUTES = [

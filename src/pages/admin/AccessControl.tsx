@@ -8,6 +8,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { Link } from "react-router-dom";
 import { RoleTransitionManager } from '@/components/admin/RoleTransitionManager';
 import { PermissionManagement } from '@/components/admin/PermissionManagement';
+import { ROUTES } from '@/constants/routes';
 const AccessControl = () => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
@@ -74,7 +75,7 @@ const AccessControl = () => {
               </div>
             </div>
             <Button asChild variant="outline" className="w-full mt-4">
-              <Link to="#permissions">Edit Permissions</Link>
+              <Link to={ROUTES.PERMISSIONS}>Edit Permissions</Link>
             </Button>
           </CardContent>
         </Card>

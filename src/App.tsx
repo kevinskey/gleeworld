@@ -20,6 +20,7 @@ import Auth from "./pages/Auth";
 import FanDashboard from "./pages/FanDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import { DuesManagement } from "./pages/DuesManagement";
+import PermissionsPage from "./pages/admin/Permissions";
 
 import { GleeWorldLanding } from "./pages/GleeWorldLanding";
 import { TestLandingPage } from "./components/debug/TestLandingPage";
@@ -594,6 +595,14 @@ const App = () => {
                                 element={
                                   <ProtectedRoute>
                                     <AccessControl />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/permissions" 
+                                element={
+                                  <ProtectedRoute>
+                                    <PermissionsPage />
                                   </ProtectedRoute>
                                 } 
                               />
