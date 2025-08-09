@@ -260,46 +260,54 @@ const Profile = () => {
       // Create full_name from separate fields for backward compatibility
       const fullName = [data.first_name, data.middle_name, data.last_name].filter(Boolean).join(' ');
 
+      // Build update payloads; lock admin-only fields for non-admin users
+      const baseUpdates: any = {
+        first_name: data.first_name,
+        middle_name: data.middle_name,
+        last_name: data.last_name,
+        full_name: fullName,
+        bio: data.bio,
+        website_url: data.website_url,
+        phone_number: data.phone_number,
+        workplace: data.workplace,
+        school_address: data.school_address,
+        home_address: data.home_address,
+        can_dance: data.can_dance,
+        preferred_payment_method: data.preferred_payment_method === "" ? null : data.preferred_payment_method,
+        instruments_played: selectedInstruments,
+        social_media_links: socialMediaLinks,
+        
+        // New fields (user-editable)
+        dress_size: data.dress_size,
+        shoe_size: data.shoe_size,
+        hair_color: data.hair_color,
+        has_tattoos: data.has_tattoos,
+        visible_piercings: data.visible_piercings,
+        academic_major: data.academic_major,
+        pronouns: data.pronouns,
+        class_year: data.class_year === "" ? null : Number(data.class_year),
+        emergency_contact: data.emergency_contact,
+        dietary_restrictions: selectedDietaryRestrictions,
+        allergies: data.allergies,
+        parent_guardian_contact: data.parent_guardian_contact,
+        mentor_opt_in: data.mentor_opt_in,
+        reunion_rsvp: data.reunion_rsvp,
+        
+        updated_at: new Date().toISOString(),
+      };
+
+      const adminOnlyUpdates = {
+        student_number: data.student_number,
+        voice_part: data.voice_part === "" ? null : (data.voice_part as any),
+        graduation_year: data.graduation_year === "" ? null : Number(data.graduation_year),
+        join_date: data.join_date === "" ? null : data.join_date,
+      };
+
+      const updatePayload = isAdmin ? { ...baseUpdates, ...adminOnlyUpdates } : baseUpdates;
+
       const { error } = await supabase
         .from("gw_profiles")
-        .update({
-          first_name: data.first_name,
-          middle_name: data.middle_name,
-          last_name: data.last_name,
-          full_name: fullName,
-          bio: data.bio,
-          website_url: data.website_url,
-          phone_number: data.phone_number,
-          student_number: data.student_number,
-          workplace: data.workplace,
-          school_address: data.school_address,
-          home_address: data.home_address,
-          voice_part: data.voice_part === "" ? null : (data.voice_part as any),
-          can_dance: data.can_dance,
-          preferred_payment_method: data.preferred_payment_method === "" ? null : data.preferred_payment_method,
-          instruments_played: selectedInstruments,
-          social_media_links: socialMediaLinks,
-          
-          // New fields
-          dress_size: data.dress_size,
-          shoe_size: data.shoe_size,
-          hair_color: data.hair_color,
-          has_tattoos: data.has_tattoos,
-          visible_piercings: data.visible_piercings,
-          academic_major: data.academic_major,
-          pronouns: data.pronouns,
-          class_year: data.class_year === "" ? null : Number(data.class_year),
-          graduation_year: data.graduation_year === "" ? null : Number(data.graduation_year),
-          emergency_contact: data.emergency_contact,
-          dietary_restrictions: selectedDietaryRestrictions,
-          allergies: data.allergies,
-          parent_guardian_contact: data.parent_guardian_contact,
-          join_date: data.join_date === "" ? null : data.join_date,
-          mentor_opt_in: data.mentor_opt_in,
-          reunion_rsvp: data.reunion_rsvp,
-          
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq("id", user.id);
 
       if (error) {
@@ -308,47 +316,54 @@ const Profile = () => {
       }
 
       // Also sync with gw_profiles table to keep data consistent
+      const baseGwUpdates: any = {
+        first_name: data.first_name,
+        middle_name: data.middle_name,
+        last_name: data.last_name,
+        full_name: fullName,
+        phone: data.phone_number,
+        bio: data.bio,
+        website_url: data.website_url,
+        phone_number: data.phone_number,
+        workplace: data.workplace,
+        school_address: data.school_address,
+        home_address: data.home_address,
+        can_dance: data.can_dance,
+        preferred_payment_method: data.preferred_payment_method === "" ? null : data.preferred_payment_method,
+        instruments_played: selectedInstruments,
+        social_media_links: socialMediaLinks,
+        
+        // New fields (user-editable)
+        dress_size: data.dress_size,
+        shoe_size: data.shoe_size,
+        hair_color: data.hair_color,
+        has_tattoos: data.has_tattoos,
+        visible_piercings: data.visible_piercings,
+        academic_major: data.academic_major,
+        pronouns: data.pronouns,
+        class_year: data.class_year === "" ? null : Number(data.class_year),
+        emergency_contact: data.emergency_contact,
+        dietary_restrictions: selectedDietaryRestrictions,
+        allergies: data.allergies,
+        parent_guardian_contact: data.parent_guardian_contact,
+        mentor_opt_in: data.mentor_opt_in,
+        reunion_rsvp: data.reunion_rsvp,
+        
+        updated_at: new Date().toISOString(),
+      };
+
+      const adminOnlyGwUpdates = {
+        student_number: data.student_number,
+        voice_part: data.voice_part === "" ? null : data.voice_part,
+        graduation_year: data.graduation_year === "" ? null : Number(data.graduation_year),
+        join_date: data.join_date === "" ? null : data.join_date,
+      };
+
+      const gwUpdatePayload = isAdmin ? { ...baseGwUpdates, ...adminOnlyGwUpdates } : baseGwUpdates;
+
       const { error: gwError } = await supabase
         .from("gw_profiles")
-        .update({
-          first_name: data.first_name,
-          middle_name: data.middle_name,
-          last_name: data.last_name,
-          full_name: fullName,
-          phone: data.phone_number,
-          bio: data.bio,
-          website_url: data.website_url,
-          phone_number: data.phone_number,
-          student_number: data.student_number,
-          workplace: data.workplace,
-          school_address: data.school_address,
-          home_address: data.home_address,
-          voice_part: data.voice_part === "" ? null : data.voice_part,
-          can_dance: data.can_dance,
-          preferred_payment_method: data.preferred_payment_method === "" ? null : data.preferred_payment_method,
-          instruments_played: selectedInstruments,
-          social_media_links: socialMediaLinks,
-          
-          // New fields
-          dress_size: data.dress_size,
-          shoe_size: data.shoe_size,
-          hair_color: data.hair_color,
-          has_tattoos: data.has_tattoos,
-          visible_piercings: data.visible_piercings,
-          academic_major: data.academic_major,
-          pronouns: data.pronouns,
-          class_year: data.class_year === "" ? null : Number(data.class_year),
-          graduation_year: data.graduation_year === "" ? null : Number(data.graduation_year),
-          emergency_contact: data.emergency_contact,
-          dietary_restrictions: selectedDietaryRestrictions,
-          allergies: data.allergies,
-          parent_guardian_contact: data.parent_guardian_contact,
-          join_date: data.join_date === "" ? null : data.join_date,
-          mentor_opt_in: data.mentor_opt_in,
-          reunion_rsvp: data.reunion_rsvp,
-          
-          updated_at: new Date().toISOString(),
-        })
+        .update(gwUpdatePayload)
         .eq("user_id", user.id);
 
       if (gwError) {
@@ -819,22 +834,34 @@ const Profile = () => {
                     id="graduation_year"
                     type="number"
                     {...register("graduation_year", { valueAsNumber: true })}
-                    disabled={!isEditing}
+                    disabled={!isEditing || !isAdmin}
                     className="mt-1"
                     placeholder="2024"
                     min="1900"
                     max="2050"
                   />
+                  {!isAdmin && (
+                    <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-2">
+                      <Lock className="h-4 w-4" />
+                      Graduation year is managed by administrators.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="student_number">Student Number</Label>
                   <Input
                     id="student_number"
                     {...register("student_number")}
-                    disabled={!isEditing}
+                    disabled={!isEditing || !isAdmin}
                     className="mt-1"
                     placeholder="Your student ID"
                   />
+                  {!isAdmin && (
+                    <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-2">
+                      <Lock className="h-4 w-4" />
+                      Student number is an official record. Contact admin to change.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="join_date">Glee Club Join Date</Label>
@@ -842,9 +869,15 @@ const Profile = () => {
                     id="join_date"
                     type="date"
                     {...register("join_date")}
-                    disabled={!isEditing}
+                    disabled={!isEditing || !isAdmin}
                     className="mt-1"
                   />
+                  {!isAdmin && (
+                    <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-2">
+                      <Lock className="h-4 w-4" />
+                      Join date is set by staff.
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
