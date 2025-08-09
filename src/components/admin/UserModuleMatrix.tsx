@@ -27,6 +27,7 @@ export const UserModuleMatrix: React.FC<Props> = ({ userId }) => {
   const [mods, setMods] = useState<ModuleRecord[]>([]);
   const [permMap, setPermMap] = useState<PermissionMap>({});
   const [loading, setLoading] = useState(false);
+  const [isDirector, setIsDirector] = useState(false);
 
   const titleFor = useMemo(() => {
     const map = new Map(configModules.map(m => [m.name, m.title] as const));
@@ -37,7 +38,29 @@ export const UserModuleMatrix: React.FC<Props> = ({ userId }) => {
     if (!userId) return;
     setLoading(true);
     try {
-      // Fetch active modules
+      // Check if selected user is a Director (alias of super-admin)
+      const { data: profileData } = await supabase
+        .from('gw_profiles')
+        .select('is_super_admin, role')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      const director = !!profileData?.is_super_admin || profileData?.role === 'director' || profileData?.role === 'super-admin';
+
+      // If Director, list ALL configured modules with full access
+      if (director) {
+        setIsDirector(true);
+        const allConfigMods: ModuleRecord[] = (configModules || []).map((m: any) => ({ id: m.name, name: m.name }));
+        setMods(allConfigMods);
+        const fullPerms: PermissionMap = {};
+        allConfigMods.forEach((m) => (fullPerms[m.id] = { view: true, manage: true }));
+        setPermMap(fullPerms);
+        return;
+      } else {
+        setIsDirector(false);
+      }
+
+      // Fetch active modules from DB (non-Director path)
       const { data: mData, error: mErr } = await supabase
         .from('gw_modules')
         .select('id, name')
@@ -152,7 +175,7 @@ export const UserModuleMatrix: React.FC<Props> = ({ userId }) => {
                         <Switch
                           checked={!!state.view}
                           onCheckedChange={(val) => toggle(m.id, 'view', val)}
-                          disabled={loading}
+                          disabled={loading || isDirector}
                           aria-label={`Toggle view for ${titleFor(m.name)}`}
                         />
                         <span className="text-xs text-muted-foreground">View</span>
@@ -163,7 +186,7 @@ export const UserModuleMatrix: React.FC<Props> = ({ userId }) => {
                         <Switch
                           checked={!!state.manage}
                           onCheckedChange={(val) => toggle(m.id, 'manage', val)}
-                          disabled={loading}
+                          disabled={loading || isDirector}
                           aria-label={`Toggle manage for ${titleFor(m.name)}`}
                         />
                         <span className="text-xs text-muted-foreground">Manage</span>
