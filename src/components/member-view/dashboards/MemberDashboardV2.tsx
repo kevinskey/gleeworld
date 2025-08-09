@@ -12,6 +12,7 @@ import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { useNotifications } from "@/hooks/useNotifications";
 import SendBucketOfLove from "@/components/buckets-of-love/SendBucketOfLove";
 import { WellnessCheckins } from "@/components/chaplain/WellnessCheckins";
+import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 
 interface MemberDashboardV2Props {
   user: {
@@ -44,6 +45,7 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
   const [mLoading, setMLoading] = useState<boolean>(false);
   const [mError, setMError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -74,6 +76,25 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
     fetchMembers();
   }, []);
 
+  // Load current user's avatar
+  useEffect(() => {
+    const loadAvatar = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("gw_profiles")
+          .select("avatar_url")
+          .eq("user_id", user.id)
+          .single();
+        if (!error && data) {
+          setAvatarUrl(data.avatar_url);
+        }
+      } catch (e) {
+        // Silent fail
+      }
+    };
+    loadAvatar();
+  }, [user.id]);
+
   const filteredMembers = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return members;
@@ -99,13 +120,40 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
     { label: "Email", icon: Mail, href: "mailto:gleeclub@spelman.edu?subject=Glee%20Club%20Inquiry" },
   ];
 
+  const firstName = user.full_name?.split(" ")[0] || "Member";
+
   return (
     <div className="min-h-screen bg-muted/30 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <header className="animate-fade-in">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Member Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Welcome back, {user.full_name?.split(" ")[0] || "Member"}. To Amaze and Inspire.</p>
-        </header>
+        {/* Hero Welcome + Community Hub */}
+        <section aria-label="Member welcome" className="animate-fade-in">
+          <Card className="relative overflow-hidden border bg-background/40">
+            <div className="absolute inset-0">
+              <img
+                src="/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png"
+                alt="Historic Spelman campus background"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background/70" />
+            </div>
+            <CardContent className="relative z-10 p-4 sm:p-6 md:p-8 h-[320px] md:h-[500px] flex flex-col justify-between">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
+                  <AvatarImage src={avatarUrl || undefined} alt={`${firstName} avatar`} />
+                  <AvatarFallback>{getInitials(user.full_name)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Welcome, {firstName}</h1>
+                  <p className="text-sm text-muted-foreground">To Amaze and Inspire.</p>
+                </div>
+              </div>
+
+              <div>
+                <CommunityHubWidget />
+              </div>
+            </CardContent>
+          </Card>
+        </section>
 
         {/* Top grid with key modules */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
