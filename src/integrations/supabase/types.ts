@@ -6492,6 +6492,53 @@ export type Database = {
           },
         ]
       }
+      gw_practice_links: {
+        Row: {
+          created_at: string
+          id: string
+          music_id: string
+          notes: string | null
+          owner_id: string
+          target_section: string | null
+          title: string
+          updated_at: string
+          url: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          music_id: string
+          notes?: string | null
+          owner_id: string
+          target_section?: string | null
+          title: string
+          updated_at?: string
+          url: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          music_id?: string
+          notes?: string | null
+          owner_id?: string
+          target_section?: string | null
+          title?: string
+          updated_at?: string
+          url?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_practice_links_music_id_fkey"
+            columns: ["music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_prayer_requests: {
         Row: {
           chaplain_response: string | null

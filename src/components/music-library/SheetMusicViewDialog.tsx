@@ -17,10 +17,10 @@ import { SheetMusicNotes } from '@/modules/glee-library/notes/SheetMusicNotes';
 import { MarkedScores } from '@/modules/glee-library/marked-scores/MarkedScores';
 import { PersonalNotes } from '@/modules/glee-library/personal-notes/PersonalNotes';
 import { SmartToolsSidebar } from '@/modules/glee-library/smart-tools/SmartToolsSidebar';
-import { RehearsalLinks } from '@/modules/glee-library/rehearsal-links/RehearsalLinks';
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
 import { useAuth } from '@/contexts/AuthContext';
 import { SheetMusicHistory } from '@/components/music-library/SheetMusicHistory';
+import { PracticeLinks } from '@/modules/glee-library/practice/PracticeLinks';
 
 interface SheetMusic {
   id: string;
@@ -152,7 +152,7 @@ export const SheetMusicViewDialog = ({
                   )}
 
                   {activeTab === 'rehearsals' && (
-                    <RehearsalLinks musicId={item.id} isAdmin={isAdmin} />
+                    <PracticeLinks musicId={item.id} voiceParts={item.voice_parts || []} />
                   )}
                 </div>
               </div>
