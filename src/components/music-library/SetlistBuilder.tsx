@@ -545,9 +545,6 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
             <Music className="h-5 w-5" />
             Setlist Builder
           </h3>
-          <p className="text-sm text-muted-foreground">
-            Create and manage performance setlists
-          </p>
         </div>
         <Button 
           onClick={() => {

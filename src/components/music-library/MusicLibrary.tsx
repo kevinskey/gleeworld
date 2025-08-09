@@ -4,16 +4,15 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { SheetMusicLibrary } from './SheetMusicLibrary';
 import { SetlistBuilder } from './SetlistBuilder';
-import { SetlistDiagnostics } from './SetlistDiagnostics';
 import { SetlistPlayer } from './SetlistPlayer';
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
-import { Settings, Home, Users, Calendar, FileText, Activity, ArrowLeft, Music } from 'lucide-react';
+import { Home, Users, Calendar, FileText, Activity, ArrowLeft, Music } from 'lucide-react';
 
 export const MusicLibrary = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedPdf, setSelectedPdf] = useState<{url: string; title: string} | null>(null);
-  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  
   const [activeSetlistPlayer, setActiveSetlistPlayer] = useState<string | null>(null);
 
   const handlePdfSelect = (pdfUrl: string, title: string) => {
@@ -106,31 +105,14 @@ export const MusicLibrary = () => {
             </Button>
           </div>
           <h1 className="text-2xl font-bold mb-1">Music Library</h1>
-          <p className="text-muted-foreground text-sm">
-            Manage your sheet music collection and create performance setlists
-          </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowDiagnostics(!showDiagnostics)}
-          className="flex items-center gap-2"
-        >
-          <Settings className="h-4 w-4" />
-          {showDiagnostics ? 'Hide' : 'Show'} Diagnostics
-        </Button>
       </div>
 
-      {showDiagnostics && (
-        <div className="mb-4">
-          <SetlistDiagnostics />
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Setlists Column */}
         <div className={`${selectedPdf ? 'lg:col-span-4' : 'lg:col-span-6'} space-y-4`}>
-          <h2 className="text-lg font-semibold">Setlist Builder</h2>
+          
           <SetlistBuilder 
             onPdfSelect={handlePdfSelect} 
             onOpenPlayer={handleOpenSetlistPlayer}
