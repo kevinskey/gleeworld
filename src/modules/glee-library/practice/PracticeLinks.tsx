@@ -34,6 +34,7 @@ export function PracticeLinks({ musicId, voiceParts = [] }: PracticeLinksProps) 
   const [links, setLinks] = useState<PracticeLink[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploadingAudio, setUploadingAudio] = useState(false)
   const [role, setRole] = useState<string | null>(null)
   const [form, setForm] = useState({
     title: '',
@@ -172,6 +173,43 @@ export function PracticeLinks({ musicId, voiceParts = [] }: PracticeLinksProps) 
     }
   }
 
+  const handleMp3Selected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!user) {
+      toast({ title: 'Sign in required', description: 'Please sign in to upload audio', variant: 'destructive' })
+      return
+    }
+    setUploadingAudio(true)
+    try {
+      const safeName = file.name.replace(/\s+/g, '_')
+      const path = `${user.id}/${musicId}/${Date.now()}_${safeName}`
+      const { error: upErr } = await supabase.storage.from('practice-media').upload(path, file)
+      if (upErr) throw upErr
+      const { data: pub } = supabase.storage.from('practice-media').getPublicUrl(path)
+      const titleFromFile = safeName.replace(/\.[^/.]+$/, '')
+      const payload: any = {
+        music_id: musicId,
+        owner_id: user.id,
+        title: (form.title || titleFromFile).trim(),
+        url: pub.publicUrl,
+        visibility: form.visibility,
+        target_section: form.visibility === 'section' ? form.target_section : null,
+      }
+      const { error } = await supabase.from('gw_practice_links').insert(payload)
+      if (error) throw error
+      toast({ title: 'Uploaded', description: 'Audio uploaded and linked' })
+      ;(e.target as HTMLInputElement).value = ''
+      setForm({ title: '', url: '', visibility: 'personal', target_section: '' })
+      fetchLinks()
+    } catch (err: any) {
+      console.error('Upload MP3 failed', err)
+      toast({ title: 'Error', description: err?.message || 'Failed to upload audio', variant: 'destructive' })
+    } finally {
+      setUploadingAudio(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       {/* YouTube Hero */}
@@ -263,7 +301,17 @@ export function PracticeLinks({ musicId, voiceParts = [] }: PracticeLinksProps) 
                 </Select>
               </div>
             )}
-            <div className="md:col-span-5 flex justify-end">
+            <div className="md:col-span-5 flex justify-end gap-2">
+              <input
+                id="practice-mp3-input"
+                type="file"
+                accept="audio/mpeg,audio/mp3,audio/*"
+                className="hidden"
+                onChange={handleMp3Selected}
+              />
+              <Button variant="outline" onClick={() => document.getElementById('practice-mp3-input')?.click()} disabled={uploadingAudio}>
+                {uploadingAudio ? 'Uploading…' : 'Upload MP3'}
+              </Button>
               <Button onClick={onSubmit} disabled={saving}>{saving ? 'Saving…' : 'Add Link'}</Button>
             </div>
           </div>
@@ -295,6 +343,9 @@ export function PracticeLinks({ musicId, voiceParts = [] }: PracticeLinksProps) 
                       {link.title}
                     </a>
                     {link.notes && <div className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{link.notes}</div>}
+                    {(link.url.toLowerCase().includes('.mp3') || link.url.includes('/practice-media/')) && (
+                      <audio controls src={link.url} className="mt-2 w-full" preload="none" />
+                    )}
                   </div>
                   <div className="flex gap-2 self-start sm:self-auto">
                     {canDelete(link) && (
