@@ -311,6 +311,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: WellnessModule,
     dbFunctionName: "wellness"
   },
+  {
+    id: "wardrobe",
+    name: "wardrobe",
+    title: "Wardrobe",
+    description: "Manage costumes, fittings, and inventory",
+    icon: Shirt,
+    iconColor: "purple",
+    category: "member-management",
+    isActive: true,
+    component: WardrobeModule,
+    dbFunctionName: "wardrobe"
+  },
 
   // Musical Leadership modules
   {
