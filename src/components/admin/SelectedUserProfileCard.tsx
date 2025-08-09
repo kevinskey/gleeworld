@@ -207,7 +207,7 @@ const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 };
 
   return (
-    <Card className="relative z-10">
+    <Card className="relative z-50 isolate">
       <CardHeader>
         <CardTitle>User Profile</CardTitle>
         
