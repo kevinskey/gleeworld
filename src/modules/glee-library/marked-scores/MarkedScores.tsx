@@ -44,6 +44,26 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
     fetchMarkedScores();
   }, [musicId]);
 
+  // Realtime updates for this music's marked scores
+  useEffect(() => {
+    if (!musicId) return;
+    const channel = supabase
+      .channel(`rt-marked-scores-${musicId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gw_marked_scores', filter: `music_id=eq.${musicId}` },
+        async () => {
+          // Refresh to keep uploader names accurate
+          await fetchMarkedScores();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [musicId]);
+
   const fetchMarkedScores = async () => {
     try {
       const { data, error } = await supabase

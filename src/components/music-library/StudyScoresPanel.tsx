@@ -59,6 +59,54 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
     fetchMarked();
   }, [user?.id]);
 
+  // Live-sync marked scores when they change elsewhere
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel('rt-marked-scores')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gw_marked_scores', filter: `uploader_id=eq.${user.id}` },
+        (payload: any) => {
+          try {
+            if (payload.eventType === 'DELETE') {
+              const id = payload.old?.id;
+              if (id) setMarkedScores((prev) => prev.filter((m) => m.id !== id));
+            } else if (payload.eventType === 'INSERT') {
+              const row = payload.new;
+              if (row) {
+                setMarkedScores((prev) => {
+                  if (prev.some((m) => m.id === row.id)) return prev;
+                  const item = {
+                    id: row.id,
+                    music_id: row.music_id,
+                    voice_part: row.voice_part,
+                    description: row.description,
+                    file_url: row.file_url,
+                    uploader_id: row.uploader_id,
+                    created_at: row.created_at,
+                  } as MarkedScore;
+                  return [item, ...prev];
+                });
+              }
+            } else if (payload.eventType === 'UPDATE') {
+              const row = payload.new;
+              if (row) {
+                setMarkedScores((prev) => prev.map((m) => (m.id === row.id ? { ...m, ...row } : m)));
+              }
+            }
+          } catch (e) {
+            console.warn('Realtime sync error (marked scores):', e);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   const unified: UnifiedItem[] = useMemo(() => {
     const studyItems: UnifiedItem[] = scores.map((s) => ({ type: 'study', ...s }));
     const markedItems: UnifiedItem[] = markedScores.map((m) => ({

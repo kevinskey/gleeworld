@@ -65,6 +65,25 @@ export const MarkedScoreManager = ({
     fetchMarkedScores();
   }, [musicId]);
 
+  // Realtime sync so the list updates if scores change elsewhere
+  useEffect(() => {
+    if (!musicId) return;
+    const channel = supabase
+      .channel(`rt-marked-scores-${musicId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gw_marked_scores', filter: `music_id=eq.${musicId}` },
+        async () => {
+          await fetchMarkedScores();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [musicId]);
+
   const fetchMarkedScores = async () => {
     try {
       setLoading(true);
