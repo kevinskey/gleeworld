@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { HeaderRadioPlayer } from "@/components/radio/HeaderRadioPlayer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,8 +63,11 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
           </div>
         </div>
 
-        {/* Center Section - Clock & Views */}
+        {/* Center Section - Clock, Views & Radio */}
         <div className="flex items-center space-x-6">
+          {/* Radio Player */}
+          <HeaderRadioPlayer />
+          
           {/* Live Clock */}
           <div className="flex items-center space-x-2 bg-background/50 px-3 py-1 rounded-lg border">
             <Clock className="w-4 h-4 text-primary" />
