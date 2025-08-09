@@ -5,6 +5,8 @@ import { Shield, Key, Users, Lock } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { Link } from "react-router-dom";
+import { RoleTransitionManager } from '@/components/admin/RoleTransitionManager';
 
 const AccessControl = () => {
   const { user } = useAuth();
@@ -48,8 +50,8 @@ const AccessControl = () => {
                 <span className="font-bold">245</span>
               </div>
             </div>
-            <Button variant="outline" className="w-full mt-4">
-              Manage Roles
+            <Button asChild variant="outline" className="w-full mt-4">
+              <a href="#role-manager">Manage Roles</a>
             </Button>
           </CardContent>
         </Card>
@@ -97,6 +99,12 @@ const AccessControl = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Role Manager Section */}
+      <section id="role-manager" aria-labelledby="role-manager-heading" className="space-y-4">
+        <h2 id="role-manager-heading" className="text-xl font-semibold">Role Manager</h2>
+        <RoleTransitionManager />
+      </section>
     </div>
   );
 };
