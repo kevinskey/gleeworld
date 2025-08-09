@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Youtube, Link as LinkIcon, PlusCircle } from 'lucide-react'
+import { Youtube, Link as LinkIcon, PlusCircle, Trash2 } from 'lucide-react'
 
 interface PracticeLinksProps {
   musicId: string
@@ -152,6 +152,26 @@ export function PracticeLinks({ musicId, voiceParts = [] }: PracticeLinksProps) 
     }
   }
 
+  const canDelete = (link: PracticeLink) => {
+    if (!user) return false
+    if (link.owner_id === user.id) return true
+    if (canManageSectionGlobal && (link.visibility === 'section' || link.visibility === 'global')) return true
+    return false
+  }
+
+  const handleDelete = async (link: PracticeLink) => {
+    if (!window.confirm('Delete this practice link?')) return
+    try {
+      const { error } = await supabase.from('gw_practice_links').delete().eq('id', link.id)
+      if (error) throw error
+      setLinks(prev => prev.filter(l => l.id !== link.id))
+      toast({ title: 'Deleted', description: 'Practice link removed' })
+    } catch (e: any) {
+      console.error('Failed to delete link', e)
+      toast({ title: 'Error', description: e?.message || 'Failed to delete link', variant: 'destructive' })
+    }
+  }
+
   return (
     <div className="space-y-4">
       {/* YouTube Hero */}
@@ -275,6 +295,13 @@ export function PracticeLinks({ musicId, voiceParts = [] }: PracticeLinksProps) 
                       {link.title}
                     </a>
                     {link.notes && <div className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{link.notes}</div>}
+                  </div>
+                  <div className="flex gap-2 self-start sm:self-auto">
+                    {canDelete(link) && (
+                      <Button variant="outline" size="sm" onClick={() => handleDelete(link)}>
+                        <Trash2 className="h-4 w-4 mr-1" /> Delete
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
