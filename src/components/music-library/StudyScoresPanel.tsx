@@ -6,6 +6,7 @@ import { Users, Share2, FileText, Plus, Trash2, FileImage } from 'lucide-react';
 import { useStudyScores } from '@/hooks/useStudyScores';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface StudyScoresPanelProps {
   currentSelected?: { url: string; title: string; id?: string } | null;
@@ -128,9 +129,11 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
     setDeletingId(id);
     try {
       // Remove collaborators
-      await supabase.from('gw_study_score_collaborators').delete().eq('study_score_id', id);
+      const { error: collabErr } = await supabase.from('gw_study_score_collaborators').delete().eq('study_score_id', id);
+      if (collabErr) throw collabErr;
       // Delete study score row
-      await supabase.from('gw_study_scores').delete().eq('id', id);
+      const { error: delErr } = await supabase.from('gw_study_scores').delete().eq('id', id);
+      if (delErr) throw delErr;
       // Best-effort: delete storage object
       try {
         const url = new URL(pdfUrl);
@@ -143,10 +146,11 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
       } catch (e) {
         console.warn('Study score storage delete skipped:', e);
       }
-      // Refresh lists
       await fetchScores();
-    } catch (e) {
+      toast.success('Study score deleted');
+    } catch (e: any) {
       console.error('Failed to delete study score', e);
+      toast.error(e?.message || 'Failed to delete study score');
     } finally {
       setDeletingId(null);
     }
