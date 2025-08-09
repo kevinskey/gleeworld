@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { Lock } from "lucide-react";
 import { AvatarCropDialog } from "@/components/shared/AvatarCropDialog";
+import { RequestChangeDialog } from "@/components/profile/RequestChangeDialog";
 import { ALL_DIETARY_OPTIONS } from "@/constants/dietaryOptions";
 
 const profileSchema = z.object({
@@ -138,6 +139,12 @@ const Profile = () => {
   const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
   const [selectedImageForCrop, setSelectedImageForCrop] = useState<string>("");
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
+  const [requestDialogOpen, setRequestDialogOpen] = useState(false);
+  const [requestField, setRequestField] = useState<{ label: string; currentValue?: string | number | null } | null>(null);
+  const openRequestChange = (label: string, currentValue?: string | number | null) => {
+    setRequestField({ label, currentValue });
+    setRequestDialogOpen(true);
+  };
 
   // Basic SEO for Profile page
   useEffect(() => {
@@ -787,7 +794,10 @@ const Profile = () => {
                 {!isAdmin && (
                   <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-2">
                     <Lock className="h-4 w-4" />
-                    Voice part is set by staff. Contact an admin to update.
+                    Voice part is set by staff.
+                    <Button variant="link" size="sm" className="px-0 h-auto" onClick={() => openRequestChange("Voice Part", watch("voice_part") || "")}>
+                      Request change
+                    </Button>
                   </p>
                 )}
 
@@ -844,6 +854,7 @@ const Profile = () => {
                     <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-2">
                       <Lock className="h-4 w-4" />
                       Graduation year is managed by administrators.
+                      <Button variant="link" size="sm" className="px-0 h-auto" onClick={() => openRequestChange("Graduation Year", (watch("graduation_year") as any) || "")}>Request change</Button>
                     </p>
                   )}
                 </div>
@@ -859,7 +870,10 @@ const Profile = () => {
                   {!isAdmin && (
                     <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-2">
                       <Lock className="h-4 w-4" />
-                      Student number is an official record. Contact admin to change.
+                      Student number is an official record.
+                      <Button variant="link" size="sm" className="px-0 h-auto" onClick={() => openRequestChange("Student Number", watch("student_number") || "")}>
+                        Request change
+                      </Button>
                     </p>
                   )}
                 </div>
@@ -876,6 +890,9 @@ const Profile = () => {
                     <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-2">
                       <Lock className="h-4 w-4" />
                       Join date is set by staff.
+                      <Button variant="link" size="sm" className="px-0 h-auto" onClick={() => openRequestChange("Join Date", watch("join_date") || "")}>
+                        Request change
+                      </Button>
                     </p>
                   )}
                 </div>
@@ -1279,6 +1296,14 @@ const Profile = () => {
           imageSrc={selectedImageForCrop}
           onCropComplete={handleCroppedImageUpload}
           isUploading={isAvatarUploading}
+        />
+
+        <RequestChangeDialog
+          open={requestDialogOpen}
+          onOpenChange={setRequestDialogOpen}
+          fieldLabel={requestField?.label || "Profile field"}
+          currentValue={requestField?.currentValue ?? ""}
+          userEmail={user?.email || ""}
         />
       </div>
     </UniversalLayout>
