@@ -21,10 +21,7 @@ export const MusicLibrary = () => {
   const [collectionsOpen, setCollectionsOpen] = useState(false);
 
   const handlePdfSelect = (pdfUrl: string, title: string, id?: string) => {
-    console.log('MusicLibrary: handlePdfSelect called with URL:', pdfUrl, 'Title:', title);
-    console.log('MusicLibrary: Setting selectedPdf to:', { url: pdfUrl, title, id });
     setSelectedPdf({ url: pdfUrl, title, id });
-    console.log('MusicLibrary: selectedPdf state should now be:', { url: pdfUrl, title, id });
   };
 
   const handleOpenSetlistPlayer = (setlistId: string) => {
@@ -35,7 +32,6 @@ export const MusicLibrary = () => {
     setActiveSetlistPlayer(null);
   };
 
-  // If setlist player is active, show only the player
   if (activeSetlistPlayer) {
     return (
       <SetlistPlayer
@@ -55,7 +51,6 @@ export const MusicLibrary = () => {
 
   return (
     <>
-      {/* Site Header Navigation */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -113,59 +108,61 @@ export const MusicLibrary = () => {
         </div>
       </div>
 
-      {/* Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Study Scores + Setlists */}
-        <div className={`${selectedPdf ? 'lg:col-span-4' : 'lg:col-span-6'} space-y-4`}>
-          <div className="border rounded">
-            <div className="flex items-center justify-between p-2">
-              <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setStudyOpen((o) => !o)}>
-                {studyOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Study Scores
-              </button>
-            </div>
-            {studyOpen && (
-              <div className="p-2">
-                <StudyScoresPanel 
-                  currentSelected={selectedPdf}
-                  onOpenScore={handlePdfSelect}
-                />
-              </div>
-            )}
+      {/* Collapsible Panels */}
+      <div className="space-y-4">
+        {/* Study Scores */}
+        <div className="border rounded">
+          <div className="flex items-center justify-between p-2">
+            <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setStudyOpen((o) => !o)}>
+              {studyOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Study Scores
+            </button>
           </div>
-          <div className="border rounded">
-            <div className="flex items-center justify-between p-2">
-              <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setCollectionsOpen((o) => !o)}>
-                {collectionsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} My Collections
-              </button>
+          {studyOpen && (
+            <div className="p-2">
+              <StudyScoresPanel 
+                currentSelected={selectedPdf}
+                onOpenScore={handlePdfSelect}
+              />
             </div>
-            {collectionsOpen && (
-              <div className="p-2">
-                <MyCollectionsPanel
-                  currentSelected={selectedPdf}
-                  onOpenScore={handlePdfSelect}
-                />
-              </div>
-            )}
-          </div>
-          <div className="border rounded">
-            <div className="flex items-center justify-between p-2">
-              <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setSetlistOpen((o) => !o)}>
-                {setlistOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Setlists
-              </button>
-            </div>
-            {setlistOpen && (
-              <div className="p-2">
-                <SetlistBuilder 
-                  onPdfSelect={handlePdfSelect} 
-                  onOpenPlayer={handleOpenSetlistPlayer}
-                />
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
-        {/* PDF Viewer Column */}
-        <div className={`${selectedPdf ? 'lg:col-span-8' : 'lg:col-span-6'} space-y-4`}>
+        {/* My Collections */}
+        <div className="border rounded">
+          <div className="flex items-center justify-between p-2">
+            <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setCollectionsOpen((o) => !o)}>
+              {collectionsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} My Collections
+            </button>
+          </div>
+          {collectionsOpen && (
+            <div className="p-2">
+              <MyCollectionsPanel
+                currentSelected={selectedPdf}
+                onOpenScore={handlePdfSelect}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Setlists */}
+        <div className="border rounded">
+          <div className="flex items-center justify-between p-2">
+            <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setSetlistOpen((o) => !o)}>
+              {setlistOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Setlists
+            </button>
+          </div>
+          {setlistOpen && (
+            <div className="p-2">
+              <SetlistBuilder 
+                onPdfSelect={handlePdfSelect} 
+                onOpenPlayer={handleOpenSetlistPlayer}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* PDF Viewer - Full width bottom */}
+        <div className="space-y-4">
           <h2 className="text-lg font-semibold">PDF Viewer</h2>
           {selectedPdf ? (
             <div>
