@@ -44,6 +44,7 @@ import {
   Home,
   Shield
 } from "lucide-react";
+import { Lock } from "lucide-react";
 import { AvatarCropDialog } from "@/components/shared/AvatarCropDialog";
 import { ALL_DIETARY_OPTIONS } from "@/constants/dietaryOptions";
 
@@ -127,6 +128,7 @@ const voiceParts = [
 const Profile = () => {
   const { user } = useAuth();
   const { profile: userRole } = useUserRole();
+  const isAdmin = Boolean(userRole?.is_admin || userRole?.is_super_admin);
   const { toast } = useToast();
   const { profile, loading: profileLoading, updateAvatarUrl } = useProfile();
   const [loading, setLoading] = useState(false);
@@ -136,6 +138,19 @@ const Profile = () => {
   const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
   const [selectedImageForCrop, setSelectedImageForCrop] = useState<string>("");
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
+
+  // Basic SEO for Profile page
+  useEffect(() => {
+    document.title = 'Profile — GleeWorld';
+    const desc = 'View your profile, upload your avatar, and manage personal information.';
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'description');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', desc);
+  }, []);
 
   const {
     register,
@@ -735,10 +750,10 @@ const Profile = () => {
                 <Label htmlFor="voice_part">Voice Part</Label>
                 <Select 
                   value={watch("voice_part") || ""} 
-                  onValueChange={(value) => setValue("voice_part", value as any)}
-                  disabled={!isEditing}
+                  onValueChange={(value) => { if (isAdmin) setValue("voice_part", value as any) }}
+                  disabled={!isEditing || !isAdmin}
                 >
-                  <SelectTrigger className="bg-background border-border text-foreground">
+                  <SelectTrigger className={`bg-background border-border text-foreground ${(!isEditing || !isAdmin) ? 'opacity-60 cursor-not-allowed' : ''}`}>
                     <SelectValue placeholder="Select your voice part" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border-border z-50">
@@ -754,6 +769,13 @@ const Profile = () => {
                     <SelectItem value="DOC" className="text-foreground hover:bg-muted">Director of Choirs (DOC)</SelectItem>
                   </SelectContent>
                 </Select>
+                {!isAdmin && (
+                  <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    Voice part is set by staff. Contact an admin to update.
+                  </p>
+                )}
+
               </div>
             </CardContent>
           </Card>
