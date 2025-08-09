@@ -207,12 +207,12 @@ const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 };
 
   return (
-    <Card>
+    <Card className="relative z-10">
       <CardHeader>
         <CardTitle>User Profile</CardTitle>
         
       </CardHeader>
-      <CardContent>
+      <CardContent className="pointer-events-auto">
         <div className="flex flex-col items-center text-center gap-3">
           <Headshot
             src={avatarUrl}
