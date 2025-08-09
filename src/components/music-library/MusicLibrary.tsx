@@ -256,7 +256,7 @@ export const MusicLibrary = () => {
                 <img
                   src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png"
                   alt="Glee World Music Library landing image"
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-contain"
                   loading="lazy"
                 />
               </div>
