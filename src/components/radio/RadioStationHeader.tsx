@@ -95,7 +95,9 @@ export const RadioStationHeader = ({
               <div className="text-center lg:text-left">
                 <p className="text-sm text-white/70 mb-1">NOW PLAYING</p>
                 <h3 className="text-xl font-semibold text-white">{currentTrack.title}</h3>
-                <p className="text-white/80">{currentTrack.artist}</p>
+                {currentTrack.artist && (
+                  <p className="text-white/80">{currentTrack.artist}</p>
+                )}
               </div>
             ) : (
               <div className="text-center lg:text-left">

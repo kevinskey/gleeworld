@@ -241,10 +241,13 @@ export const RadioStationPage = () => {
   };
 
   const handlePlayTrack = (track: any) => {
+    const rawArtist = (track.artist || '').trim();
+    const safeArtist = /^\[?\s*unknown(?:\s+artist)?\s*\]?$/i.test(rawArtist) || /^n\/a$/i.test(rawArtist) ? '' : rawArtist;
+
     const radioTrack: RadioTrack = {
       id: track.id,
       title: track.title,
-      artist: track.artist || 'Unknown Artist',
+      artist: safeArtist,
       duration: track.duration || 0,
       audio_url: track.audio_url,
       category: track.category || 'performance'
@@ -494,9 +497,11 @@ export const RadioStationPage = () => {
                   <h3 className="text-2xl font-bold text-foreground mb-2 font-playfair">
                     {currentTrack.title}
                   </h3>
-                  <p className="text-lg text-muted-foreground mb-1 font-roboto">
-                    {currentTrack.artist}
-                  </p>
+                  {currentTrack.artist && (
+                    <p className="text-lg text-muted-foreground mb-1 font-roboto">
+                      {currentTrack.artist}
+                    </p>
+                  )}
                   <Badge className="mt-2 bg-brand-100 text-brand-800">
                     <Music className="h-4 w-4 mr-1" />
                     <span className="capitalize">{currentTrack.category.replace('_', ' ')}</span>

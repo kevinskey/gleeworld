@@ -47,7 +47,9 @@ export const RadioModule = () => {
               <p className="text-sm font-medium text-muted-foreground">NOW PLAYING</p>
               <div>
                 <p className="font-medium">{currentTrack.title}</p>
-                <p className="text-sm text-muted-foreground">{currentTrack.artist}</p>
+                {currentTrack.artist && (
+                  <p className="text-sm text-muted-foreground">{currentTrack.artist}</p>
+                )}
               </div>
             </div>
           )}

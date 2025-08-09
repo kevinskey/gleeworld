@@ -103,7 +103,9 @@ export const HeaderRadioControls = () => {
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">NOW PLAYING</p>
               <p className="font-medium text-sm">{currentTrack.title}</p>
-              <p className="text-sm text-muted-foreground">{currentTrack.artist}</p>
+              {currentTrack.artist && (
+                <p className="text-sm text-muted-foreground">{currentTrack.artist}</p>
+              )}
             </div>
           )}
 

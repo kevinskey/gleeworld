@@ -54,6 +54,13 @@ export const useRadioPlayer = () => {
     streamerName: undefined,
   });
 
+  // Helper to sanitize unknown artists
+  const sanitizeArtist = (name?: string | null): string => {
+    const a = (name || '').trim();
+    if (!a) return '';
+    return /^\[?\s*unknown(?:\s+artist)?\s*\]?$/i.test(a) || /^n\/a$/i.test(a) ? '' : a;
+  };
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
@@ -162,7 +169,7 @@ export const useRadioPlayer = () => {
             streamerName: data.streamer_name || undefined,
             currentTrack: data.current_song_title ? {
               title: data.current_song_title,
-              artist: data.current_song_artist || 'Unknown Artist',
+              artist: sanitizeArtist(data.current_song_artist),
               album: data.current_song_album || undefined,
               art: data.current_song_art || undefined,
             } : null,
@@ -199,12 +206,12 @@ export const useRadioPlayer = () => {
               isLive: data.is_live || false,
               isOnline: data.is_online || false,
               streamerName: data.streamer_name || undefined,
-              currentTrack: data.current_song_title ? {
-                title: data.current_song_title,
-                artist: data.current_song_artist || 'Unknown Artist',
-                album: data.current_song_album || undefined,
-                art: data.current_song_art || undefined,
-              } : null,
+                currentTrack: data.current_song_title ? {
+                  title: data.current_song_title,
+                  artist: sanitizeArtist(data.current_song_artist),
+                  album: data.current_song_album || undefined,
+                  art: data.current_song_art || undefined,
+                } : null,
             }));
           }
         }
