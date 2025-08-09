@@ -278,6 +278,7 @@ const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
               </div>
               <Switch
                 id="director"
+                className="z-50 pointer-events-auto"
                 checked={form.is_super_admin || form.role === 'director' || form.role === 'super-admin'}
                 onCheckedChange={(val) => setForm({
                   ...form,
@@ -293,7 +294,7 @@ const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
               <Label htmlFor="admin">Admin</Label>
               <div className="text-xs text-muted-foreground">Manage most areas</div>
             </div>
-            <Switch id="admin" checked={form.is_admin} onCheckedChange={(val) => setForm({ ...form, is_admin: val })} />
+            <Switch id="admin" className="z-50 pointer-events-auto" checked={form.is_admin} onCheckedChange={(val) => setForm({ ...form, is_admin: val })} />
           </div>
 
           <div className="flex items-center justify-between">
@@ -301,7 +302,7 @@ const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
               <Label htmlFor="exec">Executive Board Member</Label>
               <div className="text-xs text-muted-foreground">Show tools for Exec positions</div>
             </div>
-            <Switch id="exec" checked={form.is_exec_board} onCheckedChange={(val) => setForm({ ...form, is_exec_board: val })} />
+            <Switch id="exec" className="z-50 pointer-events-auto" checked={form.is_exec_board} onCheckedChange={(val) => setForm({ ...form, is_exec_board: val })} />
           </div>
 
           {form.is_exec_board && (
