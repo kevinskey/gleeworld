@@ -56,6 +56,7 @@ export const SheetMusicViewDialog = ({
   const [showSmartTools, setShowSmartTools] = useState(false);
   const [setlistInfo, setSetlistInfo] = useState<any>(null);
   const [licenseInfo, setLicenseInfo] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'marked' | 'personal' | 'rehearsals'>('overview');
   
   if (!item) return null;
 
@@ -93,116 +94,119 @@ export const SheetMusicViewDialog = ({
 
         <div className="flex gap-4 h-[85vh] overflow-hidden">
           <div className={`${showSmartTools ? 'flex-1' : 'w-full'} overflow-y-auto`}>
-            <Tabs defaultValue="overview" className="w-full">
-              {/* Mobile-optimized tabs with better touch targets */}
-              <TabsList className="grid w-full grid-cols-5 h-12 md:h-10 sticky top-0 z-10 bg-background border-b">
-                <TabsTrigger value="overview" className="text-xs md:text-sm py-2 px-1">Overview</TabsTrigger>
-                <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-1">Notes</TabsTrigger>
-                <TabsTrigger value="marked" className="text-xs md:text-sm py-2 px-1">Marked</TabsTrigger>
-                <TabsTrigger value="personal" className="text-xs md:text-sm py-2 px-1">My Notes</TabsTrigger>
-                <TabsTrigger value="rehearsals" className="text-xs md:text-sm py-2 px-1">Practice</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="overview" className="mt-4">
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                  <div className="xl:col-span-2">
-                    {item.pdf_url ? (
-                      <PDFViewerWithAnnotations 
-                        pdfUrl={item.pdf_url} 
-                        musicId={item.id}
-                        musicTitle={item.title}
-                        startInAnnotationMode
-                        className="w-full"
-                      />
-                    ) : (
-                      <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
-                        <div className="w-full h-full flex items-center justify-center">
-                          <FileText className="h-24 w-24 text-muted-foreground" />
-                          <p className="text-muted-foreground mt-2">No PDF available</p>
-                        </div>
-                      </div>
-                    )}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              {/* Left: PDF stays fixed */}
+              <div className="xl:col-span-2">
+                {item.pdf_url ? (
+                  <PDFViewerWithAnnotations 
+                    pdfUrl={item.pdf_url} 
+                    musicId={item.id}
+                    musicTitle={item.title}
+                    startInAnnotationMode
+                    className="w-full"
+                  />
+                ) : (
+                  <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
+                    <div className="w-full h-full flex items-center justify-center">
+                      <FileText className="h-24 w-24 text-muted-foreground" />
+                      <p className="text-muted-foreground mt-2">No PDF available</p>
+                    </div>
                   </div>
+                )}
+              </div>
 
-                  <div className="xl:col-span-1 space-y-6">
+              {/* Right: Tab content panel */}
+              <div className="xl:col-span-1 space-y-4">
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full sticky top-0 z-10 bg-background">
+                  <TabsList className="grid w-full grid-cols-5 h-12 md:h-10">
+                    <TabsTrigger value="overview" className="text-xs md:text-sm py-2 px-1">Overview</TabsTrigger>
+                    <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-1">Notes</TabsTrigger>
+                    <TabsTrigger value="marked" className="text-xs md:text-sm py-2 px-1">Marked</TabsTrigger>
+                    <TabsTrigger value="personal" className="text-xs md:text-sm py-2 px-1">My Notes</TabsTrigger>
+                    <TabsTrigger value="rehearsals" className="text-xs md:text-sm py-2 px-1">Practice</TabsTrigger>
+                  </TabsList>
+                </Tabs>
 
-                    {/* Performance Integration Links */}
-                    {isAdmin && (
-                      <div className="p-3 bg-muted/50 rounded-lg space-y-2">
-                        <h4 className="font-medium text-sm">Performance Tools</h4>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <a href="/performance?tab=setlists" target="_blank">
-                              <List className="h-4 w-4 mr-1" />
-                              Add to Setlist
-                            </a>
-                          </Button>
-                          <Button variant="outline" size="sm" asChild>
-                            <a href="/performance?tab=licensing" target="_blank">
-                              <FileCheck className="h-4 w-4 mr-1" />
-                              Manage License
-                            </a>
-                          </Button>
+                <div className="mt-2 space-y-4">
+                  {activeTab === 'overview' && (
+                    <>
+                      {isAdmin && (
+                        <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+                          <h4 className="font-medium text-sm">Performance Tools</h4>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" asChild>
+                              <a href="/performance?tab=setlists" target="_blank">
+                                <List className="h-4 w-4 mr-1" />
+                                Add to Setlist
+                              </a>
+                            </Button>
+                            <Button variant="outline" size="sm" asChild>
+                              <a href="/performance?tab=licensing" target="_blank">
+                                <FileCheck className="h-4 w-4 mr-1" />
+                                Manage License
+                              </a>
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {item.audio_preview_url && (
-                      <div className="space-y-2">
-                        <h4 className="font-medium">Audio Preview</h4>
-                        <audio controls className="w-full">
-                          <source src={item.audio_preview_url} type="audio/mpeg" />
-                          Your browser does not support the audio element.
-                        </audio>
-                      </div>
-                    )}
-
-                    {item.voice_parts && item.voice_parts.length > 0 && (
-                      <div className="space-y-3">
-                        <h3 className="text-lg font-semibold">Voice Parts</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {item.voice_parts.map((part, index) => (
-                            <Badge key={index} variant="outline">{part}</Badge>
-                          ))}
+                      {item.audio_preview_url && (
+                        <div className="space-y-2">
+                          <h4 className="font-medium">Audio Preview</h4>
+                          <audio controls className="w-full">
+                            <source src={item.audio_preview_url} type="audio/mpeg" />
+                            Your browser does not support the audio element.
+                          </audio>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {item.tags && item.tags.length > 0 && (
-                      <div className="space-y-3">
-                        <h3 className="text-lg font-semibold">Tags</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {item.tags.map((tag, index) => (
-                            <Badge key={index} variant="secondary">{tag}</Badge>
-                          ))}
+                      {item.voice_parts && item.voice_parts.length > 0 && (
+                        <div className="space-y-3">
+                          <h3 className="text-lg font-semibold">Voice Parts</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {item.voice_parts.map((part, index) => (
+                              <Badge key={index} variant="outline">{part}</Badge>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+
+                      {item.tags && item.tags.length > 0 && (
+                        <div className="space-y-3">
+                          <h3 className="text-lg font-semibold">Tags</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {item.tags.map((tag, index) => (
+                              <Badge key={index} variant="secondary">{tag}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {activeTab === 'notes' && (
+                    <SheetMusicNotes musicId={item.id} />
+                  )}
+
+                  {activeTab === 'marked' && (
+                    <MarkedScores 
+                      musicId={item.id} 
+                      musicTitle={item.title}
+                      originalPdfUrl={item.pdf_url}
+                      voiceParts={item.voice_parts || []} 
+                    />
+                  )}
+
+                  {activeTab === 'personal' && (
+                    <PersonalNotes musicId={item.id} />
+                  )}
+
+                  {activeTab === 'rehearsals' && (
+                    <RehearsalLinks musicId={item.id} isAdmin={isAdmin} />
+                  )}
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="notes" className="mt-4">
-                <SheetMusicNotes musicId={item.id} />
-              </TabsContent>
-              
-              <TabsContent value="marked" className="mt-4">
-                <MarkedScores 
-                  musicId={item.id} 
-                  musicTitle={item.title}
-                  originalPdfUrl={item.pdf_url}
-                  voiceParts={item.voice_parts || []} 
-                />
-              </TabsContent>
-              
-              <TabsContent value="personal" className="mt-4">
-                <PersonalNotes musicId={item.id} />
-              </TabsContent>
-              
-              <TabsContent value="rehearsals" className="mt-4">
-                <RehearsalLinks musicId={item.id} isAdmin={isAdmin} />
-              </TabsContent>
-            </Tabs>
+              </div>
+            </div>
           </div>
 
           {showSmartTools && (
