@@ -13205,6 +13205,10 @@ export type Database = {
           created_at: string
         }[]
       }
+      get_audition_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_available_time_slots: {
         Args: { p_service_id: string; p_date: string }
         Returns: {
