@@ -23,10 +23,10 @@ export const HeroAuditionStats: React.FC<{ className?: string }>
         setLoading(true);
         setError(null);
         // Total auditioners = current applications count
-        const totalRes = await supabase
-          .from('audition_applications')
-          .select('*', { count: 'exact', head: true });
-        setTotal(totalRes.count ?? 0);
+        // Total auditioners = number of applications received (secure RPC)
+        const { data: appCount, error: countErr } = await supabase.rpc('get_audition_application_count');
+        if (countErr) throw countErr;
+        setTotal(appCount ?? 0);
 
         // Voice part preference breakdown
         const { data: voices, error: vErr } = await supabase
