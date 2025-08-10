@@ -8606,6 +8606,39 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_sight_reading_exercises: {
+        Row: {
+          created_at: string
+          id: string
+          musicxml: string
+          params: Json
+          pdf_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          musicxml: string
+          params: Json
+          pdf_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          musicxml?: string
+          params?: Json
+          pdf_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_site_settings: {
         Row: {
           description: string | null
