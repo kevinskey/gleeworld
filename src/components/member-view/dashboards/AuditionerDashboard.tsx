@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Mic, FileText, ArrowRight } from "lucide-react";
 import { PDFViewer } from "@/components/PDFViewer";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 interface AuditionerDashboardProps {
   user: {
@@ -216,7 +217,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
                     </p>
                     {application.audition_time_slot && (
                       <p className="text-sm">
-                        <span className="font-medium">Audition time:</span> {new Date(application.audition_time_slot).toLocaleString()}
+                        <span className="font-medium">Audition time:</span> {format(new Date(application.audition_time_slot), 'h:mm a, MMM d, yyyy')}
                       </p>
                     )}
                   </div>

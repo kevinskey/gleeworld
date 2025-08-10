@@ -157,7 +157,7 @@ function AuditionFormContent() {
                     <h3 style="margin: 0 0 10px 0; color: #7c3aed; font-size: 16px;">📅 Your Audition Details:</h3>
                     <p style="margin: 5px 0; color: #374151;"><strong>Date:</strong> ${formattedDate}</p>
                     <p style="margin: 5px 0; color: #374151;"><strong>Time:</strong> ${formattedTime}</p>
-                    <p style="margin: 5px 0; color: #374151;"><strong>Location:</strong> Spelman College Music Department</p>
+                    <p style="margin: 5px 0; color: #374151;"><strong>Location:</strong> Rockefeller Fine Arts Building, Room 109</p>
                   </div>
                   
                   <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
