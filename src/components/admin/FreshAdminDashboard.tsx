@@ -18,7 +18,8 @@ import {
   Package,
   ShoppingBag,
   Radio,
-  ArrowUpDown
+  ArrowUpDown,
+  Edit3
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
@@ -27,6 +28,7 @@ import { BucketsOfLoveWidget } from '@/components/shared/BucketsOfLoveWidget';
 
 import { PluginManagementDashboard } from '@/components/admin/PluginManagementDashboard';
 import { SystemModule } from '@/components/admin/SystemModule';
+import { GleeWritingWidget } from '@/components/writing/GleeWritingWidget';
 
 const adminModules = [
   { id: 'plugin-management', name: 'Plugin Management', icon: Settings, description: 'Control modular plugins across the platform' },
@@ -40,6 +42,7 @@ const adminModules = [
   { id: 'community-hub', name: 'Community Hub', icon: MessageSquare, description: 'Community features hub', route: '/dashboard' },
   { id: 'event-planner', name: 'Event Planner', icon: Calendar, description: 'Plan and manage events', route: '/event-planner' },
   { id: 'tour-planner', name: 'Tour Planner', icon: Calendar, description: 'Plan tours and routes', route: '/tour-planner' },
+  { id: 'glee-writing', name: 'Glee Writing', icon: Edit3, description: 'Rich editor for docs & lyrics' },
   { id: 'shop', name: 'Shop', icon: ShoppingBag, description: 'Public storefront', route: '/shop' },
   { id: 'inventory-products', name: 'Inventory & Products', icon: Package, description: 'Admin product management', route: '/admin/products' },
   { id: 'scholarships', name: 'Scholarships', icon: GraduationCap, description: 'Manage scholarships', route: '/admin/scholarships' },
@@ -171,6 +174,8 @@ export const FreshAdminDashboard = () => {
                 <PluginManagementDashboard />
               ) : selectedModule === 'system' ? (
                 <SystemModule />
+              ) : selectedModule === 'glee-writing' ? (
+                <GleeWritingWidget />
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4">
