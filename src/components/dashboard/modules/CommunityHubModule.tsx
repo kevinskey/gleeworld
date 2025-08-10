@@ -14,6 +14,14 @@ export const CommunityHubModule = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
+  const handleTabToggle = (tab: string) => {
+    if (isMobile) {
+      setActiveTab((prev) => (prev === tab ? '' : tab));
+    } else {
+      setActiveTab(tab);
+    }
+  };
+
   // Buckets of Love tab removed from Community Hub per request
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/10">
@@ -30,7 +38,7 @@ export const CommunityHubModule = () => {
             <Button
               size="sm"
               variant={activeTab === 'announcements' ? 'secondary' : 'outline'}
-              onClick={() => setActiveTab('announcements')}
+              onClick={() => handleTabToggle('announcements')}
               className="hover-scale"
             >
               Announcements
@@ -38,7 +46,7 @@ export const CommunityHubModule = () => {
             <Button
               size="sm"
               variant={activeTab === 'wellness' ? 'secondary' : 'outline'}
-              onClick={() => setActiveTab('wellness')}
+              onClick={() => handleTabToggle('wellness')}
               className="hover-scale"
             >
               Wellness
@@ -46,7 +54,7 @@ export const CommunityHubModule = () => {
             <Button
               size="sm"
               variant={activeTab === 'buckets' ? 'secondary' : 'outline'}
-              onClick={() => setActiveTab('buckets')}
+              onClick={() => handleTabToggle('buckets')}
               className="hover-scale"
             >
               <Heart className="h-4 w-4 mr-1" />
@@ -56,7 +64,7 @@ export const CommunityHubModule = () => {
             <Button
               size="sm"
               variant={activeTab === 'notifications' ? 'secondary' : 'outline'}
-              onClick={() => setActiveTab('notifications')}
+              onClick={() => handleTabToggle('notifications')}
               className="hover-scale"
             >
               <Bell className="h-4 w-4 mr-1" /> Notifications
