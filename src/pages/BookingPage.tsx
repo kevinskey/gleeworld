@@ -27,31 +27,24 @@ export default function BookingPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categories, setCategories] = useState<ServiceCategory[]>([
     {
-      id: '1',
-      name: 'Voice Lessons',
-      serviceCount: 4,
-      services: ['Individual Voice Coaching', 'Group Voice Training', 'Performance Coaching', 'Breathing Techniques'],
-      expanded: false
-    },
-    {
-      id: '2',
-      name: 'Rehearsals',
+      id: 'office-hours',
+      name: 'Office Hours',
       serviceCount: 3,
-      services: ['Section Rehearsal', 'Full Ensemble', 'Sight-Reading Practice'],
+      services: ['Faculty Office Hours', 'Director Office Hours', 'Advising / Q&A'],
       expanded: false
     },
     {
-      id: '3',
-      name: 'Music Theory',
-      serviceCount: 2,
-      services: ['Music Theory Fundamentals', 'Advanced Harmony'],
-      expanded: false
-    },
-    {
-      id: '4',
-      name: 'Performance Prep',
+      id: 'lessons',
+      name: 'Lessons',
       serviceCount: 3,
-      services: ['Audition Preparation', 'Solo Performance', 'Stage Presence'],
+      services: ['Individual Voice Lesson', 'Group Lesson', 'Sectional Coaching'],
+      expanded: false
+    },
+    {
+      id: 'auditions',
+      name: 'Auditions',
+      serviceCount: 3,
+      services: ['New Member Audition', 'Callback Audition', 'Placement Hearing'],
       expanded: false
     }
   ]);
