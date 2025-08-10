@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CommunityHubModule } from './modules/CommunityHubModule';
 import DashboardHeroCarousel from '@/components/hero/DashboardHeroCarousel';
 import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
+import { ChevronDown, ChevronUp, Users } from 'lucide-react';
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string>('music-studio');
@@ -46,6 +47,21 @@ export const UnifiedDashboard = () => {
 
       {/* Row 2: Community Hub full width (collapsible when a module is active) */}
       <div className="px-6 pb-2">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Users className="w-4 h-4" /> Community Hub
+          </div>
+          <button
+            type="button"
+            aria-controls="community-hub"
+            aria-expanded={!activeModuleId}
+            onClick={() => setActiveModuleId((prev) => (prev ? null : 'collapsed-toggle'))}
+            className="inline-flex items-center gap-1 text-sm px-2 py-1 rounded-md border border-border hover:bg-muted/50"
+          >
+            {activeModuleId ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            {activeModuleId ? 'Expand' : 'Collapse'}
+          </button>
+        </div>
         <div
           id="community-hub"
           className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden transition-[max-height,opacity] duration-300"
