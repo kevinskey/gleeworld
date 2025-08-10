@@ -52,9 +52,4 @@ export const sendAuditionConfirmation = async () => {
   }
 };
 
-// Auto-execute the function
-sendAuditionConfirmation().then(() => {
-  console.log('🎉 Audition confirmation process completed!');
-}).catch((error) => {
-  console.error('💥 Audition confirmation failed:', error);
-});
+// Auto-execution removed to prevent unintended sends during development
