@@ -46,58 +46,85 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
     load();
   }, [user?.id]);
 
-  // Resolve audition PDF URL
+  // Resolve audition PDF URL from Sheet Music bucket
   useEffect(() => {
     let isMounted = true;
-    const candidates = [
-      "come-thou-fount.pdf",
-      "Come_Thou_Fount.pdf",
-      "Come-Thu-Fount.pdf",
-      "ComeThouFount.pdf",
-    ];
 
-    const resolveFirstAvailable = async () => {
+    const toStoragePath = (url: string) => {
       try {
-        for (const name of candidates) {
-          const { data } = supabase.storage.from('audition-docs').getPublicUrl(name);
-          const url = data?.publicUrl;
-          if (!url) continue;
-          try {
-            const res = await fetch(url, { method: 'HEAD' });
-            if (res.ok) { if (isMounted) setPdfUrl(url); break; }
-          } catch {}
+        if (url.includes('/storage/v1/object/')) {
+          const after = url.split('/storage/v1/object/')[1];
+          const parts = after.split('/');
+          const isWrapped = parts[0] === 'public' || parts[0] === 'sign';
+          const bucket = isWrapped ? parts[1] : parts[0];
+          const pathParts = isWrapped ? parts.slice(2) : parts.slice(1);
+          const path = pathParts.join('/').split('?')[0];
+          return `${bucket}/${path}`; // e.g. sheet-music/pdfs/file.pdf
         }
       } catch {}
+      return url; // Already a path or external URL
     };
 
-    resolveFirstAvailable();
+    const loadFromLibrary = async () => {
+      try {
+        // Find "Come Thou Fount" in gw_sheet_music
+        const { data, error } = await supabase
+          .from('gw_sheet_music')
+          .select('id, title, pdf_url')
+          .ilike('title', '%come%thou%fount%')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (error) console.warn('AuditionerDashboard: sheet music query warning', error);
+        if (data?.pdf_url) {
+          const normalized = toStoragePath(data.pdf_url);
+          if (isMounted) setPdfUrl(normalized);
+          return true;
+        }
+        return false;
+      } catch (e) {
+        console.error('AuditionerDashboard: sheet music query error', e);
+        return false;
+      }
+    };
+
+    const run = async () => {
+      const foundViaDb = await loadFromLibrary();
+      if (!foundViaDb) {
+        // Fallback: try common folders in sheet-music bucket
+        const candidateNames = ['come-thou-fount.pdf', 'Come_Thou_Fount.pdf', 'ComeThouFount.pdf'];
+        const folders = ['', 'pdfs', 'scores', 'auditions'];
+        try {
+          // First try exact names
+          for (const folder of folders) {
+            for (const name of candidateNames) {
+              const path = folder ? `${folder}/${name}` : name;
+              const { data } = supabase.storage.from('sheet-music').getPublicUrl(path);
+              const url = data?.publicUrl;
+              if (!url) continue;
+              try {
+                const res = await fetch(url, { method: 'HEAD' });
+                if (res.ok) { if (isMounted) setPdfUrl(`sheet-music/${path}`); return; }
+              } catch {}
+            }
+          }
+          // Then list a couple of folders to find a match
+          for (const folder of folders) {
+            const { data: list, error } = await supabase.storage.from('sheet-music').list(folder, { limit: 100 });
+            if (error || !list) continue;
+            const match = list.find((f: any) => f?.name?.toLowerCase().includes('come') && f?.name?.toLowerCase().includes('fount') && f?.name?.endsWith('.pdf'));
+            if (match) { if (isMounted) setPdfUrl(`sheet-music/${folder ? folder + '/' : ''}${match.name}`); return; }
+          }
+        } catch (e) {
+          console.warn('AuditionerDashboard: fallback search failed', e);
+        }
+      }
+    };
+
+    run();
     return () => { isMounted = false; };
   }, []);
 
-  // Fallback: list bucket to find any matching PDF if direct names fail
-  useEffect(() => {
-    if (pdfUrl || triedList) return;
-    let isMounted = true;
-    const run = async () => {
-      try {
-        const { data, error } = await supabase.storage.from('audition-docs').list('', { limit: 100 });
-        console.log('Auditions: storage list', { data, error });
-        if (error || !data) return;
-        const lower = (name: string) => name.toLowerCase();
-        const match = data.find((f: any) => f?.name && lower(f.name).includes('come') && lower(f.name).endsWith('.pdf'));
-        const anyPdf = data.find((f: any) => f?.name && lower(f.name).endsWith('.pdf'));
-        const pick = match || anyPdf;
-        if (pick) {
-          const { data: pub } = supabase.storage.from('audition-docs').getPublicUrl(pick.name);
-          if (pub?.publicUrl && isMounted) setPdfUrl(pub.publicUrl);
-        }
-      } finally {
-        if (isMounted) setTriedList(true);
-      }
-    };
-    run();
-    return () => { isMounted = false; };
-  }, [pdfUrl, triedList]);
 
   const handleStartManage = async () => {
     if (!user?.id || (user as any).id === 'guest') {
