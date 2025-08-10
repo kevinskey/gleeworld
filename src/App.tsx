@@ -118,16 +118,7 @@ import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
-// Preview triggers: optional, do not auto-run to avoid impacting page load
-if (typeof window !== 'undefined') {
-  const params = new URLSearchParams(window.location.search);
-  const enable = params.get('sendPreview') === '1' || sessionStorage.getItem('gw-enable-preview') === '1';
-  if (enable) {
-    import('./utils/sendAuditionerPreviewEmail')
-      .then(m => m.gwSendAuditionPreview(true))
-      .catch((e) => console.warn('Preview email trigger failed:', e));
-  }
-}
+// Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
   defaultOptions: {
