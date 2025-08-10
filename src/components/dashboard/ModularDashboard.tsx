@@ -50,6 +50,9 @@ const SortableItem: React.FC<{ id: string; children: React.ReactNode }> = ({ id,
 export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader = false, onExpandChange }) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  
+  // Debug logging
+  console.log('🔧 ModularDashboard Debug:', { isMobile, window: typeof window !== 'undefined' ? window.innerWidth : 'SSR' });
   const [openModules, setOpenModules] = useState<OpenModule[]>([]);
   const [availableModules, setAvailableModules] = useState<typeof UNIFIED_MODULES>([]);
   const [userPermissions, setUserPermissions] = useState<UserPermissions>({
@@ -186,6 +189,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
 
   const openModule = (moduleId: string) => {
     const nextId = expandedModuleId === moduleId ? null : moduleId;
+    console.log('🎯 Opening module:', { moduleId, nextId, isMobile });
     setExpandedModuleId(nextId);
     onExpandChange?.(nextId);
   };
@@ -216,7 +220,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 relative">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 relative overflow-visible">
       {/* Dashboard Header */}
       {!hideHeader && (
         <div className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -250,7 +254,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
       )}
 
       {/* Module Grid */}
-      <div className="w-full px-4 md:px-6 py-4">
+      <div className="w-full px-4 md:px-6 py-4 overflow-visible">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={orderedModules.map(m => m.id)} strategy={verticalListSortingStrategy}>
             <div className="grid grid-cols-1 gap-4">
@@ -258,7 +262,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                 <SortableItem key={module.id} id={module.id}>
                   <div className="w-full">
                     {expandedModuleId === module.id ? (
-                      <div className={`${isMobile ? 'sticky top-12 z-40' : ''} rounded-lg border border-border bg-background ${isMobile ? 'shadow-lg' : ''}`}>
+                      <div className={`${isMobile ? 'sticky top-12 z-50' : ''} rounded-lg border border-border bg-background ${isMobile ? 'shadow-lg' : ''}`}>
                         <div
                           className="flex items-center justify-between p-2 border-b cursor-pointer hover:bg-muted/40"
                           onClick={() => openModule(module.id)}

@@ -62,7 +62,7 @@ export const UnifiedDashboard = () => {
             <h2 id="modules-heading" className="text-2xl font-semibold tracking-tight">Modules</h2>
             <p className="text-muted-foreground">Quick access based on your permissions</p>
           </header>
-          <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm">
+          <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-visible">
             <ModularDashboard hideHeader onExpandChange={handleExpandChange} />
           </div>
         </section>
