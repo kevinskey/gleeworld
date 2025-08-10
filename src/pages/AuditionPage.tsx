@@ -107,7 +107,7 @@ function AuditionFormContent() {
         years_of_vocal_training: data.isSoloist ? 1 : 0,
         instruments_played: data.playsInstrument && data.instrumentDetails ? [data.instrumentDetails] : [],
         music_theory_background: data.readsMusic ? 'Basic' : 'None',
-        sight_reading_level: data.readsMusic ? 'beginner' : 'none',
+        sight_reading_level: data.readsMusic ? 'Beginner' : null,
         why_glee_club: data.personalityDescription,
         vocal_goals: data.additionalInfo || 'General vocal improvement',
         audition_time_slot: timeParsed.toISOString(),
