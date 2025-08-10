@@ -70,6 +70,7 @@ const scrollModePluginInstance = scrollModePlugin();
   console.log('PDFViewerWithAnnotations: URL processing result:', { signedUrl, urlLoading, urlError });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [activeTool, setActiveTool] = useState<"select" | "draw" | "erase">("select");
   const [brushSize, setBrushSize] = useState([3]);
@@ -772,7 +773,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
           {/* Annotation Mode: PDF + Overlay Canvas */}
           {annotationMode && (
-            <div className="w-full h-full overflow-auto bg-muted/10">
+            <div ref={scrollContainerRef} className="w-full h-full overflow-auto bg-muted/10">
               <div className="w-full h-full flex items-start justify-center p-2 md:p-3">
                 <div className="relative">
                   <canvas
