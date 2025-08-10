@@ -54,7 +54,7 @@ Student Conductor, Spelman College Glee Club`;
         subject,
         html,
         text,
-        from: 'Spelman Glee Club <no-reply@gleeworld.org>'
+        from: 'Spelman Glee Club <onboarding@resend.dev>'
       }
     });
 
