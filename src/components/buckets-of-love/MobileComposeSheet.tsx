@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,8 +9,7 @@ import { Heart, Send, Palette, Smile } from "lucide-react";
 import { useBucketsOfLove } from "@/hooks/useBucketsOfLove";
 import { useToast } from "@/components/ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import data from '@emoji-mart/data';
-import Picker from '@emoji-mart/react';
+const EmojiPicker = lazy(() => import('@emoji-mart/react'));
 
 interface MobileComposeSheetProps {
   trigger?: React.ReactNode;
@@ -27,6 +26,11 @@ export const MobileComposeSheet = ({ trigger, onSent }: MobileComposeSheetProps)
   
   const { sendBucketOfLove } = useBucketsOfLove();
   const { toast } = useToast();
+
+  const [emojiData, setEmojiData] = useState<any>(null);
+  useEffect(() => {
+    import('@emoji-mart/data').then((m) => setEmojiData((m as any).default || m));
+  }, []);
 
   const noteColors = [
     { value: 'pink', label: 'Pink', color: 'bg-pink-200' },
@@ -109,7 +113,13 @@ export const MobileComposeSheet = ({ trigger, onSent }: MobileComposeSheetProps)
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="p-0 w-[320px]">
-                  <Picker data={data} onEmojiSelect={(e: any) => setMessage((prev) => prev + (e?.native || ''))} />
+                  {emojiData ? (
+                    <Suspense fallback={<div className="p-3 text-sm">Loading emojis…</div>}>
+                      <EmojiPicker data={emojiData} onEmojiSelect={(e: any) => setMessage((prev) => prev + (e?.native || ''))} />
+                    </Suspense>
+                  ) : (
+                    <div className="p-3 text-sm">Loading emojis…</div>
+                  )}
                 </PopoverContent>
               </Popover>
             </div>

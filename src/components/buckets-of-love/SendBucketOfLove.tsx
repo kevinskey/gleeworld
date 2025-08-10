@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,8 +11,7 @@ import { Heart, Users, User, Send, Smile } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import data from '@emoji-mart/data';
-import Picker from '@emoji-mart/react';
+const EmojiPicker = lazy(() => import('@emoji-mart/react'));
 
 interface SendBucketOfLoveProps {
   trigger?: React.ReactNode;
@@ -39,6 +38,11 @@ const SendBucketOfLove: React.FC<SendBucketOfLoveProps> = ({ trigger }) => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [emojiData, setEmojiData] = useState<any>(null);
+  useEffect(() => {
+    // Lazy-load emoji data bundle to reduce initial payload
+    import('@emoji-mart/data').then((m) => setEmojiData((m as any).default || m));
+  }, []);
 
   const groupOptions = [
     { value: 'all_members', label: 'All Members', description: 'Send to all current members' },
@@ -274,7 +278,13 @@ const SendBucketOfLove: React.FC<SendBucketOfLoveProps> = ({ trigger }) => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="p-0 w-[320px]">
-                  <Picker data={data} onEmojiSelect={(e: any) => setMessage((prev) => prev + (e?.native || ''))} />
+                  {emojiData ? (
+                    <Suspense fallback={<div className="p-3 text-sm">Loading emojis…</div>}>
+                      <EmojiPicker data={emojiData} onEmojiSelect={(e: any) => setMessage((prev) => prev + (e?.native || ''))} />
+                    </Suspense>
+                  ) : (
+                    <div className="p-3 text-sm">Loading emojis…</div>
+                  )}
                 </PopoverContent>
               </Popover>
             </div>
