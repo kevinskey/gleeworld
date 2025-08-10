@@ -6,7 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { MemberDirectory } from '@/components/directory/MemberDirectory';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { CommunicationHub } from '@/components/communication/CommunicationHub';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
 import PostItGrid from '@/components/buckets-of-love/PostItGrid';
 export const CommunityHubModule = () => {
@@ -20,6 +22,17 @@ export const CommunityHubModule = () => {
     } else {
       setActiveTab(tab);
     }
+  };
+
+  // Mini quick sender state
+  const [miniMode, setMiniMode] = useState<'note' | 'email' | 'sms'>('note');
+  const [recipientType, setRecipientType] = useState<'me' | 'email'>('me');
+  const [recipientEmail, setRecipientEmail] = useState('');
+  const [miniMessage, setMiniMessage] = useState('');
+  const canMiniSend = miniMessage.trim().length > 0 && (recipientType === 'me' || (recipientType === 'email' && /.+@.+\..+/.test(recipientEmail)));
+  const handleMiniSend = () => {
+    console.log({ mode: miniMode, recipientType, recipientEmail, message: miniMessage });
+    setMiniMessage('');
   };
 
   // Buckets of Love tab removed from Community Hub per request
@@ -116,7 +129,67 @@ export const CommunityHubModule = () => {
         </TabsContent>
         
         <TabsContent value="notifications" className="flex-1 p-4 max-h-[50vh] overflow-auto">
-          <CommunicationHub />
+          <div className="max-w-xl mx-auto space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="mini-mode">Mode</Label>
+                <Select value={miniMode} onValueChange={(v) => setMiniMode(v as 'note' | 'email' | 'sms')}>
+                  <SelectTrigger id="mini-mode" className="h-9">
+                    <SelectValue placeholder="Choose mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="note">Note (in-app)</SelectItem>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="sms">SMS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="mini-recipient">Recipient</Label>
+                <Select value={recipientType} onValueChange={(v) => setRecipientType(v as 'me' | 'email')}>
+                  <SelectTrigger id="mini-recipient" className="h-9">
+                    <SelectValue placeholder="Select recipient" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="me">Me</SelectItem>
+                    <SelectItem value="email">By Email</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {recipientType === 'email' && (
+              <div className="space-y-1.5">
+                <Label htmlFor="mini-email">Recipient Email</Label>
+                <Input
+                  id="mini-email"
+                  type="email"
+                  value={recipientEmail}
+                  onChange={(e) => setRecipientEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="h-9"
+                />
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label htmlFor="mini-message">Message</Label>
+              <Input
+                id="mini-message"
+                value={miniMessage}
+                onChange={(e) => setMiniMessage(e.target.value)}
+                placeholder="Type a quick message..."
+                className="h-9"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={handleMiniSend} disabled={!canMiniSend} className="hover-scale">
+                <Send className="h-4 w-4 mr-1" /> Send
+              </Button>
+              <p className="text-xs text-muted-foreground">Quick send only. For advanced options, use Communications.</p>
+            </div>
+          </div>
         </TabsContent>
         
         <TabsContent value="directory" className="flex-1 max-h-[50vh] overflow-auto">
