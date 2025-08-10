@@ -8,7 +8,7 @@ import { MemberDirectory } from '@/components/directory/MemberDirectory';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { NotificationsSection } from '@/components/unified/NotificationsSection';
 import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
-
+import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
 export const CommunityHubModule = () => {
   const [activeTab, setActiveTab] = useState('announcements');
   const { user } = useAuth();
@@ -32,6 +32,9 @@ export const CommunityHubModule = () => {
             </Button>
             <Button size="sm" variant="outline" onClick={() => setActiveTab('announcements')} className="hover-scale">
               Announcements
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setActiveTab('buckets')} className="hover-scale">
+              <Heart className="h-4 w-4 mr-1" /> Buckets
             </Button>
             <Button size="sm" variant="outline" onClick={() => setActiveTab('notifications')} className="hover-scale">
               <Bell className="h-4 w-4 mr-1" /> Notifications
@@ -70,6 +73,14 @@ export const CommunityHubModule = () => {
             <p className="font-medium text-blue-700 mb-2">No new announcements</p>
             <p className="text-sm">Stay tuned for important updates</p>
           </div>
+        </TabsContent>
+        
+        <TabsContent value="buckets" className="flex-1 p-4 bg-gradient-to-b from-pink-50/50 to-background">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm text-muted-foreground">Share encouragement with the community</p>
+            <SendBucketOfLove trigger={<Button size="sm" variant="default" className="hover-scale"><Send className="h-4 w-4 mr-1" /> Add Bucket</Button>} />
+          </div>
+          <BucketsOfLoveModule user={user} isFullPage />
         </TabsContent>
         
         <TabsContent value="notifications" className="flex-1 p-4">
