@@ -292,7 +292,7 @@ export const GleeWorldLanding = () => {
               loading="lazy"
             />
             {/* Soft brand gradient overlay for readability */}
-            <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
+            <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
             <div className="relative z-10 space-y-6">
               <div className="space-y-4 text-center">
                 <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-white">
