@@ -417,6 +417,7 @@ export type Database = {
           application_date: string
           audition_time_slot: string | null
           availability_conflicts: string | null
+          cancel_token: string | null
           created_at: string
           date_of_birth: string | null
           email: string
@@ -448,6 +449,7 @@ export type Database = {
           application_date?: string
           audition_time_slot?: string | null
           availability_conflicts?: string | null
+          cancel_token?: string | null
           created_at?: string
           date_of_birth?: string | null
           email: string
@@ -479,6 +481,7 @@ export type Database = {
           application_date?: string
           audition_time_slot?: string | null
           availability_conflicts?: string | null
+          cancel_token?: string | null
           created_at?: string
           date_of_birth?: string | null
           email?: string
