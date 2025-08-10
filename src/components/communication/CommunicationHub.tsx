@@ -9,7 +9,7 @@ import { useCommunication } from '@/hooks/useCommunication';
 import { RecipientGroup } from '@/types/communication';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export const CommunicationHub = () => {
@@ -136,87 +136,88 @@ export const CommunicationHub = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="notifications" className="w-full">
-          <div className="flex items-center justify-between mb-4">
-            <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="wellness">Wellness</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
-              <TabsTrigger value="announcements">Announcements</TabsTrigger>
-            </TabsList>
-          </div>
+        <Accordion type="single" collapsible defaultValue="notifications" className="w-full">
+          <AccordionItem value="wellness">
+            <AccordionTrigger>Wellness</AccordionTrigger>
+            <AccordionContent>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Wellness Suite</CardTitle>
+                  <CardDescription>Voice care, wellness tracking, and resources</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={() => navigate('/wellness')}>Open Wellness Suite</Button>
+                </CardContent>
+              </Card>
+            </AccordionContent>
+          </AccordionItem>
 
-          <TabsContent value="wellness" className="mt-0">
-            <Card>
-              <CardHeader>
-                <CardTitle>Wellness Suite</CardTitle>
-                <CardDescription>Voice care, wellness tracking, and resources</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={() => navigate('/wellness')}>Open Wellness Suite</Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          <AccordionItem value="notifications">
+            <AccordionTrigger>Notifications</AccordionTrigger>
+            <AccordionContent>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column - Message Composition */}
+                <div className="lg:col-span-2 space-y-6">
+                  <MessageComposer
+                    title={title}
+                    content={content}
+                    onTitleChange={setTitle}
+                    onContentChange={setContent}
+                    templates={templates}
+                    onTemplateSelect={handleTemplateSelect}
+                  />
+                  <RecipientSelector
+                    selectedGroups={selectedGroups}
+                    onGroupToggle={handleGroupToggle}
+                    recipientCount={recipientCount}
+                  />
+                </div>
 
-          <TabsContent value="notifications" className="mt-0">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - Message Composition */}
-              <div className="lg:col-span-2 space-y-6">
-                <MessageComposer
-                  title={title}
-                  content={content}
-                  onTitleChange={setTitle}
-                  onContentChange={setContent}
-                  templates={templates}
-                  onTemplateSelect={handleTemplateSelect}
-                />
-                <RecipientSelector
-                  selectedGroups={selectedGroups}
-                  onGroupToggle={handleGroupToggle}
-                  recipientCount={recipientCount}
-                />
+                {/* Right Column - Delivery & Controls */}
+                <div className="space-y-6">
+                  <ChannelSelector
+                    selectedChannels={selectedChannels}
+                    onChannelToggle={handleChannelToggle}
+                    recipientCount={recipientCount}
+                  />
+                  <SendControls
+                    title={title}
+                    content={content}
+                    selectedGroups={selectedGroups}
+                    selectedChannels={selectedChannels}
+                    recipientCount={recipientCount}
+                    isLoading={isLoading}
+                    scheduledFor={scheduledFor}
+                    onScheduledForChange={setScheduledFor}
+                    onSend={handleSend}
+                    onSaveDraft={handleSaveDraft}
+                  />
+                </div>
               </div>
 
-              {/* Right Column - Delivery & Controls */}
-              <div className="space-y-6">
-                <ChannelSelector
-                  selectedChannels={selectedChannels}
-                  onChannelToggle={handleChannelToggle}
-                  recipientCount={recipientCount}
-                />
-                <SendControls
-                  title={title}
-                  content={content}
-                  selectedGroups={selectedGroups}
-                  selectedChannels={selectedChannels}
-                  recipientCount={recipientCount}
-                  isLoading={isLoading}
-                  scheduledFor={scheduledFor}
-                  onScheduledForChange={setScheduledFor}
-                  onSend={handleSend}
-                  onSaveDraft={handleSaveDraft}
-                />
+              {/* Single-user quick sender */}
+              <div className="mt-10">
+                <NotificationSenderPanel />
               </div>
-            </div>
+            </AccordionContent>
+          </AccordionItem>
 
-            {/* Single-user quick sender */}
-            <div className="mt-10">
-              <NotificationSenderPanel />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="announcements" className="mt-0">
-            <Card>
-              <CardHeader>
-                <CardTitle>Announcements</CardTitle>
-                <CardDescription>Create and view club announcements</CardDescription>
-              </CardHeader>
-              <CardContent className="flex gap-2">
-                <Button onClick={() => navigate('/announcements')}>View Announcements</Button>
-                <Button variant="outline" onClick={() => navigate('/admin/announcements/new')}>Create Announcement</Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          <AccordionItem value="announcements">
+            <AccordionTrigger>Announcements</AccordionTrigger>
+            <AccordionContent>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Announcements</CardTitle>
+                  <CardDescription>Create and view club announcements</CardDescription>
+                </CardHeader>
+                <CardContent className="flex gap-2">
+                  <Button onClick={() => navigate('/announcements')}>View Announcements</Button>
+                  <Button variant="outline" onClick={() => navigate('/admin/announcements/new')}>Create Announcement</Button>
+                </CardContent>
+              </Card>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </div>
   );
