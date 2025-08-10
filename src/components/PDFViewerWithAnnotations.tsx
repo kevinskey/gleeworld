@@ -87,6 +87,21 @@ const scrollModePluginInstance = scrollModePlugin();
 const timerRef = useRef<number | null>(null);
 const [engine, setEngine] = useState<'google' | 'react'>('google');
 
+  // Page navigation helpers (annotation mode)
+  const goToPage = useCallback((page: number) => {
+    const total = totalPages || (pdf?.numPages ?? 0) || 1;
+    const clamped = Math.max(1, Math.min(page, total));
+    if (clamped !== currentPage) setCurrentPage(clamped);
+  }, [currentPage, totalPages, pdf]);
+
+  const nextPage = useCallback(() => {
+    goToPage(currentPage + 1);
+  }, [currentPage, goToPage]);
+
+  const prevPage = useCallback(() => {
+    goToPage(currentPage - 1);
+  }, [currentPage, goToPage]);
+
   useEffect(() => {
     if (startInAnnotationMode && !annotationMode) {
       setAnnotationMode(true);
@@ -772,6 +787,22 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                     onTouchCancel={() => setIsDrawing(false)}
                   />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {annotationMode && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30">
+              <div className="flex items-center gap-2 rounded-md border bg-background/80 backdrop-blur px-2 py-1">
+                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={prevPage} disabled={isLoading || currentPage <= 1}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs sm:text-sm tabular-nums">
+                  {currentPage} / {totalPages || (pdf?.numPages ?? 0) || 1}
+                </span>
+                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={nextPage} disabled={isLoading || currentPage >= (totalPages || (pdf?.numPages ?? 0) || 1)}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           )}
