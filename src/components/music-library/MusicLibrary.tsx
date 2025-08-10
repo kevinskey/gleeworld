@@ -158,7 +158,7 @@ export const MusicLibrary = ({ embedded = false }: { embedded?: boolean }) => {
   // Desktop layout - keep existing design
   return (
     <>
-      <div className={`container mx-auto px-4 ${embedded ? 'pt-2 pb-2' : 'pt-16 md:pt-20 pb-4'}`}>
+      <div className={`container mx-auto px-4 ${embedded ? 'pt-0 pb-0' : 'pt-16 md:pt-20 pb-4'}`}>
         <div className="mb-2">
           <PageHeader
             title="Music Library"
@@ -247,7 +247,7 @@ export const MusicLibrary = ({ embedded = false }: { embedded?: boolean }) => {
           </div>
 
           {/* Right column - PDF viewer */}
-          <div className={`${selectedPdf ? 'col-span-8' : 'col-span-7'} flex flex-col h-full overflow-hidden pl-1 pt-4 md:pt-5`}>
+          <div className={`${selectedPdf ? 'col-span-8' : 'col-span-7'} flex flex-col h-full overflow-hidden pl-1`}>
             {selectedPdf ? (
               <div className="flex-1 overflow-hidden">
                 <PDFViewerWithAnnotations 
