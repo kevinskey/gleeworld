@@ -117,11 +117,17 @@ import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
-// Optional preview trigger via query param
+// Preview triggers: URL param or one-time assistant-triggered send
 if (typeof window !== 'undefined') {
   const params = new URLSearchParams(window.location.search);
   if (params.get('sendPreview') === '1') {
     import('./utils/sendAuditionerPreviewEmail').then(m => m.gwSendAuditionPreview(true));
+  } else {
+    const KEY = 'gw-assistant-preview-sent-once';
+    if (!sessionStorage.getItem(KEY)) {
+      sessionStorage.setItem(KEY, '1');
+      import('./utils/sendAuditionerPreviewEmail').then(m => m.gwSendAuditionPreview(true));
+    }
   }
 }
 
