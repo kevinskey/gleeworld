@@ -49,7 +49,9 @@ export const CommunityHubModule = () => {
               onClick={() => setActiveTab('buckets')}
               className="hover-scale"
             >
-              <Heart className="h-4 w-4 mr-1" /> Buckets
+              <Heart className="h-4 w-4 mr-1" />
+              <span className="md:hidden">Bucket</span>
+              <span className="hidden md:inline">Bucket of Love</span>
             </Button>
             <Button
               size="sm"
