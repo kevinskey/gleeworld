@@ -16,6 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
 import { HeaderRadioControls } from "@/components/radio/HeaderRadioControls";
+import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
 
 
 interface UniversalHeaderProps {
@@ -99,6 +100,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             {/* Radio Controls */}
             <HeaderRadioControls />
+            <MusicalToolkit />
             {user && (
               <>
 

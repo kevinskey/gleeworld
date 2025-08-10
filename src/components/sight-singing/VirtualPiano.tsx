@@ -5,6 +5,7 @@ interface VirtualPianoProps {
   isEnabled: boolean;
   keySignature?: string;
   voiceRange?: 'soprano' | 'alto';
+  customRange?: string[]; // optional explicit note range, e.g., ['C3', ... 'G5']
   className?: string;
 }
 
@@ -17,6 +18,7 @@ interface PianoKey {
 
 // Enhanced note frequencies for better audio quality - Extended range
 const NOTE_FREQUENCIES = {
+  'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81,
   'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00,
   'A#3': 233.08, 'B3': 246.94,
   'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63,
@@ -36,6 +38,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   isEnabled,
   keySignature = 'C',
   voiceRange = 'soprano',
+  customRange,
   className = ''
 }) => {
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -163,7 +166,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     );
   }
 
-  const keyRange = getKeyRange();
+  const keyRange = (customRange && customRange.length ? customRange : getKeyRange());
   const whiteKeys = keyRange.filter(note => !isBlackKey(note));
   const blackKeys = keyRange.filter(note => isBlackKey(note));
 
