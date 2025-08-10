@@ -44,7 +44,8 @@ const NoteCard: React.FC<{
   isPlaceholder?: boolean;
   isOwner?: boolean;
   onDelete?: () => void;
-}> = ({ message, sender, isPlaceholder, isOwner, onDelete }) => {
+  noteColor?: string;
+}> = ({ message, sender, isPlaceholder, isOwner, onDelete, noteColor }) => {
   const card = (
     <div
       className={cn(
@@ -149,6 +150,7 @@ export const PostItGrid: React.FC = () => {
                 key={b.id}
                 message={b.message}
                 sender={b.is_anonymous ? 'Anonymous' : b.sender_name || null}
+                noteColor={b.note_color}
                 isOwner={b.user_id === user?.id}
                 onDelete={async () => {
                   const ok = window.confirm('Delete this note?');
