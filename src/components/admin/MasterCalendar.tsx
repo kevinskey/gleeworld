@@ -39,6 +39,19 @@ export const MasterCalendar = () => {
     rsvp_required: false,
     calendar_id: ''
   });
+  const [isEditing, setIsEditing] = useState(false);
+  const [editEvent, setEditEvent] = useState({
+    title: '',
+    description: '',
+    start_date: new Date().toISOString().split('T')[0],
+    end_date: new Date().toISOString().split('T')[0],
+    start_time: '09:00',
+    end_time: '10:00',
+    location: '',
+    event_type: 'rehearsal',
+    is_public: true,
+    registration_required: false,
+  });
   
   const { events, loading, fetchEvents, getEventsByDateRange } = useGleeWorldEvents();
 
@@ -61,6 +74,54 @@ export const MasterCalendar = () => {
     setDefaultCalendar();
   }, []);
 
+  // Editing helpers
+  const startEditSelectedEvent = () => {
+    if (!selectedEvent) return;
+    const s = new Date(selectedEvent.start_date);
+    const e = new Date(selectedEvent.end_date || selectedEvent.start_date);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    setEditEvent({
+      title: selectedEvent.title || '',
+      description: selectedEvent.description || '',
+      start_date: s.toISOString().split('T')[0],
+      end_date: e.toISOString().split('T')[0],
+      start_time: `${pad(s.getHours())}:${pad(s.getMinutes())}`,
+      end_time: `${pad(e.getHours())}:${pad(e.getMinutes())}`,
+      location: selectedEvent.location || '',
+      event_type: selectedEvent.event_type || 'other',
+      is_public: !!selectedEvent.is_public,
+      registration_required: !!selectedEvent.registration_required,
+    });
+    setIsEditing(true);
+  };
+
+  const handleUpdateEvent = async () => {
+    if (!selectedEvent) return;
+    try {
+      const updated = {
+        title: editEvent.title.trim(),
+        description: editEvent.description?.trim() || null,
+        event_type: editEvent.event_type,
+        start_date: `${editEvent.start_date}T${editEvent.start_time}:00`,
+        end_date: `${editEvent.end_date}T${editEvent.end_time}:00`,
+        location: editEvent.location?.trim() || null,
+        is_public: editEvent.is_public,
+        registration_required: editEvent.registration_required,
+      } as const;
+      const { error } = await supabase
+        .from('gw_events')
+        .update(updated)
+        .eq('id', selectedEvent.id);
+      if (error) throw error;
+      toast.success('Event updated');
+      setIsEditing(false);
+      setSelectedEvent({ ...selectedEvent, ...updated });
+      fetchEvents();
+    } catch (err: any) {
+      console.error('Error updating event:', err);
+      toast.error(err?.message || 'Failed to update event');
+    }
+  };
   const handleCreateEvent = async () => {
     if (!newEvent.title || !newEvent.start_date) {
       toast.error('Please fill in required fields');
@@ -182,8 +243,8 @@ export const MasterCalendar = () => {
                     >
                       <div className="font-medium truncate">{event.title}</div>
                       <div className="text-xs opacity-75 hidden sm:block">
-                        {format(new Date(event.start_date), 'HH:mm')}
-                        {event.end_date && ` - ${format(new Date(event.end_date), 'HH:mm')}`}
+                        {format(new Date(event.start_date), 'p')}
+                        {event.end_date && ` - ${format(new Date(event.end_date), 'p')}`}
                       </div>
                     </div>
                   ))
@@ -217,7 +278,7 @@ export const MasterCalendar = () => {
             return (
               <div key={hour} className="flex border-b border-border/50 min-h-[60px]">
                 <div className="w-16 text-sm text-muted-foreground py-2">
-                  {format(new Date().setHours(hour, 0), 'HH:mm')}
+                  {format(new Date().setHours(hour, 0), 'h a')}
                 </div>
                 <div className="flex-1 p-2">
                   {hourEvents.map((event) => (
@@ -231,7 +292,7 @@ export const MasterCalendar = () => {
                     >
                       <div className="font-medium">{event.title}</div>
                       <div className="text-sm opacity-75">
-                        {format(new Date(event.start_date), 'HH:mm')} - {format(new Date(event.end_date), 'HH:mm')}
+                        {format(new Date(event.start_date), 'p')} - {format(new Date(event.end_date), 'p')}
                         {event.location && (
                           <span className="ml-2">📍 {event.location}</span>
                         )}
@@ -509,7 +570,7 @@ export const MasterCalendar = () => {
                         <div className="text-sm text-muted-foreground space-y-1">
                           <div className="flex items-center gap-2">
                             <Clock className="h-3 w-3" />
-                            {format(new Date(event.start_date), 'MMM dd, yyyy - HH:mm')}
+                            {format(new Date(event.start_date), 'MMM dd, yyyy - p')}
                           </div>
                           {event.location && (
                             <div className="flex items-center gap-2">
@@ -597,51 +658,96 @@ export const MasterCalendar = () => {
             </DialogHeader>
             
             <div className="space-y-4">
-              <div className="flex gap-2">
-                <Badge className={getEventTypeStyle(selectedEvent.event_type)}>
-                  {selectedEvent.event_type}
-                </Badge>
-                {selectedEvent.is_public && (
-                  <Badge variant="outline">Public</Badge>
-                )}
-              </div>
-              
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  {format(new Date(selectedEvent.start_date), 'p')} - {format(new Date(selectedEvent.end_date), 'p')}
-                </div>
-                
-                {selectedEvent.location && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    {selectedEvent.location}
+              {isEditing ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="edit_title">Title *</Label>
+                    <Input id="edit_title" value={editEvent.title} onChange={(e) => setEditEvent({ ...editEvent, title: e.target.value })} />
                   </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label htmlFor="edit_start_date">Start Date</Label>
+                      <Input id="edit_start_date" type="date" value={editEvent.start_date} onChange={(e) => setEditEvent({ ...editEvent, start_date: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_end_date">End Date</Label>
+                      <Input id="edit_end_date" type="date" value={editEvent.end_date} onChange={(e) => setEditEvent({ ...editEvent, end_date: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label htmlFor="edit_start_time">Start Time</Label>
+                      <Input id="edit_start_time" type="time" value={editEvent.start_time} onChange={(e) => setEditEvent({ ...editEvent, start_time: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_end_time">End Time</Label>
+                      <Input id="edit_end_time" type="time" value={editEvent.end_time} onChange={(e) => setEditEvent({ ...editEvent, end_time: e.target.value })} />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_location">Location</Label>
+                    <Input id="edit_location" value={editEvent.location} onChange={(e) => setEditEvent({ ...editEvent, location: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_description">Description</Label>
+                    <Textarea id="edit_description" value={editEvent.description} onChange={(e) => setEditEvent({ ...editEvent, description: e.target.value })} />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button className="flex-1" onClick={handleUpdateEvent}>Save</Button>
+                    <Button variant="outline" className="flex-1" onClick={() => setIsEditing(false)}>Cancel</Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <Badge className={getEventTypeStyle(selectedEvent.event_type)}>
+                      {selectedEvent.event_type}
+                    </Badge>
+                    {selectedEvent.is_public && (
+                      <Badge variant="outline">Public</Badge>
+                    )}
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      {format(new Date(selectedEvent.start_date), 'p')} - {format(new Date(selectedEvent.end_date), 'p')}
+                    </div>
+                    {selectedEvent.location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        {selectedEvent.location}
+                      </div>
+                    )}
+                  </div>
+                  {selectedEvent.description && (
+                    <div>
+                      <h4 className="font-medium mb-1">Description</h4>
+                      <p className="text-sm text-muted-foreground">{selectedEvent.description}</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+              <div className="flex gap-2">
+                {isEditing ? (
+                  <></>
+                ) : (
+                  <Button variant="outline" className="flex-1" onClick={startEditSelectedEvent}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )}
+                {!isEditing && (
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => handleDeleteEvent(selectedEvent.id)}
+                    className="flex-1"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
                 )}
               </div>
-              
-              {selectedEvent.description && (
-                <div>
-                  <h4 className="font-medium mb-1">Description</h4>
-                  <p className="text-sm text-muted-foreground">{selectedEvent.description}</p>
-                </div>
-              )}
-              
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  onClick={() => handleDeleteEvent(selectedEvent.id)}
-                  className="flex-1"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              </div>
-            </div>
           </DialogContent>
         </Dialog>
       )}
