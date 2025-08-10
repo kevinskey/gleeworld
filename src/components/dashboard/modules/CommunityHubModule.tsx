@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { MemberDirectory } from '@/components/directory/MemberDirectory';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { NotificationsSection } from '@/components/unified/NotificationsSection';
+import { CommunicationHub } from '@/components/communication/CommunicationHub';
 import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
 import PostItGrid from '@/components/buckets-of-love/PostItGrid';
 export const CommunityHubModule = () => {
@@ -116,7 +116,7 @@ export const CommunityHubModule = () => {
         </TabsContent>
         
         <TabsContent value="notifications" className="flex-1 p-4 max-h-[50vh] overflow-auto">
-          <NotificationsSection />
+          <CommunicationHub />
         </TabsContent>
         
         <TabsContent value="directory" className="flex-1 max-h-[50vh] overflow-auto">
