@@ -57,6 +57,7 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
           pdfUrl={selectedPdf.url}
           musicTitle={selectedPdf.title}
           musicId={selectedPdf.id}
+          variant="plain"
           className="w-full h-full"
         />
       </div>

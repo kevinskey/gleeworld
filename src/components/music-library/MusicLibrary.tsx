@@ -248,21 +248,14 @@ export const MusicLibrary = () => {
 
           {/* Right column - PDF viewer */}
           <div className={`${selectedPdf ? 'col-span-8' : 'col-span-7'} flex flex-col h-full overflow-hidden pl-1`}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">PDF Viewer</h2>
-              <Button size="sm" variant="outline" className="gap-2" aria-label="Study Mode" title="Study Mode" onClick={openStudyMode}>
-                <Eye className="h-4 w-4" />
-                <span className="hidden sm:inline">Study Mode</span>
-              </Button>
-            </div>
             {selectedPdf ? (
               <div className="flex-1 overflow-hidden">
-                <p className="text-xs text-muted-foreground mb-2">Loading: {selectedPdf.title}</p>
                 <PDFViewerWithAnnotations 
                   key={selectedPdf.url}
                   pdfUrl={selectedPdf.url}
                   musicTitle={selectedPdf.title}
                   musicId={selectedPdf.id}
+                  variant="plain"
                   className="w-full h-full"
                 />
               </div>

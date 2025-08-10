@@ -44,6 +44,7 @@ interface PDFViewerWithAnnotationsProps {
   musicTitle?: string;
   className?: string;
   startInAnnotationMode?: boolean;
+  variant?: 'card' | 'plain';
 }
 
 export const PDFViewerWithAnnotations = ({ 
@@ -52,9 +53,15 @@ export const PDFViewerWithAnnotations = ({
   musicTitle,
   className = "",
   startInAnnotationMode = false,
+  variant = 'card',
 }: PDFViewerWithAnnotationsProps) => {
   const { user } = useAuth();
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
+  const wrapperClasses = cn(
+    "w-full",
+    className,
+    variant === 'plain' ? "border-0 shadow-none rounded-none mx-0 max-w-none" : ""
+  );
   
   // Initialize the default layout plugin
 const scrollModePluginInstance = scrollModePlugin();
@@ -494,7 +501,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   // Show loading while getting signed URL
   if (!pdfUrl) {
     return (
-      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
+      <Card className={wrapperClasses}>
         <CardContent className="p-8">
           <div className="flex items-center justify-center">
             <p className="text-muted-foreground">No PDF available</p>
@@ -506,7 +513,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   if (urlLoading) {
     return (
-      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
+      <Card className={wrapperClasses}>
         <CardContent className="p-8">
           <div className="flex flex-col items-center justify-center space-y-2">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -519,7 +526,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   if (urlError || !signedUrl) {
     return (
-      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
+      <Card className={wrapperClasses}>
         <CardContent className="p-8">
           <div className="flex flex-col items-center justify-center text-center space-y-4">
             <AlertCircle className="h-12 w-12 text-destructive" />
@@ -544,7 +551,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   if (error && !annotationMode) {
     return (
-      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
+      <Card className={wrapperClasses}>
         <CardContent className="p-8">
           <div className="flex flex-col items-center justify-center text-center space-y-4">
             <AlertCircle className="h-12 w-12 text-destructive" />
@@ -579,7 +586,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   const colors = ["#ff0000", "#000000", "#0000ff", "#008000", "#800080", "#ffa500"];
 
   return (
-    <Card className={cn("w-full", className)}>
+    <Card className={wrapperClasses}>
       {/* Annotation Toolbar */}
         {annotationMode && (
           <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded-t-lg border-b">
