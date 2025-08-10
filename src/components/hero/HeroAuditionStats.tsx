@@ -14,29 +14,10 @@ export const HeroAuditionStats: React.FC<{ className?: string }>
       try {
         setLoading(true);
         setError(null);
-        // Try analytics view first (likely public), then secure RPC, then direct count
-        let finalCount = 0;
-        try {
-          const { count, error } = await supabase
-            .from('audition_analytics')
-            .select('*', { count: 'exact', head: true });
-          if (error) throw error;
-          finalCount = count ?? 0;
-        } catch (err1: any) {
-          try {
-            const { data: appCount, error: countErr } = await supabase.rpc('get_audition_application_count');
-            if (countErr) throw countErr;
-            finalCount = typeof appCount === 'number' ? appCount : Number(appCount) || 0;
-          } catch (err2: any) {
-            const { count: dirCount, error: dirErr } = await supabase
-              .from('audition_applications')
-              .select('*', { count: 'exact', head: true });
-            if (dirErr) throw dirErr;
-            finalCount = dirCount ?? 0;
-          }
-        }
+        const { data: appCount, error: countErr } = await supabase.rpc('get_audition_application_count');
+        if (countErr) throw countErr;
         if (!isMounted) return;
-        setTotal(finalCount);
+        setTotal(typeof appCount === 'number' ? appCount : Number(appCount) || 0);
       } catch (e: any) {
         if (!isMounted) return;
         setError(e?.message || 'Failed to load stats');
