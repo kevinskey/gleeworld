@@ -688,7 +688,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           )}
 
           {!annotationMode && (
-            <div className="absolute top-3 right-16 md:right-20 z-20">
+            <div className="absolute top-3 left-3 z-20">
               <Button
                 size="sm"
                 variant="outline"
