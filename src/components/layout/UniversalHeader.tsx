@@ -111,7 +111,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       className="h-7 w-7 sm:h-8 sm:w-8 p-1 rounded-md hover:bg-accent/20"
                       type="button"
                     >
-                      <LayoutDashboard className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-48 bg-background border border-border shadow-lg" align="end">
@@ -236,7 +236,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       <img 
                         src="/lovable-uploads/a9348c2b-145b-4530-a755-80ee32c5bf6f.png" 
                         alt="Camera" 
-                        className="h-7 w-7 filter"
+                        className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 filter"
                         style={{ filter: 'brightness(0) saturate(100%) invert(21%) sepia(100%) saturate(4274%) hue-rotate(220deg) brightness(91%) contrast(91%)' }}
                       />
                     </Button>
