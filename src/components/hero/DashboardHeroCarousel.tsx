@@ -148,16 +148,16 @@ export const DashboardHeroCarousel: React.FC = () => {
                 />
 
                 {/* Subtle overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-primary/15" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
                 {/* Title overlay */}
                 {slide.title && (
                   <div
                     className={`absolute inset-0 flex ${getVerticalAlignment(slide.title_position_vertical)} ${getHorizontalAlignment(slide.title_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 pointer-events-none`}
                   >
-                    <h1 className={`${getTitleSize(slide.title_size)} font-bold text-white drop-shadow-2xl max-w-4xl text-center sm:text-left pointer-events-auto`}>
-                      {slide.title}
-                    </h1>
+                    <div className="bg-background/70 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-xl border border-white/20 pointer-events-auto">
+                      <h1 className={`${getTitleSize(slide.title_size)} font-bold text-foreground`}>{slide.title}</h1>
+                    </div>
                   </div>
                 )}
 
@@ -166,9 +166,9 @@ export const DashboardHeroCarousel: React.FC = () => {
                   <div
                     className={`absolute inset-0 flex ${getVerticalAlignment(slide.description_position_vertical)} ${getHorizontalAlignment(slide.description_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 pointer-events-none`}
                   >
-                    <p className={`${getDescriptionSize(slide.description_size)} text-white/90 drop-shadow-lg max-w-2xl text-center sm:text-left pointer-events-auto`}>
-                      {slide.description}
-                    </p>
+                    <div className="bg-background/70 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-xl border border-white/20 pointer-events-auto max-w-2xl">
+                      <p className={`${getDescriptionSize(slide.description_size)} text-foreground`}>{slide.description}</p>
+                    </div>
                   </div>
                 )}
 
