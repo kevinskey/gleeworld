@@ -50,28 +50,28 @@ const NoteCard: React.FC<{
       className={cn(
         'relative aspect-square rounded-md shadow-sm transition-all',
         'bg-secondary text-foreground/90 border border-border',
-        'hover:shadow-md hover:scale-[1.02]',
+        'hover:shadow-md hover:scale-[1.01]',
         isPlaceholder && 'border-dashed bg-secondary/40'
       )}
       title={isOwner && !isPlaceholder ? 'Tap to delete your note' : undefined}
     >
       {/* tape strip */}
-      <div className="absolute -top-1 left-1/2 -translate-x-1/2 h-3 w-10 rounded-sm bg-primary/50 shadow" />
+      <div className="absolute -top-1 left-1/2 -translate-x-1/2 h-2.5 w-8 rounded-sm bg-primary/50 shadow" />
 
-      <div className="p-2 h-full flex flex-col">
+      <div className="p-1.5 h-full flex flex-col">
         {isPlaceholder ? (
-          <div className="flex-1 grid place-content-center text-center text-sm text-muted-foreground">
+          <div className="flex-1 grid place-content-center text-center text-xs text-muted-foreground">
             <div className="flex flex-col items-center gap-1">
-              <Plus className="h-5 w-5 text-primary" />
+              <Plus className="h-4 w-4 text-primary" />
               <span>Add</span>
             </div>
           </div>
         ) : (
           <>
-            <p className="text-sm leading-snug line-clamp-6">
+            <p className="text-xs leading-snug line-clamp-5">
               {message}
             </p>
-            <div className="mt-auto pt-2 text-[10px] text-muted-foreground flex items-center gap-1">
+            <div className="mt-auto pt-2 text-[9px] text-muted-foreground flex items-center gap-1">
               <Heart className="h-3 w-3 text-primary" />
               <span>{sender || 'Anonymous'}</span>
             </div>
@@ -132,7 +132,7 @@ export const PostItGrid: React.FC = () => {
       </div>
 
       <div className={cn(
-        'grid gap-3',
+        'grid gap-4 md:gap-5',
         'grid-cols-2',
         'md:grid-cols-4',
         'lg:grid-cols-6',
