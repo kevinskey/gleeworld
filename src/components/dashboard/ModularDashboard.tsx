@@ -234,27 +234,26 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
       {openModules.map((openModule) => (
         <div
           key={openModule.id}
-          className="fixed inset-4 bg-background border border-border rounded-lg shadow-2xl"
+          className="fixed inset-4 relative bg-background border border-border rounded-lg shadow-2xl"
           style={{ zIndex: openModule.zIndex }}
           onClick={() => bringModuleToFront(openModule.id)}
         >
-          {/* Module Header */}
-          <div className="flex items-center justify-between p-4 border-b bg-muted/50">
-            <h2 className="font-semibold">{openModule.name}</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                closeModule(openModule.id);
-              }}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          
+          {/* Close Button */}
+          <Button
+            className="absolute top-3 right-3"
+            variant="ghost"
+            size="icon"
+            aria-label="Close module"
+            onClick={(e) => {
+              e.stopPropagation();
+              closeModule(openModule.id);
+            }}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+
           {/* Module Content */}
-          <div className="h-[calc(100%-64px)] overflow-auto">
+          <div className="h-full overflow-auto pt-6">
             <openModule.component user={user} isFullPage={true} />
           </div>
         </div>
