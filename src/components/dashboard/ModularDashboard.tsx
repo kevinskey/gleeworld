@@ -238,7 +238,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 relative overflow-visible">
       {/* Dashboard Header */}
       {!hideHeader && (
-        <div className="sticky top-16 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="sticky top-14 sm:top-16 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">

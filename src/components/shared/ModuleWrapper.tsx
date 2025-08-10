@@ -41,7 +41,7 @@ export const ModuleWrapper = ({
     ? "min-h-screen space-y-4" 
     : "space-y-4";
   const headerClass = stickyHeader
-    ? "sticky top-16 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    ? "sticky top-14 sm:top-16 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
     : "";
 
   const content = (
