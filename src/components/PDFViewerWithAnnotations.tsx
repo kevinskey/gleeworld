@@ -421,7 +421,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   };
 
   useEffect(() => {
-    if (!annotationMode || !signedUrl) return;
+    if (!signedUrl) return;
 
     let cancelled = false;
 
@@ -438,7 +438,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     const loadPdf = async () => {
       try {
         setIsLoading(true);
-        console.log('Loading PDF for annotation:', signedUrl);
+        console.log('Loading PDF for viewing/annotation:', signedUrl);
 
         // Ensure canvas exists
         const ready = await waitForCanvas();
@@ -476,9 +476,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         console.log('PDF page rendered successfully');
         setError(null);
       } catch (err) {
-        console.error('Error loading PDF for annotation:', err);
-        toast.error('Failed to load PDF for annotation');
-        setError('Failed to load PDF for annotation');
+        console.error('Error loading PDF:', err);
+        toast.error('Failed to load PDF');
+        setError('Failed to load PDF');
       } finally {
         setIsLoading(false);
       }
@@ -489,7 +489,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     return () => {
       cancelled = true;
     };
-  }, [annotationMode, signedUrl, currentPage, scale]);
+  }, [signedUrl, currentPage, scale]);
 
   // Show loading while getting signed URL
   if (!pdfUrl) {
@@ -727,38 +727,16 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           {signedUrl && !annotationMode && (
             <div className="w-full h-full bg-white">
               <div className="h-full">
-                {useGoogle ? (
-                  <iframe
-                    src={googleProvider === 'gview'
-                      ? `https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`
-                      : `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(signedUrl)}`}
-                    className="w-full h-full border-0"
-                    referrerPolicy="no-referrer"
-                    loading="lazy"
-                    sandbox="allow-scripts allow-same-origin"
-                    onLoad={handleIframeLoad}
-                    onError={handleIframeError}
-                    title="PDF Viewer"
-                  />
-                ) : (
-                  <Worker workerUrl="https://unpkg.com/pdfjs-dist@5.3.93/build/pdf.worker.min.js">
-                    <div style={{ height: '100%' }}>
-                      <Viewer
-                        fileUrl={signedUrl}
-                        plugins={[scrollModePluginInstance]}
-                        onDocumentLoad={() => {
-                          console.log('PDF document loaded successfully');
-                          if (timerRef.current) {
-                            clearTimeout(timerRef.current);
-                            timerRef.current = null;
-                          }
-                          setUseGoogle(false);
-                          setIsLoading(false);
-                        }}
+                <div className="w-full h-full overflow-hidden bg-muted/10">
+                  <div className="w-full h-full flex items-start justify-center p-4">
+                    <div className="relative">
+                      <canvas
+                        ref={canvasRef}
+                        className="max-w-full max-h-full shadow-lg bg-white block"
                       />
                     </div>
-                  </Worker>
-                )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -791,7 +769,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
           )}
 
-          {annotationMode && (
+          {signedUrl && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30">
               <div className="flex items-center gap-2 rounded-md border bg-background/80 backdrop-blur px-2 py-1">
                 <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={prevPage} disabled={isLoading || currentPage <= 1}>
