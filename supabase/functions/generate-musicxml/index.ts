@@ -205,6 +205,27 @@ OUTPUT ONLY VALID MUSICXML - NO EXPLANATIONS OR MARKDOWN.`;
     } catch (e) {
       console.warn('Key enforcement failed:', e);
     }
+
+    // Ensure each part's first measure (number="1") contains the correct key tag in <attributes>
+    try {
+      musicXML = musicXML.replace(/<measure number="1">([\s\S]*?)<\/measure>/g, (match, inner) => {
+        // If attributes exist, replace or insert key inside them
+        if (/<attributes>[\s\S]*?<\/attributes>/.test(inner)) {
+          const newInner = inner.replace(/<attributes>[\s\S]*?<\/attributes>/, (attr) => {
+            if (/<key>[\s\S]*?<\/key>/.test(attr)) {
+              return attr.replace(/<key>[\s\S]*?<\/key>/, keyTag);
+            }
+            return attr.replace('</attributes>', `\n        ${keyTag}\n      </attributes>`);
+          });
+          return `<measure number="1">${newInner}</measure>`;
+        }
+        // Otherwise, insert a minimal attributes block with key at the start of the measure
+        const injected = `\n      <attributes>\n        <divisions>4</divisions>\n        ${keyTag}\n      </attributes>` + inner;
+        return `<measure number="1">${injected}</measure>`;
+      });
+    } catch (e) {
+      console.warn('Per-part key injection failed:', e);
+    }
     
     
     // Post-process to ensure complete XML structure
