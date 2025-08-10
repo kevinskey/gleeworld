@@ -155,11 +155,11 @@ export const MusicLibrary = () => {
             variant="secondary"
             size="icon"
             onClick={() => navigate((userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard')}
-            className="fixed top-3 left-3 z-50"
+            className="fixed top-2 left-2 z-50 h-9 w-9 p-0"
             aria-label="Back"
             title="Back"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3 w-3" />
           </Button>
 
           {/* Scroll To Top Button */}
@@ -168,11 +168,11 @@ export const MusicLibrary = () => {
               variant="secondary"
               size="icon"
               onClick={scrollToTop}
-              className="fixed bottom-4 right-4 z-50"
+              className="fixed bottom-3 right-3 z-50 h-9 w-9 p-0"
               aria-label="Back to top"
               title="Back to top"
             >
-              <ArrowUp className="h-4 w-4" />
+              <ArrowUp className="h-3 w-3" />
             </Button>
           )}
         </div>

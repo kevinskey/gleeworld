@@ -98,14 +98,14 @@ export const MobileMusicLibrary = ({
             placeholder="Search music library..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-12"
+            className="pl-10 h-10 sm:h-12 text-sm"
           />
         </div>
 
         {/* Filters Row */}
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="flex gap-1 overflow-x-auto pb-1">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-32 h-8 sm:h-10">
+            <SelectTrigger className="w-28 h-8 sm:h-10 text-xs">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -117,7 +117,7 @@ export const MobileMusicLibrary = ({
           </Select>
 
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-32 h-8 sm:h-10">
+            <SelectTrigger className="w-28 h-8 sm:h-10 text-xs">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -131,7 +131,7 @@ export const MobileMusicLibrary = ({
             variant="outline"
             size="icon"
             onClick={() => setViewMode(viewMode === "list" ? "grid" : "list")}
-            className="h-8 w-8 sm:h-10 sm:w-10"
+            className="h-8 w-8 sm:h-9 sm:w-9"
           >
             {viewMode === "list" ? <Grid3X3 className="h-4 w-4" /> : <LayoutList className="h-4 w-4" />}
           </Button>
@@ -139,12 +139,12 @@ export const MobileMusicLibrary = ({
 
         {/* Selected PDF Info */}
         {selectedPdf && (
-          <div className="bg-primary/10 rounded-lg p-3 flex items-center justify-between">
+          <div className="bg-primary/10 rounded-lg p-2 sm:p-3 flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-primary truncate">
+              <p className="text-xs font-medium text-primary truncate">
                 {selectedPdf.title}
               </p>
-              <p className="text-xs text-muted-foreground">Currently selected</p>
+              <p className="text-[10px] text-muted-foreground">Currently selected</p>
             </div>
             <Button size="sm" onClick={openStudyMode} className="ml-2 h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
               <Eye className="h-4 w-4 mr-1" />
@@ -156,20 +156,20 @@ export const MobileMusicLibrary = ({
 
       {/* Tab Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-4 mx-2 my-2 sm:mx-4">
-          <TabsTrigger value="library" className="text-xs">
+        <TabsList className="grid w-full grid-cols-4 mx-1 my-1 gap-1 sm:mx-4 sm:gap-2">
+          <TabsTrigger value="library" className="text-[11px] px-1 py-1">
             <Music className="h-4 w-4 mr-1" />
             Library
           </TabsTrigger>
-          <TabsTrigger value="study" className="text-xs">
+          <TabsTrigger value="study" className="text-[11px] px-1 py-1">
             <BookOpen className="h-4 w-4 mr-1" />
             Study
           </TabsTrigger>
-          <TabsTrigger value="collections" className="text-xs">
+          <TabsTrigger value="collections" className="text-[11px] px-1 py-1">
             <Star className="h-4 w-4 mr-1" />
             Collections
           </TabsTrigger>
-          <TabsTrigger value="setlists" className="text-xs">
+          <TabsTrigger value="setlists" className="text-[11px] px-1 py-1">
             <List className="h-4 w-4 mr-1" />
             Setlists
           </TabsTrigger>
@@ -177,7 +177,7 @@ export const MobileMusicLibrary = ({
 
         {/* Tab Content */}
         <div ref={scrollContainerRef as any} className="flex-1 overflow-y-auto">
-          <TabsContent value="library" className="px-2 py-3 space-y-3 mt-0 sm:px-4 sm:py-4">
+          <TabsContent value="library" className="px-2 py-2 space-y-2 mt-0 sm:px-4 sm:py-4 sm:space-y-3">
             <SheetMusicLibrary 
               searchQuery={searchQuery}
               selectedCategory={selectedCategory}
@@ -188,21 +188,21 @@ export const MobileMusicLibrary = ({
             />
           </TabsContent>
 
-          <TabsContent value="study" className="px-2 py-3 mt-0 sm:px-4 sm:py-4">
+          <TabsContent value="study" className="px-2 py-2 mt-0 sm:px-4 sm:py-4">
             <StudyScoresPanel 
               currentSelected={selectedPdf}
               onOpenScore={onPdfSelect}
             />
           </TabsContent>
 
-          <TabsContent value="collections" className="px-2 py-3 mt-0 sm:px-4 sm:py-4">
+          <TabsContent value="collections" className="px-2 py-2 mt-0 sm:px-4 sm:py-4">
             <MyCollectionsPanel
               currentSelected={selectedPdf}
               onOpenScore={onPdfSelect}
             />
           </TabsContent>
 
-          <TabsContent value="setlists" className="px-2 py-3 mt-0 sm:px-4 sm:py-4">
+          <TabsContent value="setlists" className="px-2 py-2 mt-0 sm:px-4 sm:py-4">
             <SetlistBuilder 
               onPdfSelect={onPdfSelect} 
               onOpenPlayer={onOpenSetlistPlayer}
