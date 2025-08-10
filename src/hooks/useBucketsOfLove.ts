@@ -11,6 +11,8 @@ export interface BucketOfLove {
   decorations?: string;
   sender_name?: string;
   recipient_name?: string;
+  user_id?: string;
+  recipient_user_id?: string | null;
 }
 
 export const useBucketsOfLove = () => {
@@ -92,6 +94,22 @@ export const useBucketsOfLove = () => {
     }
   };
 
+  const deleteBucket = async (id: string) => {
+    try {
+      const { error: deleteError } = await supabase
+        .from('gw_buckets_of_love')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) throw deleteError;
+      await fetchBuckets();
+      return { success: true };
+    } catch (err) {
+      console.error('Error deleting bucket of love:', err);
+      return { success: false, error: 'Failed to delete bucket of love' };
+    }
+  };
+
   useEffect(() => {
     fetchBuckets();
   }, []);
@@ -101,6 +119,7 @@ export const useBucketsOfLove = () => {
     loading,
     error,
     fetchBuckets,
-    sendBucketOfLove
+    sendBucketOfLove,
+    deleteBucket,
   };
 };
