@@ -5,6 +5,8 @@ import { ModuleSelector } from './ModuleSelector';
 import { ModuleDisplay } from './ModuleDisplay';
 import { useAuth } from '@/contexts/AuthContext';
 import { CommunityHubModule } from './modules/CommunityHubModule';
+import { BucketsOfLoveWidget } from '@/components/shared/BucketsOfLoveWidget';
+
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string>('music-studio');
@@ -24,21 +26,25 @@ export const UnifiedDashboard = () => {
       
       <div className="flex flex-col h-[calc(100vh-72px)] p-6 gap-4">
         {/* Main Section - Community Hub only */}
-          <div className="flex-1 min-h-0">
-            {/* Mobile */}
-            <div className="md:hidden grid grid-cols-1 gap-3">
-              <div className="h-[360px] border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
-                <CommunityHubModule />
-              </div>
-            </div>
-            {/* Desktop */}
-            <div className="hidden md:flex h-full min-h-0">
-              <div className="h-full min-h-0 w-full border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
-                <CommunityHubModule />
-              </div>
+        <div className="flex-1 min-h-0">
+          {/* Mobile */}
+          <div className="md:hidden grid grid-cols-1 gap-3">
+            <div className="h-[360px] border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
+              <CommunityHubModule />
             </div>
           </div>
-        
+          {/* Desktop */}
+          <div className="hidden md:flex h-full min-h-0">
+            <div className="h-full min-h-0 w-full border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
+              <CommunityHubModule />
+            </div>
+          </div>
+        </div>
+
+        {/* Buckets of Love - visible to all authenticated users */}
+        <div className="grid grid-cols-1">
+          <BucketsOfLoveWidget />
+        </div>
         
         {/* Messages Panel Overlay */}
         {showMessages && (

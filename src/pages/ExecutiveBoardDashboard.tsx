@@ -26,6 +26,7 @@ import {
   Shield,
   User
 } from 'lucide-react';
+import { BucketsOfLoveWidget } from '@/components/shared/BucketsOfLoveWidget';
 
 const ExecutiveBoardDashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -164,6 +165,9 @@ const ExecutiveBoardDashboard = () => {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Buckets of Love - visible to all authenticated users */}
+                <BucketsOfLoveWidget />
 
                 {/* Main Dashboard */}
                 <Card className="bg-gradient-to-br from-slate-50 via-white to-slate-50">

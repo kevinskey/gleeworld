@@ -23,6 +23,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
 import { useNavigate } from 'react-router-dom';
+import { BucketsOfLoveWidget } from '@/components/shared/BucketsOfLoveWidget';
 
 import { PluginManagementDashboard } from '@/components/admin/PluginManagementDashboard';
 import { SystemModule } from '@/components/admin/SystemModule';
@@ -103,6 +104,11 @@ export const FreshAdminDashboard = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Buckets of Love - visible for all authenticated users */}
+        <div className="mb-8">
+          <BucketsOfLoveWidget />
+        </div>
 
         {/* Admin Modules Grid */}
         <Card className="bg-background/50 border-border">
