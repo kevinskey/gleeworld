@@ -9760,6 +9760,39 @@ export type Database = {
           },
         ]
       }
+      gw_user_documents: {
+        Row: {
+          content_html: string | null
+          content_md: string | null
+          created_at: string
+          id: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_html?: string | null
+          content_md?: string | null
+          created_at?: string
+          id?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_html?: string | null
+          content_md?: string | null
+          created_at?: string
+          id?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_user_module_orders: {
         Row: {
           created_at: string
