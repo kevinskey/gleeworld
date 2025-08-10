@@ -16,8 +16,21 @@ export const HeroAuditionStats: React.FC<{ className?: string }>
         setError(null);
         const { data: appCount, error: countErr } = await supabase.rpc('get_audition_application_count');
         if (countErr) throw countErr;
+        console.log('[HeroAuditionStats] RPC get_audition_application_count result:', appCount);
+        let countVal = 0;
+        if (typeof appCount === 'number') {
+          countVal = appCount;
+        } else if (Array.isArray(appCount)) {
+          const first: any = (appCount as any[])[0];
+          const maybeVal = typeof first === 'object' ? (first?.get_audition_application_count ?? first) : first;
+          countVal = Number(maybeVal) || 0;
+        } else if (appCount && typeof appCount === 'object') {
+          // Some PostgREST setups return an object keyed by the function name
+          // @ts-ignore
+          countVal = Number(appCount.get_audition_application_count) || 0;
+        }
         if (!isMounted) return;
-        setTotal(typeof appCount === 'number' ? appCount : Number(appCount) || 0);
+        setTotal(countVal);
       } catch (e: any) {
         if (!isMounted) return;
         setError(e?.message || 'Failed to load stats');
