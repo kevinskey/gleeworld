@@ -26,11 +26,10 @@ export const UnifiedDashboard = () => {
 
       {/* Row 1: Hero + Features side-by-side */}
       <div className="px-6 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
           {/* Left: Hero */}
           <DashboardHeroCarousel />
-          {/* Right: Features (ads) */}
-          <DashboardFeaturesCarousel />
+          <div className="self-center w-full"><DashboardFeaturesCarousel /></div>
         </div>
       </div>
 

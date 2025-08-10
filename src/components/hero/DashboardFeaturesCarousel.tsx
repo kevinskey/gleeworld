@@ -53,7 +53,7 @@ export const DashboardFeaturesCarousel: React.FC = () => {
   const slide = slides[current];
 
   return (
-    <Card className="border-border bg-background/50 backdrop-blur-sm rounded-xl shadow-2xl hover:shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition-shadow overflow-hidden">
+    <Card className="w-full border-border bg-background/50 backdrop-blur-sm rounded-xl shadow-2xl hover:shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition-shadow overflow-hidden">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
           <Megaphone className="h-4 w-4 text-primary" />
