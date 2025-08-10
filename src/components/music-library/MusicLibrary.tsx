@@ -20,7 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-export const MusicLibrary = () => {
+export const MusicLibrary = ({ embedded = false }: { embedded?: boolean }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -158,7 +158,7 @@ export const MusicLibrary = () => {
   // Desktop layout - keep existing design
   return (
     <>
-      <div className="container mx-auto px-4 pt-16 md:pt-20 pb-4">
+      <div className={`container mx-auto px-4 ${embedded ? 'pt-2 pb-2' : 'pt-16 md:pt-20 pb-4'}`}>
         <div className="mb-2">
           <PageHeader
             title="Music Library"
@@ -170,7 +170,7 @@ export const MusicLibrary = () => {
         </div>
 
         {/* Desktop two-column layout */}
-        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-5rem)] overflow-hidden">
+        <div className={`grid grid-cols-12 gap-6 ${embedded ? 'h-[75vh]' : 'h-[calc(100vh-5rem)]'} overflow-hidden`}>
           {/* Left column - Library sections */}
           <div className={`${selectedPdf ? 'col-span-4' : 'col-span-5'} space-y-4 h-full overflow-y-auto pr-1`}>
             {/* Study Scores */}

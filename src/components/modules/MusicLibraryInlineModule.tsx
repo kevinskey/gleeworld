@@ -9,7 +9,7 @@ export const MusicLibraryInlineModule: React.FC<ModuleProps> = () => {
   return (
     <div className="overflow-hidden">
       <div className="[&_div.mb-6]:hidden [&_div.mb-2]:hidden">
-        <MusicLibrary />
+        <MusicLibrary embedded />
       </div>
     </div>
   );
