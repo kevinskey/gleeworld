@@ -736,7 +736,6 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   />
                 </div>
               </div>
-            </div>
           )}
 
           {signedUrl && (
