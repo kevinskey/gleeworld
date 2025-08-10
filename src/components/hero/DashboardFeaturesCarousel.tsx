@@ -126,8 +126,21 @@ export const DashboardFeaturesCarousel: React.FC = () => {
                 ))
               ) : (
                 <CarouselItem>
-                  <div className="aspect-[4/3] md:aspect-[16/7] w-full flex items-center justify-center bg-muted">
-                    <p className="text-muted-foreground text-sm">No features configured</p>
+                  <div className="aspect-[4/3] md:aspect-[16/7] w-full relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20" />
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="px-6 md:px-10 lg:px-14 space-y-3 md:space-y-4 text-white max-w-2xl">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/20 backdrop-blur px-3 py-1 text-xs md:text-sm">
+                          <Megaphone className="h-3 w-3 md:h-4 md:w-4" />
+                          Featured
+                        </div>
+                        <h3 className="text-2xl md:text-4xl lg:text-5xl font-bold drop-shadow-2xl tracking-tight">Welcome Glee Class of 2029</h3>
+                        <p className="text-sm md:text-base text-white/90 drop-shadow-lg">You are home. Explore the Glee Club community, resources, and upcoming events.</p>
+                        <Button size="sm" className="bg-primary text-primary-foreground border border-white/20 shadow hover:opacity-90" asChild>
+                          <a href="/join">Get Started</a>
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CarouselItem>
               )}
