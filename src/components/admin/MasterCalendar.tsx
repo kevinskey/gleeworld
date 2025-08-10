@@ -20,6 +20,7 @@ import { CalendarManager } from "@/components/calendar/CalendarManager";
 import { CalendarExport } from "@/components/calendar/CalendarExport";
 import { AppointmentScheduler } from "@/components/appointments/AppointmentScheduler";
 import { CreateEventDialog } from "@/components/calendar/CreateEventDialog";
+import { MonthlyCalendar } from "@/components/calendar/MonthlyCalendar";
 
 export const MasterCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -508,16 +509,7 @@ export const MasterCalendar = () => {
 
             <div className="lg:col-span-3 order-1 lg:order-2">
               {viewMode === 'month' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>
-                      {format(selectedDate, 'MMMM yyyy')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {renderWeekView()}
-                  </CardContent>
-                </Card>
+                <MonthlyCalendar events={events} onEventUpdated={fetchEvents} />
               )}
               
               {viewMode === 'week' && (
