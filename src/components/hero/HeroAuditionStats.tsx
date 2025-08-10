@@ -14,23 +14,38 @@ export const HeroAuditionStats: React.FC<{ className?: string }>
       try {
         setLoading(true);
         setError(null);
-        const { data: appCount, error: countErr } = await supabase.rpc('get_audition_application_count');
-        if (countErr) throw countErr;
-        console.log('[HeroAuditionStats] RPC get_audition_application_count result:', appCount);
-        let countVal = 0;
-        if (typeof appCount === 'number') {
-          countVal = appCount;
-        } else if (Array.isArray(appCount)) {
-          const first: any = (appCount as any[])[0];
-          const maybeVal = typeof first === 'object' ? (first?.get_audition_application_count ?? first) : first;
-          countVal = Number(maybeVal) || 0;
-        } else if (appCount && typeof appCount === 'object') {
-          // Some PostgREST setups return an object keyed by the function name
-          // @ts-ignore
-          countVal = Number(appCount.get_audition_application_count) || 0;
-        }
+        // Gather counts from multiple sources to avoid RLS/visibility issues
+        let analyticsCount = 0;
+        try {
+          const { count } = await supabase
+            .from('audition_analytics')
+            .select('*', { count: 'exact', head: true });
+          analyticsCount = count ?? 0;
+        } catch (_) {}
+
+        let appsCount = 0;
+        try {
+          const { count } = await supabase
+            .from('audition_applications')
+            .select('*', { count: 'exact', head: true });
+          appsCount = count ?? 0;
+        } catch (_) {}
+
+        let rpcCountVal = 0;
+        try {
+          const { data: rpcVal } = await supabase.rpc('get_audition_application_count');
+          if (typeof rpcVal === 'number') rpcCountVal = rpcVal;
+          else if (Array.isArray(rpcVal)) {
+            const first: any = rpcVal[0];
+            rpcCountVal = Number(first?.get_audition_application_count ?? first) || 0;
+          } else if (rpcVal && typeof rpcVal === 'object') {
+            rpcCountVal = Number((rpcVal as any).get_audition_application_count) || 0;
+          }
+        } catch (_) {}
+
+        const finalCount = Math.max(analyticsCount, appsCount, rpcCountVal);
         if (!isMounted) return;
-        setTotal(countVal);
+        setTotal(finalCount);
       } catch (e: any) {
         if (!isMounted) return;
         setError(e?.message || 'Failed to load stats');
