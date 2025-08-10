@@ -92,14 +92,16 @@ export const Metronome: React.FC<MetronomeProps> = ({
 
     const interval = 60000 / tempo; // milliseconds per beat
 
+    // Immediate downbeat to avoid initial delay perception
+    setCurrentBeat(1);
+    playClick(true);
+
     intervalRef.current = setInterval(() => {
       setCurrentBeat(prev => {
         const nextBeat = prev >= beatsPerMeasure ? 1 : prev + 1;
         const isDownbeat = nextBeat === 1;
-        
         playClick(isDownbeat);
         setClickCount(c => c + 1);
-        
         return nextBeat;
       });
     }, interval);
