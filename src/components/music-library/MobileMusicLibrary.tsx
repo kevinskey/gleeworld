@@ -103,7 +103,7 @@ export const MobileMusicLibrary = ({
         {/* Filters Row */}
         <div className="flex gap-2 overflow-x-auto pb-2">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-32 h-10">
+            <SelectTrigger className="w-32 h-8 sm:h-10">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -115,7 +115,7 @@ export const MobileMusicLibrary = ({
           </Select>
 
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-32 h-10">
+            <SelectTrigger className="w-32 h-8 sm:h-10">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -129,7 +129,7 @@ export const MobileMusicLibrary = ({
             variant="outline"
             size="icon"
             onClick={() => setViewMode(viewMode === "list" ? "grid" : "list")}
-            className="h-10 w-10"
+            className="h-8 w-8 sm:h-10 sm:w-10"
           >
             {viewMode === "list" ? <Grid3X3 className="h-4 w-4" /> : <LayoutList className="h-4 w-4" />}
           </Button>
@@ -144,7 +144,7 @@ export const MobileMusicLibrary = ({
               </p>
               <p className="text-xs text-muted-foreground">Currently selected</p>
             </div>
-            <Button size="sm" onClick={openStudyMode} className="ml-2">
+            <Button size="sm" onClick={openStudyMode} className="ml-2 h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
               <Eye className="h-4 w-4 mr-1" />
               Study
             </Button>

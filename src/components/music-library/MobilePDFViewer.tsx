@@ -34,7 +34,7 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
       {/* Mobile PDF Header */}
       <div className="sticky top-0 z-10 bg-background border-b p-3">
         <div className="flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={onBack}>
+          <Button variant="ghost" size="sm" onClick={onBack} className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Library
           </Button>
@@ -42,7 +42,7 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
             <h2 className="text-sm font-medium truncate">{selectedPdf.title}</h2>
           </div>
           <div className="flex gap-2">
-            <Button size="sm" onClick={onStudyMode}>
+            <Button size="sm" onClick={onStudyMode} className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
               <Maximize className="h-4 w-4 mr-1" />
               Study
             </Button>
