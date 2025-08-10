@@ -19,7 +19,8 @@ export function SchedulingAndSelfiePage() {
   const { form, capturedImage, setCapturedImage } = useAuditionForm();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+  const uploadedPathRef = useRef<string | null>(null);
+
   // Get the currently selected date for fetching available slots
   const selectedDate = form.watch('auditionDate');
   const { timeSlots, loading: slotsLoading, availableDates } = useAvailableAuditionSlots(selectedDate);
@@ -99,6 +100,8 @@ export function SchedulingAndSelfiePage() {
         .upload(objectPath, uploadFile, { cacheControl: '3600', upsert: true, contentType: safeType });
 
       if (upErr) throw upErr;
+
+      uploadedPathRef.current = upData.path;
 
       // Prefer signed URL (works even if bucket is private); fallback to public URL
       const { data: signed } = await supabase.storage
@@ -260,6 +263,20 @@ export function SchedulingAndSelfiePage() {
                 src={capturedImage} 
                 alt="Captured selfie" 
                 className="w-64 h-64 object-cover rounded-full border-4 border-purple-200"
+                onError={async () => {
+                  try {
+                    if (!uploadedPathRef.current) throw new Error('No path to regenerate URL');
+                    const { data: signed, error } = await supabase.storage
+                      .from('user-files')
+                      .createSignedUrl(uploadedPathRef.current, 60 * 60);
+                    if (error || !signed?.signedUrl) throw error || new Error('Could not create signed URL');
+                    setCapturedImage(signed.signedUrl);
+                    toast.message('Refreshed selfie link');
+                  } catch (err) {
+                    logger.error('Selfie image failed to load; could not refresh URL', { err, path: uploadedPathRef.current });
+                    toast.error('Could not load selfie image. Please retake or re-upload.');
+                  }
+                }}
               />
               <Button
                 type="button"
