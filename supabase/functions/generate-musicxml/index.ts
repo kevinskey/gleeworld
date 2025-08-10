@@ -166,6 +166,45 @@ OUTPUT ONLY VALID MUSICXML - NO EXPLANATIONS OR MARKDOWN.`;
         );
       }
     } catch (_) {}
+
+    // Enforce requested key signature (e.g., Eb major => fifths = -3) in measure 1 and remove extra key tags
+    try {
+      const norm = (keySignature || '').toLowerCase()
+        .replace(/♭/g, 'b')
+        .replace(/♯/g, '#')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const majorMap: Record<string, number> = {
+        'c major': 0, 'g major': 1, 'd major': 2, 'a major': 3, 'e major': 4, 'b major': 5, 'f# major': 6,
+        'f major': -1, 'bb major': -2, 'eb major': -3, 'ab major': -4, 'db major': -5, 'gb major': -6
+      };
+      const minorMap: Record<string, number> = {
+        'a minor': 0, 'e minor': 1, 'b minor': 2, 'f# minor': 3, 'c# minor': 4, 'g# minor': 5, 'd# minor': 6,
+        'd minor': -1, 'g minor': -2, 'c minor': -3, 'f minor': -4, 'bb minor': -5, 'eb minor': -6
+      };
+      const isMinor = norm.includes('minor');
+      const fifths = isMinor ? (minorMap[norm] ?? 0) : (majorMap[norm] ?? 0);
+      const mode = isMinor ? 'minor' : 'major';
+      const keyTag = `<key><fifths>${fifths}</fifths><mode>${mode}</mode></key>`;
+
+      if (/<key>[\s\S]*?<\/key>/.test(musicXML)) {
+        // Replace first key tag and drop any subsequent ones
+        let replacedFirst = false;
+        musicXML = musicXML.replace(/<key>[\s\S]*?<\/key>/g, () => {
+          if (replacedFirst) return '';
+          replacedFirst = true;
+          return keyTag;
+        });
+      } else {
+        // Insert into first attributes block
+        musicXML = musicXML.replace(/<attributes>([\s\S]*?)<\/attributes>/, (match, inner) => {
+          if (inner.includes('<key>')) return match;
+          return `<attributes>${inner}\n        ${keyTag}\n      </attributes>`;
+        });
+      }
+    } catch (e) {
+      console.warn('Key enforcement failed:', e);
+    }
     
     
     // Post-process to ensure complete XML structure
