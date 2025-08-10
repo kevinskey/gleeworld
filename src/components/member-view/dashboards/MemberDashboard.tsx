@@ -1,5 +1,6 @@
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { ExecBoardMemberModules } from "@/components/executive/ExecBoardMemberModules";
+import { MemberModules } from "@/components/member-view/MemberModules";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface MemberDashboardProps {
@@ -23,8 +24,11 @@ export const MemberDashboard = ({ user }: MemberDashboardProps) => {
         <CommunityHubWidget />
         
         {/* Executive Board Modules - Show only for exec board members */}
-        {isExecutiveBoard() && (
+        {isExecutiveBoard() ? (
           <ExecBoardMemberModules user={user} />
+        ) : (
+          // Member suite for non-executive members (role-based permissions)
+          <MemberModules user={user} />
         )}
       </div>
     </div>
