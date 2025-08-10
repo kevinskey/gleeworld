@@ -280,14 +280,41 @@ const SightReadingGeneratorPage = () => {
   const [partMode, setPartMode] = useState<'single' | 'two-part'>('single');
   const [voicePart, setVoicePart] = useState<'Soprano' | 'Alto'>('Soprano');
   const [intervalProfile, setIntervalProfile] = useState<'stepwise' | 'thirds' | 'mixed'>('stepwise');
-  const [tempo, setTempo] = useState(120);
-  // Save/assign state
+  const [tempo, setTempo] = useState(96);
+  const [rhythmicComplexity, setRhythmicComplexity] = useState<'simple' | 'moderate' | 'advanced'>('simple');
+  const [noteDensity, setNoteDensity] = useState<'low' | 'medium' | 'high'>('medium');
+  const [cadenceType, setCadenceType] = useState<'perfect' | 'plagal' | 'deceptive' | 'half' | 'phrygian-half'>('perfect');
+  const [modulationFrequency, setModulationFrequency] = useState<'never' | 'rare' | 'frequent'>('never');
+  const [accidentals, setAccidentals] = useState<'none' | 'some' | 'many'>('none');
+  // Save state
   const [saving, setSaving] = useState(false);
   const [savedExerciseId, setSavedExerciseId] = useState<string | null>(null);
-  const [showAssign, setShowAssign] = useState(false);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [dueDate, setDueDate] = useState<string>('');
+
+  // Presets based on difficulty
+  React.useEffect(() => {
+    if (difficulty === 'beginner') {
+      setTempo(80);
+      setRhythmicComplexity('simple');
+      setNoteDensity('low');
+      setCadenceType('perfect');
+      setModulationFrequency('never');
+      setAccidentals('none');
+    } else if (difficulty === 'intermediate') {
+      setTempo(96);
+      setRhythmicComplexity('moderate');
+      setNoteDensity('medium');
+      setCadenceType('plagal');
+      setModulationFrequency('rare');
+      setAccidentals('some');
+    } else if (difficulty === 'advanced') {
+      setTempo(112);
+      setRhythmicComplexity('advanced');
+      setNoteDensity('high');
+      setCadenceType('deceptive');
+      setModulationFrequency('frequent');
+      setAccidentals('many');
+    }
+  }, [difficulty]);
 
   const validateMusicXML = (xml: string): { valid: boolean; error?: string } => {
     if (!xml || typeof xml !== 'string') {
@@ -370,7 +397,12 @@ const SightReadingGeneratorPage = () => {
           partCount: partMode === 'two-part' ? 2 : 1,
           voiceParts: partMode === 'two-part' ? ['Soprano','Alto'] : [voicePart],
           intervalProfile,
-          tempo
+          tempo,
+          rhythmicComplexity,
+          noteDensity,
+          cadenceType,
+          modulationFrequency,
+          accidentals
         }
       });
 
@@ -427,6 +459,85 @@ const SightReadingGeneratorPage = () => {
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const downloadGeneratedPDF = async () => {
+    if (!generatedMusicXML) return;
+    const container = document.getElementById('generated-osmd');
+    if (!container) {
+      toast({ title: 'PDF Error', description: 'Nothing to export yet.', variant: 'destructive' });
+      return;
+    }
+    try {
+      const { jsPDF } = await import('jspdf');
+      const html2canvas = await import('html2canvas');
+      const canvas = await html2canvas.default(container as HTMLElement, { backgroundColor: '#ffffff', scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      const safeKey = keySignature.replace(/\s+/g, '-');
+      pdf.save(`sight-reading-${difficulty}-${safeKey}.pdf`);
+      toast({ title: 'PDF Downloaded', description: 'Your exercise has been exported.' });
+    } catch (e: any) {
+      console.error('PDF export error:', e);
+      toast({ title: 'PDF Error', description: e.message || 'Failed to export PDF', variant: 'destructive' });
+    }
+  };
+
+  const saveExercise = async () => {
+    if (!user) {
+      toast({ title: 'Sign in required', description: 'Please sign in to save exercises.', variant: 'destructive' });
+      return;
+    }
+    if (!generatedMusicXML) {
+      toast({ title: 'Nothing to save', description: 'Generate an exercise first.', variant: 'destructive' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const title = `${difficulty} ${partMode === 'two-part' ? 'SA Two-Part' : voicePart} • ${keySignature} • ${timeSignature}`;
+      const params = {
+        difficulty,
+        keySignature,
+        timeSignature,
+        measures: measures[0],
+        noteRange,
+        partMode,
+        voicePart,
+        intervalProfile,
+        tempo,
+        rhythmicComplexity,
+        noteDensity,
+        cadenceType,
+        modulationFrequency,
+        accidentals
+      };
+      const { data, error } = await supabase
+        .from('gw_sight_reading_exercises')
+        .insert({ user_id: user.id, title, params, musicxml: generatedMusicXML })
+        .select('id')
+        .maybeSingle();
+      if (error) throw error;
+      if (data?.id) setSavedExerciseId(data.id);
+      toast({ title: 'Saved', description: 'Exercise saved to your library.' });
+    } catch (e: any) {
+      console.error('Save error:', e);
+      toast({ title: 'Save failed', description: e.message || 'Could not save exercise', variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -677,6 +788,131 @@ const SightReadingGeneratorPage = () => {
                         <SelectItem value="E3-E5">E3-E5 (Advanced)</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Parts</Label>
+                      <Select value={partMode} onValueChange={(v: any) => setPartMode(v)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="single">Single Part</SelectItem>
+                          <SelectItem value="two-part">Two-Part Treble (SA)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {partMode === 'single' && (
+                      <div className="space-y-2">
+                        <Label>Voice</Label>
+                        <Select value={voicePart} onValueChange={(v: any) => setVoicePart(v)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Soprano">Soprano</SelectItem>
+                            <SelectItem value="Alto">Alto</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Interval Profile</Label>
+                      <Select value={intervalProfile} onValueChange={(v: any) => setIntervalProfile(v)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="stepwise">Stepwise</SelectItem>
+                          <SelectItem value="thirds">Thirds</SelectItem>
+                          <SelectItem value="mixed">Mixed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Tempo: {tempo} BPM</Label>
+                      <Slider value={[tempo]} onValueChange={(v) => setTempo(v[0])} min={60} max={144} step={2} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Rhythmic Complexity</Label>
+                      <Select value={rhythmicComplexity} onValueChange={(v: any) => setRhythmicComplexity(v)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="simple">Simple</SelectItem>
+                          <SelectItem value="moderate">Moderate</SelectItem>
+                          <SelectItem value="advanced">Advanced</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Note Density</Label>
+                      <Select value={noteDensity} onValueChange={(v: any) => setNoteDensity(v)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Cadence Type</Label>
+                      <Select value={cadenceType} onValueChange={(v: any) => setCadenceType(v)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="perfect">Perfect (V–I)</SelectItem>
+                          <SelectItem value="plagal">Plagal (IV–I)</SelectItem>
+                          <SelectItem value="half">Half (ends on V)</SelectItem>
+                          <SelectItem value="deceptive">Deceptive (V–vi)</SelectItem>
+                          <SelectItem value="phrygian-half">Phrygian Half</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Modulation</Label>
+                      <Select value={modulationFrequency} onValueChange={(v: any) => setModulationFrequency(v)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="never">Never</SelectItem>
+                          <SelectItem value="rare">Rare</SelectItem>
+                          <SelectItem value="frequent">Frequent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Accidentals</Label>
+                      <Select value={accidentals} onValueChange={(v: any) => setAccidentals(v)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="some">Some</SelectItem>
+                          <SelectItem value="many">Many</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <Button 

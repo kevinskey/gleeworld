@@ -37,7 +37,12 @@ serve(async (req) => {
       partCount = 1,
       voiceParts = ["Soprano"],
       intervalProfile = "stepwise",
-      tempo = 120
+      tempo = 120,
+      rhythmicComplexity = "simple",
+      noteDensity = "medium",
+      cadenceType = "perfect",
+      modulationFrequency = "never",
+      accidentals = "none"
     } = await req.json();
 
     console.log("Generating MusicXML:", { difficulty, keySignature, timeSignature, measures, noteRange, partCount, voiceParts, intervalProfile, tempo });
@@ -101,20 +106,21 @@ OUTPUT ONLY VALID MUSICXML - NO EXPLANATIONS OR MARKDOWN.`;
 
     const userPrompt = `Generate a ${difficulty} sight-reading exercise with:
 - Key: ${keySignature} (SET ONLY IN MEASURE 1, maintain throughout entire exercise)
-- Time signature: ${timeSignature} 
-- ${measures} measures total (ARRANGE AS 4 MEASURES PER LINE - 2 LINES TOTAL)
+- Time signature: ${timeSignature}
+- ${measures} measures total
 - Note range: ${noteRange}
 - Divisions: 4 (quarter note = 4, eighth note = 2)
-- Mix of quarter and eighth notes for ${difficulty} level
-- Stepwise motion with occasional small leaps
+- Motion preference: ${intervalProfile}
+- Tempo: ${tempo} BPM (include <sound tempo="${tempo}"/> in measure 1)
+- Rhythmic complexity: ${rhythmicComplexity}
+- Note density: ${noteDensity}
+- Cadence type at the end: ${cadenceType}
+- Modulation frequency: ${modulationFrequency}
+- Accidentals: ${accidentals}
+- Parts: ${partCount === 2 ? 'Two-part treble (P1 Soprano, P2 Alto). Use mostly consonant harmony (3rds/6ths), avoid parallel 5ths/octaves, align rhythms.' : `Single-part treble for ${voiceParts[0]}.`}
 - COMPLETE XML structure with all ${measures} measures
-- LAYOUT: Add <print new-system="yes"/> at the beginning of measure 5 to force a new line
 - Ensure proper closing tags
-- CONSISTENT key signature - no key changes within the exercise
-- Only include <key> element in measure 1's <attributes>
-- All notes must fit within the specified key signature
-
-Generate COMPLETE MusicXML 3.1 format with ALL ${measures} measures using consistent ${keySignature} throughout with 4 measures per system.`;
+- CONSISTENT key signature - only include <key> element in measure 1's <attributes>`;
 
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
