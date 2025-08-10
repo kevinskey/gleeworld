@@ -26,7 +26,8 @@ export const HeroAuditionStats: React.FC<{ className?: string }>
         // Total auditioners = number of applications received (secure RPC)
         const { data: appCount, error: countErr } = await supabase.rpc('get_audition_application_count');
         if (countErr) throw countErr;
-        setTotal(appCount ?? 0);
+        console.log('[HeroAuditionStats] application count RPC result:', appCount);
+        setTotal(typeof appCount === 'number' ? appCount : Number(appCount) || 0);
 
         // Voice part preference breakdown
         const { data: voices, error: vErr } = await supabase
