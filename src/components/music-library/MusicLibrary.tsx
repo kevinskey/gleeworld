@@ -109,25 +109,27 @@ export const MusicLibrary = () => {
     { id: 'activity', label: 'Activity', icon: Activity, route: '/activity-logs' },
   ];
 
-  // Mobile layout - show either library or viewer
+  // Mobile layout - fullscreen takeover with back button
   if (isMobile) {
     return (
       <>
-        <div className="h-screen flex flex-col">
-          {/* Mobile Header - only show when in library view */}
-          {mobileView === 'library' && (
-            <div className="bg-background border-b p-4">
-              <PageHeader
-                title="Music Library"
-                description="Digital & Physical Sheet Music Collection"
-                showBackButton
-                backTo={(userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard'}
-                backgroundVariant="gradient"
-              />
-            </div>
-          )}
+        <div className="fixed inset-0 bg-background z-50 flex flex-col">
+          {/* Minimal header with back button */}
+          <div className="flex items-center justify-between p-4 border-b bg-background">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate((userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            <h1 className="text-lg font-semibold">Music Library</h1>
+            <div className="w-16" /> {/* Spacer for centering */}
+          </div>
 
-          {/* Mobile Content */}
+          {/* Fullscreen Content */}
           <div className="flex-1 min-h-0 overflow-y-auto">
             {mobileView === 'library' ? (
               <MobileMusicLibrary
