@@ -28,21 +28,9 @@ export const UnifiedDashboard = () => {
         <DashboardHeroCarousel />
       </div>
       
-      <div className="flex flex-col h-[calc(100vh-72px)] p-6 gap-4">
-        {/* Main Section - Community Hub only */}
-        <div className="flex-1 min-h-0">
-          {/* Mobile */}
-          <div className="md:hidden grid grid-cols-1 gap-3">
-            <div className="h-[360px] border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
-              <CommunityHubModule />
-            </div>
-          </div>
-          {/* Desktop */}
-          <div className="hidden md:flex h-full min-h-0">
-            <div className="h-full min-h-0 w-full border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
-              <CommunityHubModule />
-            </div>
-          </div>
+      <div className="flex flex-col p-0 gap-0">
+        <div>
+          <CommunityHubModule />
         </div>
 
         {/* Messages Panel Overlay */}
