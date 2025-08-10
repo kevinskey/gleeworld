@@ -256,9 +256,26 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                 <SortableItem key={module.id} id={module.id}>
                   <div className="w-full">
                     {expandedModuleId === module.id ? (
-                      <div className="rounded-lg border border-border bg-background">
-                        <div className="flex justify-end p-2">
-                          <Button variant="ghost" size="sm" onClick={() => { setExpandedModuleId(null); onExpandChange?.(null); }}>
+                  <div className="rounded-lg border border-border bg-background">
+                        <div
+                          className="flex items-center justify-between p-2 border-b cursor-pointer hover:bg-muted/40"
+                          onClick={() => openModule(module.id)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className={`p-1.5 rounded-md bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
+                              <module.icon className={`h-4 w-4 text-${module.iconColor}-600`} />
+                            </div>
+                            <h3 className="text-sm font-medium">{module.title}</h3>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedModuleId(null);
+                              onExpandChange?.(null);
+                            }}
+                          >
                             Close
                           </Button>
                         </div>
