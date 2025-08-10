@@ -32,7 +32,7 @@ export const UnifiedDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 pt-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 pt-24 md:pt-28">
       <UniversalHeader />
 
       {/* Row 1: Hero + Features side-by-side */}
