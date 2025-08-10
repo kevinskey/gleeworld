@@ -192,10 +192,25 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
     console.log('🎯 Opening module:', { moduleId, nextId, isMobile });
     setExpandedModuleId(nextId);
     onExpandChange?.(nextId);
+    
+    // Prevent body scroll on mobile when module is expanded
+    if (isMobile) {
+      if (nextId) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    }
   };
 
   const closeModule = (moduleId: string) => {
     setExpandedModuleId(prev => (prev === moduleId ? null : prev));
+    onExpandChange?.(null);
+    
+    // Restore body scroll on mobile
+    if (isMobile) {
+      document.body.style.overflow = '';
+    }
   };
 
   const bringModuleToFront = (moduleId: string) => {
@@ -262,7 +277,11 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                 <SortableItem key={module.id} id={module.id}>
                   <div className="w-full">
                     {expandedModuleId === module.id ? (
-                      <div className={`${isMobile ? 'sticky top-12 z-50' : ''} rounded-lg border border-border bg-background ${isMobile ? 'shadow-lg' : ''}`}>
+                      <div className={`${
+                        isMobile 
+                          ? 'fixed top-12 left-0 right-0 bottom-0 z-50 bg-background' 
+                          : 'rounded-lg border border-border bg-background'
+                      } ${isMobile ? '' : 'shadow-lg'}`}>
                         <div
                           className="flex items-center justify-between p-2 border-b cursor-pointer hover:bg-muted/40"
                           onClick={() => openModule(module.id)}
@@ -280,12 +299,19 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                               e.stopPropagation();
                               setExpandedModuleId(null);
                               onExpandChange?.(null);
+                              if (isMobile) {
+                                document.body.style.overflow = '';
+                              }
                             }}
                           >
                             Close
                           </Button>
                         </div>
-                        <div className={`px-4 md:px-6 py-3 ${isMobile ? 'max-h-[calc(100vh-8rem)] overflow-y-auto' : ''}`}>
+                        <div className={`${
+                          isMobile 
+                            ? 'h-[calc(100vh-3rem)] overflow-y-auto px-4 py-3' 
+                            : 'px-4 md:px-6 py-3'
+                        }`}>
                           <module.component user={user} isFullPage={false} />
                         </div>
                       </div>
