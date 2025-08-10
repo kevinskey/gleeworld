@@ -23,15 +23,17 @@ export const UnifiedDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 pt-4">
       <UniversalHeader />
 
-      {/* Hero with slides at top */}
-      <div className="px-6">
-        <DashboardHeroCarousel />
-      </div>
-      
-      <div className="flex flex-col p-0 gap-0">
-        <div>
-          <CommunityHubModule />
+      {/* Hero + Member feature side-by-side */}
+      <div className="px-6 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Left: Hero */}
+          <DashboardHeroCarousel />
+          {/* Right: Member Feature (Community Hub) */}
+          <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
+            <CommunityHubModule />
+          </div>
         </div>
+      </div>
 
         {/* Messages Panel Overlay */}
         {showMessages && (
@@ -40,6 +42,5 @@ export const UnifiedDashboard = () => {
           </div>
         )}
       </div>
-    </div>
   );
 };
