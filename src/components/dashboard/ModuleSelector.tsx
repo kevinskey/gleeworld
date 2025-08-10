@@ -145,10 +145,10 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
                     return (
                       <Card 
                         key={module.id}
-                        className={`p-4 cursor-pointer transition-all hover:shadow-md ${
+                        className={`p-4 cursor-pointer transition-all hover:shadow-md border border-border ${
                           isSelected 
                             ? 'bg-primary/10 border-primary shadow-sm' 
-                            : 'hover:bg-muted/50'
+                            : 'bg-card hover:bg-accent/10'
                         }`}
                         onClick={() => onSelectModule(module.id)}
                       >

@@ -122,7 +122,7 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
                   {modules.map((module) => (
                     <Card
                       key={module.id}
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      className="cursor-pointer bg-card hover:bg-accent/10 border border-border transition-colors"
                       onClick={() => handleModuleClick(module.id)}
                     >
                       <CardContent className="p-3">
