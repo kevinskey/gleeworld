@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Music2, Piano, Timer, AudioLines, Gauge } from 'lucide-react';
-import { MusicStaffMenu } from '@/components/ui/music-staff-menu';
+import { TuningForkIcon } from '@/components/icons/TuningForkIcon';
 import { Metronome } from '@/components/sight-singing/Metronome';
 import { PitchPipe } from '@/components/pitch-pipe/PitchPipe';
 import { VirtualPiano } from '@/components/sight-singing/VirtualPiano';
@@ -31,9 +31,12 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
     <div className={className}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <div>
-            <MusicStaffMenu />
-          </div>
+          <button
+            aria-label="Musical Toolkit"
+            className="inline-flex items-center justify-center h-9 w-9 rounded-full border border-border bg-background hover:bg-accent text-foreground shadow-sm transition-colors"
+          >
+            <TuningForkIcon className="h-5 w-5" />
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52 bg-background border border-border shadow-lg z-[200]">
           <DropdownMenuLabel className="flex items-center gap-2"><Music2 className="h-4 w-4" /> Musical Toolkit</DropdownMenuLabel>
