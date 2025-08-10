@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -93,7 +93,7 @@ import BookingRequest from "./pages/BookingRequest";
 import Wardrobe from "./pages/Wardrobe";
 import { ProductManagement } from "./pages/ProductManagement";
 import PRHubPage from "./pages/PRHubPage";
-import { SharedAnnotation } from "./pages/SharedAnnotation";
+const SharedAnnotation = lazy(() => import("./pages/SharedAnnotation").then(m => ({ default: m.SharedAnnotation })));
 import MobileScoring from "./pages/MobileScoring";
 import MemberDirectory from "./pages/MemberDirectory";
 import UserManagement from "./pages/UserManagement";
@@ -180,7 +180,8 @@ const App = () => {
                   <Toaster />
                   <Sonner />
                   <DesignSystemEnforcer />
-                  <Routes>
+                  <Suspense fallback={<LoadingSpinner size="lg" text="Loading..." />}>
+                    <Routes>
                     {/* Root route */}
                     <Route 
                       path="/" 
@@ -922,6 +923,7 @@ const App = () => {
                                            } 
                                          />
                       </Routes>
+                    </Suspense>
                    <GlobalMusicPlayer />
                 </div>
               </MusicPlayerProvider>
