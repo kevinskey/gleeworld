@@ -50,22 +50,36 @@ export function SchedulingAndSelfiePage() {
     }
 
     try {
+      const safeType = file.type || 'image/jpeg';
       const fileName = `audition-selfie-${user.id}-${Date.now()}.jpg`;
-      const { data, error } = await supabase.storage
+      const objectPath = `${user.id}/audition/${fileName}`;
+
+      const { data: upData, error: upErr } = await supabase.storage
         .from('user-files')
-        .upload(`${user.id}/audition/${fileName}`, file);
+        .upload(objectPath, file, { cacheControl: '3600', upsert: true, contentType: safeType });
 
-      if (error) throw error;
+      if (upErr) throw upErr;
 
-      const { data: publicData } = supabase.storage
+      // Prefer signed URL (works even if bucket is private); fallback to public URL
+      const { data: signed, error: signErr } = await supabase.storage
         .from('user-files')
-        .getPublicUrl(data.path);
+        .createSignedUrl(upData.path, 60 * 60); // 1 hour
 
-      setCapturedImage(publicData.publicUrl);
+      let finalUrl: string | undefined;
+      if (signed?.signedUrl) {
+        finalUrl = signed.signedUrl;
+      } else {
+        const { data: pub } = supabase.storage.from('user-files').getPublicUrl(upData.path);
+        finalUrl = pub.publicUrl;
+      }
+
+      if (!finalUrl) throw new Error('Could not generate file URL');
+
+      setCapturedImage(finalUrl);
       toast.success("Selfie captured successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading selfie:', error);
-      toast.error("Failed to upload selfie");
+      toast.error(`Failed to upload selfie: ${error?.message || 'Unknown error'}`);
     }
   };
 
