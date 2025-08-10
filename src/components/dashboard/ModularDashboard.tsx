@@ -279,7 +279,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                     {expandedModuleId === module.id ? (
                       <div className={`${
                         isMobile 
-                          ? 'fixed top-24 left-0 right-0 bottom-0 z-50 bg-background' 
+                          ? 'fixed top-32 left-0 right-0 bottom-0 z-50 bg-background' 
                           : 'rounded-lg border border-border bg-background'
                       } ${isMobile ? '' : 'shadow-lg'}`}>
                         <div
