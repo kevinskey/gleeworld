@@ -46,20 +46,6 @@ export const CommunityHubModule = () => {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className={`grid w-full grid-cols-4 m-2 bg-background/50 ${isMobile ? 'text-xs' : ''}`}>
-          <TabsTrigger data-tab-target="wellness" value="wellness" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
-            Wellness
-          </TabsTrigger>
-          <TabsTrigger data-tab-target="announcements" value="announcements" className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
-            {isMobile ? 'News' : 'Announcements'}
-          </TabsTrigger>
-          <TabsTrigger data-tab-target="notifications" value="notifications" className="data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-700">
-            Notifications
-          </TabsTrigger>
-          <TabsTrigger data-tab-target="directory" value="directory" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700">
-            Directory
-          </TabsTrigger>
-        </TabsList>
         
         {/* Buckets of Love tab intentionally removed */}
         
