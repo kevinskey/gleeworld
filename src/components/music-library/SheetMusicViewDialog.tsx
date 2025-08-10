@@ -80,7 +80,7 @@ export const SheetMusicViewDialog = ({
         <Button
           variant="secondary"
           size="sm"
-          className="absolute top-3 right-3 z-50"
+          className="absolute top-10 right-3 z-50"
           onClick={() => onOpenChange(false)}
         >
           Close
