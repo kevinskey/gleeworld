@@ -13253,6 +13253,10 @@ export type Database = {
           image_url: string
         }[]
       }
+      get_scheduled_auditions_count: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       get_track_like_count: {
         Args: { track_uuid: string }
         Returns: number
