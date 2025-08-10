@@ -117,6 +117,7 @@ import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
+import "./utils/sendAuditionerPreviewEmail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
