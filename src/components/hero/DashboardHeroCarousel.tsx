@@ -1,128 +1,202 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { Heart, Bell, Sparkles, Megaphone } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
-// DashboardHeroCarousel: a lightweight hero with slides for authenticated dashboards
-// - Uses shadcn/ui Carousel (Embla under the hood)
-// - Focused on key member features: Buckets of Love, Wellness, Notifications, Announcements
-// - 4:3 aspect on desktop, flexible on mobile
+interface HeroSlide {
+  id: string;
+  title: string | null;
+  description: string | null;
+  image_url: string | null;
+  mobile_image_url: string | null;
+  ipad_image_url: string | null;
+  button_text: string | null;
+  link_url: string | null;
+  display_order: number | null;
+  slide_duration_seconds: number | null;
+  title_position_horizontal: string | null;
+  title_position_vertical: string | null;
+  description_position_horizontal: string | null;
+  description_position_vertical: string | null;
+  title_size: string | null;
+  description_size: string | null;
+  action_button_text: string | null;
+  action_button_url: string | null;
+  action_button_enabled: boolean | null;
+  is_active: boolean | null;
+}
 
+// Helpers mirroring landing page behavior
+const getHorizontalAlignment = (position: string | null) => {
+  switch ((position || 'center').toLowerCase()) {
+    case 'left':
+      return 'justify-start';
+    case 'right':
+      return 'justify-end';
+    default:
+      return 'justify-center';
+  }
+};
+
+const getVerticalAlignment = (position: string | null) => {
+  switch ((position || 'middle').toLowerCase()) {
+    case 'top':
+      return 'items-start';
+    case 'bottom':
+      return 'items-end';
+    default:
+      return 'items-center';
+  }
+};
+
+const getTitleSize = (size: string | null) => {
+  switch ((size || 'large').toLowerCase()) {
+    case 'small':
+      return 'text-2xl sm:text-3xl md:text-4xl';
+    case 'medium':
+      return 'text-3xl sm:text-4xl md:text-5xl';
+    default:
+      return 'text-4xl sm:text-5xl md:text-6xl';
+  }
+};
+
+const getDescriptionSize = (size: string | null) => {
+  switch ((size || 'medium').toLowerCase()) {
+    case 'small':
+      return 'text-sm sm:text-base';
+    case 'large':
+      return 'text-lg sm:text-xl';
+    default:
+      return 'text-base sm:text-lg';
+  }
+};
+
+// DashboardHeroCarousel - uses the same hero slides as the landing page (usage_context = 'homepage')
 export const DashboardHeroCarousel: React.FC = () => {
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        const { data } = await supabase
+          .from('gw_hero_slides')
+          .select('*')
+          .eq('usage_context', 'homepage')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true });
+        setHeroSlides(data || []);
+      } catch (e) {
+        console.error('Failed to load dashboard hero slides', e);
+      }
+    };
+    fetchSlides();
+  }, []);
+
+  // Auto-advance like landing
+  useEffect(() => {
+    if (heroSlides.length <= 1) return;
+    const active = heroSlides[currentSlide];
+    const ms = ((active?.slide_duration_seconds ?? 10) as number) * 1000;
+    const t = setTimeout(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, ms);
+    return () => clearTimeout(t);
+  }, [currentSlide, heroSlides]);
+
+  const slide = heroSlides[currentSlide];
+
   return (
     <section aria-label="Dashboard hero" className="animate-fade-in">
-      <Card className="border-border overflow-hidden bg-background/40">
+      <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg">
         <CardContent className="p-0">
-          <div className="relative">
-            <Carousel className="w-full">
-              <CarouselContent>
-                {/* Slide 1: Buckets of Love */}
-                <CarouselItem>
-                  <div className="aspect-[4/3] md:aspect-[16/7] w-full relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15" />
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="px-6 md:px-10 lg:px-14 space-y-3 md:space-y-4">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 backdrop-blur px-3 py-1 text-xs md:text-sm">
-                          <Heart className="h-3 w-3 md:h-4 md:w-4 text-primary" />
-                          Buckets of Love
-                        </div>
-                        <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-tight">To Amaze and Inspire</h1>
-                        <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
-                          Share encouragement with the Glee community. Send a note of love and support.
-                        </p>
-                        <div className="pt-1">
-                          <Button size="sm" className="hover-scale" onClick={() => {
-                            const el = document.querySelector('[data-tab-target="buckets"]') as HTMLElement | null;
-                            el?.click();
-                            document.getElementById('bol-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }}>
-                            Send Love
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CarouselItem>
+          <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] relative overflow-hidden">
+            {slide ? (
+              <>
+                {/* Desktop */}
+                <img
+                  src={slide.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
+                  alt={slide.title || 'GleeWorld hero image'}
+                  className="hidden md:block w-full h-full object-contain transition-opacity duration-500"
+                  onError={(e) => {
+                    if (!e.currentTarget.src.includes('unsplash.com')) {
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
+                    }
+                  }}
+                />
+                {/* iPad */}
+                <img
+                  src={slide.ipad_image_url || slide.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
+                  alt={slide.title || 'GleeWorld hero image'}
+                  className="hidden sm:block md:hidden w-full h-full object-contain transition-opacity duration-500"
+                  onError={(e) => {
+                    if (!e.currentTarget.src.includes('unsplash.com')) {
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
+                    }
+                  }}
+                />
+                {/* Mobile */}
+                <img
+                  src={slide.mobile_image_url || slide.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
+                  alt={slide.title || 'GleeWorld hero image'}
+                  className="block sm:hidden w-full h-full object-contain transition-opacity duration-500"
+                  onError={(e) => {
+                    if (!e.currentTarget.src.includes('unsplash.com')) {
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
+                    }
+                  }}
+                />
 
-                {/* Slide 2: Wellness */}
-                <CarouselItem>
-                  <div className="aspect-[4/3] md:aspect-[16/7] w-full relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/60 via-background to-emerald-200/40" />
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="px-6 md:px-10 lg:px-14 space-y-3 md:space-y-4">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 backdrop-blur px-3 py-1 text-xs md:text-sm">
-                          <Sparkles className="h-3 w-3 md:h-4 md:w-4 text-emerald-600" />
-                          Wellness
-                        </div>
-                        <h2 className="text-2xl md:text-4xl lg:text-5xl font-semibold tracking-tight">Take a Wellness Minute</h2>
-                        <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
-                          Check in, hydrate, and care for your voice. Your well-being powers our sound.
-                        </p>
-                        <Button variant="secondary" size="sm" className="hover-scale" onClick={() => {
-                          const el = document.querySelector('[data-tab-target="wellness"]') as HTMLElement | null;
-                          el?.click();
-                        }}>
-                          Open Wellness
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CarouselItem>
+                {/* Subtle overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-primary/15" />
 
-                {/* Slide 3: Notifications */}
-                <CarouselItem>
-                  <div className="aspect-[4/3] md:aspect-[16/7] w-full relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-100/70 via-background to-amber-200/40" />
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="px-6 md:px-10 lg:px-14 space-y-3 md:space-y-4">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 backdrop-blur px-3 py-1 text-xs md:text-sm">
-                          <Bell className="h-3 w-3 md:h-4 md:w-4 text-amber-600" />
-                          Notifications
-                        </div>
-                        <h2 className="text-2xl md:text-4xl lg:text-5xl font-semibold tracking-tight">Stay in the Loop</h2>
-                        <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
-                          Important updates, tasks, and reminders—organized for your role.
-                        </p>
-                        <Button variant="outline" size="sm" className="hover-scale" onClick={() => {
-                          const el = document.querySelector('[data-tab-target="notifications"]') as HTMLElement | null;
-                          el?.click();
-                        }}>
-                          View Notifications
-                        </Button>
-                      </div>
-                    </div>
+                {/* Title overlay */}
+                {slide.title && (
+                  <div
+                    className={`absolute inset-0 flex ${getVerticalAlignment(slide.title_position_vertical)} ${getHorizontalAlignment(slide.title_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 pointer-events-none`}
+                  >
+                    <h1 className={`${getTitleSize(slide.title_size)} font-bold text-white drop-shadow-2xl max-w-4xl text-center sm:text-left pointer-events-auto`}>
+                      {slide.title}
+                    </h1>
                   </div>
-                </CarouselItem>
+                )}
 
-                {/* Slide 4: Announcements */}
-                <CarouselItem>
-                  <div className="aspect-[4/3] md:aspect-[16/7] w-full relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-sky-100/70 via-background to-sky-200/40" />
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="px-6 md:px-10 lg:px-14 space-y-3 md:space-y-4">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 backdrop-blur px-3 py-1 text-xs md:text-sm">
-                          <Megaphone className="h-3 w-3 md:h-4 md:w-4 text-sky-600" />
-                          Announcements
-                        </div>
-                        <h2 className="text-2xl md:text-4xl lg:text-5xl font-semibold tracking-tight">What’s New This Week</h2>
-                        <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
-                          Rehearsal notes, meetings, and opportunities—all in one place.
-                        </p>
-                        <Button variant="outline" size="sm" className="hover-scale" onClick={() => {
-                          const el = document.querySelector('[data-tab-target="announcements"]') as HTMLElement | null;
-                          el?.click();
-                        }}>
-                          See Announcements
-                        </Button>
-                      </div>
-                    </div>
+                {/* Description overlay */}
+                {slide.description && (
+                  <div
+                    className={`absolute inset-0 flex ${getVerticalAlignment(slide.description_position_vertical)} ${getHorizontalAlignment(slide.description_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 pointer-events-none`}
+                  >
+                    <p className={`${getDescriptionSize(slide.description_size)} text-white/90 drop-shadow-lg max-w-2xl text-center sm:text-left pointer-events-auto`}>
+                      {slide.description}
+                    </p>
                   </div>
-                </CarouselItem>
-              </CarouselContent>
-              <CarouselPrevious className="hidden md:flex" />
-              <CarouselNext className="hidden md:flex" />
-            </Carousel>
+                )}
+
+                {/* Action button (mirrors landing) */}
+                {slide.action_button_enabled && slide.action_button_text && slide.action_button_url && (
+                  <div className="absolute inset-0 flex justify-center items-end pb-4 sm:pb-6 md:pb-8 px-4 pointer-events-none">
+                    <Button size="sm" className="pointer-events-auto bg-primary text-primary-foreground border border-white/20 shadow-xl">
+                      <a href={slide.action_button_url} target="_blank" rel="noopener noreferrer">
+                        {slide.action_button_text}
+                      </a>
+                    </Button>
+                  </div>
+                )}
+                {!slide.action_button_enabled && slide.button_text && slide.link_url && (
+                  <div className="absolute inset-0 flex justify-center items-end pb-4 sm:pb-6 md:pb-8 px-4 pointer-events-none">
+                    <Button size="sm" className="pointer-events-auto bg-primary text-primary-foreground border border-white/20 shadow-xl">
+                      <a href={slide.link_url} target="_blank" rel="noopener noreferrer">
+                        {slide.button_text}
+                      </a>
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="w-full h-full bg-muted flex items-center justify-center">
+                <p className="text-muted-foreground text-sm">No hero slides configured</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
