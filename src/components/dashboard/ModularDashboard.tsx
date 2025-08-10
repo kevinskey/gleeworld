@@ -178,7 +178,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
       )}
 
       {/* Module Grid */}
-      <div className="w-full px-0 py-4">
+      <div className="w-full px-4 md:px-6 py-4">
         <div className="grid grid-cols-1 gap-4">
           {availableModules.map((module) => (
             <div key={module.id} className="w-full">
@@ -189,7 +189,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                       Close
                     </Button>
                   </div>
-                  <div className="p-0">
+                  <div className="px-4 md:px-6 py-3">
                     <module.component user={user} isFullPage={false} />
                   </div>
                 </div>
