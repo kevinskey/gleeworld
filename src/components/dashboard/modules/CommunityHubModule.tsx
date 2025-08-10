@@ -86,19 +86,19 @@ export const CommunityHubModule = () => {
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <TabsList className={`grid w-full grid-cols-5 m-2 bg-background/50 ${isMobile ? 'text-xs' : ''}`}>
-          <TabsTrigger value="buckets" className="data-[state=active]:bg-pink-100 data-[state=active]:text-pink-700">
+          <TabsTrigger data-tab-target="buckets" value="buckets" className="data-[state=active]:bg-pink-100 data-[state=active]:text-pink-700">
             {isMobile ? 'Love' : 'Buckets of Love'}
           </TabsTrigger>
-          <TabsTrigger value="wellness" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+          <TabsTrigger data-tab-target="wellness" value="wellness" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
             Wellness
           </TabsTrigger>
-          <TabsTrigger value="announcements" className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
+          <TabsTrigger data-tab-target="announcements" value="announcements" className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
             {isMobile ? 'News' : 'Announcements'}
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-700">
+          <TabsTrigger data-tab-target="notifications" value="notifications" className="data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-700">
             Notifications
           </TabsTrigger>
-          <TabsTrigger value="directory" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700">
+          <TabsTrigger data-tab-target="directory" value="directory" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700">
             Directory
           </TabsTrigger>
         </TabsList>
