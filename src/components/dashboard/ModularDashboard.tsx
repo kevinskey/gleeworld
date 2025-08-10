@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface OpenModule {
   id: string;
@@ -48,6 +49,7 @@ const SortableItem: React.FC<{ id: string; children: React.ReactNode }> = ({ id,
 
 export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader = false, onExpandChange }) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [openModules, setOpenModules] = useState<OpenModule[]>([]);
   const [availableModules, setAvailableModules] = useState<typeof UNIFIED_MODULES>([]);
   const [userPermissions, setUserPermissions] = useState<UserPermissions>({
@@ -256,7 +258,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                 <SortableItem key={module.id} id={module.id}>
                   <div className="w-full">
                     {expandedModuleId === module.id ? (
-                  <div className="rounded-lg border border-border bg-background">
+                      <div className={`${isMobile ? 'sticky top-16 z-40' : ''} rounded-lg border border-border bg-background ${isMobile ? 'shadow-lg' : ''}`}>
                         <div
                           className="flex items-center justify-between p-2 border-b cursor-pointer hover:bg-muted/40"
                           onClick={() => openModule(module.id)}
@@ -279,7 +281,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                             Close
                           </Button>
                         </div>
-                        <div className="px-4 md:px-6 py-3">
+                        <div className={`px-4 md:px-6 py-3 ${isMobile ? 'max-h-[calc(100vh-8rem)] overflow-y-auto' : ''}`}>
                           <module.component user={user} isFullPage={false} />
                         </div>
                       </div>
