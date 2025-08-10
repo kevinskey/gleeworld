@@ -705,7 +705,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
       {/* PDF Content */}
       <CardContent className="p-0">
-        <div className="relative w-full h-[calc(100dvh-4rem)] md:h-[calc(100dvh-4.5rem)] lg:h-[calc(100dvh-5rem)]">
+        <div className="relative w-full h-full">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
               <div className="flex flex-col items-center space-y-2">

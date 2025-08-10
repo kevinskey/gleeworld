@@ -158,8 +158,8 @@ export const MusicLibrary = () => {
   // Desktop layout - keep existing design
   return (
     <>
-      <div className="container mx-auto px-4 pt-16 md:pt-20 pb-6">
-        <div className="mb-6">
+      <div className="container mx-auto px-4 pt-16 md:pt-20 pb-4">
+        <div className="mb-2">
           <PageHeader
             title="Music Library"
             description="Digital & Physical Sheet Music Collection"
