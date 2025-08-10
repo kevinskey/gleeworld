@@ -446,27 +446,28 @@ export const UserDetailPanel = ({
 
     setLoading(true);
     try {
-      const { error } = await supabase.rpc('delete_user_and_data', {
-        target_user_id: user.id
+      // Use Edge Function with service role to fully delete Auth user and clean up profile
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { target_user_id: user.id },
       });
 
-      if (error) throw error;
+      if (error) throw error as any;
 
       toast({
-        title: "User Deleted",
+        title: 'User Deleted',
         description: `${user.email} has been permanently deleted from the system.`,
       });
 
       setDeleteMode(false);
-      setConfirmText("");
+      setConfirmText('');
       onUserDeleted();
       onClose();
     } catch (error) {
       console.error('Error deleting user:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete user",
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete user',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
