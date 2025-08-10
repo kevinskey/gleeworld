@@ -88,9 +88,9 @@ export const MobileMusicLibrary = ({
   };
 
   return (
-    <div className="h-full min-h-0 flex flex-col">
+    <div className="h-full min-h-0 flex flex-col pt-[calc(env(safe-area-inset-top)+3.5rem)]">
       {/* Mobile Header */}
-      <div className="sticky top-0 z-10 bg-background border-b px-2 py-3 sm:px-4 space-y-3">
+      <div className="sticky z-10 bg-background border-b px-2 py-3 sm:px-4 space-y-3" style={{ top: 'calc(env(safe-area-inset-top) + 3.5rem)' }}>
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
