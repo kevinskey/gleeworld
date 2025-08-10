@@ -27,9 +27,10 @@ const BASELINE_MODULE_IDS = ['music-library','calendar-management','attendance-m
 
 interface ModularDashboardProps {
   hideHeader?: boolean;
+  onExpandChange?: (id: string | null) => void;
 }
 
-export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader = false }) => {
+export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader = false, onExpandChange }) => {
   const { user } = useAuth();
   const [openModules, setOpenModules] = useState<OpenModule[]>([]);
   const [availableModules, setAvailableModules] = useState<typeof UNIFIED_MODULES>([]);
@@ -112,7 +113,9 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
   };
 
   const openModule = (moduleId: string) => {
-    setExpandedModuleId(prev => (prev === moduleId ? null : moduleId));
+    const nextId = expandedModuleId === moduleId ? null : moduleId;
+    setExpandedModuleId(nextId);
+    onExpandChange?.(nextId);
   };
 
   const closeModule = (moduleId: string) => {
@@ -182,7 +185,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
               {expandedModuleId === module.id ? (
                 <div className="rounded-lg border border-border bg-background">
                   <div className="flex justify-end p-2">
-                    <Button variant="ghost" size="sm" onClick={() => setExpandedModuleId(null)}>
+                    <Button variant="ghost" size="sm" onClick={() => { setExpandedModuleId(null); onExpandChange?.(null); }}>
                       Close
                     </Button>
                   </div>

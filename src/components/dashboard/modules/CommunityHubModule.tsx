@@ -76,7 +76,7 @@ export const CommunityHubModule = () => {
         
         {/* Buckets of Love tab intentionally removed */}
         
-        <TabsContent value="wellness" className="flex-1 p-4 bg-gradient-to-b from-green-50/50 to-background">
+        <TabsContent value="wellness" className="flex-1 p-4 bg-gradient-to-b from-green-50/50 to-background max-h-[50vh] overflow-auto">
           <div className="text-center text-muted-foreground">
             <Heart className="w-12 h-12 mx-auto mb-3 text-green-500" />
             <p className="mb-2 font-medium text-green-700">Wellness & Mental Health</p>
@@ -91,7 +91,7 @@ export const CommunityHubModule = () => {
             </div>
           </div>
         </TabsContent>
-        <TabsContent value="announcements" className="flex-1 p-4 bg-gradient-to-b from-blue-50/50 to-background">
+        <TabsContent value="announcements" className="flex-1 p-4 bg-gradient-to-b from-blue-50/50 to-background max-h-[50vh] overflow-auto">
           <div className="text-center text-muted-foreground">
             <MessageSquare className="w-12 h-12 mx-auto mb-3 text-blue-500" />
             <p className="font-medium text-blue-700 mb-2">No new announcements</p>
@@ -99,7 +99,7 @@ export const CommunityHubModule = () => {
           </div>
         </TabsContent>
         
-        <TabsContent value="buckets" className="flex-1 p-4 bg-gradient-to-b from-pink-50/50 to-background">
+        <TabsContent value="buckets" className="flex-1 p-4 bg-gradient-to-b from-pink-50/50 to-background max-h-[50vh] overflow-auto">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-muted-foreground">Share encouragement with the community</p>
             <SendBucketOfLove trigger={<Button size="sm" variant="default" className="hover-scale"><Send className="h-4 w-4 mr-1" /> Add Bucket</Button>} />
@@ -107,11 +107,11 @@ export const CommunityHubModule = () => {
           <PostItGrid />
         </TabsContent>
         
-        <TabsContent value="notifications" className="flex-1 p-4">
+        <TabsContent value="notifications" className="flex-1 p-4 max-h-[50vh] overflow-auto">
           <NotificationsSection />
         </TabsContent>
         
-        <TabsContent value="directory" className="flex-1">
+        <TabsContent value="directory" className="flex-1 max-h-[50vh] overflow-auto">
           <MemberDirectory />
         </TabsContent>
       </Tabs>
