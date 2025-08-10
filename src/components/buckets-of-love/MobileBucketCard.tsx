@@ -1,9 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MoreVertical, Reply } from "lucide-react";
+import { Heart, MoreVertical, Reply, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { BucketOfLove } from "@/hooks/useBucketsOfLove";
+import { BucketOfLove, useBucketsOfLove } from "@/hooks/useBucketsOfLove";
 import { getNoteClasses } from "./notePalette";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
+
 interface MobileBucketCardProps {
   bucket: BucketOfLove;
   onReply?: (bucket: BucketOfLove) => void;
@@ -13,6 +16,21 @@ interface MobileBucketCardProps {
 export const MobileBucketCard = ({ bucket, onReply, onLike }: MobileBucketCardProps) => {
   // Using shared pastel note palette
   const note = (color: string) => getNoteClasses(color);
+  const { user } = useAuth();
+  const { deleteBucket } = useBucketsOfLove();
+
+  const handleDelete = async () => {
+    const ok = window.confirm('Delete this note?');
+    if (!ok) return;
+    const res = await deleteBucket(bucket.id);
+    if (res.success) {
+      toast({ title: 'Deleted', description: 'Your bucket of love was removed.' });
+    } else {
+      toast({ title: 'Error', description: res.error || 'Could not delete note.' });
+    }
+  };
+
+  const isOwner = bucket.user_id && user?.id && bucket.user_id === user.id;
 
   return (
     <Card className={`border-l-4 ${getNoteClasses(bucket.note_color).container} hover:shadow-sm transition-all`}>
@@ -77,13 +95,29 @@ export const MobileBucketCard = ({ bucket, onReply, onLike }: MobileBucketCardPr
               )}
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 text-muted-foreground"
-            >
-              <MoreVertical className="h-3 w-3" />
-            </Button>
+            <div className="flex items-center gap-1">
+              {isOwner && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                  onClick={handleDelete}
+                  aria-label="Delete note"
+                  title="Delete"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-muted-foreground"
+                aria-label="More actions"
+                title="More"
+              >
+                <MoreVertical className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>
