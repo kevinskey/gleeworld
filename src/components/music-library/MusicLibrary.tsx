@@ -170,7 +170,7 @@ export const MusicLibrary = ({ embedded = false }: { embedded?: boolean }) => {
         </div>
 
         {/* Desktop two-column layout */}
-        <div className={`grid grid-cols-12 gap-6 ${embedded ? 'h-[75vh]' : 'h-[calc(100vh-5rem)]'} overflow-hidden`}>
+        <div className={`grid grid-cols-12 gap-6 ${embedded ? 'h-[85vh]' : 'h-[calc(100vh-5rem)]'} overflow-hidden`}>
           {/* Left column - Library sections */}
           <div className={`${selectedPdf ? 'col-span-4' : 'col-span-5'} space-y-4 h-full overflow-y-auto pr-1`}>
             {/* Study Scores */}
@@ -249,7 +249,7 @@ export const MusicLibrary = ({ embedded = false }: { embedded?: boolean }) => {
           {/* Right column - PDF viewer */}
           <div className={`${selectedPdf ? 'col-span-8' : 'col-span-7'} flex flex-col h-full overflow-hidden pl-1`}>
             {selectedPdf ? (
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-hidden min-h-0">
                 <PDFViewerWithAnnotations 
                   key={selectedPdf.url}
                   pdfUrl={selectedPdf.url}
