@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
 import { ModuleProps } from '@/types/unified-modules';
 import { toast } from 'sonner';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface OpenModule {
   id: string;
@@ -30,6 +33,19 @@ interface ModularDashboardProps {
   onExpandChange?: (id: string | null) => void;
 }
 
+const SortableItem: React.FC<{ id: string; children: React.ReactNode }> = ({ id, children }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children}
+    </div>
+  );
+};
+
 export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader = false, onExpandChange }) => {
   const { user } = useAuth();
   const [openModules, setOpenModules] = useState<OpenModule[]>([]);
@@ -43,6 +59,8 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
   const [loading, setLoading] = useState(true);
   const [nextZIndex, setNextZIndex] = useState(100);
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
+  const [moduleOrder, setModuleOrder] = useState<string[]>([]);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => {
     if (user) {
@@ -86,6 +104,58 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
     } finally {
       setLoading(false);
     }
+  };
+
+  // Load/save user module order
+  const fetchModuleOrder = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('gw_user_module_orders')
+        .select('module_order')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      if (data?.module_order) setModuleOrder(data.module_order as string[]);
+    } catch (err) {
+      console.error('Failed to load module order', err);
+    }
+  };
+
+  const saveModuleOrder = async (order: string[]) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from('gw_user_module_orders')
+        .upsert({ user_id: user.id, module_order: order });
+      if (error) throw error;
+    } catch (err) {
+      console.error('Failed to save module order', err);
+    }
+  };
+
+  useEffect(() => {
+    if (user) fetchModuleOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  const orderedModules = useMemo(() => {
+    if (!moduleOrder?.length) return availableModules;
+    const map = new Map(availableModules.map(m => [m.id, m]));
+    const ordered = moduleOrder.map(id => map.get(id)).filter(Boolean) as typeof availableModules;
+    const rest = availableModules.filter(m => !moduleOrder.includes(m.id));
+    return [...ordered, ...rest];
+  }, [availableModules, moduleOrder]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const currentOrder = orderedModules.map(m => m.id);
+    const oldIndex = currentOrder.indexOf(String(active.id));
+    const newIndex = currentOrder.indexOf(String(over.id));
+    const newOrder = arrayMove(currentOrder, oldIndex, newIndex);
+    setModuleOrder(newOrder);
+    saveModuleOrder(newOrder);
   };
 
   const filterAvailableModules = () => {
