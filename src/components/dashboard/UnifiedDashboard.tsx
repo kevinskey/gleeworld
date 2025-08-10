@@ -23,15 +23,15 @@ export const UnifiedDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 pt-4">
       <UniversalHeader />
 
-      {/* Hero + Member feature side-by-side */}
+      {/* Row 1: Hero full width */}
       <div className="px-6 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Left: Hero */}
-          <DashboardHeroCarousel />
-          {/* Right: Member Feature (Community Hub) */}
-          <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
-            <CommunityHubModule />
-          </div>
+        <DashboardHeroCarousel />
+      </div>
+
+      {/* Row 2: Community Hub full width */}
+      <div className="px-6 pb-6">
+        <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
+          <CommunityHubModule />
         </div>
       </div>
 
