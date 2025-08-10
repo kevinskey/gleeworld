@@ -158,7 +158,50 @@ export const CommunicationHub = () => {
           </TabsContent>
 
           <TabsContent value="notifications" className="mt-0">
-            <NotificationSenderPanel />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Message Composition */}
+              <div className="lg:col-span-2 space-y-6">
+                <MessageComposer
+                  title={title}
+                  content={content}
+                  onTitleChange={setTitle}
+                  onContentChange={setContent}
+                  templates={templates}
+                  onTemplateSelect={handleTemplateSelect}
+                />
+                <RecipientSelector
+                  selectedGroups={selectedGroups}
+                  onGroupToggle={handleGroupToggle}
+                  recipientCount={recipientCount}
+                />
+              </div>
+
+              {/* Right Column - Delivery & Controls */}
+              <div className="space-y-6">
+                <ChannelSelector
+                  selectedChannels={selectedChannels}
+                  onChannelToggle={handleChannelToggle}
+                  recipientCount={recipientCount}
+                />
+                <SendControls
+                  title={title}
+                  content={content}
+                  selectedGroups={selectedGroups}
+                  selectedChannels={selectedChannels}
+                  recipientCount={recipientCount}
+                  isLoading={isLoading}
+                  scheduledFor={scheduledFor}
+                  onScheduledForChange={setScheduledFor}
+                  onSend={handleSend}
+                  onSaveDraft={handleSaveDraft}
+                />
+              </div>
+            </div>
+
+            {/* Single-user quick sender */}
+            <div className="mt-10">
+              <NotificationSenderPanel />
+            </div>
           </TabsContent>
 
           <TabsContent value="announcements" className="mt-0">
