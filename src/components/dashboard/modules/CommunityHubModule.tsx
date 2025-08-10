@@ -8,7 +8,7 @@ import { MemberDirectory } from '@/components/directory/MemberDirectory';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { NotificationsSection } from '@/components/unified/NotificationsSection';
 import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
-import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
+import PostItGrid from '@/components/buckets-of-love/PostItGrid';
 export const CommunityHubModule = () => {
   const [activeTab, setActiveTab] = useState('announcements');
   const { user } = useAuth();
@@ -102,7 +102,7 @@ export const CommunityHubModule = () => {
             <p className="text-sm text-muted-foreground">Share encouragement with the community</p>
             <SendBucketOfLove trigger={<Button size="sm" variant="default" className="hover-scale"><Send className="h-4 w-4 mr-1" /> Add Bucket</Button>} />
           </div>
-          <BucketsOfLoveModule user={user} isFullPage />
+          <PostItGrid />
         </TabsContent>
         
         <TabsContent value="notifications" className="flex-1 p-4">
