@@ -56,6 +56,14 @@ const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, showMessag
   const [viewCount, setViewCount] = useState(1247);
   const navigate = useNavigate();
 
+  const [hideForAnnotation, setHideForAnnotation] = useState(false);
+  useEffect(() => {
+    const handler = (e: any) => setHideForAnnotation(!!e.detail?.active);
+    window.addEventListener('annotationModeChange', handler as any);
+    setHideForAnnotation(document.body.classList.contains('annotation-mode'));
+    return () => window.removeEventListener('annotationModeChange', handler as any);
+  }, []);
+
   // Update clock every second
   useEffect(() => {
     const timer = setInterval(() => {
@@ -70,7 +78,7 @@ const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, showMessag
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-gradient-to-r from-primary/10 via-background to-secondary/10 backdrop-blur-sm shadow-sm">
+    <header className={`sticky top-0 z-50 w-full border-b border-border bg-gradient-to-r from-primary/10 via-background to-secondary/10 backdrop-blur-sm shadow-sm ${hideForAnnotation ? 'hidden' : ''}`}>
       <div className="flex h-16 items-center justify-between px-6">
         {/* Left Section - Logo & Branding */}
         <div className="flex items-center space-x-4">
@@ -172,6 +180,14 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
+  const [hideForAnnotation, setHideForAnnotation] = useState(false);
+  useEffect(() => {
+    const handler = (e: any) => setHideForAnnotation(!!e.detail?.active);
+    window.addEventListener('annotationModeChange', handler as any);
+    setHideForAnnotation(document.body.classList.contains('annotation-mode'));
+    return () => window.removeEventListener('annotationModeChange', handler as any);
+  }, []);
+  
   // Notifications hook
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
@@ -253,7 +269,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   };
 
   return (
-    <header className="glass-nav sticky top-0 z-50">
+    <header className={`glass-nav sticky top-0 z-50 ${hideForAnnotation ? 'hidden' : ''}`}>
       <div className="container mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between h-14 sm:h-16 md:h-18">
           {/* Logo */}

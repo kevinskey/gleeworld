@@ -91,7 +91,22 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     if (startInAnnotationMode && !annotationMode) {
       setAnnotationMode(true);
     }
-  }, [startInAnnotationMode]);
+  }, [startInAnnotationMode, annotationMode]);
+
+  // Toggle global annotation mode to hide/show the app header
+  useEffect(() => {
+    try {
+      if (annotationMode) {
+        document.body.classList.add('annotation-mode');
+      } else {
+        document.body.classList.remove('annotation-mode');
+      }
+      window.dispatchEvent(new CustomEvent('annotationModeChange', { detail: { active: annotationMode } }));
+    } catch {}
+    return () => {
+      document.body.classList.remove('annotation-mode');
+    };
+  }, [annotationMode]);
 
   // Handle iframe load
   const handleIframeLoad = () => {
