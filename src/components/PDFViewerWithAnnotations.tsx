@@ -698,7 +698,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
       {/* PDF Content */}
       <CardContent className="p-0">
-        <div className="relative w-full h-[calc(100dvh-10rem)] min-h-[70vh] md:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-8rem)]">
+        <div className="relative w-full h-[calc(100dvh-4rem)] md:h-[calc(100dvh-4.5rem)] lg:h-[calc(100dvh-5rem)]">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
               <div className="flex flex-col items-center space-y-2">
@@ -766,7 +766,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           {/* Annotation Mode: PDF + Overlay Canvas */}
           {annotationMode && (
             <div className="w-full h-full overflow-auto bg-muted/10">
-              <div className="w-full h-full flex items-start justify-center p-4">
+              <div className="w-full h-full flex items-start justify-center p-2 md:p-3">
                 <div className="relative">
                   <canvas
                     ref={canvasRef}
