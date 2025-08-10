@@ -88,7 +88,7 @@ export const MobileMusicLibrary = ({
   return (
     <div className="h-full flex flex-col">
       {/* Mobile Header */}
-      <div className="sticky top-0 z-10 bg-background border-b p-4 space-y-4">
+      <div className="sticky top-0 z-10 bg-background border-b px-2 py-3 sm:px-4 space-y-3">
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -154,7 +154,7 @@ export const MobileMusicLibrary = ({
 
       {/* Tab Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-4 mx-4 my-2">
+        <TabsList className="grid w-full grid-cols-4 mx-2 my-2 sm:mx-4">
           <TabsTrigger value="library" className="text-xs">
             <Music className="h-4 w-4 mr-1" />
             Library
@@ -175,7 +175,7 @@ export const MobileMusicLibrary = ({
 
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto">
-          <TabsContent value="library" className="p-4 space-y-4 mt-0">
+          <TabsContent value="library" className="px-2 py-3 space-y-3 mt-0 sm:px-4 sm:py-4">
             <SheetMusicLibrary 
               searchQuery={searchQuery}
               selectedCategory={selectedCategory}
@@ -186,21 +186,21 @@ export const MobileMusicLibrary = ({
             />
           </TabsContent>
 
-          <TabsContent value="study" className="p-4 mt-0">
+          <TabsContent value="study" className="px-2 py-3 mt-0 sm:px-4 sm:py-4">
             <StudyScoresPanel 
               currentSelected={selectedPdf}
               onOpenScore={onPdfSelect}
             />
           </TabsContent>
 
-          <TabsContent value="collections" className="p-4 mt-0">
+          <TabsContent value="collections" className="px-2 py-3 mt-0 sm:px-4 sm:py-4">
             <MyCollectionsPanel
               currentSelected={selectedPdf}
               onOpenScore={onPdfSelect}
             />
           </TabsContent>
 
-          <TabsContent value="setlists" className="p-4 mt-0">
+          <TabsContent value="setlists" className="px-2 py-3 mt-0 sm:px-4 sm:py-4">
             <SetlistBuilder 
               onPdfSelect={onPdfSelect} 
               onOpenPlayer={onOpenSetlistPlayer}
