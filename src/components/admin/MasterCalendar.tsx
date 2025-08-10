@@ -19,6 +19,7 @@ import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { CalendarManager } from "@/components/calendar/CalendarManager";
 import { CalendarExport } from "@/components/calendar/CalendarExport";
 import { AppointmentScheduler } from "@/components/appointments/AppointmentScheduler";
+import { CreateEventDialog } from "@/components/calendar/CreateEventDialog";
 
 export const MasterCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -434,6 +435,7 @@ export const MasterCalendar = () => {
               </div>
             </DialogContent>
           </Dialog>
+          <CreateEventDialog onEventCreated={fetchEvents} initialDate={selectedDate} />
         </div>
       </div>
 
