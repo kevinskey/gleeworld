@@ -258,7 +258,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                 <SortableItem key={module.id} id={module.id}>
                   <div className="w-full">
                     {expandedModuleId === module.id ? (
-                      <div className={`${isMobile ? 'sticky top-16 z-40' : ''} rounded-lg border border-border bg-background ${isMobile ? 'shadow-lg' : ''}`}>
+                      <div className={`${isMobile ? 'sticky top-12 z-40' : ''} rounded-lg border border-border bg-background ${isMobile ? 'shadow-lg' : ''}`}>
                         <div
                           className="flex items-center justify-between p-2 border-b cursor-pointer hover:bg-muted/40"
                           onClick={() => openModule(module.id)}
