@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { SheetMusicLibrary } from './SheetMusicLibrary';
@@ -8,7 +8,7 @@ import { SetlistPlayer } from './SetlistPlayer';
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
 import { MobileMusicLibrary } from './MobileMusicLibrary';
 import { MobilePDFViewer } from './MobilePDFViewer';
-import { Home, Users, Calendar, FileText, Activity, ArrowLeft, Music, Eye, ChevronDown, ChevronRight, Smartphone, Monitor } from 'lucide-react';
+import { Home, Users, Calendar, FileText, Activity, ArrowLeft, ArrowUp, Music, Eye, ChevronDown, ChevronRight, Smartphone, Monitor } from 'lucide-react';
 import { StudyScoresPanel } from './StudyScoresPanel';
 import { MyCollectionsPanel } from './MyCollectionsPanel';
 import { SheetMusicViewDialog } from './SheetMusicViewDialog';
@@ -29,6 +29,24 @@ export const MusicLibrary = () => {
   const [selectedPdf, setSelectedPdf] = useState<{url: string; title: string; id?: string} | null>(null);
   const [mobileView, setMobileView] = useState<'library' | 'viewer'>('library');
   
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => setShowScrollTop(el.scrollTop > 300);
+    el.addEventListener('scroll', onScroll);
+    onScroll();
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [isMobile]);
+
+  const scrollToTop = () => {
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const [activeSetlistPlayer, setActiveSetlistPlayer] = useState<string | null>(null);
   const [setlistOpen, setSetlistOpen] = useState(false);
   const [studyOpen, setStudyOpen] = useState(false);
@@ -113,29 +131,15 @@ export const MusicLibrary = () => {
   if (isMobile) {
     return (
       <>
-        <div className="fixed inset-0 bg-background z-50 flex flex-col">
-          {/* Minimal header with back button */}
-          <div className="flex items-center justify-between p-4 border-b bg-background">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate((userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-            <h1 className="text-lg font-semibold">Music Library</h1>
-            <div className="w-16" /> {/* Spacer for centering */}
-          </div>
-
+        <div className="fixed inset-0 bg-background z-50 flex flex-col relative">
           {/* Fullscreen Content */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-hidden">
             {mobileView === 'library' ? (
               <MobileMusicLibrary
                 onPdfSelect={handlePdfSelect}
                 onOpenSetlistPlayer={handleOpenSetlistPlayer}
                 selectedPdf={selectedPdf}
+                scrollContainerRef={scrollRef}
               />
             ) : (
               <MobilePDFViewer
@@ -145,6 +149,32 @@ export const MusicLibrary = () => {
               />
             )}
           </div>
+
+          {/* Floating Back Button */}
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={() => navigate((userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard')}
+            className="fixed top-3 left-3 z-50"
+            aria-label="Back"
+            title="Back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+
+          {/* Scroll To Top Button */}
+          {showScrollTop && (
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={scrollToTop}
+              className="fixed bottom-4 right-4 z-50"
+              aria-label="Back to top"
+              title="Back to top"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {/* Study Mode Dialog for mobile */}

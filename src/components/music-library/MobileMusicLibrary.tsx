@@ -30,12 +30,14 @@ interface MobileMusicLibraryProps {
   onPdfSelect: (pdfUrl: string, title: string, id?: string) => void;
   onOpenSetlistPlayer: (setlistId: string) => void;
   selectedPdf: {url: string; title: string; id?: string} | null;
+  scrollContainerRef?: React.Ref<HTMLDivElement>;
 }
 
 export const MobileMusicLibrary = ({ 
   onPdfSelect, 
   onOpenSetlistPlayer, 
-  selectedPdf 
+  selectedPdf, 
+  scrollContainerRef
 }: MobileMusicLibraryProps) => {
   const [activeTab, setActiveTab] = useState("library");
   const [searchQuery, setSearchQuery] = useState("");
@@ -174,7 +176,7 @@ export const MobileMusicLibrary = ({
         </TabsList>
 
         {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div ref={scrollContainerRef as any} className="flex-1 overflow-y-auto">
           <TabsContent value="library" className="px-2 py-3 space-y-3 mt-0 sm:px-4 sm:py-4">
             <SheetMusicLibrary 
               searchQuery={searchQuery}
