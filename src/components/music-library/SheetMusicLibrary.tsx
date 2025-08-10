@@ -5,8 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   FileText, 
-  Download, 
-  Eye, 
   Edit, 
   Trash2, 
   User, 
@@ -349,23 +347,6 @@ export const SheetMusicLibrary = ({
 
               {/* Actions */}
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  console.log('Eye button clicked for item:', item.title, 'PDF URL:', item.pdf_url);
-                  handleView(item);
-                  if (item.pdf_url && onPdfSelect) {
-                    console.log('Calling onPdfSelect with:', item.pdf_url, item.title);
-                    onPdfSelect(item.pdf_url, item.title, item.id);
-                  } else {
-                    console.log('No PDF URL or onPdfSelect callback available');
-                  }
-                }}
-                >
-                  <Eye className="h-3 w-3" />
-                </Button>
                 {canEditMusic && (
                   <Button 
                     size="sm" 
@@ -376,13 +357,6 @@ export const SheetMusicLibrary = ({
                     }}
                   >
                     <Edit className="h-3 w-3" />
-                  </Button>
-                )}
-                {item.pdf_url && (
-                  <Button size="sm" variant="outline" asChild>
-                    <a href={item.pdf_url} download target="_blank" rel="noopener noreferrer">
-                      <Download className="h-3 w-3" />
-                    </a>
                   </Button>
                 )}
                 {canEditMusic && (
@@ -470,23 +444,6 @@ export const SheetMusicLibrary = ({
 
                     {/* Actions */}
                     <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log('Eye button clicked (list view) for item:', item.title, 'PDF URL:', item.pdf_url);
-                          handleView(item);
-                          if (item.pdf_url && onPdfSelect) {
-                            console.log('Calling onPdfSelect (list view) with:', item.pdf_url, item.title);
-                            onPdfSelect(item.pdf_url, item.title, item.id);
-                          } else {
-                            console.log('No PDF URL or onPdfSelect callback available (list view)');
-                          }
-                        }}
-                      >
-                        <Eye className="h-3 w-3" />
-                      </Button>
                       {canEditMusic && (
                         <Button 
                           size="sm" 
@@ -497,13 +454,6 @@ export const SheetMusicLibrary = ({
                           }}
                         >
                           <Edit className="h-3 w-3" />
-                        </Button>
-                      )}
-                      {item.pdf_url && (
-                        <Button size="sm" variant="outline" asChild>
-                          <a href={item.pdf_url} download target="_blank" rel="noopener noreferrer">
-                            <Download className="h-3 w-3" />
-                          </a>
                         </Button>
                       )}
                       {canEditMusic && (
