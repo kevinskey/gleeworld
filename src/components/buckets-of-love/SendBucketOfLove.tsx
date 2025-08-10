@@ -7,9 +7,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Users, User, Send } from 'lucide-react';
+import { Heart, Users, User, Send, Smile } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
 
 interface SendBucketOfLoveProps {
   trigger?: React.ReactNode;
@@ -150,7 +153,7 @@ const SendBucketOfLove: React.FC<SendBucketOfLoveProps> = ({ trigger }) => {
 
       toast({
         title: "Success!",
-        description: `Bucket of love sent to ${sendType === 'individual' ? 'recipient' : 'group'}!`,
+        description: `Bucket of love sent to ${sendType === 'individual' ? 'recipient' : 'group'}! 💙`,
       });
 
       // Reset form
@@ -261,7 +264,20 @@ const SendBucketOfLove: React.FC<SendBucketOfLoveProps> = ({ trigger }) => {
 
           {/* Message */}
           <div>
-            <Label htmlFor="message">Message</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="message">Message</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" size="sm" className="gap-1">
+                    <Smile className="h-4 w-4" />
+                    Emoji
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="p-0 w-[320px]">
+                  <Picker data={data} onEmojiSelect={(e: any) => setMessage((prev) => prev + (e?.native || ''))} />
+                </PopoverContent>
+              </Popover>
+            </div>
             <Textarea
               id="message"
               placeholder="Share your love and appreciation..."

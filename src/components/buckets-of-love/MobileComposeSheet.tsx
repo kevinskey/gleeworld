@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Heart, Send, Palette, Smile } from "lucide-react";
 import { useBucketsOfLove } from "@/hooks/useBucketsOfLove";
 import { useToast } from "@/components/ui/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
 
 interface MobileComposeSheetProps {
   trigger?: React.ReactNode;
@@ -97,7 +100,19 @@ export const MobileComposeSheet = ({ trigger, onSent }: MobileComposeSheetProps)
           <div className="space-y-6 pb-6">
           {/* Message */}
           <div className="space-y-2">
-            <Label htmlFor="message" className="text-sm font-medium">Your message</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="message" className="text-sm font-medium">Your message</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" size="sm" className="gap-1">
+                    <Smile className="h-4 w-4" /> Emoji
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="p-0 w-[320px]">
+                  <Picker data={data} onEmojiSelect={(e: any) => setMessage((prev) => prev + (e?.native || ''))} />
+                </PopoverContent>
+              </Popover>
+            </div>
             <Textarea
               id="message"
               placeholder="Share your love, encouragement, or appreciation..."
