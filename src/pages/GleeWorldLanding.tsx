@@ -274,7 +274,7 @@ export const GleeWorldLanding = () => {
     <div 
       className="min-h-screen w-full relative"
     >
-      <div className="absolute inset-0 bg-[url('/lovable-uploads/90bc1107-92d3-42f5-8c88-fc7a000d9c42.png')] bg-no-repeat bg-top md:bg-center bg-contain md:bg-cover grayscale opacity-60" aria-hidden="true" />
+      <div className="absolute inset-0 bg-[url('/lovable-uploads/da72bd35-4e2e-40d3-949c-d4d4e21db37b.png')] bg-no-repeat bg-top md:bg-center bg-contain md:bg-cover opacity-60" aria-hidden="true" />
       
       <PublicLayout>
 
