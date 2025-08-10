@@ -19,8 +19,8 @@
     --primary-foreground: 0 0% 100%; /* Pure white for maximum contrast */
 
     /* Secondary Accent Colors */
-    --secondary: var(--spelman-gold);
-    --secondary-foreground: var(--spelman-blue-dark); /* Dark blue on gold */
+    --secondary: var(--spelman-blue-light);
+    --secondary-foreground: 0 0% 100%; /* White text on blue */
     
     /* High-Contrast Backgrounds */
     --background: 0 0% 100%; /* Pure white background */
@@ -127,8 +127,8 @@
     --primary: var(--spelman-blue-dark);
     --primary-foreground: 0 0% 100%;
 
-    --secondary: var(--spelman-gold);
-    --secondary-foreground: var(--spelman-blue-dark);
+    --secondary: var(--spelman-blue-light);
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 0 0% 96%; /* Very light gray */
     --muted-foreground: 0 0% 25%; /* Medium dark gray */
