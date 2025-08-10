@@ -13,6 +13,7 @@ import { useAvailableAuditionSlots } from "@/hooks/useAvailableAuditionSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import heic2any from "heic2any";
 
 export function SchedulingAndSelfiePage() {
   const { form, capturedImage, setCapturedImage } = useAuditionForm();
@@ -50,25 +51,34 @@ export function SchedulingAndSelfiePage() {
     }
 
     try {
-      const safeType = file.type || 'image/jpeg';
+      // Convert HEIC to JPEG for iOS devices
+      let uploadFile: File = file;
+      if ((file.type && file.type.toLowerCase().includes('heic')) || file.name?.toLowerCase().endsWith('.heic')) {
+        try {
+          const jpegBlob = await (heic2any as any)({ blob: file, toType: 'image/jpeg', quality: 0.8 });
+          uploadFile = new File([jpegBlob as Blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
+        } catch (convErr) {
+          console.warn('HEIC conversion failed, proceeding with original file:', convErr);
+        }
+      }
+
+      const safeType = uploadFile.type || 'image/jpeg';
       const fileName = `audition-selfie-${user.id}-${Date.now()}.jpg`;
       const objectPath = `${user.id}/audition/${fileName}`;
 
       const { data: upData, error: upErr } = await supabase.storage
         .from('user-files')
-        .upload(objectPath, file, { cacheControl: '3600', upsert: true, contentType: safeType });
+        .upload(objectPath, uploadFile, { cacheControl: '3600', upsert: true, contentType: safeType });
 
       if (upErr) throw upErr;
 
       // Prefer signed URL (works even if bucket is private); fallback to public URL
-      const { data: signed, error: signErr } = await supabase.storage
+      const { data: signed } = await supabase.storage
         .from('user-files')
         .createSignedUrl(upData.path, 60 * 60); // 1 hour
 
-      let finalUrl: string | undefined;
-      if (signed?.signedUrl) {
-        finalUrl = signed.signedUrl;
-      } else {
+      let finalUrl: string | undefined = signed?.signedUrl;
+      if (!finalUrl) {
         const { data: pub } = supabase.storage.from('user-files').getPublicUrl(upData.path);
         finalUrl = pub.publicUrl;
       }
@@ -78,7 +88,7 @@ export function SchedulingAndSelfiePage() {
       setCapturedImage(finalUrl);
       toast.success("Selfie captured successfully!");
     } catch (error: any) {
-      console.error('Error uploading selfie:', error);
+      console.error('Error uploading selfie:', { message: error?.message, status: error?.statusCode || error?.status, error });
       toast.error(`Failed to upload selfie: ${error?.message || 'Unknown error'}`);
     }
   };
