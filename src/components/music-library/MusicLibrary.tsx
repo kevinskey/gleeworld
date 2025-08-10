@@ -20,7 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-export const MusicLibrary = ({ embedded = false }: { embedded?: boolean }) => {
+export const MusicLibrary = ({ embedded = false, heightClass }: { embedded?: boolean; heightClass?: string }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -170,7 +170,7 @@ export const MusicLibrary = ({ embedded = false }: { embedded?: boolean }) => {
         </div>
 
         {/* Desktop two-column layout */}
-        <div className={`grid grid-cols-12 gap-6 ${embedded ? 'h-[85vh]' : 'h-[calc(100vh-5rem)]'} overflow-hidden`}>
+        <div className={`grid grid-cols-12 gap-6 ${embedded ? (heightClass || 'h-[85vh]') : 'h-[calc(100vh-5rem)]'} overflow-hidden`}>
           {/* Left column - Library sections */}
           <div className={`${selectedPdf ? 'col-span-4' : 'col-span-5'} space-y-4 h-full overflow-y-auto pr-1`}>
             {/* Study Scores */}
