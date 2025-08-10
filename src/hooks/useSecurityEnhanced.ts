@@ -155,7 +155,7 @@ export const useSecurityEnhanced = () => {
         email: sanitizedEmail,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `https://gleeworld.org/`,
           data: {
             full_name: sanitizedFullName,
             role: role,
@@ -212,7 +212,7 @@ export const useSecurityEnhanced = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
-        redirectTo: `${window.location.origin}/auth?reset=true`,
+        redirectTo: `https://gleeworld.org/auth?reset=true`,
       });
 
       if (error) {
