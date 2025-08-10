@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function CustomerInfo() {
   const [activeTab, setActiveTab] = useState<'CUSTOMER INFO' | 'EXISTING ACCOUNT'>('CUSTOMER INFO');
@@ -20,7 +21,37 @@ export default function CustomerInfo() {
     acceptTerms: false
   });
 
-  const handleContinue = () => {
+  // Read service and datetime from query
+  const params = new URLSearchParams(window.location.search);
+  const serviceId = params.get('service') || '';
+  const dateParam = params.get('date') || '';
+  const timeParam = params.get('time') || '';
+
+  const serviceCatalog: Record<string, { name: string; amountCents: number; duration: string }> = {
+    'office-30': { name: 'Office Hours (30 min)', amountCents: 0, duration: '30min' },
+    'lesson-30': { name: 'Lesson (30 min)', amountCents: 5000, duration: '30min' },
+    'lesson-60': { name: 'Lesson (1 hour)', amountCents: 10000, duration: '1h' },
+    'audition': { name: 'Audition (30 min)', amountCents: 0, duration: '30min' },
+  };
+  const selectedService = serviceCatalog[serviceId] || { name: 'Service', amountCents: 0, duration: '' };
+  const isPaid = selectedService.amountCents > 0;
+
+  const handleContinue = async () => {
+    if (isPaid) {
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: {
+          amount: selectedService.amountCents,
+          currency: 'usd',
+          productName: selectedService.name,
+          email: formData.email || undefined,
+        },
+      });
+      if (!error && data?.url) {
+        window.location.href = data.url as string;
+        return;
+      }
+      console.error('Payment error:', error);
+    }
     window.location.href = '/booking/confirmation';
   };
 
@@ -246,15 +277,15 @@ export default function CustomerInfo() {
                 className="w-16 h-16 rounded-lg object-cover"
               />
               <div>
-                <h3 className="text-primary-foreground font-semibold text-lg">Voice Coaching</h3>
+                  <h3 className="text-primary-foreground font-semibold text-lg">{selectedService.name}</h3>
               </div>
               <div className="ml-auto">
                 <Button 
                   className="bg-blue-400 hover:bg-blue-500 text-white px-8"
                   onClick={handleContinue}
-                  disabled={!formData.firstName || !formData.lastName || !formData.acceptTerms}
+                  disabled={!formData.firstName || !formData.lastName || !formData.acceptTerms || (isPaid && !formData.email)}
                 >
-                  Continue
+                  {isPaid ? 'Proceed to Payment' : 'Continue'}
                 </Button>
               </div>
             </div>
@@ -276,10 +307,10 @@ export default function CustomerInfo() {
                     <div className="bg-white/5 border border-white/20 rounded-lg p-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-primary-foreground font-medium">Voice Coaching</div>
-                          <div className="text-sm text-primary-foreground/70">1h 45min</div>
+                        <div className="text-primary-foreground font-medium">{selectedService.name}</div>
+                        <div className="text-sm text-primary-foreground/70">{selectedService.duration}</div>
                         </div>
-                        <div className="text-lg font-bold text-primary-foreground">$30</div>
+                        <div className="text-lg font-bold text-primary-foreground">{selectedService.amountCents > 0 ? `$${(selectedService.amountCents/100).toFixed(2)}` : '$0'}</div>
                       </div>
                     </div>
                   </div>
@@ -340,7 +371,7 @@ export default function CustomerInfo() {
                       <Calendar className="h-4 w-4 mr-2" />
                       Total Price
                     </label>
-                    <div className="text-2xl font-bold text-primary-foreground">$30</div>
+                    <div className="text-2xl font-bold text-primary-foreground">{selectedService.amountCents > 0 ? `$${(selectedService.amountCents/100).toFixed(2)}` : '$0'}</div>
                   </div>
                 </div>
               </CardContent>

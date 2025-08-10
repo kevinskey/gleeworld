@@ -28,10 +28,14 @@ export default function DateTimeSelection() {
     { day: 'Tue', date: 12, available: true }
   ];
 
+  const serviceParam = new URLSearchParams(window.location.search).get('service') || '';
   const handleTimeSelect = (time: string) => {
     setSelectedTime(time);
-    // Navigate to next step
-    window.location.href = '/booking/recurring';
+    const params = new URLSearchParams(window.location.search);
+    params.set('service', serviceParam);
+    params.set('date', String(selectedDate ?? ''));
+    params.set('time', time);
+    window.location.href = `/booking/recurring?${params.toString()}`;
   };
 
   return (

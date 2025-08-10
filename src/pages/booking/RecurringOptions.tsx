@@ -9,7 +9,7 @@ export default function RecurringOptions() {
   const [endAfter, setEndAfter] = useState(1);
 
   const handleContinue = () => {
-    window.location.href = '/booking/customer-info';
+    window.location.href = '/booking/customer-info' + window.location.search;
   };
 
   return (
