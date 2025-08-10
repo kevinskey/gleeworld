@@ -17,7 +17,7 @@ export const CongratulationsDialog: React.FC<CongratulationsDialogProps> = ({
 
   const handleContinue = () => {
     onOpenChange(false);
-    navigate("/");
+    navigate("/dashboard/auditioner");
   };
 
   return (
@@ -48,7 +48,7 @@ export const CongratulationsDialog: React.FC<CongratulationsDialogProps> = ({
             className="w-full"
             size="lg"
           >
-            Return to Home
+            Go to Auditioner Dashboard
           </Button>
         </div>
       </DialogContent>
