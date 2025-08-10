@@ -70,6 +70,7 @@ import { ReceiptsModule } from "@/components/receipts/ReceiptsModule";
 import { ReimbursementsManager } from "@/components/reimbursements/ReimbursementsManager";
 import { AIFinancialPlanningModule } from "@/components/financial/AIFinancialPlanningModule";
 import { WellnessModule } from '@/components/modules/WellnessModule';
+import { GleeWritingWidget } from '@/components/writing/GleeWritingWidget';
 
 // Single source of truth for all modules
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -120,7 +121,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     category: "communications",
     isNew: true,
     isActive: true,
-    component: UserManagementModule, // TODO: Replace with actual component
+    component: GleeWritingWidget,
     dbFunctionName: "glee-writing"
   },
   {
