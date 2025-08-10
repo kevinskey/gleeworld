@@ -194,14 +194,14 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
 
       {/* Module Grid */}
       <div className="container mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {availableModules.map((module) => (
             <Card 
               key={module.id} 
-              className="hover:shadow-lg transition-shadow cursor-pointer group h-auto sm:h-[40vh] md:h-[50vh] flex"
+              className="hover:shadow-lg transition-shadow cursor-pointer group"
               onClick={() => openModule(module.id)}
             >
-              <CardContent className="p-4 sm:p-5 md:p-6 h-full">
+              <CardContent className="p-4">
                 <div className="flex items-center gap-3 mb-3">
                   <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
                     <module.icon className={`h-5 w-5 text-${module.iconColor}-600`} />
