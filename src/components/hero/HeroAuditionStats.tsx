@@ -9,16 +9,11 @@ interface VoiceStats {
   other: number;
 }
 
-interface TopCity {
-  city: string;
-  count: number;
-}
 
 export const HeroAuditionStats: React.FC<{ className?: string }>
   = ({ className = '' }) => {
   const [total, setTotal] = useState<number | null>(null);
   const [voiceStats, setVoiceStats] = useState<VoiceStats>({ soprano: 0, alto: 0, other: 0 });
-  const [topCities, setTopCities] = useState<TopCity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,15 +22,25 @@ export const HeroAuditionStats: React.FC<{ className?: string }>
       try {
         setLoading(true);
         setError(null);
-        const { data, error } = await supabase.rpc('get_audition_stats');
-        if (error) throw error;
-        const totalVal = (data as any)?.total as number | null;
-        const sopranoVal = (data as any)?.soprano as number | null;
-        const altoVal = (data as any)?.alto as number | null;
-        const cities = ((data as any)?.top_cities || []) as { city: string; count: number }[];
-        setTotal(totalVal ?? 0);
-        setVoiceStats({ soprano: sopranoVal ?? 0, alto: altoVal ?? 0, other: 0 });
-        setTopCities(cities);
+        // Total auditioners = current applications count
+        const totalRes = await supabase
+          .from('audition_applications')
+          .select('*', { count: 'exact', head: true });
+        setTotal(totalRes.count ?? 0);
+
+        // Voice part preference breakdown
+        const { data: voices, error: vErr } = await supabase
+          .from('audition_applications')
+          .select('voice_part_preference');
+        if (vErr) throw vErr;
+        const agg: VoiceStats = { soprano: 0, alto: 0, other: 0 };
+        voices?.forEach((row: any) => {
+          const v = (row.voice_part_preference || '').toString().trim().toLowerCase();
+          if (v.includes('soprano')) agg.soprano += 1;
+          else if (v.includes('alto')) agg.alto += 1;
+          else agg.other += 1;
+        });
+        setVoiceStats(agg);
       } catch (e: any) {
         setError(e?.message || 'Failed to load stats');
       } finally {
@@ -82,25 +87,6 @@ export const HeroAuditionStats: React.FC<{ className?: string }>
               <span>Soprano</span>
               <span>Alto</span>
             </div>
-          </div>
-        </div>
-        <div className="mt-3">
-          <div className="text-[11px] md:text-xs text-muted-foreground">Top Cities</div>
-          <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
-            {loading ? (
-              <div className="text-xs text-muted-foreground">—</div>
-            ) : (
-              topCities.length > 0 ? (
-                topCities.map((c) => (
-                  <div key={c.city} className="flex items-center justify-between text-xs">
-                    <span className="truncate" title={c.city}>{c.city}</span>
-                    <span className="text-muted-foreground">{c.count}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="text-xs text-muted-foreground">No city data yet</div>
-              )
-            )}
           </div>
         </div>
         {error && <div className="mt-2 text-[11px] text-destructive">{error}</div>}
