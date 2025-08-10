@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Heart, MoreVertical, Reply } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { BucketOfLove } from "@/hooks/useBucketsOfLove";
-
+import { getNoteClasses } from "./notePalette";
 interface MobileBucketCardProps {
   bucket: BucketOfLove;
   onReply?: (bucket: BucketOfLove) => void;
@@ -11,20 +11,11 @@ interface MobileBucketCardProps {
 }
 
 export const MobileBucketCard = ({ bucket, onReply, onLike }: MobileBucketCardProps) => {
-  const getColorClass = (color: string) => {
-    const colorMap = {
-      pink: 'border-l-pink-400 bg-pink-50/50',
-      yellow: 'border-l-yellow-400 bg-yellow-50/50',
-      blue: 'border-l-blue-400 bg-blue-50/50',
-      green: 'border-l-green-400 bg-green-50/50',
-      purple: 'border-l-purple-400 bg-purple-50/50',
-      orange: 'border-l-orange-400 bg-orange-50/50',
-    };
-    return colorMap[color as keyof typeof colorMap] || 'border-l-pink-400 bg-pink-50/50';
-  };
+  // Using shared pastel note palette
+  const note = (color: string) => getNoteClasses(color);
 
   return (
-    <Card className={`border-l-4 ${getColorClass(bucket.note_color)} hover:shadow-sm transition-all`}>
+    <Card className={`border-l-4 ${getNoteClasses(bucket.note_color).container} hover:shadow-sm transition-all`}>
       <CardContent className="p-4">
         {/* Message content */}
         <div className="space-y-3">
@@ -41,9 +32,9 @@ export const MobileBucketCard = ({ bucket, onReply, onLike }: MobileBucketCardPr
 
           {/* Sender and recipient info */}
           <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className={`flex items-center justify-between text-xs text-muted-foreground ${getNoteClasses(bucket.note_color).meta}`}>
               <div className="flex items-center gap-2">
-                <Heart className="h-3 w-3 text-pink-400" />
+                <Heart className={`h-3 w-3 ${getNoteClasses(bucket.note_color).heart}`} />
                 <span className="font-medium">
                   {bucket.is_anonymous ? 'Anonymous' : (bucket.sender_name || 'Unknown')}
                 </span>
@@ -67,9 +58,9 @@ export const MobileBucketCard = ({ bucket, onReply, onLike }: MobileBucketCardPr
                 variant="ghost"
                 size="sm"
                 onClick={() => onLike?.(bucket)}
-                className="h-8 px-2 text-muted-foreground hover:text-pink-600"
+                className="h-8 px-2 text-muted-foreground hover:opacity-80"
               >
-                <Heart className={`h-3 w-3 mr-1 ${bucket.likes > 0 ? 'fill-current text-pink-500' : ''}`} />
+                <Heart className={`h-3 w-3 mr-1 ${getNoteClasses(bucket.note_color).heart} ${bucket.likes > 0 ? 'fill-current' : ''}`} />
                 <span className="text-xs">{bucket.likes > 0 ? bucket.likes : 'Like'}</span>
               </Button>
               

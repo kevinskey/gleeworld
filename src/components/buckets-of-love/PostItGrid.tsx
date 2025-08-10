@@ -5,7 +5,7 @@ import { Heart, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-
+import { getNoteClasses } from './notePalette';
 // Responsive slots by breakpoint: sm=12, md=16, lg=24, xl+=32
 const useGridSlots = () => {
   const [slots, setSlots] = useState(12);
@@ -56,7 +56,7 @@ const NoteCard: React.FC<{
       title={isOwner && !isPlaceholder ? 'Tap to delete your note' : undefined}
     >
       {/* tape strip */}
-      <div className="absolute -top-1 left-1/2 -translate-x-1/2 h-2.5 w-8 rounded-sm bg-primary/50 shadow" />
+      <div className={`absolute -top-1 left-1/2 -translate-x-1/2 h-2.5 w-8 rounded-sm shadow ${getNoteClasses(noteColor || 'pink').tape}`} />
 
       <div className="p-1.5 h-full flex flex-col">
         {isPlaceholder ? (

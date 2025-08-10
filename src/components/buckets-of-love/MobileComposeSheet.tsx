@@ -9,6 +9,7 @@ import { Heart, Send, Palette, Smile } from "lucide-react";
 import { useBucketsOfLove } from "@/hooks/useBucketsOfLove";
 import { useToast } from "@/components/ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { NOTE_PALETTE } from "./notePalette";
 const EmojiPicker = lazy(() => import('@emoji-mart/react'));
 
 interface MobileComposeSheetProps {
@@ -32,14 +33,11 @@ export const MobileComposeSheet = ({ trigger, onSent }: MobileComposeSheetProps)
     import('@emoji-mart/data').then((m) => setEmojiData((m as any).default || m));
   }, []);
 
-  const noteColors = [
-    { value: 'pink', label: 'Pink', color: 'bg-pink-200' },
-    { value: 'yellow', label: 'Yellow', color: 'bg-yellow-200' },
-    { value: 'blue', label: 'Blue', color: 'bg-blue-200' },
-    { value: 'green', label: 'Green', color: 'bg-green-200' },
-    { value: 'purple', label: 'Purple', color: 'bg-purple-200' },
-    { value: 'orange', label: 'Orange', color: 'bg-orange-200' },
-  ];
+  const noteColors = (['pink','yellow','blue','green','purple','orange'] as const).map((value) => ({
+    value,
+    label: value.charAt(0).toUpperCase() + value.slice(1),
+    color: NOTE_PALETTE[value].bg,
+  }));
 
   const handleSend = async () => {
     if (!message.trim()) {
