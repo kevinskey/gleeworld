@@ -5,30 +5,30 @@ export const UniversalFooter = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 mt-auto">
+    <footer className="relative z-20 bg-background/95 backdrop-blur-sm border-t border-border mt-auto">
       <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
           {/* Company Info */}
           <div className="text-center md:text-left col-span-1 md:col-span-1">
-            <h3 className="text-lg font-semibold text-slate-100 mb-1">Glee World</h3>
-            <p className="text-slate-300 text-xs">
+            <h3 className="text-lg font-semibold text-foreground mb-1">Glee World</h3>
+            <p className="text-muted-foreground text-xs">
               The home of the Spelman College Glee Club
             </p>
           </div>
 
           {/* Quick Links */}
           <div className="text-center col-span-1 md:col-span-1">
-            <h4 className="text-sm font-medium text-slate-100 mb-1">Quick Links</h4>
+            <h4 className="text-sm font-medium text-foreground mb-1">Quick Links</h4>
             <div className="space-y-0.5">
               <Link 
                 to="/dashboard" 
-                className="block text-slate-300 hover:text-slate-100 text-xs transition-colors"
+                className="block text-muted-foreground hover:text-foreground text-xs transition-colors"
               >
                 Dashboard
               </Link>
               <Link 
                 to="/" 
-                className="block text-slate-300 hover:text-slate-100 text-xs transition-colors"
+                className="block text-muted-foreground hover:text-foreground text-xs transition-colors"
               >
                 HomePage
               </Link>
@@ -37,12 +37,12 @@ export const UniversalFooter = () => {
 
           {/* Support */}
           <div className="text-center md:text-right col-span-1 md:col-span-1">
-            <h4 className="text-sm font-medium text-slate-100 mb-1">Support</h4>
+            <h4 className="text-sm font-medium text-foreground mb-1">Support</h4>
             <div className="space-y-0.5">
-              <p className="text-slate-300 text-xs">Need help?</p>
+              <p className="text-muted-foreground text-xs">Need help?</p>
               <a 
                 href="mailto:admin@gleeworld.org" 
-                className="text-slate-300 hover:text-slate-100 text-xs transition-colors"
+                className="text-muted-foreground hover:text-foreground text-xs transition-colors"
               >
                 Contact Your Administrator
               </a>
@@ -50,8 +50,8 @@ export const UniversalFooter = () => {
           </div>
         </div>
 
-        <div className="mt-2 pt-2 border-t border-slate-700/50 text-center">
-          <p className="text-slate-400 text-xs">
+        <div className="mt-2 pt-2 border-t border-border text-center">
+          <p className="text-muted-foreground text-xs">
             © {currentYear} Glee World. All rights reserved.
           </p>
         </div>
