@@ -13,7 +13,6 @@ import { useAvailableAuditionSlots } from "@/hooks/useAvailableAuditionSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import heic2any from "heic2any";
 import { logger } from "@/utils/logger";
 
 export function SchedulingAndSelfiePage() {
@@ -52,14 +51,35 @@ export function SchedulingAndSelfiePage() {
     }
 
     try {
-      // Convert HEIC to JPEG for iOS devices
+      // Convert HEIC to JPEG for iOS devices, but avoid CSP/worker issues
       let uploadFile: File = file;
-      if ((file.type && file.type.toLowerCase().includes('heic')) || file.name?.toLowerCase().endsWith('.heic')) {
-        try {
-          const jpegBlob = await (heic2any as any)({ blob: file, toType: 'image/jpeg', quality: 0.8 });
-          uploadFile = new File([jpegBlob as Blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
-        } catch (convErr) {
-          console.warn('HEIC conversion failed, proceeding with original file:', convErr);
+      const isHeic = (file.type && file.type.toLowerCase().includes('heic')) || file.name?.toLowerCase().endsWith('.heic');
+      if (isHeic) {
+        // Detect whether blob workers are allowed (CSP may block them in preview)
+        const canUseBlobWorker = () => {
+          try {
+            const blob = new Blob(["self.onmessage=function(e){}"], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+            const w = new Worker(url);
+            w.terminate();
+            URL.revokeObjectURL(url);
+            return true;
+          } catch {
+            return false;
+          }
+        };
+
+        if (canUseBlobWorker()) {
+          try {
+            const mod = await import('heic2any');
+            const heic2any = (mod as any).default || (mod as any);
+            const jpegBlob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
+            uploadFile = new File([jpegBlob as Blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
+          } catch (convErr) {
+            console.warn('HEIC conversion failed or blocked, proceeding with original file:', convErr);
+          }
+        } else {
+          console.warn('HEIC conversion skipped due to CSP worker restrictions; uploading original HEIC file.');
         }
       }
 
