@@ -50,7 +50,7 @@ const NoteCard: React.FC<{
     <div
       className={cn(
         'relative aspect-square rounded-md shadow-sm transition-all',
-        'bg-secondary text-foreground/90 border border-border',
+        getNoteClasses(noteColor || 'pink').container,
         'hover:shadow-md hover:scale-[1.01]',
         isPlaceholder && 'border-dashed bg-secondary/40'
       )}
@@ -72,8 +72,8 @@ const NoteCard: React.FC<{
             <p className="text-xs leading-snug line-clamp-5">
               {message}
             </p>
-            <div className="mt-auto pt-2 text-[9px] text-muted-foreground flex items-center gap-1">
-              <Heart className="h-3 w-3 text-primary" />
+            <div className={cn("mt-auto pt-2 text-[9px] flex items-center gap-1", getNoteClasses(noteColor || 'pink').meta)}>
+              <Heart className={cn("h-3 w-3", getNoteClasses(noteColor || 'pink').heart)} />
               <span>{sender || 'Anonymous'}</span>
             </div>
           </>
