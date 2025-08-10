@@ -167,26 +167,27 @@ OUTPUT ONLY VALID MUSICXML - NO EXPLANATIONS OR MARKDOWN.`;
       }
     } catch (_) {}
 
+    // Compute normalized key parameters and tag once for reuse
+    const __normKey = (keySignature || '').toLowerCase()
+      .replace(/♭/g, 'b')
+      .replace(/♯/g, '#')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const __isMinor = __normKey.includes('minor');
+    const __majorMap: Record<string, number> = {
+      'c major': 0, 'g major': 1, 'd major': 2, 'a major': 3, 'e major': 4, 'b major': 5, 'f# major': 6,
+      'f major': -1, 'bb major': -2, 'eb major': -3, 'ab major': -4, 'db major': -5, 'gb major': -6
+    };
+    const __minorMap: Record<string, number> = {
+      'a minor': 0, 'e minor': 1, 'b minor': 2, 'f# minor': 3, 'c# minor': 4, 'g# minor': 5, 'd# minor': 6,
+      'd minor': -1, 'g minor': -2, 'c minor': -3, 'f minor': -4, 'bb minor': -5, 'eb minor': -6
+    };
+    const __fifths = __isMinor ? (__minorMap[__normKey] ?? 0) : (__majorMap[__normKey] ?? 0);
+    const __mode = __isMinor ? 'minor' : 'major';
+    const keyTag = `<key><fifths>${__fifths}</fifths><mode>${__mode}</mode></key>`;
+
     // Enforce requested key signature (e.g., Eb major => fifths = -3) in measure 1 and remove extra key tags
     try {
-      const norm = (keySignature || '').toLowerCase()
-        .replace(/♭/g, 'b')
-        .replace(/♯/g, '#')
-        .replace(/\s+/g, ' ')
-        .trim();
-      const majorMap: Record<string, number> = {
-        'c major': 0, 'g major': 1, 'd major': 2, 'a major': 3, 'e major': 4, 'b major': 5, 'f# major': 6,
-        'f major': -1, 'bb major': -2, 'eb major': -3, 'ab major': -4, 'db major': -5, 'gb major': -6
-      };
-      const minorMap: Record<string, number> = {
-        'a minor': 0, 'e minor': 1, 'b minor': 2, 'f# minor': 3, 'c# minor': 4, 'g# minor': 5, 'd# minor': 6,
-        'd minor': -1, 'g minor': -2, 'c minor': -3, 'f minor': -4, 'bb minor': -5, 'eb minor': -6
-      };
-      const isMinor = norm.includes('minor');
-      const fifths = isMinor ? (minorMap[norm] ?? 0) : (majorMap[norm] ?? 0);
-      const mode = isMinor ? 'minor' : 'major';
-      const keyTag = `<key><fifths>${fifths}</fifths><mode>${mode}</mode></key>`;
-
       if (/<key>[\s\S]*?<\/key>/.test(musicXML)) {
         // Replace first key tag and drop any subsequent ones
         let replacedFirst = false;
@@ -226,7 +227,42 @@ OUTPUT ONLY VALID MUSICXML - NO EXPLANATIONS OR MARKDOWN.`;
     } catch (e) {
       console.warn('Per-part key injection failed:', e);
     }
-    
+
+    // Respell accidentals according to key preference (prefer flats in flat keys)
+    try {
+      if (__fifths < 0) {
+        const sharpToFlatStep: Record<string, { step: string; alter: number }> = {
+          C: { step: 'D', alter: -1 },
+          D: { step: 'E', alter: -1 },
+          E: { step: 'F', alter: 0 },
+          F: { step: 'G', alter: -1 },
+          G: { step: 'A', alter: -1 },
+          A: { step: 'B', alter: -1 },
+          B: { step: 'C', alter: 0 },
+        };
+        musicXML = musicXML.replace(/<pitch>([\s\S]*?)<\/pitch>/g, (pb) => {
+          const stepMatch = pb.match(/<step>([A-G])<\/step>/);
+          const alterMatch = pb.match(/<alter>(-?\d+)<\/alter>/);
+          if (!stepMatch) return pb;
+          const step = stepMatch[1];
+          const alter = alterMatch ? parseInt(alterMatch[1]) : 0;
+          if (alter !== 1) return pb;
+          const map = sharpToFlatStep[step];
+          if (!map) return pb;
+          let out = pb.replace(/<step>[A-G]<\/step>/, `<step>${map.step}</step>`);
+          if (map.alter === 0) {
+            out = out.replace(/<alter>1<\/alter>/, '');
+            out = out.replace(/<accidental>sharp<\/accidental>/, '');
+          } else {
+            out = out.replace(/<alter>1<\/alter>/, `<alter>${map.alter}<\/alter>`);
+            out = out.replace(/<accidental>sharp<\/accidental>/, '<accidental>flat<\/accidental>');
+          }
+          return out;
+        });
+      }
+    } catch (e) {
+      console.warn('Accidental respell failed:', e);
+    }
     
     // Post-process to ensure complete XML structure
     if (!musicXML.includes('</score-partwise>')) {
