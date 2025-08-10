@@ -283,9 +283,18 @@ export const GleeWorldLanding = () => {
       {/* Audition Section */}
       <section className="relative z-30 py-[27.5px] sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto text-center">
-          <Card className="p-6 sm:p-8 md:p-10 bg-gradient-to-br from-primary/10 via-background to-primary/5 backdrop-blur-sm border-2 border-primary/20 shadow-xl">
-            <div className="space-y-6">
-              <div className="space-y-4">
+          <Card className="relative overflow-hidden p-6 sm:p-8 md:p-10 bg-card border-2 border-primary/20 shadow-xl">
+            {/* Background image from choir library */}
+            <img 
+              src={gleeClubFallback} 
+              alt="Spelman College Glee Club choir performing on stage" 
+              className="absolute inset-0 w-full h-full object-cover opacity-35" 
+              loading="lazy"
+            />
+            {/* Soft brand gradient overlay for readability */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background/40 to-primary/10" aria-hidden="true" />
+            <div className="relative z-10 space-y-6">
+              <div className="space-y-4 text-center">
                 <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-primary">
                   Join Our Legacy
                 </h2>
@@ -293,7 +302,6 @@ export const GleeWorldLanding = () => {
                   Ready to be part of something extraordinary? Auditions are now open for the Spelman College Glee Club.
                 </p>
               </div>
-              
               <Button 
                 size="lg"
                 onClick={goToAuditions}
