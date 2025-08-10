@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from "react";
 import { Viewer, Worker, ScrollMode } from '@react-pdf-viewer/core';
 
 import '@react-pdf-viewer/core/lib/styles/index.css';
@@ -45,14 +45,17 @@ interface PDFViewerWithAnnotationsProps {
   className?: string;
   startInAnnotationMode?: boolean;
 }
+interface PDFViewerHandle {
+  promptToSaveIfDirty: () => Promise<boolean>;
+}
 
-export const PDFViewerWithAnnotations = ({ 
+export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWithAnnotationsProps>(({ 
   pdfUrl, 
   musicId, 
   musicTitle,
   className = "",
   startInAnnotationMode = false,
-}: PDFViewerWithAnnotationsProps) => {
+}: PDFViewerWithAnnotationsProps, ref) => {
   const { user } = useAuth();
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
   
@@ -76,6 +79,22 @@ const scrollModePluginInstance = scrollModePlugin();
   const [hasAnnotations, setHasAnnotations] = useState(false);
   const [annotationMode, setAnnotationMode] = useState(false);
   const [currentMarkedScoreId, setCurrentMarkedScoreId] = useState<string | null>(null);
+  
+  // Save prompt state and imperative handle
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
+  const promptResolveRef = useRef<null | ((proceed: boolean) => void)>(null);
+
+  const promptToSaveIfDirty = useCallback(async (): Promise<boolean> => {
+    if (!hasAnnotations) return true;
+    setShowSavePrompt(true);
+    return await new Promise<boolean>((resolve) => {
+      promptResolveRef.current = resolve;
+    });
+  }, [hasAnnotations]);
+  
+  useImperativeHandle(ref, () => ({
+    promptToSaveIfDirty,
+  }));
   
   // PDF-specific state
   const [pdf, setPdf] = useState<any>(null);
@@ -566,7 +585,17 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             <Button
               variant={annotationMode ? "default" : "outline"}
               size="sm"
-              onClick={() => { setError(null); setIsLoading(true); setAnnotationMode(!annotationMode); }}
+              onClick={async () => {
+                setError(null);
+                setIsLoading(true);
+                // If exiting annotation mode, prompt to save if there are unsaved annotations
+                const canExit = await promptToSaveIfDirty();
+                if (canExit) {
+                  setAnnotationMode(false);
+                } else {
+                  setIsLoading(false);
+                }
+              }}
             >
               <Palette className="h-4 w-4 mr-2" />
               {annotationMode ? "Exit Annotations" : "Annotate"}
@@ -761,6 +790,20 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           {hasAnnotations ? "Annotations ready to save" : "Draw on the PDF to add annotations"}
         </div>
       )}
+
+      {showSavePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+          <div className="bg-background border rounded-md shadow-lg p-4 w-full max-w-sm">
+            <h3 className="text-sm font-semibold mb-2">Save annotations?</h3>
+            <p className="text-xs text-muted-foreground mb-3">You have unsaved annotations. Save before exiting?</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setShowSavePrompt(false); promptResolveRef.current?.(false); }}>Cancel</Button>
+              <Button variant="outline" size="sm" onClick={() => { setPaths([]); setHasAnnotations(false); setShowSavePrompt(false); promptResolveRef.current?.(true); }}>Discard</Button>
+              <Button size="sm" onClick={async () => { await handleSave(); setShowSavePrompt(false); promptResolveRef.current?.(true); }}>Save</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
-};
+});

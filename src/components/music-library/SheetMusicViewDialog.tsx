@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +58,7 @@ export const SheetMusicViewDialog = ({
   const [setlistInfo, setSetlistInfo] = useState<any>(null);
   const [licenseInfo, setLicenseInfo] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'marked' | 'practice' | 'smart'>('overview');
+  const pdfRef = useRef<any>(null);
   
   if (!item) return null;
 
