@@ -69,13 +69,20 @@ export const MasterCalendar = () => {
 
     try {
       const calendarId = newEvent.calendar_id || await getDefaultCalendarId();
+      const userId = (await supabase.auth.getUser()).data.user?.id;
       const eventData = {
-        ...newEvent,
-        calendar_id: calendarId,
+        title: newEvent.title.trim(),
+        description: newEvent.description?.trim() || null,
+        event_type: newEvent.event_type,
         start_date: `${newEvent.start_date}T${newEvent.start_time}:00`,
         end_date: `${newEvent.end_date}T${newEvent.end_time}:00`,
-        created_by: (await supabase.auth.getUser()).data.user?.id
-      };
+        location: newEvent.location?.trim() || null,
+        is_public: newEvent.is_public,
+        registration_required: newEvent.rsvp_required,
+        calendar_id: calendarId,
+        created_by: userId,
+        status: 'scheduled'
+      } as const;
 
       const { error } = await supabase
         .from('gw_events')
@@ -99,9 +106,9 @@ export const MasterCalendar = () => {
         calendar_id: calendarId
       });
       fetchEvents();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating event:', error);
-      toast.error('Failed to create event');
+      toast.error(error?.message || 'Failed to create event');
     }
   };
 
