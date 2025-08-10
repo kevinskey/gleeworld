@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { supabase } from '@/integrations/supabase/client';
 import { Megaphone } from 'lucide-react';
+import { HeroAuditionStats } from '@/components/hero/HeroAuditionStats';
 
 interface FeatureSlide {
   id: string;
@@ -132,6 +133,7 @@ export const DashboardFeaturesCarousel: React.FC = () => {
                         <Button size="sm" className="bg-primary text-primary-foreground border border-white/20 shadow hover:opacity-90" asChild>
                           <a href="/join">Get Started</a>
                         </Button>
+                        <HeroAuditionStats className="pt-1" />
                       </div>
                     </div>
                   </div>
