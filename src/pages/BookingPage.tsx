@@ -74,13 +74,7 @@ export default function BookingPage() {
 
   return (
     <PublicLayout>
-    <div className="relative min-h-screen">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/lovable-uploads/d7a22fe1-819c-428c-a1db-eea68a217639.png')" }}
-        aria-hidden="true"
-      />
-      <div className="absolute inset-0 bg-gradient-to-br from-background/50 via-background/35 to-background/25" aria-hidden="true" />
+    <div className="min-h-screen bg-background">
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -93,11 +87,11 @@ export default function BookingPage() {
               {/* Service Categories */}
               <div className="space-y-4">
                 {filteredCategories.map((category) => (
-                  <Card key={category.id} className="bg-white/10 border-white/20 backdrop-blur-sm">
+                  <Card key={category.id} className="bg-card border-border">
                     <CardContent className="p-0">
                       <button
                         onClick={() => toggleCategory(category.id)}
-                        className="w-full p-6 flex items-center justify-between text-left hover:bg-white/5 transition-colors rounded-lg"
+                        className="w-full p-6 flex items-center justify-between text-left hover:bg-accent/10 transition-colors rounded-lg"
                       >
                         <div className="flex items-center space-x-3">
                           <Music className="h-5 w-5 text-secondary" />
@@ -121,8 +115,8 @@ export default function BookingPage() {
                               onClick={() => selectService(service)}
                               className={`p-4 rounded-lg border cursor-pointer transition-all ${
                                 bookingDetails.service === service
-                                  ? 'bg-secondary/20 border-secondary text-primary-foreground'
-                                  : 'bg-white/5 border-white/20 text-primary-foreground/80 hover:bg-white/10 hover:border-white/30'
+                                  ? 'bg-secondary/20 border-secondary text-foreground'
+                                  : 'bg-muted border-border text-foreground hover:bg-accent/10 hover:border-accent/20'
                               }`}
                             >
                               <div className="flex items-center justify-between">
@@ -144,7 +138,7 @@ export default function BookingPage() {
 
           {/* Right Column - Booking Details */}
           <div className="lg:col-span-1">
-            <Card className="bg-white/10 border-white/20 backdrop-blur-sm sticky top-8">
+            <Card className="bg-card border-border shadow-sm sticky top-8">
               <CardContent className="p-6">
                 <h2 className="text-2xl font-bold text-primary-foreground mb-6">Booking Details</h2>
                 
