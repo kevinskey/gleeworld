@@ -61,6 +61,7 @@ const scrollModePluginInstance = scrollModePlugin();
   
   console.log('PDFViewerWithAnnotations: Props received:', { pdfUrl, musicTitle });
   console.log('PDFViewerWithAnnotations: URL processing result:', { signedUrl, urlLoading, urlError });
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -440,12 +441,17 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        const viewport = page.getViewport({ scale });
+        // Fit page to container width
+        const baseViewport = page.getViewport({ scale: 1 });
+        const containerWidth = containerRef.current?.clientWidth || baseViewport.width;
+        const fitScale = Math.max(0.1, containerWidth / baseViewport.width);
+        const viewport = page.getViewport({ scale: fitScale });
         canvas.width = viewport.width;
         canvas.height = viewport.height;
 
         const renderContext = { canvasContext: ctx, viewport } as const;
         await page.render(renderContext).promise;
+        setScale(fitScale);
         console.log('PDF page rendered successfully');
         setError(null);
       } catch (err) {
@@ -698,34 +704,25 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           
           {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
-            <div className="w-full h-full bg-white">
-              <div className="h-full">
-                <div className="w-full h-full overflow-hidden bg-muted/10">
-                  <div className="w-full h-full flex items-start justify-center p-4">
-                    <div className="relative">
-                      <canvas
-                        ref={canvasRef}
-                        className="max-w-full max-h-full shadow-lg bg-white block"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="w-full h-full" ref={containerRef}>
+              <canvas
+                ref={canvasRef}
+                className="w-full h-auto block bg-white"
+              />
             </div>
           )}
 
           {/* Annotation Mode: PDF + Overlay Canvas */}
           {annotationMode && (
-            <div className="w-full h-full overflow-auto bg-muted/10">
-              <div className="w-full h-full flex items-start justify-center p-4">
-                <div className="relative">
+            <div className="w-full h-full overflow-auto" ref={containerRef}>
+              <div className="relative w-full h-full">
                   <canvas
                     ref={canvasRef}
-                    className="max-w-full max-h-full shadow-lg bg-white block"
+                    className="w-full h-auto bg-white block"
                   />
                   <canvas
                     ref={drawingCanvasRef}
-                    className={`absolute inset-0 max-w-full max-h-full pointer-events-auto z-20 ${
+                    className={`absolute inset-0 w-full h-full pointer-events-auto z-20 ${
                       activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
                     }`}
                     onMouseDown={handleStart}
