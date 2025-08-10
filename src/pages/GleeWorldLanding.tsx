@@ -288,17 +288,17 @@ export const GleeWorldLanding = () => {
             <img 
               src="/lovable-uploads/90bc1107-92d3-42f5-8c88-fc7a000d9c42.png" 
               alt="Spelman College Glee Club choir performing at 2025 championship" 
-              className="absolute inset-0 w-full h-full object-cover opacity-35" 
+              className="absolute inset-0 w-full h-full object-cover opacity-100" 
               loading="lazy"
             />
             {/* Soft brand gradient overlay for readability */}
             <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
             <div className="relative z-10 space-y-6">
               <div className="space-y-4 text-center">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-white">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-white drop-shadow-2xl">
                   Join Our Legacy
                 </h2>
-                <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
+                <p className="text-lg md:text-xl text-white/90 drop-shadow-lg max-w-2xl mx-auto">
                   Ready to be part of something extraordinary? Auditions are now open for the Spelman College Glee Club.
                 </p>
               </div>
