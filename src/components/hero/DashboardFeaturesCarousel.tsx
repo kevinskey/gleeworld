@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,13 +54,6 @@ export const DashboardFeaturesCarousel: React.FC = () => {
 
   return (
     <Card className="w-full border-border bg-background/50 backdrop-blur-sm rounded-xl shadow-2xl hover:shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition-shadow overflow-hidden">
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Megaphone className="h-4 w-4 text-primary" />
-          <CardTitle className="text-base">Features</CardTitle>
-        </div>
-        <CardDescription>Sponsored & featured content</CardDescription>
-      </CardHeader>
       <CardContent className="p-0">
         <div className="relative">
           <Carousel className="w-full">
@@ -68,7 +61,7 @@ export const DashboardFeaturesCarousel: React.FC = () => {
               {slides.length > 0 ? (
                 slides.map((s) => (
                   <CarouselItem key={s.id}>
-                    <div className="aspect-[4/3] md:aspect-[16/7] w-full relative overflow-hidden">
+                    <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] w-full relative overflow-hidden">
                       {/* Desktop */}
                       <img
                         src={s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
@@ -126,7 +119,7 @@ export const DashboardFeaturesCarousel: React.FC = () => {
                 ))
               ) : (
                 <CarouselItem>
-                  <div className="aspect-[4/3] md:aspect-[16/7] w-full relative overflow-hidden">
+                  <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] w-full relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20" />
                     <div className="absolute inset-0 flex items-center">
                       <div className="px-6 md:px-10 lg:px-14 space-y-3 md:space-y-4 max-w-2xl bg-background/70 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-white/10 shadow text-foreground">
