@@ -198,7 +198,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     
                     {/* Public View */}
                     <DropdownMenuItem asChild className="cursor-pointer">
-                      <Link to="/" className="flex items-center" onClick={() => console.log('Public View clicked - <Link> to /')}>
+                      <Link to="/" className="flex items-center" onClick={() => { sessionStorage.setItem('force-public-view','1'); console.log('Public View clicked - force public view set'); }}>
                         <Globe className="mr-2 h-4 w-4" />
                         Public
                       </Link>

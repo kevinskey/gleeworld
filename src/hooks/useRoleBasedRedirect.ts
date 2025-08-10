@@ -60,6 +60,14 @@ export const useRoleBasedRedirect = () => {
     // Don't redirect if user is already on a specific page they navigated to
     const isOnAuthPage = location.pathname === '/auth';
     const isOnRootPage = location.pathname === '/';
+
+    // Respect explicit request to view public home (from header click)
+    const forcePublic = sessionStorage.getItem('force-public-view') === '1';
+    if (isOnRootPage && forcePublic) {
+      console.log('🛑 useRoleBasedRedirect: Force public view enabled, skipping auto-redirect');
+      sessionStorage.removeItem('force-public-view');
+      return;
+    }
     
     // Also skip redirect if user is already on their target dashboard
     const isOnTargetPage = location.pathname.includes('/admin') || 
