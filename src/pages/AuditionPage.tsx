@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { parse } from "date-fns";
+import { parse, format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -49,6 +49,12 @@ function AuditionFormContent() {
       toast.error("Please take a selfie before submitting");
       return;
     }
+    
+    // Require date and time selection
+    if (!data.auditionDate || !data.auditionTime) {
+      toast.error("Please select an audition date and time");
+      return;
+    }
 
     console.log('✅ Starting submission process...');
     setIsSubmitting(true);
@@ -82,6 +88,12 @@ function AuditionFormContent() {
       if (isNaN(timeParsed.getTime())) {
         throw new Error('Invalid time value');
       }
+      
+      const firstNameResolved = capitalizeNames(
+        data.firstName || (user as any)?.user_metadata?.full_name?.split(' ')?.[0] || (user.email?.split('@')[0] ?? 'Auditioner')
+      );
+      const formattedDate = format(data.auditionDate, 'EEEE, MMMM d, yyyy');
+      const formattedTime = `${format(timeParsed, 'h:mm a')} ET`;
       
       const submissionData = {
         user_id: user.id,
@@ -135,7 +147,7 @@ function AuditionFormContent() {
                 </div>
                 
                 <div style="background: white; padding: 30px 20px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                  <p style="font-size: 18px; color: #374151; margin-bottom: 20px;">Dear ${capitalizeNames(data.firstName)},</p>
+                  <p style="font-size: 18px; color: #374151; margin-bottom: 20px;">Dear ${firstNameResolved},</p>
                   
                   <p style="color: #374151; line-height: 1.6; margin-bottom: 20px;">
                     Thank you for submitting your audition application to join the Spelman College Glee Club! We're excited to review your application and meet you during your audition.
@@ -143,8 +155,8 @@ function AuditionFormContent() {
                   
                   <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; border-left: 4px solid #7c3aed; margin: 20px 0;">
                     <h3 style="margin: 0 0 10px 0; color: #7c3aed; font-size: 16px;">📅 Your Audition Details:</h3>
-                    <p style="margin: 5px 0; color: #374151;"><strong>Date:</strong> ${data.auditionDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    <p style="margin: 5px 0; color: #374151;"><strong>Time:</strong> ${data.auditionTime}</p>
+                    <p style="margin: 5px 0; color: #374151;"><strong>Date:</strong> ${formattedDate}</p>
+                    <p style="margin: 5px 0; color: #374151;"><strong>Time:</strong> ${formattedTime}</p>
                     <p style="margin: 5px 0; color: #374151;"><strong>Location:</strong> Spelman College Music Department</p>
                   </div>
                   
