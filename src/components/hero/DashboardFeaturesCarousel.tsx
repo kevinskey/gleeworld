@@ -130,9 +130,6 @@ export const DashboardFeaturesCarousel: React.FC = () => {
                         </div>
                         <h3 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-tight">Welcome Glee Class of 2029</h3>
                         <p className="text-sm md:text-base text-muted-foreground">You are home. Explore the Glee Club community, resources, and upcoming events.</p>
-                        <Button size="sm" className="bg-primary text-primary-foreground border border-white/20 shadow hover:opacity-90" asChild>
-                          <a href="/join">Get Started</a>
-                        </Button>
                         <HeroAuditionStats className="pt-1" />
                       </div>
                     </div>
