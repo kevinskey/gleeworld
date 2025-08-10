@@ -117,7 +117,13 @@ import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
-import "./utils/sendAuditionerPreviewEmail";
+// Optional preview trigger via query param
+if (typeof window !== 'undefined') {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('sendPreview') === '1') {
+    import('./utils/sendAuditionerPreviewEmail').then(m => m.gwSendAuditionPreview(true));
+  }
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {

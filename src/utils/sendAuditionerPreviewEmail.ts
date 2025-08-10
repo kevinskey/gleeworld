@@ -54,11 +54,10 @@ export async function gwSendAuditionPreview(force = false) {
   }
 }
 
-// Expose for manual trigger and auto-run once per session
+// Expose for manual trigger only (no auto-send)
 if (typeof window !== 'undefined') {
   // @ts-ignore
   window.gwSendAuditionPreview = gwSendAuditionPreview;
-  const urlForce = new URLSearchParams(window.location.search).get('forceSendPreview') === '1';
-  gwSendAuditionPreview(urlForce);
 }
+
 
