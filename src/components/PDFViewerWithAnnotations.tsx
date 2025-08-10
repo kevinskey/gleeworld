@@ -191,35 +191,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   }, [annotationMode, pdf]);
 
   useEffect(() => {
-    // Reset and prepare loading state whenever source or engine changes (outside annotation mode)
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-
-    if (!signedUrl || annotationMode) return;
-
-    setIsLoading(true);
-
-    if (engine === 'google') {
-      setUseGoogle(true);
-      // Fallback: if Google viewer doesn't fire onLoad within 6s, switch to React viewer
-      timerRef.current = window.setTimeout(() => {
-        console.warn('Google viewer timed out; switching to React viewer');
-        setUseGoogle(false);
-        setEngine('react');
-        setIsLoading(true);
-      }, 6000);
-    } else {
-      setUseGoogle(false);
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    };
+    // Legacy Google/React engine loader disabled in paginated mode
+    // Loading state is now managed by the canvas render effect
   }, [signedUrl, annotationMode, engine]);
 
   const redrawAnnotations = (pathsToRedraw?: any[]) => {
