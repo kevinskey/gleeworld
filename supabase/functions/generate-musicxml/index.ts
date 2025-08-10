@@ -33,10 +33,14 @@ serve(async (req) => {
       keySignature = "C major",
       timeSignature = "4/4",
       measures = 8,
-      noteRange = "C4-C5"
+      noteRange = "C4-C5",
+      partCount = 1,
+      voiceParts = ["Soprano"],
+      intervalProfile = "stepwise",
+      tempo = 120
     } = await req.json();
 
-    console.log("Generating MusicXML:", { difficulty, keySignature, timeSignature, measures, noteRange });
+    console.log("Generating MusicXML:", { difficulty, keySignature, timeSignature, measures, noteRange, partCount, voiceParts, intervalProfile, tempo });
 
     const systemPrompt = `You are a music theory expert that generates valid MusicXML 3.1 for sight-reading exercises. 
 
@@ -146,6 +150,17 @@ Generate COMPLETE MusicXML 3.1 format with ALL ${measures} measures using consis
 
     let musicXML = result.choices[0].message.content;
     console.log("Generated MusicXML length:", musicXML.length);
+
+    // Ensure tempo tag exists in first measure
+    try {
+      if (!musicXML.includes('<sound tempo')) {
+        musicXML = musicXML.replace(
+          /<attributes>([\s\S]*?)<\/attributes>/,
+          (match) => `${match}\n      <sound tempo="${tempo}"/>`
+        );
+      }
+    } catch (_) {}
+    
     
     // Post-process to ensure complete XML structure
     if (!musicXML.includes('</score-partwise>')) {

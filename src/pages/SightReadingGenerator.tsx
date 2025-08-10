@@ -13,6 +13,8 @@ import { SightSingingPractice } from '@/components/sight-singing/SightSingingPra
 import { RecordingButton } from '@/components/sight-singing/RecordingButton';
 import { CompletedExercisesList } from '@/components/sight-singing/CompletedExercisesList';
 import { useAuth } from '@/contexts/AuthContext';
+import { Input } from '@/components/ui/input';
+import { MemberSearchDropdown, Member } from '@/components/shared/MemberSearchDropdown';
 
 interface OSMDViewerProps {
   musicXML: string;
@@ -234,6 +236,7 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title, solfegeEnabled
       </CardHeader>
       <CardContent>
         <div 
+          id="generated-osmd"
           ref={containerRef}
           className="w-full border rounded-lg bg-white p-4"
           style={{ 
@@ -273,6 +276,18 @@ const SightReadingGeneratorPage = () => {
   const [timeSignature, setTimeSignature] = useState('4/4');
   const [measures, setMeasures] = useState([8]);
   const [noteRange, setNoteRange] = useState('C4-C5');
+  // New parameters
+  const [partMode, setPartMode] = useState<'single' | 'two-part'>('single');
+  const [voicePart, setVoicePart] = useState<'Soprano' | 'Alto'>('Soprano');
+  const [intervalProfile, setIntervalProfile] = useState<'stepwise' | 'thirds' | 'mixed'>('stepwise');
+  const [tempo, setTempo] = useState(120);
+  // Save/assign state
+  const [saving, setSaving] = useState(false);
+  const [savedExerciseId, setSavedExerciseId] = useState<string | null>(null);
+  const [showAssign, setShowAssign] = useState(false);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [dueDate, setDueDate] = useState<string>('');
 
   const validateMusicXML = (xml: string): { valid: boolean; error?: string } => {
     if (!xml || typeof xml !== 'string') {
@@ -338,7 +353,11 @@ const SightReadingGeneratorPage = () => {
         keySignature,
         timeSignature,
         measures: measures[0],
-        noteRange
+        noteRange,
+        partMode,
+        voicePart,
+        intervalProfile,
+        tempo
       });
       
       const { data, error } = await supabase.functions.invoke('generate-musicxml', {
@@ -347,7 +366,11 @@ const SightReadingGeneratorPage = () => {
           keySignature,
           timeSignature,
           measures: measures[0],
-          noteRange
+          noteRange,
+          partCount: partMode === 'two-part' ? 2 : 1,
+          voiceParts: partMode === 'two-part' ? ['Soprano','Alto'] : [voicePart],
+          intervalProfile,
+          tempo
         }
       });
 
