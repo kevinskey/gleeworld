@@ -151,7 +151,7 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
     // Expanded mobile mini player - vintage Victrola style replacing header
     return (
       <div 
-        className="fixed left-0 right-0 top-0 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 backdrop-blur-lg border-b-4 border-amber-600 shadow-2xl z-[101] min-h-[60px] flex items-center px-4 gap-3"
+        className="fixed left-0 right-0 top-16 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 backdrop-blur-lg border-b-4 border-amber-600 shadow-2xl z-[105] min-h-[60px] flex items-center px-4 gap-3"
         style={{
           backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(245, 158, 11, 0.2) 0%, transparent 50%), linear-gradient(90deg, rgba(180, 83, 9, 0.1) 0%, rgba(245, 158, 11, 0.1) 50%, rgba(180, 83, 9, 0.1) 100%)',
           boxShadow: 'inset 0 2px 4px rgba(245, 158, 11, 0.2), 0 4px 12px rgba(0, 0, 0, 0.4)'
