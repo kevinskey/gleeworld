@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 
 // Import all module components
-import { MusicLibraryModule } from '@/components/dashboard/modules/MusicLibraryModule';
+import { MusicLibraryInlineModule } from '@/components/modules/MusicLibraryInlineModule';
 
 // Import all module components
 import { UserManagementModule } from '@/components/modules/UserManagementModule';
@@ -506,7 +506,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "pink",
     category: "libraries",
     isActive: true,
-    component: MusicLibraryModule,
+    component: MusicLibraryInlineModule,
     dbFunctionName: "music-library"
   },
   {
