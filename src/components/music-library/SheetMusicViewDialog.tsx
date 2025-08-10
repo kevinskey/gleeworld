@@ -75,28 +75,29 @@ export const SheetMusicViewDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              {item.title}
-            </div>
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="p-0 w-screen h-screen max-w-none max-h-none overflow-hidden rounded-none">
+        <DialogHeader className="hidden" />
+        <Button
+          variant="secondary"
+          size="sm"
+          className="absolute top-3 right-3 z-50"
+          onClick={() => onOpenChange(false)}
+        >
+          Close
+        </Button>
 
-        <div className="flex gap-4 h-[85vh] overflow-hidden">
+        <div className="flex gap-0 h-full overflow-hidden">
           <div className="w-full overflow-y-auto">
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 h-full">
               {/* Left: PDF stays fixed */}
-              <div className="xl:col-span-2">
+              <div className="col-span-1 h-full">
                 {item.pdf_url ? (
                   <PDFViewerWithAnnotations 
                     pdfUrl={item.pdf_url} 
                     musicId={item.id}
                     musicTitle={item.title}
                     startInAnnotationMode
-                    className="w-full"
+                    className="w-full h-full rounded-none border-0"
                   />
                 ) : (
                   <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
@@ -109,7 +110,7 @@ export const SheetMusicViewDialog = ({
               </div>
 
               {/* Right: Tab content panel */}
-              <div className="xl:col-span-1 space-y-4">
+              <div className="hidden">
                 <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                   <TabsList className="grid w-full grid-cols-5 h-10 md:h-12 border-b">
                     <TabsTrigger value="overview" className="text-xs md:text-sm py-2 px-1">Overview</TabsTrigger>

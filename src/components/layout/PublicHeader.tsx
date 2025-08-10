@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -12,6 +12,14 @@ import { useAuth } from "@/contexts/AuthContext";
 export const PublicHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
+
+  const [hideForAnnotation, setHideForAnnotation] = useState(false);
+  useEffect(() => {
+    const handler = (e: any) => setHideForAnnotation(!!e.detail?.active);
+    window.addEventListener('annotationModeChange', handler as any);
+    setHideForAnnotation(document.body.classList.contains('annotation-mode'));
+    return () => window.removeEventListener('annotationModeChange', handler as any);
+  }, []);
 
   // Add global style to hide sheet overlay and improve iOS touch handling
   const overlayStyle = `
@@ -38,7 +46,7 @@ export const PublicHeader = () => {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: overlayStyle }} />
-      <header className="bg-background border-b border-border sticky top-0 z-50">
+      <header className={`bg-background border-b border-border sticky top-0 z-50 ${hideForAnnotation ? 'hidden' : ''}`}>
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
