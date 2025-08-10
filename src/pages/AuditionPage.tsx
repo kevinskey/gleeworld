@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { parse } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -76,6 +77,12 @@ function AuditionFormContent() {
         throw new Error('No active audition session found. Please contact administration.');
       }
       
+      // Parse the selected time like "3:30 PM" onto the selected date
+      const timeParsed = parse(data.auditionTime, 'h:mm a', data.auditionDate);
+      if (isNaN(timeParsed.getTime())) {
+        throw new Error('Invalid time value');
+      }
+      
       const submissionData = {
         user_id: user.id,
         session_id: activeSessions[0].id,
@@ -91,7 +98,7 @@ function AuditionFormContent() {
         sight_reading_level: data.readsMusic ? 'beginner' : 'none',
         why_glee_club: data.personalityDescription,
         vocal_goals: data.additionalInfo || 'General vocal improvement',
-        audition_time_slot: new Date(`${data.auditionDate.toISOString().split('T')[0]}T${data.auditionTime}:00`).toISOString(),
+        audition_time_slot: timeParsed.toISOString(),
         status: 'submitted'
       };
       

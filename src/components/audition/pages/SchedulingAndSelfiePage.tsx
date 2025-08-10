@@ -44,7 +44,10 @@ export function SchedulingAndSelfiePage() {
   });
 
   const uploadSelfie = async (file: File) => {
-    if (!user) return;
+    if (!user) {
+      toast.error("Please log in to upload a photo");
+      return;
+    }
 
     try {
       const fileName = `audition-selfie-${user.id}-${Date.now()}.jpg`;
@@ -80,6 +83,7 @@ export function SchedulingAndSelfiePage() {
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user) { toast.error("Please log in to upload a photo"); return; }
     handleFileSelect(event);
   };
 
