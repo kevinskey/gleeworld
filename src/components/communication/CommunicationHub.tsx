@@ -9,6 +9,7 @@ import { useCommunication } from '@/hooks/useCommunication';
 import { RecipientGroup } from '@/types/communication';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const CommunicationHub = () => {
   const navigate = useNavigate();
@@ -134,62 +135,60 @@ export const CommunicationHub = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
-        {/* Tabs for Broadcast vs Notifications */}
-        <div className="mb-6">
-          <div className="w-full">
-            <div className="mb-3 text-sm text-muted-foreground">Choose a mode</div>
-            <div className="grid grid-cols-2 gap-2">
-              {/* Simple tabs mimic */}
-              {/* We keep it lightweight to avoid refactor across components */}
+        <Tabs defaultValue="broadcast" className="w-full">
+          <div className="flex items-center justify-between mb-4">
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="broadcast">Broadcast</TabsTrigger>
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="broadcast" className="mt-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Message Composition */}
+              <div className="lg:col-span-2 space-y-6">
+                <MessageComposer
+                  title={title}
+                  content={content}
+                  onTitleChange={setTitle}
+                  onContentChange={setContent}
+                  templates={templates}
+                  onTemplateSelect={handleTemplateSelect}
+                />
+                <RecipientSelector
+                  selectedGroups={selectedGroups}
+                  onGroupToggle={handleGroupToggle}
+                  recipientCount={recipientCount}
+                />
+              </div>
+
+              {/* Right Column - Delivery & Controls */}
+              <div className="space-y-6">
+                <ChannelSelector
+                  selectedChannels={selectedChannels}
+                  onChannelToggle={handleChannelToggle}
+                  recipientCount={recipientCount}
+                />
+                <SendControls
+                  title={title}
+                  content={content}
+                  selectedGroups={selectedGroups}
+                  selectedChannels={selectedChannels}
+                  recipientCount={recipientCount}
+                  isLoading={isLoading}
+                  scheduledFor={scheduledFor}
+                  onScheduledForChange={setScheduledFor}
+                  onSend={handleSend}
+                  onSaveDraft={handleSaveDraft}
+                />
+              </div>
             </div>
-          </div>
-        </div>
+          </TabsContent>
 
-        {/* Use a simple two-column layout for Broadcast composer */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Message Composition */}
-          <div className="lg:col-span-2 space-y-6">
-            <MessageComposer
-              title={title}
-              content={content}
-              onTitleChange={setTitle}
-              onContentChange={setContent}
-              templates={templates}
-              onTemplateSelect={handleTemplateSelect}
-            />
-            <RecipientSelector
-              selectedGroups={selectedGroups}
-              onGroupToggle={handleGroupToggle}
-              recipientCount={recipientCount}
-            />
-          </div>
-
-          {/* Right Column - Delivery & Controls */}
-          <div className="space-y-6">
-            <ChannelSelector
-              selectedChannels={selectedChannels}
-              onChannelToggle={handleChannelToggle}
-              recipientCount={recipientCount}
-            />
-            <SendControls
-              title={title}
-              content={content}
-              selectedGroups={selectedGroups}
-              selectedChannels={selectedChannels}
-              recipientCount={recipientCount}
-              isLoading={isLoading}
-              scheduledFor={scheduledFor}
-              onScheduledForChange={setScheduledFor}
-              onSend={handleSend}
-              onSaveDraft={handleSaveDraft}
-            />
-          </div>
-        </div>
-
-        {/* Notifications panel - single-user notification sender */}
-        <div className="mt-10">
-          <NotificationSenderPanel />
-        </div>
+          <TabsContent value="notifications" className="mt-0">
+            <NotificationSenderPanel />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
