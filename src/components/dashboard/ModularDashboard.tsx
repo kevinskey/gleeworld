@@ -23,6 +23,8 @@ interface UserPermissions {
   isExecBoard: boolean;
 }
 
+const BASELINE_MODULE_IDS = ['music-library','calendar-management','attendance-management'];
+
 interface ModularDashboardProps {
   hideHeader?: boolean;
 }
@@ -101,7 +103,11 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
       return false;
     });
 
-    setAvailableModules(filtered);
+    // Ensure baseline modules are always available to all authenticated members
+    const baselineModules = UNIFIED_MODULES.filter(m => BASELINE_MODULE_IDS.includes(m.id));
+    const uniqueById = new Map([...filtered, ...baselineModules].map(m => [m.id, m]));
+
+    setAvailableModules(Array.from(uniqueById.values()));
   };
 
   const openModule = (moduleId: string) => {
