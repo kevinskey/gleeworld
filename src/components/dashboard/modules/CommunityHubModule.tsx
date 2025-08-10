@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Users, MessageSquare, Heart, Send } from 'lucide-react';
+import { Users, MessageSquare, Heart, Send, Bell } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import { MobileBucketCard } from '@/components/buckets-of-love/MobileBucketCard'
 import { MobileComposeSheet } from '@/components/buckets-of-love/MobileComposeSheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { NotificationsSection } from '@/components/unified/NotificationsSection';
+import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
 
 export const CommunityHubModule = () => {
   const [activeTab, setActiveTab] = useState('buckets');
@@ -52,14 +53,38 @@ export const CommunityHubModule = () => {
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/10">
-      <div className="p-4 border-b border-border bg-gradient-to-r from-primary/10 to-secondary/10">
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <Users className="w-5 h-5 text-primary" />
-          Community Hub
-        </h3>
+      <div className="p-4 md:p-6 border-b border-border bg-gradient-to-r from-primary/15 via-accent/10 to-secondary/15">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h1 className="text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Community Hub
+            </h1>
+            <p className="text-sm text-muted-foreground">To Amaze and Inspire — Buckets of Love, Wellness, Notifications, Announcements</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="default" onClick={() => setActiveTab('buckets')} className="hover-scale">
+              <Heart className="h-4 w-4 mr-1" /> Buckets of Love
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setActiveTab('wellness')} className="hover-scale">
+              Wellness
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setActiveTab('announcements')} className="hover-scale">
+              Announcements
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setActiveTab('notifications')} className="hover-scale">
+              <Bell className="h-4 w-4 mr-1" /> Notifications
+            </Button>
+            <SendBucketOfLove trigger={
+              <Button size="sm" variant="ghost" className="hover-scale">
+                <Send className="h-4 w-4 mr-1" /> Send Love
+              </Button>
+            } />
+          </div>
+        </div>
       </div>
       
-      <Tabs defaultValue="buckets" className="flex-1 flex flex-col">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <TabsList className={`grid w-full grid-cols-5 m-2 bg-background/50 ${isMobile ? 'text-xs' : ''}`}>
           <TabsTrigger value="buckets" className="data-[state=active]:bg-pink-100 data-[state=active]:text-pink-700">
             {isMobile ? 'Love' : 'Buckets of Love'}
