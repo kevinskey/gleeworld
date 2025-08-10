@@ -23,7 +23,11 @@ interface UserPermissions {
   isExecBoard: boolean;
 }
 
-export const ModularDashboard = () => {
+interface ModularDashboardProps {
+  hideHeader?: boolean;
+}
+
+export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader = false }) => {
   const { user } = useAuth();
   const [openModules, setOpenModules] = useState<OpenModule[]>([]);
   const [availableModules, setAvailableModules] = useState<typeof UNIFIED_MODULES>([]);
@@ -151,34 +155,36 @@ export const ModularDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 relative">
       {/* Dashboard Header */}
-      <div className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <Grid3X3 className="h-6 w-6 text-primary" />
-                <div>
-                  <h1 className="text-xl font-bold">Dashboard</h1>
-                  <p className="text-sm text-muted-foreground">Welcome back, {user?.email}</p>
+      {!hideHeader && (
+        <div className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <Grid3X3 className="h-6 w-6 text-primary" />
+                  <div>
+                    <h1 className="text-xl font-bold">Dashboard</h1>
+                    <p className="text-sm text-muted-foreground">Welcome back, {user?.email}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-4">
-              {openModules.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    <Layers className="h-3 w-3" />
-                    {openModules.length} open
-                  </Badge>
-                  <Button variant="outline" size="sm" onClick={closeAllModules}>
-                    Close All
-                  </Button>
-                </div>
-              )}
+              <div className="flex items-center gap-4">
+                {openModules.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Layers className="h-3 w-3" />
+                      {openModules.length} open
+                    </Badge>
+                    <Button variant="outline" size="sm" onClick={closeAllModules}>
+                      Close All
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Module Grid */}
       <div className="container mx-auto px-6 py-6">

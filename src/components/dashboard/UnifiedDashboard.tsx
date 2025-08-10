@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { UniversalHeader } from '../layout/UniversalHeader';
+import { UniversalFooter } from '../layout/UniversalFooter';
 import { MessagesPanel } from './MessagesPanel';
 import { ModuleSelector } from './ModuleSelector';
 import { ModuleDisplay } from './ModuleDisplay';
+import { ModularDashboard } from './ModularDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { CommunityHubModule } from './modules/CommunityHubModule';
 import DashboardHeroCarousel from '@/components/hero/DashboardHeroCarousel';
@@ -40,12 +42,27 @@ export const UnifiedDashboard = () => {
         </div>
       </div>
 
+      {/* Row 3: Modules */}
+      <div className="px-6 pb-12">
+        <section aria-labelledby="modules-heading" className="space-y-4">
+          <header>
+            <h2 id="modules-heading" className="text-2xl font-semibold tracking-tight">Modules</h2>
+            <p className="text-muted-foreground">Quick access based on your permissions</p>
+          </header>
+          <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm">
+            <ModularDashboard hideHeader />
+          </div>
+        </section>
+      </div>
+
         {/* Messages Panel Overlay */}
         {showMessages && (
           <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-10">
             <MessagesPanel onClose={() => setShowMessages(false)} />
           </div>
         )}
+
+        <UniversalFooter />
       </div>
   );
 };
