@@ -13,11 +13,25 @@ export const PublicHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
 
-  // Add global style to hide sheet overlay
+  // Add global style to hide sheet overlay and improve iOS touch handling
   const overlayStyle = `
     [data-radix-dialog-overlay] {
       background: transparent !important;
       backdrop-filter: none !important;
+    }
+    
+    /* iOS Safari touch fixes */
+    button[aria-label="Toggle mobile menu"] {
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+    
+    /* Ensure dropdown content is properly positioned on iOS */
+    [data-radix-dropdown-menu-content] {
+      transform: none !important;
+      -webkit-transform: none !important;
+      position: fixed !important;
     }
   `;
 
@@ -69,19 +83,39 @@ export const PublicHeader = () => {
             {/* Friendly Mobile Menu - Shows below lg breakpoint */}
             <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
               <DropdownMenuTrigger asChild className="lg:hidden">
-                <MusicStaffMenu />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-700 hover:bg-gray-100/50 transition-all duration-200 p-2"
+                  onClick={() => setIsOpen(!isOpen)}
+                  aria-label="Toggle mobile menu"
+                >
+                  <div className="flex flex-col justify-center items-center w-6 h-6 gap-1">
+                    {/* 5 lines like music staff */}
+                    <div className="w-7 h-0.5 bg-current transition-all duration-200 hover:w-8"></div>
+                    <div className="w-7 h-0.5 bg-current transition-all duration-200 hover:w-8"></div>
+                    <div className="w-7 h-0.5 bg-current transition-all duration-200 hover:w-8"></div>
+                    <div className="w-7 h-0.5 bg-current transition-all duration-200 hover:w-8"></div>
+                    <div className="w-7 h-0.5 bg-current transition-all duration-200 hover:w-8"></div>
+                  </div>
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
                 side="bottom"
-                sideOffset={0}
-                className="w-80 p-2 bg-popover text-popover-foreground border border-border rounded-lg shadow-xl z-[60]"
+                sideOffset={4}
+                className="w-80 p-3 bg-background border border-border rounded-lg shadow-xl z-[9999]"
+                style={{
+                  position: 'fixed',
+                  transform: 'none',
+                  WebkitTransform: 'none'
+                }}
               >
-                <div className="flex items-center justify-center gap-2 pb-1 border-b border-border">
+                <div className="flex items-center justify-center gap-2 pb-2 border-b border-border">
                   <Music className="h-4 w-4 text-primary" />
                   <span className="font-semibold text-sm text-foreground">Menu</span>
                 </div>
-                <nav className="flex flex-col gap-0 pt-2">
+                <nav className="flex flex-col gap-1 pt-3">
                   {user && (
                     <Button asChild variant="outline" size="sm" className="mb-2 text-sm justify-start">
                       <Link to={`/dashboard/member-view/${user.id}`} className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
