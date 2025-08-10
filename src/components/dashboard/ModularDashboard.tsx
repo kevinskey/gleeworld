@@ -41,6 +41,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
   });
   const [loading, setLoading] = useState(true);
   const [nextZIndex, setNextZIndex] = useState(100);
+  const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -111,30 +112,11 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
   };
 
   const openModule = (moduleId: string) => {
-    const module = availableModules.find(m => m.id === moduleId);
-    if (!module) return;
-
-    // Check if module is already open
-    const existingModule = openModules.find(m => m.id === moduleId);
-    if (existingModule) {
-      // Bring to front
-      bringModuleToFront(moduleId);
-      return;
-    }
-
-    const newModule: OpenModule = {
-      id: moduleId,
-      name: module.name,
-      component: module.component,
-      zIndex: nextZIndex
-    };
-
-    setOpenModules(prev => [...prev, newModule]);
-    setNextZIndex(prev => prev + 1);
+    setExpandedModuleId(prev => (prev === moduleId ? null : moduleId));
   };
 
   const closeModule = (moduleId: string) => {
-    setOpenModules(prev => prev.filter(m => m.id !== moduleId));
+    setExpandedModuleId(prev => (prev === moduleId ? null : prev));
   };
 
   const bringModuleToFront = (moduleId: string) => {
@@ -196,28 +178,42 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
       <div className="w-full px-0 py-4">
         <div className="grid grid-cols-1 gap-4">
           {availableModules.map((module) => (
-            <Card 
-              key={module.id} 
-              className="hover:shadow-lg transition-shadow cursor-pointer group"
-              onClick={() => openModule(module.id)}
-            >
-              <CardContent className="p-3 md:p-4">
-                <div className="flex items-center gap-3 mb-1">
-                  <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
-                    <module.icon className={`h-5 w-5 text-${module.iconColor}-600`} />
+            <div key={module.id} className="w-full">
+              {expandedModuleId === module.id ? (
+                <div className="rounded-lg border border-border bg-background">
+                  <div className="flex justify-end p-2">
+                    <Button variant="ghost" size="sm" onClick={() => setExpandedModuleId(null)}>
+                      Close
+                    </Button>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold group-hover:text-primary transition-colors">
-                      {module.title}
-                    </h3>
-                    {module.isNew && (
-                      <Badge variant="secondary" className="text-xs">New</Badge>
-                    )}
+                  <div className="p-0">
+                    <module.component user={user} isFullPage={false} />
                   </div>
                 </div>
-                
-              </CardContent>
-            </Card>
+              ) : (
+                <Card 
+                  className="hover:shadow-lg transition-shadow cursor-pointer group"
+                  onClick={() => openModule(module.id)}
+                >
+                  <CardContent className="p-3 md:p-4">
+                    <div className="flex items-center gap-3 mb-1">
+                      <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
+                        <module.icon className={`h-5 w-5 text-${module.iconColor}-600`} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold group-hover:text-primary transition-colors">
+                          {module.title}
+                        </h3>
+                        {module.isNew && (
+                          <Badge variant="secondary" className="text-xs">New</Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           ))}
         </div>
 
@@ -230,34 +226,6 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
         )}
       </div>
 
-      {/* Open Modules */}
-      {openModules.map((openModule) => (
-        <div
-          key={openModule.id}
-          className="fixed inset-4 relative bg-background border border-border rounded-lg shadow-2xl"
-          style={{ zIndex: openModule.zIndex }}
-          onClick={() => bringModuleToFront(openModule.id)}
-        >
-          {/* Close Button */}
-          <Button
-            className="absolute top-3 right-3"
-            variant="ghost"
-            size="icon"
-            aria-label="Close module"
-            onClick={(e) => {
-              e.stopPropagation();
-              closeModule(openModule.id);
-            }}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-
-          {/* Module Content */}
-          <div className="h-full overflow-auto pt-6">
-            <openModule.component user={user} isFullPage={true} />
-          </div>
-        </div>
-      ))}
     </div>
   );
 };
