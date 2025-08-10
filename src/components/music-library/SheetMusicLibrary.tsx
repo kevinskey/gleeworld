@@ -268,23 +268,23 @@ export const SheetMusicLibrary = ({
             <CardHeader className={`${isSelected ? 'pb-2' : 'pb-0 pt-2'}`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <CardTitle className={`${isSelected ? 'text-sm md:text-base' : 'text-xs md:text-sm'} font-medium whitespace-normal break-words leading-snug`} title={item.title}>
+                  <CardTitle className={`${isSelected ? 'text-sm md:text-base' : 'text-xs md:text-sm'} font-medium whitespace-nowrap overflow-x-auto scrollbar-none leading-snug`} title={item.title}>
                     {item.title}
                   </CardTitle>
                   {(item.composer || item.arranger) && !isSelected && (
-                    <p className="text-xs text-muted-foreground truncate leading-none" title={item.composer || item.arranger}>
+                    <p className="text-xs text-muted-foreground whitespace-nowrap overflow-x-auto scrollbar-none leading-none" title={item.composer || item.arranger}>
                       {item.composer ? `by ${item.composer}` : `arr. ${item.arranger}`}
                     </p>
                   )}
                   {isSelected && (
                     <>
                       {item.composer && (
-                        <p className="text-xs text-muted-foreground truncate" title={item.composer}>
+                        <p className="text-xs text-muted-foreground whitespace-nowrap overflow-x-auto scrollbar-none" title={item.composer}>
                           by {item.composer}
                         </p>
                       )}
                       {item.arranger && (
-                        <p className="text-xs text-muted-foreground truncate" title={item.arranger}>
+                        <p className="text-xs text-muted-foreground whitespace-nowrap overflow-x-auto scrollbar-none" title={item.arranger}>
                           arr. {item.arranger}
                         </p>
                       )}
@@ -427,9 +427,9 @@ export const SheetMusicLibrary = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className={`${isSelected ? 'text-sm md:text-base' : 'text-xs md:text-sm'} font-medium whitespace-normal break-words leading-snug`}>{item.title}</h3>
+                      <h3 className={`${isSelected ? 'text-sm md:text-base' : 'text-xs md:text-sm'} font-medium whitespace-nowrap overflow-x-auto scrollbar-none leading-snug`}>{item.title}</h3>
                       {(item.composer || item.arranger) && (
-                        <p className="text-xs text-muted-foreground truncate leading-none">
+                        <p className="text-xs text-muted-foreground whitespace-nowrap overflow-x-auto scrollbar-none leading-none">
                           {item.composer ? `by ${item.composer}` : `arr. ${item.arranger}`}
                         </p>
                       )}
