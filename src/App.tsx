@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 import Index from "./pages/Index";
 import DirectoryPage from "./pages/DirectoryPage";
@@ -237,7 +238,9 @@ const App = () => {
                 path="/dashboard" 
                 element={
                   <ProtectedRoute>
-                    <UnifiedDashboard />
+                    <UniversalLayout>
+                      <UnifiedDashboard />
+                    </UniversalLayout>
                   </ProtectedRoute>
                  } 
                />

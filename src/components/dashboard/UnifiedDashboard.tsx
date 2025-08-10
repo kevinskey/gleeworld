@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { UniversalHeader } from '../layout/UniversalHeader';
-import { UniversalFooter } from '../layout/UniversalFooter';
 import { MessagesPanel } from './MessagesPanel';
 import { ModuleSelector } from './ModuleSelector';
 import { ModuleDisplay } from './ModuleDisplay';
@@ -34,7 +32,7 @@ export const UnifiedDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 pt-24 md:pt-28">
-      <UniversalHeader />
+      
 
       {/* Row 1: Hero + Features side-by-side */}
       <div className="px-6 py-4">
@@ -91,7 +89,7 @@ export const UnifiedDashboard = () => {
           </div>
         )}
 
-        <UniversalFooter />
+        
       </div>
   );
 };
