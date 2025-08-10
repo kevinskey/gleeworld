@@ -69,7 +69,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <EnhancedTooltip 
               content="Go to GleeWorld Home" 
-              disabled={location.pathname === '/admin'}
+              disabled={isMobile || location.pathname === '/admin'}
               className="z-[200]"
             >
               <div className="flex items-center gap-1 flex-shrink-0">
@@ -80,7 +80,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       alt="Spelman College Glee Club" 
                       className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain flex-shrink-0 drop-shadow-md relative z-[112]"
                     />
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 z-[111]"></div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 z-[111] pointer-events-none"></div>
                   </div>
                   <span className="text-foreground font-bold text-lg sm:text-xl md:text-2xl whitespace-nowrap drop-shadow-sm relative z-[112]">
                     GleeWorld
@@ -197,15 +197,11 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     </DropdownMenuItem>
                     
                     {/* Public View */}
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        console.log('Public View clicked - navigating to /');
-                        navigate('/');
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <Globe className="mr-2 h-4 w-4" />
-                      Public
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link to="/" className="flex items-center" onClick={() => console.log('Public View clicked - <Link> to /')}>
+                        <Globe className="mr-2 h-4 w-4" />
+                        Public
+                      </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
