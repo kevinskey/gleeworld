@@ -5,8 +5,6 @@ import { ModuleSelector } from './ModuleSelector';
 import { ModuleDisplay } from './ModuleDisplay';
 import { useAuth } from '@/contexts/AuthContext';
 import { CommunityHubModule } from './modules/CommunityHubModule';
-import { BucketsOfLoveWidget } from '@/components/shared/BucketsOfLoveWidget';
-
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string>('music-studio');
@@ -41,11 +39,6 @@ export const UnifiedDashboard = () => {
           </div>
         </div>
 
-        {/* Buckets of Love - visible to all authenticated users */}
-        <div className="grid grid-cols-1">
-          <BucketsOfLoveWidget />
-        </div>
-        
         {/* Messages Panel Overlay */}
         {showMessages && (
           <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-10">

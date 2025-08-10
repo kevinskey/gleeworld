@@ -12,6 +12,7 @@ import { MemberDirectory } from '@/components/directory/MemberDirectory';
 import { MobileBucketCard } from '@/components/buckets-of-love/MobileBucketCard';
 import { MobileComposeSheet } from '@/components/buckets-of-love/MobileComposeSheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { NotificationsSection } from '@/components/unified/NotificationsSection';
 
 export const CommunityHubModule = () => {
   const [activeTab, setActiveTab] = useState('buckets');
@@ -59,7 +60,7 @@ export const CommunityHubModule = () => {
       </div>
       
       <Tabs defaultValue="buckets" className="flex-1 flex flex-col">
-        <TabsList className={`grid w-full grid-cols-4 m-2 bg-background/50 ${isMobile ? 'text-xs' : ''}`}>
+        <TabsList className={`grid w-full grid-cols-5 m-2 bg-background/50 ${isMobile ? 'text-xs' : ''}`}>
           <TabsTrigger value="buckets" className="data-[state=active]:bg-pink-100 data-[state=active]:text-pink-700">
             {isMobile ? 'Love' : 'Buckets of Love'}
           </TabsTrigger>
@@ -68,6 +69,9 @@ export const CommunityHubModule = () => {
           </TabsTrigger>
           <TabsTrigger value="announcements" className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
             {isMobile ? 'News' : 'Announcements'}
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-700">
+            Notifications
           </TabsTrigger>
           <TabsTrigger value="directory" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700">
             Directory
@@ -191,6 +195,10 @@ export const CommunityHubModule = () => {
             <p className="font-medium text-blue-700 mb-2">No new announcements</p>
             <p className="text-sm">Stay tuned for important updates</p>
           </div>
+        </TabsContent>
+        
+        <TabsContent value="notifications" className="flex-1 p-4">
+          <NotificationsSection />
         </TabsContent>
         
         <TabsContent value="directory" className="flex-1">
