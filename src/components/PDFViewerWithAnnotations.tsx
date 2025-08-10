@@ -96,15 +96,38 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   // Toggle global annotation mode to hide/show the app header
   useEffect(() => {
     try {
+      const styleId = 'annotation-mode-global-style';
+      let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
+
       if (annotationMode) {
         document.body.classList.add('annotation-mode');
+        if (!styleEl) {
+          styleEl = document.createElement('style');
+          styleEl.id = styleId;
+          styleEl.textContent = `
+            /* Hide global headers/footers and allow full-bleed canvas */
+            body.annotation-mode header, 
+            body.annotation-mode .glass-nav,
+            body.annotation-mode [data-global-header],
+            body.annotation-mode [data-global-footer] {
+              display: none !important;
+            }
+            body.annotation-mode { overflow: hidden; }
+          `;
+          document.head.appendChild(styleEl);
+        }
       } else {
         document.body.classList.remove('annotation-mode');
+        if (styleEl) {
+          styleEl.remove();
+        }
       }
       window.dispatchEvent(new CustomEvent('annotationModeChange', { detail: { active: annotationMode } }));
     } catch {}
     return () => {
       document.body.classList.remove('annotation-mode');
+      const styleEl = document.getElementById('annotation-mode-global-style');
+      if (styleEl) styleEl.remove();
     };
   }, [annotationMode]);
 
