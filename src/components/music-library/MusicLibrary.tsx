@@ -247,7 +247,7 @@ export const MusicLibrary = ({ embedded = false, heightClass }: { embedded?: boo
           </div>
 
           {/* Right column - PDF viewer */}
-          <div className={`${selectedPdf ? 'col-span-8' : 'col-span-7'} flex flex-col h-full overflow-hidden pl-1`}>
+          <div className={`${selectedPdf ? 'col-span-8' : 'col-span-7'} flex flex-col h-full min-h-0 overflow-hidden pl-1`}>
             {selectedPdf ? (
               <div className="flex-1 overflow-hidden min-h-0">
                 <PDFViewerWithAnnotations 
