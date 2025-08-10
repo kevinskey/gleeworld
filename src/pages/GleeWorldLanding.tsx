@@ -274,7 +274,8 @@ export const GleeWorldLanding = () => {
     <div 
       className="min-h-screen w-full relative"
     >
-      <div className="absolute inset-0 bg-[url('/lovable-uploads/da72bd35-4e2e-40d3-949c-d4d4e21db37b.png')] bg-cover bg-left-top md:bg-left" aria-hidden="true" />
+      <div className="absolute inset-0 -z-10 [background-image:radial-gradient(1200px_800px_at_20%_0%,hsl(var(--primary)/0.12),transparent_60%),radial-gradient(900px_700px_at_80%_100%,hsl(var(--accent)/0.10),transparent_60%),linear-gradient(to_bottom,hsl(var(--background)),hsl(var(--background)))]" aria-hidden="true" />
+      <div className="absolute inset-0 -z-10 opacity-20 mix-blend-overlay" style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0.08'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")" }} aria-hidden="true" />
       
       <PublicLayout>
 
