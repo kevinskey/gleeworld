@@ -309,7 +309,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                         </div>
                         <div className={`${
                           isMobile 
-                            ? 'h-[calc(100vh-5rem)] overflow-y-auto px-4 py-3' 
+                            ? 'h-full overflow-y-auto px-4 py-3' 
                             : 'px-4 md:px-6 py-3'
                         }`}>
                           <module.component user={user} isFullPage={false} />
