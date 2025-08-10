@@ -59,8 +59,7 @@ export const UnifiedDashboard = () => {
       <div className="px-6 pb-12">
         <section id="modules-section" aria-labelledby="modules-heading" className="space-y-4">
           <header>
-            <h2 id="modules-heading" className="text-2xl font-semibold tracking-tight">Modules</h2>
-            <p className="text-muted-foreground">Quick access based on your permissions</p>
+            <h2 id="modules-heading" className="text-2xl font-semibold tracking-tight">Applications</h2>
           </header>
           <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm">
             <ModularDashboard hideHeader onExpandChange={handleExpandChange} />
