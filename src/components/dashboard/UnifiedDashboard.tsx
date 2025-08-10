@@ -37,7 +37,7 @@ export const UnifiedDashboard = () => {
 
       {/* Row 2: Community Hub full width */}
       <div className="px-6 pb-6">
-        <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden min-h-[60vh]">
+        <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm md:max-h-[50vh] lg:max-h-[45vh] overflow-y-auto">
           <CommunityHubModule />
         </div>
       </div>
