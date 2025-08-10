@@ -320,15 +320,23 @@ const App = () => {
                       <Notifications />
                     </ProtectedRoute>
                   } 
-                 />
-                <Route
-                  path="/notifications/send" 
-                  element={
-                    <ProtectedRoute>
-                      <SendNotificationPage />
-                    </ProtectedRoute>
-                  } 
-                 />
+                  />
+                 <Route
+                   path="/notifications/send" 
+                   element={
+                     <ProtectedRoute>
+                       <SendNotificationPage />
+                     </ProtectedRoute>
+                   } 
+                  />
+                 <Route
+                   path="/community-hub" 
+                   element={
+                     <ProtectedRoute>
+                       <SendNotificationPage />
+                     </ProtectedRoute>
+                   } 
+                  />
                  <Route
                    path="/announcements" 
                    element={

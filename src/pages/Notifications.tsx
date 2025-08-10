@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import {
 import { format } from "date-fns";
 
 export default function Notifications() {
+  const navigate = useNavigate();
   const { 
     notifications, 
     unreadCount, 
@@ -112,6 +114,9 @@ export default function Notifications() {
                   All caught up!
                 </Badge>
               )}
+              <Button onClick={() => navigate('/community-hub')}>
+                Open Community Hub
+              </Button>
             </div>
           </div>
         </div>
