@@ -86,7 +86,7 @@ export const MobileMusicLibrary = ({
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full min-h-0 flex flex-col">
       {/* Mobile Header */}
       <div className="sticky top-0 z-10 bg-background border-b px-2 py-3 sm:px-4 space-y-3">
         {/* Search Bar */}
