@@ -44,7 +44,6 @@ interface PDFViewerWithAnnotationsProps {
   musicTitle?: string;
   className?: string;
   startInAnnotationMode?: boolean;
-  variant?: 'card' | 'plain';
 }
 
 export const PDFViewerWithAnnotations = ({ 
@@ -53,15 +52,9 @@ export const PDFViewerWithAnnotations = ({
   musicTitle,
   className = "",
   startInAnnotationMode = false,
-  variant = 'card',
 }: PDFViewerWithAnnotationsProps) => {
   const { user } = useAuth();
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
-  const wrapperClasses = cn(
-    "w-full",
-    className,
-    variant === 'plain' ? "border-0 shadow-none rounded-none mx-0 max-w-none" : ""
-  );
   
   // Initialize the default layout plugin
 const scrollModePluginInstance = scrollModePlugin();
@@ -70,7 +63,6 @@ const scrollModePluginInstance = scrollModePlugin();
   console.log('PDFViewerWithAnnotations: URL processing result:', { signedUrl, urlLoading, urlError });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [activeTool, setActiveTool] = useState<"select" | "draw" | "erase">("select");
   const [brushSize, setBrushSize] = useState([3]);
@@ -502,7 +494,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   // Show loading while getting signed URL
   if (!pdfUrl) {
     return (
-      <Card className={wrapperClasses}>
+      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
         <CardContent className="p-8">
           <div className="flex items-center justify-center">
             <p className="text-muted-foreground">No PDF available</p>
@@ -514,7 +506,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   if (urlLoading) {
     return (
-      <Card className={wrapperClasses}>
+      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
         <CardContent className="p-8">
           <div className="flex flex-col items-center justify-center space-y-2">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -527,7 +519,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   if (urlError || !signedUrl) {
     return (
-      <Card className={wrapperClasses}>
+      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
         <CardContent className="p-8">
           <div className="flex flex-col items-center justify-center text-center space-y-4">
             <AlertCircle className="h-12 w-12 text-destructive" />
@@ -552,7 +544,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   if (error && !annotationMode) {
     return (
-      <Card className={wrapperClasses}>
+      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
         <CardContent className="p-8">
           <div className="flex flex-col items-center justify-center text-center space-y-4">
             <AlertCircle className="h-12 w-12 text-destructive" />
@@ -587,7 +579,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   const colors = ["#ff0000", "#000000", "#0000ff", "#008000", "#800080", "#ffa500"];
 
   return (
-    <Card className={wrapperClasses}>
+    <Card className={cn("w-full", className)}>
       {/* Annotation Toolbar */}
         {annotationMode && (
           <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded-t-lg border-b">
@@ -706,7 +698,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
       {/* PDF Content */}
       <CardContent className="p-0">
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-[calc(100dvh-10rem)] min-h-[70vh] md:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-8rem)]">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
               <div className="flex flex-col items-center space-y-2">
@@ -773,8 +765,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
           {/* Annotation Mode: PDF + Overlay Canvas */}
           {annotationMode && (
-            <div ref={scrollContainerRef} className="w-full h-full overflow-auto bg-muted/10">
-              <div className="w-full h-full flex items-start justify-center p-2 md:p-3">
+            <div className="w-full h-full overflow-auto bg-muted/10">
+              <div className="w-full h-full flex items-start justify-center p-4">
                 <div className="relative">
                   <canvas
                     ref={canvasRef}

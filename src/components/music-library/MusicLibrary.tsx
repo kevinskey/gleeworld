@@ -20,7 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-export const MusicLibrary = ({ embedded = false, heightClass }: { embedded?: boolean; heightClass?: string }) => {
+export const MusicLibrary = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -158,8 +158,8 @@ export const MusicLibrary = ({ embedded = false, heightClass }: { embedded?: boo
   // Desktop layout - keep existing design
   return (
     <>
-      <div className={`container mx-auto px-4 ${embedded ? 'pt-0 pb-0' : 'pt-16 md:pt-20 pb-4'}`}>
-        <div className="mb-2">
+      <div className="container mx-auto px-4 pt-16 md:pt-20 pb-6">
+        <div className="mb-6">
           <PageHeader
             title="Music Library"
             description="Digital & Physical Sheet Music Collection"
@@ -170,7 +170,7 @@ export const MusicLibrary = ({ embedded = false, heightClass }: { embedded?: boo
         </div>
 
         {/* Desktop two-column layout */}
-        <div className={`grid grid-cols-12 gap-6 ${embedded ? (heightClass || 'h-[85vh]') : 'h-[calc(100vh-5rem)]'} overflow-hidden`}>
+        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-5rem)] overflow-hidden">
           {/* Left column - Library sections */}
           <div className={`${selectedPdf ? 'col-span-4' : 'col-span-5'} space-y-4 h-full overflow-y-auto pr-1`}>
             {/* Study Scores */}
@@ -247,15 +247,22 @@ export const MusicLibrary = ({ embedded = false, heightClass }: { embedded?: boo
           </div>
 
           {/* Right column - PDF viewer */}
-          <div className={`${selectedPdf ? 'col-span-8' : 'col-span-7'} flex flex-col h-full min-h-0 overflow-hidden pl-1`}>
+          <div className={`${selectedPdf ? 'col-span-8' : 'col-span-7'} flex flex-col h-full overflow-hidden pl-1`}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">PDF Viewer</h2>
+              <Button size="sm" variant="outline" className="gap-2" aria-label="Study Mode" title="Study Mode" onClick={openStudyMode}>
+                <Eye className="h-4 w-4" />
+                <span className="hidden sm:inline">Study Mode</span>
+              </Button>
+            </div>
             {selectedPdf ? (
-              <div className="flex-1 overflow-hidden min-h-0">
+              <div className="flex-1 overflow-hidden">
+                <p className="text-xs text-muted-foreground mb-2">Loading: {selectedPdf.title}</p>
                 <PDFViewerWithAnnotations 
                   key={selectedPdf.url}
                   pdfUrl={selectedPdf.url}
                   musicTitle={selectedPdf.title}
                   musicId={selectedPdf.id}
-                  variant="plain"
                   className="w-full h-full"
                 />
               </div>

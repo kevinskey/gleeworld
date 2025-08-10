@@ -97,7 +97,6 @@ export const SheetMusicViewDialog = ({
                     musicId={item.id}
                     musicTitle={item.title}
                     startInAnnotationMode
-                    variant="plain"
                     className="w-full h-full rounded-none border-0"
                   />
                 ) : (
