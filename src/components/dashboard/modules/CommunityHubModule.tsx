@@ -27,23 +27,45 @@ export const CommunityHubModule = () => {
             <p className="text-sm text-muted-foreground">To Amaze and Inspire — Wellness, Notifications, Announcements</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="secondary" onClick={() => setActiveTab('wellness')} className="hover-scale">
+            <Button
+              size="sm"
+              variant={activeTab === 'wellness' ? 'secondary' : 'outline'}
+              onClick={() => setActiveTab('wellness')}
+              className="hover-scale"
+            >
               Wellness
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setActiveTab('announcements')} className="hover-scale">
+            <Button
+              size="sm"
+              variant={activeTab === 'announcements' ? 'secondary' : 'outline'}
+              onClick={() => setActiveTab('announcements')}
+              className="hover-scale"
+            >
               Announcements
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setActiveTab('buckets')} className="hover-scale">
+            <Button
+              size="sm"
+              variant={activeTab === 'buckets' ? 'secondary' : 'outline'}
+              onClick={() => setActiveTab('buckets')}
+              className="hover-scale"
+            >
               <Heart className="h-4 w-4 mr-1" /> Buckets
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setActiveTab('notifications')} className="hover-scale">
+            <Button
+              size="sm"
+              variant={activeTab === 'notifications' ? 'secondary' : 'outline'}
+              onClick={() => setActiveTab('notifications')}
+              className="hover-scale"
+            >
               <Bell className="h-4 w-4 mr-1" /> Notifications
             </Button>
-            <SendBucketOfLove trigger={
-              <Button size="sm" variant="ghost" className="hover-scale">
-                <Send className="h-4 w-4 mr-1" /> Send Love
-              </Button>
-            } />
+            <SendBucketOfLove
+              trigger={
+                <Button size="sm" variant="ghost" className="hover-scale">
+                  <Send className="h-4 w-4 mr-1" /> Send Love
+                </Button>
+              }
+            />
           </div>
         </div>
       </div>
