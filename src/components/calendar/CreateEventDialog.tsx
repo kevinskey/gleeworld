@@ -153,10 +153,31 @@ export const CreateEventDialog = ({ onEventCreated, initialDate }: CreateEventDi
 
       if (error) throw error;
 
+      // If no calendars exist, create a default personal calendar
+      if (!data || data.length === 0) {
+        if (!user) throw new Error('You must be signed in to create a calendar.');
+        const { data: newCal, error: createCalError } = await supabase
+          .from('gw_calendars')
+          .insert({
+            name: 'My Events',
+            description: 'Personal event calendar',
+            color: '#6366f1',
+            is_visible: true,
+            is_default: true,
+            created_by: user.id
+          })
+          .select('id, name, color, is_default')
+          .single();
+        if (createCalError) throw createCalError;
+        setCalendars([newCal]);
+        setSelectedCalendarId(newCal.id);
+        return;
+      }
+
       setCalendars(data || []);
       // Set default calendar if no calendar is selected
       if (!selectedCalendarId && data && data.length > 0) {
-        const defaultCal = data.find(cal => cal.is_default) || data[0];
+        const defaultCal = data.find(cal => (cal as any).is_default) || data[0];
         setSelectedCalendarId(defaultCal.id);
       }
     } catch (error) {
@@ -465,9 +486,14 @@ export const CreateEventDialog = ({ onEventCreated, initialDate }: CreateEventDi
       onEventCreated();
     } catch (err) {
       console.error('Error creating event:', err);
+      const message = err instanceof Error
+        ? err.message
+        : (typeof err === 'object' && err && 'message' in (err as any)
+            ? (err as any).message
+            : 'Failed to create event');
       toast({
         title: "Error",
-        description: "Failed to create event",
+        description: message,
         variant: "destructive",
       });
     } finally {
