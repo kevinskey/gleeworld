@@ -6,6 +6,7 @@ import { ModuleDisplay } from './ModuleDisplay';
 import { useAuth } from '@/contexts/AuthContext';
 import { CommunityHubModule } from './modules/CommunityHubModule';
 import DashboardHeroCarousel from '@/components/hero/DashboardHeroCarousel';
+import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string>('music-studio');
@@ -23,9 +24,14 @@ export const UnifiedDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 pt-4">
       <UniversalHeader />
 
-      {/* Row 1: Hero full width */}
+      {/* Row 1: Hero + Features side-by-side */}
       <div className="px-6 py-4">
-        <DashboardHeroCarousel />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Left: Hero */}
+          <DashboardHeroCarousel />
+          {/* Right: Features (ads) */}
+          <DashboardFeaturesCarousel />
+        </div>
       </div>
 
       {/* Row 2: Community Hub full width */}

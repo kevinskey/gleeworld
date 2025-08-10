@@ -49,7 +49,7 @@ export const HeroManagement = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [usageContext, setUsageContext] = useState<'homepage' | 'press_kit'>('homepage');
+  const [usageContext, setUsageContext] = useState<'homepage' | 'press_kit' | 'dashboard_features'>('homepage');
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -402,6 +402,13 @@ export const HeroManagement = () => {
             >
               📰 Press Kit Slides
             </Button>
+            <Button
+              variant={usageContext === 'dashboard_features' ? 'default' : 'outline'}
+              onClick={() => setUsageContext('dashboard_features')}
+              className="text-sm"
+            >
+              📣 Dashboard Features
+            </Button>
           </div>
         </CardHeader>
       </Card>
@@ -413,8 +420,8 @@ export const HeroManagement = () => {
             <div className={`p-2 rounded-lg ${editingId ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
               {editingId ? '✏️' : '➕'}
             </div>
-            <span className="hidden sm:inline">{editingId ? "Edit" : "Create New"} {usageContext === 'press_kit' ? 'Press Kit' : 'Homepage'} Slide</span>
-            <span className="sm:hidden">{editingId ? "Edit" : "New"} {usageContext === 'press_kit' ? 'Press Kit' : 'Homepage'} Slide</span>
+            <span className="hidden sm:inline">{editingId ? "Edit" : "Create New"} {usageContext === 'press_kit' ? 'Press Kit' : usageContext === 'dashboard_features' ? 'Dashboard Features' : 'Homepage'} Slide</span>
+            <span className="sm:hidden">{editingId ? "Edit" : "New"} {usageContext === 'press_kit' ? 'Press Kit' : usageContext === 'dashboard_features' ? 'Dashboard Features' : 'Homepage'} Slide</span>
           </CardTitle>
         </CardHeader>
       </Card>
