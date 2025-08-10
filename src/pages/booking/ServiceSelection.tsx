@@ -21,78 +21,50 @@ interface Service {
 
 const services: Service[] = [
   {
-    id: '1',
-    name: 'Voice Coaching',
+    id: 'office-30',
+    name: 'Office Hours (30 min)',
     image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
-    duration: '45min',
+    duration: '30min',
     capacity: '1-1',
-    price: '$75',
-    description: 'Our voice coaching service isn\'t just a trim - it\'s a transformation. Our skilled instructors specialize in crafting vocal techniques that look refined and professional.',
+    price: '$0',
+    description: 'Meet with faculty during office hours. 30 minutes, free.',
+    location: 'Music Office',
+    instructor: 'Faculty'
+  },
+  {
+    id: 'lesson-30',
+    name: 'Lesson (30 min)',
+    image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
+    duration: '30min',
+    capacity: '1-1',
+    price: '$50',
+    description: 'Private lesson. Billed at $50 per half hour.',
     location: 'Music Room A',
-    instructor: 'Dr. Johnson',
-    badge: 'Your Choice',
-    badgeColor: 'bg-green-500'
-  },
-  {
-    id: '2',
-    name: 'Section Rehearsal',
-    image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
-    duration: '1h 45min',
-    capacity: '1-4',
-    price: '$30',
-    description: 'Indulge in the ultimate vocal grooming experience with our Section Rehearsal. Step into a world of luxurious vocal training where every note is perfected.',
-    location: 'Rehearsal Hall',
-    instructor: 'Section Leader',
-    badge: 'Premium',
-    badgeColor: 'bg-yellow-500'
-  },
-  {
-    id: '3',
-    name: 'Audition Prep',
-    image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
-    duration: '1h',
-    capacity: '1-4',
-    price: '$45',
-    description: 'WE WILL FIX YOUR AUDITION TECHNIQUE!',
-    location: 'Practice Room 3',
-    instructor: 'Ms. Williams',
+    instructor: 'Assigned Instructor',
     badge: 'Most Popular',
     badgeColor: 'bg-blue-500'
   },
   {
-    id: '4',
-    name: 'Music Theory',
-    image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
-    duration: '30min',
-    capacity: '1-2',
-    price: '$45',
-    description: 'Experience the epitome of musical luxury with our expert Music Theory service. Our skilled instructors are dedicated to providing you with a refined understanding.',
-    location: 'Classroom 101',
-    instructor: 'Theory Faculty'
-  },
-  {
-    id: '5',
-    name: 'Piano Accompaniment',
-    image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
-    duration: '40min',
-    capacity: '1-4',
-    price: '$55',
-    description: 'As if born from a musical mother!',
-    location: 'Music Room B',
-    instructor: 'Piano Faculty',
-    badge: 'Premium',
-    badgeColor: 'bg-yellow-500'
-  },
-  {
-    id: '6',
-    name: 'Ensemble Practice',
+    id: 'lesson-60',
+    name: 'Lesson (1 hour)',
     image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
     duration: '1h',
-    capacity: '1-4',
-    price: '$60',
-    description: 'Refine your ensemble skills with our Ensemble Practice service, where precision meets personal style. Our skilled instructors are dedicated to crafting perfect harmonies.',
-    location: 'Main Concert Hall',
-    instructor: 'Director'
+    capacity: '1-1',
+    price: '$100',
+    description: 'Private lesson. $50 per half hour, 1 hour total.',
+    location: 'Music Room A',
+    instructor: 'Assigned Instructor'
+  },
+  {
+    id: 'audition',
+    name: 'Audition (30 min)',
+    image: '/lovable-uploads/8fb52a1d-ae81-4f4e-bda6-87fcee73d57e.png',
+    duration: '30min',
+    capacity: '1-1',
+    price: '$0',
+    description: 'Auditions are free. Please arrive 10 minutes early.',
+    location: 'Rehearsal Hall',
+    instructor: 'Audition Panel'
   }
 ];
 
@@ -178,8 +150,8 @@ export default function ServiceSelection() {
                       <div className="flex items-center space-x-3">
                         <Music className="h-5 w-5 text-secondary" />
                         <div>
-                          <h3 className="text-lg font-semibold text-primary-foreground">Voice Lessons</h3>
-                          <p className="text-sm text-primary-foreground/70">6 Services</p>
+                          <h3 className="text-lg font-semibold text-primary-foreground">Services</h3>
+                          <p className="text-sm text-primary-foreground/70">{filteredServices.length} Options</p>
                         </div>
                       </div>
                     </div>
@@ -234,20 +206,6 @@ export default function ServiceSelection() {
                 </Card>
               </div>
 
-              {/* Rehearsals Category */}
-              <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Music className="h-5 w-5 text-secondary" />
-                      <div>
-                        <h3 className="text-lg font-semibold text-primary-foreground">Rehearsals</h3>
-                        <p className="text-sm text-primary-foreground/70">3 Services</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
 
