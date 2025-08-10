@@ -583,7 +583,12 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         
         melodyPlayerRef.current.onProgress((progress, noteIndex) => {
           setPlaybackProgress(progress);
-          if (noteIndex === -1) {
+          if (noteIndex === -1 || progress >= 1) {
+            // Melody finished -> stop everything and notify parent
+            if (isPlaying) {
+              stopPractice();
+              window.dispatchEvent(new CustomEvent('practiceAutoStopped'));
+            }
             setCurrentNoteIndex(-1);
             setCurrentNote(undefined);
           }
@@ -958,7 +963,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
               <div className="flex items-center gap-2">
                 <input
                   type="range"
-                  min="60"
+                  min="45"
                   max="200"
                   value={tempo}
                   onChange={(e) => setTempo(parseInt(e.target.value))}
