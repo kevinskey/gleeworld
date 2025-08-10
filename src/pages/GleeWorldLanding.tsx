@@ -292,13 +292,13 @@ export const GleeWorldLanding = () => {
               loading="lazy"
             />
             {/* Soft brand gradient overlay for readability */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background/40 to-primary/10" aria-hidden="true" />
+            <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
             <div className="relative z-10 space-y-6">
               <div className="space-y-4 text-center">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-primary">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-white">
                   Join Our Legacy
                 </h2>
-                <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+                <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
                   Ready to be part of something extraordinary? Auditions are now open for the Spelman College Glee Club.
                 </p>
               </div>
