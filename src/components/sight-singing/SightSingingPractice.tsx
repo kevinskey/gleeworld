@@ -968,14 +968,24 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
               </div>
             </div>
             
-            {/* Play Button */}
+            {/* Play/Stop Button */}
             <Button 
-              onClick={startPractice}
+              onClick={isPlaying ? stopPractice : startPractice}
               disabled={!musicXML || extractedMelody.length === 0}
               className="flex items-center gap-2"
+              variant={isPlaying ? "destructive" : "default"}
             >
-              <Play className="h-4 w-4" />
-              Play
+              {isPlaying ? (
+                <>
+                  <Square className="h-4 w-4" />
+                  Stop
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4" />
+                  Play
+                </>
+              )}
             </Button>
           </div>
         </div>
