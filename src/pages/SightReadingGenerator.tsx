@@ -623,34 +623,6 @@ const SightReadingGeneratorPage = () => {
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Practice Button */}
-                    <Button 
-                      onClick={() => {
-                        if (isPlayingExercise) {
-                          const stopEvent = new CustomEvent('stopPractice');
-                          window.dispatchEvent(stopEvent);
-                          setIsPlayingExercise(false);
-                        } else {
-                          const practiceEvent = new CustomEvent('startPractice');
-                          window.dispatchEvent(practiceEvent);
-                          setIsPlayingExercise(true);
-                        }
-                      }}
-                      className="flex items-center gap-2"
-                      variant="secondary"
-                    >
-                      {isPlayingExercise ? (
-                        <>
-                          <Square className="h-4 w-4" />
-                          Stop
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4" />
-                          Play
-                        </>
-                      )}
-                    </Button>
                     
                     {/* Recording Button */}
                     <RecordingButton 
