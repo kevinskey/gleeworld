@@ -70,6 +70,10 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
       title: "Success",
       description: "User deleted successfully",
     });
+    // Immediately refresh the list and close the panel
+    setShowDetailPanel(false);
+    setSelectedUser(null);
+    onRefetch();
   };
 
   const handleUserClick = (user: User) => {
