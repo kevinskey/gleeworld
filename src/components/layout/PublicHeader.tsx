@@ -27,19 +27,12 @@ export const PublicHeader = () => {
       background: transparent !important;
       backdrop-filter: none !important;
     }
-    
+
     /* iOS Safari touch fixes */
     button[aria-label="Toggle mobile menu"] {
       -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
       touch-action: manipulation;
       cursor: pointer;
-    }
-    
-    /* Ensure dropdown content is properly positioned on iOS */
-    [data-radix-dropdown-menu-content] {
-      transform: none !important;
-      -webkit-transform: none !important;
-      position: fixed !important;
     }
   `;
 
@@ -95,7 +88,7 @@ export const PublicHeader = () => {
                   variant="ghost"
                   size="sm"
                   className="text-gray-700 hover:bg-gray-100/50 transition-all duration-200 p-2"
-                  onClick={() => setIsOpen(!isOpen)}
+                  onClick={() => setIsOpen(true)}
                   aria-label="Toggle mobile menu"
                 >
                   <div className="flex flex-col justify-center items-center w-6 h-6 gap-1">
@@ -111,13 +104,10 @@ export const PublicHeader = () => {
               <DropdownMenuContent
                 align="end"
                 side="bottom"
-                sideOffset={4}
-                className="w-80 p-3 bg-background border border-border rounded-lg shadow-xl z-[9999]"
-                style={{
-                  position: 'fixed',
-                  transform: 'none',
-                  WebkitTransform: 'none'
-                }}
+                sideOffset={8}
+                avoidCollisions
+                collisionPadding={8}
+                className="w-[92vw] sm:w-80 max-w-sm p-3 bg-background border border-border rounded-lg shadow-xl z-[9999] max-h-[80vh] overflow-y-auto"
               >
                 <div className="flex items-center justify-center gap-2 pb-2 border-b border-border">
                   <Music className="h-4 w-4 text-primary" />
