@@ -117,17 +117,14 @@ import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
-// Preview triggers: URL param or one-time assistant-triggered send
+// Preview triggers: optional, do not auto-run to avoid impacting page load
 if (typeof window !== 'undefined') {
   const params = new URLSearchParams(window.location.search);
-  if (params.get('sendPreview') === '1') {
-    import('./utils/sendAuditionerPreviewEmail').then(m => m.gwSendAuditionPreview(true));
-  } else {
-    const KEY = 'gw-assistant-preview-sent-once';
-    if (!sessionStorage.getItem(KEY)) {
-      sessionStorage.setItem(KEY, '1');
-      import('./utils/sendAuditionerPreviewEmail').then(m => m.gwSendAuditionPreview(true));
-    }
+  const enable = params.get('sendPreview') === '1' || sessionStorage.getItem('gw-enable-preview') === '1';
+  if (enable) {
+    import('./utils/sendAuditionerPreviewEmail')
+      .then(m => m.gwSendAuditionPreview(true))
+      .catch((e) => console.warn('Preview email trigger failed:', e));
   }
 }
 
