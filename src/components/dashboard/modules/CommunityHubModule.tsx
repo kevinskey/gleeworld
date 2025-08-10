@@ -29,19 +29,19 @@ export const CommunityHubModule = () => {
           <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
-              variant={activeTab === 'wellness' ? 'secondary' : 'outline'}
-              onClick={() => setActiveTab('wellness')}
-              className="hover-scale"
-            >
-              Wellness
-            </Button>
-            <Button
-              size="sm"
               variant={activeTab === 'announcements' ? 'secondary' : 'outline'}
               onClick={() => setActiveTab('announcements')}
               className="hover-scale"
             >
               Announcements
+            </Button>
+            <Button
+              size="sm"
+              variant={activeTab === 'wellness' ? 'secondary' : 'outline'}
+              onClick={() => setActiveTab('wellness')}
+              className="hover-scale"
+            >
+              Wellness
             </Button>
             <Button
               size="sm"
