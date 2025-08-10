@@ -869,49 +869,49 @@ const App = () => {
                                      <Route 
                                        path="/booking" 
                                        element={
-                                         <ProtectedRoute>
+                                         <PublicRoute>
                                            <BookingPage />
-                                         </ProtectedRoute>
+                                         </PublicRoute>
                                        } 
                                      />
                                      <Route 
                                        path="/booking/service-selection" 
                                        element={
-                                         <ProtectedRoute>
+                                         <PublicRoute>
                                            <ServiceSelection />
-                                         </ProtectedRoute>
+                                         </PublicRoute>
                                        } 
                                      />
                                      <Route 
                                        path="/booking/datetime" 
                                        element={
-                                         <ProtectedRoute>
+                                         <PublicRoute>
                                            <DateTimeSelection />
-                                         </ProtectedRoute>
+                                         </PublicRoute>
                                        } 
                                      />
                                      <Route 
                                        path="/booking/recurring" 
                                        element={
-                                         <ProtectedRoute>
+                                         <PublicRoute>
                                            <RecurringOptions />
-                                         </ProtectedRoute>
-                                        } 
+                                         </PublicRoute>
+                                       } 
                                       />
                                       <Route 
-                                        path="/booking/customer-info" 
-                                        element={
-                                          <ProtectedRoute>
-                                            <CustomerInfo />
-                                          </ProtectedRoute>
-                                        } 
+                                         path="/booking/customer-info" 
+                                         element={
+                                           <PublicRoute>
+                                             <CustomerInfo />
+                                           </PublicRoute>
+                                         } 
                                       />
                                       <Route 
-                                        path="/booking/confirmation" 
-                                        element={
-                                          <ProtectedRoute>
-                                            <BookingConfirmation />
-                                          </ProtectedRoute>
+                                         path="/booking/confirmation" 
+                                         element={
+                                           <PublicRoute>
+                                             <BookingConfirmation />
+                                           </PublicRoute>
                                          } 
                                        />
                                          <Route 
