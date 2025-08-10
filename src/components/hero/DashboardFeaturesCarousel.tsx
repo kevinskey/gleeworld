@@ -129,7 +129,7 @@ export const DashboardFeaturesCarousel: React.FC = () => {
                           Featured
                         </div>
                         <h3 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-tight">Welcome Glee Class of 2029</h3>
-                        <p className="text-sm md:text-base text-muted-foreground">Welcome to the glee sisterhood! Explore the app, send some buckets of lave and Amaze & Inspire!</p>
+                        <p className="text-sm md:text-base text-muted-foreground">Welcome to the glee sisterhood! Explore the app, send some buckets of love and Amaze & Inspire!</p>
                         <HeroAuditionStats className="pt-1" />
                       </div>
                     </div>
