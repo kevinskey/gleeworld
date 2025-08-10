@@ -290,7 +290,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                             <div className={`p-1.5 rounded-md bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
                               <module.icon className={`h-4 w-4 text-${module.iconColor}-600`} />
                             </div>
-                            <h3 className="text-sm font-medium">{module.title}</h3>
+                            <h3 className="text-xs font-medium">{module.title}</h3>
                           </div>
                           <Button
                             variant="ghost"
