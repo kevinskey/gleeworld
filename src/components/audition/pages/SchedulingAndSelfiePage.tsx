@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import heic2any from "heic2any";
+import { logger } from "@/utils/logger";
 
 export function SchedulingAndSelfiePage() {
   const { form, capturedImage, setCapturedImage } = useAuditionForm();
@@ -66,6 +67,13 @@ export function SchedulingAndSelfiePage() {
       const fileName = `audition-selfie-${user.id}-${Date.now()}.jpg`;
       const objectPath = `${user.id}/audition/${fileName}`;
 
+      logger.info('Uploading selfie', {
+        userId: user.id,
+        objectPath,
+        type: safeType,
+        size: uploadFile.size
+      });
+
       const { data: upData, error: upErr } = await supabase.storage
         .from('user-files')
         .upload(objectPath, uploadFile, { cacheControl: '3600', upsert: true, contentType: safeType });
@@ -83,13 +91,28 @@ export function SchedulingAndSelfiePage() {
         finalUrl = pub.publicUrl;
       }
 
-      if (!finalUrl) throw new Error('Could not generate file URL');
+      if (!finalUrl) {
+        logger.error('Failed to generate selfie URL', { path: upData.path, signed });
+        throw new Error('Could not generate file URL');
+      }
+
+      logger.info('Selfie uploaded successfully', { path: upData.path, urlPreview: finalUrl?.slice(0, 60) + '...' });
 
       setCapturedImage(finalUrl);
       toast.success("Selfie captured successfully!");
     } catch (error: any) {
-      console.error('Error uploading selfie:', { message: error?.message, status: error?.statusCode || error?.status, error });
-      toast.error(`Failed to upload selfie: ${error?.message || 'Unknown error'}`);
+      const status = error?.statusCode || error?.status;
+      const code = error?.code;
+      const msg = error?.message || (typeof error === 'string' ? error : 'Unknown error');
+      logger.error('Selfie upload failed', { status, code, msg, error });
+      console.error('Error uploading selfie:', { status, code, msg, error });
+      if (msg?.toLowerCase?.().includes('row-level security') || status === 401 || status === 403) {
+        toast.error('Permission denied while uploading. Please sign in again and try.');
+      } else if (msg?.toLowerCase?.().includes('bucket') && msg?.toLowerCase?.().includes('not found')) {
+        toast.error('Storage bucket not found. Please contact an administrator.');
+      } else {
+        toast.error(`Failed to upload selfie: ${msg}`);
+      }
     }
   };
 
