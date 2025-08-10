@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, ChevronDown, Calendar, Clock, MapPin, Users, Music } from 'lucide-react';
+import { ChevronDown, Calendar, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { PublicLayout } from '@/components/layout/PublicLayout';
 
 interface ServiceCategory {
   id: string;
@@ -17,14 +16,14 @@ interface ServiceCategory {
 
 interface BookingDetails {
   service: string;
-  numberOfPeople: string;
-  instructor: string;
-  location: string;
+  name: string;
+  email: string;
+  phone: string;
   dateTime: string;
 }
 
 export default function BookingPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+  // Search removed
   const [categories, setCategories] = useState<ServiceCategory[]>([
     {
       id: 'office-hours',
@@ -51,9 +50,9 @@ export default function BookingPage() {
 
   const [bookingDetails, setBookingDetails] = useState<BookingDetails>({
     service: '',
-    numberOfPeople: '',
-    instructor: '',
-    location: '',
+    name: '',
+    email: '',
+    phone: '',
     dateTime: ''
   });
 
@@ -71,43 +70,17 @@ export default function BookingPage() {
     setBookingDetails(prev => ({ ...prev, service }));
   };
 
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.services.some(service => 
-      service.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  const filteredCategories = categories;
 
   return (
+    <PublicLayout>
     <div className="relative min-h-screen">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('/lovable-uploads/d7a22fe1-819c-428c-a1db-eea68a217639.png')" }}
         aria-hidden="true"
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/70 to-background/60" aria-hidden="true" />
-      {/* Navigation Header */}
-      <div className="relative z-10 border-b border-white/20 bg-white/10 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-8">
-              <div className="text-primary-foreground font-bold text-xl">GleeWorld</div>
-              <nav className="hidden md:flex space-x-6">
-                <Link to="/scheduling" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Services</Link>
-                <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Instructors</a>
-                <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Locations</a>
-                <a href="#" className="text-secondary font-semibold border-b-2 border-secondary">Book Now</a>
-              </nav>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-primary-foreground/80 text-sm">🇺🇸 English</span>
-              <Button variant="outline" className="border-white/30 text-primary-foreground hover:bg-white/10">
-                Log In
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="absolute inset-0 bg-gradient-to-br from-background/50 via-background/35 to-background/25" aria-hidden="true" />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -116,16 +89,6 @@ export default function BookingPage() {
             <div>
               <h1 className="text-3xl font-bold text-primary-foreground mb-6">Choose Service</h1>
               
-              {/* Search Bar */}
-              <div className="relative mb-6">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 h-5 w-5" />
-                <Input
-                  placeholder="Search services"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 h-12 bg-white/10 border-white/30 text-primary-foreground placeholder:text-white/60 rounded-full"
-                />
-              </div>
 
               {/* Service Categories */}
               <div className="space-y-4">
@@ -197,69 +160,44 @@ export default function BookingPage() {
                     </div>
                   </div>
 
-                  {/* Number of People */}
+                  {/* Your Name */}
                   <div>
                     <label className="flex items-center text-sm font-medium text-primary-foreground/80 mb-2">
-                      <Users className="h-4 w-4 mr-2" />
-                      Number of People
+                      Your Name
                     </label>
-                    <Select value={bookingDetails.numberOfPeople} onValueChange={(value) => 
-                      setBookingDetails(prev => ({ ...prev, numberOfPeople: value }))
-                    }>
-                      <SelectTrigger className="bg-white/5 border-white/20 text-primary-foreground">
-                        <SelectValue placeholder="Select number" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1 Person</SelectItem>
-                        <SelectItem value="2-4">2-4 People</SelectItem>
-                        <SelectItem value="5-10">5-10 People</SelectItem>
-                        <SelectItem value="group">Full Section</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      placeholder="Full name"
+                      className="bg-white/5 border-white/20 text-primary-foreground"
+                      value={bookingDetails.name}
+                      onChange={(e) => setBookingDetails(prev => ({ ...prev, name: e.target.value }))}
+                    />
                   </div>
 
-                  {/* Instructor */}
+                  {/* Email */}
                   <div>
                     <label className="flex items-center text-sm font-medium text-primary-foreground/80 mb-2">
-                      <Users className="h-4 w-4 mr-2" />
-                      Instructor
+                      Email
                     </label>
-                    <Select value={bookingDetails.instructor} onValueChange={(value) => 
-                      setBookingDetails(prev => ({ ...prev, instructor: value }))
-                    }>
-                      <SelectTrigger className="bg-white/5 border-white/20 text-primary-foreground">
-                        <SelectValue placeholder="Select instructor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="dr-johnson">Dr. Johnson</SelectItem>
-                        <SelectItem value="ms-williams">Ms. Williams</SelectItem>
-                        <SelectItem value="section-leader">Section Leader</SelectItem>
-                        <SelectItem value="piano-faculty">Piano Faculty</SelectItem>
-                        <SelectItem value="theory-instructor">Theory Instructor</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      type="email"
+                      placeholder="you@example.com"
+                      className="bg-white/5 border-white/20 text-primary-foreground"
+                      value={bookingDetails.email}
+                      onChange={(e) => setBookingDetails(prev => ({ ...prev, email: e.target.value }))}
+                    />
                   </div>
 
-                  {/* Location */}
+                  {/* Phone */}
                   <div>
                     <label className="flex items-center text-sm font-medium text-primary-foreground/80 mb-2">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      Location
+                      Phone
                     </label>
-                    <Select value={bookingDetails.location} onValueChange={(value) => 
-                      setBookingDetails(prev => ({ ...prev, location: value }))
-                    }>
-                      <SelectTrigger className="bg-white/5 border-white/20 text-primary-foreground">
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="music-room-a">Music Room A</SelectItem>
-                        <SelectItem value="music-room-b">Music Room B</SelectItem>
-                        <SelectItem value="rehearsal-hall">Rehearsal Hall</SelectItem>
-                        <SelectItem value="main-concert-hall">Main Concert Hall</SelectItem>
-                        <SelectItem value="practice-room-1">Practice Room 1</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      placeholder="(201) 555-0123"
+                      className="bg-white/5 border-white/20 text-primary-foreground"
+                      value={bookingDetails.phone}
+                      onChange={(e) => setBookingDetails(prev => ({ ...prev, phone: e.target.value }))}
+                    />
                   </div>
 
                   {/* Date & Time */}
@@ -311,5 +249,6 @@ export default function BookingPage() {
         </div>
       </div>
     </div>
+    </PublicLayout>
   );
 }
