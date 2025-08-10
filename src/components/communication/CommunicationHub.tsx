@@ -127,9 +127,6 @@ export const CommunicationHub = () => {
                 <h1 className="text-2xl font-bold">Communication Hub</h1>
               </div>
             </div>
-            <div className="text-sm text-muted-foreground">
-              To Amaze and Inspire — Wellness, Notifications, Announcements
-            </div>
           </div>
         </div>
       </div>

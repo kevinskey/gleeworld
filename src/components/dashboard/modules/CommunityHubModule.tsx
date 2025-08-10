@@ -45,7 +45,7 @@ export const CommunityHubModule = () => {
               <Users className="w-5 h-5 text-primary" />
               Community Hub
             </h1>
-            <p className="text-sm text-muted-foreground">To Amaze and Inspire — Wellness, Notifications, Announcements</p>
+            
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button
