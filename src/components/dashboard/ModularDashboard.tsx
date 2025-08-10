@@ -249,46 +249,52 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
 
       {/* Module Grid */}
       <div className="w-full px-4 md:px-6 py-4">
-        <div className="grid grid-cols-1 gap-4">
-          {availableModules.map((module) => (
-            <div key={module.id} className="w-full">
-              {expandedModuleId === module.id ? (
-                <div className="rounded-lg border border-border bg-background">
-                  <div className="flex justify-end p-2">
-                    <Button variant="ghost" size="sm" onClick={() => { setExpandedModuleId(null); onExpandChange?.(null); }}>
-                      Close
-                    </Button>
-                  </div>
-                  <div className="px-4 md:px-6 py-3">
-                    <module.component user={user} isFullPage={false} />
-                  </div>
-                </div>
-              ) : (
-                <Card 
-                  className="hover:shadow-lg transition-shadow cursor-pointer group"
-                  onClick={() => openModule(module.id)}
-                >
-                  <CardContent className="p-3 md:p-4">
-                    <div className="flex items-center gap-3 mb-1">
-                      <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
-                        <module.icon className={`h-5 w-5 text-${module.iconColor}-600`} />
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={orderedModules.map(m => m.id)} strategy={verticalListSortingStrategy}>
+            <div className="grid grid-cols-1 gap-4">
+              {orderedModules.map((module) => (
+                <SortableItem key={module.id} id={module.id}>
+                  <div className="w-full">
+                    {expandedModuleId === module.id ? (
+                      <div className="rounded-lg border border-border bg-background">
+                        <div className="flex justify-end p-2">
+                          <Button variant="ghost" size="sm" onClick={() => { setExpandedModuleId(null); onExpandChange?.(null); }}>
+                            Close
+                          </Button>
+                        </div>
+                        <div className="px-4 md:px-6 py-3">
+                          <module.component user={user} isFullPage={false} />
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold group-hover:text-primary transition-colors">
-                          {module.title}
-                        </h3>
-                        {module.isNew && (
-                          <Badge variant="secondary" className="text-xs">New</Badge>
-                        )}
-                      </div>
-                    </div>
-                    
-                  </CardContent>
-                </Card>
-              )}
+                    ) : (
+                      <Card 
+                        className="hover:shadow-lg transition-shadow cursor-pointer group"
+                        onClick={() => openModule(module.id)}
+                      >
+                        <CardContent className="p-3 md:p-4">
+                          <div className="flex items-center gap-3 mb-1">
+                            <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
+                              <module.icon className={`h-5 w-5 text-${module.iconColor}-600`} />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold group-hover:text-primary transition-colors">
+                                {module.title}
+                              </h3>
+                              {module.isNew && (
+                                <Badge variant="secondary" className="text-xs">New</Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </SortableItem>
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
 
         {availableModules.length === 0 && (
           <div className="text-center py-12">
