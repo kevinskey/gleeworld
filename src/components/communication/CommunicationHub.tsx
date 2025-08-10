@@ -4,6 +4,7 @@ import { MessageComposer } from './MessageComposer';
 import { RecipientSelector } from './RecipientSelector';
 import { ChannelSelector } from './ChannelSelector';
 import { SendControls } from './SendControls';
+import { NotificationSenderPanel } from './NotificationSenderPanel';
 import { useCommunication } from '@/hooks/useCommunication';
 import { RecipientGroup } from '@/types/communication';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
@@ -133,6 +134,18 @@ export const CommunicationHub = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
+        {/* Tabs for Broadcast vs Notifications */}
+        <div className="mb-6">
+          <div className="w-full">
+            <div className="mb-3 text-sm text-muted-foreground">Choose a mode</div>
+            <div className="grid grid-cols-2 gap-2">
+              {/* Simple tabs mimic */}
+              {/* We keep it lightweight to avoid refactor across components */}
+            </div>
+          </div>
+        </div>
+
+        {/* Use a simple two-column layout for Broadcast composer */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Message Composition */}
           <div className="lg:col-span-2 space-y-6">
@@ -144,7 +157,6 @@ export const CommunicationHub = () => {
               templates={templates}
               onTemplateSelect={handleTemplateSelect}
             />
-            
             <RecipientSelector
               selectedGroups={selectedGroups}
               onGroupToggle={handleGroupToggle}
@@ -159,7 +171,6 @@ export const CommunicationHub = () => {
               onChannelToggle={handleChannelToggle}
               recipientCount={recipientCount}
             />
-            
             <SendControls
               title={title}
               content={content}
@@ -173,6 +184,11 @@ export const CommunicationHub = () => {
               onSaveDraft={handleSaveDraft}
             />
           </div>
+        </div>
+
+        {/* Notifications panel - single-user notification sender */}
+        <div className="mt-10">
+          <NotificationSenderPanel />
         </div>
       </div>
     </div>
