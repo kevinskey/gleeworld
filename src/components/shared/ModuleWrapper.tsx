@@ -46,6 +46,9 @@ export const ModuleWrapper = ({
 
   const content = (
     <div className={`${containerClass} ${className}`}>
+      {/* Mobile Header Spacer/Bumper */}
+      <div className="h-16 sm:h-0 block sm:hidden" aria-hidden="true" />
+      
       {/* Standardized Header */}
       <div className={`${headerClass} border-l-4 border-primary pl-4`}>
         <div className="flex items-center justify-between">
@@ -75,7 +78,7 @@ export const ModuleWrapper = ({
       </div>
 
       {/* Module Content */}
-      <div className="space-y-4">
+      <div className="space-y-4 pt-4 sm:pt-0">
         {isLoading ? (
           <Card>
             <CardContent className="p-8">
