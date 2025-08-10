@@ -1,11 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
 
-// One-time preview sender for Auditioner email
-// Uses sessionStorage guard to avoid duplicate sends during this session
-(async () => {
+// Preview sender for Auditioner email
+export async function gwSendAuditionPreview(force = false) {
   if (typeof window === 'undefined') return;
-  const FLAG = 'gw-audition-preview-sent';
-  if (sessionStorage.getItem(FLAG)) return;
+  const FLAG = 'gw-audition-preview-sent-v2';
+  if (!force && sessionStorage.getItem(FLAG)) return;
 
   try {
     const origin = window.location.origin;
@@ -31,23 +30,9 @@ import { supabase } from '@/integrations/supabase/client';
       </div>
     `;
 
-    const text = `Dear Auditioner,
+    const text = `Dear Auditioner,\n\nThank you for registering to audition for the Spelman College Glee Club! We are excited to hear your voice and meet you in person.\n\nYour audition is scheduled for:\n[Audition details will appear here]\n\nBefore your audition:\nPlease prepare the song “Come Thou Fount.” Your Auditioner page includes the music PDF and practice materials:\n${auditionerLink}\n\nIf you have any questions, reply to this email.\n\nMusically yours,\nAriana\nStudent Conductor, Spelman College Glee Club`;
 
-Thank you for registering to audition for the Spelman College Glee Club! We are excited to hear your voice and meet you in person.
-
-Your audition is scheduled for:
-[Audition details will appear here]
-
-Before your audition:
-Please prepare the song “Come Thou Fount.” Your Auditioner page includes the music PDF and practice materials:
-${auditionerLink}
-
-If you have any questions, reply to this email.
-
-Musically yours,
-Ariana
-Student Conductor, Spelman College Glee Club`;
-
+    console.log('📧 Invoking gw-send-email edge function...');
     const { data, error } = await supabase.functions.invoke('gw-send-email', {
       body: {
         to: 'kpj64110@gmail.com',
@@ -67,4 +52,13 @@ Student Conductor, Spelman College Glee Club`;
   } catch (err) {
     console.error('❌ Unexpected error sending preview email:', err);
   }
-})();
+}
+
+// Expose for manual trigger and auto-run once per session
+if (typeof window !== 'undefined') {
+  // @ts-ignore
+  window.gwSendAuditionPreview = gwSendAuditionPreview;
+  const urlForce = new URLSearchParams(window.location.search).get('forceSendPreview') === '1';
+  gwSendAuditionPreview(urlForce);
+}
+
