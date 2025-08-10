@@ -10,7 +10,7 @@ import { useMusic, Album } from "@/hooks/useMusic";
 import { useYouTubeVideos } from "@/hooks/useYouTubeVideos";
 
 import { useNavigate, Link } from "react-router-dom";
-import gleeClubFallback from "@/assets/glee-club-fallback.jpg";
+
 import gleeWorldBackground from "@/assets/glee-world-background.jpg";
 import { AlbumModal } from "@/components/music/AlbumModal";
 import { YoutubeVideoSection } from "@/components/youtube/YoutubeVideoSection";
@@ -286,8 +286,8 @@ export const GleeWorldLanding = () => {
           <Card className="relative overflow-hidden p-6 sm:p-8 md:p-10 bg-card border-2 border-primary/20 shadow-xl">
             {/* Background image from choir library */}
             <img 
-              src={gleeClubFallback} 
-              alt="Spelman College Glee Club choir performing on stage" 
+              src="/lovable-uploads/90bc1107-92d3-42f5-8c88-fc7a000d9c42.png" 
+              alt="Spelman College Glee Club choir performing at 2025 championship" 
               className="absolute inset-0 w-full h-full object-cover opacity-35" 
               loading="lazy"
             />
