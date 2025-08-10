@@ -79,9 +79,15 @@ export default function BookingPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-primary/95 to-primary">
+    <div className="relative min-h-screen">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/lovable-uploads/d7a22fe1-819c-428c-a1db-eea68a217639.png')" }}
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/70 to-background/60" aria-hidden="true" />
       {/* Navigation Header */}
-      <div className="border-b border-white/20 bg-white/10 backdrop-blur-sm">
+      <div className="relative z-10 border-b border-white/20 bg-white/10 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-8">
