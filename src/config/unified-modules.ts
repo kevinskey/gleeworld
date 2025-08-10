@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 
 // Import all module components
-import { MusicLibraryModule } from '@/components/modules/MusicLibraryModule';
+import { MusicLibraryModule } from '@/components/dashboard/modules/MusicLibraryModule';
 
 // Import all module components
 import { UserManagementModule } from '@/components/modules/UserManagementModule';

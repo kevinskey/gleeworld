@@ -186,7 +186,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                       Close
                     </Button>
                   </div>
-                  <div className="p-0 [&_h1]:hidden [&_h2]:hidden [&_header]:hidden [&_.module-header]:hidden [&_.module-subtitle]:hidden [&_.description]:hidden">
+                  <div className="p-0">
                     <module.component user={user} isFullPage={false} />
                   </div>
                 </div>
