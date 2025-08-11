@@ -113,10 +113,8 @@ function AuditionFormContent() {
         return null;
       };
       const voicePartCode = normalizeVoicePart(data.highSchoolSection);
-      // Force a safe default: leave null to satisfy CHECK constraint
-      const sightReadingLevel: null = null;
       
-      const submissionData = {
+      const submissionData: any = {
         user_id: user.id,
         session_id: activeSessions[0].id,
         full_name: `${capitalizeNames(data.firstName)} ${capitalizeNames(data.lastName)}`,
@@ -128,12 +126,19 @@ function AuditionFormContent() {
         years_of_vocal_training: data.isSoloist ? 1 : 0,
         instruments_played: data.playsInstrument && data.instrumentDetails ? [data.instrumentDetails] : [],
         music_theory_background: data.readsMusic ? 'Basic' : 'None',
-        sight_reading_level: sightReadingLevel,
         why_glee_club: data.personalityDescription,
         vocal_goals: data.additionalInfo || 'General vocal improvement',
         audition_time_slot: timeParsed.toISOString(),
         status: 'submitted'
-      } as const;
+      };
+
+      // Only include sight_reading_level if it matches allowed values
+      const allowedSight = ['beginner', 'intermediate', 'advanced'];
+      const candidateSight = null as string | null; // currently no field in UI; keep null
+      if (candidateSight && allowedSight.includes(candidateSight)) {
+        submissionData.sight_reading_level = candidateSight;
+      }
+
       
       console.log('📋 Submission data prepared:', submissionData);
       
