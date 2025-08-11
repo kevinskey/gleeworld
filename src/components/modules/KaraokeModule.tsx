@@ -188,10 +188,13 @@ export const KaraokeModule: React.FC = () => {
     return new Blob([view], { type: 'audio/wav' });
   };
 
-  const startWebAudioRecording = (stream: MediaStream) => {
+  const startWebAudioRecording = async (stream: MediaStream) => {
     const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
     const ctx = audioCtxRef.current || new Ctx();
     audioCtxRef.current = ctx;
+    if (ctx.state === 'suspended') {
+      try { await ctx.resume(); } catch {}
+    }
     const source = ctx.createMediaStreamSource(stream);
     micSourceNodeRef.current = source;
     const sp = ctx.createScriptProcessor(4096, 1, 1);
@@ -248,11 +251,11 @@ export const KaraokeModule: React.FC = () => {
           mediaRecorderRef.current = mr;
           setRecorderMode('mediarecorder');
         } else {
-          startWebAudioRecording(stream);
+          await startWebAudioRecording(stream);
         }
       } catch (err) {
         console.warn('MediaRecorder init failed — using WebAudio fallback', err);
-        startWebAudioRecording(stream);
+        await startWebAudioRecording(stream);
       }
 
       // Start recorder first
