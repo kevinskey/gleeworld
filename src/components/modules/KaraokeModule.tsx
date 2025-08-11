@@ -203,6 +203,28 @@ export const KaraokeModule: React.FC = () => {
     return new Blob([view], { type: 'audio/wav' });
   };
 
+  // Ensure browser-playable audio; if not, transcode to WAV via Web Audio
+  const ensurePlayableBlob = async (inBlob: Blob): Promise<Blob> => {
+    try {
+      const testEl = document.createElement('audio');
+      const type = inBlob.type || 'audio/webm';
+      if (testEl.canPlayType(type)) return inBlob;
+    } catch {}
+    try {
+      const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const ctx = audioCtxRef.current || new Ctx();
+      const ab = await inBlob.arrayBuffer();
+      const audioBuffer = await ctx.decodeAudioData(ab.slice(0));
+      const pcm = audioBuffer.getChannelData(0);
+      const copy = new Float32Array(pcm.length);
+      copy.set(pcm);
+      return createWavBlob([copy], audioBuffer.sampleRate || ctx.sampleRate || 44100);
+    } catch (e) {
+      console.warn('Transcode to WAV failed, using original blob', e);
+      return inBlob;
+    }
+  };
+
   const startWebAudioRecording = async (stream: MediaStream) => {
     const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
     const ctx = audioCtxRef.current || new Ctx();
@@ -286,11 +308,12 @@ export const KaraokeModule: React.FC = () => {
           mr.ondataavailable = (e) => {
             if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
           };
-          mr.onstop = () => {
-            const blob = new Blob(recordedChunksRef.current, { type: mime });
-            setRecordedBlob(blob);
+          mr.onstop = async () => {
+            const raw = new Blob(recordedChunksRef.current, { type: mime });
+            const playable = await ensurePlayableBlob(raw);
+            setRecordedBlob(playable);
             previewSetRef.current = true;
-            console.log('MediaRecorder stopped, preview ready', { size: blob.size });
+            console.log('MediaRecorder stopped, preview ready', { size: playable.size, type: playable.type });
             toast("Mic recording captured.");
           };
           mediaRecorderRef.current = mr;
@@ -305,6 +328,7 @@ export const KaraokeModule: React.FC = () => {
 
       // Start recorder first
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'recording') {
+        // Small slice to ensure frequent dataavailable events
         mediaRecorderRef.current.start(100);
       }
       setIsRecording(true);
@@ -357,19 +381,25 @@ export const KaraokeModule: React.FC = () => {
     if (recorderMode === 'webaudio') {
       stopWebAudioRecording();
     } else if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        mediaRecorderRef.current.requestData?.();
+      } catch {}
       mediaRecorderRef.current.stop();
       // Fallback in case onstop is delayed
-      setTimeout(() => {
+      setTimeout(async () => {
         try {
           if (!previewSetRef.current && recordedChunksRef.current.length) {
             const type = (mediaRecorderRef.current as any)?.mimeType || 'audio/webm';
             const fallbackBlob = new Blob(recordedChunksRef.current, { type });
-            setRecordedBlob(fallbackBlob);
+            const playable = await ensurePlayableBlob(fallbackBlob);
+            setRecordedBlob(playable);
             previewSetRef.current = true;
-            console.log('Fallback preview prepared', { size: fallbackBlob.size });
+            console.log('Fallback preview prepared', { size: playable.size, type: playable.type });
           }
-        } catch {}
-      }, 600);
+        } catch (e) {
+          console.warn('Fallback preview failed', e);
+        }
+      }, 1200);
     }
     if (audioElRef.current) audioElRef.current.pause();
     micStreamRef.current?.getTracks().forEach(t => t.stop());
@@ -383,11 +413,13 @@ export const KaraokeModule: React.FC = () => {
     } catch {}
 
     setIsRecording(false);
-    try {
-      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
-        audioCtxRef.current.close();
-      }
-    } catch (_) {}
+    setTimeout(() => {
+      try {
+        if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+          audioCtxRef.current.close();
+        }
+      } catch (_) {}
+    }, 1200);
 
   };
 
