@@ -144,7 +144,7 @@ function AuditionFormContent() {
       
       const { error } = await supabase
         .from('audition_applications')
-        .insert(submissionData);
+        .upsert(submissionData, { onConflict: 'session_id,user_id' });
 
       if (error) {
         console.log('❌ Database error details:', {
