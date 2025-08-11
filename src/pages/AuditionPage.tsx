@@ -97,17 +97,26 @@ function AuditionFormContent() {
       const formattedTime = `${format(timeParsed, 'h:mm a')} ET`;
 
       // Normalize values to satisfy DB CHECK constraints
-      const rawVoice = (data.highSchoolSection || '').toLowerCase().trim();
-      // Map common inputs to DB-valid choir part codes
-      const voiceMap: Record<string, string> = {
-        'soprano': 'S1', 'alto': 'A1', 'tenor': 'T1', 'bass': 'B1',
-        's1': 'S1', 's2': 'S2', 'a1': 'A1', 'a2': 'A2', 't1': 'T1', 't2': 'T2', 'b1': 'B1', 'b2': 'B2'
+      const normalizeVoicePart = (input?: string | null): string | null => {
+        if (!input) return null;
+        const s = input.toLowerCase().trim().replace(/\s+/g, '');
+        // Direct codes like s1, s2, a1, etc.
+        if (/^(s|a|t|b)[12]$/.test(s)) return s.toUpperCase() as 'S1'|'S2'|'A1'|'A2'|'T1'|'T2'|'B1'|'B2';
+        // Names with optional section numbers
+        if (s.includes('sopr')) return s.includes('2') || /ii$/.test(s) ? 'S2' : 'S1';
+        if (s.includes('mezzo')) return 'A2';
+        if (s.includes('contralto')) return 'A2';
+        if (s.includes('alto')) return s.includes('2') ? 'A2' : 'A1';
+        if (s.includes('tenor')) return s.includes('2') ? 'T2' : 'T1';
+        if (s.includes('baritone')) return 'B1';
+        if (s.includes('bass')) return s.includes('2') ? 'B2' : 'B1';
+        return null;
       };
-      const voicePartCode = voiceMap[rawVoice] ?? null;
+      const voicePartCode = normalizeVoicePart(data.highSchoolSection);
 
       const proposedSight = data.readsMusic ? 'beginner' : null; // conservative default
-      const validSightLevels = ['beginner', 'intermediate', 'advanced'];
-      const sightReadingLevel = proposedSight && validSightLevels.includes(proposedSight) ? proposedSight : null;
+      const validSightLevels = ['beginner', 'intermediate', 'advanced'] as const;
+      const sightReadingLevel = (proposedSight && (validSightLevels as readonly string[]).includes(proposedSight)) ? proposedSight : null;
       
       const submissionData = {
         user_id: user.id,
