@@ -98,10 +98,10 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
         
         // Get existing audition appointments for this date
         const { data: existingAppointments, error: appointmentError } = await supabase
-          .from('gw_auditions')
-          .select('audition_date, audition_time')
-          .gte('audition_date', startOfDay(selectedDate).toISOString())
-          .lte('audition_date', endOfDay(selectedDate).toISOString());
+          .from('audition_applications')
+          .select('audition_time_slot')
+          .gte('audition_time_slot', startOfDay(selectedDate).toISOString())
+          .lte('audition_time_slot', endOfDay(selectedDate).toISOString());
 
         if (appointmentError) throw appointmentError;
 
@@ -131,7 +131,8 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
           
           // Check if this slot is already taken
           const isAvailable = !existingAppointments?.some(apt => {
-            return apt.audition_time === timeString;
+            const takenTime = format(new Date(apt.audition_time_slot), 'h:mm a');
+            return takenTime === timeString;
           });
 
           slots.push({
