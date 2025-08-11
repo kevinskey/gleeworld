@@ -261,6 +261,7 @@ export const KaraokeModule: React.FC = () => {
       const blob = createWavBlob(chunks, sr);
       setRecordedBlob(blob);
       previewSetRef.current = true;
+      console.log('WebAudio recording stopped, preview ready', { size: blob.size, type: blob.type, chunks: chunks.length });
       toast("Mic recording captured.");
     }
     webAudioChunksRef.current = [];
@@ -282,6 +283,7 @@ export const KaraokeModule: React.FC = () => {
 
   const startRecording = async () => {
     // Reset preview state and buffers for a fresh take
+    console.log('[Karaoke] startRecording invoked');
     previewSetRef.current = false;
     setRecordedBlob(null);
     setPreviewUrl(null);
@@ -332,9 +334,15 @@ export const KaraokeModule: React.FC = () => {
           const mr = new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 256000 });
           recordedChunksRef.current = [];
           mr.ondataavailable = (e) => {
-            if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
+            if (e.data && e.data.size > 0) {
+              recordedChunksRef.current.push(e.data);
+              console.log('MediaRecorder dataavailable', { size: e.data.size, chunks: recordedChunksRef.current.length });
+            } else {
+              console.warn('MediaRecorder dataavailable empty');
+            }
           };
           mr.onstop = async () => {
+            console.log('MediaRecorder onstop fired', { chunks: recordedChunksRef.current.length });
             const raw = new Blob(recordedChunksRef.current, { type: mime });
             const playable = await ensurePlayableBlob(raw);
             setRecordedBlob(playable);
@@ -403,6 +411,7 @@ export const KaraokeModule: React.FC = () => {
   };
 
   const stopRecording = async () => {
+    console.log('[Karaoke] stopRecording invoked', { mode: recorderMode, mrState: mediaRecorderRef.current?.state });
     // Stop depending on the active recorder mode
     if (recorderMode === 'webaudio') {
       stopWebAudioRecording();
@@ -459,6 +468,14 @@ export const KaraokeModule: React.FC = () => {
         }
       } catch (_) {}
     }, 1200);
+
+    // Final guard: report if no preview was prepared
+    setTimeout(() => {
+      if (!previewSetRef.current) {
+        console.warn('[Karaoke] No preview captured', { chunks: recordedChunksRef.current.length, webAudioBuffers: webAudioChunksRef.current.length });
+        toast("No audio captured. Please check microphone permissions and try again.");
+      }
+    }, 1800);
 
   };
 
