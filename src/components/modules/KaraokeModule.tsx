@@ -35,6 +35,18 @@ export const KaraokeModule: React.FC = () => {
   const [mixing, setMixing] = useState(false);
   const [isPracticePlaying, setIsPracticePlaying] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Generate preview URL for raw mic recording
+  useEffect(() => {
+    if (!recordedBlob) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(recordedBlob);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [recordedBlob]);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
@@ -298,6 +310,14 @@ export const KaraokeModule: React.FC = () => {
       }
     } catch (_) {}
 
+  };
+
+  const clearRecording = () => {
+    try { audioElRef.current?.pause(); } catch {}
+    setRecordedBlob(null);
+    setMixedMp3(null);
+    setPreviewUrl(null);
+    toast("Recording cleared. Ready for a new take.");
   };
 
   const togglePractice = async () => {
@@ -671,6 +691,23 @@ export const KaraokeModule: React.FC = () => {
             <MicTest />
           </CardContent>
         </Card>
+
+        {recordedBlob && (
+          <Card className="bg-background/50 border-border">
+            <CardHeader>
+              <CardTitle>Recording Preview</CardTitle>
+              <CardDescription>Listen before mixing or save</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <audio controls src={previewUrl || undefined} className="w-full" />
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={clearRecording}>
+                  Start Over
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="bg-background/50 border-border">
           <CardHeader>
