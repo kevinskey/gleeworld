@@ -4987,6 +4987,42 @@ export type Database = {
           },
         ]
       }
+      gw_karaoke_recordings: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          file_path: string
+          file_url: string
+          id: string
+          is_shared_to_social: boolean | null
+          social_platforms: Json | null
+          song_title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          file_path: string
+          file_url: string
+          id?: string
+          is_shared_to_social?: boolean | null
+          social_platforms?: Json | null
+          song_title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          file_path?: string
+          file_url?: string
+          id?: string
+          is_shared_to_social?: boolean | null
+          social_platforms?: Json | null
+          song_title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_leadership_development: {
         Row: {
           approved_by: string | null
@@ -5197,6 +5233,7 @@ export type Database = {
       }
       gw_media_library: {
         Row: {
+          bucket_id: string | null
           category: string
           context: string | null
           created_at: string
@@ -5216,6 +5253,7 @@ export type Database = {
           view_count: number
         }
         Insert: {
+          bucket_id?: string | null
           category?: string
           context?: string | null
           created_at?: string
@@ -5235,6 +5273,7 @@ export type Database = {
           view_count?: number
         }
         Update: {
+          bucket_id?: string | null
           category?: string
           context?: string | null
           created_at?: string

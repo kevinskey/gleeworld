@@ -70,12 +70,12 @@ export const MediaUploadButton = ({
       'application/pdf': ['.pdf']
     },
     multiple: true, // Enable multiple file selection
-    maxSize: 50 * 1024 * 1024, // 50MB max file size
+    maxSize: 11 * 1024 * 1024, // 11MB max file size
     onDrop: async (acceptedFiles, rejectedFiles) => {
       if (rejectedFiles.length > 0) {
         toast({
           title: "Some files were rejected",
-          description: "Please ensure files are under 50MB and in supported formats",
+          description: "Please ensure files are under 11MB and in supported formats",
           variant: "destructive"
         });
       }
@@ -168,12 +168,19 @@ export const MediaUploadButton = ({
       // Create upload promises for simultaneous uploads
       const uploadPromises = selectedFiles.map(async (file, index) => {
         const fileName = `${Date.now()}-${index}-${file.name}`;
-        const filePath = `${category}/${fileName}`;
+        // Route by type: private buckets for audio/pdf, existing bucket for others
+        const bucket = file.type.startsWith('audio/')
+          ? 'media-audio'
+          : (file.type === 'application/pdf' ? 'media-docs' : 'media-library');
+        const pathPrefix = (bucket === 'media-audio' || bucket === 'media-docs')
+          ? `${user.id}/${category}`
+          : `${category}`;
+        const filePath = `${pathPrefix}/${fileName}`;
 
         try {
-          // Upload file to storage
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('media-library')
+          // Upload file to appropriate bucket
+          const { error: uploadError } = await supabase.storage
+            .from(bucket)
             .upload(filePath, file);
 
           if (uploadError) {
@@ -181,9 +188,9 @@ export const MediaUploadButton = ({
             throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
           }
 
-          // Get public URL
+          // Get URL (public for public bucket, authenticated URL for private buckets)
           const { data: urlData } = supabase.storage
-            .from('media-library')
+            .from(bucket)
             .getPublicUrl(filePath);
 
           // Store metadata in database
@@ -200,7 +207,8 @@ export const MediaUploadButton = ({
               tags: tags.length > 0 ? tags : null,
               context: context,
               uploaded_by: user.id,
-              is_public: category === 'hero' || category === 'promotional'
+              is_public: bucket === 'media-library' && (category === 'hero' || category === 'promotional'),
+              bucket_id: bucket
             })
             .select()
             .single();
@@ -208,7 +216,7 @@ export const MediaUploadButton = ({
           if (dbError) {
             console.error('Database error for file:', file.name, dbError);
             // Clean up uploaded file if database insert fails
-            await supabase.storage.from('media-library').remove([filePath]);
+            await supabase.storage.from(bucket).remove([filePath]);
             throw new Error(`Failed to save ${file.name}: ${dbError.message}`);
           }
 
@@ -230,7 +238,7 @@ export const MediaUploadButton = ({
           return {
             success: false,
             fileName: file.name,
-            error: error.message
+            error: (error as Error).message
           };
         }
       });
@@ -325,7 +333,7 @@ export const MediaUploadButton = ({
                 <div>
                   <p className="mb-1">Drag and drop files here, or click to select</p>
                   <p className="text-sm text-muted-foreground">
-                    Supports: Images, Videos, Audio, PDFs (max 50MB each)
+                    Supports: Images, Videos, Audio, PDFs (max 11MB each)
                   </p>
                 </div>
               )}

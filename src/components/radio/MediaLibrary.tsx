@@ -35,6 +35,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Document, Page, pdfjs } from 'react-pdf';
+import { getFileUrl } from '@/utils/storage';
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
@@ -51,6 +52,8 @@ interface MediaFile {
   created_at: string;
   uploaded_by?: string;
   is_public?: boolean;
+  file_path?: string;
+  bucket_id?: string;
 }
 
 interface MediaLibraryProps {
@@ -74,12 +77,15 @@ export const MediaLibrary = ({
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPdf, setSelectedPdf] = useState<MediaFile | null>(null);
+  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const [pdfNumPages, setPdfNumPages] = useState<number>(0);
   const [pdfPageNumber, setPdfPageNumber] = useState<number>(1);
   const [pdfScale, setPdfScale] = useState<number>(1.0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
+    fetchAdminStatus();
     fetchMediaData();
   }, []);
 
