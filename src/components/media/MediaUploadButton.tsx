@@ -70,12 +70,12 @@ export const MediaUploadButton = ({
       'application/pdf': ['.pdf']
     },
     multiple: true, // Enable multiple file selection
-    maxSize: 11 * 1024 * 1024, // 11MB max file size
+    maxSize: 50 * 1024 * 1024, // 50MB max file size
     onDrop: async (acceptedFiles, rejectedFiles) => {
       if (rejectedFiles.length > 0) {
         toast({
           title: "Some files were rejected",
-          description: "Please ensure files are under 11MB and in supported formats",
+          description: "Please ensure files are under 50MB and in supported formats",
           variant: "destructive"
         });
       }
@@ -333,7 +333,7 @@ export const MediaUploadButton = ({
                 <div>
                   <p className="mb-1">Drag and drop files here, or click to select</p>
                   <p className="text-sm text-muted-foreground">
-                    Supports: Images, Videos, Audio, PDFs (max 11MB each)
+                    Supports: Images, Videos, Audio, PDFs (max 50MB each)
                   </p>
                 </div>
               )}
