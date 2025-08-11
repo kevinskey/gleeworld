@@ -13,6 +13,7 @@ import { AppointmentCalendarSync } from './AppointmentCalendarSync';
 import { ProviderDashboard } from './ProviderDashboard';
 import { DayScheduleView } from './DayScheduleView';
 import { AppointmentsTableView } from './AppointmentsTableView';
+import { AppointmentSystemTest } from './AppointmentSystemTest';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const AppointmentDashboard = () => {
@@ -63,6 +64,7 @@ export const AppointmentDashboard = () => {
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-6">
+          <AppointmentSystemTest />
           <ProviderDashboard />
         </TabsContent>
 

@@ -13615,6 +13615,14 @@ export type Database = {
         Args: { target_user_id: string; new_role: string; reason?: string }
         Returns: boolean
       }
+      send_appointment_notification: {
+        Args: {
+          p_appointment_id: string
+          p_phone_number: string
+          p_message: string
+        }
+        Returns: Json
+      }
       share_study_score: {
         Args: {
           p_study_score_id: string
