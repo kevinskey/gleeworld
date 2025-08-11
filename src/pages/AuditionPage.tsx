@@ -95,6 +95,15 @@ function AuditionFormContent() {
       );
       const formattedDate = format(data.auditionDate, 'EEEE, MMMM d, yyyy');
       const formattedTime = `${format(timeParsed, 'h:mm a')} ET`;
+
+      // Normalize values to satisfy DB CHECK constraints
+      const rawVoice = (data.highSchoolSection || '').toLowerCase();
+      const validVoices = ['soprano', 'alto', 'tenor', 'bass'];
+      const voicePart = validVoices.includes(rawVoice) ? rawVoice : null;
+
+      const proposedSight = data.readsMusic ? 'beginner' : null; // conservative default
+      const validSightLevels = ['beginner', 'intermediate', 'advanced'];
+      const sightReadingLevel = proposedSight && validSightLevels.includes(proposedSight) ? proposedSight : null;
       
       const submissionData = {
         user_id: user.id,
@@ -104,16 +113,16 @@ function AuditionFormContent() {
         phone_number: data.phone,
         profile_image_url: capturedImage,
         previous_choir_experience: data.sangInHighSchool ? 'High School Choir' : 'No previous experience',
-        voice_part_preference: data.highSchoolSection || null,
+        voice_part_preference: voicePart,
         years_of_vocal_training: data.isSoloist ? 1 : 0,
         instruments_played: data.playsInstrument && data.instrumentDetails ? [data.instrumentDetails] : [],
         music_theory_background: data.readsMusic ? 'Basic' : 'None',
-        sight_reading_level: data.readsMusic ? 'Beginner' : null,
+        sight_reading_level: sightReadingLevel,
         why_glee_club: data.personalityDescription,
         vocal_goals: data.additionalInfo || 'General vocal improvement',
         audition_time_slot: timeParsed.toISOString(),
         status: 'submitted'
-      };
+      } as const;
       
       console.log('📋 Submission data prepared:', submissionData);
       
