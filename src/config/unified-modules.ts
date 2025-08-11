@@ -33,7 +33,8 @@ import {
   Megaphone,
   Camera,
   GraduationCap,
-  Radio
+  Radio,
+  Mic2
 } from 'lucide-react';
 
 // Import all module components
@@ -72,6 +73,7 @@ import { AIFinancialPlanningModule } from "@/components/financial/AIFinancialPla
 import { WellnessModule } from '@/components/modules/WellnessModule';
 import { GleeWritingWidget } from '@/components/writing/GleeWritingWidget';
 import MediaLibrary from '@/pages/admin/MediaLibrary';
+import { KaraokeModule } from '@/components/modules/KaraokeModule';
 
 // Single source of truth for all modules
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -535,6 +537,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: MediaLibrary,
     dbFunctionName: "media-library",
     requiredRoles: ["admin"]
+  },
+  {
+    id: "karaoke",
+    name: "karaoke",
+    title: "Karaoke Studio",
+    description: "Record over backing tracks and save mixes",
+    icon: Mic2,
+    iconColor: "pink",
+    category: "libraries",
+    isActive: true,
+    component: KaraokeModule,
+    dbFunctionName: "karaoke"
   }
 ];
 
