@@ -142,27 +142,49 @@ export const KaraokeModule: React.FC = () => {
       return;
     }
     try {
-      if (!audioReady) {
-        await enableAudio();
-      }
       if (!audioElRef.current) {
         audioElRef.current = new Audio(track.file_url);
       } else if (audioElRef.current.src !== track.file_url) {
         audioElRef.current.src = track.file_url;
       }
-      audioElRef.current.preload = 'auto';
-      (audioElRef.current as any).playsInline = true;
-      audioElRef.current.crossOrigin = 'anonymous';
-      audioElRef.current.volume = Math.max(0, Math.min(1, trackVolume));
+      const el = audioElRef.current!;
+      el.preload = 'auto';
+      (el as any).playsInline = true;
+      el.crossOrigin = 'anonymous';
+
+      // Wait for decodable state to avoid play() rejection
+      await new Promise<void>((resolve) => {
+        if (el.readyState >= 2) return resolve();
+        const onReady = () => {
+          el.removeEventListener('canplaythrough', onReady);
+          resolve();
+        };
+        el.addEventListener('canplaythrough', onReady, { once: true });
+        el.load();
+      });
+
       if (isPracticePlaying) {
-        audioElRef.current.pause();
+        el.pause();
         setIsPracticePlaying(false);
-      } else {
-        audioElRef.current.currentTime = 0;
-        await audioElRef.current.play();
-        setIsPracticePlaying(true);
-        audioElRef.current.onended = () => setIsPracticePlaying(false);
+        return;
       }
+
+      // Prime with muted playback (iOS/silent switch safe), then unmute
+      el.muted = true;
+      el.volume = 0;
+      el.currentTime = 0;
+      await el.play();
+      setTimeout(() => {
+        el.muted = false;
+        el.volume = Math.max(0, Math.min(1, trackVolume));
+      }, 80);
+
+      setIsPracticePlaying(true);
+      el.onended = () => setIsPracticePlaying(false);
+      el.onerror = (ev: any) => {
+        console.error('Audio error', ev);
+        toast("Audio error: unable to play the backing track.");
+      };
     } catch (e: any) {
       console.error('Practice play error', e);
       toast(e?.message || "Playback blocked. Tap Enable Audio above or disable Silent Mode and try again.");
