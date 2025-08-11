@@ -3,7 +3,7 @@ import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import { MetronomePlayer } from './MetronomePlayer';
 import { MelodyPlayer, MelodyNote } from './MelodyPlayer';
 import './slider-styles.css';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -109,6 +109,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [recordingTime, setRecordingTime] = useState(0);
   const [playbackTime, setPlaybackTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordingStream, setRecordingStream] = useState<MediaStream | null>(null);
   
@@ -120,6 +121,17 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [needsPractice, setNeedsPractice] = useState(false);
   const targetScore = 90;
   
+  // Generate preview URL for recorded audio
+  React.useEffect(() => {
+    if (!audioBlob) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(audioBlob);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [audioBlob]);
+
   // Refs
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const playbackTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -1016,6 +1028,17 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         </Card>
       )}
 
+      {audioBlob && (
+        <Card className="border-border bg-background/50">
+          <CardHeader>
+            <CardTitle>Recording Preview</CardTitle>
+            <CardDescription>Listen to your take before assessment</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <audio controls src={previewUrl || undefined} className="w-full" />
+          </CardContent>
+        </Card>
+      )}
       {/* Assessment Results */}
       {assessmentScore !== null && (
         <Card className={needsPractice ? "border-yellow-500 bg-yellow-50/30" : "border-green-500 bg-green-50/30"}>
