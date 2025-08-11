@@ -53,6 +53,7 @@ export const KaraokeModule: React.FC = () => {
   const recordedChunksRef = useRef<Blob[]>([]);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const previewSetRef = useRef(false);
 
   // Fallback Web Audio recording
   const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
@@ -105,7 +106,7 @@ export const KaraokeModule: React.FC = () => {
 
   useEffect(() => {
     // Probe mic permission without keeping the stream
-    navigator.mediaDevices.getUserMedia({ audio: true })
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
       .then(stream => {
         setMicPermission('granted');
         stream.getTracks().forEach(t => t.stop());
@@ -130,7 +131,13 @@ export const KaraokeModule: React.FC = () => {
   const requestMicPermission = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          channelCount: 1,
+          sampleRate: 48000
+        } as MediaTrackConstraints
       });
       setMicPermission('granted');
       stream.getTracks().forEach(t => t.stop());
@@ -200,12 +207,12 @@ export const KaraokeModule: React.FC = () => {
     const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
     const ctx = audioCtxRef.current || new Ctx();
     audioCtxRef.current = ctx;
-    if (ctx.state === 'suspended') {
-      try { await ctx.resume(); } catch {}
-    }
+      if (ctx.state === 'suspended') {
+        try { await ctx.resume(); } catch {}
+      }
     const source = ctx.createMediaStreamSource(stream);
     micSourceNodeRef.current = source;
-    const sp = ctx.createScriptProcessor(4096, 1, 1);
+    const sp = ctx.createScriptProcessor(1024, 1, 1);
     scriptProcessorRef.current = sp;
     webAudioChunksRef.current = [];
     sp.onaudioprocess = (e) => {
@@ -228,6 +235,7 @@ export const KaraokeModule: React.FC = () => {
     if (chunks.length) {
       const blob = createWavBlob(chunks, sr);
       setRecordedBlob(blob);
+      previewSetRef.current = true;
       toast("Mic recording captured.");
     }
     webAudioChunksRef.current = [];
@@ -240,13 +248,22 @@ export const KaraokeModule: React.FC = () => {
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          channelCount: 1,
+          sampleRate: 48000
+        } as MediaTrackConstraints
       });
       micStreamRef.current = stream;
 
       // Ensure AudioContext and build monitor chain so singer hears themselves
       const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
-      const ctx = audioCtxRef.current || new Ctx();
+      let ctx = audioCtxRef.current;
+      if (!ctx) {
+        try { ctx = new Ctx({ latencyHint: 'interactive', sampleRate: 48000 }); } catch { ctx = new Ctx(); }
+      }
       audioCtxRef.current = ctx;
       if (ctx.state === 'suspended') {
         try { await ctx.resume(); } catch {}
@@ -264,7 +281,7 @@ export const KaraokeModule: React.FC = () => {
       const mime = chooseSupportedMimeType();
       try {
         if ((window as any).MediaRecorder && mime) {
-          const mr = new MediaRecorder(stream, { mimeType: mime });
+          const mr = new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 256000 });
           recordedChunksRef.current = [];
           mr.ondataavailable = (e) => {
             if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
@@ -272,6 +289,8 @@ export const KaraokeModule: React.FC = () => {
           mr.onstop = () => {
             const blob = new Blob(recordedChunksRef.current, { type: mime });
             setRecordedBlob(blob);
+            previewSetRef.current = true;
+            console.log('MediaRecorder stopped, preview ready', { size: blob.size });
             toast("Mic recording captured.");
           };
           mediaRecorderRef.current = mr;
@@ -339,6 +358,18 @@ export const KaraokeModule: React.FC = () => {
       stopWebAudioRecording();
     } else if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
+      // Fallback in case onstop is delayed
+      setTimeout(() => {
+        try {
+          if (!previewSetRef.current && recordedChunksRef.current.length) {
+            const type = (mediaRecorderRef.current as any)?.mimeType || 'audio/webm';
+            const fallbackBlob = new Blob(recordedChunksRef.current, { type });
+            setRecordedBlob(fallbackBlob);
+            previewSetRef.current = true;
+            console.log('Fallback preview prepared', { size: fallbackBlob.size });
+          }
+        } catch {}
+      }, 600);
     }
     if (audioElRef.current) audioElRef.current.pause();
     micStreamRef.current?.getTracks().forEach(t => t.stop());
@@ -415,7 +446,7 @@ export const KaraokeModule: React.FC = () => {
           el.removeEventListener('canplaythrough', onReady);
           el.removeEventListener('loadeddata', onReady);
           resolve();
-        }, 2000);
+        }, 1500);
         el.addEventListener('canplaythrough', onReady, { once: true });
         el.addEventListener('loadeddata', onReady, { once: true });
         el.load();
