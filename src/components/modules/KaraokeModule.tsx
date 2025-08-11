@@ -288,9 +288,17 @@ export const KaraokeModule: React.FC = () => {
       }
       setIsRecording(true);
       toast("Recording started. Sing along now!");
-    } catch (err) {
-      console.error(err);
-      toast("Failed to access microphone.");
+    } catch (err: any) {
+      console.error('startRecording error', err);
+      const name = err?.name || '';
+      if (name === 'NotAllowedError' || name === 'SecurityError') {
+        setMicPermission('denied');
+        toast("Microphone blocked. Use the lock icon in the address bar to allow mic, then try again.");
+      } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        toast("No microphone detected. Plug in or select a mic in system settings.");
+      } else {
+        toast("Failed to access microphone.");
+      }
     }
   };
 
@@ -676,8 +684,13 @@ export const KaraokeModule: React.FC = () => {
               <Slider value={[Math.round(micVolume*100)]} onValueChange={(v)=>setMicVolume((v[0]||0)/100)} className="w-40"/>
               <span className="text-xs text-muted-foreground">{Math.round(micVolume*100)}%</span>
             </div>
-            <div className="text-xs text-muted-foreground">
-              Permission: {micPermission}
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Permission: {micPermission}</span>
+              {micPermission !== 'granted' && (
+                <Button size="sm" variant="secondary" onClick={requestMicPermission}>
+                  Enable Microphone
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
