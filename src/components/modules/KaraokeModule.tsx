@@ -262,7 +262,10 @@ export const KaraokeModule: React.FC = () => {
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+    // Stop depending on the active recorder mode
+    if (recorderMode === 'webaudio') {
+      stopWebAudioRecording();
+    } else if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
     if (audioElRef.current) audioElRef.current.pause();
