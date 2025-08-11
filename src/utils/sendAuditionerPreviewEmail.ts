@@ -123,7 +123,7 @@ export async function sendTestAuditionEmail() {
     email: 'kpj64110@gmail.com',
     auditionDate: '2025-01-20',
     auditionTime: '14:30',
-    auditionLocation: 'Spelman College Music Hall'
+    auditionLocation: 'Rockefeller Fine Arts Building Room 109'
   };
   
   return await sendAuditionEmail(testData);
