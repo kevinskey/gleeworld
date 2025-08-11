@@ -213,6 +213,10 @@ export const KaraokeModule: React.FC = () => {
       webAudioChunksRef.current.push(new Float32Array(input));
     };
     source.connect(sp);
+    // Ensure the ScriptProcessor is pulled by the graph (silent tap)
+    const nullGain = ctx.createGain();
+    nullGain.gain.value = 0;
+    sp.connect(nullGain).connect(ctx.destination);
     // Monitoring is handled via a separate gain chain
     setRecorderMode('webaudio');
   };
