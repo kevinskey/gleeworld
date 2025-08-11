@@ -31,11 +31,13 @@ export const KaraokeModule: React.FC = () => {
   const [mixedMp3, setMixedMp3] = useState<Blob | null>(null);
   const [mixing, setMixing] = useState(false);
   const [isPracticePlaying, setIsPracticePlaying] = useState(false);
+  const [audioReady, setAudioReady] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     // Attempt to locate the backing track automatically
@@ -160,7 +162,40 @@ export const KaraokeModule: React.FC = () => {
       }
     }
   };
-
+  const enableAudio = async () => {
+    try {
+      if (!audioCtxRef.current) {
+        const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+        audioCtxRef.current = new Ctx();
+      }
+      if (audioCtxRef.current.state === 'suspended') {
+        await audioCtxRef.current.resume();
+      }
+      if (track) {
+        if (!audioElRef.current) {
+          audioElRef.current = new Audio(track.file_url);
+        } else if (audioElRef.current.src !== track.file_url) {
+          audioElRef.current.src = track.file_url;
+        }
+        audioElRef.current.muted = true;
+        audioElRef.current.volume = 0;
+        audioElRef.current.currentTime = 0;
+        try {
+          await audioElRef.current.play();
+          audioElRef.current.pause();
+        } catch (_) {
+          // ignore – some browsers won't play muted programmatically
+        }
+        audioElRef.current.muted = false;
+        audioElRef.current.volume = Math.max(0, Math.min(1, trackVolume));
+      }
+      setAudioReady(true);
+      toast("Audio enabled.");
+    } catch (e) {
+      console.error(e);
+      toast("Could not enable audio. Please tap again.");
+    }
+  };
   const floatTo16BitPCM = (input: Float32Array) => {
     const output = new Int16Array(input.length);
     for (let i = 0; i < input.length; i++) {
@@ -169,7 +204,6 @@ export const KaraokeModule: React.FC = () => {
     }
     return output;
   };
-
   const encodeToMp3 = (audioBuffer: AudioBuffer): Blob => {
     const numChannels = 1; // we will render mono
     const sampleRate = audioBuffer.sampleRate;
@@ -192,7 +226,6 @@ export const KaraokeModule: React.FC = () => {
 
     return new Blob(mp3Data, { type: 'audio/mpeg' });
   };
-
   const mixAndEncode = async () => {
     if (!recordedBlob || !track) {
       toast("Nothing to mix yet.");
@@ -264,7 +297,6 @@ export const KaraokeModule: React.FC = () => {
       setMixing(false);
     }
   };
-
   const downloadMp3 = () => {
     if (!mixedMp3) return;
     const url = URL.createObjectURL(mixedMp3);
@@ -347,6 +379,17 @@ export const KaraokeModule: React.FC = () => {
       </header>
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {!audioReady && (
+          <Card className="bg-background/50 border-border">
+            <CardHeader>
+              <CardTitle>Enable Audio</CardTitle>
+              <CardDescription>Browsers require a tap to allow sound.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={enableAudio}>Enable Audio</Button>
+            </CardContent>
+          </Card>
+        )}
         <Card className="bg-background/50 border-border">
           <CardHeader>
             <CardTitle>Backing Track</CardTitle>
