@@ -18,6 +18,7 @@ import { MusicSkillsPage } from "@/components/audition/pages/MusicSkillsPage";
 import { PersonalInfoPage } from "@/components/audition/pages/PersonalInfoPage";
 import { SchedulingAndSelfiePage } from "@/components/audition/pages/SchedulingAndSelfiePage";
 import { PublicLayout } from "@/components/layout/PublicLayout";
+import { sendAuditionEmail } from "@/utils/sendAuditionerPreviewEmail";
 
 function AuditionFormContent() {
   const { user } = useAuth();
@@ -134,68 +135,19 @@ function AuditionFormContent() {
       
       // Send email confirmation to auditioner
       try {
-        console.log('📧 Sending confirmation email...');
-        const emailResponse = await supabase.functions.invoke('gw-send-email', {
-          body: {
-            to: data.email,
-            subject: '🎵 Audition Application Received - Spelman Glee Club',
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f9fafb; padding: 20px;">
-                <div style="background: linear-gradient(135deg, #7c3aed, #3b82f6); color: white; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-                  <h1 style="margin: 0; font-size: 28px; font-weight: bold;">🎵 Spelman College Glee Club</h1>
-                  <p style="margin: 10px 0 0 0; font-size: 18px; opacity: 0.9;">Audition Application Received</p>
-                </div>
-                
-                <div style="background: white; padding: 30px 20px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                  <p style="font-size: 18px; color: #374151; margin-bottom: 20px;">Dear ${firstNameResolved},</p>
-                  
-                  <p style="color: #374151; line-height: 1.6; margin-bottom: 20px;">
-                    Thank you for submitting your audition application to join the Spelman College Glee Club! We're excited to review your application and meet you during your audition.
-                  </p>
-                  
-                  <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; border-left: 4px solid #7c3aed; margin: 20px 0;">
-                    <h3 style="margin: 0 0 10px 0; color: #7c3aed; font-size: 16px;">📅 Your Audition Details:</h3>
-                    <p style="margin: 5px 0; color: #374151;"><strong>Date:</strong> ${formattedDate}</p>
-                    <p style="margin: 5px 0; color: #374151;"><strong>Time:</strong> ${formattedTime}</p>
-                    <p style="margin: 5px 0; color: #374151;"><strong>Location:</strong> Rockefeller Fine Arts Building, Room 109</p>
-                  </div>
-                  
-                  <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
-                    <h4 style="margin: 0 0 10px 0; color: #92400e; font-size: 14px;">⚠️ Important Reminders:</h4>
-                    <ul style="margin: 0; padding-left: 20px; color: #92400e; font-size: 14px;">
-                      <li>Please arrive 15 minutes early</li>
-                      <li>Bring a prepared song (1-2 minutes)</li>
-                      <li>Be ready for some vocal exercises</li>
-                      <li>Dress comfortably but professionally</li>
-                    </ul>
-                  </div>
-                  
-                  <p style="color: #374151; line-height: 1.6; margin: 20px 0;">
-                    If you need to reschedule or have any questions, please contact us immediately at <a href="mailto:gleeclubofficial@spelman.edu" style="color: #7c3aed;">gleeclubofficial@spelman.edu</a>.
-                  </p>
-                  
-                  <div style="text-align: center; margin: 30px 0;">
-                    <div style="background: linear-gradient(135deg, #7c3aed, #3b82f6); color: white; display: inline-block; padding: 15px 25px; border-radius: 8px; font-weight: bold;">
-                      🌟 "To Amaze and Inspire" 🌟
-                    </div>
-                  </div>
-                  
-                  <p style="color: #6b7280; font-size: 14px; text-align: center; margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
-                    Best wishes,<br>
-                    <strong>The Spelman College Glee Club Team</strong><br>
-                    <em>Celebrating 100+ Years of Musical Excellence</em>
-                  </p>
-                </div>
-              </div>
-            `
-          }
+        console.log('📧 Sending confirmation email via utility...');
+        const sendResult = await sendAuditionEmail({
+          firstName: firstNameResolved,
+          lastName: capitalizeNames(data.lastName),
+          email: data.email,
+          auditionDate: format(data.auditionDate, 'yyyy-MM-dd'),
+          auditionTime: data.auditionTime,
+          auditionLocation: 'Rockefeller Fine Arts Building Room 109'
         });
-
-        if (emailResponse.error) {
-          console.error('❌ Failed to send confirmation email:', emailResponse.error);
-          // Don't fail the whole process if email fails
+        if (!sendResult?.success) {
+          console.warn('Email not sent or suppressed:', sendResult);
         } else {
-          console.log('✅ Confirmation email sent successfully');
+          console.log('✅ Confirmation email sent:', sendResult);
         }
       } catch (emailError) {
         console.error('❌ Email error:', emailError);
