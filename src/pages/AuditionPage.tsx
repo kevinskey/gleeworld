@@ -18,7 +18,7 @@ import { MusicSkillsPage } from "@/components/audition/pages/MusicSkillsPage";
 import { PersonalInfoPage } from "@/components/audition/pages/PersonalInfoPage";
 import { SchedulingAndSelfiePage } from "@/components/audition/pages/SchedulingAndSelfiePage";
 import { PublicLayout } from "@/components/layout/PublicLayout";
-import { sendAuditionEmail } from "@/utils/sendAuditionerPreviewEmail";
+import { sendAuditionConfirmationEmail } from "@/utils/sendAuditionConfirmationEmail";
 
 function AuditionFormContent() {
   const { user } = useAuth();
@@ -186,10 +186,10 @@ function AuditionFormContent() {
       // Send email confirmation to auditioner
       try {
         console.log('📧 Sending confirmation email via utility...');
-        const sendResult = await sendAuditionEmail({
-          firstName: firstNameResolved,
-          lastName: capitalizeNames(data.lastName),
-          email: data.email,
+        const sendResult = await sendAuditionConfirmationEmail({
+          applicationId: existingApp?.id || 'new-application',
+          applicantName: `${firstNameResolved} ${capitalizeNames(data.lastName)}`,
+          applicantEmail: data.email,
           auditionDate: format(data.auditionDate, 'yyyy-MM-dd'),
           auditionTime: data.auditionTime,
           auditionLocation: 'Rockefeller Fine Arts Building Room 109'
