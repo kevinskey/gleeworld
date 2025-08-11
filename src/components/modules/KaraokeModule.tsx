@@ -142,24 +142,44 @@ export const KaraokeModule: React.FC = () => {
       return;
     }
     try {
-      if (!audioElRef.current) {
-        audioElRef.current = new Audio(track.file_url);
-      } else if (audioElRef.current.src !== track.file_url) {
-        audioElRef.current.src = track.file_url;
-      }
-      const el = audioElRef.current!;
-      el.preload = 'auto';
-      (el as any).playsInline = true;
-      el.crossOrigin = 'anonymous';
+      const createOrUpdateEl = () => {
+        if (!audioElRef.current) {
+          const a = new Audio();
+          a.preload = 'auto';
+          (a as any).playsInline = true;
+          a.crossOrigin = 'anonymous';
+          audioElRef.current = a;
+        }
+        const el2 = audioElRef.current!;
+        // Ensure crossorigin is set BEFORE assigning src
+        if (el2.crossOrigin !== 'anonymous') el2.crossOrigin = 'anonymous';
+        if (el2.src !== track.file_url) {
+          el2.src = track.file_url;
+        }
+        return el2;
+      };
+      const el = createOrUpdateEl();
 
-      // Wait for decodable state to avoid play() rejection
+      // Wait for decodable state to avoid play() rejection (fallback + timeout)
       await new Promise<void>((resolve) => {
         if (el.readyState >= 2) return resolve();
+        let settled = false;
         const onReady = () => {
+          if (settled) return;
+          settled = true;
           el.removeEventListener('canplaythrough', onReady);
+          el.removeEventListener('loadeddata', onReady);
           resolve();
         };
+        const to = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          el.removeEventListener('canplaythrough', onReady);
+          el.removeEventListener('loadeddata', onReady);
+          resolve();
+        }, 2000);
         el.addEventListener('canplaythrough', onReady, { once: true });
+        el.addEventListener('loadeddata', onReady, { once: true });
         el.load();
       });
 
