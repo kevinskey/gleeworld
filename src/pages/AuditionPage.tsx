@@ -97,9 +97,13 @@ function AuditionFormContent() {
       const formattedTime = `${format(timeParsed, 'h:mm a')} ET`;
 
       // Normalize values to satisfy DB CHECK constraints
-      const rawVoice = (data.highSchoolSection || '').toLowerCase();
-      const validVoices = ['soprano', 'alto', 'tenor', 'bass'];
-      const voicePart = validVoices.includes(rawVoice) ? rawVoice : null;
+      const rawVoice = (data.highSchoolSection || '').toLowerCase().trim();
+      // Map common inputs to DB-valid choir part codes
+      const voiceMap: Record<string, string> = {
+        'soprano': 'S1', 'alto': 'A1', 'tenor': 'T1', 'bass': 'B1',
+        's1': 'S1', 's2': 'S2', 'a1': 'A1', 'a2': 'A2', 't1': 'T1', 't2': 'T2', 'b1': 'B1', 'b2': 'B2'
+      };
+      const voicePartCode = voiceMap[rawVoice] ?? null;
 
       const proposedSight = data.readsMusic ? 'beginner' : null; // conservative default
       const validSightLevels = ['beginner', 'intermediate', 'advanced'];
@@ -113,7 +117,7 @@ function AuditionFormContent() {
         phone_number: data.phone,
         profile_image_url: capturedImage,
         previous_choir_experience: data.sangInHighSchool ? 'High School Choir' : 'No previous experience',
-        voice_part_preference: voicePart,
+        voice_part_preference: voicePartCode,
         years_of_vocal_training: data.isSoloist ? 1 : 0,
         instruments_played: data.playsInstrument && data.instrumentDetails ? [data.instrumentDetails] : [],
         music_theory_background: data.readsMusic ? 'Basic' : 'None',
