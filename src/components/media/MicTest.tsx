@@ -11,6 +11,8 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
   const [level, setLevel] = useState(0); // 0-100
   const [status, setStatus] = useState<'idle'|'granted'|'denied'|'error'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [deviceId, setDeviceId] = useState<string>('default');
 
   const streamRef = useRef<MediaStream | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
@@ -51,6 +53,33 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
     rafIdRef.current = requestAnimationFrame(tick);
   };
 
+  const refreshDevices = async () => {
+    try {
+      const all = await navigator.mediaDevices.enumerateDevices();
+      setDevices(all.filter(d => d.kind === 'audioinput'));
+    } catch {}
+  };
+
+  useEffect(() => {
+    const onChange = () => refreshDevices();
+    if (navigator.mediaDevices?.addEventListener) {
+      navigator.mediaDevices.addEventListener('devicechange', onChange);
+    }
+    return () => {
+      if (navigator.mediaDevices?.removeEventListener) {
+        navigator.mediaDevices.removeEventListener('devicechange', onChange);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (testing) {
+      stopAll();
+      setTesting(false);
+      startTest();
+    }
+  }, [deviceId]);
+
   const startTest = async () => {
     try {
       setStatus('idle');
@@ -65,23 +94,28 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
       // Prefer enhanced constraints, fallback to basic
       let stream: MediaStream | null = null;
       try {
+        const base: MediaTrackConstraints = {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1,
+        };
+        const audioConstraints = {
+          ...base,
+          ...(deviceId && deviceId !== 'default' ? { deviceId: { exact: deviceId } } : {})
+        } as MediaTrackConstraints;
         stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-            channelCount: 1,
-            sampleRate: 44100,
-          } as MediaTrackConstraints
+          audio: audioConstraints
         });
       } catch (e) {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream = await navigator.mediaDevices.getUserMedia({ audio: deviceId && deviceId !== 'default' ? { deviceId: { exact: deviceId } } : true });
       }
 
       streamRef.current = stream;
+      await refreshDevices();
 
       const Ctx: any = (window as any).AudioContext || (window as any).webkitAudioContext;
-      const ctx: AudioContext = new Ctx({ sampleRate: 44100 });
+      const ctx: AudioContext = new Ctx();
       ctxRef.current = ctx;
       if (ctx.state === 'suspended') {
         await ctx.resume();
@@ -138,6 +172,22 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
           </Button>
         )}
       </div>
+
+      {devices.length > 0 && (
+        <div className="mb-2 flex items-center gap-2">
+          <label className="text-xs text-muted-foreground">Input</label>
+          <select
+            value={deviceId}
+            onChange={(e) => setDeviceId(e.target.value)}
+            className="text-sm border border-border rounded px-2 py-1 bg-background"
+          >
+            <option value="default">System default</option>
+            {devices.map((d) => (
+              <option key={d.deviceId} value={d.deviceId}>{d.label || `Mic ${d.deviceId.slice(0,6)}`}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="h-3 rounded-md bg-muted overflow-hidden border border-border">
         <div
