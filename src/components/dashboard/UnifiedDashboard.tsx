@@ -31,7 +31,7 @@ export const UnifiedDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 pt-24 md:pt-28">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 pt-[var(--app-header-offset)]">
       
 
       {/* Row 1: Hero + Features side-by-side */}
@@ -71,7 +71,7 @@ export const UnifiedDashboard = () => {
 
       {/* Row 3: Modules */}
       <div className="px-6 pb-12">
-        <section id="modules-section" aria-labelledby="modules-heading" className="space-y-4">
+        <section id="modules-section" aria-labelledby="modules-heading" className="space-y-4 scroll-mt-[var(--app-header-offset)]">
           <header>
             <h2 id="modules-heading" className="text-2xl font-semibold tracking-tight">Modules</h2>
             <p className="text-muted-foreground">Quick access based on your permissions</p>

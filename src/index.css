@@ -145,6 +145,14 @@
   }
 }
 
+/* Layout constants */
+:root { --app-header-offset: calc(env(safe-area-inset-top) + 3.5rem); }
+
+/* Responsive header offset for larger screens */
+@media (min-width: 640px) {
+  :root { --app-header-offset: calc(env(safe-area-inset-top) + 4rem); }
+}
+
 @layer base {
   * {
     @apply border-border;

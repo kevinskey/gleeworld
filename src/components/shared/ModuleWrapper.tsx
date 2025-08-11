@@ -41,16 +41,16 @@ export const ModuleWrapper = ({
     ? "min-h-screen space-y-4" 
     : "space-y-4";
   const headerClass = stickyHeader
-    ? "sticky top-14 sm:top-16 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    ? "sticky z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
     : "";
 
   const content = (
     <div className={`${containerClass} ${className}`}>
       {/* Mobile Header Spacer/Bumper */}
-      <div className="h-16 sm:h-0 block sm:hidden" aria-hidden="true" />
+      
       
       {/* Standardized Header */}
-      <div className={`${headerClass} border-l-4 border-primary pl-4`}>
+      <div className={`${headerClass} border-l-4 border-primary pl-4`} style={stickyHeader ? { top: 'var(--app-header-offset)' } : undefined}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {showBack && (
