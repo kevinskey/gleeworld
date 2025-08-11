@@ -42,6 +42,12 @@ export const KaraokeModule: React.FC = () => {
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
+  // Fallback Web Audio recording
+  const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
+  const micSourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const webAudioChunksRef = useRef<Float32Array[]>([]);
+  const [recorderMode, setRecorderMode] = useState<'mediarecorder' | 'webaudio'>('mediarecorder');
+
   useEffect(() => {
     // Attempt to locate the backing track automatically
     const fetchTrack = async () => {
@@ -101,29 +107,137 @@ export const KaraokeModule: React.FC = () => {
     return track.file_url;
   };
 
+  const requestMicPermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      });
+      setMicPermission('granted');
+      stream.getTracks().forEach(t => t.stop());
+      toast("Microphone enabled.");
+    } catch {
+      setMicPermission('denied');
+      toast("Microphone access was denied.");
+    }
+  };
+
+  const chooseSupportedMimeType = (): string | undefined => {
+    const types = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/ogg;codecs=opus',
+      'audio/mp4'
+    ];
+    for (const t of types) {
+      try {
+        if ((window as any).MediaRecorder && (MediaRecorder as any).isTypeSupported?.(t)) return t;
+      } catch {}
+    }
+    return undefined;
+  };
+
+  const createWavBlob = (buffers: Float32Array[], sampleRate: number): Blob => {
+    let length = 0;
+    for (const b of buffers) length += b.length;
+    const pcmFloat = new Float32Array(length);
+    let offset = 0;
+    for (const b of buffers) { pcmFloat.set(b, offset); offset += b.length; }
+
+    const numChannels = 1;
+    const bitsPerSample = 16;
+    const byteRate = sampleRate * numChannels * bitsPerSample / 8;
+    const blockAlign = numChannels * bitsPerSample / 8;
+
+    const buffer = new ArrayBuffer(44 + pcmFloat.length * 2);
+    const view = new DataView(buffer);
+    const writeString = (off: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + pcmFloat.length * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitsPerSample, true);
+    writeString(36, 'data');
+    view.setUint32(40, pcmFloat.length * 2, true);
+
+    let idx = 44;
+    for (let i = 0; i < pcmFloat.length; i++) {
+      let s = Math.max(-1, Math.min(1, pcmFloat[i]));
+      view.setInt16(idx, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      idx += 2;
+    }
+
+    return new Blob([view], { type: 'audio/wav' });
+  };
+
+  const startWebAudioRecording = (stream: MediaStream) => {
+    const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+    const ctx = audioCtxRef.current || new Ctx();
+    audioCtxRef.current = ctx;
+    const source = ctx.createMediaStreamSource(stream);
+    micSourceNodeRef.current = source;
+    const sp = ctx.createScriptProcessor(4096, 1, 1);
+    scriptProcessorRef.current = sp;
+    webAudioChunksRef.current = [];
+    sp.onaudioprocess = (e) => {
+      const input = e.inputBuffer.getChannelData(0);
+      webAudioChunksRef.current.push(new Float32Array(input));
+    };
+    source.connect(sp);
+    sp.connect(ctx.destination);
+    setRecorderMode('webaudio');
+  };
+
+  const stopWebAudioRecording = () => {
+    scriptProcessorRef.current?.disconnect();
+    micSourceNodeRef.current?.disconnect();
+    const sr = audioCtxRef.current?.sampleRate || 44100;
+    const chunks = webAudioChunksRef.current;
+    if (chunks.length) {
+      const blob = createWavBlob(chunks, sr);
+      setRecordedBlob(blob);
+      toast("Mic recording captured.");
+    }
+    webAudioChunksRef.current = [];
+    scriptProcessorRef.current = null;
+    micSourceNodeRef.current = null;
+  };
+
   const startRecording = async () => {
     if (!track) {
       toast("No backing track found.");
       return;
     }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      });
       micStreamRef.current = stream;
 
-      // Prepare MediaRecorder for mic
-      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus' : 'audio/webm';
-      const mr = new MediaRecorder(stream, { mimeType: mime });
-      recordedChunksRef.current = [];
-      mr.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
-      };
-      mr.onstop = () => {
-        const blob = new Blob(recordedChunksRef.current, { type: mime });
-        setRecordedBlob(blob);
-        toast("Mic recording captured.");
-      };
-      mediaRecorderRef.current = mr;
+      // Decide recording mode
+      const mime = chooseSupportedMimeType();
+      if ((window as any).MediaRecorder && mime) {
+        const mr = new MediaRecorder(stream, { mimeType: mime });
+        recordedChunksRef.current = [];
+        mr.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
+        };
+        mr.onstop = () => {
+          const blob = new Blob(recordedChunksRef.current, { type: mime });
+          setRecordedBlob(blob);
+          toast("Mic recording captured.");
+        };
+        mediaRecorderRef.current = mr;
+        setRecorderMode('mediarecorder');
+      } else {
+        startWebAudioRecording(stream);
+      }
 
       // Play the backing track and start recording simultaneously
       const srcUrl = await resolveTrackUrl();
@@ -136,7 +250,9 @@ export const KaraokeModule: React.FC = () => {
       audioElRef.current.currentTime = 0;
 
       await audioElRef.current.play();
-      mr.start(100); // gather data every 100ms
+      if (recorderMode === 'mediarecorder' && mediaRecorderRef.current?.state !== 'recording') {
+        mediaRecorderRef.current?.start(100);
+      }
       setIsRecording(true);
       toast("Recording started. Sing along now!");
     } catch (err) {
