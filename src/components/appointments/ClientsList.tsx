@@ -228,7 +228,7 @@ export const ClientsList = () => {
                       </div>
                       <div className="flex gap-1 flex-wrap justify-end">
                         {Object.entries(client.status_summary).map(([status, count]) => (
-                          <Badge key={status} size="sm" className={getStatusColor(status)}>
+                          <Badge key={status} className={getStatusColor(status)}>
                             {status}: {count}
                           </Badge>
                         ))}

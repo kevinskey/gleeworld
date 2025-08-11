@@ -14,6 +14,9 @@ import { ProviderDashboard } from './ProviderDashboard';
 import { DayScheduleView } from './DayScheduleView';
 import { AppointmentsTableView } from './AppointmentsTableView';
 import { AppointmentSystemTest } from './AppointmentSystemTest';
+import { AdminCalendarView } from './AdminCalendarView';
+import { AdminTimeView } from './AdminTimeView';
+import { ClientsList } from './ClientsList';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const AppointmentDashboard = () => {
@@ -73,7 +76,8 @@ export const AppointmentDashboard = () => {
         </TabsContent>
 
         <TabsContent value="calendar" className="space-y-6">
-          <DayScheduleView />
+          <AdminCalendarView />
+          <AdminTimeView />
         </TabsContent>
 
         <TabsContent value="overview" className="space-y-6">
@@ -134,7 +138,7 @@ export const AppointmentDashboard = () => {
         </TabsContent>
 
         <TabsContent value="schedule" className="space-y-6">
-          <AppointmentsTableView />
+          <ClientsList />
         </TabsContent>
 
         <TabsContent value="availability" className="space-y-6">

@@ -25,6 +25,7 @@ interface BlockedDate {
   blocked_date: string;
   reason: string | null;
   created_at: string;
+  created_by?: string | null;
 }
 
 export const AdminCalendarView = () => {
@@ -47,11 +48,8 @@ export const AdminCalendarView = () => {
 
       if (appointmentsError) throw appointmentsError;
 
-      // Fetch blocked dates
-      const { data: blockedData, error: blockedError } = await supabase
-        .from('gw_blocked_dates')
-        .select('*')
-        .order('blocked_date', { ascending: true });
+      // Fetch blocked dates using raw SQL to avoid type issues
+      const { data: blockedData, error: blockedError } = await supabase.rpc('get_blocked_dates');
 
       if (blockedError) throw blockedError;
 
@@ -71,12 +69,10 @@ export const AdminCalendarView = () => {
 
   const blockDate = async (date: Date, reason?: string) => {
     try {
-      const { error } = await supabase
-        .from('gw_blocked_dates')
-        .insert({
-          blocked_date: format(date, 'yyyy-MM-dd'),
-          reason: reason || 'Date blocked by admin'
-        });
+      const { error } = await supabase.rpc('block_date', {
+        date_to_block: format(date, 'yyyy-MM-dd'),
+        block_reason: reason || 'Date blocked by admin'
+      });
 
       if (error) throw error;
 
@@ -99,10 +95,9 @@ export const AdminCalendarView = () => {
 
   const unblockDate = async (blockId: string) => {
     try {
-      const { error } = await supabase
-        .from('gw_blocked_dates')
-        .delete()
-        .eq('id', blockId);
+      const { error } = await supabase.rpc('unblock_date', {
+        block_id: blockId
+      });
 
       if (error) throw error;
 

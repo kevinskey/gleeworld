@@ -213,7 +213,6 @@ export const AdminTimeView = () => {
                             <div className="text-muted-foreground truncate">{appointment.title}</div>
                             <div className="flex items-center gap-1 mt-1">
                               <Badge 
-                                size="sm" 
                                 className={
                                   appointment.status === 'confirmed' ? 'bg-status-confirmed text-status-confirmed-fg' :
                                   appointment.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' :
