@@ -225,7 +225,11 @@ export const KaraokeModule: React.FC = () => {
     }
   };
 
-  const startWebAudioRecording = async (stream: MediaStream) => {
+  const startWebAudioRecording = async (stream: MediaStream, setMode: boolean = true) => {
+    if (scriptProcessorRef.current) {
+      console.log('WebAudio tap already running');
+      return;
+    }
     const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
     const ctx = audioCtxRef.current || new Ctx();
     audioCtxRef.current = ctx;
@@ -247,9 +251,8 @@ export const KaraokeModule: React.FC = () => {
     nullGain.gain.value = 0;
     sp.connect(nullGain).connect(ctx.destination);
     // Monitoring is handled via a separate gain chain
-    setRecorderMode('webaudio');
+    if (setMode) setRecorderMode('webaudio');
   };
-
   const stopWebAudioRecording = () => {
     scriptProcessorRef.current?.disconnect();
     const sr = audioCtxRef.current?.sampleRate || 44100;
@@ -262,6 +265,19 @@ export const KaraokeModule: React.FC = () => {
     }
     webAudioChunksRef.current = [];
     scriptProcessorRef.current = null;
+  };
+
+  const stopWebAudioTap = (): Blob | null => {
+    scriptProcessorRef.current?.disconnect();
+    const sr = audioCtxRef.current?.sampleRate || 44100;
+    const chunks = webAudioChunksRef.current;
+    let blob: Blob | null = null;
+    if (chunks.length) {
+      blob = createWavBlob(chunks, sr);
+    }
+    webAudioChunksRef.current = [];
+    scriptProcessorRef.current = null;
+    return blob;
   };
 
   const startRecording = async () => {
@@ -298,6 +314,10 @@ export const KaraokeModule: React.FC = () => {
       } catch (e) {
         console.warn('Mic monitor setup failed', e);
       }
+
+      // Start a parallel WebAudio tap to guarantee preview
+      await startWebAudioRecording(stream, false);
+      console.log('Parallel WebAudio tap started');
 
       // Decide recording mode (fall back safely if MediaRecorder fails)
       const mime = chooseSupportedMimeType();
@@ -376,7 +396,7 @@ export const KaraokeModule: React.FC = () => {
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
     // Stop depending on the active recorder mode
     if (recorderMode === 'webaudio') {
       stopWebAudioRecording();
@@ -385,7 +405,20 @@ export const KaraokeModule: React.FC = () => {
         mediaRecorderRef.current.requestData?.();
       } catch {}
       mediaRecorderRef.current.stop();
-      // Fallback in case onstop is delayed
+
+      // Harvest parallel WebAudio tap immediately for a guaranteed preview
+      try {
+        const tapBlob = stopWebAudioTap();
+        if (tapBlob && !previewSetRef.current) {
+          setRecordedBlob(tapBlob);
+          previewSetRef.current = true;
+          console.log('Preview generated from WebAudio tap', { size: tapBlob.size, type: tapBlob.type });
+        }
+      } catch (e) {
+        console.warn('Stopping WebAudio tap failed', e);
+      }
+
+      // Fallback in case MediaRecorder onstop is delayed
       setTimeout(async () => {
         try {
           if (!previewSetRef.current && recordedChunksRef.current.length) {
