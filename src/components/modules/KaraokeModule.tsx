@@ -220,38 +220,59 @@ export const KaraokeModule: React.FC = () => {
       });
       micStreamRef.current = stream;
 
-      // Decide recording mode
+      // Decide recording mode (fall back safely if MediaRecorder fails)
       const mime = chooseSupportedMimeType();
-      if ((window as any).MediaRecorder && mime) {
-        const mr = new MediaRecorder(stream, { mimeType: mime });
-        recordedChunksRef.current = [];
-        mr.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
-        };
-        mr.onstop = () => {
-          const blob = new Blob(recordedChunksRef.current, { type: mime });
-          setRecordedBlob(blob);
-          toast("Mic recording captured.");
-        };
-        mediaRecorderRef.current = mr;
-        setRecorderMode('mediarecorder');
-      } else {
+      try {
+        if ((window as any).MediaRecorder && mime) {
+          const mr = new MediaRecorder(stream, { mimeType: mime });
+          recordedChunksRef.current = [];
+          mr.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
+          };
+          mr.onstop = () => {
+            const blob = new Blob(recordedChunksRef.current, { type: mime });
+            setRecordedBlob(blob);
+            toast("Mic recording captured.");
+          };
+          mediaRecorderRef.current = mr;
+          setRecorderMode('mediarecorder');
+        } else {
+          startWebAudioRecording(stream);
+        }
+      } catch (err) {
+        console.warn('MediaRecorder init failed — using WebAudio fallback', err);
         startWebAudioRecording(stream);
       }
 
       // Play the backing track and start recording simultaneously
       const srcUrl = await resolveTrackUrl();
       if (!audioElRef.current) {
-        audioElRef.current = new Audio(srcUrl);
-      } else {
-        audioElRef.current.src = srcUrl;
+        const a = new Audio();
+        a.preload = 'auto';
+        (a as any).playsInline = true;
+        a.crossOrigin = 'anonymous';
+        audioElRef.current = a;
       }
-      audioElRef.current.volume = Math.max(0, Math.min(1, trackVolume));
-      audioElRef.current.currentTime = 0;
+      const el = audioElRef.current;
+      if (el.crossOrigin !== 'anonymous') el.crossOrigin = 'anonymous';
+      if (el.src !== srcUrl) el.src = srcUrl;
+      el.currentTime = 0;
+      el.muted = true;
+      el.volume = 0;
 
-      await audioElRef.current.play();
-      if (recorderMode === 'mediarecorder' && mediaRecorderRef.current?.state !== 'recording') {
-        mediaRecorderRef.current?.start(100);
+      try {
+        await el.play();
+      } catch (e) {
+        console.warn('Autoplay rejected during recording start', e);
+      }
+      // Unmute shortly after starting to satisfy iOS policies
+      setTimeout(() => {
+        el.muted = false;
+        el.volume = Math.max(0, Math.min(1, trackVolume));
+      }, 80);
+
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'recording') {
+        mediaRecorderRef.current.start(100);
       }
       setIsRecording(true);
       toast("Recording started. Sing along now!");
@@ -271,6 +292,12 @@ export const KaraokeModule: React.FC = () => {
     if (audioElRef.current) audioElRef.current.pause();
     micStreamRef.current?.getTracks().forEach(t => t.stop());
     setIsRecording(false);
+    try {
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close();
+      }
+    } catch (_) {}
+
   };
 
   const togglePractice = async () => {
