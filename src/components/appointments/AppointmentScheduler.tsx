@@ -23,7 +23,7 @@ const appointmentSchema = z.object({
   client_email: z.string().email("Valid email is required"),
   client_phone: z.string().min(10, "Valid phone number is required"),
   appointment_type: z.string(),
-  duration_minutes: z.number().min(5).max(5), // Fixed 5-minute audition slots
+  duration_minutes: z.number().min(15).max(120), // 15 minutes to 2 hours
 });
 
 type AppointmentForm = z.infer<typeof appointmentSchema>;
@@ -45,47 +45,21 @@ export const AppointmentScheduler = () => {
   const form = useForm<AppointmentForm>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      title: "Glee Club Audition",
+      title: "",
       description: "",
       client_name: "",
       client_email: "",
       client_phone: "",
-      appointment_type: "audition",
-      duration_minutes: 5,
+      appointment_type: "general",
+      duration_minutes: 30,
     },
   });
 
-  // Generate time slots for selected date with duration consideration - AUDITION ONLY
-  const generateTimeSlots = async (date: Date, durationMinutes: number = 5) => {
+  // Generate time slots for selected date with duration consideration
+  const generateTimeSlots = async (date: Date, durationMinutes: number = 30) => {
     if (!date) return;
 
-    // Check if this date falls within audition time blocks
-    const { data: auditionBlocks, error: auditionError } = await supabase
-      .from('audition_time_blocks')
-      .select('*')
-      .eq('is_active', true);
-
-    if (auditionError) {
-      console.error('Error fetching audition blocks:', auditionError);
-      setAvailableSlots([]);
-      return;
-    }
-
-    // Check if the selected date falls within any audition time block
-    const dateString = format(date, 'yyyy-MM-dd');
-    const auditionBlock = auditionBlocks?.find(block => {
-      const blockStart = new Date(block.start_date);
-      const blockDate = format(blockStart, 'yyyy-MM-dd');
-      return blockDate === dateString;
-    });
-
-    if (!auditionBlock) {
-      // No appointments allowed outside of audition dates
-      setAvailableSlots([]);
-      return;
-    }
-
-    // Get existing appointments for this date
+    // Check for existing appointments for this date
     const { data: existingAppointments } = await supabase
       .from('gw_appointments')
       .select('appointment_date, duration_minutes')
@@ -95,24 +69,29 @@ export const AppointmentScheduler = () => {
 
     const slots: TimeSlot[] = [];
     
-    // Generate time slots based on audition time block
-    const blockStart = new Date(auditionBlock.start_date);
-    const blockEnd = new Date(auditionBlock.end_date);
-    const appointmentDuration = auditionBlock.appointment_duration_minutes || 5;
+    // Generate time slots for business hours (9 AM to 5 PM)
+    const startHour = 9;
+    const endHour = 17;
     
-    let currentTime = new Date(blockStart);
-    
-    while (currentTime < blockEnd) {
-      const slotEndTime = new Date(currentTime.getTime() + appointmentDuration * 60000);
-      
-      if (slotEndTime <= blockEnd) {
+    for (let hour = startHour; hour < endHour; hour++) {
+      for (let minute = 0; minute < 60; minute += durationMinutes) {
+        const currentTime = new Date(date);
+        currentTime.setHours(hour, minute, 0, 0);
+        
+        const slotEndTime = new Date(currentTime.getTime() + durationMinutes * 60000);
+        
+        // Don't show slots that extend past business hours
+        if (slotEndTime.getHours() >= endHour) {
+          continue;
+        }
+        
         const timeString = format(currentTime, 'HH:mm');
         
         // Check if this slot conflicts with existing appointments
         const isAvailable = !existingAppointments?.some(apt => {
           const aptStart = new Date(apt.appointment_date);
           const aptEnd = new Date(aptStart.getTime() + apt.duration_minutes * 60000);
-          const newSlotEnd = new Date(currentTime.getTime() + appointmentDuration * 60000);
+          const newSlotEnd = new Date(currentTime.getTime() + durationMinutes * 60000);
           
           // Check for any overlap
           return (
@@ -121,17 +100,16 @@ export const AppointmentScheduler = () => {
           );
         });
 
-        // Only show future slots
+        // Only show future slots (at least 1 hour from now)
         const now = new Date();
-        if (currentTime > now) {
+        const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+        if (currentTime > oneHourFromNow) {
           slots.push({
             time: timeString,
             available: isAvailable,
           });
         }
       }
-      
-      currentTime = new Date(currentTime.getTime() + appointmentDuration * 60000);
     }
 
     setAvailableSlots(slots);
@@ -139,10 +117,10 @@ export const AppointmentScheduler = () => {
 
   useEffect(() => {
     if (selectedDate) {
-      const duration = 5; // Fixed 5-minute audition slots
+      const duration = form.watch('duration_minutes') || 30;
       generateTimeSlots(selectedDate, duration);
     }
-  }, [selectedDate]);
+  }, [selectedDate, form.watch('duration_minutes')]);
 
   const onSubmit = async (data: AppointmentForm) => {
     if (!selectedDate || !selectedTime) {
@@ -219,30 +197,28 @@ export const AppointmentScheduler = () => {
       // Send SMS notifications to both parties
       try {
         // Send confirmation SMS to client
-        await supabase.functions.invoke('send-sms', {
+        await supabase.functions.invoke('gw-send-sms', {
           body: {
             to: data.client_phone,
-            message: `Your appointment request for ${format(appointmentDateTime, 'PPP')} at ${selectedTime} has been submitted. You'll receive confirmation once approved.`,
-            notificationId: appointment.id
+            message: `Your appointment request for ${format(appointmentDateTime, 'PPP')} at ${selectedTime} has been submitted. You'll receive confirmation once approved.`
           }
         });
 
-        // Get admin phone number from dashboard settings
-        const { data: adminSettings } = await supabase
-          .from('dashboard_settings')
-          .select('setting_value')
-          .eq('setting_name', 'admin_phone')
-          .single();
+        // Get admin phone number from user profiles (admins)
+        const { data: adminUsers } = await supabase
+          .from('gw_profiles')
+          .select('phone_number')
+          .or('is_admin.eq.true,is_super_admin.eq.true')
+          .not('phone_number', 'is', null)
+          .limit(1);
 
-        const adminPhone = adminSettings?.setting_value || '+1234567890'; // Fallback number
+        const adminPhone = adminUsers?.[0]?.phone_number || '(470) 622-1392'; // Fallback number
 
         // Send approval SMS to admin/receiver
-        await supabase.functions.invoke('send-sms', {
+        await supabase.functions.invoke('gw-send-sms', {
           body: {
             to: adminPhone,
-            message: `New appointment request from ${data.client_name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Reply "APPROVE ${appointment.id}" or "DENY ${appointment.id}"`,
-            notificationId: appointment.id,
-            isApprovalRequest: true
+            message: `New appointment request from ${data.client_name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Login to manage appointments.`
           }
         });
       } catch (smsError) {
@@ -284,13 +260,11 @@ export const AppointmentScheduler = () => {
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Schedule Glee Club Audition</DialogTitle>
+          <DialogTitle>Schedule Appointment</DialogTitle>
           <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-2">
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>Audition Appointments Only:</strong> Appointments are only available during scheduled audition dates:
-              <br />• Friday, August 15, 2025: 2:30 PM - 5:30 PM
-              <br />• Saturday, August 16, 2025: 11:00 AM - 1:00 PM
-              <br />Each audition slot is 5 minutes long.
+              <strong>Appointment Scheduling:</strong> Select a date and available time slot to schedule your appointment.
+              Available appointment types include meetings, consultations, auditions, and more.
             </p>
           </div>
         </DialogHeader>
@@ -305,10 +279,10 @@ export const AppointmentScheduler = () => {
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   disabled={(date) => {
-                    // Only allow August 15 and 16, 2025 for auditions
-                    const aug15 = new Date(2025, 7, 15); // Month is 0-indexed
-                    const aug16 = new Date(2025, 7, 16);
-                    return !(format(date, 'yyyy-MM-dd') === '2025-08-15' || format(date, 'yyyy-MM-dd') === '2025-08-16');
+                    // Allow appointments from today onwards, but check availability dynamically
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return date < today;
                   }}
                   className="rounded-md border"
                 />
@@ -403,7 +377,12 @@ export const AppointmentScheduler = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-background border shadow-lg z-50">
-                          <SelectItem value="5">5 minutes (Audition Slot)</SelectItem>
+                          <SelectItem value="15">15 minutes</SelectItem>
+                          <SelectItem value="30">30 minutes</SelectItem>
+                          <SelectItem value="45">45 minutes</SelectItem>
+                          <SelectItem value="60">1 hour</SelectItem>
+                          <SelectItem value="90">1.5 hours</SelectItem>
+                          <SelectItem value="120">2 hours</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
