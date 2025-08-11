@@ -281,6 +281,12 @@ export const KaraokeModule: React.FC = () => {
   };
 
   const startRecording = async () => {
+    // Reset preview state and buffers for a fresh take
+    previewSetRef.current = false;
+    setRecordedBlob(null);
+    setPreviewUrl(null);
+    recordedChunksRef.current = [];
+
     if (!track) {
       toast("No backing track loaded — recording mic only.");
     }
