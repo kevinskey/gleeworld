@@ -10,6 +10,7 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
   const [testing, setTesting] = useState(false);
   const [level, setLevel] = useState(0); // 0-100
   const [status, setStatus] = useState<'idle'|'granted'|'denied'|'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
@@ -53,23 +54,63 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
   const startTest = async () => {
     try {
       setStatus('idle');
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setErrorMsg(null);
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setStatus('error');
+        setErrorMsg('getUserMedia not supported. Use Chrome/Safari over HTTPS.');
+        return;
+      }
+
+      // Prefer enhanced constraints, fallback to basic
+      let stream: MediaStream | null = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1,
+            sampleRate: 44100,
+          } as MediaTrackConstraints
+        });
+      } catch (e) {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+
       streamRef.current = stream;
-      const ctx = new AudioContext({ sampleRate: 44100 });
+
+      const Ctx: any = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const ctx: AudioContext = new Ctx({ sampleRate: 44100 });
       ctxRef.current = ctx;
-      const src = ctx.createMediaStreamSource(stream);
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+
+      const src = ctx.createMediaStreamSource(stream!);
       sourceRef.current = src;
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 512;
       analyser.smoothingTimeConstant = 0.85;
       analyserRef.current = analyser;
       src.connect(analyser);
+
       setTesting(true);
       setStatus('granted');
       rafIdRef.current = requestAnimationFrame(tick);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Mic test error', e);
-      setStatus('denied');
+      const name = e?.name || '';
+      if (name === 'NotAllowedError' || name === 'SecurityError') {
+        setStatus('denied');
+        setErrorMsg('Permission blocked. Tap the lock icon in the address bar to enable the microphone, then try again.');
+      } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        setStatus('error');
+        setErrorMsg('No microphone detected. Plug in a mic or select one in system settings.');
+      } else {
+        setStatus('error');
+        setErrorMsg(e?.message || 'Unknown error.');
+      }
       setTesting(false);
     }
   };
@@ -109,11 +150,12 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
         />
       </div>
 
-      <div className="mt-2 text-xs text-muted-foreground">
+      <div className="mt-2 text-xs text-muted-foreground space-y-1">
         {status === 'idle' && 'Click Start Test and allow microphone access.'}
         {status === 'granted' && 'Speak into your mic — the bar should react to your voice.'}
         {status === 'denied' && 'Microphone blocked. Check browser permissions (lock icon) and try again.'}
         {status === 'error' && 'An error occurred while accessing your microphone.'}
+        {errorMsg && <div className="text-destructive">{errorMsg}</div>}
       </div>
     </div>
   );
