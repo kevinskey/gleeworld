@@ -31,7 +31,7 @@ export const UnifiedDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 pt-[var(--app-header-offset)]">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
       
 
       {/* Row 1: Hero + Features side-by-side */}
