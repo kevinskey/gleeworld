@@ -119,8 +119,15 @@ export async function gwSendAuditionPreview(force = false) {
   return { success: false, message: 'Use sendAuditionEmail with proper user data instead' };
 }
 
-// Test function for sending example email
+// Test function for sending example email (with safety check)
 export async function sendTestAuditionEmail() {
+  // Safety check to prevent multiple sends
+  const FLAG = 'test-audition-email-sent-v1';
+  if (sessionStorage.getItem(FLAG)) {
+    console.log('🛑 Test email already sent. Use force flag to resend.');
+    return { success: false, message: 'Already sent - use force flag to resend' };
+  }
+
   const testData = {
     firstName: 'John',
     lastName: 'Doe',
@@ -130,7 +137,14 @@ export async function sendTestAuditionEmail() {
     auditionLocation: 'Rockefeller Fine Arts Building Room 109'
   };
   
-  return await sendAuditionEmail(testData);
+  const result = await sendAuditionEmail(testData);
+  
+  // Mark as sent to prevent duplicates
+  if (result?.success) {
+    sessionStorage.setItem(FLAG, '1');
+  }
+  
+  return result;
 }
 
 // Expose test function for manual trigger

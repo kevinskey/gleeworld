@@ -8,7 +8,6 @@ import { CommunityHubModule } from './modules/CommunityHubModule';
 import DashboardHeroCarousel from '@/components/hero/DashboardHeroCarousel';
 import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
 import { ChevronDown, ChevronUp, Users } from 'lucide-react';
-import TestEmailSender from '@/components/TestEmailSender';
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string>('music-studio');
@@ -33,7 +32,6 @@ export const UnifiedDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      <TestEmailSender />
 
       {/* Row 1: Hero + Features side-by-side */}
       <div className="px-6 py-4">
