@@ -42,8 +42,12 @@ export async function sendAuditionEmail(userData: {
     const html = `
       <div style="background:#f5f7fb;padding:24px;">
         <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e6e9f2;">
-          <div style="background:#1E4AA9;padding:20px;text-align:center;">
-            <img src="${logoUrl}" alt="Spelman College Glee Club" style="height:40px;display:inline-block;" />
+          <div style="background: linear-gradient(135deg, #1E4AA9 0%, #2563eb 100%); padding:32px 24px; text-align:center; position:relative;">
+            <div style="background: rgba(255,255,255,0.1); padding:16px; border-radius:8px; display:inline-block;">
+              <img src="${logoUrl}" alt="Spelman College Glee Club" style="height:60px; max-width:200px; object-fit:contain; display:block;" />
+            </div>
+            <h1 style="color:#ffffff; margin:16px 0 8px 0; font-size:24px; font-weight:600; font-family:Arial,Helvetica,sans-serif;">Spelman College Glee Club</h1>
+            <p style="color:rgba(255,255,255,0.9); margin:0; font-size:14px; font-family:Arial,Helvetica,sans-serif;">Audition Information</p>
           </div>
           <div style="padding:24px;color:#111;font-family:Arial,Helvetica,sans-serif;">
             <p>Dear ${userData.firstName},</p>
