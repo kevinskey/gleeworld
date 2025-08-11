@@ -21,6 +21,8 @@ export const SignupForm = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isFanSignup, setIsFanSignup] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
   
   const { enhancedSignUp, checkRateLimit } = useSecurityEnhanced();
 
@@ -52,7 +54,8 @@ export const SignupForm = () => {
       if (!result.user) {
         throw new Error("Signup failed - please try again");
       }
-      
+      // Persist intended redirect for post-auth
+      try { sessionStorage.setItem('redirectAfterAuth', '/dashboard/auditioner'); } catch {}
       setSuccess(true);
     } catch (error: any) {
       setError(error.message || "An error occurred during sign up");
@@ -69,7 +72,7 @@ export const SignupForm = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/dashboard/auditioner`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent'
@@ -83,18 +86,58 @@ export const SignupForm = () => {
       setSocialLoading(null);
     }
   };
-
+  
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setResendMessage(null);
+    setError("");
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/dashboard/auditioner` }
+      });
+      if (error) throw error;
+      setResendMessage('Verification email resent. Please check your inbox.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to resend verification email');
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   if (success) {
     return (
-      <Alert>
-        <AlertDescription>
-          {isFanSignup 
-            ? "Welcome to the GleeWorld fan community! Check your email for a verification link to complete your registration and unlock exclusive fan content."
-            : "Check your email for a verification link to complete your registration."
-          }
-        </AlertDescription>
-      </Alert>
+      <div className="space-y-4">
+        <Alert>
+          <AlertDescription>
+            {isFanSignup 
+              ? "Welcome to the GleeWorld fan community! Please verify your email to complete registration."
+              : "Please verify your email to complete your registration."}
+          </AlertDescription>
+        </Alert>
+        {resendMessage && (
+          <Alert>
+            <AlertDescription>{resendMessage}</AlertDescription>
+          </Alert>
+        )}
+        <div className="flex gap-2">
+          <Button type="button" onClick={handleResendVerification} disabled={resendLoading}>
+            {resendLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Resend verification email
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              try { sessionStorage.setItem('redirectAfterAuth', '/dashboard/auditioner'); } catch {}
+              window.location.href = '/dashboard/auditioner';
+            }}
+          >
+            Go to Auditioner Dashboard
+          </Button>
+        </div>
+      </div>
     );
   }
 

@@ -155,7 +155,7 @@ export const useSecurityEnhanced = () => {
         email: sanitizedEmail,
         password,
         options: {
-          emailRedirectTo: `https://gleeworld.org/`,
+          emailRedirectTo: `${window.location.origin}/dashboard/auditioner`,
           data: {
             full_name: sanitizedFullName,
             role: role,
