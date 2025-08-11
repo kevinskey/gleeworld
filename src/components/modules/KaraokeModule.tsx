@@ -391,9 +391,17 @@ export const KaraokeModule: React.FC = () => {
           </Card>
         )}
         <Card className="bg-background/50 border-border">
-          <CardHeader>
-            <CardTitle>Backing Track</CardTitle>
-            <CardDescription>Auto-selected from your Media Library</CardDescription>
+          <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle>Backing Track</CardTitle>
+              <CardDescription>Auto-selected from your Media Library</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" size="sm" onClick={togglePractice} disabled={isRecording || !track}>
+                {isPracticePlaying ? <Pause className="mr-2 h-4 w-4"/> : <Play className="mr-2 h-4 w-4"/>}
+                {isPracticePlaying ? 'Pause' : 'Play'}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-sm space-y-3">
@@ -404,15 +412,11 @@ export const KaraokeModule: React.FC = () => {
                       <div className="font-medium truncate">{track.title}</div>
                       <div className="text-xs text-muted-foreground truncate">{track.file_url}</div>
                     </div>
-                    <div className="flex items-center gap-4 min-w-[260px]">
+                    <div className="flex items-center gap-4 min-w-[200px]">
                       <div className="flex items-center gap-2 w-full">
                         <Music className="h-4 w-4 text-primary"/>
                         <Slider value={[Math.round(trackVolume*100)]} onValueChange={(v)=>setTrackVolume((v[0]||0)/100)} className="w-40"/>
                       </div>
-                      <Button variant="secondary" size="sm" onClick={togglePractice} disabled={isRecording}>
-                        {isPracticePlaying ? <Pause className="mr-2 h-4 w-4"/> : <Play className="mr-2 h-4 w-4"/>}
-                        {isPracticePlaying ? 'Pause Practice' : 'Play Practice'}
-                      </Button>
                     </div>
                   </div>
                 </>
