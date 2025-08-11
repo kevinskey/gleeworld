@@ -15,8 +15,10 @@ if (externalScripts.length > 0) {
   console.warn('main.tsx: External scripts detected:', externalScripts.map(s => s.src));
 }
 
-// Debug: Check for tracking pixels and analytics
-const trackingElements = Array.from(document.querySelectorAll('[src*="facebook"], [src*="google-analytics"], [src*="gtag"], [data-*="fb"], [data-*="pixel"]'));
+// Debug: Check for tracking pixels and analytics (use valid selectors only)
+const trackingElements = Array.from(
+  document.querySelectorAll('[src*="facebook"], [src*="google-analytics"], [src*="gtag"]')
+);
 if (trackingElements.length > 0) {
   console.warn('main.tsx: Tracking elements detected:', trackingElements);
 }
