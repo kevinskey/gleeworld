@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import MicTest from '@/components/media/MicTest';
+import { getFileUrl } from '@/utils/storage';
 
 // @ts-ignore - lamejs has no types
 import lamejs from 'lamejs';
@@ -17,6 +18,8 @@ interface MediaItem {
   title?: string | null;
   file_url: string;
   file_type?: string | null;
+  file_path?: string | null;
+  bucket_id?: string | null;
 }
 
 export const KaraokeModule: React.FC = () => {
@@ -46,7 +49,7 @@ export const KaraokeModule: React.FC = () => {
         setLoading(true);
         const { data, error } = await (supabase
           .from('gw_media_library') as any)
-          .select('id,title,file_url')
+          .select('id,title,file_url,file_path,bucket_id')
           .ilike('title', 'Choice Band%')
           .order('created_at', { ascending: false })
           .limit(1);
@@ -84,6 +87,20 @@ export const KaraokeModule: React.FC = () => {
       .catch(() => setMicPermission('denied'));
   }, []);
 
+  // Resolve a playable URL (handles private buckets via signed URLs)
+  const resolveTrackUrl = async (): Promise<string> => {
+    if (!track) return '';
+    try {
+      if (track.bucket_id && track.file_path) {
+        const url = await getFileUrl(track.bucket_id, track.file_path);
+        return url || track.file_url;
+      }
+    } catch (e) {
+      console.error('Failed to resolve signed URL', e);
+    }
+    return track.file_url;
+  };
+
   const startRecording = async () => {
     if (!track) {
       toast("No backing track found.");
@@ -109,10 +126,11 @@ export const KaraokeModule: React.FC = () => {
       mediaRecorderRef.current = mr;
 
       // Play the backing track and start recording simultaneously
+      const srcUrl = await resolveTrackUrl();
       if (!audioElRef.current) {
-        audioElRef.current = new Audio(track.file_url);
+        audioElRef.current = new Audio(srcUrl);
       } else {
-        audioElRef.current.src = track.file_url;
+        audioElRef.current.src = srcUrl;
       }
       audioElRef.current.volume = Math.max(0, Math.min(1, trackVolume));
       audioElRef.current.currentTime = 0;
@@ -159,6 +177,12 @@ export const KaraokeModule: React.FC = () => {
         return el2;
       };
       const el = createOrUpdateEl();
+
+      // Ensure we use a playable URL (signed for private buckets)
+      const srcUrl = await resolveTrackUrl();
+      if (el.src !== srcUrl) {
+        el.src = srcUrl;
+      }
 
       // Wait for decodable state to avoid play() rejection (fallback + timeout)
       await new Promise<void>((resolve) => {
