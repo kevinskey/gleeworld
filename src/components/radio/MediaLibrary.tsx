@@ -35,6 +35,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Document, Page, pdfjs } from 'react-pdf';
+import { getFileUrl } from '@/utils/storage';
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
@@ -179,14 +180,30 @@ export const MediaLibrary = ({
           comparison = (a.file_size || 0) - (b.file_size || 0);
           break;
       }
-      
-      return sortOrder === 'asc' ? comparison : -comparison;
+    
+    return sortOrder === 'asc' ? comparison : -comparison;
     });
 
     return filtered;
   };
 
-  // Get unique categories for folder navigation
+  const resolveUrl = async (file: MediaFile) => {
+    if (file.bucket_id && file.file_path) {
+      const url = await getFileUrl(file.bucket_id, file.file_path);
+      return url || file.file_url;
+    }
+    return file.file_url;
+  };
+
+  const handleDownload = async (file: MediaFile) => {
+    const url = await resolveUrl(file);
+    window.open(url, '_blank');
+  };
+
+  const openPdf = async (file: MediaFile) => {
+    const url = await resolveUrl(file);
+    setSelectedPdf({ ...file, file_url: url });
+  };
   const getCategories = () => {
     const categories = new Set(mediaFiles.map(file => file.category).filter(Boolean));
     return Array.from(categories).sort();
@@ -245,16 +262,16 @@ export const MediaLibrary = ({
     }
   };
 
-  const handlePlayFile = (file: MediaFile) => {
+  const handlePlayFile = async (file: MediaFile) => {
     const fileType = getFileTypeFromUrl(file.file_url);
+    const url = await resolveUrl(file);
     if (fileType === 'mp3' && onPlayTrack) {
-      onPlayTrack(file);
+      onPlayTrack({ ...file, file_url: url });
     } else {
       // Open file in new tab for viewing/downloading
-      window.open(file.file_url, '_blank');
+      window.open(url, '_blank');
     }
   };
-
   const renderMediaCard = (file: MediaFile) => {
     const fileType = getFileTypeFromUrl(file.file_url);
     const isCurrentlyPlaying = currentTrack === file.id && isPlaying;
@@ -315,7 +332,7 @@ export const MediaLibrary = ({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => window.open(file.file_url, '_blank')}
+                  onClick={() => handleDownload(file)}
                   className="text-xs h-8 px-3"
                 >
                   <Download className="h-3 w-3 mr-1" />
@@ -383,7 +400,7 @@ export const MediaLibrary = ({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => setSelectedPdf(file)}
+                onClick={() => openPdf(file)}
                 className="text-xs h-8 px-3 bg-primary/10 hover:bg-primary/20 border-primary/30 text-primary hover:text-primary"
               >
                 <Eye className="h-3 w-3 mr-1" />
