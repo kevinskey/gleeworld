@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MessagesPanel } from './MessagesPanel';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { ModuleSelector } from './ModuleSelector';
 import { ModuleDisplay } from './ModuleDisplay';
 import { ModularDashboard } from './ModularDashboard';

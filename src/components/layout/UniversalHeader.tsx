@@ -108,6 +108,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
               <GlobalCommandPalette />
             </div>
             
+            {user && (
+              <>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button 
