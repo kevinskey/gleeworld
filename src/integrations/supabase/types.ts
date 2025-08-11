@@ -13139,6 +13139,10 @@ export type Database = {
         }
         Returns: Json
       }
+      block_date: {
+        Args: { date_to_block: string; block_reason?: string }
+        Returns: undefined
+      }
       book_appointment: {
         Args: {
           p_service_id: string
@@ -13320,6 +13324,16 @@ export type Database = {
       get_avatar_url: {
         Args: { user_id_param: string }
         Returns: string
+      }
+      get_blocked_dates: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          blocked_date: string
+          reason: string
+          created_at: string
+          created_by: string
+        }[]
       }
       get_current_user_admin_status: {
         Args: Record<PropertyKey, never>
@@ -13679,6 +13693,10 @@ export type Database = {
       trigger_scholarship_update: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      unblock_date: {
+        Args: { block_id: string }
+        Returns: undefined
       }
       update_audition_status_with_logging: {
         Args: {
