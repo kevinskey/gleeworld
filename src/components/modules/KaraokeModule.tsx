@@ -223,8 +223,7 @@ export const KaraokeModule: React.FC = () => {
 
   const startRecording = async () => {
     if (!track) {
-      toast("No backing track found.");
-      return;
+      toast("No backing track loaded — recording mic only.");
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -256,38 +255,41 @@ export const KaraokeModule: React.FC = () => {
         startWebAudioRecording(stream);
       }
 
-      // Play the backing track and start recording simultaneously
-      const srcUrl = await resolveTrackUrl();
-      if (!audioElRef.current) {
-        const a = new Audio();
-        a.preload = 'auto';
-        (a as any).playsInline = true;
-        a.crossOrigin = 'anonymous';
-        audioElRef.current = a;
-      }
-      const el = audioElRef.current;
-      if (el.crossOrigin !== 'anonymous') el.crossOrigin = 'anonymous';
-      if (el.src !== srcUrl) el.src = srcUrl;
-      el.currentTime = 0;
-      el.muted = true;
-      el.volume = 0;
-
-      try {
-        await el.play();
-      } catch (e) {
-        console.warn('Autoplay rejected during recording start', e);
-      }
-      // Unmute shortly after starting to satisfy iOS policies
-      setTimeout(() => {
-        el.muted = false;
-        el.volume = Math.max(0, Math.min(1, trackVolume));
-      }, 80);
-
+      // Start recorder first
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'recording') {
         mediaRecorderRef.current.start(100);
       }
       setIsRecording(true);
-      toast("Recording started. Sing along now!");
+
+      // Play the backing track if available (safe iOS prime)
+      if (track) {
+        const srcUrl = await resolveTrackUrl();
+        if (!audioElRef.current) {
+          const a = new Audio();
+          a.preload = 'auto';
+          (a as any).playsInline = true;
+          a.crossOrigin = 'anonymous';
+          audioElRef.current = a;
+        }
+        const el = audioElRef.current;
+        if (el.crossOrigin !== 'anonymous') el.crossOrigin = 'anonymous';
+        if (el.src !== srcUrl) el.src = srcUrl;
+        el.currentTime = 0;
+        el.muted = true;
+        el.volume = 0;
+
+        try {
+          await el.play();
+        } catch (e) {
+          console.warn('Autoplay rejected during recording start', e);
+        }
+        setTimeout(() => {
+          el.muted = false;
+          el.volume = Math.max(0, Math.min(1, trackVolume));
+        }, 80);
+      }
+
+      toast("Recording started.");
     } catch (err: any) {
       console.error('startRecording error', err);
       const name = err?.name || '';
@@ -612,7 +614,7 @@ export const KaraokeModule: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             {!isRecording ? (
-              <Button onClick={startRecording} disabled={loading || micPermission==='denied' || !track}>
+              <Button onClick={startRecording} disabled={loading || micPermission==='denied'}>
                 <Play className="mr-2 h-4 w-4"/> Start Recording
               </Button>
             ) : (
