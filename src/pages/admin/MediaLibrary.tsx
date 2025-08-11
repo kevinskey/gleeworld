@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Music, Image, Video, Upload, FileText, ArrowLeft, Loader2, ExternalLink } from "lucide-react";
+import { Music, Image, Video, Upload, FileText, ArrowLeft, Loader2, ExternalLink, Camera } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -157,28 +157,36 @@ const MediaLibrary = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Media Library</h1>
-            <p className="text-muted-foreground">Manage images, audio, videos, and documents</p>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <header className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-b">
+          <div className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <div className="rounded-md bg-primary/10 p-2 text-primary">
+                <Camera className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Media Library</h1>
+                <p className="text-sm text-muted-foreground">Manage images, audio, videos, and documents</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => navigate('/admin')}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Admin
+              </Button>
+              <input ref={fileInputRef} type="file" className="hidden" onChange={handleUpload} />
+              <Button onClick={onUploadClick} disabled={uploading}>
+                {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                {uploading ? 'Uploading...' : 'Upload Media'}
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate('/admin')}>
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Admin
-            </Button>
-            <input ref={fileInputRef} type="file" className="hidden" onChange={handleUpload} />
-            <Button onClick={onUploadClick} disabled={uploading}>
-              {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-              {uploading ? 'Uploading...' : 'Upload Media'}
-            </Button>
-          </div>
-        </div>
+        </header>
 
-        <Card className="bg-background/50 border-border">
-          <CardHeader>
-            <CardTitle className="text-lg">Browse</CardTitle>
-            <CardDescription>Filter by type or search by filename/category</CardDescription>
+        <main className="pt-6 space-y-6">
+          <Card className="bg-background/50 border-border">
+            <CardHeader>
+              <CardTitle className="text-lg">Browse</CardTitle>
+              <CardDescription>Filter by type or search by filename/category</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between mb-4">
@@ -285,6 +293,7 @@ const MediaLibrary = () => {
             )}
           </CardContent>
         </Card>
+        </main>
       </div>
     </div>
   );
