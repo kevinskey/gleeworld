@@ -71,6 +71,7 @@ import { ReimbursementsManager } from "@/components/reimbursements/Reimbursement
 import { AIFinancialPlanningModule } from "@/components/financial/AIFinancialPlanningModule";
 import { WellnessModule } from '@/components/modules/WellnessModule';
 import { GleeWritingWidget } from '@/components/writing/GleeWritingWidget';
+import MediaLibrary from '@/pages/admin/MediaLibrary';
 
 // Single source of truth for all modules
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -521,6 +522,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: RadioManagement,
     dbFunctionName: "radio-management"
+  },
+  {
+    id: "media-library",
+    name: "media-library",
+    title: "Media Library",
+    description: "Manage images, audio, videos, and documents",
+    icon: Camera,
+    iconColor: "pink",
+    category: "libraries",
+    isActive: true,
+    component: MediaLibrary,
+    dbFunctionName: "media-library",
+    requiredRoles: ["admin"]
   }
 ];
 
