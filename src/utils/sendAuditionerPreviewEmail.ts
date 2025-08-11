@@ -12,6 +12,19 @@ export async function sendAuditionEmail(userData: {
   if (typeof window === 'undefined') return;
 
   try {
+    // Client-side idempotency: avoid duplicate sends for same recipient and datetime
+    const idKeyParts = [
+      userData.email,
+      userData.auditionDate || 'tbd',
+      userData.auditionTime || 'tbd'
+    ];
+    const idKey = `audition-email:${idKeyParts.join('|')}`;
+    const lastSentAtRaw = localStorage.getItem(idKey);
+    if (lastSentAtRaw) {
+      console.log('🛑 Skipping duplicate audition email (idempotent key):', idKey);
+      return { success: false, message: 'Duplicate suppressed' };
+    }
+
     const origin = window.location.origin;
     const auditionerLink = `${origin}/dashboard/auditioner`;
     const logoUrl = `${origin}/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png`;
@@ -89,6 +102,22 @@ Ariana
 Student Conductor, Spelman College Glee Club`;
 
     console.log('📧 Sending personalized audition email...');
+
+    // Server-side rate limit to prevent accidental spam
+    const { data: allowed, error: rateErr } = await supabase.rpc('check_rate_limit_secure', {
+      identifier_param: userData.email,
+      action_type_param: 'audition_email',
+      max_attempts: 2,
+      window_minutes: 60
+    });
+
+    if (rateErr) {
+      console.warn('⚠️ Rate limit check failed, proceeding cautiously:', rateErr);
+    } else if (allowed === false) {
+      console.warn('🛑 Rate limit exceeded for', userData.email);
+      return { success: false, message: 'Rate limit exceeded' };
+    }
+
     const { data, error } = await supabase.functions.invoke('gw-send-email', {
       body: {
         to: userData.email,
@@ -104,6 +133,11 @@ Student Conductor, Spelman College Glee Club`;
       throw error;
     } else {
       console.log('✅ Audition email sent:', data);
+      try {
+        localStorage.setItem(idKey, new Date().toISOString());
+      } catch (e) {
+        console.warn('Could not write idempotency key', e);
+      }
       return { success: true, data };
     }
   } catch (err) {
@@ -117,40 +151,4 @@ export async function gwSendAuditionPreview(force = false) {
   console.log('📧 Legacy preview function - now redirects to proper sendAuditionEmail');
   // This is now disabled to prevent spam
   return { success: false, message: 'Use sendAuditionEmail with proper user data instead' };
-}
-
-// Test function for sending example email (with safety check)
-export async function sendTestAuditionEmail() {
-  // Safety check to prevent multiple sends
-  const FLAG = 'test-audition-email-sent-v1';
-  if (sessionStorage.getItem(FLAG)) {
-    console.log('🛑 Test email already sent. Use force flag to resend.');
-    return { success: false, message: 'Already sent - use force flag to resend' };
-  }
-
-  const testData = {
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'kpj64110@gmail.com',
-    auditionDate: '2025-01-20',
-    auditionTime: '14:30',
-    auditionLocation: 'Rockefeller Fine Arts Building Room 109'
-  };
-  
-  const result = await sendAuditionEmail(testData);
-  
-  // Mark as sent to prevent duplicates
-  if (result?.success) {
-    sessionStorage.setItem(FLAG, '1');
-  }
-  
-  return result;
-}
-
-// Expose test function for manual trigger
-if (typeof window !== 'undefined') {
-  // @ts-ignore
-  window.sendTestAuditionEmail = sendTestAuditionEmail;
-  // @ts-ignore
-  window.sendAuditionEmail = sendAuditionEmail;
 }
