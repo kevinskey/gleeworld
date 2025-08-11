@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MessagesPanel } from './MessagesPanel';
+import { useEffect, useState } from 'react';
 import { ModuleSelector } from './ModuleSelector';
 import { ModuleDisplay } from './ModuleDisplay';
 import { ModularDashboard } from './ModularDashboard';
@@ -8,11 +9,13 @@ import { CommunityHubModule } from './modules/CommunityHubModule';
 import DashboardHeroCarousel from '@/components/hero/DashboardHeroCarousel';
 import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
 import { ChevronDown, ChevronUp, Users } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string>('music-studio');
   const [showMessages, setShowMessages] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
+  const location = useLocation();
 
   // Debug logging
   console.log('🎯 UnifiedDashboard rendering:', {
@@ -21,6 +24,16 @@ export const UnifiedDashboard = () => {
     selectedModule,
     timestamp: new Date().toISOString()
   });
+
+  // If a module is requested via query param, ensure we scroll to modules section
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('module')) {
+      setTimeout(() => {
+        try { document.getElementById('modules-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch {}
+      }, 150);
+    }
+  }, [location.search]);
 
   const handleExpandChange = (id: string | null) => {
     setActiveModuleId(id);

@@ -17,6 +17,7 @@ import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
 import { HeaderRadioControls } from "@/components/radio/HeaderRadioControls";
 import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
+import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
 
 
 interface UniversalHeaderProps {
@@ -101,10 +102,12 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             {/* Radio Controls */}
             <HeaderRadioControls />
             <MusicalToolkit />
-            {user && (
-              <>
 
-                {/* Dashboard Dropdown for logged-in users */}
+            {/* Global Command Palette */}
+            <div className="hidden md:block">
+              <GlobalCommandPalette />
+            </div>
+            
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button 

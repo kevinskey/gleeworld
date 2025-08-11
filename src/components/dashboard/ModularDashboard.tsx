@@ -12,6 +12,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEn
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLocation } from 'react-router-dom';
 
 interface OpenModule {
   id: string;
@@ -66,6 +67,8 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
   const [moduleOrder, setModuleOrder] = useState<string[]>([]);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const location = useLocation();
+
 
   useEffect(() => {
     if (user) {
@@ -187,6 +190,28 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
     setAvailableModules(Array.from(uniqueById.values()));
   };
 
+  // Open module based on query param or external event
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const moduleId = params.get('module');
+    if (moduleId) {
+      setTimeout(() => {
+        try { openModule(moduleId); } catch {}
+        try {
+          document.getElementById('modules-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch {}
+      }, 100);
+    }
+    const handler = (e: any) => {
+      const id = e?.detail?.id;
+      if (id) {
+        openModule(id);
+        try { document.getElementById('modules-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch {}
+      }
+    };
+    window.addEventListener('open-module', handler);
+    return () => window.removeEventListener('open-module', handler);
+  }, [location.search]);
   const openModule = (moduleId: string) => {
     const nextId = expandedModuleId === moduleId ? null : moduleId;
     console.log('🎯 Opening module:', { moduleId, nextId, isMobile });
