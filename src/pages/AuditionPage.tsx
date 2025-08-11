@@ -113,10 +113,8 @@ function AuditionFormContent() {
         return null;
       };
       const voicePartCode = normalizeVoicePart(data.highSchoolSection);
-
-      const proposedSight = data.readsMusic ? 'beginner' : null; // conservative default
-      const validSightLevels = ['beginner', 'intermediate', 'advanced'] as const;
-      const sightReadingLevel = (proposedSight && (validSightLevels as readonly string[]).includes(proposedSight)) ? proposedSight : null;
+      // Force a safe default to avoid DB constraint issues
+      const sightReadingLevel: 'beginner' = 'beginner';
       
       const submissionData = {
         user_id: user.id,
