@@ -142,18 +142,43 @@ function AuditionFormContent() {
       
       console.log('📋 Submission data prepared:', submissionData);
       
-      const { error } = await supabase
+      // Idempotent save: update if already exists for this user/session, else insert
+      let dbError: any = null;
+      const { data: existingApp, error: lookupError } = await supabase
         .from('audition_applications')
-        .upsert(submissionData, { onConflict: 'session_id,user_id' });
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('session_id', activeSessions[0].id)
+        .maybeSingle();
 
-      if (error) {
+      if (lookupError && (lookupError as any).code && (lookupError as any).code !== 'PGRST116') {
+        console.warn('Lookup warning (continuing):', lookupError);
+      }
+
+      if (existingApp?.id) {
+        const updateData = { ...submissionData };
+        delete (updateData as any).user_id;
+        delete (updateData as any).session_id;
+        const { error: updErr } = await supabase
+          .from('audition_applications')
+          .update(updateData)
+          .eq('id', existingApp.id);
+        dbError = updErr ?? null;
+      } else {
+        const { error: insErr } = await supabase
+          .from('audition_applications')
+          .insert(submissionData);
+        dbError = insErr ?? null;
+      }
+
+      if (dbError) {
         console.log('❌ Database error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
+          message: dbError.message,
+          details: dbError.details,
+          hint: dbError.hint,
+          code: dbError.code
         });
-        throw error;
+        throw dbError;
       }
 
       console.log('✅ Successfully saved to database!');
