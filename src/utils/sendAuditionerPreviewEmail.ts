@@ -1,17 +1,43 @@
 import { supabase } from '@/integrations/supabase/client';
 
-// Preview sender for Auditioner email
-export async function gwSendAuditionPreview(force = false) {
+// Proper audition email sender with real user data
+export async function sendAuditionEmail(userData: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  auditionDate?: string;
+  auditionTime?: string;
+  auditionLocation?: string;
+}) {
   if (typeof window === 'undefined') return;
-  const FLAG = 'gw-audition-preview-sent-v2';
-  if (!force && sessionStorage.getItem(FLAG)) return;
 
   try {
     const origin = window.location.origin;
     const auditionerLink = `${origin}/dashboard/auditioner`;
     const logoUrl = `${origin}/images/glee-logo-email.png`;
 
-    const subject = 'Spelman College Glee Club Audition – Song Preparation';
+    const subject = `Spelman College Glee Club Audition – Welcome ${userData.firstName}!`;
+
+    // Format audition details
+    let auditionDetails = 'Your audition details will be confirmed soon.';
+    if (userData.auditionDate && userData.auditionTime) {
+      const auditionDateTime = new Date(`${userData.auditionDate}T${userData.auditionTime}`);
+      const formattedDate = auditionDateTime.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const formattedTime = auditionDateTime.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      });
+      auditionDetails = `${formattedDate} at ${formattedTime}`;
+      if (userData.auditionLocation) {
+        auditionDetails += `<br/>Location: ${userData.auditionLocation}`;
+      }
+    }
 
     const html = `
       <div style="background:#f5f7fb;padding:24px;">
@@ -20,11 +46,11 @@ export async function gwSendAuditionPreview(force = false) {
             <img src="${logoUrl}" alt="Spelman College Glee Club" style="height:40px;display:inline-block;" />
           </div>
           <div style="padding:24px;color:#111;font-family:Arial,Helvetica,sans-serif;">
-            <p>Dear Auditioner,</p>
+            <p>Dear ${userData.firstName},</p>
             <p>Thank you for registering to audition for the Spelman College Glee Club! We are excited to hear your voice and meet you in person.</p>
-            <p><strong>Your audition is scheduled for:</strong><br/>[Audition details will appear here]</p>
+            <p><strong>Your audition is scheduled for:</strong><br/>${auditionDetails}</p>
             <p><strong>Before your audition:</strong><br/>
-               Please prepare the song “Come Thou Fount.” Your Auditioner page includes the music PDF and practice materials.</p>
+               Please prepare the song "Come Thou Fount." Your Auditioner page includes the music PDF and practice materials.</p>
             <p style="margin:24px 0;">
               <a href="${auditionerLink}" style="display:inline-block; padding:12px 18px; background:#1E4AA9; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600;">
                 Open Your Auditioner Page
@@ -41,16 +67,27 @@ export async function gwSendAuditionPreview(force = false) {
       </div>
     `;
 
-    const text = `Dear Auditioner,\n\nThank you for registering to audition for the Spelman College Glee Club! We are excited to hear your voice and meet you in person.\n\nYour audition is scheduled for:\n[Audition details will appear here]\n\nBefore your audition:\nPlease prepare the song “Come Thou Fount.” Your Auditioner page includes the music PDF and practice materials:\n${auditionerLink}\n\nIf you have any questions, reply to this email.\n\nMusically yours,\nAriana\nStudent Conductor, Spelman College Glee Club`;
+    const text = `Dear ${userData.firstName},
 
-    console.log('📧 Preview email function called - but email sending is disabled to prevent spam');
-    // Email sending disabled to prevent repeated emails
-    // Uncomment below only for testing purposes:
-    
-    /* 
+Thank you for registering to audition for the Spelman College Glee Club! We are excited to hear your voice and meet you in person.
+
+Your audition is scheduled for:
+${auditionDetails.replace(/<br\/>/g, '\n')}
+
+Before your audition:
+Please prepare the song "Come Thou Fount." Your Auditioner page includes the music PDF and practice materials:
+${auditionerLink}
+
+If you have any questions, reply to this email.
+
+Musically yours,
+Ariana
+Student Conductor, Spelman College Glee Club`;
+
+    console.log('📧 Sending personalized audition email...');
     const { data, error } = await supabase.functions.invoke('gw-send-email', {
       body: {
-        to: 'kpj64110@gmail.com',
+        to: userData.email,
         subject,
         html,
         text,
@@ -59,24 +96,43 @@ export async function gwSendAuditionPreview(force = false) {
     });
 
     if (error) {
-      console.error('❌ Preview email send failed:', error);
+      console.error('❌ Audition email send failed:', error);
+      throw error;
     } else {
-      console.log('✅ Preview email sent:', data);
-      sessionStorage.setItem(FLAG, '1');
+      console.log('✅ Audition email sent:', data);
+      return { success: true, data };
     }
-    */
-    
-    // Mark as sent to prevent further attempts
-    sessionStorage.setItem(FLAG, '1');
   } catch (err) {
-    console.error('❌ Unexpected error sending preview email:', err);
+    console.error('❌ Unexpected error sending audition email:', err);
+    throw err;
   }
 }
 
-// Expose for manual trigger only (no auto-send)
-if (typeof window !== 'undefined') {
-  // @ts-ignore
-  window.gwSendAuditionPreview = gwSendAuditionPreview;
+// Legacy function (disabled to prevent spam)
+export async function gwSendAuditionPreview(force = false) {
+  console.log('📧 Legacy preview function - now redirects to proper sendAuditionEmail');
+  // This is now disabled to prevent spam
+  return { success: false, message: 'Use sendAuditionEmail with proper user data instead' };
 }
 
+// Test function for sending example email
+export async function sendTestAuditionEmail() {
+  const testData = {
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'kpj64110@gmail.com',
+    auditionDate: '2025-01-20',
+    auditionTime: '14:30',
+    auditionLocation: 'Spelman College Music Hall'
+  };
+  
+  return await sendAuditionEmail(testData);
+}
 
+// Expose test function for manual trigger
+if (typeof window !== 'undefined') {
+  // @ts-ignore
+  window.sendTestAuditionEmail = sendTestAuditionEmail;
+  // @ts-ignore
+  window.sendAuditionEmail = sendAuditionEmail;
+}
