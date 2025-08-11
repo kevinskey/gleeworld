@@ -35,7 +35,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { getFileUrl } from '@/utils/storage';
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
@@ -77,7 +76,7 @@ export const MediaLibrary = ({
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPdf, setSelectedPdf] = useState<MediaFile | null>(null);
-  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
+  
   const [pdfNumPages, setPdfNumPages] = useState<number>(0);
   const [pdfPageNumber, setPdfPageNumber] = useState<number>(1);
   const [pdfScale, setPdfScale] = useState<number>(1.0);
@@ -88,6 +87,17 @@ export const MediaLibrary = ({
     fetchAdminStatus();
     fetchMediaData();
   }, []);
+
+  const fetchAdminStatus = async () => {
+    try {
+      const { data, error } = await supabase.rpc('is_current_user_admin_safe');
+      if (!error) {
+        setIsAdmin(Boolean(data));
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
 
   const fetchMediaData = async () => {
     try {
@@ -301,15 +311,17 @@ export const MediaLibrary = ({
 
             {/* Actions */}
             <div className="flex-shrink-0 flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => window.open(file.file_url, '_blank')}
-                className="text-xs h-8 px-3"
-              >
-                <Download className="h-3 w-3 mr-1" />
-                Download
-              </Button>
+              {isAdmin && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(file.file_url, '_blank')}
+                  className="text-xs h-8 px-3"
+                >
+                  <Download className="h-3 w-3 mr-1" />
+                  Download
+                </Button>
+              )}
               
               {canPlay && (
                 <Button
@@ -378,15 +390,17 @@ export const MediaLibrary = ({
                 View PDF
               </Button>
               
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => window.open(file.file_url, '_blank')}
-                className="text-xs h-8 px-3"
-              >
-                <Download className="h-3 w-3 mr-1" />
-                Download
-              </Button>
+              {isAdmin && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(file.file_url, '_blank')}
+                  className="text-xs h-8 px-3"
+                >
+                  <Download className="h-3 w-3 mr-1" />
+                  Download
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>
@@ -582,14 +596,16 @@ export const MediaLibrary = ({
                           <Badge variant="outline" className="text-xs">
                             {file.category}
                           </Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => window.open(file.file_url, '_blank')}
-                            className="h-7 w-7 p-0"
-                          >
-                            <Download className="h-3 w-3" />
-                          </Button>
+                          {isAdmin && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => window.open(file.file_url, '_blank')}
+                              className="h-7 w-7 p-0"
+                            >
+                              <Download className="h-3 w-3" />
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
