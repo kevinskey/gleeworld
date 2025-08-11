@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import { Mic2, Square, Play } from 'lucide-react';
 
 interface MicTestProps {
@@ -13,21 +14,30 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [deviceId, setDeviceId] = useState<string>('default');
+  const [monitorEnabled, setMonitorEnabled] = useState(false);
+  const [monitorVolume, setMonitorVolume] = useState(0.6);
+  const [db, setDb] = useState(-90);
+  const [peakDb, setPeakDb] = useState(-90);
 
   const streamRef = useRef<MediaStream | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafIdRef = useRef<number | null>(null);
+  const monitorGainRef = useRef<GainNode | null>(null);
+  const meterCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const stopAll = () => {
     if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-    sourceRef.current?.disconnect();
-    analyserRef.current?.disconnect();
-    ctxRef.current?.close();
-    streamRef.current?.getTracks().forEach(t => t.stop());
+    rafIdRef.current = null;
+    try { sourceRef.current?.disconnect(); } catch {}
+    try { analyserRef.current?.disconnect(); } catch {}
+    try { monitorGainRef.current?.disconnect(); } catch {}
+    try { ctxRef.current?.close(); } catch {}
+    try { streamRef.current?.getTracks().forEach(t => t.stop()); } catch {}
     sourceRef.current = null;
     analyserRef.current = null;
+    monitorGainRef.current = null;
     ctxRef.current = null;
     streamRef.current = null;
   };
@@ -38,18 +48,58 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
 
   const tick = () => {
     const analyser = analyserRef.current;
+    const canvas = meterCanvasRef.current;
     if (!analyser) return;
+
     const buffer = new Uint8Array(analyser.fftSize);
     analyser.getByteTimeDomainData(buffer);
-    // Compute RMS
+
+    // Compute RMS and dBFS
     let sum = 0;
     for (let i = 0; i < buffer.length; i++) {
       const v = (buffer[i] - 128) / 128; // -1..1
       sum += v * v;
     }
-    const rms = Math.sqrt(sum / buffer.length); // 0..1
-    const pct = Math.min(100, Math.max(0, Math.round(rms * 120))); // scale a bit
+    const rms = Math.sqrt(sum / buffer.length);
+    const dbNow = rms > 1e-6 ? 20 * Math.log10(rms) : -90; // dBFS approx
+    const clampedDb = Math.max(-90, Math.min(0, dbNow));
+    setDb(clampedDb);
+    setPeakDb((prev) => {
+      if (clampedDb > prev) return clampedDb; // rise instantly
+      return Math.max(-90, prev - 0.75); // decay
+    });
+
+    // UI level percent for legacy bar
+    const pct = Math.min(100, Math.max(0, Math.round(rms * 120)));
     setLevel(pct);
+
+    // Draw meter canvas (-60dB..0dB range)
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        const minDb = -60;
+        const frac = Math.max(0, Math.min(1, (clampedDb - minDb) / (0 - minDb)));
+        const peakFrac = Math.max(0, Math.min(1, (peakDb - minDb) / (0 - minDb)));
+        // background
+        ctx.fillStyle = '#1f2937'; // slate-800-like
+        ctx.fillRect(0, 0, w, h);
+        // gradient level (green->yellow->red)
+        const grd = ctx.createLinearGradient(0, 0, w, 0);
+        grd.addColorStop(0.0, '#10b981'); // green-500
+        grd.addColorStop(0.75, '#f59e0b'); // amber-500
+        grd.addColorStop(1.0, '#ef4444'); // red-500
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, Math.floor(w * frac), h);
+        // peak hold line
+        ctx.fillStyle = '#ffffff';
+        const px = Math.floor(w * peakFrac);
+        ctx.fillRect(px - 1, 0, 2, h);
+      }
+    }
+
     rafIdRef.current = requestAnimationFrame(tick);
   };
 
