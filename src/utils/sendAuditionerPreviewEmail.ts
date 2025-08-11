@@ -43,7 +43,11 @@ export async function gwSendAuditionPreview(force = false) {
 
     const text = `Dear Auditioner,\n\nThank you for registering to audition for the Spelman College Glee Club! We are excited to hear your voice and meet you in person.\n\nYour audition is scheduled for:\n[Audition details will appear here]\n\nBefore your audition:\nPlease prepare the song “Come Thou Fount.” Your Auditioner page includes the music PDF and practice materials:\n${auditionerLink}\n\nIf you have any questions, reply to this email.\n\nMusically yours,\nAriana\nStudent Conductor, Spelman College Glee Club`;
 
-    console.log('📧 Invoking gw-send-email edge function...');
+    console.log('📧 Preview email function called - but email sending is disabled to prevent spam');
+    // Email sending disabled to prevent repeated emails
+    // Uncomment below only for testing purposes:
+    
+    /* 
     const { data, error } = await supabase.functions.invoke('gw-send-email', {
       body: {
         to: 'kpj64110@gmail.com',
@@ -60,6 +64,10 @@ export async function gwSendAuditionPreview(force = false) {
       console.log('✅ Preview email sent:', data);
       sessionStorage.setItem(FLAG, '1');
     }
+    */
+    
+    // Mark as sent to prevent further attempts
+    sessionStorage.setItem(FLAG, '1');
   } catch (err) {
     console.error('❌ Unexpected error sending preview email:', err);
   }
