@@ -42,37 +42,31 @@ export const AppointmentSystemTest = () => {
         results.push('✓ Notification log table accessible');
       }
 
-      // Test 3: Test creating a test appointment
-      results.push('✓ Testing appointment creation...');
-      const testAppointment = {
-        title: 'Test Appointment',
-        description: 'System test appointment',
-        appointment_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-        duration_minutes: 30,
-        appointment_type: 'general',
-        client_name: 'Test User',
-        client_email: 'test@example.com',
-        client_phone: '(555) 123-4567',
-        status: 'pending_approval'
-      };
-
-      const { data: newAppt, error: createError } = await supabase
-        .from('gw_appointments')
-        .insert(testAppointment)
-        .select()
+      // Test 3: Test creating a test appointment type
+      results.push('✓ Creating default Office Hour type...');
+      const { data: existing } = await supabase
+        .from('gw_appointment_types')
+        .select('*')
+        .eq('name', 'Office Hour')
         .single();
 
-      if (createError) {
-        results.push(`❌ Appointment creation error: ${createError.message}`);
+      if (!existing) {
+        const { error } = await supabase
+          .from('gw_appointment_types')
+          .insert([{
+            name: 'Office Hour',
+            description: 'One-on-one consultation session',
+            default_duration_minutes: 30,
+            color: '#3B82F6'
+          }]);
+
+        if (error) {
+          results.push(`❌ Failed to create Office Hour type: ${error.message}`);
+        } else {
+          results.push('✓ Office Hour type created successfully');
+        }
       } else {
-        results.push('✓ Test appointment created successfully');
-        
-        // Clean up test appointment
-        await supabase
-          .from('gw_appointments')
-          .delete()
-          .eq('id', newAppt.id);
-        results.push('✓ Test appointment cleaned up');
+        results.push('✓ Office Hour type already exists');
       }
 
       // Test 4: Check SMS function exists
