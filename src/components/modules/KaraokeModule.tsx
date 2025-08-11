@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Music, Mic2, Download, Play, Square, Save, RefreshCw } from 'lucide-react';
+import { Music, Mic2, Download, Play, Square, Save, RefreshCw, Pause } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import MicTest from '@/components/media/MicTest';
 
 // @ts-ignore - lamejs has no types
 import lamejs from 'lamejs';
@@ -29,6 +30,7 @@ export const KaraokeModule: React.FC = () => {
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [mixedMp3, setMixedMp3] = useState<Blob | null>(null);
   const [mixing, setMixing] = useState(false);
+  const [isPracticePlaying, setIsPracticePlaying] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
@@ -64,7 +66,14 @@ export const KaraokeModule: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Check microphone permission
+    // Keep audio element volume in sync
+    if (audioElRef.current) {
+      audioElRef.current.volume = Math.max(0, Math.min(1, trackVolume));
+    }
+  }, [trackVolume]);
+
+  useEffect(() => {
+    // Probe mic permission without keeping the stream
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
         setMicPermission('granted');
@@ -123,6 +132,33 @@ export const KaraokeModule: React.FC = () => {
     if (audioElRef.current) audioElRef.current.pause();
     micStreamRef.current?.getTracks().forEach(t => t.stop());
     setIsRecording(false);
+  };
+
+  const togglePractice = async () => {
+    if (!track) {
+      toast("No backing track found.");
+      return;
+    }
+    if (!audioElRef.current) {
+      audioElRef.current = new Audio(track.file_url);
+    } else if (audioElRef.current.src !== track.file_url) {
+      audioElRef.current.src = track.file_url;
+    }
+    audioElRef.current.volume = Math.max(0, Math.min(1, trackVolume));
+    if (isPracticePlaying) {
+      audioElRef.current.pause();
+      setIsPracticePlaying(false);
+    } else {
+      audioElRef.current.currentTime = 0;
+      try {
+        await audioElRef.current.play();
+        setIsPracticePlaying(true);
+        audioElRef.current.onended = () => setIsPracticePlaying(false);
+      } catch (e) {
+        console.error(e);
+        toast("Autoplay blocked. Click again to start playback.");
+      }
+    }
   };
 
   const floatTo16BitPCM = (input: Float32Array) => {
@@ -317,20 +353,26 @@ export const KaraokeModule: React.FC = () => {
             <CardDescription>Auto-selected from your Media Library</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-sm">
+            <div className="text-sm space-y-3">
               {loading ? 'Loading…' : track ? (
-                <div className="flex items-center justify-between gap-4">
-                  <div className="truncate">
-                    <div className="font-medium truncate">{track.title}</div>
-                    <div className="text-xs text-muted-foreground truncate">{track.file_url}</div>
-                  </div>
-                  <div className="flex items-center gap-4 min-w-[220px]">
-                    <div className="flex items-center gap-2 w-full">
-                      <Music className="h-4 w-4 text-primary"/>
-                      <Slider value={[Math.round(trackVolume*100)]} onValueChange={(v)=>setTrackVolume((v[0]||0)/100)} className="w-40"/>
+                <>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="truncate">
+                      <div className="font-medium truncate">{track.title}</div>
+                      <div className="text-xs text-muted-foreground truncate">{track.file_url}</div>
+                    </div>
+                    <div className="flex items-center gap-4 min-w-[260px]">
+                      <div className="flex items-center gap-2 w-full">
+                        <Music className="h-4 w-4 text-primary"/>
+                        <Slider value={[Math.round(trackVolume*100)]} onValueChange={(v)=>setTrackVolume((v[0]||0)/100)} className="w-40"/>
+                      </div>
+                      <Button variant="secondary" size="sm" onClick={togglePractice} disabled={isRecording}>
+                        {isPracticePlaying ? <Pause className="mr-2 h-4 w-4"/> : <Play className="mr-2 h-4 w-4"/>}
+                        {isPracticePlaying ? 'Pause Practice' : 'Play Practice'}
+                      </Button>
                     </div>
                   </div>
-                </div>
+                </>
               ) : (
                 <div>No track found named "Choice Band".</div>
               )}
@@ -352,6 +394,16 @@ export const KaraokeModule: React.FC = () => {
             <div className="text-xs text-muted-foreground">
               Permission: {micPermission}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-background/50 border-border">
+          <CardHeader>
+            <CardTitle>Microphone Test</CardTitle>
+            <CardDescription>Check input levels before recording</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MicTest />
           </CardContent>
         </Card>
 
