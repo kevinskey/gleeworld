@@ -141,25 +141,31 @@ export const KaraokeModule: React.FC = () => {
       toast("No backing track found.");
       return;
     }
-    if (!audioElRef.current) {
-      audioElRef.current = new Audio(track.file_url);
-    } else if (audioElRef.current.src !== track.file_url) {
-      audioElRef.current.src = track.file_url;
-    }
-    audioElRef.current.volume = Math.max(0, Math.min(1, trackVolume));
-    if (isPracticePlaying) {
-      audioElRef.current.pause();
-      setIsPracticePlaying(false);
-    } else {
-      audioElRef.current.currentTime = 0;
-      try {
+    try {
+      if (!audioReady) {
+        await enableAudio();
+      }
+      if (!audioElRef.current) {
+        audioElRef.current = new Audio(track.file_url);
+      } else if (audioElRef.current.src !== track.file_url) {
+        audioElRef.current.src = track.file_url;
+      }
+      audioElRef.current.preload = 'auto';
+      (audioElRef.current as any).playsInline = true;
+      audioElRef.current.crossOrigin = 'anonymous';
+      audioElRef.current.volume = Math.max(0, Math.min(1, trackVolume));
+      if (isPracticePlaying) {
+        audioElRef.current.pause();
+        setIsPracticePlaying(false);
+      } else {
+        audioElRef.current.currentTime = 0;
         await audioElRef.current.play();
         setIsPracticePlaying(true);
         audioElRef.current.onended = () => setIsPracticePlaying(false);
-      } catch (e) {
-        console.error(e);
-        toast("Autoplay blocked. Click again to start playback.");
       }
+    } catch (e: any) {
+      console.error('Practice play error', e);
+      toast(e?.message || "Playback blocked. Tap Enable Audio above or disable Silent Mode and try again.");
     }
   };
   const enableAudio = async () => {
