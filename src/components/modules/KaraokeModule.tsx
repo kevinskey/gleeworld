@@ -45,7 +45,7 @@ export const KaraokeModule: React.FC = () => {
     }
     const url = URL.createObjectURL(recordedBlob);
     setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
+    console.log('[Karaoke] Preview URL set', { url, size: recordedBlob.size, type: recordedBlob.type });
   }, [recordedBlob]);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -871,10 +871,28 @@ export const KaraokeModule: React.FC = () => {
               <CardDescription>Listen before mixing or save</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <audio controls src={previewUrl || undefined} className="w-full" />
+              <audio controls key={previewUrl || 'no-preview'} src={previewUrl || undefined} preload="metadata" className="w-full" />
+              {!previewUrl && (
+                <div className="text-xs text-muted-foreground">Preparing preview…</div>
+              )}
               <div className="flex items-center gap-2">
                 <Button variant="outline" onClick={clearRecording}>
                   Start Over
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    if (!recordedBlob) return;
+                    const url = URL.createObjectURL(recordedBlob);
+                    const a = document.createElement('a');
+                    const ext = (recordedBlob.type || '').includes('wav') ? 'wav' : 'webm';
+                    a.href = url;
+                    a.download = `mic-take.${ext}`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  Download Raw
                 </Button>
               </div>
             </CardContent>
