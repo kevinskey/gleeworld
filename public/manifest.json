@@ -1,0 +1,30 @@
+{
+  "name": "GleeWorld - Spelman College Glee Club",
+  "short_name": "GleeWorld",
+  "description": "Official digital platform of the Spelman College Glee Club - celebrating 100+ years of musical excellence",
+  "theme_color": "#1e3a8a",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/android-chrome-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "categories": ["music", "education", "social"],
+  "lang": "en-US"
+}
