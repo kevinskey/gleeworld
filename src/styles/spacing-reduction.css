@@ -5,9 +5,9 @@
     @apply pb-1 pt-3;
   }
   
-  /* Override any existing CardHeader spacing */
-  [data-component="card-header"] {
-    @apply pb-1 !important;
+  /* Card header compact variant - apply intentionally */
+  .card-header-compact {
+    @apply pb-1 pt-2;
   }
 }
 

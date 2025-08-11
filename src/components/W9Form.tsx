@@ -473,24 +473,24 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
 
   return (
     <div className="w9-form-container">
-      <Card className="max-w-4xl mx-auto bg-white text-gray-900 border border-gray-300">
-        <CardHeader className="bg-white border-b border-gray-200">
-          <CardTitle className="text-gray-900 text-2xl font-bold">W9 Tax Form</CardTitle>
-          <CardDescription className="text-gray-700">
+      <Card className="max-w-4xl mx-auto bg-card text-card-foreground border">
+        <CardHeader className="bg-card border-b">
+          <CardTitle className="text-foreground text-2xl font-bold">W9 Tax Form</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Request for Taxpayer Identification Number and Certification
           </CardDescription>
         </CardHeader>
-        <CardContent className="bg-white p-6">
+        <CardContent className="bg-card p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-gray-900 font-medium">Name (as shown on your income tax return) *</Label>
+                <Label htmlFor="name" className="text-foreground font-medium">Name (as shown on your income tax return) *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   required
-                  className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  className="bg-input border text-foreground focus:border-ring focus:ring-ring"
                   placeholder="Enter your full legal name"
                 />
               </div>

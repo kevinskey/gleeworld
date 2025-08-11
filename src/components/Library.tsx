@@ -22,18 +22,18 @@ export const Library = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+      <div className="bg-card/95 backdrop-blur-sm rounded-xl p-6 shadow-lg">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Document Library</h1>
-            <p className="text-gray-600">Manage your documents and forms</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Document Library</h1>
+            <p className="text-muted-foreground">Manage your documents and forms</p>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-white/95 backdrop-blur-sm">
+        <Card className="bg-card/95 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-brand-600" />
@@ -56,7 +56,7 @@ export const Library = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-white/95 backdrop-blur-sm">
+        <Card className="bg-card/95 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Upload className="h-5 w-5 text-brand-600" />
@@ -74,7 +74,7 @@ export const Library = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-white/95 backdrop-blur-sm">
+        <Card className="bg-card/95 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-brand-600" />
