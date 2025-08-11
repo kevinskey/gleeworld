@@ -32,7 +32,7 @@ export const AppointmentDashboard = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Dashboard
@@ -48,6 +48,10 @@ export const AppointmentDashboard = () => {
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Overview
+          </TabsTrigger>
+          <TabsTrigger value="types" className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Types
           </TabsTrigger>
           <TabsTrigger value="availability" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
