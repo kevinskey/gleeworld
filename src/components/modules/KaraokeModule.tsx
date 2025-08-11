@@ -743,7 +743,7 @@ export const KaraokeModule: React.FC = () => {
 
   return (
     <div className="min-h-[60vh]">
-      <header className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
+      <header className="sticky z-30 bg-background/95 backdrop-blur border-b" style={{ top: 'var(--app-header-offset)' }}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="rounded-md bg-primary/10 p-2 text-primary"><Mic2 className="h-5 w-5"/></div>
