@@ -57,6 +57,7 @@ export const KaraokeModule: React.FC = () => {
   // Fallback Web Audio recording
   const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
   const micSourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const monitorGainRef = useRef<GainNode | null>(null);
   const webAudioChunksRef = useRef<Float32Array[]>([]);
   const [recorderMode, setRecorderMode] = useState<'mediarecorder' | 'webaudio'>('mediarecorder');
 
@@ -94,6 +95,13 @@ export const KaraokeModule: React.FC = () => {
       audioElRef.current.volume = Math.max(0, Math.min(1, trackVolume));
     }
   }, [trackVolume]);
+
+  // Keep live monitor gain in sync with UI
+  useEffect(() => {
+    if (monitorGainRef.current) {
+      try { monitorGainRef.current.gain.value = micVolume; } catch {}
+    }
+  }, [micVolume]);
 
   useEffect(() => {
     // Probe mic permission without keeping the stream
@@ -205,13 +213,12 @@ export const KaraokeModule: React.FC = () => {
       webAudioChunksRef.current.push(new Float32Array(input));
     };
     source.connect(sp);
-    sp.connect(ctx.destination);
+    // Monitoring is handled via a separate gain chain
     setRecorderMode('webaudio');
   };
 
   const stopWebAudioRecording = () => {
     scriptProcessorRef.current?.disconnect();
-    micSourceNodeRef.current?.disconnect();
     const sr = audioCtxRef.current?.sampleRate || 44100;
     const chunks = webAudioChunksRef.current;
     if (chunks.length) {
@@ -221,7 +228,6 @@ export const KaraokeModule: React.FC = () => {
     }
     webAudioChunksRef.current = [];
     scriptProcessorRef.current = null;
-    micSourceNodeRef.current = null;
   };
 
   const startRecording = async () => {
@@ -233,6 +239,22 @@ export const KaraokeModule: React.FC = () => {
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
       });
       micStreamRef.current = stream;
+
+      // Ensure AudioContext and build monitor chain so singer hears themselves
+      const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const ctx = audioCtxRef.current || new Ctx();
+      audioCtxRef.current = ctx;
+      if (ctx.state === 'suspended') {
+        try { await ctx.resume(); } catch {}
+      }
+      try {
+        micSourceNodeRef.current = ctx.createMediaStreamSource(stream);
+        monitorGainRef.current = ctx.createGain();
+        monitorGainRef.current.gain.value = micVolume;
+        micSourceNodeRef.current.connect(monitorGainRef.current).connect(ctx.destination);
+      } catch (e) {
+        console.warn('Mic monitor setup failed', e);
+      }
 
       // Decide recording mode (fall back safely if MediaRecorder fails)
       const mime = chooseSupportedMimeType();
@@ -316,6 +338,15 @@ export const KaraokeModule: React.FC = () => {
     }
     if (audioElRef.current) audioElRef.current.pause();
     micStreamRef.current?.getTracks().forEach(t => t.stop());
+
+    // Tear down monitoring chain
+    try {
+      monitorGainRef.current?.disconnect();
+      monitorGainRef.current = null;
+      micSourceNodeRef.current?.disconnect();
+      micSourceNodeRef.current = null;
+    } catch {}
+
     setIsRecording(false);
     try {
       if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
