@@ -192,9 +192,9 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
 
       <main className="w-full sm:container mx-auto px-0 sm:px-4 pb-12 space-y-0 sm:space-y-6">
         {showSummary && application && (
-          <section ref={summaryRef} aria-labelledby="your-application" className="animate-fade-in scroll-mt-24 sm:scroll-mt-28">
-            <Card>
-              <CardContent className="pt-6">
+          <section ref={summaryRef} aria-labelledby="your-application" className="animate-fade-in scroll-mt-24 sm:scroll-mt-28 sticky top-14 sm:top-20 z-40">
+            <Card className="shadow-lg">
+              <CardContent className="pt-6 max-h-[calc(100dvh-6rem)] sm:max-h-[calc(100dvh-7rem)] overflow-auto">
                 <div className="flex items-start gap-4">
                   {application.profile_image_url && (
                     <img
