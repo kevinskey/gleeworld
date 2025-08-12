@@ -10,14 +10,16 @@ import {
   AlertTriangle,
   Activity
 } from 'lucide-react';
+import { UsernamePermissionsManager } from './UsernamePermissionsManager';
 
 export const AdvancedPermissionPanels = () => {
   console.log('AdvancedPermissionPanels component loading...');
   
   return (
     <Tabs defaultValue="overview" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="overview">User Overview</TabsTrigger>
+        <TabsTrigger value="username">Username Permissions</TabsTrigger>
         <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
         <TabsTrigger value="audit">Audit Trail</TabsTrigger>
         <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -70,6 +72,10 @@ export const AdvancedPermissionPanels = () => {
             </CardContent>
           </Card>
         </div>
+      </TabsContent>
+
+      <TabsContent value="username" className="space-y-6">
+        <UsernamePermissionsManager />
       </TabsContent>
 
       <TabsContent value="bulk" className="space-y-6">
