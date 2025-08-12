@@ -10,6 +10,7 @@ import { EventsList } from "@/components/events/EventsList";
 import { BudgetsList } from "@/components/events/BudgetsList";
 import { TeamsList } from "@/components/events/TeamsList";
 import { CreateEventDialog } from "@/components/events/CreateEventDialog";
+import { QuickBudgetDialog } from "@/components/events/QuickBudgetDialog";
 
 export default function EventPlanner() {
   const [activeTab, setActiveTab] = useState("all-events");
@@ -52,10 +53,7 @@ export default function EventPlanner() {
             {/* Quick Actions */}
             <div className="flex flex-col sm:flex-row gap-3 lg:flex-col lg:gap-3">
               <CreateEventDialog />
-              <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                <Plus className="h-4 w-4 mr-2" />
-                Quick Budget
-              </Button>
+              <QuickBudgetDialog />
             </div>
           </div>
           
