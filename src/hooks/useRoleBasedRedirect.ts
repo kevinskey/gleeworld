@@ -98,15 +98,15 @@ export const useRoleBasedRedirect = () => {
 
       // PRIORITY 1: Super Admin -> Admin Panel  
       if (userProfile.is_super_admin || userProfile.role === 'super-admin') {
-        console.log('🚀 useRoleBasedRedirect: Super Admin redirect to /dashboard');
-        navigate('/dashboard', { replace: true });
+        console.log('🚀 useRoleBasedRedirect: Super Admin redirect to /admin');
+        navigate('/admin', { replace: true });
         return;
       }
 
       // PRIORITY 2: Admin or Executive Board -> Admin Panel
       if (userProfile.is_admin || userProfile.role === 'admin' || userProfile.is_exec_board) {
-        console.log('🚀 useRoleBasedRedirect: Admin/Executive redirect to /dashboard');
-        navigate('/dashboard', { replace: true });
+        console.log('🚀 useRoleBasedRedirect: Admin/Executive redirect to /admin');
+        navigate('/admin', { replace: true });
         return;
       }
 

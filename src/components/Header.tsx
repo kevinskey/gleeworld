@@ -248,7 +248,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   // Dashboard views for super-admin dropdown
   const dashboardViews = [
     { id: 'personal', label: 'My Dashboard', icon: User, route: '/dashboard' },
-    { id: 'admin', label: 'Admin Panel', icon: Shield, route: '/dashboard' },
+    { id: 'admin', label: 'Admin Panel', icon: Shield, route: '/admin' },
     ...(isSuperAdmin ? [{ id: 'alumnae', label: 'Alumnae Portal Admin', icon: GraduationCap, route: '/admin/alumnae' }] : [])
   ];
 
@@ -261,7 +261,8 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
       return 'Member Dashboard';
     }
     if (location.pathname === '/admin/alumnae') return 'Alumnae Portal Admin';
-    if (location.pathname === '/dashboard') return 'Admin Panel';
+    if (location.pathname === '/admin') return 'Admin Panel';
+    if (location.pathname === '/dashboard') return 'My Dashboard';
     return 'Dashboard';
   };
 
@@ -309,7 +310,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                 {isOnUserDashboard ? (
                   <Button
                     variant="ghost"
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate('/admin')}
                     className="text-primary hover:bg-secondary/20 bg-secondary/10 border border-secondary/30"
                   >
                     <UserCog className="h-4 w-4 mr-2" />
@@ -460,7 +461,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                         {isOnUserDashboard ? (
                           <Button
                             variant="ghost"
-                            onClick={() => handleMobileNavClick('', '/dashboard')}
+                            onClick={() => handleMobileNavClick('', '/admin')}
                             className="w-full justify-start text-primary-foreground hover:bg-primary-foreground/20 bg-accent/30 h-12"
                           >
                             <UserCog className="h-5 w-5 mr-3" />
@@ -530,7 +531,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                 {isAdmin && (
                   <>
                     {isOnUserDashboard ? (
-                      <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                      <DropdownMenuItem onClick={() => navigate('/admin')}>
                         <UserCog className="mr-2 h-4 w-4" />
                         <span>Admin Panel</span>
                       </DropdownMenuItem>
