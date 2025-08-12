@@ -91,9 +91,9 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
     };
 
     const run = async () => {
-      const foundViaDb = await loadFromLibrary();
+      let foundViaDb = await loadFromLibrary();
       if (!foundViaDb) {
-        // Fallback: try common folders in sheet-music bucket
+        // Fallback: try common folders in sheet-music bucket (may be private)
         const candidateNames = ['come-thou-fount.pdf', 'Come_Thou_Fount.pdf', 'ComeThouFount.pdf'];
         const folders = ['', 'pdfs', 'scores', 'auditions'];
         try {
@@ -106,20 +106,36 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
               if (!url) continue;
               try {
                 const res = await fetch(url, { method: 'HEAD' });
-                if (res.ok) { if (isMounted) setPdfUrl(`sheet-music/${path}`); return; }
+                if (res.ok) { if (isMounted) setPdfUrl(`sheet-music/${path}`); console.log('AuditionerDashboard: using sheet-music', path); return; }
               } catch {}
             }
           }
-          // Then list a couple of folders to find a match
+          // Then list a couple of folders to find a match (will fail if bucket is private for anon)
           for (const folder of folders) {
             const { data: list, error } = await supabase.storage.from('sheet-music').list(folder, { limit: 100 });
             if (error || !list) continue;
             const match = list.find((f: any) => f?.name?.toLowerCase().includes('come') && f?.name?.toLowerCase().includes('fount') && f?.name?.endsWith('.pdf'));
-            if (match) { if (isMounted) setPdfUrl(`sheet-music/${folder ? folder + '/' : ''}${match.name}`); return; }
+            if (match) { if (isMounted) setPdfUrl(`sheet-music/${folder ? folder + '/' : ''}${match.name}`); console.log('AuditionerDashboard: found via list in sheet-music', match.name); return; }
           }
         } catch (e) {
-          console.warn('AuditionerDashboard: fallback search failed', e);
+          console.warn('AuditionerDashboard: sheet-music fallback search failed', e);
         }
+      }
+
+      // Final fallback: public audition-docs bucket with common filenames
+      try {
+        const publicCandidates = ['come-thou-fount.pdf', 'Come_Thou_Fount.pdf', 'Come-Thu-Fount.pdf', 'ComeThouFount.pdf'];
+        for (const name of publicCandidates) {
+          const { data } = supabase.storage.from('audition-docs').getPublicUrl(name);
+          const url = data?.publicUrl;
+          if (!url) continue;
+          try {
+            const res = await fetch(url, { method: 'HEAD' });
+            if (res.ok) { if (isMounted) setPdfUrl(`audition-docs/${name}`); console.log('AuditionerDashboard: using audition-docs', name); return; }
+          } catch {}
+        }
+      } catch (e) {
+        console.warn('AuditionerDashboard: audition-docs fallback failed', e);
       }
     };
 
