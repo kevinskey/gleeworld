@@ -17,9 +17,9 @@ export const UsernamePermissionsManager = () => {
   const { modules } = useUnifiedModulesSimple();
   const [isGranting, setIsGranting] = useState(false);
   const [formData, setFormData] = useState({
-    userEmail: 'jordanoneal@spelman.edu',
-    moduleName: 'auditions',
-    notes: 'Access granted for audition data management'
+    userEmail: 'onnestypelle@spelman.edu',
+    moduleName: 'calendar-management',
+    notes: 'Access granted for calendar editing and event management'
   });
 
   const handleGrantPermission = async (e: React.FormEvent) => {
