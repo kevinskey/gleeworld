@@ -161,7 +161,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pb-28">
-      <header className="container mx-auto px-0 sm:px-4 pt-8 pb-6 sm:pt-12 sm:pb-8">
+      <header className="w-full sm:container mx-auto px-0 sm:px-4 pt-8 pb-6 sm:pt-12 sm:pb-8">
         <div className="rounded-2xl border border-border bg-card/80 backdrop-blur shadow-sm p-5 sm:p-8 animate-fade-in">
           <div className="flex items-start gap-4 sm:gap-6">
             <div className="shrink-0 p-2 rounded-lg bg-primary/10 text-primary">
@@ -190,7 +190,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
         </div>
       </header>
 
-      <main className="container mx-auto px-0 sm:px-4 pb-12 space-y-0 sm:space-y-6">
+      <main className="w-full sm:container mx-auto px-0 sm:px-4 pb-12 space-y-0 sm:space-y-6">
         {showSummary && application && (
           <section ref={summaryRef} aria-labelledby="your-application" className="animate-fade-in">
             <Card>
