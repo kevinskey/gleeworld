@@ -58,17 +58,6 @@ export const DashboardSwitcher = () => {
             )}
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to={`/dashboard/member-view/${user?.id}`} className="flex items-center cursor-pointer">
-            <User className="mr-2 h-4 w-4" />
-            Personal Dashboard
-            {location.pathname.startsWith('/dashboard/member-view/') && (
-              <Badge variant="secondary" className="ml-auto text-xs">
-                Current
-              </Badge>
-            )}
-          </Link>
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

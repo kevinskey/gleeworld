@@ -67,7 +67,7 @@ export const PublicHeader = () => {
               {/* Dashboard Link for Authenticated Users */}
               {user && (
                 <Button asChild variant="outline" className="hidden md:flex lg:text-base">
-                  <Link to={`/dashboard/member-view/${user.id}`}>
+                  <Link to="/dashboard">
                     <Settings className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
                     Dashboard
                   </Link>
@@ -116,7 +116,7 @@ export const PublicHeader = () => {
                 <nav className="flex flex-col gap-1 pt-3">
                   {user && (
                     <Button asChild variant="outline" size="sm" className="mb-2 text-sm justify-start">
-                      <Link to={`/dashboard/member-view/${user.id}`} className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
+                      <Link to="/dashboard" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
                         <Settings className="h-4 w-4" />
                         My Dashboard
                       </Link>

@@ -33,7 +33,7 @@ import W9FormPage from "./pages/W9FormPage";
 import NotFound from "./pages/NotFound";
 import Accounting from "./pages/Accounting";
 import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
-import { MemberViewDashboard } from "./components/member-view/MemberViewDashboard";
+
 import AuditionerDashboardPage from "./pages/AuditionerDashboardPage";
 
 import EventPlanner from "./pages/EventPlanner";
@@ -243,14 +243,14 @@ const App = () => {
                    </ProtectedRoute>
                  } 
                />
-              <Route 
-                path="/dashboard/member-view/:userId" 
-                element={
-                  <ProtectedRoute>
-                    <MemberViewDashboard />
-                  </ProtectedRoute>
-                } 
-              />
+               <Route 
+                 path="/dashboard/member-view/:userId" 
+                 element={
+                   <ProtectedRoute>
+                     <Navigate to="/dashboard" replace />
+                   </ProtectedRoute>
+                 } 
+               />
               <Route 
                 path="/dashboard/auditioner" 
                 element={

@@ -247,7 +247,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
 
   // Dashboard views for super-admin dropdown
   const dashboardViews = [
-    { id: 'personal', label: 'Personal Dashboard', icon: User, route: `/dashboard/member-view/${user?.id}` },
+    { id: 'personal', label: 'Personal Dashboard', icon: User, route: '/dashboard' },
     { id: 'admin', label: 'Admin Panel', icon: Shield, route: '/dashboard' },
     ...(isSuperAdmin ? [{ id: 'alumnae', label: 'Alumnae Portal Admin', icon: GraduationCap, route: '/admin/alumnae' }] : [])
   ];
@@ -318,7 +318,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                 ) : (
                   <Button
                     variant="ghost"
-                    onClick={() => navigate(`/dashboard/member-view/${user?.id}`)}
+                    onClick={() => navigate('/dashboard')}
                     className="text-primary hover:bg-accent/20 bg-accent/10 border border-accent/30"
                   >
                     <User className="h-4 w-4 mr-2" />
@@ -469,7 +469,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                         ) : (
                           <Button
                             variant="ghost"
-                            onClick={() => handleMobileNavClick('', `/dashboard/member-view/${user?.id}`)}
+                            onClick={() => handleMobileNavClick('', '/dashboard')}
                             className="w-full justify-start text-primary-foreground hover:bg-primary-foreground/20 bg-secondary/30 h-12"
                           >
                             <User className="h-5 w-5 mr-3" />
@@ -535,7 +535,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                         <span>Admin Panel</span>
                       </DropdownMenuItem>
                     ) : (
-                      <DropdownMenuItem onClick={() => navigate(`/dashboard/member-view/${user?.id}`)}>
+                      <DropdownMenuItem onClick={() => navigate('/dashboard')}>
                         <User className="mr-2 h-4 w-4" />
                         <span>My Dashboard</span>
                       </DropdownMenuItem>

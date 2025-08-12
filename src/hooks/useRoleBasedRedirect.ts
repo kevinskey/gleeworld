@@ -129,8 +129,8 @@ export const useRoleBasedRedirect = () => {
       
       // PRIORITY 6: Regular Members -> simplified Member Dashboard
       if (userProfile.role === 'member') {
-        console.log('👤 useRoleBasedRedirect: Member redirect to member-view dashboard');
-        navigate(`/dashboard/member-view/${user.id}`, { replace: true });
+        console.log('👤 useRoleBasedRedirect: Member redirect to unified dashboard');
+        navigate('/dashboard', { replace: true });
         return;
       }
       
