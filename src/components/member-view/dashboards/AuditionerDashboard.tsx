@@ -239,7 +239,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
               </div>
 
               {/* Sticky audio player so users can listen while scrolling the score */}
-              <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 px-6 py-3 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/70">
+              <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 px-6 py-3 border-b border-border bg-muted/95 backdrop-blur supports-[backdrop-filter]:bg-muted/80">
                 <label htmlFor="audition-audio" className="sr-only">Audio player: Come Thou Fount</label>
                 <audio
                   id="audition-audio"
@@ -264,7 +264,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
         <aside
           role="complementary"
           aria-label="Audition audio player"
-          className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 shadow-lg"
+          className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-muted/95 backdrop-blur supports-[backdrop-filter]:bg-muted/80 shadow-lg"
         >
           <div className="container mx-auto px-4 py-2 flex items-center gap-3">
             <div className="hidden sm:block p-2 rounded-md bg-primary/10 text-primary">
