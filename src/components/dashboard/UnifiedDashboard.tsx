@@ -76,7 +76,7 @@ export const UnifiedDashboard = () => {
       {/* Row 3: Unified Calendar visible to all logged-in users */}
       <div className="px-6 pb-6">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-medium">Glee Calendar</h2>
+          <h2 className="font-sans font-semibold tracking-tight text-base sm:text-lg md:text-xl">Glee Calendar</h2>
           <Button
             variant="ghost"
             size="sm"

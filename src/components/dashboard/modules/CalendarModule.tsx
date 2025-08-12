@@ -81,7 +81,7 @@ export const CalendarModule = () => {
               <Calendar className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold">Calendar</h2>
+              <h2 className="font-sans font-semibold tracking-tight text-base sm:text-lg md:text-xl">Calendar</h2>
               <p className="text-muted-foreground">Stay on top of rehearsals, concerts, and events</p>
             </div>
           </div>
