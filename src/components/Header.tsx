@@ -247,7 +247,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
 
   // Dashboard views for super-admin dropdown
   const dashboardViews = [
-    { id: 'personal', label: 'Personal Dashboard', icon: User, route: '/dashboard' },
+    { id: 'personal', label: 'My Dashboard', icon: User, route: '/dashboard' },
     { id: 'admin', label: 'Admin Panel', icon: Shield, route: '/dashboard' },
     ...(isSuperAdmin ? [{ id: 'alumnae', label: 'Alumnae Portal Admin', icon: GraduationCap, route: '/admin/alumnae' }] : [])
   ];

@@ -164,7 +164,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       className={`cursor-pointer ${viewMode === 'member' ? 'bg-accent' : ''}`}
                     >
                       <User className="mr-2 h-4 w-4" />
-                      Member
+                        My Dashboard
                     </DropdownMenuItem>
                     
                     {/* Fan View */}
