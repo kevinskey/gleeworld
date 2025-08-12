@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mic, FileText, ArrowRight } from "lucide-react";
+import { Mic, FileText, ArrowRight, Music2, X } from "lucide-react";
 import { PDFViewer } from "@/components/PDFViewer";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -28,6 +28,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
   const [showSummary, setShowSummary] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [triedList, setTriedList] = useState(false);
+  const [showAudioDock, setShowAudioDock] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -159,7 +160,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pb-28">
       <header className="container mx-auto px-4 pt-8 pb-6 sm:pt-12 sm:pb-8">
         <div className="rounded-2xl border border-border bg-card/80 backdrop-blur shadow-sm p-5 sm:p-8 animate-fade-in">
           <div className="flex items-start gap-4 sm:gap-6">
@@ -258,6 +259,42 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
           </Card>
         </section>
       </main>
+
+      {showAudioDock && (
+        <aside
+          role="complementary"
+          aria-label="Audition audio player"
+          className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 shadow-lg"
+        >
+          <div className="container mx-auto px-4 py-2 flex items-center gap-3">
+            <div className="hidden sm:block p-2 rounded-md bg-primary/10 text-primary">
+              <Music2 className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Audition Track</p>
+              <p className="text-xs sm:text-sm font-medium truncate">Come Thou Fount — Audition Edition</p>
+            </div>
+            <audio
+              controls
+              preload="none"
+              className="w-full max-w-[400px] sm:max-w-[520px]"
+              src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/service-images/4e6c2ec0-1f83-449a-a984-8920f6056ab5/20250811-899174f9-2d52-4ef7-96b3-87a77127e18e-come-thou-font-of-every-blessing---audition.mp3"
+              aria-label="Play Come Thou Fount audition track"
+            >
+              Your browser does not support the audio element.
+            </audio>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Hide audio player"
+              onClick={() => setShowAudioDock(false)}
+              className="ml-1"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </aside>
+      )}
     </div>
   );
 };
