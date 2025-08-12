@@ -115,8 +115,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     const target = e.target as HTMLInputElement;
                     if (e.key === 'Enter') {
                       const q = target.value.trim();
-                      if (q) navigate(`/modules?q=${encodeURIComponent(q)}`);
-                      else navigate('/modules');
+                      if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
+                      else navigate('/search');
                     }
                   }}
                 />

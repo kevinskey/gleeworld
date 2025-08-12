@@ -116,6 +116,7 @@ import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
+import SearchPage from "./pages/SearchPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -814,6 +815,19 @@ const App = () => {
                                     </ProtectedRoute>
                                   } 
                                 />
+                                
+                                {/* Site-wide Search */}
+                                <Route 
+                                  path="/search" 
+                                  element={
+                                    <PublicRoute>
+                                      <UniversalLayout>
+                                        <SearchPage />
+                                      </UniversalLayout>
+                                    </PublicRoute>
+                                  } 
+                                />
+                                
                                   <Route 
                                     path="/modules" 
                                     element={
