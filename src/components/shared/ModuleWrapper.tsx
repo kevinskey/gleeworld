@@ -1,8 +1,8 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { LucideIcon, ArrowLeft } from 'lucide-react';
+import { LucideIcon, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ModuleWrapperProps {
   id: string;
@@ -19,6 +19,8 @@ interface ModuleWrapperProps {
   showBack?: boolean;
   onBack?: () => void;
   stickyHeader?: boolean;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
 }
 
 export const ModuleWrapper = ({
@@ -35,7 +37,9 @@ export const ModuleWrapper = ({
   fullPage = false,
   showBack = false,
   onBack,
-  stickyHeader = false
+  stickyHeader = false,
+  collapsible = true,
+  defaultOpen = true,
 }: ModuleWrapperProps) => {
   const containerClass = fullPage 
     ? "min-h-screen space-y-4" 
@@ -44,11 +48,12 @@ export const ModuleWrapper = ({
     ? "sticky z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
     : "";
 
+  const [collapsed, setCollapsed] = useState(collapsible ? !(defaultOpen ?? true) : false);
+
   const content = (
     <div className={`${containerClass} ${className}`}>
       {/* Mobile Header Spacer/Bumper */}
-      
-      
+
       {/* Standardized Header */}
       <div className={`${headerClass} border-l-4 border-primary pl-4`} style={stickyHeader ? { top: 'var(--app-header-offset)' } : undefined}>
         <div className="flex items-center justify-between">
@@ -69,28 +74,41 @@ export const ModuleWrapper = ({
               )}
             </div>
           </div>
-          {headerActions && (
-            <div className="flex items-center gap-2">
-              {headerActions}
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {headerActions}
+            {collapsible && (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-controls={`${id}-content`}
+                aria-expanded={!collapsed}
+                onClick={() => setCollapsed((v) => !v)}
+                title={collapsed ? 'Expand module' : 'Collapse module'}
+              >
+                {collapsed ? 'Expand' : 'Collapse'}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Module Content */}
-      <div className="space-y-4 pt-4 sm:pt-0">
-        {isLoading ? (
-          <Card>
-            <CardContent className="p-8">
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          children
-        )}
-      </div>
+      {!collapsed && (
+        <div id={`${id}-content`} className="space-y-4 pt-4 sm:pt-0">
+          {isLoading ? (
+            <Card>
+              <CardContent className="p-8">
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            children
+          )}
+        </div>
+      )}
+
     </div>
   );
 
