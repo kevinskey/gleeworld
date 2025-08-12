@@ -23,9 +23,6 @@ import FanDashboard from "./pages/FanDashboard";
 import { DuesManagement } from "./pages/DuesManagement";
 import PermissionsPage from "./pages/admin/Permissions";
 
-import { GleeWorldLanding } from "./pages/GleeWorldLanding";
-import { TestLandingPage } from "./components/debug/TestLandingPage";
-import { SimpleHomePage } from "./components/debug/SimpleHomePage";
 import ContractSigning from "./pages/ContractSigning";
 import AdminSigning from "./pages/AdminSigning";
 import ActivityLogs from "./pages/ActivityLogs";
@@ -254,11 +251,7 @@ const App = () => {
                />
               <Route 
                 path="/dashboard/auditioner" 
-                element={
-                  <PublicRoute>
-                    <AuditionerDashboardPage />
-                  </PublicRoute>
-                } 
+                element={<Navigate to="/auditioner" replace />} 
               />
               <Route 
                 path="/event-planner" 
