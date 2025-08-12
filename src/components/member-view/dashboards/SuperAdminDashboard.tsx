@@ -6,7 +6,7 @@ import { AnnouncementsEventsSection } from "@/components/user-dashboard/sections
 import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Calendar, 
@@ -32,6 +32,9 @@ import {
   Lock,
   GraduationCap
 } from "lucide-react";
+
+const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
+
 
 interface SuperAdminDashboardProps {
   user: {
@@ -390,6 +393,21 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <CommunityHubWidget />
           <AnnouncementsEventsSection upcomingEvents={formattedUpcomingEvents} />
+        </div>
+        {/* Unified Calendar for Super Admins */}
+        <div className="mt-6">
+          <Suspense fallback={
+            <Card className="glass-dashboard-card">
+              <CardHeader>
+                <CardTitle>Calendar</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="py-6">Loading calendar…</div>
+              </CardContent>
+            </Card>
+          }>
+            <CalendarViewsLazy />
+          </Suspense>
         </div>
       </div>
     </div>

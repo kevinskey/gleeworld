@@ -15,7 +15,7 @@ import { useAuditionManagement } from "@/hooks/useAuditionManagement";
 import { useSRFAssignments } from "@/hooks/useSRFAssignments";
 import { AuditionDialog } from "@/components/audition/AuditionDialog";
 import { AuditionEntry } from "@/hooks/useAuditionManagement";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -45,6 +45,9 @@ import {
   Eye,
   Send
 } from "lucide-react";
+
+const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
+
 
 interface AdminDashboardProps {
   user: {
@@ -644,6 +647,22 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
       {/* Community Hub */}
       <CommunityHubWidget />
+
+      {/* Unified Calendar (visible to all admins) */}
+      <Suspense fallback={
+        <Card className="glass-dashboard-card mt-4">
+          <CardHeader>
+            <CardTitle>Calendar</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="py-6">Loading calendar…</div>
+          </CardContent>
+        </Card>
+      }>
+        <CalendarViewsLazy />
+      </Suspense>
+      
+      {/* Audition Dialog */}
       
       {/* Audition Dialog */}
       <AuditionDialog
