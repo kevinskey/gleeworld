@@ -8,11 +8,11 @@ import { useUsernamePermissions } from '@/hooks/useUsernamePermissions';
 
 export const CalendarManagementModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
   const { user: authUser } = useAuth();
-  const { isSuperAdmin, isAdmin } = useUserRole();
+  const { isSuperAdmin, isAdmin, isExecutiveBoard } = useUserRole();
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(authUser?.email);
 
   // Check if user has access to calendar management
-  const hasCalendarAccess = isSuperAdmin() || isAdmin() || usernamePermissions.includes('calendar-management');
+  const hasCalendarAccess = isSuperAdmin() || isAdmin() || isExecutiveBoard() || usernamePermissions.includes('calendar-management');
 
   // Show loading state while checking permissions
   if (permissionsLoading) {

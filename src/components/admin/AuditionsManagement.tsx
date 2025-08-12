@@ -137,7 +137,7 @@ interface AuditionAnalytics {
 export const AuditionsManagement = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const { isSuperAdmin } = useUserRole();
+  const { isSuperAdmin, isAdmin, isExecutiveBoard } = useUserRole();
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
   const [activeTab, setActiveTab] = useState("overview");
   const [sessions, setSessions] = useState<AuditionSession[]>([]);
@@ -183,7 +183,7 @@ export const AuditionsManagement = () => {
   const [isCreateSessionExpanded, setIsCreateSessionExpanded] = useState(false);
 
   // Check if user has access to auditions
-  const hasAuditionsAccess = isSuperAdmin() || usernamePermissions.includes('auditions');
+  const hasAuditionsAccess = isSuperAdmin() || isAdmin() || isExecutiveBoard() || usernamePermissions.includes('auditions');
 
   useEffect(() => {
     if (hasAuditionsAccess && !permissionsLoading) {
