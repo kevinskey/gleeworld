@@ -8,6 +8,10 @@ import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarous
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { AuditionsModule } from '@/components/modules/AuditionsModule';
+import { AttendanceModule } from '@/components/modules/AttendanceModule';
+import { MusicLibraryModule } from '@/components/modules/MusicLibraryModule';
+import { TourManagerModule } from '@/components/modules/TourManagerModule';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
@@ -93,6 +97,14 @@ export const UnifiedDashboard = () => {
             </div>
           </Suspense>
         )}
+      </div>
+
+      {/* Row 4: Key Modules (stacked) */}
+      <div className="px-6 pb-10 space-y-6">
+        <AuditionsModule user={user} />
+        <AttendanceModule user={user} />
+        <MusicLibraryModule user={user} />
+        <TourManagerModule user={user} />
       </div>
 
       {/* Messages Panel Overlay */}
