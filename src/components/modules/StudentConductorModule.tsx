@@ -13,6 +13,7 @@ export const StudentConductorModule = ({ user, isFullPage = false }: ModuleProps
       icon={Music}
       iconColor="purple"
       fullPage={isFullPage}
+      defaultOpen={!!isFullPage}
     >
       <StudentConductorDashboard user={user} />
     </ModuleWrapper>

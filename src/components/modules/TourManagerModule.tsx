@@ -30,6 +30,7 @@ export const TourManagerModule = ({ user, isFullPage = false }: ModuleProps) => 
       icon={Route}
       iconColor="blue"
       fullPage={isFullPage}
+      defaultOpen={!!isFullPage}
     >
       <TourManagerDashboard user={user} />
     </ModuleWrapper>

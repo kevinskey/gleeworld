@@ -12,6 +12,7 @@ export const MusicLibraryModule = ({ user, isFullPage = false }: ModuleProps) =>
       icon={Music}
       iconColor="pink"
       fullPage={isFullPage}
+      defaultOpen={!!isFullPage}
     >
       <div className="space-y-6">
         {/* Coming Soon Notice */}

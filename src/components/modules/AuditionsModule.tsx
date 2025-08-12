@@ -13,6 +13,7 @@ export const AuditionsModule = ({ user, isFullPage = false }: ModuleProps) => {
       icon={ScanLine}
       iconColor="purple"
       fullPage={isFullPage}
+      defaultOpen={!!isFullPage}
     >
       <AuditionsManagement />
     </ModuleWrapper>

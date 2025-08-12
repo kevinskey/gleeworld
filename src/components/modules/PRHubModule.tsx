@@ -13,6 +13,7 @@ export const PRHubModule = ({ user, isFullPage = false }: ModuleProps) => {
       icon={Megaphone}
       iconColor="orange"
       fullPage={isFullPage}
+      defaultOpen={!!isFullPage}
     >
       <PRCoordinatorHub />
     </ModuleWrapper>

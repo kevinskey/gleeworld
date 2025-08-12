@@ -16,6 +16,7 @@ export const TreasurerModule = ({ user, isFullPage }: ModuleProps) => {
       icon={DollarSign}
       iconColor="green"
       fullPage={!!isFullPage}
+      defaultOpen={!!isFullPage}
       headerActions={
         <Button size="sm" onClick={() => navigate('/treasurer')} aria-label="Open Treasurer Hub">
           Open
