@@ -69,7 +69,7 @@ const findRedundancies = () => {
 };
 
 export const ModulesDirectory: React.FC = () => {
-  useSEO('Modules Directory | GleeWorld', 'Browse all active modules across communications, tours, members, finances, and more.', `${window.location.origin}/modules`);
+  useSEO('Modules Directory | GleeWorld', 'Explore all functional modules in GleeWorld. Open any module or propose cleanup of redundant modules. No deletions will occur without your approval.', `${window.location.origin}/modules`);
 
   const navigate = useNavigate();
   const { user } = useAuth();
