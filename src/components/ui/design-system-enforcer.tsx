@@ -195,12 +195,6 @@ export const DesignSystemEnforcer = () => {
         color: hsl(var(--muted-foreground) / 0.6) !important;
       }
       
-      /* === ANIMATION CONSISTENCY === */
-      
-      * {
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      }
-      
       /* === SHADOW SYSTEM === */
       
       .shadow {
