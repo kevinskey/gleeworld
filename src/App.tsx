@@ -19,7 +19,7 @@ import Index from "./pages/Index";
 import DirectoryPage from "./pages/DirectoryPage";
 import Auth from "./pages/Auth";
 import FanDashboard from "./pages/FanDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
+// import AdminDashboard from "./pages/AdminDashboard";
 import { DuesManagement } from "./pages/DuesManagement";
 import PermissionsPage from "./pages/admin/Permissions";
 
@@ -808,7 +808,7 @@ const App = () => {
                       path="/admin" 
                       element={
                         <ProtectedRoute>
-                          <AdminDashboard />
+                          <Navigate to="/dashboard" replace />
                         </ProtectedRoute>
                       } 
                     />

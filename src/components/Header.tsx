@@ -248,20 +248,17 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   // Dashboard views for super-admin dropdown
   const dashboardViews = [
     { id: 'personal', label: 'My Dashboard', icon: User, route: '/dashboard' },
-    { id: 'admin', label: 'Admin Panel', icon: Shield, route: '/admin' },
     ...(isSuperAdmin ? [{ id: 'alumnae', label: 'Alumnae Portal Admin', icon: GraduationCap, route: '/admin/alumnae' }] : [])
   ];
 
   const getCurrentDashboardView = () => {
     if (location.pathname.startsWith('/dashboard/member-view/')) {
-      // Get the user profile to determine the correct dashboard type
       if (userProfile?.is_exec_board) return 'Executive Board Dashboard';
       if (userProfile?.role === 'alumnae') return 'Alumnae Dashboard'; 
       if (userProfile?.role === 'auditioner') return 'Auditioner Dashboard';
       return 'Member Dashboard';
     }
     if (location.pathname === '/admin/alumnae') return 'Alumnae Portal Admin';
-    if (location.pathname === '/admin') return 'Admin Panel';
     if (location.pathname === '/dashboard') return 'My Dashboard';
     return 'Dashboard';
   };
@@ -303,29 +300,18 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                 </Button>
             ))}
 
-            {/* Dashboard Toggle for Admins */}
+            {/* Dashboard Shortcut for Admins */}
             {isAdmin && (
               <>
                 {!isOnUserDashboard && <div className="h-6 w-px bg-border mx-2" />}
-                {isOnUserDashboard ? (
-                  <Button
-                    variant="ghost"
-                    onClick={() => navigate('/admin')}
-                    className="text-primary hover:bg-secondary/20 bg-secondary/10 border border-secondary/30"
-                  >
-                    <UserCog className="h-4 w-4 mr-2" />
-                    Admin Panel
-                  </Button>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    onClick={() => navigate('/dashboard')}
-                    className="text-primary hover:bg-accent/20 bg-accent/10 border border-accent/30"
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    My Dashboard
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate('/dashboard')}
+                  className="text-primary hover:bg-accent/20 bg-accent/10 border border-accent/30"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  My Dashboard
+                </Button>
               </>
             )}
 
@@ -458,25 +444,14 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                         {(isOnUserDashboard || !isOnUserDashboard) && (
                           <div className="h-px bg-primary-foreground/20 my-3" />
                         )}
-                        {isOnUserDashboard ? (
-                          <Button
-                            variant="ghost"
-                            onClick={() => handleMobileNavClick('', '/admin')}
-                            className="w-full justify-start text-primary-foreground hover:bg-primary-foreground/20 bg-accent/30 h-12"
-                          >
-                            <UserCog className="h-5 w-5 mr-3" />
-                            <span className="text-base">Admin Panel</span>
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            onClick={() => handleMobileNavClick('', '/dashboard')}
-                            className="w-full justify-start text-primary-foreground hover:bg-primary-foreground/20 bg-secondary/30 h-12"
-                          >
-                            <User className="h-5 w-5 mr-3" />
-                            <span className="text-base">My Dashboard</span>
-                          </Button>
-                        )}
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleMobileNavClick('', '/dashboard')}
+                          className="w-full justify-start text-primary-foreground hover:bg-primary-foreground/20 bg-secondary/30 h-12"
+                        >
+                          <User className="h-5 w-5 mr-3" />
+                          <span className="text-base">My Dashboard</span>
+                        </Button>
 
                         {/* Mobile Admin Items */}
                         {!isOnUserDashboard && adminItems.map((item) => (
@@ -527,20 +502,13 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                 </div>
                 <DropdownMenuSeparator />
                 
-                {/* Dashboard Toggle in Dropdown */}
+                {/* Dashboard Shortcut in Dropdown */}
                 {isAdmin && (
                   <>
-                    {isOnUserDashboard ? (
-                      <DropdownMenuItem onClick={() => navigate('/admin')}>
-                        <UserCog className="mr-2 h-4 w-4" />
-                        <span>Admin Panel</span>
-                      </DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                        <User className="mr-2 h-4 w-4" />
-                        <span>My Dashboard</span>
-                      </DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>My Dashboard</span>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>
                 )}

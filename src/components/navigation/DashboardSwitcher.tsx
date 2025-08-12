@@ -21,7 +21,7 @@ export const DashboardSwitcher = () => {
   }
 
   const isOnMemberDashboard = location.pathname.startsWith('/dashboard/member-view/');
-  const isOnAdminDashboard = location.pathname.startsWith('/admin');
+  const isOnAdminDashboard = location.pathname === '/dashboard';
 
   const getCurrentContext = () => {
     if (isOnMemberDashboard) return "Personal View";
@@ -48,9 +48,9 @@ export const DashboardSwitcher = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-48 sm:w-56 bg-background shadow-lg border border-border z-50">
         <DropdownMenuItem asChild>
-          <Link to="/admin" className="flex items-center cursor-pointer">
+          <Link to="/dashboard" className="flex items-center cursor-pointer">
             <Shield className="mr-2 h-4 w-4" />
-            Admin Dashboard
+            Dashboard
             {isOnAdminDashboard && (
               <Badge variant="secondary" className="ml-auto text-xs">
                 Current

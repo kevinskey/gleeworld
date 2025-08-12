@@ -125,19 +125,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     <DropdownMenuLabel>Dashboard Views</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     
-                    {/* Admin View - only for actual admins */}
-                    {isAdmin && (
-                      <DropdownMenuItem 
-                      onClick={() => {
-                          navigate('/admin');
-                          onViewModeChange?.('admin');
-                        }}
-                        className={`cursor-pointer ${viewMode === 'admin' ? 'bg-accent' : ''}`}
-                      >
-                        <Shield className="mr-2 h-4 w-4" />
-                        Admin (includes Exec Board)
-                      </DropdownMenuItem>
-                    )}
+                    {/* Admin View removed - unified dashboard only */}
                     
                     {/* Executive Board Dashboard - only for executive board members */}
                     {false && (
