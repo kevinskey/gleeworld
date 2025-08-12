@@ -214,19 +214,15 @@ export const DesignSystemEnforcer = () => {
       }
     `;
     
-    // Remove existing enforcer if present
+    // Idempotent append without removal to prevent flicker in StrictMode/dev
     const existing = document.getElementById('design-system-enforcer');
-    if (existing) {
-      existing.remove();
+    if (!existing) {
+      document.head.appendChild(style);
     }
     
-    document.head.appendChild(style);
-    
+    // Keep the style tag persistent across mounts to avoid visual blinking
     return () => {
-      const styleElement = document.getElementById('design-system-enforcer');
-      if (styleElement) {
-        styleElement.remove();
-      }
+      // no-op
     };
   }, []);
   
