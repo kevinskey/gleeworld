@@ -41,6 +41,11 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
       setUseGoogle(true);
     }
 
+    // Safety timeout: if the iframe never fires onLoad/onError, don't block the UI
+    timerRef.current = window.setTimeout(() => {
+      setIsLoading(false);
+    }, 10000);
+
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
