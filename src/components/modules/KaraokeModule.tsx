@@ -36,6 +36,7 @@ export const KaraokeModule: React.FC = () => {
   const [isPracticePlaying, setIsPracticePlaying] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [autoMix, setAutoMix] = useState(true);
 
   // Generate preview URL for raw mic recording
   useEffect(() => {
@@ -287,6 +288,7 @@ export const KaraokeModule: React.FC = () => {
     previewSetRef.current = false;
     setRecordedBlob(null);
     setPreviewUrl(null);
+    setMixedMp3(null);
     recordedChunksRef.current = [];
 
     if (!track) {
@@ -702,6 +704,12 @@ export const KaraokeModule: React.FC = () => {
       setMixing(false);
     }
   };
+  // Auto-mix immediately when a new take is captured
+  useEffect(() => {
+    if (autoMix && recordedBlob && track && !mixing) {
+      void mixAndEncode();
+    }
+  }, [autoMix, recordedBlob, track, mixing]);
   const downloadMp3 = () => {
     if (!mixedMp3) return;
     const url = URL.createObjectURL(mixedMp3);
