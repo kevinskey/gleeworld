@@ -14,6 +14,8 @@ import { QuickBudgetDialog } from "@/components/events/QuickBudgetDialog";
 
 export default function EventPlanner() {
   const [activeTab, setActiveTab] = useState("all-events");
+  const [openCreateEvent, setOpenCreateEvent] = useState(false);
+  const [openQuickBudget, setOpenQuickBudget] = useState(false);
 
   return (
     <UniversalLayout>
@@ -35,25 +37,25 @@ export default function EventPlanner() {
                 team coordination, and expense tracking for all student functions.
               </p>
               <div className="flex flex-wrap gap-4 text-sm text-white/60">
-                <div className="flex items-center gap-2">
+                <button type="button" className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer" onClick={() => setOpenQuickBudget(true)} aria-label="Open Quick Budget">
                   <DollarSign className="h-4 w-4" />
                   <span>Budget Tracking</span>
-                </div>
-                <div className="flex items-center gap-2">
+                </button>
+                <button type="button" className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer" onClick={() => setActiveTab('my-teams')} aria-label="Go to My Teams">
                   <Users className="h-4 w-4" />
                   <span>Team Management</span>
-                </div>
-                <div className="flex items-center gap-2">
+                </button>
+                <button type="button" className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer" onClick={() => setOpenCreateEvent(true)} aria-label="Open Create Event">
                   <Calendar className="h-4 w-4" />
                   <span>Event Scheduling</span>
-                </div>
+                </button>
               </div>
             </div>
             
             {/* Quick Actions */}
             <div className="flex flex-col sm:flex-row gap-3 lg:flex-col lg:gap-3">
-              <CreateEventDialog />
-              <QuickBudgetDialog />
+              <CreateEventDialog open={openCreateEvent} onOpenChange={setOpenCreateEvent} />
+              <QuickBudgetDialog open={openQuickBudget} onOpenChange={setOpenQuickBudget} />
             </div>
           </div>
           

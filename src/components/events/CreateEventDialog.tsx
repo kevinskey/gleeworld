@@ -17,6 +17,9 @@ import { useMergedProfile } from "@/hooks/useMergedProfile";
 
 interface CreateEventDialogProps {
   onEventCreated?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
 interface Calendar {
@@ -32,11 +35,12 @@ interface ImageUpload {
   url?: string;
 }
 
-export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) => {
+export const CreateEventDialog = ({ onEventCreated, open: controlledOpen, onOpenChange, showTrigger = true }: CreateEventDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { profile } = useMergedProfile(user);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const dialogOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const [loading, setLoading] = useState(false);
   const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [images, setImages] = useState<ImageUpload[]>([]);
@@ -353,7 +357,8 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
       }
 
       onEventCreated?.();
-      setOpen(false);
+      setInternalOpen(false);
+      onOpenChange?.(false);
       
       // Reset form
       setFormData({
@@ -397,21 +402,24 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
   };
 
   const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
+    setInternalOpen(newOpen);
+    onOpenChange?.(newOpen);
     if (newOpen) {
       loadCalendars();
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Create Event</span>
-          <span className="sm:hidden">Create</span>
-        </Button>
-      </DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Create Event</span>
+            <span className="sm:hidden">Create</span>
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Event</DialogTitle>
@@ -741,7 +749,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
 
           {/* Submit Button */}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading || uploadingImages}>

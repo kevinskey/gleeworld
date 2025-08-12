@@ -21,12 +21,23 @@ interface UserEventOption {
   start_date: string;
 }
 
-export const QuickBudgetDialog = () => {
+interface QuickBudgetDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
+}
+
+export const QuickBudgetDialog = ({ open: controlledOpen, onOpenChange, showTrigger = true }: QuickBudgetDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { createBudget } = useBudgets();
 
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = (val: boolean) => {
+    if (controlledOpen === undefined) setInternalOpen(val);
+    onOpenChange?.(val);
+  };
   const [loading, setLoading] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [events, setEvents] = useState<UserEventOption[]>([]);
@@ -42,7 +53,7 @@ export const QuickBudgetDialog = () => {
 
   // Load profile id and user's events when dialog opens
   useEffect(() => {
-    if (!open || !user) return;
+    if (!isOpen || !user) return;
     const run = async () => {
       // Get profile id for this user
       const { data: profile } = await supabase
@@ -68,7 +79,7 @@ export const QuickBudgetDialog = () => {
       }
     };
     run();
-  }, [open, user]);
+  }, [isOpen, user]);
 
   const eventOptions = useMemo(() => {
     return events.map(e => ({
@@ -118,13 +129,15 @@ export const QuickBudgetDialog = () => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-          <Plus className="h-4 w-4 mr-2" />
-          Quick Budget
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={setOpen}>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <Plus className="h-4 w-4 mr-2" />
+            Quick Budget
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Quick Budget</DialogTitle>
