@@ -119,9 +119,40 @@ export class MelodyPlayer {
 
   private playNote(note: MelodyNote, duration: number) {
     try {
-      const frequency = this.noteFrequencies[note.note];
+      // Normalize flats and edge accidentals to supported sharp/natural names
+      const mapFlatToSharp: Record<string, string> = {
+        'Cb': 'B',
+        'Db': 'C#',
+        'Eb': 'D#',
+        'Fb': 'E',
+        'Gb': 'F#',
+        'Ab': 'G#',
+        'Bb': 'A#',
+      };
+      const mapSharpToNatural: Record<string, string> = {
+        'E#': 'F',
+        'B#': 'C',
+      };
+      const normalize = (n: string) => {
+        const m = n.match(/^([A-G])([#b]?)(\d)$/);
+        if (!m) return n;
+        const [, step, acc, oct] = m;
+        if (acc === 'b') {
+          const k = `${step}b`;
+          return `${mapFlatToSharp[k] || step}${oct}`;
+        }
+        if (acc === '#') {
+          const k = `${step}#`;
+          const nat = mapSharpToNatural[k];
+          if (nat) return `${nat}${oct}`;
+        }
+        return n;
+      };
+
+      const name = normalize(note.note);
+      const frequency = this.noteFrequencies[name];
       if (!frequency) {
-        console.warn('Unknown note:', note.note);
+        console.warn('Unknown note:', note.note, 'normalized to', name);
         return;
       }
 
@@ -137,19 +168,20 @@ export class MelodyPlayer {
       // Create musical envelope (ADSR-like)
       const velocity = note.velocity || 0.3;
       const attackTime = 0.02;
-      const decayTime = duration * 0.3;
+      const decayTime = Math.max(0.02, duration * 0.3);
       const sustainLevel = velocity * 0.7;
-      const releaseTime = duration * 0.1;
+      const releaseTime = Math.min(0.1, Math.max(0.02, duration * 0.1));
 
-      gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(velocity, this.audioContext.currentTime + attackTime);
-      gainNode.gain.linearRampToValueAtTime(sustainLevel, this.audioContext.currentTime + attackTime + decayTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration - releaseTime);
+      const now = this.audioContext.currentTime;
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(velocity, now + attackTime);
+      gainNode.gain.linearRampToValueAtTime(sustainLevel, now + attackTime + decayTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + Math.max(0.05, duration - releaseTime));
 
-      oscillator.start(this.audioContext.currentTime);
-      oscillator.stop(this.audioContext.currentTime + duration);
+      oscillator.start(now);
+      oscillator.stop(now + duration);
 
-      console.log(`🎵 Playing ${note.note} (${frequency.toFixed(1)}Hz) for ${duration.toFixed(2)}s`);
+      console.log(`🎵 Playing ${name} (${frequency.toFixed(1)}Hz) for ${duration.toFixed(2)}s`);
     } catch (error) {
       console.error('Error playing note:', error);
     }
