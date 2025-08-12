@@ -121,7 +121,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       <LayoutDashboard className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-48 bg-background border border-border shadow-lg" align="end">
+                  <DropdownMenuContent className="w-48 bg-background border border-border shadow-lg z-[200]" align="end">
                     <DropdownMenuLabel>Dashboard Views</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     
@@ -142,7 +142,9 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     {/* Executive Board Dashboard - only for executive board members */}
                     {isExecBoardMember && !isAdmin && (
                       <DropdownMenuItem 
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           navigate('/executive-board-dashboard');
                           onViewModeChange?.('admin');
                         }}
