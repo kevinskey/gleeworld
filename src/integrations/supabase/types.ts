@@ -13744,8 +13744,16 @@ export type Database = {
         Args: { budget_id_param: string; created_by_param: string }
         Returns: boolean
       }
+      user_can_manage_class_list_members: {
+        Args: { class_list_id_param: string }
+        Returns: boolean
+      }
       user_can_view_budget: {
         Args: { budget_id_param: string; created_by_param: string }
+        Returns: boolean
+      }
+      user_can_view_class_list: {
+        Args: { class_list_id_param: string }
         Returns: boolean
       }
       user_has_budget_permission: {
