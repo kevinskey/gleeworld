@@ -6,7 +6,7 @@ import { CommunityHubModule } from './modules/CommunityHubModule';
 import DashboardHeroCarousel from '@/components/hero/DashboardHeroCarousel';
 import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Users } from 'lucide-react';
+import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { AuditionsModule } from '@/components/modules/AuditionsModule';
 import { AttendanceModule } from '@/components/modules/AttendanceModule';
@@ -76,17 +76,24 @@ export const UnifiedDashboard = () => {
       </div>
       {/* Row 3: Unified Calendar visible to all logged-in users */}
       <div className="px-6 pb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="font-sans font-semibold tracking-tight text-base sm:text-lg md:text-xl">Glee Calendar</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-controls="glee-calendar"
-            aria-expanded={!calendarCollapsed}
-            onClick={() => setCalendarCollapsed((v) => !v)}
-          >
-            {calendarCollapsed ? 'Expand' : 'Collapse'}
-          </Button>
+        <div className="mb-2">
+          <div className="border-l-4 border-primary pl-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="h-5 w-5 text-primary" />
+                <h2 className="font-sans font-semibold tracking-tight text-base sm:text-lg md:text-xl">Glee Calendar</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-controls="glee-calendar"
+                aria-expanded={!calendarCollapsed}
+                onClick={() => setCalendarCollapsed((v) => !v)}
+              >
+                {calendarCollapsed ? 'Expand' : 'Collapse'}
+              </Button>
+            </div>
+          </div>
         </div>
         {!calendarCollapsed && (
           <Suspense fallback={
