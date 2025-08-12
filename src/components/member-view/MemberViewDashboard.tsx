@@ -101,6 +101,10 @@ export const MemberViewDashboard = () => {
       case 'auditioner':
         return 'Auditioner Dashboard';
       default:
+        // Check for executive board status for members
+        if (user.is_exec_board) {
+          return 'Executive Board Dashboard';
+        }
         return 'Member Dashboard';
     }
   };
