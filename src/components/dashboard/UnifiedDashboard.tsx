@@ -14,6 +14,7 @@ import { MusicLibraryModule } from '@/components/modules/MusicLibraryModule';
 import { TourManagerModule } from '@/components/modules/TourManagerModule';
 import { PRHubModule } from '@/components/modules/PRHubModule';
 import { StudentConductorModule } from '@/components/modules/StudentConductorModule';
+import { TreasurerModule } from '@/components/modules/TreasurerModule';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
 export const UnifiedDashboard = () => {
@@ -107,6 +108,7 @@ export const UnifiedDashboard = () => {
         <MusicLibraryModule user={user} />
         <TourManagerModule user={user} />
         <PRHubModule user={user} />
+        <TreasurerModule user={user} />
         <StudentConductorModule user={user} />
       </div>
 
