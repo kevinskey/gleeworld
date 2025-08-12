@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,9 @@ import SendBucketOfLove from "@/components/buckets-of-love/SendBucketOfLove";
 import { WellnessCheckins } from "@/components/chaplain/WellnessCheckins";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { AuditionStatsWidget } from "@/components/member-view/AuditionStatsWidget";
+
+const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
+
 
 interface MemberDashboardV2Props {
   user: {
@@ -157,7 +160,23 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
           </Card>
         </section>
 
-        {/* Top grid with key modules */}
+{/* Calendar for all members */}
+<section aria-label="Member calendar" className="animate-fade-in">
+  <Suspense fallback={
+    <Card className="glass-dashboard-card">
+      <CardHeader>
+        <CardTitle>Calendar</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="py-6">Loading calendar…</div>
+      </CardContent>
+    </Card>
+  }>
+    <CalendarViewsLazy />
+  </Suspense>
+</section>
+
+{/* Top grid with key modules */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Buckets of Love */}
           <Card className="hover:shadow-md transition-shadow">
