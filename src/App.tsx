@@ -818,7 +818,9 @@ const App = () => {
                                     path="/modules" 
                                     element={
                                       <ProtectedRoute>
-                                        <ModulesDirectory />
+                                        <UniversalLayout>
+                                          <ModulesDirectory />
+                                        </UniversalLayout>
                                       </ProtectedRoute>
                                     } 
                                   />
