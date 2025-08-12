@@ -135,7 +135,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
     }
     if (application) {
       setShowSummary(true);
-      setTimeout(() => summaryRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+      setTimeout(() => summaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
       return;
     }
     setChecking(true);
@@ -150,7 +150,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
       if (data) {
         setApplication(data);
         setShowSummary(true);
-        setTimeout(() => summaryRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+        setTimeout(() => summaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
       } else {
         navigate('/auditions');
       }
@@ -192,7 +192,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
 
       <main className="w-full sm:container mx-auto px-0 sm:px-4 pb-12 space-y-0 sm:space-y-6">
         {showSummary && application && (
-          <section ref={summaryRef} aria-labelledby="your-application" className="animate-fade-in">
+          <section ref={summaryRef} aria-labelledby="your-application" className="animate-fade-in scroll-mt-24 sm:scroll-mt-28">
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
