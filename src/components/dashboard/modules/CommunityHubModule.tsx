@@ -9,12 +9,14 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
 import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
 import PostItGrid from '@/components/buckets-of-love/PostItGrid';
 export const CommunityHubModule = () => {
   const [activeTab, setActiveTab] = useState('announcements');
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const handleTabToggle = (tab: string) => {
     if (isMobile) {
@@ -76,8 +78,8 @@ export const CommunityHubModule = () => {
             </Button>
             <Button
               size="sm"
-              variant={activeTab === 'notifications' ? 'secondary' : 'outline'}
-              onClick={() => handleTabToggle('notifications')}
+              variant="outline"
+              onClick={() => navigate('/notifications/send')}
               className="hover-scale"
             >
               <Bell className="h-4 w-4 mr-1" /> Notifications
