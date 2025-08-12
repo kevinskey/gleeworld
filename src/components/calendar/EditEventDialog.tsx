@@ -54,6 +54,8 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [isAdminLike, setIsAdminLike] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -131,10 +133,24 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
       });
 
       // Set existing image if available
-      setImagePreview(event.image_url || null);
       setImageFile(null);
     }
   }, [event]);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchProfile = async () => {
+      const { data } = await supabase
+        .from('gw_profiles')
+        .select('id, is_admin, is_super_admin, role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      setProfileId(data?.id ?? null);
+      setIsAdminLike(!!(data?.is_admin || data?.is_super_admin || ['admin','super-admin'].includes(data?.role || '')));
+    };
+    fetchProfile();
+  }, [user]);
+
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -248,6 +264,38 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         title: "Error",
         description: "Failed to update event",
         variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!event || !profileId) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('gw_events')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('id', event.id)
+        .eq('created_by', profileId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Event cancelled',
+        description: 'Your event was marked as cancelled.',
+      });
+
+      onOpenChange(false);
+      onEventUpdated();
+    } catch (err) {
+      console.error('Error cancelling event:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to cancel event',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -660,40 +708,69 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-6 border-t gap-3">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button type="button" variant="destructive" size="sm" className="w-full sm:w-auto">
-                  <TrashIcon className="h-4 w-4 mr-2" />
-                  Delete Event
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="flex items-center gap-2">
-                    <AlertTriangleIcon className="h-5 w-5 text-destructive" />
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              {event.created_by === profileId && formData.status !== 'cancelled' && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto text-destructive border-destructive/20 hover:bg-destructive/10">
+                      Mark as Cancelled
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangleIcon className="h-5 w-5 text-destructive" />
+                        Cancel Event
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to mark "{event.title}" as cancelled? Attendees will see this status.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Keep Event</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleCancel} disabled={loading}>
+                        {loading ? 'Cancelling...' : 'Confirm Cancel'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive" size="sm" className="w-full sm:w-auto">
+                    <TrashIcon className="h-4 w-4 mr-2" />
                     Delete Event
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete "{event.title}"? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={handleDelete}
-                    disabled={deleteLoading}
-                    className="bg-destructive hover:bg-destructive/90"
-                  >
-                    {deleteLoading ? "Deleting..." : "Delete Event"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <AlertTriangleIcon className="h-5 w-5 text-destructive" />
+                      Delete Event
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{event.title}"? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDelete}
+                      disabled={deleteLoading}
+                      className="bg-destructive hover:bg-destructive/90"
+                    >
+                      {deleteLoading ? "Deleting..." : "Delete Event"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 <XIcon className="h-4 w-4 mr-2" />
-                Cancel
+                Close
               </Button>
               <Button type="submit" disabled={loading} className="hover-scale w-full sm:w-auto">
                 <SaveIcon className="h-4 w-4 mr-2" />
