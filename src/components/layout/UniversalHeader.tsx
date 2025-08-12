@@ -128,8 +128,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     {/* Admin View - only for actual admins */}
                     {isAdmin && (
                       <DropdownMenuItem 
-                        onClick={() => {
-                          navigate('/dashboard');
+                      onClick={() => {
+                          navigate('/admin');
                           onViewModeChange?.('admin');
                         }}
                         className={`cursor-pointer ${viewMode === 'admin' ? 'bg-accent' : ''}`}
