@@ -236,7 +236,24 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
                   Required Piece: Come Thou Fount — Audition Edition
                 </h2>
               </div>
+
+              {/* Sticky audio player so users can listen while scrolling the score */}
+              <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 px-6 py-3 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/70">
+                <label htmlFor="audition-audio" className="sr-only">Audio player: Come Thou Fount</label>
+                <audio
+                  id="audition-audio"
+                  className="w-full"
+                  controls
+                  preload="none"
+                  src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/service-images/4e6c2ec0-1f83-449a-a984-8920f6056ab5/20250811-899174f9-2d52-4ef7-96b3-87a77127e18e-come-thou-font-of-every-blessing---audition.mp3"
+                  aria-label="Play Come Thou Fount audition track"
+                >
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+
               <PDFViewer pdfUrl={pdfUrl} className="border-0 shadow-none" />
+              <p className="mt-3 text-xs text-muted-foreground">Tip: Press play and scroll the score. Audio continues while you view the PDF.</p>
             </CardContent>
           </Card>
         </section>
