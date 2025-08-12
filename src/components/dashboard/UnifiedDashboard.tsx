@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { MessagesPanel } from './MessagesPanel';
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,6 +7,7 @@ import DashboardHeroCarousel from '@/components/hero/DashboardHeroCarousel';
 import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
 import { ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
   
@@ -66,16 +67,24 @@ export const UnifiedDashboard = () => {
           <CommunityHubModule />
         </div>
       </div>
-
-
-        {/* Messages Panel Overlay */}
-        {showMessages && (
-          <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-10">
-            <MessagesPanel onClose={() => setShowMessages(false)} />
+      {/* Row 3: Unified Calendar visible to all logged-in users */}
+      <div className="px-6 pb-6">
+        <Suspense fallback={
+          <div className="border border-border rounded-xl bg-background/60 p-4">
+            Loading calendar…
           </div>
-        )}
-
-        
+        }>
+          <CalendarViewsLazy />
+        </Suspense>
       </div>
+
+      {/* Messages Panel Overlay */}
+      {showMessages && (
+        <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-10">
+          <MessagesPanel onClose={() => setShowMessages(false)} />
+        </div>
+      )}
+
+    </div>
   );
 };
