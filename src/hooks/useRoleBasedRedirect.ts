@@ -86,32 +86,6 @@ export const useRoleBasedRedirect = () => {
       const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
       const isPostLogin = redirectAfterAuth !== null || location.pathname === '/auth';
       
-      // PRIORITY 1: Admin/Super Admin (direct check)
-      const isAdmin = userProfile.is_admin || userProfile.is_super_admin || 
-                     userProfile.role === 'admin' || userProfile.role === 'super-admin';
-      
-      console.log('🔍 Admin check details:', {
-        is_admin: userProfile.is_admin,
-        is_super_admin: userProfile.is_super_admin,
-        role: userProfile.role,
-        isAdmin,
-        isPostLogin,
-        redirectAfterAuth,
-        currentPath: location.pathname,
-        fullProfile: userProfile
-      });
-      
-      if (isAdmin) {
-        // Redirect admins when coming from login OR when on root page
-        if (isPostLogin || isOnRootPage) {
-          console.log('🚀 useRoleBasedRedirect: Admin redirect to /admin');
-          navigate('/admin', { replace: true });
-          return;
-        }
-        console.log('🏠 useRoleBasedRedirect: Admin on non-root public page, staying put');
-        return;
-      }
-      
       // For public pages other than root, don't auto-redirect unless coming from auth
       if (!isPostLogin) {
         if (!isOnRootPage) {
@@ -120,6 +94,13 @@ export const useRoleBasedRedirect = () => {
         } else {
           console.log('🚀 useRoleBasedRedirect: Authenticated user on root, redirecting to role-based home');
         }
+      }
+
+      // PRIORITY 1: Super Admin -> Admin Panel
+      if (userProfile.is_super_admin || userProfile.role === 'super-admin') {
+        console.log('🚀 useRoleBasedRedirect: Super Admin redirect to /admin');
+        navigate('/admin', { replace: true });
+        return;
       }
 
       // PRIORITY 2: Alumna
@@ -136,15 +117,17 @@ export const useRoleBasedRedirect = () => {
         return;
       }
       
-      // PRIORITY 4: Members -> simplified Member Dashboard; Exec Board -> keep dashboard
-      if (userProfile.role === 'member' && !userProfile.is_exec_board) {
-        console.log('👤 useRoleBasedRedirect: Member redirect to member-view dashboard');
-        navigate(`/dashboard/member-view/${user.id}`, { replace: true });
+      // PRIORITY 4: Executive Board -> dedicated executive dashboard
+      if (userProfile.is_exec_board) {
+        console.log('👑 useRoleBasedRedirect: Executive Board redirect to /executive-board-dashboard');
+        navigate('/executive-board-dashboard', { replace: true });
         return;
       }
-      if (userProfile.is_exec_board) {
-        console.log('👤 useRoleBasedRedirect: Executive Board redirect to /dashboard');
-        navigate('/dashboard', { replace: true });
+      
+      // PRIORITY 5: Regular Members -> simplified Member Dashboard
+      if (userProfile.role === 'member') {
+        console.log('👤 useRoleBasedRedirect: Member redirect to member-view dashboard');
+        navigate(`/dashboard/member-view/${user.id}`, { replace: true });
         return;
       }
       
