@@ -148,10 +148,16 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
   }, [user?.id]);
 
   const orderedModules = useMemo(() => {
-    if (!moduleOrder?.length) return availableModules;
+    if (!moduleOrder?.length) {
+      return [...availableModules].sort((a, b) =>
+        a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+      );
+    }
     const map = new Map(availableModules.map(m => [m.id, m]));
     const ordered = moduleOrder.map(id => map.get(id)).filter(Boolean) as typeof availableModules;
-    const rest = availableModules.filter(m => !moduleOrder.includes(m.id));
+    const rest = availableModules
+      .filter(m => !moduleOrder.includes(m.id))
+      .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }));
     return [...ordered, ...rest];
   }, [availableModules, moduleOrder]);
 
