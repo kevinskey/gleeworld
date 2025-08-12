@@ -648,8 +648,9 @@ export const KaraokeModule: React.FC = () => {
       return;
     }
     setMixing(true);
+    let ctx: AudioContext | null = null;
     try {
-      const ctx = new AudioContext();
+      ctx = new AudioContext();
       const micBlob = mixSourceBlob || recordedBlob;
 
       // Decode mic first (must succeed)
@@ -677,7 +678,14 @@ export const KaraokeModule: React.FC = () => {
 
       // Use mono offline context for simpler MP3 encode
       const sampleRate = 44100;
-      const duration = trackBuf ? Math.max(trackBuf.duration, micBuf.duration) : micBuf.duration;
+      // Render only as long as the mic recording to avoid huge offline buffers
+      const duration = micBuf.duration;
+      console.log('[Karaoke] Mix params', {
+        micDuration: micBuf.duration,
+        trackDuration: trackBuf?.duration ?? null,
+        sampleRate,
+        frames: Math.ceil(duration * sampleRate),
+      });
       const length = Math.ceil(duration * sampleRate);
       const offline = new OfflineAudioContext(1, length, sampleRate);
 
@@ -702,7 +710,7 @@ export const KaraokeModule: React.FC = () => {
       // Track source + gain (optional)
       if (trackBuf) {
         const trackSource = offline.createBufferSource();
-        const trackMono = offline.createBuffer(1, Math.floor(trackBuf.duration * sampleRate), sampleRate);
+        const trackMono = offline.createBuffer(1, Math.floor(duration * sampleRate), sampleRate);
         const tmpTrack = trackBuf.numberOfChannels > 1
           ? (() => {
               const chL = trackBuf.getChannelData(0);
@@ -730,6 +738,7 @@ export const KaraokeModule: React.FC = () => {
       console.error('Mix error', e);
       toast("Mixing failed. Your browser may not support decoding this audio.");
     } finally {
+      try { await ctx?.close(); } catch {}
       setMixing(false);
     }
   };
