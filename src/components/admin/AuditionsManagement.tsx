@@ -36,6 +36,8 @@ import {
 import { MobileScoreWindow } from "@/components/scoring/MobileScoreWindow";
 import { SightReadingScoreWindow } from "@/components/scoring/SightReadingScoreWindow";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useUsernamePermissions } from "@/hooks/useUsernamePermissions";
+import { useAuth } from "@/contexts/AuthContext";
 import { AuditionFilters } from "@/components/audition/AuditionFilters";
 import { PageHeader } from "@/components/shared/PageHeader";
 
@@ -134,7 +136,9 @@ interface AuditionAnalytics {
 
 export const AuditionsManagement = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const { isSuperAdmin } = useUserRole();
+  const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
   const [activeTab, setActiveTab] = useState("overview");
   const [sessions, setSessions] = useState<AuditionSession[]>([]);
   const [applications, setApplications] = useState<AuditionApplication[]>([]);
@@ -178,9 +182,38 @@ export const AuditionsManagement = () => {
   // State for collapsible sections
   const [isCreateSessionExpanded, setIsCreateSessionExpanded] = useState(false);
 
+  // Check if user has access to auditions
+  const hasAuditionsAccess = isSuperAdmin() || usernamePermissions.includes('auditions');
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (hasAuditionsAccess && !permissionsLoading) {
+      fetchData();
+    }
+  }, [hasAuditionsAccess, permissionsLoading]);
+
+
+  // Show access denied if user doesn't have permissions
+  if (permissionsLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-muted-foreground">Loading permissions...</div>
+      </div>
+    );
+  }
+
+  if (!hasAuditionsAccess) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
+          <p className="text-muted-foreground">
+            You don't have permission to access audition management.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const fetchData = async () => {
     try {
@@ -419,10 +452,10 @@ export const AuditionsManagement = () => {
   };
 
   const deleteApplication = async (application: AuditionApplication) => {
-    if (!isSuperAdmin()) {
+    if (!hasAuditionsAccess) {
       toast({
         title: "Access Denied",
-        description: "Only super admins can delete applications",
+        description: "You don't have permission to delete applications",
         variant: "destructive",
       });
       return;
