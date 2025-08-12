@@ -17,7 +17,7 @@ export const CongratulationsDialog: React.FC<CongratulationsDialogProps> = ({
 
   const handleContinue = () => {
     onOpenChange(false);
-    navigate("/dashboard/auditioner");
+    navigate("/auditioner");
   };
 
   return (

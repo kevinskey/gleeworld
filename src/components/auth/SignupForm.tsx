@@ -55,7 +55,7 @@ export const SignupForm = () => {
         throw new Error("Signup failed - please try again");
       }
       // Persist intended redirect for post-auth
-      try { sessionStorage.setItem('redirectAfterAuth', '/dashboard/auditioner'); } catch {}
+      try { sessionStorage.setItem('redirectAfterAuth', '/auditioner'); } catch {}
       setSuccess(true);
     } catch (error: any) {
       setError(error.message || "An error occurred during sign up");
@@ -72,7 +72,7 @@ export const SignupForm = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard/auditioner`,
+          redirectTo: `${window.location.origin}/auditioner`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent'
@@ -95,7 +95,7 @@ export const SignupForm = () => {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email,
-        options: { emailRedirectTo: `${window.location.origin}/dashboard/auditioner` }
+        options: { emailRedirectTo: `${window.location.origin}/auditioner` }
       });
       if (error) throw error;
       setResendMessage('Verification email resent. Please check your inbox.');
@@ -130,8 +130,8 @@ export const SignupForm = () => {
             type="button"
             variant="outline"
             onClick={() => {
-              try { sessionStorage.setItem('redirectAfterAuth', '/dashboard/auditioner'); } catch {}
-              window.location.href = '/dashboard/auditioner';
+              try { sessionStorage.setItem('redirectAfterAuth', '/auditioner'); } catch {}
+              window.location.href = '/auditioner';
             }}
           >
             Go to Auditioner Dashboard

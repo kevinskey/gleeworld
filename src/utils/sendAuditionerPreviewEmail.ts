@@ -26,7 +26,7 @@ export async function sendAuditionEmail(userData: {
     }
 
     const origin = window.location.origin;
-    const auditionerLink = `${origin}/dashboard/auditioner`;
+    const auditionerLink = `${origin}/auditioner`;
     const logoUrl = `${origin}/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png`;
 
     const subject = `Spelman College Glee Club Audition – Welcome ${userData.firstName}!`;

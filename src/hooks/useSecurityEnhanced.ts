@@ -155,7 +155,7 @@ export const useSecurityEnhanced = () => {
         email: sanitizedEmail,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard/auditioner`,
+          emailRedirectTo: `${window.location.origin}/auditioner`,
           data: {
             full_name: sanitizedFullName,
             role: role,
