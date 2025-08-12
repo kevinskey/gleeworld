@@ -12,6 +12,8 @@ interface MemberModulesProps {
     email: string;
     full_name: string;
     role: string;
+    exec_board_role?: string;
+    is_exec_board?: boolean;
     is_admin?: boolean;
     is_super_admin?: boolean;
   };
@@ -20,9 +22,10 @@ interface MemberModulesProps {
 export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
-  // Use unified modules with role-based filtering (no executive position)
+  // Use unified modules with role-based filtering and executive position
   const { modules: availableModules, loading, getAccessibleModules } = useUnifiedModules({
     userRole: user.role,
+    execPosition: user.exec_board_role,
     isAdmin: user.is_admin || user.is_super_admin,
   });
 
