@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { standardizeModuleName } from '@/utils/moduleHelpers';
 import { toast } from 'sonner';
 
 interface PermissionMap {
@@ -65,7 +66,7 @@ export const RoleModuleMatrix: React.FC = () => {
   const enablePermission = async (moduleName: string, permission: 'view' | 'manage') => {
     const payload = {
       role,
-      module_name: moduleName,
+      module_name: standardizeModuleName(moduleName),
       permission_type: permission,
       is_active: true,
     } as const;
@@ -82,7 +83,7 @@ export const RoleModuleMatrix: React.FC = () => {
       .from('gw_role_module_permissions')
       .delete()
       .eq('role', role)
-      .eq('module_name', moduleName)
+      .eq('module_name', standardizeModuleName(moduleName))
       .eq('permission_type', permission);
 
     if (error) throw error;

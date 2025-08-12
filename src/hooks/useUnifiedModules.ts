@@ -1,190 +1,163 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { 
-  UnifiedModule, 
-  ModuleWithPermissions, 
-  ModulePermission,
-  ModuleFilterOptions 
-} from '@/types/unified-modules';
-import { 
-  UNIFIED_MODULES, 
-  UNIFIED_MODULE_CATEGORIES,
-  getUnifiedModuleById,
-  getUnifiedModuleByName,
-  getUnifiedCategoryById 
-} from '@/config/unified-modules';
+  standardizeModuleName, 
+  getModuleDisplayName,
+  type StandardModuleName 
+} from '@/utils/moduleHelpers';
+
+export interface UnifiedModule {
+  id: string;
+  name: StandardModuleName | string;
+  title: string;
+  description: string;
+  category: string;
+  permissions: {
+    canAccess: boolean;
+    canManage: boolean;
+    source: 'role' | 'individual' | 'executive' | 'none';
+  };
+  // Legacy properties for compatibility
+  hasPermission?: (type: string) => boolean;
+  canAccess?: boolean;
+  canManage?: boolean;
+  component?: any;
+  icon?: any;
+}
+
+export interface ModuleFilterOptions {
+  userRole?: string;
+  execPosition?: string;
+  isAdmin?: boolean;
+  category?: string;
+  showInactive?: boolean;
+}
 
 interface UseUnifiedModulesReturn {
-  modules: ModuleWithPermissions[];
-  categories: typeof UNIFIED_MODULE_CATEGORIES;
+  modules: UnifiedModule[];
+  categories: string[];
   loading: boolean;
   error: string | null;
-  getModuleById: (id: string) => ModuleWithPermissions | null;
-  getModulesByCategory: (categoryId: string) => ModuleWithPermissions[];
-  getAccessibleModules: () => ModuleWithPermissions[];
-  getManageableModules: () => ModuleWithPermissions[];
+  getModuleById: (id: string) => UnifiedModule | undefined;
+  getModulesByCategory: (category: string) => UnifiedModule[];
+  getAccessibleModules: () => UnifiedModule[];
+  getManageableModules: () => UnifiedModule[];
   refetch: () => Promise<void>;
 }
 
 export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifiedModulesReturn => {
-  const [modules, setModules] = useState<ModuleWithPermissions[]>([]);
+  const [modules, setModules] = useState<UnifiedModule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const fetchModulePermissions = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Get all base modules
-      let filteredModules = [...UNIFIED_MODULES];
+      // Fetch base modules from database
+      const { data: moduleData, error: moduleError } = await supabase
+        .from('gw_modules')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
 
-      // Apply basic filters
-      if (filterOptions?.category) {
-        filteredModules = filteredModules.filter(m => m.category === filterOptions.category);
-      }
-      
-      if (!filterOptions?.showInactive) {
-        filteredModules = filteredModules.filter(m => m.isActive);
-      }
+      if (moduleError) throw moduleError;
 
-      // If no user context, return modules without permissions
-      if (!filterOptions?.userRole && !filterOptions?.execPosition && !filterOptions?.isAdmin) {
-        const modulesWithPerms = filteredModules.map(module => ({
-          ...module,
+      // Convert to UnifiedModule format with standardized names and legacy compatibility
+      let modulesWithPerms: UnifiedModule[] = (moduleData || []).map(module => {
+        const baseModule: UnifiedModule = {
+          id: module.name,
+          name: standardizeModuleName(module.name),
+          title: getModuleDisplayName(module.name),
+          description: module.description || '',
+          category: module.category || 'general',
+          permissions: {
+            canAccess: false,
+            canManage: false,
+            source: 'none'
+          },
+          // Legacy compatibility properties
+          hasPermission: (type: string) => {
+            if (type === 'view' || type === 'access') return baseModule.permissions.canAccess;
+            if (type === 'manage') return baseModule.permissions.canManage;
+            return false;
+          },
           canAccess: false,
-          canManage: false,
-          hasPermission: false
-        }));
+          canManage: false
+        };
+        return baseModule;
+      });
+
+      // Apply category filter
+      if (filterOptions?.category) {
+        modulesWithPerms = modulesWithPerms.filter(m => m.category === filterOptions.category);
+      }
+
+      // If no user-specific filters, return base modules
+      if (!filterOptions?.userRole && !filterOptions?.execPosition && !filterOptions?.isAdmin) {
         setModules(modulesWithPerms);
         return;
       }
 
-      // Fetch permissions from database for executive positions and roles
-      let dbPermissions: ModulePermission[] = [];
-      
-      // 1) Executive position-derived permissions
-      if (filterOptions?.execPosition) {
-        try {
-          const { data: positionFunctions, error: positionError } = await supabase
-            .from('gw_executive_position_functions')
-            .select(`
-              can_access,
-              can_manage,
-              function:gw_app_functions!inner(name, module)
-            `)
-            .eq('position', filterOptions.execPosition as any);
-
-          if (positionError) throw positionError;
-
-          // Map database permissions to our format
-          dbPermissions = (positionFunctions?.map(pf => ({
-            moduleId: pf.function?.module || pf.function?.name || '',
-            canAccess: pf.can_access || false,
-            canManage: pf.can_manage || false,
-            source: 'executive_position' as const
-          })) || []);
-        } catch (err) {
-          console.error('Error fetching position permissions:', err);
-        }
-      }
-
-      // 2) Role-based permissions (RoleModuleMatrix is source of truth)
+      // Fetch user permissions from role-based system
       if (filterOptions?.userRole) {
-        try {
-          const { data: rolePerms, error: rolePermsError } = await supabase
-            .from('gw_role_module_permissions')
-            .select('module_name, permission_type, is_active')
-            .eq('role', filterOptions.userRole)
-            .eq('is_active', true);
+        const { data: rolePermissions, error: roleError } = await supabase
+          .from('gw_role_module_permissions')
+          .select('module_name, permission_type')
+          .eq('role', filterOptions.userRole)
+          .eq('is_active', true);
 
-          if (rolePermsError) throw rolePermsError;
+        if (roleError) throw roleError;
 
-          (rolePerms || []).forEach(row => {
-            const moduleKey = row.module_name;
-            const existing = dbPermissions.find(p => p.moduleId === moduleKey);
-            const addView = row.permission_type === 'view';
-            const addManage = row.permission_type === 'manage';
-            if (existing) {
-              existing.canAccess = existing.canAccess || addView || addManage;
-              existing.canManage = existing.canManage || addManage;
-              // Keep existing.source untouched
-            } else {
-              dbPermissions.push({
-                moduleId: moduleKey,
-                canAccess: addView || addManage,
-                canManage: addManage,
-                source: 'role'
-              });
+        // Apply role permissions
+        modulesWithPerms = modulesWithPerms.map(module => {
+          const rolePerms = rolePermissions?.filter(p => 
+            standardizeModuleName(p.module_name) === module.name
+          ) || [];
+          
+          const hasViewPerm = rolePerms.some(p => p.permission_type === 'view');
+          const hasManagePerm = rolePerms.some(p => p.permission_type === 'manage');
+
+          return {
+            ...module,
+            permissions: {
+              canAccess: hasViewPerm || hasManagePerm,
+              canManage: hasManagePerm,
+              source: hasViewPerm || hasManagePerm ? 'role' : 'none'
+            },
+            // Update legacy properties for compatibility
+            canAccess: hasViewPerm || hasManagePerm,
+            canManage: hasManagePerm,
+            hasPermission: (type: string) => {
+              if (type === 'view' || type === 'access') return hasViewPerm || hasManagePerm;
+              if (type === 'manage') return hasManagePerm;
+              return false;
             }
-          });
-        } catch (err) {
-          console.error('Error fetching role permissions:', err);
-        }
+          };
+        });
       }
 
-      // Apply permissions to modules
-      const modulesWithPermissions = filteredModules.map(module => {
-        let canAccess = false;
-        let canManage = false;
-
-        // Admin override
-        if (filterOptions?.isAdmin) {
-          canAccess = true;
-          canManage = true;
-        } else {
-          // Check database permissions by module name or dbFunctionName
-          const dbPerm = dbPermissions.find(p => 
-            p.moduleId === module.name || 
-            p.moduleId === module.dbFunctionName ||
-            p.moduleId === module.id
-          );
-          
-          if (dbPerm) {
-            canAccess = dbPerm.canAccess;
-            canManage = dbPerm.canManage;
-          }
-
-          // Check role-based restrictions
-          if (module.requiredRoles && filterOptions?.userRole) {
-            const hasRequiredRole = module.requiredRoles.includes(filterOptions.userRole);
-            if (!hasRequiredRole) {
-              canAccess = false;
-              canManage = false;
-            }
-          }
-
-          // Check executive position restrictions
-          if (module.requiredExecPositions && filterOptions?.execPosition) {
-            const hasRequiredExecPosition = module.requiredExecPositions.includes(filterOptions.execPosition);
-            if (!hasRequiredExecPosition) {
-              canAccess = false;
-              canManage = false;
-            }
-          }
-        }
-
-        return {
+      // Admin override
+      if (filterOptions?.isAdmin) {
+        modulesWithPerms = modulesWithPerms.map(module => ({
           ...module,
-          canAccess,
-          canManage,
-          hasPermission: canAccess || canManage
-        };
-      });
+          permissions: {
+            canAccess: true,
+            canManage: true,
+            source: 'role'
+          },
+          // Update legacy properties for compatibility
+          canAccess: true,
+          canManage: true,
+          hasPermission: () => true
+        }));
+      }
 
-
-      setModules(modulesWithPermissions);
-
-    } catch (err: any) {
+      setModules(modulesWithPerms);
+    } catch (err) {
       console.error('Error fetching module permissions:', err);
-      setError(err.message);
-      toast({
-        title: "Error",
-        description: "Failed to load modules",
-        variant: "destructive",
-      });
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
@@ -192,33 +165,29 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
 
   useEffect(() => {
     fetchModulePermissions();
-  }, [
-    filterOptions?.category,
-    filterOptions?.userRole,
-    filterOptions?.execPosition,
-    filterOptions?.isAdmin,
-    filterOptions?.showInactive
-  ]);
+  }, [filterOptions?.userRole, filterOptions?.execPosition, filterOptions?.isAdmin, filterOptions?.category]);
 
-  const getModuleById = (id: string): ModuleWithPermissions | null => {
-    return modules.find(m => m.id === id) || null;
+  const getModuleById = (id: string) => {
+    return modules.find(m => m.id === id || m.name === id);
   };
 
-  const getModulesByCategory = (categoryId: string): ModuleWithPermissions[] => {
-    return modules.filter(m => m.category === categoryId);
+  const getModulesByCategory = (category: string) => {
+    return modules.filter(m => m.category === category);
   };
 
-  const getAccessibleModules = (): ModuleWithPermissions[] => {
-    return modules.filter(m => m.canAccess);
+  const getAccessibleModules = () => {
+    return modules.filter(m => m.permissions.canAccess);
   };
 
-  const getManageableModules = (): ModuleWithPermissions[] => {
-    return modules.filter(m => m.canManage);
+  const getManageableModules = () => {
+    return modules.filter(m => m.permissions.canManage);
   };
+
+  const categories = [...new Set(modules.map(m => m.category))];
 
   return {
     modules,
-    categories: UNIFIED_MODULE_CATEGORIES,
+    categories,
     loading,
     error,
     getModuleById,
@@ -229,13 +198,44 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
   };
 };
 
-// Hook for simple module access without permissions
 export const useUnifiedModulesSimple = () => {
-  return {
-    modules: UNIFIED_MODULES,
-    categories: UNIFIED_MODULE_CATEGORIES,
-    getModuleById: getUnifiedModuleById,
-    getModuleByName: getUnifiedModuleByName,
-    getCategoryById: getUnifiedCategoryById
-  };
+  const [modules, setModules] = useState<UnifiedModule[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('gw_modules')
+          .select('*')
+          .eq('is_active', true)
+          .order('name');
+
+        if (error) throw error;
+
+        const moduleList: UnifiedModule[] = (data || []).map(module => ({
+          id: module.name,
+          name: standardizeModuleName(module.name),
+          title: getModuleDisplayName(module.name),
+          description: module.description || '',
+          category: module.category || 'general',
+          permissions: {
+            canAccess: false,
+            canManage: false,
+            source: 'none'
+          }
+        }));
+
+        setModules(moduleList);
+      } catch (err) {
+        console.error('Error fetching modules:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchModules();
+  }, []);
+
+  return { modules, loading };
 };
