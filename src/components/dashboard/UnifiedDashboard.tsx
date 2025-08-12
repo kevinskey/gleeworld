@@ -14,6 +14,12 @@ export const UnifiedDashboard = () => {
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const location = useLocation();
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const moduleId = params.get('module');
+    setActiveModuleId(moduleId ? moduleId : null);
+  }, [location.search]);
+
   // Debug logging
   console.log('🎯 UnifiedDashboard rendering:', {
     user: !!user,
