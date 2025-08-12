@@ -12,7 +12,10 @@ import { AuditionsModule } from '@/components/modules/AuditionsModule';
 import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { MusicLibraryModule } from '@/components/modules/MusicLibraryModule';
 import { TourManagerModule } from '@/components/modules/TourManagerModule';
+import { PRHubModule } from '@/components/modules/PRHubModule';
+import { StudentConductorModule } from '@/components/modules/StudentConductorModule';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
+
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
   
@@ -33,8 +36,6 @@ export const UnifiedDashboard = () => {
     userEmail: user?.email,
     timestamp: new Date().toISOString()
   });
-
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
@@ -105,6 +106,8 @@ export const UnifiedDashboard = () => {
         <AttendanceModule user={user} />
         <MusicLibraryModule user={user} />
         <TourManagerModule user={user} />
+        <PRHubModule user={user} />
+        <StudentConductorModule user={user} />
       </div>
 
       {/* Messages Panel Overlay */}
