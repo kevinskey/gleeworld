@@ -310,27 +310,19 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
           return;
         }
 
-        const restStart = formData.no_sing_rest_date_start ? new Date(formData.no_sing_rest_date_start) : null;
-        const restEnd = formData.no_sing_rest_date_end ? new Date(formData.no_sing_rest_date_end) : null;
-
         const eventData = {
           title: formData.title.trim(),
           event_type: formData.event_type,
           start_date: start.toISOString(),
           end_date: end ? end.toISOString() : null,
           location: formData.location || null,
-          is_travel_involved: formData.is_travel_involved,
-          no_sing_rest_required: formData.no_sing_rest_required,
-          no_sing_rest_date_start: restStart ? restStart.toISOString() : null,
-          no_sing_rest_date_end: restEnd ? restEnd.toISOString() : null,
           description: formData.brief_description || null,
           registration_required: formData.approval_needed,
           calendar_id: formData.calendar_id,
-          created_by: profile?.id || user.id,
+          created_by: profile?.id ?? null,
           is_public: true,
           status: 'scheduled'
         };
-
         const { data: eventResult, error } = await supabase
           .from('gw_events')
           .insert([eventData])
