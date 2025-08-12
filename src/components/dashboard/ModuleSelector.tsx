@@ -138,6 +138,7 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
               <div className="space-y-2">
                 {modules
                   .filter(module => module.category === category)
+                  .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
                   .map((module) => {
                     const Icon = module.icon;
                     const isSelected = selectedModule === module.id;
