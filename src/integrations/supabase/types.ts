@@ -13335,6 +13335,12 @@ export type Database = {
           created_by: string
         }[]
       }
+      get_booked_audition_slots: {
+        Args: { p_start: string; p_end: string }
+        Returns: {
+          audition_time_slot: string
+        }[]
+      }
       get_current_user_admin_status: {
         Args: Record<PropertyKey, never>
         Returns: boolean

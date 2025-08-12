@@ -96,12 +96,12 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
 
         const auditionBlock = matchingBlocks[0];
         
-        // Get existing audition appointments for this date
+        // Get existing audition appointments for this date via secure RPC (bypasses RLS safely)
         const { data: existingAppointments, error: appointmentError } = await supabase
-          .from('audition_applications')
-          .select('audition_time_slot')
-          .gte('audition_time_slot', startOfDay(selectedDate).toISOString())
-          .lte('audition_time_slot', endOfDay(selectedDate).toISOString());
+          .rpc('get_booked_audition_slots', {
+            p_start: startOfDay(selectedDate).toISOString(),
+            p_end: endOfDay(selectedDate).toISOString(),
+          });
 
         if (appointmentError) throw appointmentError;
 
