@@ -250,8 +250,14 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-
+    if (!user) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to create an event.',
+        variant: 'destructive',
+      });
+      return;
+    }
     // Permission checks
     if (requiresBudget && !isExecBoardMember) {
       toast({
@@ -280,16 +286,43 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
         });
       } else {
         // Handle single event
+        // Basic validation
+        if (!formData.title.trim() || !formData.event_date_start || !formData.calendar_id) {
+          toast({
+            title: 'Missing required fields',
+            description: 'Please fill Title, Start Date, and Calendar.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+
+        const start = new Date(formData.event_date_start);
+        const end = formData.event_date_end ? new Date(formData.event_date_end) : null;
+        if (isNaN(start.getTime())) {
+          toast({ title: 'Invalid start date', description: 'Please choose a valid start date/time.', variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
+        if (end && isNaN(end.getTime())) {
+          toast({ title: 'Invalid end date', description: 'Please choose a valid end date/time or leave blank.', variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
+
+        const restStart = formData.no_sing_rest_date_start ? new Date(formData.no_sing_rest_date_start) : null;
+        const restEnd = formData.no_sing_rest_date_end ? new Date(formData.no_sing_rest_date_end) : null;
+
         const eventData = {
-          title: formData.title,
+          title: formData.title.trim(),
           event_type: formData.event_type,
-          start_date: formData.event_date_start,
-          end_date: formData.event_date_end || null,
+          start_date: start.toISOString(),
+          end_date: end ? end.toISOString() : null,
           location: formData.location || null,
           is_travel_involved: formData.is_travel_involved,
           no_sing_rest_required: formData.no_sing_rest_required,
-          no_sing_rest_date_start: formData.no_sing_rest_date_start || null,
-          no_sing_rest_date_end: formData.no_sing_rest_date_end || null,
+          no_sing_rest_date_start: restStart ? restStart.toISOString() : null,
+          no_sing_rest_date_end: restEnd ? restEnd.toISOString() : null,
           description: formData.brief_description || null,
           registration_required: formData.approval_needed,
           calendar_id: formData.calendar_id,
@@ -357,10 +390,14 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
       
     } catch (err) {
       console.error('Error creating event:', err);
+      const message = (err as any)?.message || (typeof err === 'string' ? err : 'Failed to create event');
+      const hint = typeof message === 'string' && message.toLowerCase().includes('row-level security')
+        ? ' You may not have permission for the selected calendar.'
+        : '';
       toast({
-        title: "Error",
-        description: "Failed to create event",
-        variant: "destructive",
+        title: 'Error creating event',
+        description: `${message}${hint}`,
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
