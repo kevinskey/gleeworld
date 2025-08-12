@@ -94,6 +94,7 @@ import BookingRequest from "./pages/BookingRequest";
 import Wardrobe from "./pages/Wardrobe";
 import { ProductManagement } from "./pages/ProductManagement";
 import PRHubPage from "./pages/PRHubPage";
+import ModulesDirectory from "./pages/ModulesDirectory";
 const SharedAnnotation = lazy(() => import("./pages/SharedAnnotation").then(m => ({ default: m.SharedAnnotation })));
 import MobileScoring from "./pages/MobileScoring";
 import MemberDirectory from "./pages/MemberDirectory";
@@ -820,6 +821,14 @@ const App = () => {
                                     </ProtectedRoute>
                                   } 
                                 />
+                                  <Route 
+                                    path="/modules" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <ModulesDirectory />
+                                      </ProtectedRoute>
+                                    } 
+                                  />
                                   <Route 
                                     path="/pr-hub" 
                                     element={

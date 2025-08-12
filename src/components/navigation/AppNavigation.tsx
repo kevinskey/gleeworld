@@ -18,7 +18,8 @@ import {
   CalendarDays,
   Music,
   ShoppingCart,
-  ShoppingBag
+  ShoppingBag,
+  LayoutDashboard
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/constants/permissions";
@@ -70,6 +71,12 @@ export const AppNavigation = () => {
       label: "Event Planner",
       href: "/event-planner",
       icon: CalendarDays,
+      permission: null
+    },
+    {
+      label: "Modules",
+      href: "/modules",
+      icon: LayoutDashboard,
       permission: null
     },
   ];
