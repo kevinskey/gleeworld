@@ -66,7 +66,7 @@ export const ModuleWrapper = ({
             {Icon && <Icon className={`h-5 w-5 text-${iconColor}-600`} />}
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold">{title}</h2>
+                <h2 className="font-sans font-semibold tracking-tight text-base sm:text-lg md:text-xl">{title}</h2>
                 {isNew && <Badge variant="secondary" className="text-xs">New</Badge>}
               </div>
               {description && (
