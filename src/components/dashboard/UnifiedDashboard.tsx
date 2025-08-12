@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CommunityHubModule } from './modules/CommunityHubModule';
 import DashboardHeroCarousel from '@/components/hero/DashboardHeroCarousel';
 import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
+import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
@@ -13,6 +14,7 @@ export const UnifiedDashboard = () => {
   
   const [showMessages, setShowMessages] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
+  const [calendarCollapsed, setCalendarCollapsed] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
@@ -48,16 +50,15 @@ export const UnifiedDashboard = () => {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="w-4 h-4" /> Community Hub
           </div>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             aria-controls="community-hub"
             aria-expanded={!activeModuleId}
             onClick={() => setActiveModuleId((prev) => (prev ? null : 'collapsed-toggle'))}
-            className="inline-flex items-center gap-1 text-sm px-2 py-1 rounded-md border border-border hover:bg-muted/50"
           >
-            {activeModuleId ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
             {activeModuleId ? 'Expand' : 'Collapse'}
-          </button>
+          </Button>
         </div>
         <div
           id="community-hub"
@@ -69,13 +70,29 @@ export const UnifiedDashboard = () => {
       </div>
       {/* Row 3: Unified Calendar visible to all logged-in users */}
       <div className="px-6 pb-6">
-        <Suspense fallback={
-          <div className="border border-border rounded-xl bg-background/60 p-4">
-            Loading calendar…
-          </div>
-        }>
-          <CalendarViewsLazy />
-        </Suspense>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-medium">Glee Calendar</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-controls="glee-calendar"
+            aria-expanded={!calendarCollapsed}
+            onClick={() => setCalendarCollapsed((v) => !v)}
+          >
+            {calendarCollapsed ? 'Expand' : 'Collapse'}
+          </Button>
+        </div>
+        {!calendarCollapsed && (
+          <Suspense fallback={
+            <div className="border border-border rounded-xl bg-background/60 p-4">
+              Loading calendar…
+            </div>
+          }>
+            <div id="glee-calendar">
+              <CalendarViewsLazy />
+            </div>
+          </Suspense>
+        )}
       </div>
 
       {/* Messages Panel Overlay */}

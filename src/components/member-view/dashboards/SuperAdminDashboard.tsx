@@ -102,6 +102,8 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
     recentActions: []
   });
 
+  const [calendarCollapsed, setCalendarCollapsed] = useState(true);
+
   useEffect(() => {
     const fetchSuperAdminData = async () => {
       try {
@@ -394,20 +396,36 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
           <CommunityHubWidget />
           <AnnouncementsEventsSection upcomingEvents={formattedUpcomingEvents} />
         </div>
-        {/* Unified Calendar for Super Admins */}
+        {/* Unified Calendar for Super Admins (collapsed by default) */}
         <div className="mt-6">
-          <Suspense fallback={
-            <Card className="glass-dashboard-card">
-              <CardHeader>
-                <CardTitle>Calendar</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="py-6">Loading calendar…</div>
-              </CardContent>
-            </Card>
-          }>
-            <CalendarViewsLazy />
-          </Suspense>
+          <div className="flex items-center justify-between mb-2">
+            <CardTitle className="text-base">Glee Calendar</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-controls="superadmin-glee-calendar"
+              aria-expanded={!calendarCollapsed}
+              onClick={() => setCalendarCollapsed((v) => !v)}
+            >
+              {calendarCollapsed ? 'Expand' : 'Collapse'}
+            </Button>
+          </div>
+          {!calendarCollapsed && (
+            <Suspense fallback={
+              <Card className="glass-dashboard-card">
+                <CardHeader>
+                  <CardTitle>Glee Calendar</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="py-6">Loading calendar…</div>
+                </CardContent>
+              </Card>
+            }>
+              <div id="superadmin-glee-calendar">
+                <CalendarViewsLazy />
+              </div>
+            </Suspense>
+          )}
         </div>
       </div>
     </div>

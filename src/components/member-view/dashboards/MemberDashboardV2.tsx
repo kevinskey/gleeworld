@@ -50,6 +50,7 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
   const [mError, setMError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [calendarCollapsed, setCalendarCollapsed] = useState(true);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -140,40 +141,56 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
               />
               <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background/70" />
             </div>
-            <CardContent className="relative z-10 p-4 sm:p-6 md:p-8 h-[320px] md:h-[500px] flex flex-col justify-between">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
-                  <AvatarImage src={avatarUrl || undefined} alt={`${firstName} avatar`} />
-                  <AvatarFallback>{getInitials(user.full_name)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Welcome, {firstName}</h1>
-                  <p className="text-sm text-muted-foreground">To Amaze and Inspire.</p>
-                </div>
+          <CardContent className="relative z-10 p-4 sm:p-6 md:p-8 h-[320px] md:h-[500px] flex flex-col justify-between">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
+                <AvatarImage src={avatarUrl || undefined} alt={`${firstName} avatar`} />
+                <AvatarFallback>{getInitials(user.full_name)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Welcome, {firstName}</h1>
+                <p className="text-sm text-muted-foreground">To Amaze and Inspire.</p>
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <CommunityHubWidget />
-                <AuditionStatsWidget />
-              </div>
-            </CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <CommunityHubWidget />
+              <AuditionStatsWidget />
+            </div>
+          </CardContent>
           </Card>
         </section>
 
-{/* Calendar for all members */}
+{/* Calendar for all members (collapsed by default) */}
 <section aria-label="Member calendar" className="animate-fade-in">
-  <Suspense fallback={
-    <Card className="glass-dashboard-card">
-      <CardHeader>
-        <CardTitle>Calendar</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="py-6">Loading calendar…</div>
-      </CardContent>
-    </Card>
-  }>
-    <CalendarViewsLazy />
-  </Suspense>
+  <div className="flex items-center justify-between mb-2">
+    <h2 className="text-sm font-medium">Glee Calendar</h2>
+    <Button
+      variant="ghost"
+      size="sm"
+      aria-controls="member-glee-calendar"
+      aria-expanded={!calendarCollapsed}
+      onClick={() => setCalendarCollapsed((v) => !v)}
+    >
+      {calendarCollapsed ? 'Expand' : 'Collapse'}
+    </Button>
+  </div>
+  {!calendarCollapsed && (
+    <Suspense fallback={
+      <Card className="glass-dashboard-card">
+        <CardHeader>
+          <CardTitle>Glee Calendar</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="py-6">Loading calendar…</div>
+        </CardContent>
+      </Card>
+    }>
+      <div id="member-glee-calendar">
+        <CalendarViewsLazy />
+      </div>
+    </Suspense>
+  )}
 </section>
 
 {/* Top grid with key modules */}

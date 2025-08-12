@@ -108,6 +108,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     }
   };
 
+  const [calendarCollapsed, setCalendarCollapsed] = useState(true);
+
   const [adminData, setAdminData] = useState({
     systemStats: {
       totalUsers: 0,
@@ -648,19 +650,37 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       {/* Community Hub */}
       <CommunityHubWidget />
 
-      {/* Unified Calendar (visible to all admins) */}
-      <Suspense fallback={
-        <Card className="glass-dashboard-card mt-4">
-          <CardHeader>
-            <CardTitle>Calendar</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="py-6">Loading calendar…</div>
-          </CardContent>
-        </Card>
-      }>
-        <CalendarViewsLazy />
-      </Suspense>
+      {/* Unified Calendar (collapsed by default) */}
+      <div className="mt-4">
+        <div className="flex items-center justify-between mb-2">
+          <CardTitle className="text-base">Glee Calendar</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-controls="admin-glee-calendar"
+            aria-expanded={!calendarCollapsed}
+            onClick={() => setCalendarCollapsed((v) => !v)}
+          >
+            {calendarCollapsed ? 'Expand' : 'Collapse'}
+          </Button>
+        </div>
+        {!calendarCollapsed && (
+          <Suspense fallback={
+            <Card className="glass-dashboard-card">
+              <CardHeader>
+                <CardTitle>Glee Calendar</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="py-6">Loading calendar…</div>
+              </CardContent>
+            </Card>
+          }>
+            <div id="admin-glee-calendar">
+              <CalendarViewsLazy />
+            </div>
+          </Suspense>
+        )}
+      </div>
       
       {/* Audition Dialog */}
       
