@@ -253,7 +253,13 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   ];
 
   const getCurrentDashboardView = () => {
-    if (location.pathname.startsWith('/dashboard/member-view/')) return 'Personal Dashboard';
+    if (location.pathname.startsWith('/dashboard/member-view/')) {
+      // Get the user profile to determine the correct dashboard type
+      if (userProfile?.is_exec_board) return 'Executive Board Dashboard';
+      if (userProfile?.role === 'alumnae') return 'Alumnae Dashboard'; 
+      if (userProfile?.role === 'auditioner') return 'Auditioner Dashboard';
+      return 'Member Dashboard';
+    }
     if (location.pathname === '/admin/alumnae') return 'Alumnae Portal Admin';
     if (location.pathname === '/dashboard') return 'Admin Panel';
     return 'Dashboard';
