@@ -55,6 +55,7 @@ export const KaraokeModule: React.FC = () => {
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const previewSetRef = useRef(false);
+  const lastAutoMixedRef = useRef<Blob | null>(null);
 
   // Fallback Web Audio recording
   const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
@@ -634,6 +635,7 @@ export const KaraokeModule: React.FC = () => {
     return new Blob(mp3Data, { type: 'audio/mpeg' });
   };
   const mixAndEncode = async () => {
+    if (mixing) return;
     if (!recordedBlob || !track) {
       toast("Nothing to mix yet.");
       return;
@@ -641,8 +643,9 @@ export const KaraokeModule: React.FC = () => {
     setMixing(true);
     try {
       const ctx = new AudioContext();
+      const trackUrl = (await resolveTrackUrl()) || track.file_url;
       const [trackBuf, micBuf] = await Promise.all([
-        fetch(track.file_url).then(r => r.arrayBuffer()).then(ab => ctx.decodeAudioData(ab.slice(0))),
+        fetch(trackUrl).then(r => r.arrayBuffer()).then(ab => ctx.decodeAudioData(ab.slice(0))),
         recordedBlob.arrayBuffer().then(ab => ctx.decodeAudioData(ab.slice(0)))
       ]);
 
@@ -704,12 +707,13 @@ export const KaraokeModule: React.FC = () => {
       setMixing(false);
     }
   };
-  // Auto-mix immediately when a new take is captured
+  // Auto-mix once per new take
   useEffect(() => {
-    if (autoMix && recordedBlob && track && !mixing) {
-      void mixAndEncode();
-    }
-  }, [autoMix, recordedBlob, track, mixing]);
+    if (!autoMix || !recordedBlob || !track) return;
+    if (lastAutoMixedRef.current === recordedBlob) return;
+    lastAutoMixedRef.current = recordedBlob;
+    void mixAndEncode();
+  }, [autoMix, recordedBlob, track]);
   const downloadMp3 = () => {
     if (!mixedMp3) return;
     const url = URL.createObjectURL(mixedMp3);
