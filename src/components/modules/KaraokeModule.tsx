@@ -31,6 +31,7 @@ export const KaraokeModule: React.FC = () => {
   const [micVolume, setMicVolume] = useState(1);
   const [trackVolume, setTrackVolume] = useState(0.9);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [mixSourceBlob, setMixSourceBlob] = useState<Blob | null>(null);
   const [mixedMp3, setMixedMp3] = useState<Blob | null>(null);
   const [mixing, setMixing] = useState(false);
   const [isPracticePlaying, setIsPracticePlaying] = useState(false);
@@ -262,6 +263,7 @@ export const KaraokeModule: React.FC = () => {
     if (chunks.length) {
       const blob = createWavBlob(chunks, sr);
       setRecordedBlob(blob);
+      setMixSourceBlob(blob);
       previewSetRef.current = true;
       console.log('WebAudio recording stopped, preview ready', { size: blob.size, type: blob.type, chunks: chunks.length });
       toast("Mic recording captured.");
@@ -288,6 +290,7 @@ export const KaraokeModule: React.FC = () => {
     console.log('[Karaoke] startRecording invoked');
     previewSetRef.current = false;
     setRecordedBlob(null);
+    setMixSourceBlob(null);
     setPreviewUrl(null);
     setMixedMp3(null);
     recordedChunksRef.current = [];
@@ -427,6 +430,9 @@ export const KaraokeModule: React.FC = () => {
       // Harvest parallel WebAudio tap immediately for a guaranteed preview
       try {
         const tapBlob = stopWebAudioTap();
+        if (tapBlob) {
+          setMixSourceBlob(tapBlob);
+        }
         if (tapBlob && !previewSetRef.current) {
           setRecordedBlob(tapBlob);
           previewSetRef.current = true;
@@ -485,6 +491,7 @@ export const KaraokeModule: React.FC = () => {
   const clearRecording = () => {
     try { audioElRef.current?.pause(); } catch {}
     setRecordedBlob(null);
+    setMixSourceBlob(null);
     setMixedMp3(null);
     setPreviewUrl(null);
     toast("Recording cleared. Ready for a new take.");
@@ -636,44 +643,43 @@ export const KaraokeModule: React.FC = () => {
   };
   const mixAndEncode = async () => {
     if (mixing) return;
-    if (!recordedBlob || !track) {
+    if (!recordedBlob) {
       toast("Nothing to mix yet.");
       return;
     }
     setMixing(true);
     try {
       const ctx = new AudioContext();
-      const trackUrl = (await resolveTrackUrl()) || track.file_url;
-      const [trackBuf, micBuf] = await Promise.all([
-        fetch(trackUrl).then(r => r.arrayBuffer()).then(ab => ctx.decodeAudioData(ab.slice(0))),
-        recordedBlob.arrayBuffer().then(ab => ctx.decodeAudioData(ab.slice(0)))
-      ]);
+      const micBlob = mixSourceBlob || recordedBlob;
+
+      // Decode mic first (must succeed)
+      let micBuf: AudioBuffer;
+      try {
+        const micAb = await micBlob.arrayBuffer();
+        micBuf = await ctx.decodeAudioData(micAb.slice(0));
+      } catch (e) {
+        console.error('Decode mic failed', e);
+        toast("Could not decode mic recording.");
+        return;
+      }
+
+      // Try to decode backing track; if it fails, export mic-only
+      let trackBuf: AudioBuffer | null = null;
+      try {
+        if (track) {
+          const trackUrl = (await resolveTrackUrl()) || track.file_url;
+          const trackAb = await fetch(trackUrl).then(r => r.arrayBuffer());
+          trackBuf = await ctx.decodeAudioData(trackAb.slice(0));
+        }
+      } catch (e) {
+        console.warn('Decode track failed, exporting mic-only', e);
+      }
 
       // Use mono offline context for simpler MP3 encode
       const sampleRate = 44100;
-      const duration = Math.max(trackBuf.duration, micBuf.duration);
+      const duration = trackBuf ? Math.max(trackBuf.duration, micBuf.duration) : micBuf.duration;
       const length = Math.ceil(duration * sampleRate);
       const offline = new OfflineAudioContext(1, length, sampleRate);
-
-      // Track source + gain
-      const trackSource = offline.createBufferSource();
-      // Resample into offline context
-      const trackMono = offline.createBuffer(1, Math.floor(trackBuf.duration * sampleRate), sampleRate);
-      // Downmix to mono
-      const tmpTrack = trackBuf.numberOfChannels > 1 
-        ? (() => { 
-            const chL = trackBuf.getChannelData(0);
-            const chR = trackBuf.getChannelData(1);
-            const mono = new Float32Array(Math.min(chL.length, chR.length));
-            for (let i = 0; i < mono.length; i++) mono[i] = (chL[i] + chR[i]) / 2;
-            return mono;
-          })()
-        : trackBuf.getChannelData(0);
-      trackMono.copyToChannel(tmpTrack.subarray(0, trackMono.length), 0);
-      trackSource.buffer = trackMono;
-      const trackGain = offline.createGain();
-      trackGain.gain.value = trackVolume;
-      trackSource.connect(trackGain).connect(offline.destination);
 
       // Mic source + gain
       const micSource = offline.createBufferSource();
@@ -693,16 +699,36 @@ export const KaraokeModule: React.FC = () => {
       micGainNode.gain.value = micVolume;
       micSource.connect(micGainNode).connect(offline.destination);
 
-      trackSource.start(0);
+      // Track source + gain (optional)
+      if (trackBuf) {
+        const trackSource = offline.createBufferSource();
+        const trackMono = offline.createBuffer(1, Math.floor(trackBuf.duration * sampleRate), sampleRate);
+        const tmpTrack = trackBuf.numberOfChannels > 1
+          ? (() => {
+              const chL = trackBuf.getChannelData(0);
+              const chR = trackBuf.getChannelData(1);
+              const mono = new Float32Array(Math.min(chL.length, chR.length));
+              for (let i = 0; i < mono.length; i++) mono[i] = (chL[i] + chR[i]) / 2;
+              return mono;
+            })()
+          : trackBuf.getChannelData(0);
+        trackMono.copyToChannel(tmpTrack.subarray(0, trackMono.length), 0);
+        trackSource.buffer = trackMono;
+        const trackGain = offline.createGain();
+        trackGain.gain.value = trackVolume;
+        trackSource.connect(trackGain).connect(offline.destination);
+        trackSource.start(0);
+      }
+
       micSource.start(0);
 
       const rendered = await offline.startRendering();
       const mp3Blob = encodeToMp3(rendered);
       setMixedMp3(mp3Blob);
-      toast("Mix rendered. You can download or save to library.");
+      toast(trackBuf ? "Mix rendered. You can download or save to library." : "Mic exported. Backing track could not be decoded.");
     } catch (e) {
-      console.error(e);
-      toast("Mixing failed. Your browser may not support decoding the mic recording.");
+      console.error('Mix error', e);
+      toast("Mixing failed. Your browser may not support decoding this audio.");
     } finally {
       setMixing(false);
     }
