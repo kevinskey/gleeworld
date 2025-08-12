@@ -98,24 +98,20 @@ export const useRoleBasedRedirect = () => {
 
       // PRIORITY 1: Super Admin -> Admin Panel  
       if (userProfile.is_super_admin || userProfile.role === 'super-admin') {
-        console.log('🚀 useRoleBasedRedirect: Super Admin redirect to /admin');
-        navigate('/admin', { replace: true });
+        console.log('🚀 useRoleBasedRedirect: Super Admin redirect to /dashboard');
+        navigate('/dashboard', { replace: true });
         return;
       }
 
-      // PRIORITY 2: Admin -> Admin Panel
-      if (userProfile.is_admin || userProfile.role === 'admin') {
-        console.log('🚀 useRoleBasedRedirect: Admin redirect to /admin');
-        navigate('/admin', { replace: true });
+      // PRIORITY 2: Admin or Executive Board -> Admin Panel
+      if (userProfile.is_admin || userProfile.role === 'admin' || userProfile.is_exec_board) {
+        console.log('🚀 useRoleBasedRedirect: Admin/Executive redirect to /dashboard');
+        navigate('/dashboard', { replace: true });
         return;
       }
 
-      // PRIORITY 3: Executive Board -> dedicated executive dashboard
-      if (userProfile.is_exec_board) {
-        console.log('👑 useRoleBasedRedirect: Executive Board redirect to /executive-board-dashboard');
-        navigate('/executive-board-dashboard', { replace: true });
-        return;
-      }
+      // (Removed dedicated executive board dashboard)
+
 
       // PRIORITY 4: Alumna
       if (userProfile.role === 'alumna') {

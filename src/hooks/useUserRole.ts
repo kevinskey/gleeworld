@@ -89,7 +89,7 @@ export const useUserRole = () => {
 
   const isAdmin = () => {
     if (!profile) return false;
-    return profile.is_admin || profile.is_super_admin;
+    return profile.is_admin || profile.is_super_admin || profile.is_exec_board;
   };
 
   const isSuperAdmin = () => {

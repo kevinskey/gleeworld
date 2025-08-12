@@ -35,7 +35,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   
   
   // Check if user has PR access (PR coordinator or admin)
-  const isAdmin = userProfile?.is_admin === true || userProfile?.is_super_admin === true;
+  const isAdmin = userProfile?.is_admin === true || userProfile?.is_super_admin === true || userProfile?.is_exec_board === true;
   const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
   const canAccessPR = isAdmin || isPRCoordinator;
   const isExecBoardMember = userProfile?.exec_board_role && userProfile.exec_board_role.trim() !== '';
@@ -135,12 +135,12 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         className={`cursor-pointer ${viewMode === 'admin' ? 'bg-accent' : ''}`}
                       >
                         <Shield className="mr-2 h-4 w-4" />
-                        Admin
+                        Admin (includes Exec Board)
                       </DropdownMenuItem>
                     )}
                     
                     {/* Executive Board Dashboard - only for executive board members */}
-                    {isExecBoardMember && !isAdmin && (
+                    {false && (
                       <DropdownMenuItem 
                         onClick={(e) => {
                           e.preventDefault();

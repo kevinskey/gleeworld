@@ -1,5 +1,5 @@
 
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import Index from "@/pages/Index";
 import Profile from "@/pages/Profile";
 import ContractSigning from "@/pages/ContractSigning";
@@ -155,7 +155,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/executive-board-dashboard",
-    element: <ExecutiveBoardDashboard />,
+    element: <Navigate to="/dashboard" replace />,
   },
   {
     path: "*",

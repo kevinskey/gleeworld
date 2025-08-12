@@ -908,14 +908,10 @@ const App = () => {
                                            </PublicRoute>
                                          } 
                                        />
-                                         <Route 
-                                           path="/executive-board-dashboard" 
-                                           element={
-                                             <ProtectedRoute>
-                                               <ExecutiveBoardDashboard />
-                                             </ProtectedRoute>
-                                           } 
-                                         />
+                                          <Route 
+                                            path="/executive-board-dashboard" 
+                                            element={<Navigate to="/dashboard" replace />} 
+                                          />
                                          <Route 
                                            path="/google-docs" 
                                            element={
