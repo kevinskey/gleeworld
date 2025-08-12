@@ -15,7 +15,7 @@ import { SheetMusicViewDialog } from './SheetMusicViewDialog';
 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { MusicLibraryHeader } from '@/components/music-library/MusicLibraryHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -132,6 +132,7 @@ export const MusicLibrary = () => {
     return (
       <>
         <div className="fixed inset-0 bg-background z-50 flex flex-col relative">
+          <MusicLibraryHeader />
           {/* Fullscreen Content */}
           <div className="flex-1 min-h-0 overflow-hidden">
             {mobileView === 'library' ? (
@@ -190,16 +191,8 @@ export const MusicLibrary = () => {
   // Desktop layout - keep existing design
   return (
     <>
-      <div className="container mx-auto px-4 pt-16 md:pt-20 pb-6">
-        <div className="mb-6">
-          <PageHeader
-            title="Music Library"
-            description="Digital & Physical Sheet Music Collection"
-            showBackButton
-            backTo={(userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard'}
-            backgroundVariant="gradient"
-          />
-        </div>
+      <MusicLibraryHeader />
+      <div className="container mx-auto px-4 pt-4 md:pt-6 pb-6">
 
         {/* Desktop two-column layout */}
         <div className="grid grid-cols-12 gap-6 h-[calc(100vh-5rem)] overflow-hidden">
