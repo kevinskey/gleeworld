@@ -46,7 +46,7 @@ export const DashboardSwitcher = () => {
           </Badge>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-48 sm:w-56">
+      <DropdownMenuContent align="start" className="w-48 sm:w-56 bg-background shadow-lg border border-border z-50">
         <DropdownMenuItem asChild>
           <Link to="/admin" className="flex items-center cursor-pointer">
             <Shield className="mr-2 h-4 w-4" />
