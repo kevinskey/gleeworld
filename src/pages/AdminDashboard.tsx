@@ -17,7 +17,7 @@ const AdminDashboard = () => {
     );
   }
 
-  const isAdmin = !!(userProfile?.role === 'admin' || userProfile?.role === 'super-admin' || userProfile?.is_admin || userProfile?.is_super_admin);
+  const isAdmin = !!(userProfile?.role === 'admin' || userProfile?.role === 'super-admin' || userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.is_exec_board);
   if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
