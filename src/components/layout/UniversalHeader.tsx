@@ -3,9 +3,10 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -17,7 +18,7 @@ import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
 import { HeaderRadioControls } from "@/components/radio/HeaderRadioControls";
 import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
-import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
+// import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
 
 
 interface UniversalHeaderProps {
@@ -103,9 +104,23 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             <HeaderRadioControls />
             <MusicalToolkit />
 
-            {/* Global Command Palette */}
-            <div className="hidden md:block">
-              <GlobalCommandPalette />
+            {/* Site Search */}
+            <div className="hidden md:block w-64">
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search the website..."
+                  className="pl-8"
+                  onKeyDown={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    if (e.key === 'Enter') {
+                      const q = target.value.trim();
+                      if (q) navigate(`/modules?q=${encodeURIComponent(q)}`);
+                      else navigate('/modules');
+                    }
+                  }}
+                />
+              </div>
             </div>
             
             {user && (

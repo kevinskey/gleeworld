@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { UNIFIED_MODULES, UNIFIED_MODULE_CATEGORIES } from '@/config/unified-modules';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,8 +76,14 @@ export const ModulesDirectory: React.FC = () => {
   const { userProfile } = useUserProfile(user);
   const isAdmin = !!(userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.is_exec_board || userProfile?.role === 'admin' || userProfile?.role === 'super-admin');
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const suggestions = useMemo(() => findRedundancies(), []);
+
+  useEffect(() => {
+    const qParam = searchParams.get('q') || '';
+    setQuery(qParam);
+  }, [searchParams]);
 
   const filteredCategories = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -95,7 +101,17 @@ export const ModulesDirectory: React.FC = () => {
           <h1 className="text-3xl font-bold tracking-tight">Modules Directory</h1>
           <p className="text-muted-foreground mt-2 max-w-2xl">Explore all functional modules in GleeWorld. Open any module or propose cleanup of redundant modules. No deletions will occur without your approval.</p>
           <div className="mt-4 max-w-md">
-            <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search modules by name, category, or description" />
+            <Input 
+              value={query} 
+              onChange={(e) => {
+                const val = e.target.value;
+                setQuery(val);
+                const sp = new URLSearchParams(searchParams);
+                if (val) sp.set('q', val); else sp.delete('q');
+                setSearchParams(sp, { replace: true });
+              }} 
+              placeholder="Search modules by name, category, or description" 
+            />
           </div>
         </div>
       </header>
