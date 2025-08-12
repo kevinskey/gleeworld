@@ -326,7 +326,7 @@ export const CreateEventDialog = ({ onEventCreated }: CreateEventDialogProps) =>
           description: formData.brief_description || null,
           registration_required: formData.approval_needed,
           calendar_id: formData.calendar_id,
-          created_by: user.id,
+          created_by: profile?.id || user.id,
           is_public: true,
           status: 'scheduled'
         };
