@@ -19,7 +19,7 @@ const AdminDashboard = () => {
 
   const isAdmin = !!(userProfile?.role === 'admin' || userProfile?.role === 'super-admin' || userProfile?.is_admin || userProfile?.is_super_admin);
   if (!isAdmin) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <FreshAdminDashboard />;

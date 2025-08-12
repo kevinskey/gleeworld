@@ -63,7 +63,7 @@ const ExecutiveBoardDashboard = () => {
   const execRole = userProfile?.exec_board_role;
 
   if (!isExecBoard) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (

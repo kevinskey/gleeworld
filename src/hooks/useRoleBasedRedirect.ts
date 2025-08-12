@@ -96,35 +96,42 @@ export const useRoleBasedRedirect = () => {
         }
       }
 
-      // PRIORITY 1: Super Admin -> Admin Panel
+      // PRIORITY 1: Super Admin -> Admin Panel  
       if (userProfile.is_super_admin || userProfile.role === 'super-admin') {
         console.log('🚀 useRoleBasedRedirect: Super Admin redirect to /admin');
         navigate('/admin', { replace: true });
         return;
       }
 
-      // PRIORITY 2: Alumna
+      // PRIORITY 2: Admin -> Admin Panel
+      if (userProfile.is_admin || userProfile.role === 'admin') {
+        console.log('🚀 useRoleBasedRedirect: Admin redirect to /admin');
+        navigate('/admin', { replace: true });
+        return;
+      }
+
+      // PRIORITY 3: Executive Board -> dedicated executive dashboard
+      if (userProfile.is_exec_board) {
+        console.log('👑 useRoleBasedRedirect: Executive Board redirect to /executive-board-dashboard');
+        navigate('/executive-board-dashboard', { replace: true });
+        return;
+      }
+
+      // PRIORITY 4: Alumna
       if (userProfile.role === 'alumna') {
         console.log('🎓 useRoleBasedRedirect: Alumna redirect to /alumnae');
         navigate('/alumnae', { replace: true });
         return;
       }
       
-      // PRIORITY 3: Fans  
+      // PRIORITY 5: Fans  
       if (userProfile.role === 'fan') {
         console.log('🎵 useRoleBasedRedirect: Fan redirect to /fan');
         navigate('/fan', { replace: true });
         return;
       }
       
-      // PRIORITY 4: Executive Board -> dedicated executive dashboard
-      if (userProfile.is_exec_board) {
-        console.log('👑 useRoleBasedRedirect: Executive Board redirect to /executive-board-dashboard');
-        navigate('/executive-board-dashboard', { replace: true });
-        return;
-      }
-      
-      // PRIORITY 5: Regular Members -> simplified Member Dashboard
+      // PRIORITY 6: Regular Members -> simplified Member Dashboard
       if (userProfile.role === 'member') {
         console.log('👤 useRoleBasedRedirect: Member redirect to member-view dashboard');
         navigate(`/dashboard/member-view/${user.id}`, { replace: true });
