@@ -81,9 +81,8 @@ export default function UnifiedBookingPage() {
         .insert({
           title: `Audition - ${contactInfo.name}`,
           client_name: contactInfo.name,
-          description: 'Spelman College Glee Club Audition (5 minutes)',
+          description: `Spelman College Glee Club Audition (5 minutes) - ${selectedSlot.displayTime}`,
           appointment_date: selectedSlot.date,
-          audition_time_slot: appointmentDateTime.toISOString(),
           client_email: contactInfo.email,
           client_phone: contactInfo.phone,
           status: 'scheduled',

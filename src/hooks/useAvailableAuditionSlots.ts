@@ -21,12 +21,18 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
   useEffect(() => {
     const fetchAuditionDates = async () => {
       try {
+        console.log('🔍 Fetching audition time blocks...');
         const { data: timeBlocks, error } = await supabase
           .from('audition_time_blocks')
           .select('start_date, end_date')
           .eq('is_active', true);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching time blocks:', error);
+          throw error;
+        }
+
+        console.log('📊 Time blocks from database:', timeBlocks);
 
         const dates: Date[] = [];
         timeBlocks?.forEach(block => {
@@ -46,7 +52,7 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
           }
         });
 
-        console.log('Available audition dates:', dates);
+        console.log('📅 Available audition dates:', dates);
         setAvailableDates(dates);
       } catch (error) {
         console.error('Error fetching audition dates:', error);
