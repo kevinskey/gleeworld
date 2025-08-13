@@ -104,7 +104,7 @@ import { ReceiptsPage } from "./pages/ReceiptsPage";
 import ApprovalSystemPage from "./pages/ApprovalSystemPage";
 import SightReadingSubmission from "./pages/SightReadingSubmission";
 import SightReadingPreview from "./pages/SightReadingPreview";
-import SightReadingGenerator from "./pages/SightReadingGenerator";
+import SightReadingGeneratorPage from "./pages/SightReadingGenerator";
 import SchedulingPage from "./pages/SchedulingPage";
 import BookingPage from "./pages/BookingPage";
 import ServiceSelection from "./pages/booking/ServiceSelection";
@@ -870,7 +870,7 @@ const App = () => {
                                       path="/sight-reading-generator" 
                                       element={
                                         <ProtectedRoute>
-                                          <SightReadingGenerator />
+                                          <SightReadingGeneratorPage />
                                         </ProtectedRoute>
                                       } 
                                     />
