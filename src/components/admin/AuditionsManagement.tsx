@@ -44,7 +44,7 @@ import {
   UserCheck,
   Trash2
 } from "lucide-react";
-import { AuditionRescheduleManager } from '@/components/admin/AuditionRescheduleManager';
+import { AuditionTimeGrid } from '@/components/admin/AuditionTimeGrid';
 import { MobileScoreWindow } from "@/components/scoring/MobileScoreWindow";
 import { SightReadingScoreWindow } from "@/components/scoring/SightReadingScoreWindow";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -702,8 +702,8 @@ export const AuditionsManagement = () => {
               value="reschedule" 
               className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
             >
-              <Mail className="h-4 w-4" />
-              <span className="hidden sm:inline">Reschedule</span>
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Schedule</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -2320,9 +2320,9 @@ export const AuditionsManagement = () => {
           </Card>
         </TabsContent>
 
-        {/* Reschedule Tab */}
+        {/* Schedule Grid Tab */}
         <TabsContent value="reschedule" className="space-y-6">
-          <AuditionRescheduleManager />
+          <AuditionTimeGrid />
         </TabsContent>
       </Tabs>
     </div>
