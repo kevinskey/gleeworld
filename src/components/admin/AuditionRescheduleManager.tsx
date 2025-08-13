@@ -89,16 +89,20 @@ export const AuditionRescheduleManager = () => {
   };
 
   const sendRescheduleEmails = async () => {
+    console.log('🎭 Starting email send process for', auditioners.length, 'auditioners');
     setSending(true);
     try {
       let successCount = 0;
       let errorCount = 0;
 
+      console.log('📧 Auditioners to email:', auditioners.map(a => a.email));
+
       for (const auditioner of auditioners) {
         try {
+          console.log(`📨 Sending email to ${auditioner.email}...`);
           const formattedDate = format(parseISO(auditioner.audition_date), 'EEEE, MMMM dd, yyyy');
           
-          await sendRescheduleEmail({
+          const result = await sendRescheduleEmail({
             recipientEmail: auditioner.email,
             recipientName: `${auditioner.first_name} ${auditioner.last_name}`,
             currentDate: formattedDate,
@@ -106,16 +110,19 @@ export const AuditionRescheduleManager = () => {
             copyEmail: 'kpj64110@gmail.com' // Send copy to specified email
           });
 
+          console.log(`✅ Email sent successfully to ${auditioner.email}:`, result);
           successCount++;
           
           // Small delay to avoid rate limiting
           await new Promise(resolve => setTimeout(resolve, 500));
           
         } catch (error) {
-          console.error(`Failed to send email to ${auditioner.email}:`, error);
+          console.error(`❌ Failed to send email to ${auditioner.email}:`, error);
           errorCount++;
         }
       }
+
+      console.log(`📊 Email send complete: ${successCount} success, ${errorCount} errors`);
 
       toast({
         title: "Emails Sent",
@@ -124,13 +131,14 @@ export const AuditionRescheduleManager = () => {
       });
 
     } catch (error) {
-      console.error('Error sending emails:', error);
+      console.error('💥 Error in email send process:', error);
       toast({
         title: "Error",
         description: "Failed to send reschedule emails",
         variant: "destructive"
       });
     } finally {
+      console.log('🔄 Setting sending to false');
       setSending(false);
     }
   };
