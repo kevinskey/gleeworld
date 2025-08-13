@@ -107,6 +107,7 @@ import SightReadingPreview from "./pages/SightReadingPreview";
 import SightReadingGeneratorPage from "./pages/SightReadingGenerator";
 import SchedulingPage from "./pages/SchedulingPage";
 import BookingPage from "./pages/BookingPage";
+import UnifiedBookingPage from "./pages/UnifiedBookingPage";
 import ServiceSelection from "./pages/booking/ServiceSelection";
 import DateTimeSelection from "./pages/booking/DateTimeSelection";
 import RecurringOptions from "./pages/booking/RecurringOptions";
@@ -882,14 +883,22 @@ const App = () => {
                                         </ProtectedRoute>
                                       } 
                                      />
-                                     <Route 
-                                       path="/booking" 
-                                       element={
-                                         <PublicRoute>
-                                           <BookingPage />
-                                         </PublicRoute>
-                                       } 
-                                     />
+                                      <Route 
+                                        path="/booking" 
+                                        element={
+                                          <PublicRoute>
+                                            <UnifiedBookingPage />
+                                          </PublicRoute>
+                                        } 
+                                      />
+                                      <Route 
+                                        path="/booking-old" 
+                                        element={
+                                          <PublicRoute>
+                                            <BookingPage />
+                                          </PublicRoute>
+                                        } 
+                                      />
                                      <Route 
                                        path="/booking/service-selection" 
                                        element={
