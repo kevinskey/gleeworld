@@ -4,6 +4,7 @@ import { AppointmentDashboard } from '@/components/appointments/AppointmentDashb
 import { AppointmentCalendar } from '@/components/appointments/AppointmentCalendar';
 import { AppointmentAvailability } from '@/components/appointments/AppointmentAvailability';
 import { AppointmentSettings } from '@/components/appointments/AppointmentSettings';
+import { AppointmentDialog } from '@/components/appointments/AppointmentDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +12,7 @@ import { Calendar, Clock, Settings, BarChart3, Plus } from 'lucide-react';
 
 export default function AppointmentScheduler() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showNewAppointmentDialog, setShowNewAppointmentDialog] = useState(false);
 
   return (
     <UniversalLayout>
@@ -23,7 +25,7 @@ export default function AppointmentScheduler() {
               Manage appointments, availability, and scheduling preferences
             </p>
           </div>
-          <Button>
+          <Button onClick={() => setShowNewAppointmentDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New Appointment
           </Button>
@@ -66,6 +68,13 @@ export default function AppointmentScheduler() {
             <AppointmentSettings />
           </TabsContent>
         </Tabs>
+
+        {/* New Appointment Dialog */}
+        <AppointmentDialog
+          open={showNewAppointmentDialog}
+          onOpenChange={setShowNewAppointmentDialog}
+          selectedDate={new Date()}
+        />
       </div>
     </UniversalLayout>
   );
