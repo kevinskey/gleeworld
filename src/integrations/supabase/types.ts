@@ -13266,6 +13266,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      debug_audition_permissions: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       decrypt_square_token: {
         Args: { encrypted_token: string }
         Returns: string
