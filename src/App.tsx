@@ -250,10 +250,14 @@ const App = () => {
                    </ProtectedRoute>
                  } 
                />
-              <Route 
-                path="/dashboard/auditioner" 
-                element={<Navigate to="/auditioner" replace />} 
-              />
+               <Route 
+                 path="/dashboard/auditioner" 
+                 element={<Navigate to="/auditioner" replace />} 
+               />
+               <Route 
+                 path="/auditioner" 
+                 element={<AuditionerDashboardPage />} 
+               />
               <Route 
                 path="/event-planner" 
                 element={
