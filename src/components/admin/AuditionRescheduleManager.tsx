@@ -127,7 +127,7 @@ export const AuditionRescheduleManager = () => {
           successCount++;
           
           // Delay to respect Resend rate limit (2 requests per second max)
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 1500));
           
         } catch (error) {
           console.error(`❌ Failed to send email to ${auditioner.email}:`, error);
