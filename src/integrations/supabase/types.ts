@@ -13164,6 +13164,10 @@ export type Database = {
         Args: { event_id_param: string }
         Returns: undefined
       }
+      can_view_auditioner_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       check_appointment_availability: {
         Args: {
           p_service_id: string
