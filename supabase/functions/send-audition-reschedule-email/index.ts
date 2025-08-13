@@ -99,6 +99,9 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
+    console.log("About to send email to:", recipientEmail);
+    console.log("Using API key:", Deno.env.get("RESEND_API_KEY") ? "API key is set" : "API key is missing");
+    
     const emailResponse = await resend.emails.send({
       from: "Spelman Glee Club <noreply@gleeworld.org>",
       to: [recipientEmail],
@@ -107,11 +110,18 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailContent,
     });
 
-    console.log("Reschedule email sent successfully:", emailResponse);
+    console.log("Resend API response:", JSON.stringify(emailResponse, null, 2));
+    
+    if (emailResponse.error) {
+      console.error("Resend API error:", emailResponse.error);
+      throw new Error(`Resend API error: ${JSON.stringify(emailResponse.error)}`);
+    }
+
+    console.log("Email sent successfully with ID:", emailResponse.data?.id);
 
     return new Response(JSON.stringify({
       success: true,
-      messageId: emailResponse.id,
+      messageId: emailResponse.data?.id,
       emailContent: emailContent
     }), {
       status: 200,
