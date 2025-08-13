@@ -44,6 +44,7 @@ import {
   UserCheck,
   Trash2
 } from "lucide-react";
+import { AuditionRescheduleManager } from '@/components/admin/AuditionRescheduleManager';
 import { MobileScoreWindow } from "@/components/scoring/MobileScoreWindow";
 import { SightReadingScoreWindow } from "@/components/scoring/SightReadingScoreWindow";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -661,7 +662,7 @@ export const AuditionsManagement = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Responsive tab navigation */}
         <div className="border-b border-border">
-          <TabsList className="grid w-full grid-cols-5 h-auto bg-transparent p-0 gap-0">
+          <TabsList className="grid w-full grid-cols-6 h-auto bg-transparent p-0 gap-0">
             <TabsTrigger 
               value="overview" 
               className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
@@ -696,6 +697,13 @@ export const AuditionsManagement = () => {
             >
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="reschedule" 
+              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
+            >
+              <Mail className="h-4 w-4" />
+              <span className="hidden sm:inline">Reschedule</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -2310,6 +2318,11 @@ export const AuditionsManagement = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Reschedule Tab */}
+        <TabsContent value="reschedule" className="space-y-6">
+          <AuditionRescheduleManager />
         </TabsContent>
       </Tabs>
     </div>
