@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic } from "lucide-react";
@@ -12,7 +13,7 @@ export const AuditionHoverCard = () => {
   const location = useLocation();
 
   // Hide on auditions page to prevent interference
-  if (location.pathname === '/auditions') {
+  if (location.pathname === '/auditions' || location.pathname === '/auditioner-dashboard') {
     return null;
   }
 
@@ -21,7 +22,7 @@ export const AuditionHoverCard = () => {
     return (
       <div className="fixed top-16 left-0 right-0 z-40 px-4 pointer-events-none">
         <div className="pointer-events-auto">
-          <Link to="/auditions">
+          <Link to="/auditioner-dashboard">
             <Button 
               variant="branded" 
               size="sm"
@@ -39,7 +40,7 @@ export const AuditionHoverCard = () => {
   // Desktop version with hover card
   return (
     <div className="fixed top-32 left-1/2 transform -translate-x-1/2 z-40 pt-[10px] pb-8">
-      <Link to="/auditions">
+      <Link to="/auditioner-dashboard">
         <Button 
           variant="branded" 
           size="lg"
