@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAvailableAuditionSlots } from '@/hooks/useAvailableAuditionSlots';
 
 interface TimeSlot {
   date: string;
@@ -23,8 +24,8 @@ interface ContactInfo {
 
 export default function UnifiedBookingPage() {
   const { toast } = useToast();
-  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
-  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string; displayDate: string; displayTime: string } | null>(null);
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
     name: '',
     email: '',
@@ -34,89 +35,46 @@ export default function UnifiedBookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
 
+  // Use the existing hook for real audition data
+  const { timeSlots, allTimeSlots, loading, availableDates } = useAvailableAuditionSlots(selectedDate);
+
+  // Set the first available date by default
   useEffect(() => {
-    generateAvailableSlots();
-  }, []);
+    if (availableDates.length > 0 && !selectedDate) {
+      setSelectedDate(availableDates[0]);
+    }
+  }, [availableDates, selectedDate]);
 
-  const generateAvailableSlots = () => {
-    const slots: TimeSlot[] = [];
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+  const selectTimeSlot = (time: string) => {
+    if (!selectedDate) return;
     
-    // Only generate slots for the 15th and 16th
-    const targetDates = [15, 16];
-    
-    targetDates.forEach(day => {
-      const date = new Date(currentYear, currentMonth, day);
-      
-      // Skip if date is in the past
-      if (date < today) {
-        return;
-      }
-      
-      const dateString = date.toISOString().split('T')[0];
-      const displayDate = date.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        month: 'short', 
-        day: 'numeric' 
-      });
-
-      // Friday (15th) slots: 2:30 PM - 4:30 PM (5-minute intervals)
-      if (day === 15) {
-        for (let minutes = 14 * 60 + 30; minutes <= 16 * 60 + 25; minutes += 5) {
-          const hours = Math.floor(minutes / 60);
-          const mins = minutes % 60;
-          const timeString = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-          const hour12 = hours > 12 ? hours - 12 : hours;
-          const ampm = hours >= 12 ? 'PM' : 'AM';
-          const displayTime = `${hour12}:${mins.toString().padStart(2, '0')} ${ampm}`;
-
-          slots.push({
-            date: dateString,
-            time: timeString,
-            available: Math.random() > 0.15, // 85% availability
-            displayDate,
-            displayTime
-          });
-        }
-      }
-
-      // Saturday (16th) slots: 11:00 AM - 1:00 PM (5-minute intervals)
-      if (day === 16) {
-        for (let minutes = 11 * 60; minutes <= 12 * 60 + 55; minutes += 5) {
-          const hours = Math.floor(minutes / 60);
-          const mins = minutes % 60;
-          const timeString = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-          const hour12 = hours === 0 ? 12 : (hours > 12 ? hours - 12 : hours);
-          const ampm = hours >= 12 ? 'PM' : 'AM';
-          const displayTime = `${hour12}:${mins.toString().padStart(2, '0')} ${ampm}`;
-
-          slots.push({
-            date: dateString,
-            time: timeString,
-            available: Math.random() > 0.15, // 85% availability
-            displayDate,
-            displayTime
-          });
-        }
-      }
+    const dateString = selectedDate.toISOString().split('T')[0];
+    const displayDate = selectedDate.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'short', 
+      day: 'numeric' 
     });
     
-    setAvailableSlots(slots); // Show all slots, both available and unavailable
-  };
-
-  const selectTimeSlot = (slot: TimeSlot) => {
-    setSelectedSlot(slot);
+    setSelectedSlot({
+      date: dateString,
+      time,
+      displayDate,
+      displayTime: time
+    });
     setShowContactForm(true);
   };
 
   const handleSubmit = async () => {
-    if (!selectedSlot) return;
+    if (!selectedSlot || !selectedDate) return;
     
     setIsSubmitting(true);
     
     try {
+      // Format the datetime for the appointment
+      const [hours, minutes] = selectedSlot.time.split(':');
+      const appointmentDateTime = new Date(selectedDate);
+      appointmentDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
       const { error } = await supabase
         .from('gw_appointments')
         .insert({
@@ -124,6 +82,7 @@ export default function UnifiedBookingPage() {
           client_name: contactInfo.name,
           description: 'Spelman College Glee Club Audition (5 minutes)',
           appointment_date: selectedSlot.date,
+          audition_time_slot: appointmentDateTime.toISOString(),
           client_email: contactInfo.email,
           client_phone: contactInfo.phone,
           status: 'scheduled',
@@ -235,54 +194,85 @@ export default function UnifiedBookingPage() {
           {!showContactForm ? (
             /* Time Selection */
             <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center text-xl">
-                    <Calendar className="h-5 w-5 mr-2" />
-                    Available Audition Times
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {/* Group slots by date */}
-                    {Array.from(new Set(availableSlots.map(slot => slot.date))).map(date => {
-                      const daySlots = availableSlots.filter(slot => slot.date === date);
-                      const displayDate = daySlots[0]?.displayDate;
-                      
-                      return (
-                        <div key={date} className="space-y-3">
-                          <h3 className="text-lg font-semibold text-foreground border-b pb-2">
-                            {displayDate}
-                          </h3>
-                          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                            {daySlots.map((slot, index) => (
-                              <Button
-                                key={`${slot.date}-${slot.time}`}
-                                variant={slot.available ? "outline" : "destructive"}
-                                onClick={() => slot.available && selectTimeSlot(slot)}
-                                disabled={!slot.available}
-                                className={slot.available 
-                                  ? "text-sm py-2 hover:bg-secondary hover:text-secondary-foreground" 
-                                  : "text-sm py-2 bg-destructive text-destructive-foreground cursor-not-allowed"
-                                }
-                              >
-                                {slot.displayTime}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  
-                  {availableSlots.length === 0 && (
-                    <div className="text-center py-8">
-                      <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No available time slots at the moment.</p>
+              {availableDates.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-xl">
+                      <Calendar className="h-5 w-5 mr-2" />
+                      Select a Date
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      {availableDates.map((date, index) => (
+                        <Button
+                          key={index}
+                          variant={selectedDate?.toDateString() === date.toDateString() ? "default" : "outline"}
+                          onClick={() => setSelectedDate(date)}
+                          className="p-4 h-auto"
+                        >
+                          {date.toLocaleDateString('en-US', { 
+                            weekday: 'long', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </Button>
+                      ))}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
+
+              {selectedDate && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-xl">
+                      <Clock className="h-5 w-5 mr-2" />
+                      Available Times - {selectedDate.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loading ? (
+                      <div className="text-center py-8">
+                        <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
+                        <p className="text-muted-foreground">Loading available times...</p>
+                      </div>
+                    ) : timeSlots.length > 0 ? (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                        {timeSlots.map((time, index) => (
+                          <Button
+                            key={index}
+                            variant="outline"
+                            onClick={() => selectTimeSlot(time)}
+                            className="text-sm py-2 hover:bg-primary hover:text-primary-foreground"
+                          >
+                            {time}
+                          </Button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">No available time slots for this date.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {!selectedDate && availableDates.length === 0 && (
+                <div className="text-center py-12">
+                  <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Audition Dates Available</h3>
+                  <p className="text-muted-foreground">
+                    There are currently no audition dates scheduled. Please check back later.
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             /* Contact Form */
