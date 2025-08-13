@@ -64,7 +64,7 @@ const handler = async (req: Request): Promise<Response> => {
             <strong>What you need to do:</strong>
           </p>
           <ol style="color: #4a5568; line-height: 1.8;">
-            <li>Visit the audition scheduling portal: <a href="https://gleeworld.org/appointments" style="color: #4299e1;">https://gleeworld.org/appointments</a></li>
+            <li>Visit the audition scheduling portal: <a href="https://oopmlreysjzuxzylyheb.lovableproject.com/appointments" style="color: #4299e1;">https://oopmlreysjzuxzylyheb.lovableproject.com/appointments</a></li>
             <li>Select a new time slot within the updated windows</li>
             <li>Confirm your new appointment</li>
           </ol>
