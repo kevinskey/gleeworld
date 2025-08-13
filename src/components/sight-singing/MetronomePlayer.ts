@@ -68,9 +68,13 @@ export class MetronomePlayer {
     this.nextNoteTime += secondsPerBeat;
     this.beatNumber++;
 
-    // Schedule next note
+    // Schedule next note using AudioScheduler for precise timing
     if (this.isPlaying) {
-      setTimeout(() => this.scheduleNote(), 0);
+      this.scheduler.scheduleEvent({
+        time: this.nextNoteTime - 0.01, // Schedule slightly before to ensure continuity
+        type: 'metronome',
+        callback: () => this.scheduleNote()
+      });
     }
   }
 
