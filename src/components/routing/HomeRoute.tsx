@@ -24,6 +24,7 @@ export const HomeRoute = () => {
 
   // Show loading while determining auth status
   if (authLoading) {
+    console.log('🏠 HomeRoute: Still loading auth...');
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center">
         <LoadingSpinner size="lg" text="Loading GleeWorld..." />
@@ -39,5 +40,17 @@ export const HomeRoute = () => {
     shouldShowLanding: true
   });
   
-  return <GleeWorldLanding />;
+  try {
+    return <GleeWorldLanding />;
+  } catch (error) {
+    console.error('❌ Error rendering GleeWorldLanding:', error);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">Welcome to GleeWorld</h1>
+          <p className="text-muted-foreground">Something went wrong loading the page. Please refresh.</p>
+        </div>
+      </div>
+    );
+  }
 };
