@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAvailableAuditionSlots } from '@/hooks/useAvailableAuditionSlots';
 import { cn } from '@/lib/utils';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 interface TimeSlot {
   date: string;
@@ -72,10 +73,15 @@ export default function UnifiedBookingPage() {
     setIsSubmitting(true);
     
     try {
-      // Format the datetime for the appointment
+      const easternTimeZone = 'America/New_York';
+      
+      // Create the appointment time in Eastern Time
       const [hours, minutes] = selectedSlot.time.split(':');
-      const appointmentDateTime = new Date(selectedDate);
-      appointmentDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      const easternDateTime = new Date(selectedDate);
+      easternDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      // Convert Eastern Time to UTC for storage
+      const utcDateTime = fromZonedTime(easternDateTime, easternTimeZone);
       
       // Check if this person already has an audition application
       const { data: existingApplication, error: checkError } = await supabase
@@ -95,7 +101,7 @@ export default function UnifiedBookingPage() {
         const { error: updateError } = await supabase
           .from('audition_applications')
           .update({
-            audition_time_slot: appointmentDateTime.toISOString(),
+            audition_time_slot: utcDateTime.toISOString(),
             phone_number: contactInfo.phone,
             email: contactInfo.email,
             full_name: contactInfo.name,
@@ -113,7 +119,7 @@ export default function UnifiedBookingPage() {
         .insert({
           title: `Audition - ${contactInfo.name}`,
           client_name: contactInfo.name,
-          description: `Spelman College Glee Club Audition (5 minutes) - ${selectedSlot.displayTime}`,
+          description: `Spelman College Glee Club Audition (5 minutes) - ${selectedSlot.displayTime} EST`,
           appointment_date: selectedSlot.date,
           client_email: contactInfo.email,
           client_phone: contactInfo.phone,
@@ -262,7 +268,7 @@ export default function UnifiedBookingPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center text-xl">
                       <Clock className="h-5 w-5 mr-2" />
-                      Available Times - {selectedDate.toLocaleDateString('en-US', { 
+                      Available Times (Eastern Time) - {selectedDate.toLocaleDateString('en-US', { 
                         weekday: 'long', 
                         month: 'short', 
                         day: 'numeric' 
@@ -326,7 +332,7 @@ export default function UnifiedBookingPage() {
                 <CardHeader>
                   <CardTitle>Contact Information</CardTitle>
                   <p className="text-muted-foreground">
-                    Selected: {selectedSlot?.displayDate} at {selectedSlot?.displayTime}
+                    Selected: {selectedSlot?.displayDate} at {selectedSlot?.displayTime} EST
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
