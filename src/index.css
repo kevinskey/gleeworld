@@ -199,18 +199,8 @@
 
   /* Responsive body text */
   p, div, span {
-    @apply text-xs sm:text-sm md:text-base;
+    @apply text-sm sm:text-base md:text-lg;
     line-height: 1.6;
-  }
-  
-  /* Button text should be readable on all devices */
-  button {
-    @apply text-xs sm:text-sm md:text-base;
-  }
-  
-  /* Form inputs should be consistent */
-  input, textarea, select {
-    @apply text-xs sm:text-sm md:text-base;
   }
 }
 

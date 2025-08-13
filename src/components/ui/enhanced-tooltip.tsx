@@ -1,6 +1,7 @@
 import React, { ReactElement, cloneElement } from "react";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
+import { useTooltipContext } from "@/contexts/TooltipContext";
 import { cn } from "@/lib/utils";
 
 interface EnhancedTooltipProps {
@@ -20,8 +21,7 @@ export const EnhancedTooltip = ({
   className,
   maxWidth = 250
 }: EnhancedTooltipProps) => {
-  const enabled = true;
-  const delay = 300;
+  const { enabled, delay } = useTooltipContext();
 
   // If tooltips are globally disabled or locally disabled, just return the children
   if (!enabled || disabled || !content) {
@@ -68,7 +68,7 @@ interface SimpleTitleTooltipProps {
 }
 
 export const SimpleTitleTooltip = ({ title, children }: SimpleTitleTooltipProps) => {
-  const enabled = true;
+  const { enabled } = useTooltipContext();
   
   if (!enabled || !title) {
     return children;

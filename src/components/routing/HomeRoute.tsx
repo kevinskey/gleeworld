@@ -1,41 +1,43 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useNavigate } from 'react-router-dom';
+import { useRoleBasedRedirect } from '@/hooks/useRoleBasedRedirect';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
+import { RouteDebugger } from '@/components/debug/RouteDebugger';
 
 export const HomeRoute = () => {
-  console.log('🏠 HomeRoute: ULTRA SIMPLE VERSION LOADING');
+  const { user, loading: authLoading } = useAuth();
   
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #1e3a8a, #1e40af, #334155)',
-      color: 'white',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'system-ui, sans-serif'
-    }}>
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
-        <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>
-          Welcome to GleeWorld
-        </h1>
-        <p style={{ fontSize: '1.2rem', opacity: 0.9, marginBottom: '2rem' }}>
-          The official digital platform of the Spelman College Glee Club
-        </p>
-        <button 
-          onClick={() => window.location.href = '/auth'}
-          style={{
-            background: 'white',
-            color: '#1e3a8a',
-            border: 'none',
-            padding: '1rem 2rem',
-            borderRadius: '8px',
-            fontSize: '1.1rem',
-            fontWeight: 'bold',
-            cursor: 'pointer'
-          }}
-        >
-          Sign In
-        </button>
+  // Debug logging for auth state
+  console.log('🏠 HomeRoute render:', {
+    hasUser: !!user,
+    userId: user?.id,
+    email: user?.email,
+    authLoading,
+    timestamp: new Date().toISOString()
+  });
+  
+  // Use the role-based redirect hook to handle automatic redirection
+  useRoleBasedRedirect();
+
+  // Show loading while determining auth status
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Loading GleeWorld..." />
       </div>
-    </div>
-  );
+    );
+  }
+
+  // For public/non-authenticated users, show the landing page
+  console.log('🌐 Showing public landing page for user:', {
+    hasUser: !!user,
+    userEmail: user?.email,
+    authLoading,
+    shouldShowLanding: true
+  });
+  
+  return <GleeWorldLanding />;
 };

@@ -3,7 +3,6 @@ import { ReactNode } from "react";
 import { UniversalHeader } from "./UniversalHeader";
 import { UniversalFooter } from "./UniversalFooter";
 import { ResponsiveContainer } from "@/components/shared/ResponsiveContainer";
-import { ResponsiveDesignEnforcer } from "@/components/ui/responsive-design-enforcer";
 
 interface UniversalLayoutProps {
   children: ReactNode;
@@ -27,8 +26,7 @@ export const UniversalLayout = ({
   onViewModeChange,
 }: UniversalLayoutProps) => {
   return (
-    <div className="min-h-screen flex flex-col w-full overflow-x-hidden mobile-text-scale tablet-text-scale desktop-text-scale">
-      <ResponsiveDesignEnforcer />
+    <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
       {showHeader && (
         <UniversalHeader 
           viewMode={viewMode}

@@ -61,7 +61,7 @@ interface CheckoutForm {
   shippingCountry: string;
 }
 
-const CheckoutPage = () => {
+export const CheckoutPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -599,5 +599,3 @@ const CheckoutPage = () => {
     </PublicLayout>
   );
 };
-
-export default CheckoutPage;

@@ -1,5 +1,4 @@
 
-
 export const PAGE_NAMES: Record<string, string> = {
   '/': 'Home',
   '/landing': 'Home',
@@ -35,9 +34,7 @@ export const PAGE_NAMES: Record<string, string> = {
   '/budgets': 'Budget Management',
   '/tour-manager': 'Tour Manager Dashboard',
   '/treasurer': 'Treasurer Dashboard',
-  '/tour-planner': 'Tour Planner',
-  '/auditions': 'Auditions',
-  '/auditioner-dashboard': 'Audition Application'
+  '/tour-planner': 'Tour Planner'
 };
 
 export const getPageName = (pathname: string): string => {
@@ -60,4 +57,3 @@ export const getPageName = (pathname: string): string => {
   // Default fallback
   return 'GleeWorld';
 };
-

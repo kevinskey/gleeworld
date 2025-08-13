@@ -13164,10 +13164,6 @@ export type Database = {
         Args: { event_id_param: string }
         Returns: undefined
       }
-      can_manage_appointments: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
       can_view_auditioner_profiles: {
         Args: Record<PropertyKey, never>
         Returns: boolean

@@ -60,15 +60,7 @@ export class MelodyPlayer {
   }
 
   setTempo(tempo: number) {
-    const wasPlaying = this.isPlaying;
     this.tempo = tempo;
-    
-    // If currently playing, restart with new tempo
-    if (wasPlaying) {
-      console.log('MelodyPlayer: Restarting with new tempo:', tempo);
-      this.stop();
-      this.start(tempo);
-    }
   }
 
   onNote(callback: (note: MelodyNote, index: number) => void) {

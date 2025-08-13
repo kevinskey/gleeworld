@@ -20,13 +20,13 @@ export class MetronomePlayer {
     this.scheduler = new AudioScheduler(audioContext);
   }
 
-  start(tempo: number = 120, beatsPerMeasure: number = 4, startBeat: number = 0) {
+  start(tempo: number = 120, beatsPerMeasure: number = 4) {
     if (this.isPlaying) return;
 
     this.tempo = tempo;
     this.beatsPerMeasure = beatsPerMeasure;
     this.isPlaying = true;
-    this.beatNumber = startBeat;
+    this.beatNumber = 0;
     this.nextNoteTime = this.audioContext.currentTime;
 
     this.scheduler.start();
@@ -39,15 +39,7 @@ export class MetronomePlayer {
   }
 
   setTempo(tempo: number) {
-    const wasPlaying = this.isPlaying;
     this.tempo = tempo;
-    
-    // If currently playing, restart with new tempo
-    if (wasPlaying) {
-      console.log('MetronomePlayer: Restarting with new tempo:', tempo);
-      this.stop();
-      this.start(tempo, this.beatsPerMeasure, this.beatNumber);
-    }
   }
 
   onBeat(callback: (beatNumber: number, isDownbeat: boolean) => void) {
@@ -76,13 +68,9 @@ export class MetronomePlayer {
     this.nextNoteTime += secondsPerBeat;
     this.beatNumber++;
 
-    // Schedule next note using AudioScheduler for precise timing
+    // Schedule next note
     if (this.isPlaying) {
-      this.scheduler.scheduleEvent({
-        time: this.nextNoteTime - 0.01, // Schedule slightly before to ensure continuity
-        type: 'metronome',
-        callback: () => this.scheduleNote()
-      });
+      setTimeout(() => this.scheduleNote(), 0);
     }
   }
 

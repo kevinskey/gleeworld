@@ -1,4 +1,3 @@
-
 export const ROUTES = {
   HOME: '/',
   AUTH: '/auth',
@@ -31,9 +30,6 @@ export const ROUTES = {
   SIGHT_READING_SUBMISSION: '/sight-reading-submission',
   SIGHT_READING_PREVIEW: '/sight-reading-preview',
   SIGHT_READING_GENERATOR: '/sight-reading-generator',
-  
-  AUDITIONS: '/auditions',
-  AUDITIONER_DASHBOARD: '/auditioner-dashboard',
   
   PERMISSIONS: '/admin/permissions',
   WELLNESS: '/wellness'
@@ -71,7 +67,5 @@ export const PUBLIC_ROUTES = [
   ROUTES.CALENDAR,
   ROUTES.SHOP,
   ROUTES.CHECKOUT,
-  ROUTES.SHOP_SUCCESS,
-  ROUTES.AUDITIONS,
-  ROUTES.AUDITIONER_DASHBOARD
+  ROUTES.SHOP_SUCCESS
 ] as const;

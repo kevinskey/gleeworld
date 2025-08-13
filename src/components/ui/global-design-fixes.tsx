@@ -63,61 +63,15 @@ export const GlobalDesignFixes = () => {
       @media (max-width: 768px) {
         .card {
           margin: 0.5rem !important;
-          padding: 0.75rem !important;
-        }
-        
-        .text-4xl {
-          font-size: 1.75rem !important;
-        }
-        
-        .text-3xl {
-          font-size: 1.5rem !important;
-        }
-        
-        .text-2xl {
-          font-size: 1.25rem !important;
-        }
-        
-        .text-xl {
-          font-size: 1.125rem !important;
-        }
-        
-        .text-lg {
-          font-size: 1rem !important;
-        }
-        
-        .text-base {
-          font-size: 0.875rem !important;
-        }
-        
-        .text-sm {
-          font-size: 0.75rem !important;
-        }
-        
-        /* Ensure buttons and interactive elements have min touch targets */
-        button, a, [role="button"] {
-          min-height: 44px !important;
-          min-width: 44px !important;
-        }
-        
-        /* Fix padding on small screens */
-        .p-6, .px-6, .py-6 {
           padding: 1rem !important;
         }
         
-        .p-4, .px-4, .py-4 {
-          padding: 0.75rem !important;
-        }
-      }
-      
-      /* Tablet-specific improvements */
-      @media (min-width: 769px) and (max-width: 1024px) {
         .text-4xl {
-          font-size: 2.25rem !important;
+          font-size: 2rem !important;
         }
         
         .text-3xl {
-          font-size: 1.875rem !important;
+          font-size: 1.75rem !important;
         }
         
         .text-2xl {
