@@ -189,14 +189,25 @@ export const AuditionRescheduleManager = () => {
             </Button>
 
             {auditioners.length > 0 && (
-              <Button 
-                onClick={sendRescheduleEmails} 
-                disabled={sending}
-                variant="destructive"
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                {sending ? 'Sending...' : `Send Reschedule Emails (${auditioners.length})`}
-              </Button>
+              <>
+                <Button 
+                  onClick={sendRescheduleEmails} 
+                  disabled={sending}
+                  variant="destructive"
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  {sending ? 'Sending...' : `Send Reschedule Emails (${auditioners.length})`}
+                </Button>
+                
+                {sending && (
+                  <Button 
+                    onClick={() => setSending(false)} 
+                    variant="outline"
+                  >
+                    Reset
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </CardContent>
