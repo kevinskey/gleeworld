@@ -416,6 +416,22 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     }
   };
 
+  // Helper function to count actual measures in MusicXML
+  const countMeasuresFromMusicXML = (xml: string): number => {
+    if (!xml) return 0;
+    
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xml, 'application/xml');
+      const measures = doc.querySelectorAll('measure');
+      console.log('Counted', measures.length, 'measures from MusicXML');
+      return measures.length;
+    } catch (error) {
+      console.error('Error counting measures from MusicXML:', error);
+      return 0;
+    }
+  };
+
   const startCountdown = (callback: () => void) => {
     setIsCountingDown(true);
     setCountdownBeats(0);
@@ -550,10 +566,15 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     // Calculate practice duration based on exercise measures and tempo
     const [beatsPerMeasure] = exerciseMetadata.timeSignature.split('/').map(Number);
-    const totalBeats = exerciseMetadata.measures * beatsPerMeasure;
+    
+    // Count actual measures from MusicXML instead of using metadata
+    const actualMeasureCount = countMeasuresFromMusicXML(musicXML);
+    const effectiveMeasures = actualMeasureCount > 0 ? actualMeasureCount : exerciseMetadata.measures;
+    
+    const totalBeats = effectiveMeasures * beatsPerMeasure;
     const practiceSeconds = Math.ceil((totalBeats * 60) / tempo);
     
-    console.log('Practice duration calculated:', practiceSeconds, 'seconds for', exerciseMetadata.measures, 'measures');
+    console.log('Practice duration calculated:', practiceSeconds, 'seconds for', effectiveMeasures, 'actual measures (metadata said', exerciseMetadata.measures, ')');
     
     // Clear any existing timer before starting a new one
     if (playbackTimerRef.current) {
