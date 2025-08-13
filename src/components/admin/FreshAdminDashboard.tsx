@@ -114,10 +114,10 @@ export const FreshAdminDashboard = () => {
         </div>
 
         {/* Admin Modules Grid */}
-        <Card className="bg-background/50 border-border">
-          <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <Card className="bg-card border border-border">
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4">
             <div>
-              <CardTitle className="text-lg">Administration Modules</CardTitle>
+              <CardTitle className="text-lg font-semibold text-foreground">Administration Modules</CardTitle>
               <p className="text-sm text-muted-foreground">
                 Select a module to manage different aspects of the platform
               </p>
@@ -128,6 +128,7 @@ export const FreshAdminDashboard = () => {
                 size="sm"
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
                 aria-label={sortOrder === 'asc' ? 'Sort Z–A' : 'Sort A–Z'}
+                className="border-border text-foreground hover:bg-muted"
               >
                 <ArrowUpDown className="h-4 w-4 mr-2" />
                 Sort {sortOrder === 'asc' ? 'A–Z' : 'Z–A'}
@@ -135,25 +136,25 @@ export const FreshAdminDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {sortedModules.map((module) => (
                 <Card 
                   key={module.id}
-                  className={`cursor-pointer transition-all hover:shadow-md border-border ${
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-md border border-border hover:border-primary/50 ${
                     selectedModule === module.id 
-                      ? 'ring-2 ring-primary bg-primary/5' 
-                      : 'bg-background/30 hover:bg-background/60'
+                      ? 'ring-2 ring-primary bg-primary/5 border-primary' 
+                      : 'bg-card hover:bg-muted/50'
                   }`}
                   onClick={() => module.route ? navigate(module.route) : setSelectedModule(module.id)}
                 >
-                  <CardContent className="p-4 text-center h-full flex flex-col justify-center min-h-[160px]">
+                  <CardContent className="p-4 text-center h-full flex flex-col justify-center min-h-[140px]">
                     <div className="mb-3">
-                      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
-                        <module.icon className="h-6 w-6 text-primary" />
+                      <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center mx-auto">
+                        <module.icon className="h-5 w-5 text-primary" />
                       </div>
                     </div>
-                    <h3 className="font-medium text-foreground mb-1">{module.name}</h3>
-                    <p className="text-xs text-muted-foreground">{module.description}</p>
+                    <h3 className="text-sm font-medium text-foreground mb-1 line-clamp-2">{module.name}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{module.description}</p>
                   </CardContent>
                 </Card>
               ))}

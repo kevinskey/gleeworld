@@ -491,25 +491,26 @@ export const AuditionsManagement = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'accepted': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'waitlisted': return 'bg-yellow-100 text-yellow-800';
-      case 'under_review': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'accepted': return 'bg-status-confirmed text-status-confirmed-fg';
+      case 'rejected': return 'bg-status-cancelled text-status-cancelled-fg';
+      case 'waitlisted': return 'bg-muted text-muted-foreground';
+      case 'under_review': return 'bg-status-scheduled text-status-scheduled-fg';
+      case 'pending': return 'bg-muted text-muted-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
   const getVoicePartColor = (voicePart: string) => {
     switch (voicePart) {
       case 'S1':
-      case 'S2': return 'bg-pink-100 text-pink-800';
+      case 'S2': return 'bg-event-social text-event-social-fg';
       case 'A1':
-      case 'A2': return 'bg-purple-100 text-purple-800';
+      case 'A2': return 'bg-event-sectional text-event-sectional-fg';
       case 'T1':
-      case 'T2': return 'bg-blue-100 text-blue-800';
+      case 'T2': return 'bg-event-performance text-event-performance-fg';
       case 'B1':
-      case 'B2': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'B2': return 'bg-event-rehearsal text-event-rehearsal-fg';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -597,196 +598,211 @@ export const AuditionsManagement = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Custom Header Design */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 rounded-3xl shadow-xl">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative p-6 sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                  <Music className="h-6 w-6 text-white" />
-                </div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Clean Admin Header */}
+      <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-primary rounded-md">
+                <Music className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-semibold text-foreground">
                   Auditions Management
                 </h1>
-              </div>
-              <p className="text-white/90 text-base sm:text-lg max-w-2xl">
-                Manage audition sessions, applications, and evaluations
-              </p>
-              <div className="flex items-center gap-4 pt-2">
-                <div className="flex items-center gap-2 text-white/80 text-sm">
-                  <Users className="h-4 w-4" />
-                  <span>{applications.length} Applications</span>
-                </div>
-                <div className="flex items-center gap-2 text-white/80 text-sm">
-                  <Calendar className="h-4 w-4" />
-                  <span>{sessions.length} Sessions</span>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  Manage audition sessions, applications, and evaluations
+                </p>
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <Select value={selectedSession} onValueChange={setSelectedSession}>
-                <SelectTrigger className="w-full sm:w-56 bg-white/20 border-white/30 text-white placeholder:text-white/70 hover:bg-white/30 transition-colors">
-                  <SelectValue placeholder="Filter by session" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sessions</SelectItem>
-                  {sessions.map((session) => (
-                    <SelectItem key={session.id} value={session.id}>
-                      {session.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>{applications.length} Applications</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>{sessions.length} Sessions</span>
+              </div>
             </div>
           </div>
+          
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <Select value={selectedSession} onValueChange={setSelectedSession}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filter by session" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sessions</SelectItem>
+                {sessions.map((session) => (
+                  <SelectItem key={session.id} value={session.id}>
+                    {session.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        
-        {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        {/* Mobile optimized tab list */}
-        <div className="overflow-x-auto mb-8">
-          <TabsList className="grid w-full min-w-[600px] grid-cols-5 h-auto sm:h-12">
-            <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
-              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Overview</span>
+        {/* Responsive tab navigation */}
+        <div className="border-b border-border">
+          <TabsList className="grid w-full grid-cols-5 h-auto bg-transparent p-0 gap-0">
+            <TabsTrigger 
+              value="overview" 
+              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="roster" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
-              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Roster</span>
+            <TabsTrigger 
+              value="roster" 
+              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
+            >
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Roster</span>
             </TabsTrigger>
-            <TabsTrigger value="evaluations" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
-              <Star className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Evaluations</span>
+            <TabsTrigger 
+              value="evaluations" 
+              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
+            >
+              <Star className="h-4 w-4" />
+              <span className="hidden sm:inline">Evaluations</span>
             </TabsTrigger>
-            <TabsTrigger value="sessions" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
-              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Sessions</span>
+            <TabsTrigger 
+              value="sessions" 
+              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
+            >
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Sessions</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
-              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Data Center</span>
-              <span className="sm:hidden">Data</span>
+            <TabsTrigger 
+              value="analytics" 
+              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Analytics</span>
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="space-y-8 mt-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
+        <TabsContent value="overview" className="space-y-6 pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="border border-border bg-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <CardTitle className="text-sm font-medium text-foreground">Active Sessions</CardTitle>
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{sessions.filter(s => s.is_active).length}</div>
-                <p className="text-xs text-muted-foreground">
+              <CardContent className="pt-0">
+                <div className="text-2xl font-bold text-foreground">{sessions.filter(s => s.is_active).length}</div>
+                <p className="text-xs text-muted-foreground mt-1">
                   {sessions.length} total sessions
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
+            <Card className="border border-border bg-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <CardTitle className="text-sm font-medium text-foreground">Total Applications</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{filteredApplications.length}</div>
-                <p className="text-xs text-muted-foreground">
+              <CardContent className="pt-0">
+                <div className="text-2xl font-bold text-foreground">{filteredApplications.length}</div>
+                <p className="text-xs text-muted-foreground mt-1">
                   {filteredApplications.filter(a => a.status === 'submitted' || a.status === 'pending').length} pending review
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Evaluated</CardTitle>
+            <Card className="border border-border bg-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <CardTitle className="text-sm font-medium text-foreground">Evaluated</CardTitle>
                 <Star className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{evaluations.length}</div>
-                <p className="text-xs text-muted-foreground">
+              <CardContent className="pt-0">
+                <div className="text-2xl font-bold text-foreground">{evaluations.length}</div>
+                <p className="text-xs text-muted-foreground mt-1">
                   {evaluations.filter(e => e.is_final).length} final evaluations
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Acceptance Rate</CardTitle>
+            <Card className="border border-border bg-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <CardTitle className="text-sm font-medium text-foreground">Acceptance Rate</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
+              <CardContent className="pt-0">
+                <div className="text-2xl font-bold text-foreground">
                   {filteredApplications.length > 0 
                     ? Math.round((filteredApplications.filter(a => a.status === 'accepted').length / filteredApplications.length) * 100)
                     : 0}%
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mt-1">
                   {filteredApplications.filter(a => a.status === 'accepted').length} accepted
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Applications</CardTitle>
-              <CardDescription>Latest audition applications submitted</CardDescription>
+          <Card className="border border-border bg-card">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-foreground">Recent Applications</CardTitle>
+              <CardDescription className="text-muted-foreground">Latest audition applications submitted</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="pt-0">
+              <div className="space-y-3">
                 {filteredApplications.slice(0, 5).map((application) => (
-                  <div key={application.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <Avatar>
+                  <div key={application.id} className="flex items-center justify-between p-3 border border-border rounded-md bg-card hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
                         <AvatarImage src={application.profile_image_url} />
-                        <AvatarFallback>
-                          {application.full_name.split(' ').map(n => n[0]).join('')}
+                        <AvatarFallback className="text-xs bg-muted text-muted-foreground">
+                          {application.full_name?.split(' ').map(n => n[0]).join('') || 'A'}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-medium">{application.full_name}</p>
-                        <p className="text-sm text-muted-foreground">{application.email}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground truncate">{application.full_name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{application.email}</p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       {application.voice_part_preference && (
-                        <Badge className={getVoicePartColor(application.voice_part_preference)}>
+                        <Badge variant="outline" className={`text-xs ${getVoicePartColor(application.voice_part_preference)}`}>
                           {application.voice_part_preference}
                         </Badge>
                       )}
-                      <Badge className={getStatusColor(application.status)}>
+                      <Badge variant="outline" className={`text-xs ${getStatusColor(application.status)}`}>
                         {application.status.replace('_', ' ')}
                       </Badge>
                     </div>
                   </div>
                 ))}
+                {filteredApplications.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No applications found</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="sessions" className="space-y-6 mt-8">
-
+        <TabsContent value="sessions" className="space-y-6 pt-6">
           <div className="grid gap-4">
             {sessions.map((session) => (
-              <Card key={session.id}>
-                <CardHeader>
+              <Card key={session.id} className="border border-border bg-card">
+                <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>{session.name}</CardTitle>
-                      <CardDescription>{session.description}</CardDescription>
+                      <CardTitle className="text-lg font-semibold text-foreground">{session.name}</CardTitle>
+                      <CardDescription className="text-muted-foreground">{session.description}</CardDescription>
                     </div>
-                    <Badge className={session.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                    <Badge variant="outline" className={session.is_active ? 'bg-status-confirmed text-status-confirmed-fg' : 'bg-muted text-muted-foreground'}>
                       {session.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
