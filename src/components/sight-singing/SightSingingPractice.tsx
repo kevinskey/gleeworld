@@ -84,6 +84,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [practiceMode, setPracticeMode] = useState(true);
   const [pianoEnabled, setPianoEnabled] = useState(true);
   const [metronomeEnabled, setMetronomeEnabled] = useState(true);
+  const [metronomeVolume, setMetronomeVolume] = useState(0.7); // Default higher volume
   const [tempo, setTempo] = useState(120);
   const [solfegeEnabled, setSolfegeEnabled] = useState(false);
   const [currentNote, setCurrentNote] = useState<string | undefined>();
@@ -588,6 +589,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       // Initialize MIDI-style players
       if (!metronomePlayerRef.current) {
         metronomePlayerRef.current = new MetronomePlayer(audioContextRef.current);
+        metronomePlayerRef.current.setVolume(metronomeVolume);
         metronomePlayerRef.current.onBeat((beat, isDownbeat) => {
           console.log(`🎯 Beat ${beat} (${isDownbeat ? 'DOWN' : 'up'})`);
         });
@@ -646,6 +648,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     const [beatsPerMeasure] = exerciseMetadata.timeSignature.split('/').map(Number);
     metronomePlayerRef.current.setTempo(tempo);
+    metronomePlayerRef.current.setVolume(metronomeVolume);
     metronomePlayerRef.current.start(tempo, beatsPerMeasure);
     
     console.log('🎯 Started MIDI-style metronome at', tempo, 'BPM');
@@ -790,8 +793,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       recordingTimerRef.current = null;
     }
     
-    // Keep metronome running after recording stops - don't stop it here
-    console.log('Recording stopped, but keeping metronome running for continued practice');
+    // Stop metronome when recording ends
+    if (metronomePlayerRef.current) {
+      metronomePlayerRef.current.stop();
+      console.log('🎯 Metronome stopped at end of recording');
+    }
     
     toast({
       title: "Recording Stopped",
@@ -941,37 +947,62 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
               </Label>
             </div>
             
-            {/* Metronome Toggle */}
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="metronome"
-                checked={metronomeEnabled}
-                onCheckedChange={(checked) => {
-                  console.log('=== METRONOME TOGGLE ===');
-                  console.log('Metronome toggle clicked:', checked);
-                  
-                  setMetronomeEnabled(checked);
-                  
-                  if (!checked) {
-                    console.log('Metronome toggled OFF - stopping MIDI-style metronome');
-                    if (metronomePlayerRef.current) {
-                      metronomePlayerRef.current.stop();
+            {/* Metronome Toggle with Volume */}
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="metronome"
+                  checked={metronomeEnabled}
+                  onCheckedChange={(checked) => {
+                    console.log('=== METRONOME TOGGLE ===');
+                    console.log('Metronome toggle clicked:', checked);
+                    
+                    setMetronomeEnabled(checked);
+                    
+                    if (!checked) {
+                      console.log('Metronome toggled OFF - stopping MIDI-style metronome');
+                      if (metronomePlayerRef.current) {
+                        metronomePlayerRef.current.stop();
+                      }
+                    } else if (isPlaying || isRecording) {
+                      console.log('Metronome toggled ON during active session - starting MIDI-style metronome');
+                      startMetronomeWithPreciseTiming();
+                    } else {
+                      console.log('Metronome toggled ON but no active session');
                     }
-                  } else if (isPlaying || isRecording) {
-                    console.log('Metronome toggled ON during active session - starting MIDI-style metronome');
-                    startMetronomeWithPreciseTiming();
-                  } else {
-                    console.log('Metronome toggled ON but no active session');
-                  }
-                  
-                  console.log('=== END METRONOME TOGGLE ===');
-                }}
-                className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
-              />
-              <Label htmlFor="metronome" className="flex items-center gap-1 cursor-pointer text-sm">
-                <Timer className="h-3.5 w-3.5" />
-                Metronome
-              </Label>
+                    
+                    console.log('=== END METRONOME TOGGLE ===');
+                  }}
+                  className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
+                />
+                <Label htmlFor="metronome" className="flex items-center gap-1 cursor-pointer text-sm">
+                  <Timer className="h-3.5 w-3.5" />
+                  Metronome
+                </Label>
+              </div>
+              
+              {/* Metronome Volume Control */}
+              {metronomeEnabled && (
+                <div className="flex items-center gap-2">
+                  <Volume2 className="h-3 w-3 text-muted-foreground" />
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1"
+                    step="0.1"
+                    value={metronomeVolume}
+                    onChange={(e) => {
+                      const newVolume = parseFloat(e.target.value);
+                      setMetronomeVolume(newVolume);
+                      if (metronomePlayerRef.current) {
+                        metronomePlayerRef.current.setVolume(newVolume);
+                      }
+                    }}
+                    className="w-16 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                  />
+                  <span className="text-xs font-mono min-w-[2rem] text-center">{Math.round(metronomeVolume * 100)}%</span>
+                </div>
+              )}
             </div>
           </div>
           

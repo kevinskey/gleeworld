@@ -13,6 +13,7 @@ export class MetronomePlayer {
   private noteLength = 0.05; // Length of metronome click
   private beatNumber = 0;
   private beatsPerMeasure = 4;
+  private volume = 0.3; // Adjustable volume
   private onBeatCallback?: (beatNumber: number, isDownbeat: boolean) => void;
 
   constructor(audioContext: AudioContext) {
@@ -40,6 +41,10 @@ export class MetronomePlayer {
 
   setTempo(tempo: number) {
     this.tempo = tempo;
+  }
+
+  setVolume(volume: number) {
+    this.volume = Math.max(0, Math.min(1, volume)); // Clamp between 0 and 1
   }
 
   onBeat(callback: (beatNumber: number, isDownbeat: boolean) => void) {
@@ -96,7 +101,7 @@ export class MetronomePlayer {
 
       // Create sharp click envelope
       gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + 0.001);
+      gainNode.gain.linearRampToValueAtTime(this.volume, this.audioContext.currentTime + 0.001);
       gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + this.noteLength);
 
       oscillator.start(this.audioContext.currentTime);
