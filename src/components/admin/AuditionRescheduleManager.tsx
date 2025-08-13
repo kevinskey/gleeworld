@@ -26,8 +26,8 @@ export const AuditionRescheduleManager = () => {
 
   // New audition time windows
   const newAuditionWindows = [
-    { date: '2025-08-15', startTime: '14:30', endTime: '16:30', displayTime: '2:30 PM - 4:30 PM' },
-    { date: '2025-08-16', startTime: '11:00', endTime: '13:00', displayTime: '11:00 AM - 1:00 PM' }
+    { date: '2025-08-16', startTime: '14:30', endTime: '16:30', displayTime: '2:30 PM - 4:30 PM' },
+    { date: '2025-08-17', startTime: '11:00', endTime: '13:00', displayTime: '11:00 AM - 1:00 PM' }
   ];
 
   const loadAuditionersNeedingReschedule = async () => {
@@ -157,8 +157,8 @@ export const AuditionRescheduleManager = () => {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="font-semibold text-blue-900 mb-2">New Audition Windows:</h3>
             <ul className="text-blue-800 space-y-1">
-              <li>• <strong>Thursday, August 15:</strong> 2:30 PM - 4:30 PM</li>
-              <li>• <strong>Friday, August 16:</strong> 11:00 AM - 1:00 PM</li>
+              <li>• <strong>Friday, August 16:</strong> 2:30 PM - 4:30 PM</li>
+              <li>• <strong>Saturday, August 17:</strong> 11:00 AM - 1:00 PM</li>
             </ul>
           </div>
 
