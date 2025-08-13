@@ -665,7 +665,8 @@ const SightReadingGeneratorPage = () => {
                 keySignature,
                 timeSignature,
                 measures: measures[0],
-                noteRange
+                noteRange,
+                tempo
               }}
               onRecordingChange={setIsRecording}
               onSolfegeChange={setSolfegeEnabled}

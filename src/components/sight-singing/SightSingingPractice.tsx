@@ -58,6 +58,7 @@ interface SightSingingPracticeProps {
     timeSignature: string;
     measures: number;
     noteRange: string;
+    tempo?: number; // Add tempo to metadata
   };
   showRecordingButton?: boolean;
   onRecordingChange?: (isRecording: boolean) => void;
@@ -84,7 +85,15 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const [practiceMode, setPracticeMode] = useState(true);
   const [pianoEnabled, setPianoEnabled] = useState(true);
   const [metronomeEnabled, setMetronomeEnabled] = useState(true);
-  const [tempo, setTempo] = useState(120);
+  const [tempo, setTempo] = useState(exerciseMetadata.tempo || 120);
+  
+  // Update tempo when exercise metadata changes
+  React.useEffect(() => {
+    if (exerciseMetadata.tempo && exerciseMetadata.tempo !== tempo) {
+      console.log('Updating tempo from exercise metadata:', exerciseMetadata.tempo);
+      setTempo(exerciseMetadata.tempo);
+    }
+  }, [exerciseMetadata.tempo]);
   const [solfegeEnabled, setSolfegeEnabled] = useState(false);
   const [currentNote, setCurrentNote] = useState<string | undefined>();
   const [extractedMelody, setExtractedMelody] = useState<Note[]>([]);
@@ -281,7 +290,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   React.useEffect(() => {
     console.log('=== MELODY EXTRACTION DEBUG ===');
     console.log('MusicXML changed, extracting melody. XML length:', musicXML?.length || 0);
-    console.log('MusicXML content preview:', musicXML?.substring(0, 200) || 'No XML');
+    console.log('Current tempo for extraction:', tempo, 'BPM');
     
     // Extract melody from MusicXML
     const melody = extractMelodyFromMusicXML(musicXML);
@@ -293,7 +302,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     if (onSolfegeChange) {
       onSolfegeChange(solfegeEnabled);
     }
-  }, [musicXML, solfegeEnabled]);
+  }, [musicXML, solfegeEnabled, tempo]);
 
   // Initialize OSMD and render sheet music
   useEffect(() => {
@@ -374,7 +383,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       
       const melody: Note[] = [];
       let currentTime = 0;
-      const beatDuration = 0.5; // Half second per beat (120 BPM)
+      const beatDuration = 60.0 / tempo; // Calculate beat duration from current tempo
       
       notes.forEach((noteElement, index) => {
         console.log(`Processing note ${index + 1}:`, noteElement);
@@ -489,53 +498,23 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     console.log('=== STARTING PRACTICE SESSION ===');
     console.log('Piano enabled:', pianoEnabled);
     console.log('Extracted melody length:', extractedMelody.length);
-    console.log('Extracted melody:', extractedMelody);
     console.log('Metronome enabled:', metronomeEnabled);
+    console.log('Current tempo:', tempo, 'BPM');
     
     setIsPlaying(true);
     
-    console.log('Starting practice - pianoEnabled:', pianoEnabled, 'extractedMelody length:', extractedMelody.length);
-    
-    console.log('=== MELODY PLAYBACK DEBUG ===');
-    console.log('Piano enabled:', pianoEnabled);
-    console.log('Extracted melody length:', extractedMelody.length);
-    console.log('Extracted melody:', extractedMelody);
-    console.log('Is playing:', isPlaying);
-    
-    // Initialize and start the precise audio timing system
-    if (pianoEnabled && extractedMelody.length > 0) {
-      console.log('✅ Starting MIDI-style melody playback with', extractedMelody.length, 'notes');
-      initializeAudioSystem();
-      startMelodyWithPreciseTiming();
-      
-      toast({
-        title: "Practice Started",
-        description: "Melody and metronome synchronized with precise timing"
-      });
-    } else {
-      console.log('❌ Melody playback skipped');
-      console.log('  - Piano enabled:', pianoEnabled);
-      console.log('  - Melody length:', extractedMelody.length);
-      
-      if (metronomeEnabled) {
-        initializeAudioSystem();
-        startMetronomeOnly();
-        toast({
-          title: "Practice Started", 
-          description: "Metronome only"
-        });
-      }
-    }
-    
-    
-    // Initialize audio systems
+    // Initialize audio systems ONCE
     initializeAudioSystem();
     
+    // Start melody playback if enabled
     if (pianoEnabled && extractedMelody.length > 0) {
+      console.log('✅ Starting MIDI-style melody playback with', extractedMelody.length, 'notes');
       startMelodyWithPreciseTiming();
     }
     
+    // Start metronome if enabled
     if (metronomeEnabled) {
+      console.log('✅ Starting MIDI-style metronome at', tempo, 'BPM');
       startMetronomeWithPreciseTiming();
     }
     
@@ -544,7 +523,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     const totalBeats = exerciseMetadata.measures * beatsPerMeasure;
     const practiceSeconds = Math.ceil((totalBeats * 60) / tempo);
     
-    console.log('Practice duration calculated:', practiceSeconds, 'seconds for', exerciseMetadata.measures, 'measures');
+    console.log('Practice duration calculated:', practiceSeconds, 'seconds for', exerciseMetadata.measures, 'measures at', tempo, 'BPM');
     
     // Clear any existing timer before starting a new one
     if (playbackTimerRef.current) {
@@ -564,6 +543,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         window.dispatchEvent(new CustomEvent('practiceAutoStopped'));
       }
     }, 1000);
+    
+    toast({
+      title: "Practice Started",
+      description: `Playing at ${tempo} BPM with synchronized timing`
+    });
   };
 
   // Initialize the precise audio timing system
