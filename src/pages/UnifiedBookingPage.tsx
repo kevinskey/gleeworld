@@ -94,10 +94,22 @@ export default function UnifiedBookingPage() {
         throw checkError;
       }
 
+      // Check if this person already has an audition appointment
+      const { data: existingAppointment, error: appointmentCheckError } = await supabase
+        .from('gw_appointments')
+        .select('id, client_name, client_email')
+        .eq('appointment_type', 'audition')
+        .or(`client_name.ilike.%${contactInfo.name}%,client_email.ilike.%${contactInfo.email}%`)
+        .maybeSingle();
+
+      if (appointmentCheckError && appointmentCheckError.code !== 'PGRST116') {
+        throw appointmentCheckError;
+      }
+
       let isUpdate = false;
 
+      // Update existing audition application if found
       if (existingApplication) {
-        // Update existing audition application with new time
         const { error: updateError } = await supabase
           .from('audition_applications')
           .update({
@@ -113,22 +125,43 @@ export default function UnifiedBookingPage() {
         isUpdate = true;
       }
 
-      // Always create/update appointment in gw_appointments for scheduling
-      const { error: appointmentError } = await supabase
-        .from('gw_appointments')
-        .insert({
-          title: `Audition - ${contactInfo.name}`,
-          client_name: contactInfo.name,
-          description: `Spelman College Glee Club Audition (5 minutes) - ${selectedSlot.displayTime} EST`,
-          appointment_date: selectedSlot.date,
-          client_email: contactInfo.email,
-          client_phone: contactInfo.phone,
-          status: 'scheduled',
-          appointment_type: 'audition',
-          duration_minutes: 5
-        });
+      // Update or create appointment in gw_appointments
+      if (existingAppointment) {
+        // Update existing appointment
+        const { error: appointmentUpdateError } = await supabase
+          .from('gw_appointments')
+          .update({
+            title: `Audition - ${contactInfo.name}`,
+            client_name: contactInfo.name,
+            description: `Spelman College Glee Club Audition (5 minutes) - ${selectedSlot.displayTime} EST`,
+            appointment_date: selectedSlot.date,
+            client_email: contactInfo.email,
+            client_phone: contactInfo.phone,
+            status: 'scheduled',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingAppointment.id);
 
-      if (appointmentError) throw appointmentError;
+        if (appointmentUpdateError) throw appointmentUpdateError;
+        isUpdate = true;
+      } else {
+        // Create new appointment
+        const { error: appointmentError } = await supabase
+          .from('gw_appointments')
+          .insert({
+            title: `Audition - ${contactInfo.name}`,
+            client_name: contactInfo.name,
+            description: `Spelman College Glee Club Audition (5 minutes) - ${selectedSlot.displayTime} EST`,
+            appointment_date: selectedSlot.date,
+            client_email: contactInfo.email,
+            client_phone: contactInfo.phone,
+            status: 'scheduled',
+            appointment_type: 'audition',
+            duration_minutes: 5
+          });
+
+        if (appointmentError) throw appointmentError;
+      }
 
       setIsConfirmed(true);
       
