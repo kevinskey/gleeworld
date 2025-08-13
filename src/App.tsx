@@ -117,6 +117,7 @@ import GoogleDocsPage from "./pages/GoogleDocs";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
 import AppointmentScheduler from "./pages/AppointmentScheduler";
+import PublicBooking from "./pages/PublicBooking";
 import SearchPage from "./pages/SearchPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
@@ -742,6 +743,14 @@ const App = () => {
                     <ProtectedRoute>
                       <AppointmentScheduler />
                     </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/public-booking" 
+                  element={
+                    <PublicRoute>
+                      <PublicBooking />
+                    </PublicRoute>
                   } 
                 />
                               <Route 

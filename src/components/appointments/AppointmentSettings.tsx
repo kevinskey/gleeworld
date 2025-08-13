@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -392,6 +393,32 @@ export const AppointmentSettings = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Enhanced Features */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Enhanced Features</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Email Notifications */}
+          <div className="p-4 border rounded-lg">
+            <h5 className="font-medium mb-2">Email Notifications</h5>
+            <p className="text-sm text-muted-foreground mb-4">
+              Automatic email confirmations, reminders, and updates for appointments
+            </p>
+            <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+          </div>
+
+          {/* Calendar Integration */}
+          <div className="p-4 border rounded-lg">
+            <h5 className="font-medium mb-2">Calendar Integration</h5>
+            <p className="text-sm text-muted-foreground mb-4">
+              Sync with Google Calendar and other external calendars
+            </p>
+            <Badge variant="secondary">Coming Soon</Badge>
           </div>
         </CardContent>
       </Card>
