@@ -4,7 +4,7 @@ import { MessageComposer } from './MessageComposer';
 import { RecipientSelector } from './RecipientSelector';
 import { ChannelSelector } from './ChannelSelector';
 import { SendControls } from './SendControls';
-import { NotificationSenderPanel } from './NotificationSenderPanel';
+import { SimplifiedNotificationsPanel } from './SimplifiedNotificationsPanel';
 import { useCommunication } from '@/hooks/useCommunication';
 import { RecipientGroup } from '@/types/communication';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
@@ -152,50 +152,7 @@ export const CommunicationHub = () => {
           <AccordionItem value="notifications">
             <AccordionTrigger>Notifications</AccordionTrigger>
             <AccordionContent>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column - Message Composition */}
-                <div className="lg:col-span-2 space-y-6">
-                  <MessageComposer
-                    title={title}
-                    content={content}
-                    onTitleChange={setTitle}
-                    onContentChange={setContent}
-                    templates={templates}
-                    onTemplateSelect={handleTemplateSelect}
-                  />
-                  <RecipientSelector
-                    selectedGroups={selectedGroups}
-                    onGroupToggle={handleGroupToggle}
-                    recipientCount={recipientCount}
-                  />
-                </div>
-
-                {/* Right Column - Delivery & Controls */}
-                <div className="space-y-6">
-                  <ChannelSelector
-                    selectedChannels={selectedChannels}
-                    onChannelToggle={handleChannelToggle}
-                    recipientCount={recipientCount}
-                  />
-                  <SendControls
-                    title={title}
-                    content={content}
-                    selectedGroups={selectedGroups}
-                    selectedChannels={selectedChannels}
-                    recipientCount={recipientCount}
-                    isLoading={isLoading}
-                    scheduledFor={scheduledFor}
-                    onScheduledForChange={setScheduledFor}
-                    onSend={handleSend}
-                    onSaveDraft={handleSaveDraft}
-                  />
-                </div>
-              </div>
-
-              {/* Single-user quick sender */}
-              <div className="mt-10">
-                <NotificationSenderPanel />
-              </div>
+              <SimplifiedNotificationsPanel />
             </AccordionContent>
           </AccordionItem>
 
