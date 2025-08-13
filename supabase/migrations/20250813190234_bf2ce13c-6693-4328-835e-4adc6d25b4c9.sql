@@ -1,0 +1,2 @@
+-- Create edge function for sight singing assessment
+-- This will be handled by the Edge Function creation
