@@ -54,6 +54,8 @@ export interface ProfileData {
   reunion_rsvp?: boolean;
   
   role?: string;
+  is_admin?: boolean;
+  is_super_admin?: boolean;
   created_at?: string;
   updated_at?: string;
 }
