@@ -103,7 +103,7 @@ export default function UnifiedBookingPage() {
       }
     });
     
-    setAvailableSlots(slots.filter(slot => slot.available));
+    setAvailableSlots(slots); // Show all slots, both available and unavailable
   };
 
   const selectTimeSlot = (slot: TimeSlot) => {
@@ -255,9 +255,13 @@ export default function UnifiedBookingPage() {
                             {daySlots.map((slot, index) => (
                               <Button
                                 key={`${slot.date}-${slot.time}`}
-                                variant="outline"
-                                onClick={() => selectTimeSlot(slot)}
-                                className="text-sm py-2 hover:bg-secondary hover:text-secondary-foreground"
+                                variant={slot.available ? "outline" : "destructive"}
+                                onClick={() => slot.available && selectTimeSlot(slot)}
+                                disabled={!slot.available}
+                                className={slot.available 
+                                  ? "text-sm py-2 hover:bg-secondary hover:text-secondary-foreground" 
+                                  : "text-sm py-2 bg-destructive text-destructive-foreground cursor-not-allowed"
+                                }
                               >
                                 {slot.displayTime}
                               </Button>
