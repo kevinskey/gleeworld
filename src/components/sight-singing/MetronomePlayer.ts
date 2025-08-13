@@ -39,7 +39,15 @@ export class MetronomePlayer {
   }
 
   setTempo(tempo: number) {
+    const wasPlaying = this.isPlaying;
     this.tempo = tempo;
+    
+    // If currently playing, restart with new tempo
+    if (wasPlaying) {
+      console.log('MetronomePlayer: Restarting with new tempo:', tempo);
+      this.stop();
+      this.start(tempo, this.beatsPerMeasure, this.beatNumber);
+    }
   }
 
   onBeat(callback: (beatNumber: number, isDownbeat: boolean) => void) {

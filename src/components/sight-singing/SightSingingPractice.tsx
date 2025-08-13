@@ -1027,15 +1027,37 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                     console.log('Tempo slider changed to:', newTempo);
                     setTempo(newTempo);
                     
-                    // Update players immediately if they exist
+                    // Update both players synchronously to maintain sync
+                    const wasPlaying = isPlaying;
+                    if (wasPlaying) {
+                      // Stop both first
+                      if (melodyPlayerRef.current) {
+                        melodyPlayerRef.current.stop();
+                      }
+                      if (metronomePlayerRef.current) {
+                        metronomePlayerRef.current.stop();
+                      }
+                    }
+                    
+                    // Update tempo on both players
                     if (melodyPlayerRef.current) {
                       melodyPlayerRef.current.setTempo(newTempo);
-                      console.log('Updated melody player tempo to:', newTempo);
                     }
                     if (metronomePlayerRef.current) {
                       metronomePlayerRef.current.setTempo(newTempo);
-                      console.log('Updated metronome player tempo to:', newTempo);
                     }
+                    
+                    // Restart both if they were playing
+                    if (wasPlaying) {
+                      if (melodyPlayerRef.current && extractedMelody.length > 0) {
+                        melodyPlayerRef.current.start(newTempo);
+                      }
+                      if (metronomePlayerRef.current && metronomeEnabled) {
+                        metronomePlayerRef.current.start(newTempo);
+                      }
+                    }
+                    
+                    console.log('Synchronized tempo change to:', newTempo);
                   }}
                   className="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                 />
