@@ -132,13 +132,18 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   
   // Generate preview URL for recorded audio
   React.useEffect(() => {
+    console.log('🎥 audioBlob effect triggered, audioBlob:', audioBlob?.size || 'null');
     if (!audioBlob) {
       setPreviewUrl(null);
       return;
     }
     const url = URL.createObjectURL(audioBlob);
+    console.log('🎥 Created preview URL:', url);
     setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
+    return () => {
+      console.log('🗑️ Cleaning up preview URL');
+      URL.revokeObjectURL(url);
+    };
   }, [audioBlob]);
 
   // Refs
@@ -750,10 +755,12 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   };
 
   const actuallyStartRecording = async () => {
+    console.log('🎙️ Starting recording process...');
     try {
       // Metronome is already running from countdown, keep it going
       console.log('Starting recording with metronome continuing from countdown');
       
+      console.log('🎙️ Requesting microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 44100,
@@ -763,32 +770,47 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           autoGainControl: true
         }
       });
+      console.log('✅ Got media stream, tracks:', stream.getAudioTracks().length);
       
       setRecordingStream(stream);
+      console.log('💾 Set recording stream in state');
       
+      console.log('🎛️ Creating MediaRecorder...');
       const recorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm'
       });
+      console.log('✅ MediaRecorder created, state:', recorder.state);
       
       const chunks: BlobPart[] = [];
+      console.log('📝 Initialized empty chunks array');
       
       recorder.ondataavailable = (event) => {
+        console.log('🎙️ MediaRecorder data available, size:', event.data.size);
         if (event.data.size > 0) {
           chunks.push(event.data);
+          console.log('✅ Added chunk, total chunks:', chunks.length);
+        } else {
+          console.warn('⚠️ Empty data chunk received');
         }
       };
       
       recorder.onstop = () => {
+        console.log('🎙️ MediaRecorder stopped, chunks:', chunks.length);
         const blob = new Blob(chunks, { type: 'audio/webm' });
+        console.log('📦 Created audio blob, size:', blob.size, 'bytes');
         setAudioBlob(blob);
         stream.getTracks().forEach(track => track.stop());
+        console.log('🔇 Stopped all media tracks');
       };
       
       setMediaRecorder(recorder);
+      console.log('🎙️ Starting MediaRecorder...');
       recorder.start();
+      console.log('✅ MediaRecorder started, state:', recorder.state);
       setIsRecording(true);
       onRecordingChange?.(true);
       setRecordingTime(0);
+      console.log('🔴 Recording state set to true');
       
       // Recording timer
       recordingTimerRef.current = setInterval(() => {
@@ -811,8 +833,12 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   };
 
   const stopRecording = () => {
+    console.log('🛑 Stopping recording, mediaRecorder state:', mediaRecorder?.state);
     if (mediaRecorder && mediaRecorder.state === 'recording') {
+      console.log('🎙️ Calling mediaRecorder.stop()');
       mediaRecorder.stop();
+    } else {
+      console.warn('⚠️ MediaRecorder not recording or not available');
     }
     
     setIsRecording(false);
