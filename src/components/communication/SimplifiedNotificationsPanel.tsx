@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useUsers } from "@/hooks/useUsers";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { formatDistanceToNow } from "date-fns";
 export const SimplifiedNotificationsPanel = () => {
   const { user } = useAuth();
   const { notifications, unreadCount, loading: notificationsLoading, markAsRead, sendNotification } = useNotifications();
+  const { users, loading: usersLoading } = useUsers();
   const [activeTab, setActiveTab] = useState("view");
   const [sendLoading, setSendLoading] = useState(false);
   
@@ -25,7 +27,7 @@ export const SimplifiedNotificationsPanel = () => {
     message: "",
     type: "info" as string,
     recipient: "self" as "self" | "specific",
-    recipientEmail: ""
+    selectedUserId: ""
   });
 
   const handleSendNotification = async (e: React.FormEvent) => {
@@ -36,11 +38,8 @@ export const SimplifiedNotificationsPanel = () => {
     try {
       let targetUserId = user.id;
 
-      if (formData.recipient === "specific" && formData.recipientEmail) {
-        // This would require looking up user by email - simplified for now
-        // Just show a message that this feature needs user lookup
-        alert("Sending to specific users requires admin permissions");
-        return;
+      if (formData.recipient === "specific" && formData.selectedUserId) {
+        targetUserId = formData.selectedUserId;
       }
 
       await sendNotification(
@@ -60,7 +59,7 @@ export const SimplifiedNotificationsPanel = () => {
         message: "",
         type: "info",
         recipient: "self",
-        recipientEmail: ""
+        selectedUserId: ""
       });
 
       setActiveTab("view");
@@ -209,15 +208,27 @@ export const SimplifiedNotificationsPanel = () => {
 
               {formData.recipient === "specific" && (
                 <div className="space-y-2">
-                  <Label htmlFor="recipientEmail">Recipient Email</Label>
-                  <Input
-                    id="recipientEmail"
-                    type="email"
-                    value={formData.recipientEmail}
-                    onChange={(e) => setFormData(prev => ({ ...prev, recipientEmail: e.target.value }))}
-                    placeholder="user@example.com"
-                    required
-                  />
+                  <Label htmlFor="recipientUser">Select User</Label>
+                  <Select
+                    value={formData.selectedUserId}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, selectedUserId: value }))}
+                    disabled={usersLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={usersLoading ? "Loading users..." : "Select a user"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          <div className="flex items-center space-x-2">
+                            <User className="h-4 w-4" />
+                            <span>{user.full_name || user.email}</span>
+                            <span className="text-muted-foreground text-sm">({user.email})</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
 
