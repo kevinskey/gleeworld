@@ -33,7 +33,10 @@ export const AppointmentsList = () => {
 
   const canViewAppointments = profile?.role === 'admin' || 
                               profile?.role === 'super-admin' || 
-                              profile?.role === 'secretary';
+                              profile?.role === 'secretary' ||
+                              profile?.is_admin === true ||
+                              profile?.is_super_admin === true ||
+                              user !== null; // Allow any authenticated user to view
 
   const fetchAppointments = async () => {
     if (!canViewAppointments) {

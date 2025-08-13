@@ -5,10 +5,11 @@ import { AppointmentCalendar } from '@/components/appointments/AppointmentCalend
 import { AppointmentAvailability } from '@/components/appointments/AppointmentAvailability';
 import { AppointmentSettings } from '@/components/appointments/AppointmentSettings';
 import { AppointmentDialog } from '@/components/appointments/AppointmentDialog';
+import { AppointmentTestButton } from '@/components/appointments/AppointmentTestButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Clock, Settings, BarChart3, Plus } from 'lucide-react';
+import { Calendar, Clock, Settings, BarChart3, Plus, TestTube } from 'lucide-react';
 
 export default function AppointmentScheduler() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -25,10 +26,13 @@ export default function AppointmentScheduler() {
               Manage appointments, availability, and scheduling preferences
             </p>
           </div>
-          <Button onClick={() => setShowNewAppointmentDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Appointment
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowNewAppointmentDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Appointment
+            </Button>
+            <AppointmentTestButton />
+          </div>
         </div>
 
         {/* Main Content */}
