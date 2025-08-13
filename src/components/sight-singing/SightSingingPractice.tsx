@@ -648,6 +648,23 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     console.log('🎯 Started MIDI-style metronome at', tempo, 'BPM');
   };
 
+  // Start metronome with synced timing to current melody position
+  const startMetronomeWithSyncedTiming = (currentBeat: number) => {
+    if (!metronomePlayerRef.current) return;
+    
+    const [beatsPerMeasure] = exerciseMetadata.timeSignature.split('/').map(Number);
+    metronomePlayerRef.current.setTempo(tempo);
+    
+    // Round to nearest beat for sync
+    const syncedBeat = Math.floor(currentBeat);
+    console.log('Starting metronome synced to beat', currentBeat, '(rounded to beat', syncedBeat, ')');
+    
+    // Start metronome from the correct beat position
+    metronomePlayerRef.current.start(tempo, beatsPerMeasure, syncedBeat);
+    
+    console.log('🎯 Started MIDI-style metronome synced to melody at beat', syncedBeat);
+  };
+
   // Start metronome only
   const startMetronomeOnly = () => {
     startMetronomeWithPreciseTiming();
@@ -957,7 +974,10 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                     }
                   } else if (isPlaying || isRecording) {
                     console.log('Metronome toggled ON during active session - starting MIDI-style metronome');
-                    startMetronomeWithPreciseTiming();
+                    // Get current melody progress to sync metronome
+                    const currentProgress = melodyPlayerRef.current?.getCurrentProgress() || { beat: 0 };
+                    console.log('Syncing metronome to current beat:', currentProgress.beat);
+                    startMetronomeWithSyncedTiming(currentProgress.beat);
                   } else {
                     console.log('Metronome toggled ON but no active session');
                   }

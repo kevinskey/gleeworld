@@ -20,13 +20,13 @@ export class MetronomePlayer {
     this.scheduler = new AudioScheduler(audioContext);
   }
 
-  start(tempo: number = 120, beatsPerMeasure: number = 4) {
+  start(tempo: number = 120, beatsPerMeasure: number = 4, startBeat: number = 0) {
     if (this.isPlaying) return;
 
     this.tempo = tempo;
     this.beatsPerMeasure = beatsPerMeasure;
     this.isPlaying = true;
-    this.beatNumber = 0;
+    this.beatNumber = startBeat;
     this.nextNoteTime = this.audioContext.currentTime;
 
     this.scheduler.start();
