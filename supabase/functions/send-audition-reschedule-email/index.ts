@@ -111,17 +111,10 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log("Resend API response:", JSON.stringify(emailResponse, null, 2));
-    
-    if (emailResponse.error) {
-      console.error("Resend API error:", emailResponse.error);
-      throw new Error(`Resend API error: ${JSON.stringify(emailResponse.error)}`);
-    }
-
-    console.log("Email sent successfully with ID:", emailResponse.data?.id);
 
     return new Response(JSON.stringify({
       success: true,
-      messageId: emailResponse.data?.id,
+      messageId: emailResponse.data?.id || emailResponse.id,
       emailContent: emailContent
     }), {
       status: 200,
