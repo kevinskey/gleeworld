@@ -983,7 +983,21 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                   min="45"
                   max="200"
                   value={tempo}
-                  onChange={(e) => setTempo(parseInt(e.target.value))}
+                  onChange={(e) => {
+                    const newTempo = parseInt(e.target.value);
+                    console.log('Tempo slider changed to:', newTempo);
+                    setTempo(newTempo);
+                    
+                    // Update players immediately if they exist
+                    if (melodyPlayerRef.current) {
+                      melodyPlayerRef.current.setTempo(newTempo);
+                      console.log('Updated melody player tempo to:', newTempo);
+                    }
+                    if (metronomePlayerRef.current) {
+                      metronomePlayerRef.current.setTempo(newTempo);
+                      console.log('Updated metronome player tempo to:', newTempo);
+                    }
+                  }}
                   className="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                 />
                 <span className="text-sm font-mono min-w-[3rem] text-center">{tempo}</span>
