@@ -90,6 +90,18 @@ export const AuditionRescheduleManager = () => {
 
   const sendRescheduleEmails = async () => {
     console.log('🎭 Starting email send process for', auditioners.length, 'auditioners');
+    console.log('📧 Auditioners data:', auditioners);
+    
+    if (auditioners.length === 0) {
+      console.log('❌ No auditioners to send emails to');
+      toast({
+        title: "No Recipients",
+        description: "No auditioners found who need to reschedule",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setSending(true);
     try {
       let successCount = 0;
