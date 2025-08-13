@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { ThemeProvider } from "next-themes";
 import { ProtectedRoute } from "@/components/routing/ProtectedRoute";
 import { HomeRoute } from "@/components/routing/HomeRoute";
@@ -39,7 +40,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
+            <MusicPlayerProvider>
+              <Routes>
               <Route path={ROUTES.HOME} element={<HomeRoute />} />
               <Route path={ROUTES.AUTH} element={<AuthPage />} />
               <Route path={ROUTES.AUDITIONER_DASHBOARD} element={<AuditionerDashboardPage />} />
@@ -135,7 +137,8 @@ const App = () => (
                   </Suspense>
                 </ProtectedRoute>
               } />
-            </Routes>
+              </Routes>
+            </MusicPlayerProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
