@@ -117,6 +117,7 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
         }
 
         console.log('📋 Existing appointments:', existingAppointments);
+        console.log('🕐 Querying appointments between:', startOfDay(selectedDate).toISOString(), 'and', endOfDay(selectedDate).toISOString());
 
         // Generate time slots based on the audition block's time range
         const appointmentDuration = auditionBlock.appointment_duration_minutes || 30;
