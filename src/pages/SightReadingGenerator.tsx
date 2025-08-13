@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Music, RefreshCw, ArrowLeft, Mic, Square, Play, RotateCcw } from 'lucide-react';
+import { Music, RefreshCw, ArrowLeft, Mic, Square, Play, RotateCcw, Pause, StopCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +15,7 @@ import { CompletedExercisesList } from '@/components/sight-singing/CompletedExer
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { MemberSearchDropdown, Member } from '@/components/shared/MemberSearchDropdown';
+import { MetronomePlayer } from '@/components/sight-singing/MetronomePlayer';
 
 interface OSMDViewerProps {
   musicXML: string;
@@ -269,6 +270,17 @@ const SightReadingGeneratorPage = () => {
   const [solfegeEnabled, setSolfegeEnabled] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlayingExercise, setIsPlayingExercise] = useState(false);
+  
+  // Metronome state
+  const [isPracticing, setIsPracticing] = useState(false);
+  const [currentBeat, setCurrentBeat] = useState(0);
+  const [currentMeasure, setCurrentMeasure] = useState(0);
+  const [countInBeats, setCountInBeats] = useState(0);
+  const [isCountingIn, setIsCountingIn] = useState(false);
+  
+  // Audio context and metronome refs
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const metronomeRef = useRef<MetronomePlayer | null>(null);
   
   // Generation parameters
   const [difficulty, setDifficulty] = useState('beginner');
@@ -541,7 +553,60 @@ const SightReadingGeneratorPage = () => {
     }
   };
 
+  const startPractice = async () => {
+    if (!audioContextRef.current || !metronomeRef.current) return;
+    
+    // Resume audio context if suspended
+    if (audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume();
+    }
+    
+    setIsPracticing(true);
+    setIsCountingIn(true);
+    setCountInBeats(0);
+    setCurrentBeat(0);
+    setCurrentMeasure(0);
+    
+    const beatsPerMeasure = parseInt(timeSignature.split('/')[0]);
+    
+    // Start metronome with count-in
+    metronomeRef.current.onBeat((beatNumber, isDownbeat) => {
+      if (beatNumber < 4) {
+        // Count-in phase
+        setCountInBeats(beatNumber + 1);
+      } else {
+        // Practice phase
+        if (beatNumber === 4) {
+          setIsCountingIn(false);
+        }
+        const adjustedBeat = beatNumber - 4;
+        setCurrentBeat(adjustedBeat % beatsPerMeasure);
+        setCurrentMeasure(Math.floor(adjustedBeat / beatsPerMeasure));
+        
+        // Auto-stop after the specified number of measures
+        const totalBeats = measures[0] * beatsPerMeasure;
+        if (adjustedBeat >= totalBeats) {
+          stopPractice();
+        }
+      }
+    });
+    
+    metronomeRef.current.start(tempo, beatsPerMeasure);
+  };
+  
+  const stopPractice = () => {
+    if (metronomeRef.current) {
+      metronomeRef.current.stop();
+    }
+    setIsPracticing(false);
+    setIsCountingIn(false);
+    setCountInBeats(0);
+    setCurrentBeat(0);
+    setCurrentMeasure(0);
+  };
+
   const startNewExercise = () => {
+    stopPractice();
     setGeneratedMusicXML('');
     setExerciseGenerated(false);
     setIsPlayingExercise(false);
@@ -558,6 +623,36 @@ const SightReadingGeneratorPage = () => {
     // Dispatch reset events to clear practice component state
     window.dispatchEvent(new CustomEvent('resetPractice'));
   };
+
+  // Initialize audio context and metronome
+  useEffect(() => {
+    const initAudio = async () => {
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        metronomeRef.current = new MetronomePlayer(audioContextRef.current);
+        
+        // Set up beat callback
+        metronomeRef.current.onBeat((beatNumber, isDownbeat) => {
+          const beatsPerMeasure = parseInt(timeSignature.split('/')[0]);
+          setCurrentBeat(beatNumber % beatsPerMeasure);
+          setCurrentMeasure(Math.floor(beatNumber / beatsPerMeasure));
+        });
+      } catch (error) {
+        console.error('Failed to initialize audio context:', error);
+      }
+    };
+    
+    initAudio();
+    
+    return () => {
+      if (metronomeRef.current) {
+        metronomeRef.current.stop();
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, [timeSignature]);
 
   // Listen for practice auto-stop to update button state
   React.useEffect(() => {
@@ -623,6 +718,24 @@ const SightReadingGeneratorPage = () => {
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
+                    {/* Practice Button with Metronome */}
+                    <Button
+                      variant={isPracticing ? "destructive" : "secondary"}
+                      onClick={isPracticing ? stopPractice : startPractice}
+                      className="flex items-center gap-2"
+                    >
+                      {isPracticing ? (
+                        <>
+                          <StopCircle className="h-4 w-4" />
+                          Stop Practice
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4" />
+                          Practice with Metronome
+                        </>
+                      )}
+                    </Button>
                     
                     {/* Recording Button */}
                     <RecordingButton 
@@ -645,6 +758,38 @@ const SightReadingGeneratorPage = () => {
                 </div>
               </CardHeader>
               <CardContent>
+                {/* Practice Status Display */}
+                {(isPracticing || isCountingIn) && (
+                  <div className="mb-4 p-4 bg-muted rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="text-sm font-medium">
+                          {isCountingIn ? (
+                            <span className="text-primary">Count-in: {countInBeats}/4</span>
+                          ) : (
+                            <span>Measure {currentMeasure + 1} of {measures[0]} • Beat {currentBeat + 1}</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {tempo} BPM • {timeSignature}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: parseInt(timeSignature.split('/')[0]) }).map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-3 h-3 rounded-full border-2 transition-colors ${
+                              i === currentBeat && !isCountingIn
+                                ? 'bg-primary border-primary'
+                                : 'border-muted-foreground/30'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <OSMDViewer 
                   musicXML={generatedMusicXML} 
                   title={`${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Exercise - ${keySignature}`}
