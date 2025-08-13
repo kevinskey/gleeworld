@@ -314,6 +314,22 @@ export default function UnifiedBookingPage() {
           {!showContactForm ? (
             /* Time Selection */
             <div className="space-y-6">
+              {/* Show existing booking info for authenticated users */}
+              {user && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-lg">
+                      <User className="h-5 w-5 mr-2" />
+                      Your Current Booking
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      Already have an audition? Select a new time below to update your appointment.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
               {availableDates.length > 0 && (
                 <Card>
                   <CardHeader>
