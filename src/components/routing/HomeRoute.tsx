@@ -38,38 +38,38 @@ export const HomeRoute = () => {
     shouldShowLanding: true
   });
   
-  console.log('🚀 HomeRoute: About to render GleeWorldLanding');
+  console.log('🚀 HomeRoute: About to render simple fallback page');
   
-  try {
-    return <GleeWorldLanding />;
-  } catch (error) {
-    console.error('❌ Error rendering GleeWorldLanding:', error);
-    console.error('❌ Error stack:', error.stack);
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-foreground mb-6">Welcome to GleeWorld</h1>
-            <p className="text-lg text-muted-foreground mb-8">
-              The official digital platform of the Spelman College Glee Club
-            </p>
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              <strong>Debug:</strong> Error loading main component: {error.message}
-            </div>
-            <div className="space-y-4">
-              <a 
-                href="/auth"
-                className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
-              >
-                Sign In
-              </a>
-              <div className="text-sm text-muted-foreground">
-                New here? Sign up to get started
-              </div>
+  // Temporarily use a simple fallback instead of GleeWorldLanding
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-slate-700">
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center text-white">
+          <h1 className="text-5xl font-bold mb-6">Welcome to GleeWorld</h1>
+          <p className="text-xl mb-8 opacity-90">
+            The official digital platform of the Spelman College Glee Club
+          </p>
+          <p className="text-lg mb-8 opacity-80">
+            Celebrating 100+ years of musical excellence
+          </p>
+          <div className="space-y-4">
+            <a 
+              href="/auth"
+              className="inline-block bg-white text-blue-900 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-colors"
+            >
+              Sign In
+            </a>
+            <div className="text-sm opacity-70">
+              New here? Sign up to get started
             </div>
           </div>
+          {user && (
+            <div className="mt-8 p-4 bg-white/10 rounded-lg">
+              <p className="text-sm">Logged in as: {user.email}</p>
+            </div>
+          )}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 };
