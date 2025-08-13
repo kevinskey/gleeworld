@@ -569,16 +569,29 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   // Initialize the precise audio timing system
   const initializeAudioSystem = async () => {
     try {
+      console.log('🎵 Initializing audio system...');
+      
       if (!audioContextRef.current) {
+        console.log('Creating new AudioContext');
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
       
+      console.log('AudioContext state:', audioContextRef.current.state);
+      
       if (audioContextRef.current.state === 'suspended') {
+        console.log('Resuming suspended AudioContext');
         await audioContextRef.current.resume();
+        console.log('AudioContext resumed, new state:', audioContextRef.current.state);
+      }
+      
+      // Test audio capability
+      if (audioContextRef.current.state !== 'running') {
+        throw new Error(`AudioContext failed to start. State: ${audioContextRef.current.state}`);
       }
       
       // Initialize MIDI-style players
       if (!metronomePlayerRef.current) {
+        console.log('Creating MetronomePlayer');
         metronomePlayerRef.current = new MetronomePlayer(audioContextRef.current);
         metronomePlayerRef.current.onBeat((beat, isDownbeat) => {
           console.log(`🎯 Beat ${beat} (${isDownbeat ? 'DOWN' : 'up'})`);
@@ -586,6 +599,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       }
       
       if (!melodyPlayerRef.current) {
+        console.log('Creating MelodyPlayer');
         melodyPlayerRef.current = new MelodyPlayer(audioContextRef.current);
         melodyPlayerRef.current.onNote((note, index) => {
           console.log(`🎵 Playing note ${index}: ${note.note}`);
@@ -610,6 +624,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       console.log('✅ Audio timing system initialized with precise MIDI-style timing');
     } catch (error) {
       console.error('Error initializing audio system:', error);
+      toast({
+        title: "Audio Error",
+        description: "Failed to initialize audio. Please refresh and try again.",
+        variant: "destructive"
+      });
     }
   };
 
