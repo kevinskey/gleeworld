@@ -239,7 +239,7 @@ export const useAuditionManagement = () => {
   const deleteAudition = async (auditionId: string) => {
     try {
       const { error } = await supabase
-        .from('gw_auditions')
+        .from('audition_applications')
         .delete()
         .eq('id', auditionId);
 
