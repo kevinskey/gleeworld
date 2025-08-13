@@ -240,8 +240,43 @@ export const AuditionsManagement = () => {
       if (sessionsError) throw sessionsError;
       setSessions(sessionsData || []);
 
-      // Fetch applications from audition_applications table with available fields
-      const { data: applicationsData, error: applicationsError } = await supabase
+      // Fetch applications from BOTH tables to show all audition data
+      
+      // Fetch from gw_auditions (legacy table)
+      const { data: legacyApplicationsData, error: legacyError } = await supabase
+        .from('gw_auditions')
+        .select(`
+          id,
+          user_id,
+          first_name,
+          last_name,
+          email,
+          phone,
+          audition_date,
+          audition_time,
+          status,
+          created_at,
+          updated_at,
+          sang_in_middle_school,
+          sang_in_high_school,
+          high_school_years,
+          plays_instrument,
+          instrument_details,
+          is_soloist,
+          soloist_rating,
+          high_school_section,
+          reads_music,
+          interested_in_voice_lessons,
+          interested_in_music_fundamentals,
+          personality_description,
+          interested_in_leadership,
+          additional_info,
+          selfie_url
+        `)
+        .order('created_at', { ascending: false });
+
+      // Fetch from audition_applications (current table)
+      const { data: currentApplicationsData, error: currentError } = await supabase
         .from('audition_applications')
         .select(`
           id,
@@ -268,10 +303,26 @@ export const AuditionsManagement = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (applicationsError) throw applicationsError;
+      if (legacyError) {
+        console.warn('Error fetching legacy applications:', legacyError);
+      }
+      if (currentError) {
+        console.warn('Error fetching current applications:', currentError);
+      }
       
-      // Transform data to match interface expectations
-      const transformedApplications = (applicationsData || []).map(app => ({
+      // Transform legacy applications (gw_auditions)
+      const transformedLegacyApplications = (legacyApplicationsData || []).map(app => ({
+        ...app,
+        full_name: `${app.first_name} ${app.last_name}`,
+        application_date: app.created_at,
+        profile_image_url: app.selfie_url,
+        phone_number: app.phone,
+        audition_time_slot: app.audition_time,
+        source_table: 'gw_auditions' // Add identifier
+      }));
+
+      // Transform current applications (audition_applications)
+      const transformedCurrentApplications = (currentApplicationsData || []).map(app => ({
         ...app,
         first_name: app.full_name?.split(' ')[0] || '',
         last_name: app.full_name?.split(' ').slice(1).join(' ') || '',
@@ -291,21 +342,30 @@ export const AuditionsManagement = () => {
         additional_info: app.prepared_pieces || '',
         // Add missing required properties with defaults
         sang_in_middle_school: false,
-        sang_in_high_school: true, // Assume true since they're applying to college
+        sang_in_high_school: true,
         high_school_years: app.academic_year || '',
         is_soloist: false,
         soloist_rating: 0,
         reads_music: app.sight_reading_level !== 'Beginner',
         interested_in_voice_lessons: false,
         interested_in_music_fundamentals: false,
-        interested_in_leadership: false
+        interested_in_leadership: false,
+        source_table: 'audition_applications' // Add identifier
       }));
-      
-      setApplications(transformedApplications);
 
-      // Generate analytics from application data
-      const analyticsData = generateAnalytics(transformedApplications);
+      // Combine both sets of applications
+      const allApplications = [...transformedLegacyApplications, ...transformedCurrentApplications];
+      
+      setApplications(allApplications);
+
+      // Generate analytics from combined application data
+      const analyticsData = generateAnalytics(allApplications);
       setAnalytics(analyticsData);
+
+      console.log(`📊 Loaded ${allApplications.length} applications total:`, {
+        legacy: transformedLegacyApplications.length,
+        current: transformedCurrentApplications.length
+      });
 
       // Fetch evaluations - for now, we'll create a placeholder since gw_auditions doesn't have evaluations yet
       const evaluationsData: any[] = []; // Empty for now
@@ -490,20 +550,19 @@ export const AuditionsManagement = () => {
     }
 
     try {
-      // Delete the application from audition_applications table
+      // Delete the application from the correct table based on source
+      const sourceTable = (application as any).source_table || 'audition_applications';
+      
       const { error: deleteError } = await supabase
-        .from('audition_applications')
+        .from(sourceTable)
         .delete()
         .eq('id', application.id);
 
       if (deleteError) throw deleteError;
 
-      // Restore time availability - appointments should be freed when application is deleted
-      // This is handled automatically by the database if there's proper foreign key setup
-
       toast({
         title: "Success",
-        description: `Application deleted successfully. Time slot has been restored.`,
+        description: `Application deleted successfully from ${sourceTable}.`,
       });
 
       fetchData(); // Refresh data
@@ -906,6 +965,11 @@ export const AuditionsManagement = () => {
                           {application.full_name || `${application.first_name} ${application.last_name}`}
                         </h3>
                         <div className="flex items-center justify-center sm:justify-end space-x-2">
+                          {(application as any).source_table && (
+                            <Badge variant="secondary" className="text-xs">
+                              {(application as any).source_table === 'gw_auditions' ? 'Legacy' : 'Current'}
+                            </Badge>
+                          )}
                           {application.high_school_section && (
                             <Badge className={getVoicePartColor(application.high_school_section)}>
                               {application.high_school_section}
