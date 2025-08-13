@@ -56,8 +56,8 @@ const handler = async (req: Request): Promise<Response> => {
             <strong>New Audition Windows:</strong>
           </p>
           <ul style="color: #4a5568; line-height: 1.8;">
-            <li><strong>Thursday, August 15, 2025:</strong> 2:30 PM - 4:30 PM</li>
-            <li><strong>Friday, August 16, 2025:</strong> 11:00 AM - 1:00 PM</li>
+            <li><strong>Friday, August 16, 2025:</strong> 2:30 PM - 4:30 PM</li>
+            <li><strong>Saturday, August 17, 2025:</strong> 11:00 AM - 1:00 PM</li>
           </ul>
 
           <p style="color: #4a5568; line-height: 1.6;">
