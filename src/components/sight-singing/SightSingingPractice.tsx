@@ -425,21 +425,29 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     let beatCount = 0;
     
-    // Start metronome for countdown
-    if (metronomeEnabled) {
-      initializeAudioSystem();
-    }
+    // Initialize and start metronome for countdown
+    const startCountdownMetronome = async () => {
+      if (metronomeEnabled) {
+        await initializeAudioSystem();
+        // Start metronome immediately for countdown
+        startMetronomeWithPreciseTiming();
+        console.log('🎯 Metronome started for countdown');
+      }
+    };
+    
+    startCountdownMetronome();
     
     const countdownInterval = setInterval(() => {
       beatCount++;
       setCountdownBeats(beatCount);
+      console.log(`Count-in beat ${beatCount}/${beatsPerMeasure}`);
       
       if (beatCount >= beatsPerMeasure) {
         clearInterval(countdownInterval);
         setIsCountingDown(false);
         
         // Keep metronome running for practice - DO NOT STOP IT
-        console.log('Countdown complete, metronome continues running for practice');
+        console.log('Countdown complete, metronome continues running for recording');
         
         callback(); // Start the actual practice or recording
       }
@@ -447,7 +455,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     toast({
       title: "Get Ready",
-      description: `1 measure countdown (${beatsPerMeasure} beats)`
+      description: `4-beat count-in starting now`
     });
   };
 
