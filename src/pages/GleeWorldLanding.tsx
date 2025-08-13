@@ -184,7 +184,10 @@ export const GleeWorldLanding = () => {
 
 
   const currentHeroSlide = heroSlides[currentSlide];
-  const goToAuditions = () => {
+  const goToAuditions = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🎵 Audition button clicked - navigating to /auditioner');
     navigate('/auditioner');
   };
 
