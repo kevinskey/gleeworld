@@ -368,6 +368,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   // Function to extract melody from MusicXML
   const extractMelodyFromMusicXML = (xml: string): Note[] => {
     console.log('extractMelodyFromMusicXML called with XML length:', xml ? xml.length : 0);
+    console.log('Current tempo for extraction:', tempo, 'BPM');
     if (!xml) {
       console.log('No XML provided to extractMelodyFromMusicXML');
       return [];
@@ -376,19 +377,20 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     try {
       const parser = new DOMParser();
       const doc = parser.parseFromString(xml, 'application/xml');
-      console.log('Parsed MusicXML document:', doc);
+      console.log('Parsed MusicXML document');
       
       const notes = doc.querySelectorAll('note');
       console.log('Found notes in MusicXML:', notes.length);
       
       const melody: Note[] = [];
-      let currentTime = 0;
-      const beatDuration = 60.0 / tempo; // Calculate beat duration from current tempo
+      let currentBeat = 0; // Use beat-based timing instead of seconds
+      const secondsPerBeat = 60.0 / tempo; // Same calculation as metronome
+      
+      console.log('Tempo:', tempo, 'BPM, Seconds per beat:', secondsPerBeat);
       
       notes.forEach((noteElement, index) => {
-        console.log(`Processing note ${index + 1}:`, noteElement);
+        console.log(`Processing note ${index + 1}:`);
         const pitchElement = noteElement.querySelector('pitch');
-        console.log('Pitch element found:', !!pitchElement);
         
         if (pitchElement) {
           const step = pitchElement.querySelector('step')?.textContent || 'C';
@@ -400,23 +402,37 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           if (alter === '-1') noteName = step + 'b' + octave;
           
           const duration = noteElement.querySelector('duration')?.textContent;
-          const durationValue = duration ? parseFloat(duration) / 4 * beatDuration : beatDuration;
+          const divisions = 4; // Standard divisions for quarter note
+          const durationInBeats = duration ? parseFloat(duration) / divisions : 1; // Duration in beats
+          const durationInSeconds = durationInBeats * secondsPerBeat;
+          const timeInSeconds = currentBeat * secondsPerBeat;
           
-          console.log(`Adding note to melody: ${noteName} at time ${currentTime} with duration ${durationValue}`);
+          console.log(`Note ${index + 1}: ${noteName}`);
+          console.log(`  - Beat: ${currentBeat.toFixed(2)}`);
+          console.log(`  - Time: ${timeInSeconds.toFixed(3)}s`);
+          console.log(`  - Duration: ${durationInBeats} beats (${durationInSeconds.toFixed(3)}s)`);
           
           melody.push({
             note: noteName,
-            time: currentTime,
-            duration: durationValue
+            time: timeInSeconds,
+            duration: durationInSeconds
           });
           
-          currentTime += durationValue;
+          currentBeat += durationInBeats;
         } else {
-          console.log('Note element has no pitch - might be a rest');
+          // Handle rests
+          const duration = noteElement.querySelector('duration')?.textContent;
+          const divisions = 4;
+          const durationInBeats = duration ? parseFloat(duration) / divisions : 1;
+          console.log(`Rest: ${durationInBeats} beats`);
+          currentBeat += durationInBeats;
         }
       });
       
-      console.log('Final extracted melody:', melody);
+      console.log('=== MELODY EXTRACTION SUMMARY ===');
+      console.log(`Total notes: ${melody.length}`);
+      console.log(`Total duration: ${currentBeat} beats (${(currentBeat * secondsPerBeat).toFixed(2)}s)`);
+      console.log('Melody with timing:', melody);
       return melody;
     } catch (error) {
       console.error('Error extracting melody from MusicXML:', error);
@@ -601,13 +617,18 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const startMelodyWithPreciseTiming = () => {
     if (!melodyPlayerRef.current || extractedMelody.length === 0) return;
     
-    // Convert our Note[] to MelodyNote[]
+    // Convert our Note[] to MelodyNote[] - IMPORTANT: Convert time back to beats!
     const melodyNotes: MelodyNote[] = extractedMelody.map(note => ({
       note: note.note,
-      time: note.time,
-      duration: note.duration || 0.5,
+      time: note.time / (60.0 / tempo), // Convert seconds back to beats for MelodyPlayer
+      duration: (note.duration || 0.5) / (60.0 / tempo), // Convert duration back to beats
       velocity: 0.3
     }));
+    
+    console.log('=== MELODY CONVERSION FOR PLAYBACK ===');
+    console.log('Original melody (in seconds):', extractedMelody);
+    console.log('Converted melody (in beats):', melodyNotes);
+    console.log('Tempo for conversion:', tempo, 'BPM');
     
     melodyPlayerRef.current.loadMelody(melodyNotes);
     melodyPlayerRef.current.setTempo(tempo);
