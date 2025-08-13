@@ -722,29 +722,13 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   const startRecording = async () => {
     try {
-      if (metronomeEnabled) {
-        // Start with countdown
-        startCountdown(() => {
-          actuallyStartRecording();
-        });
-      } else {
-        actuallyStartRecording();
-      }
-    } catch (error) {
-      console.error('Error starting recording:', error);
+      // First, request microphone permission
       toast({
-        title: "Error",
-        description: "Failed to start recording session",
-        variant: "destructive"
+        title: "Microphone Access",
+        description: "Please grant microphone permission to start recording"
       });
-    }
-  };
-
-  const actuallyStartRecording = async () => {
-    try {
-      // Metronome is already running from countdown, keep it going
-      console.log('Starting recording with metronome continuing from countdown');
       
+      console.log('🎙️ Requesting microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 44100,
@@ -755,7 +739,52 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         }
       });
       
+      console.log('✅ Microphone access granted');
       setRecordingStream(stream);
+      
+      // Initialize audio system for metronome
+      await initializeAudioSystem();
+      
+      toast({
+        title: "Microphone Ready", 
+        description: "Starting countdown for recording..."
+      });
+      
+      if (metronomeEnabled) {
+        // Start with countdown, then begin recording
+        startCountdown(() => {
+          actuallyStartRecording(stream);
+        });
+      } else {
+        actuallyStartRecording(stream);
+      }
+    } catch (error) {
+      console.error('❌ Error accessing microphone:', error);
+      
+      let errorMessage = 'Failed to access microphone. ';
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          errorMessage += 'Permission denied. Please allow microphone access in your browser settings.';
+        } else if (error.name === 'NotFoundError') {
+          errorMessage += 'No microphone found. Please connect a microphone.';
+        } else if (error.name === 'NotReadableError') {
+          errorMessage += 'Microphone is being used by another application.';
+        } else {
+          errorMessage += error.message;
+        }
+      }
+      
+      toast({
+        title: "Microphone Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const actuallyStartRecording = async (stream: MediaStream) => {
+    try {
+      console.log('🎙️ Starting actual recording with provided stream');
       
       const recorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm'
@@ -770,9 +799,21 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       };
       
       recorder.onstop = () => {
+        console.log('🎙️ Recording stopped, creating audio blob');
         const blob = new Blob(chunks, { type: 'audio/webm' });
         setAudioBlob(blob);
         stream.getTracks().forEach(track => track.stop());
+        setRecordingStream(null);
+        console.log('✅ Audio blob created, size:', blob.size, 'bytes');
+      };
+      
+      recorder.onerror = (event) => {
+        console.error('❌ Recording error:', event);
+        toast({
+          title: "Recording Error",
+          description: "Failed to record audio. Please try again.",
+          variant: "destructive"
+        });
       };
       
       setMediaRecorder(recorder);
@@ -792,10 +833,10 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       });
       
     } catch (error) {
-      console.error('Error accessing microphone:', error);
+      console.error('❌ Error starting recording:', error);
       toast({
-        title: "Error",
-        description: "Failed to access microphone",
+        title: "Recording Error",
+        description: "Failed to start recording. Please try again.",
         variant: "destructive"
       });
     }
