@@ -14,6 +14,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { 
+  PieChart, 
+  Pie, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
+import { 
   Music, 
   Users, 
   Star, 
@@ -1369,103 +1380,313 @@ export const AuditionsManagement = () => {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6 mt-8">
-          {/* Cumulative Scores Top Window */}
-          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+          {/* Enhanced Analytics Dashboard */}
+          <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-blue-900 flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
+              <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+                <TrendingUp className="h-6 w-6 text-primary" />
                 Cumulative Audition Scores Dashboard
               </CardTitle>
-              <CardDescription className="text-blue-700">
+              <CardDescription className="text-muted-foreground">
                 Real-time audition performance metrics and scoring analytics
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-                <div className="bg-white rounded-lg p-4 border shadow-sm">
-                  <div className="text-sm font-medium text-gray-600">Total Evaluations</div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {analytics.reduce((sum, app) => sum + app.evaluation_count, 0)}
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-4 border shadow-sm">
-                  <div className="text-sm font-medium text-gray-600">Avg Overall Score</div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {analytics.length > 0 
-                      ? (analytics.reduce((sum, app) => sum + (app.avg_overall_score || 0), 0) / analytics.length).toFixed(1)
-                      : '0.0'
-                    }
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-4 border shadow-sm">
-                  <div className="text-sm font-medium text-gray-600">Technical Avg</div>
-                  <div className="text-2xl font-bold text-orange-600">
-                    {analytics.length > 0 
-                      ? (analytics.reduce((sum, app) => sum + (app.avg_technical_score || 0), 0) / analytics.length).toFixed(1)
-                      : '0.0'
-                    }
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-4 border shadow-sm">
-                  <div className="text-sm font-medium text-gray-600">Artistic Avg</div>
-                  <div className="text-2xl font-bold text-purple-600">
-                    {analytics.length > 0 
-                      ? (analytics.reduce((sum, app) => sum + (app.avg_artistic_score || 0), 0) / analytics.length).toFixed(1)
-                      : '0.0'
-                    }
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-4 border shadow-sm">
-                  <div className="text-sm font-medium text-gray-600">Pending Reviews</div>
-                  <div className="text-2xl font-bold text-red-600">
-                    {analytics.filter(app => app.status === 'pending').length}
-                  </div>
-                </div>
+            <CardContent className="space-y-8">
+              {/* Key Performance Indicators */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-blue-700">Total Evaluations</p>
+                        <p className="text-3xl font-bold text-blue-900">
+                          {analytics.reduce((sum, app) => sum + app.evaluation_count, 0)}
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          {analytics.length > 0 ? Math.round((analytics.reduce((sum, app) => sum + app.evaluation_count, 0) / analytics.length)) : 0} avg per applicant
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-blue-200 rounded-full flex items-center justify-center">
+                        <BarChart3 className="h-6 w-6 text-blue-700" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-700">Overall Average</p>
+                        <p className="text-3xl font-bold text-green-900">
+                          {analytics.length > 0 
+                            ? (analytics.reduce((sum, app) => sum + (app.avg_overall_score || 0), 0) / analytics.length).toFixed(1)
+                            : '0.0'
+                          }
+                        </p>
+                        <p className="text-xs text-green-600 mt-1">
+                          {analytics.length > 0 
+                            ? Math.round((analytics.reduce((sum, app) => sum + (app.avg_overall_score || 0), 0) / analytics.length) * 10) + '%'
+                            : '0%'
+                          } performance score
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-green-200 rounded-full flex items-center justify-center">
+                        <TrendingUp className="h-6 w-6 text-green-700" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-purple-700">Acceptance Rate</p>
+                        <p className="text-3xl font-bold text-purple-900">
+                          {analytics.length > 0 
+                            ? Math.round((analytics.filter(app => app.status === 'accepted').length / analytics.length) * 100)
+                            : 0
+                          }%
+                        </p>
+                        <p className="text-xs text-purple-600 mt-1">
+                          {analytics.filter(app => app.status === 'accepted').length} of {analytics.length} applicants
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-purple-200 rounded-full flex items-center justify-center">
+                        <Users className="h-6 w-6 text-purple-700" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-orange-700">Pending Reviews</p>
+                        <p className="text-3xl font-bold text-orange-900">
+                          {analytics.filter(app => app.status === 'pending').length}
+                        </p>
+                        <p className="text-xs text-orange-600 mt-1">
+                          {analytics.length > 0 
+                            ? Math.round((analytics.filter(app => app.status === 'pending').length / analytics.length) * 100)
+                            : 0
+                          }% awaiting decision
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-orange-200 rounded-full flex items-center justify-center">
+                        <Clock className="h-6 w-6 text-orange-700" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              
-              {/* Real-time Audition Results */}
-              <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-                <div className="px-4 py-3 bg-gray-50 border-b">
-                  <h4 className="font-medium text-gray-900">Latest Audition Results</h4>
-                </div>
-                <div className="max-h-48 overflow-y-auto">
-                  {analytics.slice(0, 5).map((app) => (
-                    <div key={app.id} className="p-4 border-b last:border-b-0 hover:bg-gray-50">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={app.profile_image_url} />
-                            <AvatarFallback className="text-xs">
-                              {app.full_name?.split(' ').map(n => n[0]).join('') || 'NA'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium text-sm">{app.full_name}</div>
-                            <div className="text-xs text-gray-500">
-                              {new Date(app.application_date).toLocaleDateString()}
-                            </div>
-                          </div>
+
+              {/* Charts and Visual Analytics */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Application Status Distribution */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <PieChart className="h-5 w-5 text-primary" />
+                      Application Status Distribution
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { 
+                                name: 'Accepted', 
+                                value: analytics.filter(app => app.status === 'accepted').length,
+                                fill: 'hsl(var(--success))'
+                              },
+                              { 
+                                name: 'Rejected', 
+                                value: analytics.filter(app => app.status === 'rejected').length,
+                                fill: 'hsl(var(--destructive))'
+                              },
+                              { 
+                                name: 'Pending', 
+                                value: analytics.filter(app => app.status === 'pending').length,
+                                fill: 'hsl(var(--warning))'
+                              }
+                            ]}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          />
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Voice Part Distribution */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Music className="h-5 w-5 text-primary" />
+                      Voice Part Preferences
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={(() => {
+                              const voiceParts = analytics.reduce((acc, app) => {
+                                const part = app.voice_part_preference || 'Not specified';
+                                acc[part] = (acc[part] || 0) + 1;
+                                return acc;
+                              }, {} as Record<string, number>);
+                              
+                              const colors = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
+                              return Object.entries(voiceParts).map(([name, value], index) => ({
+                                name,
+                                value,
+                                fill: colors[index % colors.length]
+                              }));
+                            })()}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          />
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Score Distribution Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Score Distribution Analysis
+                  </CardTitle>
+                  <CardDescription>
+                    Average scores across technical, artistic, and overall performance
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={[
+                          {
+                            category: 'Technical',
+                            average: analytics.length > 0 
+                              ? (analytics.reduce((sum, app) => sum + (app.avg_technical_score || 0), 0) / analytics.length)
+                              : 0,
+                            percentage: analytics.length > 0 
+                              ? Math.round((analytics.reduce((sum, app) => sum + (app.avg_technical_score || 0), 0) / analytics.length) * 10)
+                              : 0
+                          },
+                          {
+                            category: 'Artistic',
+                            average: analytics.length > 0 
+                              ? (analytics.reduce((sum, app) => sum + (app.avg_artistic_score || 0), 0) / analytics.length)
+                              : 0,
+                            percentage: analytics.length > 0 
+                              ? Math.round((analytics.reduce((sum, app) => sum + (app.avg_artistic_score || 0), 0) / analytics.length) * 10)
+                              : 0
+                          },
+                          {
+                            category: 'Overall',
+                            average: analytics.length > 0 
+                              ? (analytics.reduce((sum, app) => sum + (app.avg_overall_score || 0), 0) / analytics.length)
+                              : 0,
+                            percentage: analytics.length > 0 
+                              ? Math.round((analytics.reduce((sum, app) => sum + (app.avg_overall_score || 0), 0) / analytics.length) * 10)
+                              : 0
+                          }
+                        ]}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="category" stroke="hsl(var(--foreground))" />
+                        <YAxis stroke="hsl(var(--foreground))" />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--background))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '6px'
+                          }}
+                          labelStyle={{ color: 'hsl(var(--foreground))' }}
+                        />
+                        <Bar dataKey="average" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Activity Timeline */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Clock className="h-5 w-5 text-primary" />
+                    Recent Audition Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4 max-h-64 overflow-y-auto">
+                    {analytics.slice(0, 8).map((app, index) => (
+                      <div key={app.id} className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={app.profile_image_url} />
+                          <AvatarFallback className="text-sm font-medium">
+                            {app.full_name?.split(' ').map(n => n[0]).join('') || 'NA'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{app.full_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(app.application_date).toLocaleDateString()} • {app.voice_part_preference || 'No preference'}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-3">
                           <div className="text-center">
-                            <div className="font-medium text-blue-600">{app.avg_overall_score?.toFixed(1) || 'N/A'}</div>
-                            <div className="text-xs text-gray-500">Overall</div>
+                            <div className="text-lg font-bold text-primary">
+                              {app.avg_overall_score?.toFixed(1) || 'N/A'}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Score</div>
                           </div>
                           <div className="text-center">
-                            <div className="font-medium">{app.evaluation_count}</div>
-                            <div className="text-xs text-gray-500">Evals</div>
+                            <div className="text-lg font-bold text-secondary-foreground">
+                              {app.evaluation_count}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Evals</div>
                           </div>
-                          <Badge className={app.status === 'accepted' ? 'bg-green-100 text-green-800' : 
-                                          app.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                          'bg-yellow-100 text-yellow-800'}>
+                          <Badge 
+                            variant={app.status === 'accepted' ? 'default' : 
+                                    app.status === 'rejected' ? 'destructive' : 'secondary'}
+                            className="capitalize"
+                          >
                             {app.status}
                           </Badge>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </CardContent>
           </Card>
 
