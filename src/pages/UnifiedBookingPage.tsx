@@ -23,6 +23,7 @@ interface ContactInfo {
 }
 
 export default function UnifiedBookingPage() {
+  console.log('🔍 UnifiedBookingPage component loading...');
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string; displayDate: string; displayTime: string } | null>(null);

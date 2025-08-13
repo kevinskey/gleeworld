@@ -9,6 +9,7 @@ interface TimeSlot {
 }
 
 export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
+  console.log('🎯 useAvailableAuditionSlots hook called with selectedDate:', selectedDate);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
