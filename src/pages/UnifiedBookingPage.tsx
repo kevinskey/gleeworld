@@ -7,6 +7,7 @@ import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAvailableAuditionSlots } from '@/hooks/useAvailableAuditionSlots';
+import { cn } from '@/lib/utils';
 
 interface TimeSlot {
   date: string;
@@ -241,16 +242,22 @@ export default function UnifiedBookingPage() {
                         <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
                         <p className="text-muted-foreground">Loading available times...</p>
                       </div>
-                    ) : timeSlots.length > 0 ? (
+                    ) : allTimeSlots.length > 0 ? (
                       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                        {timeSlots.map((time, index) => (
+                        {allTimeSlots.map((slot, index) => (
                           <Button
                             key={index}
-                            variant="outline"
-                            onClick={() => selectTimeSlot(time)}
-                            className="text-sm py-2 hover:bg-primary hover:text-primary-foreground"
+                            variant={slot.isAvailable ? "outline" : "destructive"}
+                            onClick={() => slot.isAvailable && selectTimeSlot(slot.time)}
+                            disabled={!slot.isAvailable}
+                            className={cn(
+                              "text-sm py-2",
+                              slot.isAvailable 
+                                ? "hover:bg-primary hover:text-primary-foreground" 
+                                : "bg-destructive text-destructive-foreground cursor-not-allowed opacity-75"
+                            )}
                           >
-                            {time}
+                            {slot.time}
                           </Button>
                         ))}
                       </div>

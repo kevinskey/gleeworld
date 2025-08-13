@@ -110,7 +110,12 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
             p_end: endOfDay(selectedDate).toISOString(),
           });
 
-        if (appointmentError) throw appointmentError;
+        if (appointmentError) {
+          console.error('Error fetching existing appointments:', appointmentError);
+          throw appointmentError;
+        }
+
+        console.log('📋 Existing appointments:', existingAppointments);
 
         // Generate time slots based on the audition block's time range
         const appointmentDuration = auditionBlock.appointment_duration_minutes || 30;
@@ -150,6 +155,7 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
           currentTime.setMinutes(currentTime.getMinutes() + appointmentDuration);
         }
 
+        console.log('⏰ All generated time slots:', slots);
         setTimeSlots(slots);
       } catch (error) {
         console.error('Error fetching available slots:', error);
