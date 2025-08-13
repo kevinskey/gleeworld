@@ -68,9 +68,11 @@ export class MetronomePlayer {
     this.nextNoteTime += secondsPerBeat;
     this.beatNumber++;
 
-    // Schedule next note
+    // Schedule next note with proper timing (not immediate)
     if (this.isPlaying) {
-      setTimeout(() => this.scheduleNote(), 0);
+      // Use a small delay to prevent overwhelming the scheduler
+      const scheduleDelay = Math.max(1, (secondsPerBeat * 1000) / 4); // Quarter of beat duration in ms
+      setTimeout(() => this.scheduleNote(), scheduleDelay);
     }
   }
 
