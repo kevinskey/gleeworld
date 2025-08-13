@@ -16,18 +16,17 @@ export const HeroAuditionStats: React.FC<{ className?: string }>
         setError(null);
         let countVal = 0;
         try {
-          const { data: rpcVal, error: rpcError } = await supabase.rpc('get_scheduled_auditions_count');
-          if (rpcError) throw rpcError;
-          if (typeof rpcVal === 'number') {
-            countVal = rpcVal;
-          } else if (Array.isArray(rpcVal)) {
-            const first: any = rpcVal[0];
-            countVal = Number(first?.get_scheduled_auditions_count ?? first) || 0;
-          } else if (rpcVal && typeof rpcVal === 'object') {
-            countVal = Number((rpcVal as any).get_scheduled_auditions_count) || 0;
-          }
+          // Count from both gw_auditions and audition_applications tables
+          const [auditionsResult, applicationsResult] = await Promise.all([
+            supabase.from('gw_auditions').select('*', { count: 'exact', head: true }),
+            supabase.from('audition_applications').select('*', { count: 'exact', head: true })
+          ]);
+          
+          const auditionsCount = auditionsResult.count ?? 0;
+          const applicationsCount = applicationsResult.count ?? 0;
+          countVal = auditionsCount + applicationsCount;
         } catch (_) {
-          // Fallback: try counting rows directly as a backup
+          // Fallback: try just auditions table
           const { count } = await supabase
             .from('gw_auditions')
             .select('*', { count: 'exact', head: true });
