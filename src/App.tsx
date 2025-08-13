@@ -18,6 +18,8 @@ import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import Index from "./pages/Index";
 import DirectoryPage from "./pages/DirectoryPage";
 import Auth from "./pages/Auth";
+import AuthPage from "./pages/AuthPage";
+import AuditionApplicationPage from "./pages/AuditionApplicationPage";
 import FanDashboard from "./pages/FanDashboard";
 // import AdminDashboard from "./pages/AdminDashboard";
 import { DuesManagement } from "./pages/DuesManagement";
@@ -187,7 +189,15 @@ const App = () => {
                 path="/auth" 
                 element={
                   <PublicRoute>
-                    <Auth />
+                    <AuthPage />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/audition-application" 
+                element={
+                  <PublicRoute>
+                    <AuditionApplicationPage />
                   </PublicRoute>
                 } 
               />

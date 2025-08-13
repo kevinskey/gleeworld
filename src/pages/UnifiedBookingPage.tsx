@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAvailableAuditionSlots } from '@/hooks/useAvailableAuditionSlots';
 import { cn } from '@/lib/utils';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TimeSlot {
   date: string;
@@ -25,6 +26,7 @@ interface ContactInfo {
 }
 
 export default function UnifiedBookingPage() {
+  const { user, loading: authLoading } = useAuth();
   console.log('🔍 UnifiedBookingPage component loading...');
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -48,6 +50,37 @@ export default function UnifiedBookingPage() {
     }
   }, [availableDates, selectedDate]);
 
+  // Restore selected time slot from localStorage when user returns from auth
+  useEffect(() => {
+    if (user && !authLoading) {
+      const savedTimeSlot = localStorage.getItem('selectedAuditionTimeSlot');
+      if (savedTimeSlot) {
+        try {
+          const timeSlotData = JSON.parse(savedTimeSlot);
+          setSelectedSlot(timeSlotData);
+          setShowContactForm(true);
+          
+          // Clean up localStorage
+          localStorage.removeItem('selectedAuditionTimeSlot');
+        } catch (error) {
+          console.error('Error parsing saved time slot:', error);
+          localStorage.removeItem('selectedAuditionTimeSlot');
+        }
+      }
+    }
+  }, [user, authLoading]);
+
+  // Pre-fill contact info with user data when authenticated
+  useEffect(() => {
+    if (user) {
+      setContactInfo({
+        name: user.user_metadata?.full_name || '',
+        email: user.email || '',
+        phone: user.user_metadata?.phone || ''
+      });
+    }
+  }, [user]);
+
   const selectTimeSlot = (time: string) => {
     if (!selectedDate) return;
     
@@ -58,12 +91,26 @@ export default function UnifiedBookingPage() {
       day: 'numeric' 
     });
     
-    setSelectedSlot({
+    const timeSlotData = {
       date: dateString,
       time,
       displayDate,
       displayTime: time
-    });
+    };
+
+    // Store selected time slot in localStorage for persistence across auth flow
+    localStorage.setItem('selectedAuditionTimeSlot', JSON.stringify(timeSlotData));
+    
+    // Check if user is authenticated
+    if (!user) {
+      // Redirect to auth page with return URL
+      const returnUrl = encodeURIComponent('/booking');
+      window.location.href = `/auth?returnTo=${returnUrl}&timeSlot=true`;
+      return;
+    }
+    
+    // User is authenticated, proceed with normal booking
+    setSelectedSlot(timeSlotData);
     setShowContactForm(true);
   };
 
