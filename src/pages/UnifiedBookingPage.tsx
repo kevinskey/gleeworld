@@ -251,13 +251,18 @@ export default function UnifiedBookingPage() {
                             onClick={() => slot.isAvailable && selectTimeSlot(slot.time)}
                             disabled={!slot.isAvailable}
                             className={cn(
-                              "text-sm py-2",
+                              "text-xs py-3 px-2 h-auto flex flex-col items-center",
                               slot.isAvailable 
                                 ? "hover:bg-primary hover:text-primary-foreground" 
-                                : "bg-destructive text-destructive-foreground cursor-not-allowed opacity-75"
+                                : "bg-destructive text-destructive-foreground cursor-not-allowed opacity-90"
                             )}
                           >
-                            {slot.time}
+                            <span className="font-medium">{slot.time}</span>
+                            {!slot.isAvailable && slot.auditionerName && (
+                              <span className="text-xs font-normal truncate w-full text-center mt-1">
+                                {slot.auditionerName}
+                              </span>
+                            )}
                           </Button>
                         ))}
                       </div>

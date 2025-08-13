@@ -13351,6 +13351,7 @@ export type Database = {
         Args: { p_start: string; p_end: string }
         Returns: {
           audition_time_slot: string
+          auditioner_name: string
         }[]
       }
       get_current_user_admin_status: {

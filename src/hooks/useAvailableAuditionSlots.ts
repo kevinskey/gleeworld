@@ -6,6 +6,7 @@ import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 interface TimeSlot {
   time: string;
   isAvailable: boolean;
+  auditionerName?: string;
 }
 
 export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
@@ -141,15 +142,18 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
         while (currentTime < endTime) {
           const timeString = format(currentTime, 'h:mm a');
           
-          // Check if this slot is already taken
-          const isAvailable = !existingAppointments?.some(apt => {
+          // Check if this slot is already taken and get the auditioner name
+          const bookedAppointment = existingAppointments?.find(apt => {
             const takenTime = format(new Date(apt.audition_time_slot), 'h:mm a');
             return takenTime === timeString;
           });
 
+          const isAvailable = !bookedAppointment;
+
           slots.push({
             time: timeString,
-            isAvailable
+            isAvailable,
+            auditionerName: bookedAppointment?.auditioner_name
           });
 
           currentTime.setMinutes(currentTime.getMinutes() + appointmentDuration);
