@@ -887,11 +887,13 @@ const SightReadingGeneratorPage = () => {
                     <RecordingButton 
                       isRecording={isRecording}
                       onStartRecording={() => {
+                        console.log('Recording button clicked - start recording');
                         setIsRecording(true);
                         const recordingEvent = new CustomEvent('startRecording');
                         window.dispatchEvent(recordingEvent);
                       }}
                       onStopRecording={() => {
+                        console.log('Recording button clicked - stop recording');
                         setIsRecording(false);
                         const recordingEvent = new CustomEvent('stopRecording');
                         window.dispatchEvent(recordingEvent);
