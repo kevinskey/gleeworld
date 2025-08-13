@@ -89,6 +89,7 @@ export const AuditionRescheduleManager = () => {
   };
 
   const sendRescheduleEmails = async () => {
+    alert('Function called with ' + auditioners.length + ' auditioners');
     console.log('🎭 Starting email send process for', auditioners.length, 'auditioners');
     console.log('📧 Auditioners data:', auditioners);
     
