@@ -189,25 +189,21 @@ export const AuditionRescheduleManager = () => {
             </Button>
 
             {auditioners.length > 0 && (
-              <>
-                <Button 
-                  onClick={sendRescheduleEmails} 
-                  disabled={sending}
-                  variant="destructive"
-                >
-                  <Mail className="w-4 h-4 mr-2" />
-                  {sending ? 'Sending...' : `Send Reschedule Emails (${auditioners.length})`}
-                </Button>
-                
-                {sending && (
-                  <Button 
-                    onClick={() => setSending(false)} 
-                    variant="outline"
-                  >
-                    Reset
-                  </Button>
-                )}
-              </>
+              <Button 
+                onClick={() => {
+                  console.log('Button clicked, sending state:', sending);
+                  if (sending) {
+                    setSending(false);
+                    console.log('Reset sending state');
+                  } else {
+                    sendRescheduleEmails();
+                  }
+                }} 
+                variant="destructive"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                {sending ? 'Click to Reset' : `Send Reschedule Emails (${auditioners.length})`}
+              </Button>
             )}
           </div>
         </CardContent>
