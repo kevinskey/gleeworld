@@ -568,25 +568,49 @@ const SightReadingGeneratorPage = () => {
     setCurrentMeasure(0);
     
     const beatsPerMeasure = parseInt(timeSignature.split('/')[0]);
+    const totalMeasures = measures[0];
+    const totalBeatsInExercise = totalMeasures * beatsPerMeasure;
+    let exerciseBeatCount = 0; // Separate counter for the actual exercise
+    
+    console.log('Starting practice:', {
+      totalMeasures,
+      beatsPerMeasure,
+      totalBeatsInExercise,
+      tempo
+    });
     
     // Start metronome with count-in
     metronomeRef.current.onBeat((beatNumber, isDownbeat) => {
       if (beatNumber < 4) {
-        // Count-in phase
+        // Count-in phase (beats 0-3)
         setCountInBeats(beatNumber + 1);
+        console.log('Count-in beat:', beatNumber + 1);
       } else {
-        // Practice phase
+        // Practice phase starts after count-in
         if (beatNumber === 4) {
           setIsCountingIn(false);
+          console.log('Exercise started');
         }
-        const adjustedBeat = beatNumber - 4;
-        setCurrentBeat(adjustedBeat % beatsPerMeasure);
-        setCurrentMeasure(Math.floor(adjustedBeat / beatsPerMeasure));
         
-        // Auto-stop after the specified number of measures
-        const totalBeats = measures[0] * beatsPerMeasure;
-        if (adjustedBeat >= totalBeats) {
+        exerciseBeatCount = beatNumber - 4; // Exercise beats start from 0
+        const currentBeatInMeasure = exerciseBeatCount % beatsPerMeasure;
+        const currentMeasureNumber = Math.floor(exerciseBeatCount / beatsPerMeasure);
+        
+        setCurrentBeat(currentBeatInMeasure);
+        setCurrentMeasure(currentMeasureNumber);
+        
+        console.log('Exercise beat:', {
+          exerciseBeatCount,
+          currentMeasureNumber: currentMeasureNumber + 1,
+          currentBeatInMeasure: currentBeatInMeasure + 1,
+          totalBeatsInExercise
+        });
+        
+        // Stop exactly when we've completed all the measures
+        if (exerciseBeatCount >= totalBeatsInExercise) {
+          console.log('Exercise completed, stopping metronome');
           stopPractice();
+          return;
         }
       }
     });
