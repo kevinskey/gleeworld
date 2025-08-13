@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -22,7 +20,31 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { recipientEmail, recipientName, currentDate, currentTime, copyEmail }: RescheduleEmailRequest = await req.json();
+    console.log("🎭 Reschedule email function started");
+    
+    // Check API key
+    const apiKey = Deno.env.get("RESEND_API_KEY");
+    console.log("API key status:", apiKey ? "API key found" : "API key missing");
+    
+    if (!apiKey) {
+      console.error("RESEND_API_KEY is not set");
+      return new Response(JSON.stringify({ 
+        error: 'RESEND_API_KEY is not configured' 
+      }), {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    const resend = new Resend(apiKey);
+    
+    const requestData: RescheduleEmailRequest = await req.json();
+    console.log("Request data received for:", requestData.recipientEmail);
+    
+    const { recipientEmail, recipientName, currentDate, currentTime, copyEmail } = requestData;
 
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -99,8 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    console.log("About to send email to:", recipientEmail);
-    console.log("Using API key:", Deno.env.get("RESEND_API_KEY") ? "API key is set" : "API key is missing");
+    console.log("Sending email via Resend...");
     
     const emailResponse = await resend.emails.send({
       from: "Spelman Glee Club <noreply@gleeworld.org>",
@@ -110,12 +131,19 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailContent,
     });
 
-    console.log("Resend API response:", JSON.stringify(emailResponse, null, 2));
+    console.log("Resend response:", JSON.stringify(emailResponse, null, 2));
+
+    if (emailResponse.error) {
+      console.error("Resend error:", emailResponse.error);
+      throw new Error(`Resend error: ${JSON.stringify(emailResponse.error)}`);
+    }
+
+    console.log("✅ Email sent successfully");
 
     return new Response(JSON.stringify({
       success: true,
-      messageId: emailResponse.data?.id || emailResponse.id,
-      emailContent: emailContent
+      messageId: emailResponse.data?.id,
+      recipient: recipientEmail
     }), {
       status: 200,
       headers: {
@@ -125,10 +153,12 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
-    console.error("Error sending reschedule email:", error);
+    console.error("❌ Function error:", error);
+    console.error("Error stack:", error.stack);
     
     return new Response(JSON.stringify({ 
-      error: error.message || 'Failed to send email' 
+      error: error.message || 'Failed to send email',
+      details: error.stack
     }), {
       status: 500,
       headers: {
