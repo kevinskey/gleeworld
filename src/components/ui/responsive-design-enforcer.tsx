@@ -114,10 +114,7 @@ export const ResponsiveDesignEnforcer = () => {
         }
       }
       
-      /* Color consistency enforcement */
-      * {
-        color: hsl(var(--foreground)) !important;
-      }
+      /* Color consistency enforcement - Remove overly aggressive rule */
       
       /* Background color fixes */
       .bg-white { background-color: hsl(var(--background)) !important; }

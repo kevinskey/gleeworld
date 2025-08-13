@@ -87,7 +87,7 @@ export const PublicHeader = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-700 hover:bg-gray-100/50 transition-all duration-200 p-2"
+                  className="text-foreground hover:bg-muted/50 transition-all duration-200 p-2"
                   onClick={() => setIsOpen(true)}
                   aria-label="Toggle mobile menu"
                 >
