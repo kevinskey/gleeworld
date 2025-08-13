@@ -1131,11 +1131,44 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       {audioBlob && (
         <Card className="border-border bg-background/50">
           <CardHeader>
-            <CardTitle>Recording Preview</CardTitle>
-            <CardDescription>Listen to your take before assessment</CardDescription>
+            <CardTitle>Recording Complete</CardTitle>
+            <CardDescription>
+              {isAssessing 
+                ? "AI assessment in progress..." 
+                : "Listen to your recording and submit for AI analysis"
+              }
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <audio controls src={previewUrl || undefined} className="w-full" />
+            
+            {/* Recording Status Indicator */}
+            <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
+              <Mic className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                Recording saved ({Math.round((audioBlob.size / 1024))} KB)
+              </span>
+            </div>
+            
+            {/* Submit for Assessment Button */}
+            {!isAssessing && assessmentScore === null && (
+              <Button 
+                onClick={submitForAssessment}
+                className="w-full flex items-center gap-2"
+                size="lg"
+              >
+                <GraduationCap className="h-4 w-4" />
+                Submit for AI Assessment
+              </Button>
+            )}
+            
+            {/* Assessment Loading State */}
+            {isAssessing && (
+              <div className="flex items-center justify-center gap-3 p-4 bg-blue-50 rounded-lg">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="text-blue-600 font-medium">AI analyzing your performance...</span>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
