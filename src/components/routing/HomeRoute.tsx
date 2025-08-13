@@ -38,10 +38,13 @@ export const HomeRoute = () => {
     shouldShowLanding: true
   });
   
+  console.log('🚀 HomeRoute: About to render GleeWorldLanding');
+  
   try {
     return <GleeWorldLanding />;
   } catch (error) {
     console.error('❌ Error rendering GleeWorldLanding:', error);
+    console.error('❌ Error stack:', error.stack);
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         <div className="container mx-auto px-4 py-16">
@@ -50,6 +53,9 @@ export const HomeRoute = () => {
             <p className="text-lg text-muted-foreground mb-8">
               The official digital platform of the Spelman College Glee Club
             </p>
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              <strong>Debug:</strong> Error loading main component: {error.message}
+            </div>
             <div className="space-y-4">
               <a 
                 href="/auth"
