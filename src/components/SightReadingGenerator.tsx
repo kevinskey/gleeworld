@@ -149,16 +149,18 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     const melody: Note[] = [];
     const barsCount = params.measures;
     
-    // Calculate timing based on time signature
+    // FIXED TIMING: 120 BPM (0.5 seconds per quarter note)
+    const BPM = 120;
+    const quarterNoteDuration = 60 / BPM; // 0.5 seconds per quarter note
     const [beatsPerMeasure, beatType] = params.timeSignature.split('/').map(Number);
-    const quarterNoteDuration = 1.0; // 1 second per quarter note (60 BPM base)
-    const beatDuration = (4 / beatType) * quarterNoteDuration; // Adjust for beat type
+    const beatDuration = (4 / beatType) * quarterNoteDuration; // Duration of one beat in the time signature
+    
+    console.log(`🎵 Generating melody at ${BPM} BPM`);
+    console.log(`Quarter note duration: ${quarterNoteDuration}s, Beat duration: ${beatDuration}s`);
     
     // Generate notes with proper rhythm values
     const availableNoteValues = noteValues.filter(nv => params.noteValues.includes(nv.value));
     const availableRests = restTypes.filter(rt => params.restsToInclude.includes(rt.value));
-    
-    let currentTime = 0;
     
     for (let bar = 0; bar < barsCount; bar++) {
       let barTime = 0;
@@ -170,7 +172,7 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
       while (barTime < beatsPerMeasure * beatDuration) {
         // Choose note value based on what's available
         const noteValue = availableNoteValues[Math.floor(Math.random() * availableNoteValues.length)];
-        const noteDuration = noteValue.duration * quarterNoteDuration;
+        const noteDuration = noteValue.duration * quarterNoteDuration; // Duration in seconds
         
         // Check if we should add a rest
         const shouldAddRest = availableRests.length > 0 && Math.random() < 0.2; // 20% chance of rest
@@ -233,12 +235,16 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     }
     
     setGeneratedMelody(melody);
-    console.log('Generated melody with locked timing:', melody);
+    console.log('🎵 Generated melody with timing:', melody.map(n => ({
+      note: n.note,
+      time: n.time,
+      duration: n.duration
+    })));
     generateMusicXML(melody);
     setIsGenerating(false);
     toast({
       title: "Melody Generated",
-      description: `Generated ${melody.length} notes in ${params.key} major with locked timing at 60 BPM`
+      description: `Generated ${melody.length} notes in ${params.key} major at ${BPM} BPM`
     });
   };
 
@@ -283,18 +289,27 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
   const generateBars = (melody: Note[], fifths: number) => {
     const barsCount = params.measures;
     const [beatsPerMeasure, beatType] = params.timeSignature.split('/').map(Number);
-    const divisionsPerQuarter = 4; // Standard MIDI divisions
+    
+    // CRITICAL: Use consistent timing calculations
+    const BPM = 120;
+    const quarterNoteDuration = 60 / BPM; // 0.5 seconds per quarter note
+    const beatDuration = (4 / beatType) * quarterNoteDuration;
+    const divisionsPerQuarter = 4; // Standard MusicXML divisions
+    
+    console.log(`🎼 Generating MusicXML at ${BPM} BPM with ${divisionsPerQuarter} divisions per quarter`);
+    
     let bars = '';
     
     for (let bar = 0; bar < barsCount; bar++) {
-      const barStartTime = bar * beatsPerMeasure;
-      const barEndTime = (bar + 1) * beatsPerMeasure;
+      const barStartTime = bar * beatsPerMeasure * beatDuration;
+      const barEndTime = (bar + 1) * beatsPerMeasure * beatDuration;
       
       // Get notes for this bar
       const barNotes = melody.filter(note => {
-        const noteBarTime = note.time / 1.0; // Convert to beat units (assuming 60 BPM)
-        return noteBarTime >= barStartTime && noteBarTime < barEndTime;
+        return note.time >= barStartTime && note.time < barEndTime;
       });
+      
+      console.log(`Bar ${bar + 1}: ${barNotes.length} notes from ${barStartTime}s to ${barEndTime}s`);
       
       bars += `
     <measure number="${bar + 1}">
@@ -315,29 +330,33 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
       </attributes>` : ''}
       ${barNotes.map(note => {
         if (note.note === 'rest') {
-          // Handle rests
-          const restDuration = Math.round(note.duration * divisionsPerQuarter);
-          const restType = note.duration >= 4 ? 'whole' : 
-                          note.duration >= 2 ? 'half' : 
-                          note.duration >= 1 ? 'quarter' : 
-                          note.duration >= 0.5 ? 'eighth' : 'sixteenth';
+          // Handle rests - convert duration to MusicXML divisions
+          const xmlDuration = Math.round((note.duration / quarterNoteDuration) * divisionsPerQuarter);
+          const restType = note.duration >= 4 * quarterNoteDuration ? 'whole' : 
+                          note.duration >= 2 * quarterNoteDuration ? 'half' : 
+                          note.duration >= quarterNoteDuration ? 'quarter' : 
+                          note.duration >= quarterNoteDuration / 2 ? 'eighth' : 'sixteenth';
+          
+          console.log(`Rest: duration=${note.duration}s, xmlDuration=${xmlDuration}, type=${restType}`);
           
           return `
       <note>
         <rest/>
-        <duration>${restDuration}</duration>
+        <duration>${xmlDuration}</duration>
         <type>${restType}</type>
       </note>`;
         } else {
-          // Handle pitched notes
+          // Handle pitched notes - convert duration to MusicXML divisions
           const [noteName, octave] = [note.note.slice(0, -1), note.note.slice(-1)];
           const step = noteName.charAt(0);
           const alter = noteName.includes('#') ? 1 : noteName.includes('b') ? -1 : 0;
-          const noteDuration = Math.round(note.duration * divisionsPerQuarter);
-          const noteType = note.duration >= 4 ? 'whole' : 
-                          note.duration >= 2 ? 'half' : 
-                          note.duration >= 1 ? 'quarter' : 
-                          note.duration >= 0.5 ? 'eighth' : 'sixteenth';
+          const xmlDuration = Math.round((note.duration / quarterNoteDuration) * divisionsPerQuarter);
+          const noteType = note.duration >= 4 * quarterNoteDuration ? 'whole' : 
+                          note.duration >= 2 * quarterNoteDuration ? 'half' : 
+                          note.duration >= quarterNoteDuration ? 'quarter' : 
+                          note.duration >= quarterNoteDuration / 2 ? 'eighth' : 'sixteenth';
+          
+          console.log(`Note ${note.note}: duration=${note.duration}s, xmlDuration=${xmlDuration}, type=${noteType}`);
           
           return `
       <note>
@@ -346,7 +365,7 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
           ${alter !== 0 ? `<alter>${alter}</alter>` : ''}
           <octave>${octave}</octave>
         </pitch>
-        <duration>${noteDuration}</duration>
+        <duration>${xmlDuration}</duration>
         <type>${noteType}</type>
       </note>`;
         }
