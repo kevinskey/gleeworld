@@ -16,6 +16,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { MemberSearchDropdown, Member } from '@/components/shared/MemberSearchDropdown';
 import { MetronomePlayer } from '@/components/sight-singing/MetronomePlayer';
+import { NotePlayer } from '@/components/sight-singing/NotePlayer';
+import { parseMusicXMLForPlayback, ParsedNote } from '@/utils/musicxml-parser';
 
 interface OSMDViewerProps {
   musicXML: string;
@@ -273,14 +275,17 @@ const SightReadingGeneratorPage = () => {
   
   // Metronome state
   const [isPracticing, setIsPracticing] = useState(false);
+  const [isPlayingExample, setIsPlayingExample] = useState(false);
   const [currentBeat, setCurrentBeat] = useState(0);
   const [currentMeasure, setCurrentMeasure] = useState(0);
   const [countInBeats, setCountInBeats] = useState(0);
   const [isCountingIn, setIsCountingIn] = useState(false);
   
-  // Audio context and metronome refs
+  // Audio context and player refs
   const audioContextRef = useRef<AudioContext | null>(null);
   const metronomeRef = useRef<MetronomePlayer | null>(null);
+  const notePlayerRef = useRef<NotePlayer | null>(null);
+  const [parsedNotes, setParsedNotes] = useState<ParsedNote[]>([]);
   
   // Generation parameters
   const [difficulty, setDifficulty] = useState('beginner');
@@ -553,6 +558,89 @@ const SightReadingGeneratorPage = () => {
     }
   };
 
+  const startExamplePlayback = async () => {
+    if (!audioContextRef.current || !metronomeRef.current || !notePlayerRef.current) return;
+    
+    // Resume audio context if suspended
+    if (audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume();
+    }
+    
+    setIsPlayingExample(true);
+    setIsCountingIn(true);
+    setCountInBeats(0);
+    setCurrentBeat(0);
+    setCurrentMeasure(0);
+    
+    const beatsPerMeasure = parseInt(timeSignature.split('/')[0]);
+    const totalMeasures = measures[0];
+    const totalBeatsInExercise = totalMeasures * beatsPerMeasure;
+    const secondsPerBeat = 60.0 / tempo;
+    let exerciseBeatCount = 0;
+    
+    console.log('Starting example playback:', {
+      totalMeasures,
+      beatsPerMeasure,
+      totalBeatsInExercise,
+      tempo,
+      notesToPlay: parsedNotes.length
+    });
+    
+    // Schedule all notes based on their timing
+    const startTime = audioContextRef.current.currentTime + (4 * secondsPerBeat); // After count-in
+    
+    parsedNotes.forEach((note) => {
+      const noteStartTime = startTime + (note.startBeat * secondsPerBeat);
+      const noteDuration = note.duration * secondsPerBeat;
+      notePlayerRef.current!.playNote(note.pitch, noteDuration, noteStartTime);
+    });
+    
+    // Start metronome with count-in
+    metronomeRef.current.onBeat((beatNumber, isDownbeat) => {
+      if (beatNumber < 4) {
+        // Count-in phase (beats 0-3)
+        setCountInBeats(beatNumber + 1);
+        console.log('Count-in beat:', beatNumber + 1);
+      } else {
+        // Example playback phase starts after count-in
+        if (beatNumber === 4) {
+          setIsCountingIn(false);
+          console.log('Example playback started');
+        }
+        
+        exerciseBeatCount = beatNumber - 4; // Exercise beats start from 0
+        const currentBeatInMeasure = exerciseBeatCount % beatsPerMeasure;
+        const currentMeasureNumber = Math.floor(exerciseBeatCount / beatsPerMeasure);
+        
+        setCurrentBeat(currentBeatInMeasure);
+        setCurrentMeasure(currentMeasureNumber);
+        
+        // Stop exactly when we've completed all the measures
+        if (exerciseBeatCount >= totalBeatsInExercise) {
+          console.log('Example playback completed, stopping');
+          stopExamplePlayback();
+          return;
+        }
+      }
+    });
+    
+    metronomeRef.current.start(tempo, beatsPerMeasure);
+  };
+
+  const stopExamplePlayback = () => {
+    if (metronomeRef.current) {
+      metronomeRef.current.stop();
+    }
+    if (notePlayerRef.current) {
+      notePlayerRef.current.stop();
+    }
+    setIsPlayingExample(false);
+    setIsCountingIn(false);
+    setCountInBeats(0);
+    setCurrentBeat(0);
+    setCurrentMeasure(0);
+  };
+
   const startPractice = async () => {
     if (!audioContextRef.current || !metronomeRef.current) return;
     
@@ -617,7 +705,6 @@ const SightReadingGeneratorPage = () => {
     
     metronomeRef.current.start(tempo, beatsPerMeasure);
   };
-  
   const stopPractice = () => {
     if (metronomeRef.current) {
       metronomeRef.current.stop();
@@ -631,11 +718,13 @@ const SightReadingGeneratorPage = () => {
 
   const startNewExercise = () => {
     stopPractice();
+    stopExamplePlayback();
     setGeneratedMusicXML('');
     setExerciseGenerated(false);
     setIsPlayingExercise(false);
     setIsRecording(false);
     setSolfegeEnabled(false);
+    setParsedNotes([]);
     
     // Reset to default parameters
     setDifficulty('beginner');
@@ -648,12 +737,13 @@ const SightReadingGeneratorPage = () => {
     window.dispatchEvent(new CustomEvent('resetPractice'));
   };
 
-  // Initialize audio context and metronome
+  // Initialize audio context and players
   useEffect(() => {
     const initAudio = async () => {
       try {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         metronomeRef.current = new MetronomePlayer(audioContextRef.current);
+        notePlayerRef.current = new NotePlayer(audioContextRef.current);
         
         // Set up beat callback
         metronomeRef.current.onBeat((beatNumber, isDownbeat) => {
@@ -672,11 +762,23 @@ const SightReadingGeneratorPage = () => {
       if (metronomeRef.current) {
         metronomeRef.current.stop();
       }
+      if (notePlayerRef.current) {
+        notePlayerRef.current.stop();
+      }
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
     };
   }, [timeSignature]);
+
+  // Parse notes when exercise is generated
+  useEffect(() => {
+    if (generatedMusicXML) {
+      const parsed = parseMusicXMLForPlayback(generatedMusicXML);
+      setParsedNotes(parsed.notes);
+      console.log('Parsed exercise notes:', parsed);
+    }
+  }, [generatedMusicXML]);
 
   // Listen for practice auto-stop to update button state
   React.useEffect(() => {
@@ -742,6 +844,26 @@ const SightReadingGeneratorPage = () => {
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
+                    {/* Play Example Button */}
+                    <Button
+                      variant={isPlayingExample ? "destructive" : "default"}
+                      onClick={isPlayingExample ? stopExamplePlayback : startExamplePlayback}
+                      className="flex items-center gap-2"
+                      disabled={!parsedNotes.length}
+                    >
+                      {isPlayingExample ? (
+                        <>
+                          <StopCircle className="h-4 w-4" />
+                          Stop Example
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4" />
+                          Play Example
+                        </>
+                      )}
+                    </Button>
+                    
                     {/* Practice Button with Metronome */}
                     <Button
                       variant={isPracticing ? "destructive" : "secondary"}
@@ -783,7 +905,7 @@ const SightReadingGeneratorPage = () => {
               </CardHeader>
               <CardContent>
                 {/* Practice Status Display */}
-                {(isPracticing || isCountingIn) && (
+                {(isPracticing || isPlayingExample || isCountingIn) && (
                   <div className="mb-4 p-4 bg-muted rounded-lg border">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
@@ -791,7 +913,10 @@ const SightReadingGeneratorPage = () => {
                           {isCountingIn ? (
                             <span className="text-primary">Count-in: {countInBeats}/4</span>
                           ) : (
-                            <span>Measure {currentMeasure + 1} of {measures[0]} • Beat {currentBeat + 1}</span>
+                            <span>
+                              {isPlayingExample ? '🔊 Playing Example - ' : '🎤 Practice Mode - '}
+                              Measure {currentMeasure + 1} of {measures[0]} • Beat {currentBeat + 1}
+                            </span>
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground">
