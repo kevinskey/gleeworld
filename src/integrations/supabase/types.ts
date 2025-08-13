@@ -13164,6 +13164,10 @@ export type Database = {
         Args: { event_id_param: string }
         Returns: undefined
       }
+      can_manage_appointments: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       can_view_auditioner_profiles: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -13814,6 +13818,7 @@ export type Database = {
         | "section_leader_a2"
         | "set_up_crew_manager"
         | "pr_manager"
+        | "chief_of_staff"
       feedback_category_enum:
         | "Vocal Blend"
         | "Rhythmic Precision"
@@ -13987,6 +13992,7 @@ export const Constants = {
         "section_leader_a2",
         "set_up_crew_manager",
         "pr_manager",
+        "chief_of_staff",
       ],
       feedback_category_enum: [
         "Vocal Blend",
