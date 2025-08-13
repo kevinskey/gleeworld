@@ -782,9 +782,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       recordingTimerRef.current = null;
     }
     
-    if (metronomePlayerRef.current) {
-      metronomePlayerRef.current.stop();
-    }
+    // Keep metronome running after recording stops - don't stop it here
+    console.log('Recording stopped, but keeping metronome running for continued practice');
     
     toast({
       title: "Recording Stopped",
