@@ -18,8 +18,8 @@ export const HomeRoute = () => {
     timestamp: new Date().toISOString()
   });
   
-  // Use the role-based redirect hook to handle automatic redirection
-  useRoleBasedRedirect();
+  // Temporarily disable auto-redirect to view landing page
+  // useRoleBasedRedirect();
 
   // Show loading while determining auth status
   if (authLoading) {
