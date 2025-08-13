@@ -192,12 +192,12 @@ export const MusicLibrary = () => {
   return (
     <>
       <MusicLibraryHeader />
-      <div className="container mx-auto px-4 pt-4 md:pt-6 pb-6">
+      <div className="container mx-auto px-2 sm:px-4 lg:px-6 pt-4 md:pt-6 pb-6">
 
-        {/* Desktop two-column layout */}
-        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-5rem)] overflow-hidden">
+        {/* Desktop responsive layout */}
+        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-6 min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">
           {/* Left column - Library sections */}
-          <div className={`${selectedPdf ? 'col-span-4' : 'col-span-5'} space-y-4 h-full overflow-y-auto pr-1`}>
+          <div className={`${selectedPdf ? 'lg:col-span-4' : 'lg:col-span-5'} space-y-4 lg:h-full lg:overflow-y-auto lg:pr-1 order-2 lg:order-1`}>
             {/* Study Scores */}
             <div className="border rounded">
               <div className="flex items-center justify-between p-2">
@@ -272,17 +272,18 @@ export const MusicLibrary = () => {
           </div>
 
           {/* Right column - PDF viewer */}
-          <div className={`${selectedPdf ? 'col-span-8' : 'col-span-7'} flex flex-col h-full overflow-hidden pl-1`}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">PDF Viewer</h2>
-              <Button size="sm" variant="outline" className="gap-2" aria-label="Study Mode" title="Study Mode" onClick={openStudyMode}>
-                <Eye className="h-4 w-4" />
-                <span className="hidden sm:inline">Study Mode</span>
+          <div className={`${selectedPdf ? 'lg:col-span-8' : 'lg:col-span-7'} flex flex-col min-h-[60vh] lg:h-full overflow-hidden lg:pl-1 order-1 lg:order-2`}>
+            <div className="flex items-center justify-between mb-2 lg:mb-4 px-2 lg:px-0">
+              <h2 className="text-base lg:text-lg font-semibold">PDF Viewer</h2>
+              <Button size="sm" variant="outline" className="gap-2 h-8 lg:h-9 px-2 lg:px-3" aria-label="Study Mode" title="Study Mode" onClick={openStudyMode}>
+                <Eye className="h-3 w-3 lg:h-4 lg:w-4" />
+                <span className="hidden sm:inline text-xs lg:text-sm">Study Mode</span>
+                <span className="sm:hidden text-xs">Study</span>
               </Button>
             </div>
             {selectedPdf ? (
-              <div className="flex-1 overflow-hidden">
-                <p className="text-xs text-muted-foreground mb-2">Loading: {selectedPdf.title}</p>
+              <div className="flex-1 overflow-hidden rounded-lg lg:rounded-xl">
+                <p className="text-xs text-muted-foreground mb-1 lg:mb-2 px-2 lg:px-0">Loading: {selectedPdf.title}</p>
                 <PDFViewerWithAnnotations 
                   key={selectedPdf.url}
                   pdfUrl={selectedPdf.url}
@@ -292,11 +293,11 @@ export const MusicLibrary = () => {
                 />
               </div>
             ) : (
-              <div className="flex-1 relative rounded-xl overflow-hidden bg-background shadow-xl ring-1 ring-border">
+              <div className="flex-1 relative rounded-lg lg:rounded-xl overflow-hidden bg-background shadow-lg lg:shadow-xl ring-1 ring-border mx-2 lg:mx-0">
                 <img
                   src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png"
                   alt="Glee World Music Library landing image"
-                  className="absolute inset-0 w-full h-full object-contain"
+                  className="absolute inset-0 w-full h-full object-contain p-4 lg:p-6"
                   loading="lazy"
                 />
               </div>
