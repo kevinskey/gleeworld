@@ -36,6 +36,31 @@ export const AuditionTimeGrid = () => {
     }
   }, [selectedDate]);
 
+  // Real-time updates for audition applications
+  useEffect(() => {
+    const channel = supabase
+      .channel('audition-schedule-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'audition_applications'
+        },
+        () => {
+          // Refetch appointments when any change occurs
+          if (selectedDate) {
+            fetchAppointmentsForDate();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedDate]);
+
   const fetchAppointmentsForDate = async () => {
     if (!selectedDate) return;
     
