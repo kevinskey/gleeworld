@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Download, Music, Play, RefreshCw } from 'lucide-react';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +20,10 @@ interface GeneratorParams {
   difficulty: number;
   timeSignature: string;
   measures: number;
+  intervals: string[];
+  cadenceEvery4Bars: boolean;
+  noteValues: string[];
+  restsToInclude: string[];
 }
 
 export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightReading?: (melody: Note[]) => void }) => {
@@ -27,7 +32,11 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     range: 'C4-G4',
     difficulty: 1,
     timeSignature: '4/4',
-    measures: 8
+    measures: 8,
+    intervals: ['unison', 'second', 'third'],
+    cadenceEvery4Bars: true,
+    noteValues: ['quarter', 'half'],
+    restsToInclude: ['quarter']
   });
   const [generatedMelody, setGeneratedMelody] = useState<Note[]>([]);
   const [musicXML, setMusicXML] = useState<string>('');
@@ -41,8 +50,34 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
   const ranges = [
     'C4-G4', 'C4-C5', 'G3-G4', 'F4-F5', 'E4-E5'
   ];
-  const timeSignatures = ['4/4', '3/4', '2/4'];
+  const timeSignatures = ['4/4', '3/4', '2/4', '6/8', '2/2', '3/8'];
   const measureCounts = [4, 8, 12, 16];
+  
+  const intervals = [
+    { value: 'unison', label: 'Unison (1st)' },
+    { value: 'second', label: 'Second (2nd)' },
+    { value: 'third', label: 'Third (3rd)' },
+    { value: 'fourth', label: 'Fourth (4th)' },
+    { value: 'fifth', label: 'Fifth (5th)' },
+    { value: 'sixth', label: 'Sixth (6th)' },
+    { value: 'seventh', label: 'Seventh (7th)' },
+    { value: 'octave', label: 'Octave (8th)' }
+  ];
+  
+  const noteValues = [
+    { value: 'whole', label: 'Whole Note', duration: 4 },
+    { value: 'half', label: 'Half Note', duration: 2 },
+    { value: 'quarter', label: 'Quarter Note', duration: 1 },
+    { value: 'eighth', label: 'Eighth Note', duration: 0.5 },
+    { value: 'sixteenth', label: 'Sixteenth Note', duration: 0.25 }
+  ];
+  
+  const restTypes = [
+    { value: 'whole', label: 'Whole Rest', duration: 4 },
+    { value: 'half', label: 'Half Rest', duration: 2 },
+    { value: 'quarter', label: 'Quarter Rest', duration: 1 },
+    { value: 'eighth', label: 'Eighth Rest', duration: 0.5 }
+  ];
 
   // Initialize OSMD
   useEffect(() => {
@@ -434,105 +469,222 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
             <span className="text-xs text-muted-foreground">• Customize your sight-reading exercise</span>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {/* Difficulty Level */}
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Difficulty Level</Label>
-              <Select
-                value={params.difficulty.toString()}
-                onValueChange={(value) => setParams({ ...params, difficulty: parseInt(value) })}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50">
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <SelectItem key={level} value={level.toString()}>
-                      Level {level} {level === 1 ? '(Beginner)' : level === 5 ? '(Advanced)' : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Basic Parameters */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-foreground">Basic Parameters</h4>
+              
+              {/* Difficulty Level */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Difficulty Level</Label>
+                <Select
+                  value={params.difficulty.toString()}
+                  onValueChange={(value) => setParams({ ...params, difficulty: parseInt(value) })}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    {[1, 2, 3, 4, 5].map((level) => (
+                      <SelectItem key={level} value={level.toString()}>
+                        Level {level} {level === 1 ? '(Beginner)' : level === 5 ? '(Advanced)' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Key Signature */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Key Signature</Label>
+                <Select
+                  value={params.key}
+                  onValueChange={(value) => setParams({ ...params, key: value })}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    {keys.map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {key} Major
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Time Signature */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Time Signature</Label>
+                <Select
+                  value={params.timeSignature}
+                  onValueChange={(value) => setParams({ ...params, timeSignature: value })}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    {timeSignatures.map((sig) => (
+                      <SelectItem key={sig} value={sig}>
+                        {sig}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Number of Measures */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Number of Measures</Label>
+                <Select
+                  value={params.measures.toString()}
+                  onValueChange={(value) => setParams({ ...params, measures: parseInt(value) })}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    {measureCounts.map((count) => (
+                      <SelectItem key={count} value={count.toString()}>
+                        {count} measures
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Voice Range */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Voice Range</Label>
+                <Select
+                  value={params.range}
+                  onValueChange={(value) => setParams({ ...params, range: value })}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    {ranges.map((range) => (
+                      <SelectItem key={range} value={range}>
+                        {range}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            {/* Key Signature */}
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Key Signature</Label>
-              <Select
-                value={params.key}
-                onValueChange={(value) => setParams({ ...params, key: value })}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50">
-                  {keys.map((key) => (
-                    <SelectItem key={key} value={key}>
-                      {key} Major
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Intervals */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-foreground">Allowed Intervals</h4>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {intervals.map((interval) => (
+                  <div key={interval.value} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`interval-${interval.value}`}
+                      checked={params.intervals.includes(interval.value)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setParams({
+                            ...params,
+                            intervals: [...params.intervals, interval.value]
+                          });
+                        } else {
+                          setParams({
+                            ...params,
+                            intervals: params.intervals.filter(i => i !== interval.value)
+                          });
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`interval-${interval.value}`} className="text-xs">
+                      {interval.label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Time Signature */}
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Time Signature</Label>
-              <Select
-                value={params.timeSignature}
-                onValueChange={(value) => setParams({ ...params, timeSignature: value })}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50">
-                  {timeSignatures.map((sig) => (
-                    <SelectItem key={sig} value={sig}>
-                      {sig}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Note Values */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-foreground">Note Values</h4>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {noteValues.map((noteValue) => (
+                  <div key={noteValue.value} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`note-${noteValue.value}`}
+                      checked={params.noteValues.includes(noteValue.value)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setParams({
+                            ...params,
+                            noteValues: [...params.noteValues, noteValue.value]
+                          });
+                        } else {
+                          setParams({
+                            ...params,
+                            noteValues: params.noteValues.filter(n => n !== noteValue.value)
+                          });
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`note-${noteValue.value}`} className="text-xs">
+                      {noteValue.label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Number of Measures */}
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Measures</Label>
-              <Select
-                value={params.measures.toString()}
-                onValueChange={(value) => setParams({ ...params, measures: parseInt(value) })}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50">
-                  {measureCounts.map((count) => (
-                    <SelectItem key={count} value={count.toString()}>
-                      {count}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Rests and Advanced Options */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-foreground">Rests & Options</h4>
+              
+              {/* Cadence Option */}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="cadence-4-bars"
+                  checked={params.cadenceEvery4Bars}
+                  onCheckedChange={(checked) => 
+                    setParams({ ...params, cadenceEvery4Bars: checked as boolean })
+                  }
+                />
+                <Label htmlFor="cadence-4-bars" className="text-xs">
+                  Add cadence every 4 bars
+                </Label>
+              </div>
 
-            {/* Note Range */}
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Note Range</Label>
-              <Select
-                value={params.range}
-                onValueChange={(value) => setParams({ ...params, range: value })}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50">
-                  {ranges.map((range) => (
-                    <SelectItem key={range} value={range}>
-                      {range} {range === 'C4-G4' ? '(Beginner)' : ''}
-                    </SelectItem>
+              {/* Rest Types */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Include Rests</Label>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {restTypes.map((rest) => (
+                    <div key={rest.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`rest-${rest.value}`}
+                        checked={params.restsToInclude.includes(rest.value)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setParams({
+                              ...params,
+                              restsToInclude: [...params.restsToInclude, rest.value]
+                            });
+                          } else {
+                            setParams({
+                              ...params,
+                              restsToInclude: params.restsToInclude.filter(r => r !== rest.value)
+                            });
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`rest-${rest.value}`} className="text-xs">
+                        {rest.label}
+                      </Label>
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              </div>
             </div>
           </div>
         </div>
