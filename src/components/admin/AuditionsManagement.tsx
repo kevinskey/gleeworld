@@ -1380,6 +1380,250 @@ export const AuditionsManagement = () => {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6 mt-8">
+          {/* Musical Experience Overview - Top Priority Stats */}
+          <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-emerald-900 flex items-center gap-2">
+                <Music className="h-6 w-6 text-emerald-700" />
+                Musical Experience & Skills Overview
+              </CardTitle>
+              <CardDescription className="text-emerald-700">
+                Key insights into applicant musical backgrounds and experience levels
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-sm font-medium text-blue-700">Musical Experience</p>
+                        <p className="text-3xl font-bold text-blue-900">
+                          {applications.length > 0 
+                            ? Math.round((applications.filter(a => a.sang_in_high_school || a.sang_in_middle_school).length / applications.length) * 100)
+                            : 0
+                          }%
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          {applications.filter(a => a.sang_in_high_school || a.sang_in_middle_school).length} of {applications.length} have choir experience
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-blue-200 rounded-full flex items-center justify-center">
+                        <Music className="h-6 w-6 text-blue-700" />
+                      </div>
+                    </div>
+                    <Progress 
+                      value={applications.length > 0 
+                        ? (applications.filter(a => a.sang_in_high_school || a.sang_in_middle_school).length / applications.length) * 100 
+                        : 0} 
+                      className="h-2" 
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-sm font-medium text-purple-700">Music Literacy</p>
+                        <p className="text-3xl font-bold text-purple-900">
+                          {applications.length > 0 
+                            ? Math.round((applications.filter(a => a.reads_music).length / applications.length) * 100)
+                            : 0
+                          }%
+                        </p>
+                        <p className="text-xs text-purple-600 mt-1">
+                          {applications.filter(a => a.reads_music).length} of {applications.length} can read music notation
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-purple-200 rounded-full flex items-center justify-center">
+                        <GraduationCap className="h-6 w-6 text-purple-700" />
+                      </div>
+                    </div>
+                    <Progress 
+                      value={applications.length > 0 
+                        ? (applications.filter(a => a.reads_music).length / applications.length) * 100 
+                        : 0} 
+                      className="h-2" 
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-sm font-medium text-amber-700">Leadership Interest</p>
+                        <p className="text-3xl font-bold text-amber-900">
+                          {applications.length > 0 
+                            ? Math.round((applications.filter(a => a.interested_in_leadership).length / applications.length) * 100)
+                            : 0
+                          }%
+                        </p>
+                        <p className="text-xs text-amber-600 mt-1">
+                          {applications.filter(a => a.interested_in_leadership).length} of {applications.length} interested in leadership roles
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-amber-200 rounded-full flex items-center justify-center">
+                        <Shield className="h-6 w-6 text-amber-700" />
+                      </div>
+                    </div>
+                    <Progress 
+                      value={applications.length > 0 
+                        ? (applications.filter(a => a.interested_in_leadership).length / applications.length) * 100 
+                        : 0} 
+                      className="h-2" 
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-sm font-medium text-green-700">Voice Part Experience</p>
+                        <p className="text-3xl font-bold text-green-900">
+                          {applications.length > 0 
+                            ? Math.round((applications.filter(a => a.high_school_section).length / applications.length) * 100)
+                            : 0
+                          }%
+                        </p>
+                        <p className="text-xs text-green-600 mt-1">
+                          {applications.filter(a => a.high_school_section).length} of {applications.length} have section experience
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-green-200 rounded-full flex items-center justify-center">
+                        <Users className="h-6 w-6 text-green-700" />
+                      </div>
+                    </div>
+                    <Progress 
+                      value={applications.length > 0 
+                        ? (applications.filter(a => a.high_school_section).length / applications.length) * 100 
+                        : 0} 
+                      className="h-2" 
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Detailed Experience Breakdown */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                      Choir Experience Distribution
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              {
+                                name: 'Middle School Only',
+                                value: applications.filter(a => a.sang_in_middle_school && !a.sang_in_high_school).length,
+                                fill: 'hsl(var(--primary))',
+                                percentage: applications.length > 0 
+                                  ? Math.round((applications.filter(a => a.sang_in_middle_school && !a.sang_in_high_school).length / applications.length) * 100)
+                                  : 0
+                              },
+                              {
+                                name: 'High School Only',
+                                value: applications.filter(a => !a.sang_in_middle_school && a.sang_in_high_school).length,
+                                fill: 'hsl(var(--secondary))',
+                                percentage: applications.length > 0 
+                                  ? Math.round((applications.filter(a => !a.sang_in_middle_school && a.sang_in_high_school).length / applications.length) * 100)
+                                  : 0
+                              },
+                              {
+                                name: 'Both Levels',
+                                value: applications.filter(a => a.sang_in_middle_school && a.sang_in_high_school).length,
+                                fill: 'hsl(var(--accent))',
+                                percentage: applications.length > 0 
+                                  ? Math.round((applications.filter(a => a.sang_in_middle_school && a.sang_in_high_school).length / applications.length) * 100)
+                                  : 0
+                              },
+                              {
+                                name: 'No Experience',
+                                value: applications.filter(a => !a.sang_in_middle_school && !a.sang_in_high_school).length,
+                                fill: 'hsl(var(--muted))',
+                                percentage: applications.length > 0 
+                                  ? Math.round((applications.filter(a => !a.sang_in_middle_school && !a.sang_in_high_school).length / applications.length) * 100)
+                                  : 0
+                              }
+                            ]}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percentage }) => `${name}: ${percentage}%`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          />
+                          <Tooltip 
+                            formatter={(value, name, props) => [
+                              `${value} applicants (${props.payload.percentage}%)`,
+                              name
+                            ]}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Music className="h-5 w-5 text-primary" />
+                      High School Voice Parts
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={(() => {
+                              const voiceParts = applications.reduce((acc, app) => {
+                                const part = app.high_school_section || 'Not specified';
+                                acc[part] = (acc[part] || 0) + 1;
+                                return acc;
+                              }, {} as Record<string, number>);
+                              
+                              const colors = ['hsl(220, 70%, 50%)', 'hsl(280, 70%, 50%)', 'hsl(340, 70%, 50%)', 'hsl(40, 70%, 50%)', 'hsl(160, 70%, 50%)'];
+                              return Object.entries(voiceParts).map(([name, value], index) => ({
+                                name: name.charAt(0).toUpperCase() + name.slice(1),
+                                value,
+                                fill: colors[index % colors.length],
+                                percentage: applications.length > 0 ? Math.round((value / applications.length) * 100) : 0
+                              }));
+                            })()}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percentage }) => `${name}: ${percentage}%`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          />
+                          <Tooltip 
+                            formatter={(value, name, props) => [
+                              `${value} applicants (${props.payload.percentage}%)`,
+                              name
+                            ]}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Enhanced Analytics Dashboard */}
           <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
             <CardHeader>
