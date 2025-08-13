@@ -37,11 +37,11 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
 
         const dates: Date[] = [];
         timeBlocks?.forEach(block => {
-          // Use the local date from the database timestamp
-          const blockDate = new Date(block.start_date);
+          // Convert the UTC timestamp to Eastern Time for proper date calculation
+          const blockDateEastern = toZonedTime(new Date(block.start_date), EASTERN_TZ);
           
           // Create a clean date object (midnight local time) for the date
-          const cleanDate = new Date(blockDate.getFullYear(), blockDate.getMonth(), blockDate.getDate());
+          const cleanDate = new Date(blockDateEastern.getFullYear(), blockDateEastern.getMonth(), blockDateEastern.getDate());
           
           // Only add the date if it's not already in the array
           const dateExists = dates.some(date => 
@@ -86,10 +86,10 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
           throw blockError;
         }
 
-        // Filter blocks that match the selected date (compare local dates)
+        // Filter blocks that match the selected date (compare Eastern Time dates)
         const matchingBlocks = auditionBlocks?.filter(block => {
-          const blockStartDate = new Date(block.start_date);
-          const blockDateString = format(blockStartDate, 'yyyy-MM-dd');
+          const blockStartDateEastern = toZonedTime(new Date(block.start_date), EASTERN_TZ);
+          const blockDateString = format(blockStartDateEastern, 'yyyy-MM-dd');
           return blockDateString === selectedDateString;
         }) || [];
 
@@ -123,18 +123,18 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
         const appointmentDuration = auditionBlock.appointment_duration_minutes || 30;
         const slots: TimeSlot[] = [];
         
-        // Get the actual start and end times from the audition block
-        const blockStartUTC = new Date(auditionBlock.start_date);
-        const blockEndUTC = new Date(auditionBlock.end_date);
+        // Get the actual start and end times from the audition block in Eastern Time
+        const blockStartEastern = toZonedTime(new Date(auditionBlock.start_date), EASTERN_TZ);
+        const blockEndEastern = toZonedTime(new Date(auditionBlock.end_date), EASTERN_TZ);
         
-        // Create the start and end times for the selected date using local time
+        // Create the start and end times for the selected date using Eastern Time
         const startTime = new Date(selectedDate);
-        startTime.setHours(blockStartUTC.getHours(), blockStartUTC.getMinutes(), 0, 0);
+        startTime.setHours(blockStartEastern.getHours(), blockStartEastern.getMinutes(), 0, 0);
         
         const endTime = new Date(selectedDate);
-        endTime.setHours(blockEndUTC.getHours(), blockEndUTC.getMinutes(), 0, 0);
+        endTime.setHours(blockEndEastern.getHours(), blockEndEastern.getMinutes(), 0, 0);
         
-        console.log('Block times (UTC):', blockStartUTC, 'to', blockEndUTC);
+        console.log('Block times (Eastern):', blockStartEastern, 'to', blockEndEastern);
         console.log('Generated slot times for', selectedDateString, ':', startTime, 'to', endTime);
         console.log('Appointment duration:', appointmentDuration, 'minutes');
         

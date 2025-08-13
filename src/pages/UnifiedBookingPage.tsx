@@ -122,10 +122,26 @@ export default function UnifiedBookingPage() {
     try {
       const easternTimeZone = 'America/New_York';
       
-      // Create the appointment time in Eastern Time
-      const [hours, minutes] = selectedSlot.time.split(':');
+      // Parse the time from the selectedSlot.time (e.g., "6:30 PM")
+      const timeMatch = selectedSlot.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      if (!timeMatch) {
+        throw new Error('Invalid time format');
+      }
+      
+      let hours = parseInt(timeMatch[1]);
+      const minutes = parseInt(timeMatch[2]);
+      const ampm = timeMatch[3].toUpperCase();
+      
+      // Convert to 24-hour format
+      if (ampm === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (ampm === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      
+      // Create the appointment time in Eastern Time using the selected date
       const easternDateTime = new Date(selectedDate);
-      easternDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      easternDateTime.setHours(hours, minutes, 0, 0);
       
       // Convert Eastern Time to UTC for storage
       const utcDateTime = fromZonedTime(easternDateTime, easternTimeZone);
