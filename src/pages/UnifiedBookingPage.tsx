@@ -77,7 +77,38 @@ export default function UnifiedBookingPage() {
       const appointmentDateTime = new Date(selectedDate);
       appointmentDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
       
-      const { error } = await supabase
+      // Check if this person already has an audition application
+      const { data: existingApplication, error: checkError } = await supabase
+        .from('audition_applications')
+        .select('id, full_name, email')
+        .or(`full_name.ilike.%${contactInfo.name}%,email.ilike.%${contactInfo.email}%`)
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      let isUpdate = false;
+
+      if (existingApplication) {
+        // Update existing audition application with new time
+        const { error: updateError } = await supabase
+          .from('audition_applications')
+          .update({
+            audition_time_slot: appointmentDateTime.toISOString(),
+            phone_number: contactInfo.phone,
+            email: contactInfo.email,
+            full_name: contactInfo.name,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingApplication.id);
+
+        if (updateError) throw updateError;
+        isUpdate = true;
+      }
+
+      // Always create/update appointment in gw_appointments for scheduling
+      const { error: appointmentError } = await supabase
         .from('gw_appointments')
         .insert({
           title: `Audition - ${contactInfo.name}`,
@@ -91,13 +122,15 @@ export default function UnifiedBookingPage() {
           duration_minutes: 5
         });
 
-      if (error) throw error;
+      if (appointmentError) throw appointmentError;
 
       setIsConfirmed(true);
       
       toast({
-        title: "Audition Scheduled!",
-        description: "Your audition appointment has been confirmed.",
+        title: isUpdate ? "Audition Time Updated!" : "Audition Scheduled!",
+        description: isUpdate 
+          ? "Your audition time has been successfully updated."
+          : "Your audition appointment has been confirmed.",
       });
 
     } catch (error) {
