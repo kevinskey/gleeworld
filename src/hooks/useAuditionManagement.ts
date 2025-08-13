@@ -24,42 +24,49 @@ export const useAuditionManagement = () => {
     try {
       setLoading(true);
       
-      // Fetch real audition data from the database
+      // Fetch real audition data from the correct table
       const { data: auditionData, error } = await supabase
-        .from('gw_auditions')
+        .from('audition_applications')
         .select(`
           id,
-          first_name,
-          last_name,
+          full_name,
           email,
-          audition_date,
-          audition_time,
+          audition_time_slot,
           status,
-          additional_info,
-          interested_in_leadership,
-          is_soloist,
+          notes,
           created_at,
-          updated_at
+          updated_at,
+          voice_part_preference,
+          academic_year
         `)
-        .order('audition_date', { ascending: true });
+        .order('audition_time_slot', { ascending: true });
 
       if (error) throw error;
 
       // Transform database data to match our interface
-      const transformedAuditions: AuditionEntry[] = auditionData?.map(audition => ({
-        id: audition.id,
-        name: `${audition.first_name} ${audition.last_name}`,
-        timeSlot: audition.audition_time || 'TBD',
-        date: new Date(audition.audition_date).toISOString().split('T')[0],
-        type: audition.is_soloist ? 'Solo Audition' : 'New Member',
-        status: audition.status === 'pending' ? 'Scheduled' : 
-                audition.status === 'approved' ? 'Completed' :
-                audition.status === 'rejected' ? 'Pending' : 'Scheduled',
-        notes: audition.additional_info || 'No additional notes',
-        email: audition.email,
-        created_at: audition.created_at,
-        updated_at: audition.updated_at
-      })) || [];
+      const transformedAuditions: AuditionEntry[] = auditionData?.map(audition => {
+        const auditionDate = audition.audition_time_slot ? new Date(audition.audition_time_slot) : new Date();
+        const timeSlot = auditionDate.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit', 
+          hour12: true 
+        });
+        
+        return {
+          id: audition.id,
+          name: audition.full_name,
+          timeSlot: timeSlot,
+          date: auditionDate.toISOString().split('T')[0],
+          type: (audition.voice_part_preference === 'Solo' ? 'Solo Audition' : 'New Member') as AuditionEntry['type'],
+          status: audition.status === 'submitted' ? 'Scheduled' : 
+                  audition.status === 'confirmed' ? 'Completed' :
+                  audition.status === 'cancelled' ? 'Pending' : 'Scheduled',
+          notes: audition.notes || 'No additional notes',
+          email: audition.email,
+          created_at: audition.created_at,
+          updated_at: audition.updated_at
+        };
+      }) || [];
 
       setAuditions(transformedAuditions);
     } catch (error) {
@@ -77,11 +84,11 @@ export const useAuditionManagement = () => {
   const updateAuditionStatus = async (auditionId: string, status: AuditionEntry['status']) => {
     try {
       // Update in database
-      const dbStatus = status === 'Completed' ? 'approved' : 
-                     status === 'Pending' ? 'rejected' : 'pending';
+      const dbStatus = status === 'Completed' ? 'confirmed' : 
+                     status === 'Pending' ? 'submitted' : 'submitted';
       
       const { error } = await supabase
-        .from('gw_auditions')
+        .from('audition_applications')
         .update({ status: dbStatus })
         .eq('id', auditionId);
 
@@ -110,8 +117,8 @@ export const useAuditionManagement = () => {
     try {
       // Update in database
       const { error } = await supabase
-        .from('gw_auditions')
-        .update({ additional_info: notes })
+        .from('audition_applications')
+        .update({ notes: notes })
         .eq('id', auditionId);
 
       if (error) throw error;
@@ -137,12 +144,14 @@ export const useAuditionManagement = () => {
 
   const rescheduleAudition = async (auditionId: string, newDate: string, newTime: string) => {
     try {
+      // Create new datetime combining date and time
+      const newDateTime = new Date(`${newDate}T${newTime}`);
+      
       // Update in database
       const { error } = await supabase
-        .from('gw_auditions')
+        .from('audition_applications')
         .update({ 
-          audition_date: new Date(newDate).toISOString(),
-          audition_time: newTime
+          audition_time_slot: newDateTime.toISOString()
         })
         .eq('id', auditionId);
 
@@ -238,10 +247,13 @@ export const useAuditionManagement = () => {
 
   const deleteAudition = async (auditionId: string) => {
     try {
+      console.log('🗑️ Attempting to delete audition from audition_applications:', auditionId);
       const { error } = await supabase
         .from('audition_applications')
         .delete()
         .eq('id', auditionId);
+
+      console.log('🗑️ Delete operation result:', { error });
 
       if (error) throw error;
 
