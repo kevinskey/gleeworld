@@ -87,7 +87,7 @@ export default function UnifiedBookingPage() {
           client_email: contactInfo.email,
           client_phone: contactInfo.phone,
           status: 'scheduled',
-          appointment_type: 'New Member Audition',
+          appointment_type: 'audition',
           duration_minutes: 5
         });
 
