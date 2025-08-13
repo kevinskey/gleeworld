@@ -148,46 +148,97 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     const noteSequence = getNoteSequence(params.range, params.key);
     const melody: Note[] = [];
     const barsCount = params.measures;
-    const notesPerBar = 4; // 4/4 time
-    const beatDuration = 0.5; // Half second per beat
+    
+    // Calculate timing based on time signature
+    const [beatsPerMeasure, beatType] = params.timeSignature.split('/').map(Number);
+    const quarterNoteDuration = 1.0; // 1 second per quarter note (60 BPM base)
+    const beatDuration = (4 / beatType) * quarterNoteDuration; // Adjust for beat type
+    
+    // Generate notes with proper rhythm values
+    const availableNoteValues = noteValues.filter(nv => params.noteValues.includes(nv.value));
+    const availableRests = restTypes.filter(rt => params.restsToInclude.includes(rt.value));
+    
+    let currentTime = 0;
     
     for (let bar = 0; bar < barsCount; bar++) {
-      for (let beat = 0; beat < notesPerBar; beat++) {
-        const time = (bar * notesPerBar + beat) * beatDuration;
+      let barTime = 0;
+      const barStartTime = bar * beatsPerMeasure * beatDuration;
+      
+      // Add cadence every 4 bars if enabled
+      const shouldAddCadence = params.cadenceEvery4Bars && (bar + 1) % 4 === 0 && bar > 0;
+      
+      while (barTime < beatsPerMeasure * beatDuration) {
+        // Choose note value based on what's available
+        const noteValue = availableNoteValues[Math.floor(Math.random() * availableNoteValues.length)];
+        const noteDuration = noteValue.duration * quarterNoteDuration;
         
-        // Generate note based on difficulty
+        // Check if we should add a rest
+        const shouldAddRest = availableRests.length > 0 && Math.random() < 0.2; // 20% chance of rest
+        
+        if (shouldAddRest) {
+          const restType = availableRests[Math.floor(Math.random() * availableRests.length)];
+          const restDuration = restType.duration * quarterNoteDuration;
+          
+          // Only add rest if it fits in the bar
+          if (barTime + restDuration <= beatsPerMeasure * beatDuration) {
+            melody.push({
+              note: 'rest',
+              time: barStartTime + barTime,
+              duration: restDuration
+            });
+            barTime += restDuration;
+            continue;
+          }
+        }
+        
+        // Don't overflow the bar
+        const remainingBarTime = (beatsPerMeasure * beatDuration) - barTime;
+        const actualDuration = Math.min(noteDuration, remainingBarTime);
+        
+        if (actualDuration <= 0) break;
+        
+        // Generate note based on difficulty and intervals
         let noteIndex;
-        if (params.difficulty <= 2) {
-          // Easier: mostly stepwise motion
-          const lastNoteIndex = melody.length > 0 
-            ? noteSequence.indexOf(melody[melody.length - 1].note)
-            : Math.floor(noteSequence.length / 2);
-          
-          const step = Math.random() < 0.7 
-            ? (Math.random() < 0.5 ? -1 : 1) // Step up or down
-            : (Math.random() < 0.5 ? -2 : 2); // Small leap
-          
-          noteIndex = Math.max(0, Math.min(noteSequence.length - 1, lastNoteIndex + step));
+        if (melody.length === 0 || shouldAddCadence) {
+          // Start on tonic or cadential note
+          noteIndex = Math.floor(noteSequence.length / 2);
         } else {
-          // Harder: more random intervals
-          noteIndex = Math.floor(Math.random() * noteSequence.length);
+          const lastNote = melody[melody.length - 1];
+          if (lastNote.note === 'rest') {
+            // After rest, can jump more freely
+            noteIndex = Math.floor(Math.random() * noteSequence.length);
+          } else {
+            // Follow interval constraints
+            const lastNoteIndex = noteSequence.indexOf(lastNote.note);
+            const allowedIntervals = params.intervals;
+            
+            let step = 0;
+            if (allowedIntervals.includes('unison')) step = 0;
+            else if (allowedIntervals.includes('second')) step = Math.random() < 0.5 ? -1 : 1;
+            else if (allowedIntervals.includes('third')) step = Math.random() < 0.5 ? -2 : 2;
+            else step = Math.floor(Math.random() * 4) - 2; // Default small range
+            
+            noteIndex = Math.max(0, Math.min(noteSequence.length - 1, lastNoteIndex + step));
+          }
         }
         
         melody.push({
           note: noteSequence[noteIndex],
-          time,
-          duration: beatDuration
+          time: barStartTime + barTime,
+          duration: actualDuration
         });
+        
+        barTime += actualDuration;
       }
     }
     
     setGeneratedMelody(melody);
-    console.log('Generated melody:', melody);
+    console.log('Generated melody with locked timing:', melody);
     generateMusicXML(melody);
     setIsGenerating(false);
     toast({
       title: "Melody Generated",
-      description: `Generated ${melody.length} notes in ${params.key} major`
+      description: `Generated ${melody.length} notes in ${params.key} major with locked timing at 60 BPM`
     });
   };
 
@@ -231,22 +282,31 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
 
   const generateBars = (melody: Note[], fifths: number) => {
     const barsCount = params.measures;
-    const notesPerBar = 4;
+    const [beatsPerMeasure, beatType] = params.timeSignature.split('/').map(Number);
+    const divisionsPerQuarter = 4; // Standard MIDI divisions
     let bars = '';
     
     for (let bar = 0; bar < barsCount; bar++) {
-      const barNotes = melody.slice(bar * notesPerBar, (bar + 1) * notesPerBar);
+      const barStartTime = bar * beatsPerMeasure;
+      const barEndTime = (bar + 1) * beatsPerMeasure;
+      
+      // Get notes for this bar
+      const barNotes = melody.filter(note => {
+        const noteBarTime = note.time / 1.0; // Convert to beat units (assuming 60 BPM)
+        return noteBarTime >= barStartTime && noteBarTime < barEndTime;
+      });
+      
       bars += `
     <measure number="${bar + 1}">
       ${bar === 0 ? `
       <attributes>
-        <divisions>4</divisions>
+        <divisions>${divisionsPerQuarter}</divisions>
         <key>
           <fifths>${fifths}</fifths>
         </key>
         <time>
-          <beats>${params.timeSignature.split('/')[0]}</beats>
-          <beat-type>${params.timeSignature.split('/')[1]}</beat-type>
+          <beats>${beatsPerMeasure}</beats>
+          <beat-type>${beatType}</beat-type>
         </time>
         <clef>
           <sign>G</sign>
@@ -254,20 +314,42 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
         </clef>
       </attributes>` : ''}
       ${barNotes.map(note => {
-        const [noteName, octave] = [note.note.slice(0, -1), note.note.slice(-1)];
-        const step = noteName.charAt(0);
-        const alter = noteName.includes('#') ? 1 : noteName.includes('b') ? -1 : 0;
-        
-        return `
+        if (note.note === 'rest') {
+          // Handle rests
+          const restDuration = Math.round(note.duration * divisionsPerQuarter);
+          const restType = note.duration >= 4 ? 'whole' : 
+                          note.duration >= 2 ? 'half' : 
+                          note.duration >= 1 ? 'quarter' : 
+                          note.duration >= 0.5 ? 'eighth' : 'sixteenth';
+          
+          return `
+      <note>
+        <rest/>
+        <duration>${restDuration}</duration>
+        <type>${restType}</type>
+      </note>`;
+        } else {
+          // Handle pitched notes
+          const [noteName, octave] = [note.note.slice(0, -1), note.note.slice(-1)];
+          const step = noteName.charAt(0);
+          const alter = noteName.includes('#') ? 1 : noteName.includes('b') ? -1 : 0;
+          const noteDuration = Math.round(note.duration * divisionsPerQuarter);
+          const noteType = note.duration >= 4 ? 'whole' : 
+                          note.duration >= 2 ? 'half' : 
+                          note.duration >= 1 ? 'quarter' : 
+                          note.duration >= 0.5 ? 'eighth' : 'sixteenth';
+          
+          return `
       <note>
         <pitch>
           <step>${step}</step>
           ${alter !== 0 ? `<alter>${alter}</alter>` : ''}
           <octave>${octave}</octave>
         </pitch>
-        <duration>4</duration>
-        <type>quarter</type>
+        <duration>${noteDuration}</duration>
+        <type>${noteType}</type>
       </note>`;
+        }
       }).join('')}
     </measure>`;
     }
