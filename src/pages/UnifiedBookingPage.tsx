@@ -216,16 +216,19 @@ export default function UnifiedBookingPage() {
 
   return (
     <PublicLayout>
-      <div className="min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
+        <div className="max-w-4xl mx-auto px-4 py-16">
           
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-foreground mb-2">
+          <div className="text-center mb-12 pt-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
+              <Calendar className="h-8 w-8 text-primary" />
+            </div>
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent mb-4">
               Spelman College Glee Club Auditions
             </h1>
-            <p className="text-lg text-muted-foreground">
-              Schedule your 5-minute audition appointment
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Schedule your 5-minute audition appointment and take the first step toward joining our celebrated musical family
             </p>
           </div>
 
