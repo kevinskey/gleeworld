@@ -2,11 +2,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { useTooltipContext } from "@/contexts/TooltipContext";
 import { Settings, HelpCircle } from "lucide-react";
+import { useState } from "react";
 
 export const AccessibilitySettings = () => {
-  const { enabled, delay, toggleTooltips, updateDelay, loading } = useTooltipContext();
+  const [enabled, setEnabled] = useState(true);
+  const [delay, setDelay] = useState(300);
+  const [loading, setLoading] = useState(false);
+  
+  const toggleTooltips = async (newEnabled: boolean) => {
+    setLoading(true);
+    setEnabled(newEnabled);
+    setLoading(false);
+  };
+  
+  const updateDelay = async (newDelay: number) => {
+    setLoading(true);
+    setDelay(newDelay);
+    setLoading(false);
+  };
 
   const handleDelayChange = (value: number[]) => {
     updateDelay(value[0]);
