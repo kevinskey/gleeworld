@@ -41,11 +41,19 @@ export default function UnifiedBookingPage() {
   const generateAvailableSlots = () => {
     const slots: TimeSlot[] = [];
     const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
     
-    // Generate slots for the next 14 days
-    for (let dayOffset = 1; dayOffset <= 14; dayOffset++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + dayOffset);
+    // Only generate slots for the 15th and 16th
+    const targetDates = [15, 16];
+    
+    targetDates.forEach(day => {
+      const date = new Date(currentYear, currentMonth, day);
+      
+      // Skip if date is in the past
+      if (date < today) {
+        return;
+      }
       
       const dateString = date.toISOString().split('T')[0];
       const displayDate = date.toLocaleDateString('en-US', { 
@@ -54,8 +62,8 @@ export default function UnifiedBookingPage() {
         day: 'numeric' 
       });
 
-      // Friday slots: 2:30 PM - 4:30 PM (5-minute intervals)
-      if (date.getDay() === 5) {
+      // Friday (15th) slots: 2:30 PM - 4:30 PM (5-minute intervals)
+      if (day === 15) {
         for (let minutes = 14 * 60 + 30; minutes <= 16 * 60 + 25; minutes += 5) {
           const hours = Math.floor(minutes / 60);
           const mins = minutes % 60;
@@ -74,8 +82,8 @@ export default function UnifiedBookingPage() {
         }
       }
 
-      // Saturday slots: 11:00 AM - 1:00 PM (5-minute intervals)
-      if (date.getDay() === 6) {
+      // Saturday (16th) slots: 11:00 AM - 1:00 PM (5-minute intervals)
+      if (day === 16) {
         for (let minutes = 11 * 60; minutes <= 12 * 60 + 55; minutes += 5) {
           const hours = Math.floor(minutes / 60);
           const mins = minutes % 60;
@@ -93,7 +101,7 @@ export default function UnifiedBookingPage() {
           });
         }
       }
-    }
+    });
     
     setAvailableSlots(slots.filter(slot => slot.available));
   };
