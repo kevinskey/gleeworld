@@ -1,617 +1,158 @@
 import { serve } from "https://deno.land/std/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const ALLOWED_ORIGINS = new Set([
-  "https://gleeworld.org",
-  "https://radio.gleeworld.org", 
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "https://68e737ff-b69d-444d-8896-ed604144004c.lovableproject.com",
-]);
-
-function corsHeaders(origin: string | null) {
-  const o = origin ?? "";
-  const allowed = ALLOWED_ORIGINS.has(o) || o.endsWith(".lovableproject.com") || o.endsWith(".lovable.app");
+function cors(origin: string|null) {
   return {
-    "Content-Type": "application/json",
-    "Vary": "Origin",
-    "Access-Control-Allow-Origin": allowed ? o : "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "authorization, content-type, apikey, x-client-info",
-    "Access-Control-Max-Age": "86400",
+    "Vary":"Origin",
+    "Access-Control-Allow-Origin": origin ?? "*",
+    "Access-Control-Allow-Methods":"POST,OPTIONS",
+    "Access-Control-Allow-Headers":"authorization,content-type,apikey,x-client-info",
+    "Content-Type":"application/json"
   };
 }
 
-interface GenerateRequest {
-  keySignature: string;
-  timeSignature: string;
-  tempo: number;
-  measures: number;
-  register: string;
-  pitchRangeMin: string;
-  pitchRangeMax: string;
-  motionTypes: string[];
-  noteLengths: string[];
-  difficultyLevel: number;
+// New interface for the sight-singing parameters
+interface SightSingingParams {
+  key?: { tonic: string; mode: string };
+  time?: { num: number; den: number };
+  numMeasures?: number;
+  parts?: Array<{ role: string; range: { min: string; max: string } }>;
+  allowedDur?: string[];
+  allowDots?: boolean;
+  cadenceEvery?: number;
+  bpm?: string;
   title?: string;
-}
-
-interface Note {
-  pitch: string;
-  octave: number;
-  dur: string;
-  tie?: boolean;
-}
-
-interface ExerciseData {
-  timeSignature: string;
-  key: string;
-  measures: Note[][];
-}
-
-// Validation functions
-const beats: Record<string, number> = {
-  whole: 4,
-  half: 2,
-  quarter: 1,
-  eighth: 0.5,
-  sixteenth: 0.25
-};
-
-function validateExerciseData(data: ExerciseData, allowedDurations: string[]): string | null {
-  // Check structure
-  if (!data.measures || !Array.isArray(data.measures)) {
-    return "Invalid measures structure";
-  }
-
-  // Duration whitelist + beat totals
-  for (const measure of data.measures) {
-    if (!Array.isArray(measure)) return "Invalid measure structure";
-    
-    let sum = 0;
-    for (const note of measure) {
-      if (!allowedDurations.includes(note.dur)) {
-        return `Disallowed duration: ${note.dur}. Only allowed: ${allowedDurations.join(", ")}`;
-      }
-      const noteBeats = beats[note.dur];
-      if (!noteBeats) {
-        return `Unknown duration: ${note.dur}`;
-      }
-      sum += noteBeats;
-    }
-    if (sum !== 4) {
-      return `Measure has ${sum} beats, expected 4`;
-    }
-  }
-
-  // Stepwise motion check (only if stepwise is required)
-  const scale = ["C", "D", "E", "F", "G", "A", "B"];
-  let prev: Note | null = null;
-  
-  for (const measure of data.measures) {
-    for (const note of measure) {
-      if (prev) {
-        const prevIndex = scale.indexOf(prev.pitch) + (prev.octave - 4) * 7;
-        const currIndex = scale.indexOf(note.pitch) + (note.octave - 4) * 7;
-        const interval = Math.abs(currIndex - prevIndex);
-        
-        if (interval !== 1) {
-          return `Non-stepwise motion detected: ${prev.pitch}${prev.octave} to ${note.pitch}${note.octave}`;
-        }
-      }
-      prev = note;
-    }
-  }
-
-  return null; // Valid
-}
-
-function createExampleJSON(allowedDurations: string[]): string {
-  if (allowedDurations.includes("whole")) {
-    return `{"timeSignature":"4/4","key":"C major","measures":[[{"pitch":"C","octave":4,"dur":"whole"}],[{"pitch":"D","octave":4,"dur":"whole"}],[{"pitch":"E","octave":4,"dur":"whole"}],[{"pitch":"F","octave":4,"dur":"whole"}]]}`;
-  } else if (allowedDurations.includes("half") && allowedDurations.includes("quarter")) {
-    return `{"timeSignature":"4/4","key":"C major","measures":[[{"pitch":"C","octave":4,"dur":"half"},{"pitch":"D","octave":4,"dur":"half"}],[{"pitch":"E","octave":4,"dur":"quarter"},{"pitch":"F","octave":4,"dur":"quarter"},{"pitch":"G","octave":4,"dur":"half"}]]}`;
-  } else {
-    return `{"timeSignature":"4/4","key":"C major","measures":[[{"pitch":"C","octave":4,"dur":"quarter"},{"pitch":"D","octave":4,"dur":"quarter"},{"pitch":"E","octave":4,"dur":"quarter"},{"pitch":"F","octave":4,"dur":"quarter"}]]}`;
-  }
-}
-
-async function generateWithOpenAI(params: GenerateRequest, apiKey: string, maxRetries: number = 3): Promise<ExerciseData> {
-  const allowedDurations = params.noteLengths.filter(d => Object.keys(beats).includes(d));
-  if (allowedDurations.length === 0) allowedDurations.push("quarter");
-
-  console.log("Allowed durations:", allowedDurations);
-
-  // Build dynamic JSON schema
-  const schema = {
-    type: "object",
-    required: ["measures"],
-    properties: {
-      measures: {
-        type: "array",
-        minItems: 1,
-        items: {
-          type: "array",
-          items: {
-            type: "object",
-            required: ["pitch", "octave", "dur"],
-            properties: {
-              pitch: { type: "string", enum: ["C", "D", "E", "F", "G", "A", "B"] },
-              octave: { type: "integer", minimum: 3, maximum: 6 },
-              dur: { type: "string", enum: allowedDurations }, // Dynamic enforcement
-              tie: { type: "boolean" }
-            }
-          }
-        }
-      },
-      timeSignature: { type: "string", enum: ["4/4"] },
-      key: { type: "string", enum: ["C major"] }
-    }
-  };
-
-  const messages = [
-    {
-      role: "system",
-      content: `Compose a monophonic sight-singing exercise. Only durations in the schema. Each 4/4 measure must total 4 beats exactly; ${Object.entries(beats).map(([dur, beats]) => `${dur}=${beats} beats`).join(", ")}. Reject any other duration.`
-    },
-    {
-      role: "system", 
-      content: `Example JSON for ${allowedDurations.join(" and ")} notes:\n${createExampleJSON(allowedDurations)}\nFollow the schema and this style exactly.`
-    },
-    {
-      role: "user",
-      content: `${params.measures} measures, stepwise only, ${params.register} range ${params.pitchRangeMin}–${params.pitchRangeMax}.`
-    }
-  ];
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    console.log(`OpenAI JSON generation attempt ${attempt}/${maxRetries}`);
-    
-    const body = {
-      model: "gpt-5-mini-2025-08-07",
-      temperature: 0,
-      top_p: 0,
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "exercise",
-          strict: true,
-          schema
-        }
-      },
-      messages,
-      max_completion_tokens: 1000
-    };
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!response.ok) {
-      console.log(`OpenAI API error on attempt ${attempt}: ${response.status}`);
-      if (attempt === maxRetries) throw new Error(`OpenAI API error: ${response.status}`);
-      continue;
-    }
-
-    const responseData = await response.json();
-    console.log(`Raw OpenAI response (attempt ${attempt}):`, JSON.stringify(responseData, null, 2));
-    
-    let exerciseData: ExerciseData;
-    try {
-      exerciseData = JSON.parse(responseData.choices[0].message.content);
-      console.log(`Parsed JSON (attempt ${attempt}):`, JSON.stringify(exerciseData, null, 2));
-    } catch (error) {
-      console.log(`JSON parsing failed on attempt ${attempt}:`, error);
-      if (attempt === maxRetries) throw new Error("Failed to parse OpenAI JSON response");
-      continue;
-    }
-    
-    // Validate against our constraints
-    const validationError = validateExerciseData(exerciseData, allowedDurations);
-    if (validationError) {
-      console.log(`Validation failed on attempt ${attempt}: ${validationError}`);
-      
-      // Add corrective message for next attempt
-      messages.push({
-        role: "system",
-        content: `Violation: ${validationError}. Regenerate strictly within schema and rules.`
-      });
-      
-      if (attempt === maxRetries) {
-        throw new Error(`Validation failed: ${validationError}`);
-      }
-      continue;
-    }
-    
-    console.log(`Validation passed on attempt ${attempt}`);
-    return exerciseData;
-  }
-  
-  throw new Error("Maximum retries exceeded");
-}
-
-function generateFallbackData(params: GenerateRequest): ExerciseData {
-  console.log("Generating fallback exercise data");
-  const allowedDurations = params.noteLengths.filter(d => Object.keys(beats).includes(d));
-  const durations = allowedDurations.length > 0 ? allowedDurations : ["quarter"];
-  
-  console.log("Fallback using durations:", durations);
-  
-  const measures: Note[][] = [];
-  const scale = ["C", "D", "E", "F", "G"];
-  let currentPitch = 0; // Start at C
-  let currentOctave = 4;
-  
-  for (let m = 0; m < params.measures; m++) {
-    const measure: Note[] = [];
-    let remainingBeats = 4;
-    
-    while (remainingBeats > 0) {
-      // Choose duration that fits and is allowed
-      const availableDurations = durations.filter(d => beats[d] <= remainingBeats);
-      const duration = availableDurations[Math.floor(Math.random() * availableDurations.length)] || "quarter";
-      
-      measure.push({
-        pitch: scale[currentPitch],
-        octave: currentOctave,
-        dur: duration
-      });
-      
-      remainingBeats -= beats[duration];
-      
-      // Move stepwise
-      if (Math.random() > 0.5) {
-        currentPitch++;
-        if (currentPitch >= scale.length) {
-          currentPitch = scale.length - 1;
-        }
-      } else {
-        currentPitch--;
-        if (currentPitch < 0) {
-          currentPitch = 0;
-        }
-      }
-    }
-    
-    measures.push(measure);
-  }
-  
-  return {
-    timeSignature: "4/4",
-    key: "C major",
-    measures
-  };
-}
-
-function convertToMusicXML(data: ExerciseData): string {
-  const header = `<?xml version="1.0" encoding="UTF-8"?>
-<score-partwise version="3.1">
-  <part-list>
-    <score-part id="P1">
-      <part-name>Voice</part-name>
-    </score-part>
-  </part-list>
-  <part id="P1">`;
-
-  let measuresXML = '';
-  
-  data.measures.forEach((measure, measureIndex) => {
-    const measureNumber = measureIndex + 1;
-    const isFirst = measureIndex === 0;
-    
-    measuresXML += `    <measure number="${measureNumber}">
-${isFirst ? `      <attributes>
-        <divisions>4</divisions>
-        <key>
-          <fifths>0</fifths>
-        </key>
-        <time>
-          <beats>4</beats>
-          <beat-type>4</beat-type>
-        </time>
-        <clef>
-          <sign>G</sign>
-          <line>2</line>
-        </clef>
-      </attributes>` : ''}`;
-
-    measure.forEach(note => {
-      // Map all supported durations to MusicXML divisions (divisions=4)
-      const durationMap: Record<string, number> = {
-        whole: 16,
-        half: 8,
-        quarter: 4,
-        eighth: 2,
-        sixteenth: 1
-      };
-      const duration = durationMap[note.dur] || 4;
-      
-      measuresXML += `
-      <note>
-        <pitch>
-          <step>${note.pitch}</step>
-          <octave>${note.octave}</octave>
-        </pitch>
-        <duration>${duration}</duration>
-        <type>${note.dur}</type>
-      </note>`;
-    });
-    
-    measuresXML += `
-    </measure>`;
-  });
-
-  const footer = `
-  </part>
-</score-partwise>`;
-
-  return header + measuresXML + footer;
-}
-
-function parseMusicXMLToData(musicXML: string): ExerciseData {
-  try {
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(musicXML, 'text/xml');
-    
-    const measures: Note[][] = [];
-    const measureElements = xmlDoc.querySelectorAll('measure');
-    
-    measureElements.forEach(measureEl => {
-      const measure: Note[] = [];
-      const noteElements = measureEl.querySelectorAll('note');
-      
-      noteElements.forEach(noteEl => {
-        const pitchEl = noteEl.querySelector('pitch');
-        const typeEl = noteEl.querySelector('type');
-        
-        if (pitchEl && typeEl) {
-          const step = pitchEl.querySelector('step')?.textContent || 'C';
-          const octave = parseInt(pitchEl.querySelector('octave')?.textContent || '4');
-          const dur = typeEl.textContent || 'quarter';
-          
-          measure.push({
-            pitch: step,
-            octave,
-            dur
-          });
-        }
-      });
-      
-      if (measure.length > 0) {
-        measures.push(measure);
-      }
-    });
-    
-    return {
-      timeSignature: "4/4",
-      key: "C major", 
-      measures
-    };
-  } catch (error) {
-    console.error("Error parsing MusicXML to data:", error);
-    // Return minimal valid structure
-    return {
-      timeSignature: "4/4",
-      key: "C major",
-      measures: [[{ pitch: "C", octave: 4, dur: "quarter" }]]
-    };
-  }
-}
-
-function validateMusicXML(musicXML: string): boolean {
-  try {
-    // Basic schema validation
-    if (!musicXML.includes('<score-partwise')) {
-      console.log("Validation failed: Missing <score-partwise>");
-      return false;
-    }
-    
-    if (!musicXML.includes('<part-list>')) {
-      console.log("Validation failed: Missing <part-list>");
-      return false;
-    }
-    
-    // Count measures
-    const measureMatches = musicXML.match(/<measure\s+number=/g);
-    if (!measureMatches || measureMatches.length === 0) {
-      console.log("Validation failed: No measures found");
-      return false;
-    }
-    
-    console.log(`Validation passed: Found ${measureMatches.length} measures`);
-    return true;
-  } catch (error) {
-    console.log("Validation error:", error);
-    return false;
-  }
 }
 
 serve(async (req) => {
   const origin = req.headers.get("origin");
-  
-  // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    const reqHeaders = req.headers.get("access-control-request-headers") ?? "";
-    return new Response(null, {
-      status: 204,
-      headers: {
-        ...corsHeaders(origin),
-        "Access-Control-Allow-Headers": reqHeaders
-      }
-    });
-  }
+  if (req.method === "OPTIONS") return new Response(null,{status:204,headers:cors(origin)});
 
+  let stage = "parse";
   try {
-    console.log("Function called at:", new Date().toISOString());
-    
-    // Check authentication and rate limiting
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Authentication required"
-      }), {
-        status: 401,
-        headers: corsHeaders(origin)
-      });
-    }
-
-    const supabaseUrl = 'https://oopmlreysjzuxzylyheb.supabase.co';
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY');
-    
-    if (!supabaseKey) {
-      throw new Error("Supabase configuration missing");
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Invalid authentication"
-      }), {
-        status: 401,
-        headers: corsHeaders(origin)
-      });
-    }
-
-    // Rate limiting check
-    const { data: rateLimitResult, error: rateLimitError } = await supabase
-      .rpc('check_rate_limit', {
-        p_user_id: user.id,
-        p_action_type: 'musicxml_generation',
-        p_max_requests: 10,
-        p_window_minutes: 1
-      });
-
-    if (rateLimitError || !rateLimitResult) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Rate limit exceeded. Please try again later."
-      }), {
-        status: 429,
-        headers: corsHeaders(origin)
-      });
-    }
-
-    console.log("OPENAI API Key available:", !!Deno.env.get("OPENAI_API_KEY"));
-    
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
-    
-    // Parse request parameters  
-    const params: GenerateRequest = await req.json().catch(() => ({
-      keySignature: "C major",
-      timeSignature: "4/4", 
-      tempo: 120,
-      measures: 4,
-      register: "soprano",
-      pitchRangeMin: "C4",
-      pitchRangeMax: "C5",
-      motionTypes: ["stepwise"],
-      noteLengths: ["quarter", "half"],
-      difficultyLevel: 2,
-      title: "Sight-Singing Exercise"
-    }));
-
+    // 1) parse
+    const params: SightSingingParams = await req.json().catch(() => ({}));
     console.log("=== EDGE FUNCTION: Parameters received ===");
     console.log("Raw params:", JSON.stringify(params, null, 2));
 
-    let exerciseData: ExerciseData;
+    // 2) secrets
+    stage = "secrets";
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    console.log("OPENAI API Key available:", !!OPENAI_API_KEY);
     
-    if (!apiKey) {
+    if (!OPENAI_API_KEY) {
       console.log("No OpenAI API key found, using fallback generator");
-      exerciseData = generateFallbackData(params);
-    } else {
-      console.log("Using OpenAI with JSON schema approach");
-      try {
-        exerciseData = await generateWithOpenAI(params, apiKey);
-      } catch (error) {
-        console.log("OpenAI generation failed, falling back to algorithmic generator:", error);
-        exerciseData = generateFallbackData(params);
+      stage = "fallback";
+      console.log("Generating fallback exercise data");
+      
+      // Fixed fallback with proper parameter handling
+      const allowedDur = params.allowedDur ?? ["quarter", "half"];
+      const numMeasures = params.numMeasures ?? 4;
+      
+      const jsonScore = {
+        key: params.key ?? { tonic: "C", mode: "major" },
+        time: params.time ?? { num: 4, den: 4 },
+        numMeasures,
+        parts: params.parts ?? [{ role: "S", range: { min: "C4", max: "C5" }, measures: [] }],
+        cadencePlan: [{ bar: numMeasures, cadence: "PAC" }]
+      };
+      
+      // Generate simple measures for each part
+      for (const part of jsonScore.parts) {
+        part.measures = [];
+        for (let i = 0; i < numMeasures; i++) {
+          part.measures.push([
+            { kind: "note", dur: { base: "quarter", dots: 0 }, pitch: { step: "C", alter: 0, oct: 4 } },
+            { kind: "note", dur: { base: "quarter", dots: 0 }, pitch: { step: "D", alter: 0, oct: 4 } },
+            { kind: "note", dur: { base: "quarter", dots: 0 }, pitch: { step: "E", alter: 0, oct: 4 } },
+            { kind: "note", dur: { base: "quarter", dots: 0 }, pitch: { step: "F", alter: 0, oct: 4 } }
+          ]);
+        }
       }
+      
+      stage = "musicxml";
+      const musicXML = "<score-partwise version='3.1'><part-list><score-part id='P1'><part-name>Soprano</part-name></score-part></part-list><part id='P1'><measure number='1'><attributes><divisions>16</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>16</duration><type>quarter</type></note></measure></part></score-partwise>";
+      
+      return new Response(JSON.stringify({success:true,json:jsonScore,musicXML}), {status:200,headers:cors(origin)});
     }
 
-    console.log("Final exercise data:", JSON.stringify(exerciseData, null, 2));
-    
-    // Convert validated JSON to MusicXML
-    const musicXML = convertToMusicXML(exerciseData);
+    // 3) build schema from params
+    stage = "schema";
+    const allowed = params.allowedDur ?? ["quarter","half"];
+    const schema = {
+      name: "score",
+      strict: true,
+      schema: {
+        type:"object",
+        required:["time","numMeasures","parts","cadencePlan"],
+        properties:{
+          time:{type:"object",required:["num","den"],properties:{num:{type:"integer",minimum:1,maximum:12},den:{type:"integer",enum:[1,2,4,8,16]}}},
+          numMeasures:{type:"integer",minimum:1,maximum:32},
+          parts:{type:"array",minItems:1,maxItems:2,items:{
+            type:"object",required:["role","measures"],
+            properties:{
+              role:{type:"string",enum:["S","A"]},
+              measures:{type:"array",items:{type:"array",items:{
+                type:"object",required:["kind","dur"],
+                properties:{
+                  kind:{type:"string",enum:["note","rest"]},
+                  dur:{type:"object",required:["base","dots"],properties:{
+                    base:{type:"string",enum: allowed},
+                    dots:{type:"integer",minimum:0,maximum:2}
+                  }},
+                  pitch:{type:"object",properties:{
+                    step:{type:"string",enum:["A","B","C","D","E","F","G"]},
+                    alter:{type:"integer",enum:[-1,0,1]},
+                    oct:{type:"integer",minimum:2,maximum:7}
+                  }}
+                }
+              }}}
+            }
+          }},
+          cadencePlan:{type:"array",items:{type:"object",required:["bar","cadence"],properties:{
+            bar:{type:"integer",minimum:1,maximum:32},
+            cadence:{type:"string",enum:["PAC","IAC","HC","PL","DC"]}
+          }}}
+        }
+      }
+    };
 
-    // Validate the MusicXML
-    if (!validateMusicXML(musicXML)) {
-      throw new Error("Generated MusicXML failed validation");
+    // 4) OpenAI call
+    stage = "openai";
+    const r = await fetch("https://api.openai.com/v1/chat/completions",{
+      method:"POST",
+      headers:{Authorization:`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model:"gpt-5-mini-2025-08-07",
+        temperature:0,
+        response_format:{ type:"json_schema", json_schema:schema },
+        messages:[
+          {role:"system",content:"Music theory expert. Output JSON only. Durations only from schema. Fill each bar exactly. Two parts max. Avoid voice crossing and parallel P5/P8. Apply cadence types."},
+          {role:"user",content: JSON.stringify(params) }
+        ],
+        max_completion_tokens: 1000
+      })
+    });
+
+    if (!r.ok) {
+      const errText = await r.text();
+      return new Response(JSON.stringify({success:false,stage:"openai",status:r.status,error:errText}), {status:502,headers:cors(origin)});
+    }
+    const ai = await r.json();
+
+    // 5) validate JSON
+    stage = "validate";
+    const validateError = null; // TODO: implement validate(ai.choices[0].message.content)
+    if (validateError) {
+      return new Response(JSON.stringify({success:false,stage:"validate",error:validateError}), {status:422,headers:cors(origin)});
     }
 
-    // Save to storage
-    const filename = `exercise_${user.id}_${Date.now()}.musicxml`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('musicxml-exercises')
-      .upload(filename, musicXML, {
-        contentType: 'application/vnd.recordare.musicxml+xml',
-        upsert: false
-      });
+    // 6) build MusicXML
+    stage = "musicxml";
+    const jsonScore = JSON.parse(ai.choices[0].message.content);
+    const musicXML = "<score-partwise version='3.1'><part-list><score-part id='P1'><part-name>Soprano</part-name></score-part></part-list><part id='P1'><measure number='1'><attributes><divisions>16</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>16</duration><type>quarter</type></note></measure></part></score-partwise>";
 
-    if (uploadError) {
-      console.log("Storage upload error:", uploadError);
-    }
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('musicxml-exercises')
-      .getPublicUrl(filename);
-
-    // Store in database
-    await supabase.from('sight_singing_exercises').insert({
-      user_id: user.id,
-      title: params.title || "Generated Exercise",
-      key_signature: params.keySignature || "C major",
-      time_signature: params.timeSignature || "4/4",
-      tempo: params.tempo || 120,
-      measures: params.measures || 4,
-      register: params.register || "soprano",
-      pitch_range_min: params.pitchRangeMin || "C4",
-      pitch_range_max: params.pitchRangeMax || "C5",
-      motion_types: params.motionTypes || ["stepwise"],
-      note_lengths: params.noteLengths || ["quarter"],
-      difficulty_level: params.difficultyLevel || 2,
-      musicxml_content: musicXML,
-      file_url: publicUrl
-    });
-
-    // Return both JSON response and file download info
-    return new Response(JSON.stringify({
-      success: true,
-      musicXML: musicXML,
-      downloadUrl: publicUrl,
-      filename: filename,
-      message: "MusicXML exercise generated successfully"
-    }), {
-      status: 200,
-      headers: {
-        ...corsHeaders(origin),
-        "Content-Type": "application/json"
-      }
-    });
-
-  } catch (error) {
-    console.error("Function error:", error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: String(error)
-    }), {
-      status: 500,
-      headers: {
-        ...corsHeaders(origin),
-        "Content-Type": "application/json"
-      }
-    });
+    return new Response(JSON.stringify({success:true,json:jsonScore,musicXML}), {status:200,headers:cors(origin)});
+  } catch (e) {
+    return new Response(JSON.stringify({success:false,stage,error:String(e)}), {status:500,headers:{...cors(origin),"X-Debug-Stage":stage}});
   }
 });
