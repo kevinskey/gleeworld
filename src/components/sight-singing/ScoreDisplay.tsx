@@ -109,7 +109,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   };
 
   return (
-    <Card className="p-6">
+    <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Musical Score</h3>
         <div className="flex gap-2">
@@ -140,14 +140,14 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       
       <div 
         ref={scoreRef}
-        className="min-h-[400px] bg-background rounded-lg border p-4 overflow-auto"
+        className="flex-1 min-h-[400px] bg-background rounded-lg border p-4 overflow-auto"
       />
       
       {!musicXML && (
-        <div className="min-h-[400px] flex items-center justify-center text-muted-foreground">
+        <div className="flex-1 min-h-[400px] flex items-center justify-center text-muted-foreground">
           Generate an exercise to see the musical notation
         </div>
       )}
-    </Card>
+    </div>
   );
 };
