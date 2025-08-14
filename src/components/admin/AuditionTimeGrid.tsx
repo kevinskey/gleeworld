@@ -51,7 +51,7 @@ export const AuditionTimeGrid = () => {
     }
   }, [selectedDate]);
 
-  // Real-time updates for audition applications
+  // Real-time updates for gw_auditions
   useEffect(() => {
     const channel = supabase
       .channel('audition-schedule-updates')
@@ -60,7 +60,7 @@ export const AuditionTimeGrid = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'audition_applications'
+          table: 'gw_auditions'
         },
         () => {
           // Refetch appointments when any change occurs
@@ -79,22 +79,31 @@ export const AuditionTimeGrid = () => {
 
   const fetchAllAppointments = async () => {
     try {
-      // Get ALL audition applications regardless of time blocks
+      // Get ALL auditions from gw_auditions table
       const { data, error } = await supabase
-        .from('audition_applications')
-        .select('id, full_name, email, audition_time_slot, status')
-        .not('audition_time_slot', 'is', null)
-        .order('audition_time_slot');
+        .from('gw_auditions')
+        .select('id, first_name, last_name, email, audition_date, audition_time, status')
+        .not('audition_date', 'is', null)
+        .order('audition_date, audition_time');
 
       if (error) throw error;
       
-      setAllAppointments(data || []);
-      console.log('📅 All appointments found:', data?.length || 0);
+      // Transform the data to match our interface
+      const transformedData = data?.map(audition => ({
+        id: audition.id,
+        full_name: `${audition.first_name} ${audition.last_name}`.trim(),
+        email: audition.email,
+        audition_time_slot: `${audition.audition_date}T${audition.audition_time}`,
+        status: audition.status
+      })) || [];
       
-      // Extract unique dates from the audition applications using Eastern Time
-      if (data && data.length > 0) {
+      setAllAppointments(transformedData);
+      console.log('📅 All auditions found from gw_auditions:', transformedData.length);
+      
+      // Extract unique dates from the auditions using Eastern Time
+      if (transformedData.length > 0) {
         const uniqueDates = Array.from(new Set(
-          data.map(apt => {
+          transformedData.map(apt => {
             // Convert UTC timestamp to Eastern Time, then get just the date
             const easternTime = toZonedTime(new Date(apt.audition_time_slot), 'America/New_York');
             const dateOnly = new Date(easternTime.getFullYear(), easternTime.getMonth(), easternTime.getDate());
@@ -106,7 +115,7 @@ export const AuditionTimeGrid = () => {
         console.log(`📊 Found ${uniqueDates.length} unique audition dates (Eastern Time):`, uniqueDates);
       }
     } catch (error) {
-      console.error('Error fetching all appointments:', error);
+      console.error('Error fetching all auditions:', error);
     }
   };
 
@@ -138,17 +147,27 @@ export const AuditionTimeGrid = () => {
         setBookedSlots(rpcData || []);
       }
 
-      // Also get full appointment details for display
+      // Get appointments for this specific date from gw_auditions
+      const selectedDateString = selectedDate.toISOString().split('T')[0];
       const { data, error } = await supabase
-        .from('audition_applications')
-        .select('id, full_name, email, audition_time_slot, status')
-        .gte('audition_time_slot', startOfDay.toISOString())
-        .lte('audition_time_slot', endOfDay.toISOString())
-        .order('audition_time_slot');
+        .from('gw_auditions')
+        .select('id, first_name, last_name, email, audition_date, audition_time, status')
+        .eq('audition_date', selectedDateString)
+        .order('audition_time');
 
       if (error) throw error;
-      console.log(`📋 Found ${data?.length || 0} appointments:`, data);
-      setAppointments(data || []);
+      
+      // Transform the data to match our interface
+      const transformedData = data?.map(audition => ({
+        id: audition.id,
+        full_name: `${audition.first_name} ${audition.last_name}`.trim(),
+        email: audition.email,
+        audition_time_slot: `${audition.audition_date}T${audition.audition_time}`,
+        status: audition.status
+      })) || [];
+      
+      console.log(`📋 Found ${transformedData.length} appointments for ${selectedDateString}:`, transformedData);
+      setAppointments(transformedData);
     } catch (error) {
       console.error('Error fetching appointments:', error);
     } finally {
