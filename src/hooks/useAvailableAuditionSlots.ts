@@ -131,9 +131,14 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
         if (!appointmentsError && appointments && appointments.length > 0) {
           console.log('📋 Found booked appointments:', appointments);
           appointments.forEach(appointment => {
+            console.log('Processing appointment:', appointment);
             const appointmentDate = new Date(appointment.appointment_date);
+            console.log('Appointment raw date:', appointment.appointment_date);
+            console.log('Parsed appointment date:', appointmentDate);
             const easternTime = toZonedTime(appointmentDate, EASTERN_TZ);
+            console.log('Eastern time:', easternTime);
             const timeString = format(easternTime, 'h:mm a');
+            console.log('Formatted time string:', timeString);
             
             // Check if this slot is already marked as unavailable
             const existingSlotIndex = slots.findIndex(slot => slot.time === timeString);
