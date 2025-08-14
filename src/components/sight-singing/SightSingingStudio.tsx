@@ -138,6 +138,7 @@ export const SightSingingStudio: React.FC = () => {
     setIsGenerating(true);
     try {
       console.log('Generating exercise with enhanced security...');
+      console.log('Exercise parameters being sent:', JSON.stringify(parameters, null, 2));
       
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) {

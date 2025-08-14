@@ -159,6 +159,9 @@ serve(async (req) => {
         title: "Sight-Singing Exercise"
       }));
 
+      console.log("Mock response parameters:", JSON.stringify(params));
+      console.log("Generating mock response with", params.measures, "measures");
+
       // Generate mock measures based on requested count
       let measures = '';
       const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
@@ -201,6 +204,8 @@ ${!isLast ? `      <note>
     </measure>
 `;
       }
+
+      console.log("Generated measures count:", (measures.match(/measure number/g) || []).length);
 
       // Mock response with dynamic measures
       musicXML = `<?xml version="1.0" encoding="UTF-8"?>
