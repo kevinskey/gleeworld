@@ -278,10 +278,11 @@ export const SightSingingStudio: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 grid gap-4 grid-cols-4 min-h-0">
-          {/* Left Column - Parameters (1/4 width) */}
-          <div className="col-span-1">
-            <Card className="p-3 h-full flex flex-col">
+        <div className="flex-1 grid gap-4 grid-cols-3 min-h-0">
+          {/* Left Column - Parameters & Controls (1/3 width) */}
+          <div className="col-span-1 flex flex-col gap-3">
+            {/* Parameters */}
+            <Card className="p-3 flex-1 flex flex-col">
               <h2 className="text-base font-semibold mb-2 flex-shrink-0">Parameters</h2>
               <div className="flex-1 overflow-y-auto min-h-0">
                 <ParameterForm 
@@ -292,9 +293,45 @@ export const SightSingingStudio: React.FC = () => {
                 />
               </div>
             </Card>
+
+            {/* Playback Controls */}
+            <Card className="p-3 flex-shrink-0">
+              <h2 className="text-base font-semibold mb-2">Playback</h2>
+              <PlaybackControls
+                isPlaying={isPlaying}
+                mode={mode}
+                onModeChange={setMode}
+                onStartPlayback={handleStartPlayback}
+                onStopPlayback={stopPlayback}
+                onDownload={handleDownloadMusicXML}
+                hasExercise={!!currentMusicXML}
+              />
+            </Card>
+
+            {/* Recording Controls */}
+            <Card className="p-3 flex-shrink-0">
+              <h2 className="text-base font-semibold mb-2">Recording</h2>
+              <RecordingControls
+                isRecording={isRecording}
+                duration={recordingDuration}
+                onStartRecording={handleStartRecording}
+                onStopRecording={stopRecording}
+                hasRecording={!!audioBlob}
+                onClearRecording={clearRecording}
+              />
+              
+              {gradingResults && (
+                <div className="mt-2 pt-2 border-t">
+                  <h3 className="text-xs font-medium mb-1">Results</h3>
+                  <div className="text-xs">
+                    <GradingResults results={gradingResults} />
+                  </div>
+                </div>
+              )}
+            </Card>
           </div>
 
-          {/* Middle Column - Score Display (2/4 width) */}
+          {/* Middle Column - Score Display (2/3 width) */}
           <div className="col-span-2">
             <Card className="p-4 h-full flex flex-col">
               <h2 className="text-base font-semibold mb-2 flex-shrink-0">Musical Score</h2>
@@ -305,49 +342,6 @@ export const SightSingingStudio: React.FC = () => {
                   hasRecording={!!audioBlob}
                   isGrading={isGrading}
                 />
-              </div>
-            </Card>
-          </div>
-
-          {/* Right Column - Combined Controls (1/4 width) */}
-          <div className="col-span-1 flex flex-col gap-3">
-            {/* Playback Controls */}
-            <Card className="p-3 flex-1 flex flex-col">
-              <h2 className="text-base font-semibold mb-2 flex-shrink-0">Playback</h2>
-              <div className="flex-1">
-                <PlaybackControls
-                  isPlaying={isPlaying}
-                  mode={mode}
-                  onModeChange={setMode}
-                  onStartPlayback={handleStartPlayback}
-                  onStopPlayback={stopPlayback}
-                  onDownload={handleDownloadMusicXML}
-                  hasExercise={!!currentMusicXML}
-                />
-              </div>
-            </Card>
-
-            {/* Recording & Results Combined */}
-            <Card className="p-3 flex-1 flex flex-col">
-              <h2 className="text-base font-semibold mb-2 flex-shrink-0">Recording</h2>
-              <div className="flex-1 flex flex-col space-y-2">
-                <RecordingControls
-                  isRecording={isRecording}
-                  duration={recordingDuration}
-                  onStartRecording={handleStartRecording}
-                  onStopRecording={stopRecording}
-                  hasRecording={!!audioBlob}
-                  onClearRecording={clearRecording}
-                />
-                
-                {gradingResults && (
-                  <div className="pt-2 border-t flex-shrink-0">
-                    <h3 className="text-xs font-medium mb-1">Results</h3>
-                    <div className="text-xs">
-                      <GradingResults results={gradingResults} />
-                    </div>
-                  </div>
-                )}
               </div>
             </Card>
           </div>
