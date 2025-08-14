@@ -1,25 +1,30 @@
 import { serve } from "https://deno.land/std/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const ALLOWED_ORIGINS = new Set([
+const ALLOW = new Set([
   "https://gleeworld.org",
   "https://radio.gleeworld.org",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
+  "https://68e737ff-b69d-444d-8896-ed604144004c.lovableproject.com", // your current Lovable origin
 ]);
 
-function corsHeaders(origin: string | null) {
+function cors(origin: string | null, status = 200, extra: HeadersInit = {}) {
   const o = origin ?? "";
-  const allowed =
-    o.startsWith("https://") && o.endsWith(".lovableproject.com") ||
-    ALLOWED_ORIGINS.has(o);
+  const allowed = ALLOW.has(o) || o.endsWith(".lovableproject.com");
   return {
-    "Access-Control-Allow-Origin": allowed ? o : "https://gleeworld.org",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers":
-      "authorization, content-type, apikey, x-client-info",
-    "Access-Control-Max-Age": "86400",
-    "Vary": "Origin",
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Vary": "Origin",
+      "Access-Control-Allow-Origin": allowed ? o : "https://gleeworld.org",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      // reflect requested headers to satisfy preflight
+      "Access-Control-Allow-Headers": (extra as any)["Access-Control-Allow-Headers"] ??
+        "authorization, content-type, apikey, x-client-info",
+      "Access-Control-Max-Age": "86400",
+      ...extra,
+    },
   };
 }
 
@@ -39,21 +44,18 @@ interface GenerateRequest {
 
 serve(async (req) => {
   const origin = req.headers.get("origin");
-  
-  // Handle preflight OPTIONS request
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    // Echo requested headers for preflight
+    const reqHeaders = req.headers.get("access-control-request-headers") ?? "";
+    return new Response(null, cors(origin, 204, { "Access-Control-Allow-Headers": reqHeaders }));
   }
 
+  // ---- your existing logic below ----
+  console.log("OPENAI set:", !!Deno.env.get("OPENAI_API_KEY"));
+  
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) {
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: "Missing OPENAI_API_KEY" 
-    }), {
-      status: 500,
-      headers: { "Content-Type": "application/json", ...corsHeaders(origin) },
-    });
+    return new Response(JSON.stringify({ success: false, error: "Missing OPENAI_API_KEY" }), cors(origin, 500));
   }
 
   const params: GenerateRequest = await req.json().catch(() => ({
@@ -74,24 +76,21 @@ serve(async (req) => {
 
   const r = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
+    headers: { 
+      "Authorization": `Bearer ${apiKey}`, 
+      "Content-Type": "application/json" 
     },
-    body: JSON.stringify({
-      model: "gpt-5-mini-2025-08-07",
+    body: JSON.stringify({ 
+      model: "gpt-5-mini-2025-08-07", 
       input: input
-    })
+    }),
   });
 
   if (!r.ok) {
     return new Response(JSON.stringify({
       success: false,
       error: `OpenAI API error: ${r.status}`
-    }), {
-      status: 500,
-      headers: { "Content-Type": "application/json", ...corsHeaders(origin) }
-    });
+    }), cors(origin, 500));
   }
 
   const musicXML = await r.text();
@@ -132,7 +131,5 @@ serve(async (req) => {
   return new Response(JSON.stringify({
     success: true,
     musicXML: musicXML
-  }), {
-    headers: { "Content-Type": "application/json", ...corsHeaders(origin) }
-  });
+  }), cors(origin, 200));
 });
