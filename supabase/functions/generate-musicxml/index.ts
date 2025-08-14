@@ -189,7 +189,19 @@ serve(async (req) => {
 
     if (!r.ok) {
       const errText = await r.text();
-      return new Response(JSON.stringify({success:false,stage:"openai",status:r.status,error:errText}), {status:502,headers:cors(origin)});
+      console.error("OpenAI API Error:", {
+        status: r.status,
+        statusText: r.statusText,
+        response: errText,
+        headers: Object.fromEntries(r.headers.entries())
+      });
+      return new Response(JSON.stringify({
+        success:false,
+        stage:"openai",
+        status:r.status,
+        error:errText,
+        message: `OpenAI API failed with status ${r.status}: ${errText}`
+      }), {status:502,headers:cors(origin)});
     }
     const ai = await r.json();
 
