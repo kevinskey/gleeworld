@@ -28,24 +28,28 @@ export const AuditionTimeGrid = () => {
   const [allAppointments, setAllAppointments] = useState<AuditionAppointment[]>([]);
   const [bookedSlots, setBookedSlots] = useState<BookedSlot[]>([]);
   const [loading, setLoading] = useState(false);
+  const [auditionDates, setAuditionDates] = useState<Date[]>([]);
   
   const { allTimeSlots, loading: slotsLoading, availableDates } = useAvailableAuditionSlots(selectedDate);
 
-  // Set the first available date by default
+  // Fetch all appointments first to get all actual audition dates
   useEffect(() => {
-    if (availableDates.length > 0 && !selectedDate) {
-      setSelectedDate(availableDates[0]);
-    }
-  }, [availableDates, selectedDate]);
+    fetchAllAppointments();
+  }, []);
 
-  // Fetch appointments for selected date and all available dates
+  // Set the first audition date by default when we have audition dates
+  useEffect(() => {
+    if (auditionDates.length > 0 && !selectedDate) {
+      setSelectedDate(auditionDates[0]);
+    }
+  }, [auditionDates, selectedDate]);
+
+  // Fetch appointments for selected date
   useEffect(() => {
     if (selectedDate) {
       fetchAppointmentsForDate();
     }
-    // Also fetch all appointments in the time window
-    fetchAllAppointments();
-  }, [selectedDate, availableDates]);
+  }, [selectedDate]);
 
   // Real-time updates for audition applications
   useEffect(() => {
@@ -74,26 +78,32 @@ export const AuditionTimeGrid = () => {
   }, [selectedDate, availableDates]);
 
   const fetchAllAppointments = async () => {
-    if (availableDates.length === 0) return;
-    
     try {
-      const startDate = new Date(Math.min(...availableDates.map(d => d.getTime())));
-      startDate.setHours(0, 0, 0, 0);
-      
-      const endDate = new Date(Math.max(...availableDates.map(d => d.getTime())));
-      endDate.setHours(23, 59, 59, 999);
-
+      // Get ALL audition applications regardless of time blocks
       const { data, error } = await supabase
         .from('audition_applications')
         .select('id, full_name, email, audition_time_slot, status')
-        .gte('audition_time_slot', startDate.toISOString())
-        .lte('audition_time_slot', endDate.toISOString())
+        .not('audition_time_slot', 'is', null)
         .order('audition_time_slot');
 
       if (error) throw error;
       
       setAllAppointments(data || []);
-      console.log('📅 All appointments in time window:', data?.length || 0);
+      console.log('📅 All appointments found:', data?.length || 0);
+      
+      // Extract unique dates from the audition applications
+      if (data && data.length > 0) {
+        const uniqueDates = Array.from(new Set(
+          data.map(apt => {
+            const date = new Date(apt.audition_time_slot);
+            date.setHours(0, 0, 0, 0);
+            return date.toDateString();
+          })
+        )).map(dateString => new Date(dateString)).sort((a, b) => a.getTime() - b.getTime());
+        
+        setAuditionDates(uniqueDates);
+        console.log(`📊 Found ${uniqueDates.length} unique audition dates:`, uniqueDates);
+      }
     } catch (error) {
       console.error('Error fetching all appointments:', error);
     }
@@ -217,13 +227,13 @@ export const AuditionTimeGrid = () => {
     }
   };
 
-  if (availableDates.length === 0) {
+  if (auditionDates.length === 0 && allAppointments.length === 0) {
     return (
       <div className="text-center py-12">
         <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Audition Dates Available</h3>
+        <h3 className="text-lg font-semibold mb-2">No Auditions Scheduled</h3>
         <p className="text-muted-foreground">
-          There are currently no audition dates scheduled.
+          There are currently no auditions scheduled.
         </p>
       </div>
     );
@@ -236,23 +246,28 @@ export const AuditionTimeGrid = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            All Scheduled Auditions
+            All Scheduled Auditions ({allAppointments.length} total)
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {availableDates.map((date, index) => {
+            {auditionDates.map((date, index) => {
               const dayAppointments = allAppointments.filter(apt => {
                 const aptDate = new Date(apt.audition_time_slot);
                 return aptDate.toDateString() === date.toDateString();
               });
+              
+              const hasTimeBlocks = availableDates.some(availableDate => 
+                availableDate.toDateString() === date.toDateString()
+              );
               
               return (
                 <Card key={index} className={cn(
                   "cursor-pointer transition-all hover:shadow-md",
                   selectedDate?.toDateString() === date.toDateString() 
                     ? "ring-2 ring-primary bg-primary/5" 
-                    : "hover:bg-muted/30"
+                    : "hover:bg-muted/30",
+                  !hasTimeBlocks && "border-dashed border-orange-300 bg-orange-50/30"
                 )}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
@@ -267,9 +282,16 @@ export const AuditionTimeGrid = () => {
                           day: 'numeric' 
                         })}
                       </Button>
-                      <Badge variant="secondary">
-                        {dayAppointments.length} auditions
-                      </Badge>
+                      <div className="flex gap-1">
+                        <Badge variant="secondary">
+                          {dayAppointments.length} auditions
+                        </Badge>
+                        {!hasTimeBlocks && (
+                          <Badge variant="outline" className="text-orange-600 border-orange-300">
+                            No time blocks
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     {dayAppointments.length > 0 && (
                       <div className="space-y-1">
@@ -281,6 +303,13 @@ export const AuditionTimeGrid = () => {
                               apt.status === 'submitted' ? "bg-blue-500" : "bg-gray-400"
                             )} />
                             <span className="truncate">{apt.full_name}</span>
+                            <span className="text-muted-foreground">
+                              {new Date(apt.audition_time_slot).toLocaleTimeString('en-US', { 
+                                hour: 'numeric', 
+                                minute: '2-digit', 
+                                hour12: true 
+                              })}
+                            </span>
                           </div>
                         ))}
                         {dayAppointments.length > 3 && (
