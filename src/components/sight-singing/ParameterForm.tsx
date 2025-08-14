@@ -83,13 +83,18 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   const handleNoteLengthChange = (noteLength: string, checked: boolean) => {
     const current = watchedValues.noteLengths || [];
     if (checked) {
-      setValue('noteLengths', [...current, noteLength]);
+      const newLengths = [...current, noteLength];
+      setValue('noteLengths', newLengths);
+      console.log('Added note length:', noteLength, 'Current selections:', newLengths);
     } else {
-      setValue('noteLengths', current.filter(l => l !== noteLength));
+      const newLengths = current.filter(l => l !== noteLength);
+      setValue('noteLengths', newLengths);
+      console.log('Removed note length:', noteLength, 'Current selections:', newLengths);
     }
   };
 
   const onSubmit = (data: ExerciseParameters) => {
+    console.log('Form submission - Note lengths selected:', data.noteLengths);
     onGenerate(data);
   };
 
@@ -239,7 +244,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
 
           {/* Note Lengths */}
           <div className="space-y-4">
-            <Label>Note Lengths</Label>
+            <Label>Note Lengths (Current: {watchedValues.noteLengths?.join(', ') || 'None'})</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {noteLengthOptions.map(option => (
                 <div key={option.value} className="flex items-center space-x-2">
