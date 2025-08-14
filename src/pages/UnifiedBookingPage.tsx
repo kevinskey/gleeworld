@@ -235,6 +235,11 @@ export default function UnifiedBookingPage() {
           : "Your audition appointment has been confirmed.",
       });
 
+      // Force a refresh of the page to update the available slots
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
     } catch (error) {
       console.error('Error booking audition:', error);
       toast({

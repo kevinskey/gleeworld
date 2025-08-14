@@ -226,7 +226,7 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
     };
 
     fetchSlotsFromAuditions();
-  }, [selectedDate]);
+  }, [selectedDate, EASTERN_TZ]); // Add dependency to ensure re-render
 
   return {
     timeSlots: timeSlots.filter(slot => slot.isAvailable).map(slot => slot.time),
