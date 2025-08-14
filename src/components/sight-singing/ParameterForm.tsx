@@ -184,7 +184,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 checked={watchedAllowedDur?.includes(duration as any) || false}
                 onCheckedChange={(checked) => handleDurationChange(duration, checked as boolean)}
               />
-              <Label htmlFor={duration} className="text-base font-medium">
+              <Label htmlFor={duration} className="text-xl font-medium">
                 {duration === 'whole' ? '𝅝' : 
                  duration === 'half' ? '𝅗𝅥' : 
                  duration === 'quarter' ? '𝅘𝅥' : 
