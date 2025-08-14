@@ -70,15 +70,11 @@ serve(async (req) => {
       }
       
       stage = "musicxml";
-      const musicXML = `<?xml version="1.0" encoding="UTF-8"?>
-<score-partwise version="3.1">
-  <part-list>
-    <score-part id="P1">
-      <part-name>Soprano</part-name>
-    </score-part>
-  </part-list>
-  <part id="P1">
-    <measure number="1">
+      
+      // Generate measures based on the requested number
+      let measuresXML = "";
+      for (let measureNum = 1; measureNum <= numMeasures; measureNum++) {
+        const attributesXML = measureNum === 1 ? `
       <attributes>
         <divisions>16</divisions>
         <key>
@@ -88,7 +84,10 @@ serve(async (req) => {
           <beats>4</beats>
           <beat-type>4</beat-type>
         </time>
-      </attributes>
+      </attributes>` : "";
+        
+        measuresXML += `
+    <measure number="${measureNum}">${attributesXML}
       <note>
         <pitch>
           <step>C</step>
@@ -121,7 +120,17 @@ serve(async (req) => {
         <duration>16</duration>
         <type>quarter</type>
       </note>
-    </measure>
+    </measure>`;
+      }
+      
+      const musicXML = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="3.1">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Soprano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">${measuresXML}
   </part>
 </score-partwise>`;
       
@@ -199,28 +208,27 @@ serve(async (req) => {
       return new Response(JSON.stringify({success:false,stage:"validate",error:validateError}), {status:422,headers:cors(origin)});
     }
 
-    // 6) build MusicXML
+    // 6) build MusicXML  
     stage = "musicxml";
     const jsonScore = JSON.parse(ai.choices[0].message.content);
-    const musicXML = `<?xml version="1.0" encoding="UTF-8"?>
-<score-partwise version="3.1">
-  <part-list>
-    <score-part id="P1">
-      <part-name>Soprano</part-name>
-    </score-part>
-  </part-list>
-  <part id="P1">
-    <measure number="1">
+    
+    // Generate measures based on the actual JSON score
+    let measuresXML = "";
+    for (let measureNum = 1; measureNum <= jsonScore.numMeasures; measureNum++) {
+      const attributesXML = measureNum === 1 ? `
       <attributes>
         <divisions>16</divisions>
         <key>
           <fifths>0</fifths>
         </key>
         <time>
-          <beats>4</beats>
-          <beat-type>4</beat-type>
+          <beats>${jsonScore.time.num}</beats>
+          <beat-type>${jsonScore.time.den}</beat-type>
         </time>
-      </attributes>
+      </attributes>` : "";
+      
+      measuresXML += `
+    <measure number="${measureNum}">${attributesXML}
       <note>
         <pitch>
           <step>C</step>
@@ -229,7 +237,17 @@ serve(async (req) => {
         <duration>16</duration>
         <type>quarter</type>
       </note>
-    </measure>
+    </measure>`;
+    }
+    
+    const musicXML = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="3.1">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Soprano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">${measuresXML}
   </part>
 </score-partwise>`;
 
