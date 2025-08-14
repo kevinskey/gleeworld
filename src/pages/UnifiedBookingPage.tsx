@@ -197,7 +197,7 @@ export default function UnifiedBookingPage() {
             title: `Audition - ${contactInfo.name}`,
             client_name: contactInfo.name,
             description: `Spelman College Glee Club Audition (5 minutes) - ${selectedSlot.displayTime} EST`,
-            appointment_date: selectedSlot.date,
+            appointment_date: utcDateTime.toISOString(), // Use the UTC datetime instead of date string
             client_email: contactInfo.email,
             client_phone: contactInfo.phone,
             status: 'scheduled',
@@ -215,7 +215,7 @@ export default function UnifiedBookingPage() {
             title: `Audition - ${contactInfo.name}`,
             client_name: contactInfo.name,
             description: `Spelman College Glee Club Audition (5 minutes) - ${selectedSlot.displayTime} EST`,
-            appointment_date: selectedSlot.date,
+            appointment_date: utcDateTime.toISOString(), // Use the UTC datetime instead of date string
             client_email: contactInfo.email,
             client_phone: contactInfo.phone,
             status: 'scheduled',
