@@ -5,6 +5,7 @@ import { ScoreDisplay } from './ScoreDisplay';
 import { PlaybackControls } from './PlaybackControls';
 import { RecordingControls } from './RecordingControls';
 import { GradingResults } from './GradingResults';
+import { UniversalHeader } from '@/components/shared/UniversalHeader';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 import { useTonePlayback } from './hooks/useTonePlayback';
 import { useGrading } from './hooks/useGrading';
@@ -270,13 +271,8 @@ export const SightSingingStudio: React.FC = () => {
 
   return (
     <div className="h-screen bg-background overflow-hidden">
-      {/* Blue Header Container */}
-      <div className="bg-primary text-primary-foreground py-4 px-6 flex-shrink-0">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-1">Sight-Singing Studio</h1>
-          <p className="text-sm opacity-90">Generate, practice, and evaluate sight-singing exercises</p>
-        </div>
-      </div>
+      {/* Universal Header */}
+      <UniversalHeader />
       
       <div className="h-full flex flex-col p-6">
         {/* Main Content */}
