@@ -311,32 +311,51 @@ export default function UnifiedBookingPage() {
 
   return (
     <PublicLayout>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
-        <div className="max-w-4xl mx-auto px-4 py-16">
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/5">
+        <div className="max-w-5xl mx-auto px-4 py-12">
           
           {/* Header */}
-          <div className="text-center mb-12 pt-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
-              <Calendar className="h-8 w-8 text-primary" />
+          <div className="text-center mb-16 pt-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl mb-8 shadow-lg">
+              <Calendar className="h-10 w-10 text-primary" />
             </div>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent mb-4">
-              Spelman College Glee Club Auditions
+            <h1 className="text-6xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-6 leading-tight">
+              Spelman College Glee Club
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Schedule your 5-minute audition appointment and take the first step toward joining our celebrated musical family
-            </p>
+            <h2 className="text-3xl font-semibold text-foreground/90 mb-4">
+              Audition Booking
+            </h2>
+            <div className="max-w-3xl mx-auto">
+              <p className="text-xl text-muted-foreground leading-relaxed mb-6">
+                Schedule your 5-minute audition appointment and take the first step toward joining our celebrated musical family
+              </p>
+              <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground/80">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  5-minute sessions
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Multiple dates available
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  Instant confirmation
+                </div>
+              </div>
+            </div>
           </div>
 
           {!showContactForm ? (
             /* Time Selection */
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Show existing booking info for authenticated users */}
               {user && (
-                <Card>
+                <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 shadow-lg">
                   <CardHeader>
-                    <CardTitle className="flex items-center text-lg">
+                    <CardTitle className="flex items-center text-lg text-primary">
                       <User className="h-5 w-5 mr-2" />
-                      Your Current Booking
+                      Welcome Back!
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -346,28 +365,44 @@ export default function UnifiedBookingPage() {
                   </CardContent>
                 </Card>
               )}
+              
               {availableDates.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center text-xl">
-                      <Calendar className="h-5 w-5 mr-2" />
-                      Select a Date
+                <Card className="shadow-xl border-2 border-primary/10">
+                  <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-lg">
+                    <CardTitle className="flex items-center text-2xl font-bold">
+                      <Calendar className="h-6 w-6 mr-3 text-primary" />
+                      Choose Your Audition Date
                     </CardTitle>
+                    <p className="text-muted-foreground">
+                      Select from available audition dates below
+                    </p>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-4">
+                  <CardContent className="p-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {availableDates.map((date, index) => (
                         <Button
                           key={index}
                           variant={selectedDate?.toDateString() === date.toDateString() ? "default" : "outline"}
                           onClick={() => setSelectedDate(date)}
-                          className="p-4 h-auto"
+                          className={cn(
+                            "p-6 h-auto text-left flex flex-col items-start space-y-2 transition-all duration-200",
+                            selectedDate?.toDateString() === date.toDateString() 
+                              ? "bg-primary text-primary-foreground shadow-lg scale-105" 
+                              : "hover:bg-primary/5 hover:border-primary/30 hover:scale-102"
+                          )}
                         >
-                          {date.toLocaleDateString('en-US', { 
-                            weekday: 'long', 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
+                          <div className="text-lg font-semibold">
+                            {date.toLocaleDateString('en-US', { 
+                              weekday: 'long'
+                            })}
+                          </div>
+                          <div className="text-sm opacity-90">
+                            {date.toLocaleDateString('en-US', { 
+                              month: 'long', 
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </div>
                         </Button>
                       ))}
                     </div>
@@ -376,51 +411,78 @@ export default function UnifiedBookingPage() {
               )}
 
               {selectedDate && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center text-xl">
-                      <Clock className="h-5 w-5 mr-2" />
-                      Available Times (Eastern Time) - {selectedDate.toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        month: 'short', 
-                        day: 'numeric' 
-                      })}
+                <Card className="shadow-xl border-2 border-primary/10">
+                  <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-lg">
+                    <CardTitle className="flex items-center text-2xl font-bold">
+                      <Clock className="h-6 w-6 mr-3 text-primary" />
+                      Select Your Time Slot
                     </CardTitle>
+                    <p className="text-muted-foreground">
+                      {selectedDate.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        month: 'long', 
+                        day: 'numeric',
+                        year: 'numeric'
+                      })} • Eastern Time
+                    </p>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-8">
                     {loading ? (
-                      <div className="text-center py-8">
-                        <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
-                        <p className="text-muted-foreground">Loading available times...</p>
+                      <div className="text-center py-12">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
+                          <Clock className="h-8 w-8 text-primary animate-spin" />
+                        </div>
+                        <p className="text-lg text-muted-foreground">Loading available times...</p>
                       </div>
                     ) : allTimeSlots.length > 0 ? (
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                        {allTimeSlots.map((slot, index) => (
-                          <Button
-                            key={index}
-                            variant={slot.isAvailable ? "outline" : "destructive"}
-                            onClick={() => slot.isAvailable && selectTimeSlot(slot.time)}
-                            disabled={!slot.isAvailable}
-                            className={cn(
-                              "text-xs py-3 px-2 h-auto flex flex-col items-center",
-                              slot.isAvailable 
-                                ? "hover:bg-primary hover:text-primary-foreground" 
-                                : "bg-destructive text-destructive-foreground cursor-not-allowed opacity-90"
-                            )}
-                          >
-                            <span className="font-medium">{slot.time}</span>
-                            {!slot.isAvailable && slot.auditionerName && (
-                              <span className="text-xs font-normal truncate w-full text-center mt-1">
-                                {slot.auditionerName}
-                              </span>
-                            )}
-                          </Button>
-                        ))}
+                      <div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+                          {allTimeSlots.map((slot, index) => (
+                            <Button
+                              key={index}
+                              variant={slot.isAvailable ? "outline" : "destructive"}
+                              onClick={() => slot.isAvailable && selectTimeSlot(slot.time)}
+                              disabled={!slot.isAvailable}
+                              className={cn(
+                                "py-4 px-3 h-auto flex flex-col items-center space-y-1 transition-all duration-200",
+                                slot.isAvailable 
+                                  ? "hover:bg-primary hover:text-primary-foreground hover:scale-105 border-primary/20" 
+                                  : "bg-destructive/20 text-destructive border-destructive/30 cursor-not-allowed"
+                              )}
+                            >
+                              <span className="font-semibold text-sm">{slot.time}</span>
+                              {slot.isAvailable ? (
+                                <span className="text-xs text-muted-foreground">Available</span>
+                              ) : (
+                                <span className="text-xs font-medium truncate w-full text-center">
+                                  {slot.auditionerName || 'Booked'}
+                                </span>
+                              )}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="bg-muted/50 rounded-lg p-4">
+                          <div className="flex items-center justify-center space-x-6 text-sm">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-3 h-3 bg-primary rounded-sm"></div>
+                              <span>Available</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <div className="w-3 h-3 bg-destructive/20 border border-destructive/30 rounded-sm"></div>
+                              <span>Booked</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground">No available time slots for this date.</p>
+                      <div className="text-center py-12">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-muted rounded-full mb-6">
+                          <Clock className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">No Available Times</h3>
+                        <p className="text-muted-foreground">
+                          All time slots are booked for this date. Please select a different date.
+                        </p>
                       </div>
                     )}
                   </CardContent>
@@ -428,56 +490,70 @@ export default function UnifiedBookingPage() {
               )}
 
               {!selectedDate && availableDates.length === 0 && (
-                <div className="text-center py-12">
-                  <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Audition Dates Available</h3>
-                  <p className="text-muted-foreground">
-                    There are currently no audition dates scheduled. Please check back later.
-                  </p>
-                </div>
+                <Card className="shadow-lg">
+                  <CardContent className="text-center py-16">
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-muted rounded-full mb-6">
+                      <Calendar className="h-10 w-10 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-2xl font-semibold mb-4">No Audition Dates Available</h3>
+                    <p className="text-lg text-muted-foreground mb-6 max-w-md mx-auto">
+                      There are currently no audition dates scheduled. Please check back later or contact us for more information.
+                    </p>
+                    <Button variant="outline" onClick={() => window.location.href = '/'}>
+                      Return to Home
+                    </Button>
+                  </CardContent>
+                </Card>
               )}
             </div>
           ) : (
             /* Contact Form */
-            <div className="max-w-2xl mx-auto space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Contact Information</CardTitle>
-                  <p className="text-muted-foreground">
-                    Selected: {selectedSlot?.displayDate} at {selectedSlot?.displayTime} EST
-                  </p>
+            <div className="max-w-3xl mx-auto space-y-8">
+              <Card className="shadow-xl border-2 border-primary/10">
+                <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-lg text-center">
+                  <CardTitle className="text-2xl font-bold">Complete Your Booking</CardTitle>
+                  <div className="bg-white/50 rounded-lg p-4 mt-4">
+                    <p className="text-lg font-semibold text-primary">
+                      {selectedSlot?.displayDate} at {selectedSlot?.displayTime} EST
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      5-minute audition session
+                    </p>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="flex items-center text-sm font-medium mb-2">
-                      <User className="h-4 w-4 mr-2" />
+                <CardContent className="space-y-6 p-8">
+                  <div className="space-y-2">
+                    <label className="flex items-center text-base font-semibold text-foreground">
+                      <User className="h-5 w-5 mr-3 text-primary" />
                       Full Name *
                     </label>
                     <Input
-                      placeholder="Your full name"
+                      placeholder="Enter your full name"
                       value={contactInfo.name}
                       onChange={(e) => setContactInfo(prev => ({ ...prev, name: e.target.value }))}
                       required
+                      className="h-12 text-base border-2 focus:border-primary"
                     />
                   </div>
 
-                  <div>
-                    <label className="flex items-center text-sm font-medium mb-2">
-                      <Mail className="h-4 w-4 mr-2" />
+                  <div className="space-y-2">
+                    <label className="flex items-center text-base font-semibold text-foreground">
+                      <Mail className="h-5 w-5 mr-3 text-primary" />
                       Email Address *
                     </label>
                     <Input
                       type="email"
-                      placeholder="you@example.com"
+                      placeholder="your.email@example.com"
                       value={contactInfo.email}
                       onChange={(e) => setContactInfo(prev => ({ ...prev, email: e.target.value }))}
                       required
+                      className="h-12 text-base border-2 focus:border-primary"
                     />
                   </div>
 
-                  <div>
-                    <label className="flex items-center text-sm font-medium mb-2">
-                      <Phone className="h-4 w-4 mr-2" />
+                  <div className="space-y-2">
+                    <label className="flex items-center text-base font-semibold text-foreground">
+                      <Phone className="h-5 w-5 mr-3 text-primary" />
                       Phone Number *
                     </label>
                     <Input
@@ -486,26 +562,37 @@ export default function UnifiedBookingPage() {
                       value={contactInfo.phone}
                       onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))}
                       required
+                      className="h-12 text-base border-2 focus:border-primary"
                     />
                   </div>
 
-                  <div className="flex space-x-3 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-4 pt-8">
                     <Button 
                       variant="outline"
                       onClick={() => {
                         setShowContactForm(false);
                         setSelectedSlot(null);
                       }}
-                      className="flex-1"
+                      className="flex-1 h-12 text-base font-semibold border-2"
                     >
-                      Back to Times
+                      ← Back to Times
                     </Button>
                     <Button 
                       onClick={handleSubmit}
                       disabled={isSubmitting || !isFormValid}
-                      className="flex-1"
+                      className="flex-1 h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                     >
-                      {isSubmitting ? 'Scheduling...' : 'Confirm Audition'}
+                      {isSubmitting ? (
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4 animate-spin" />
+                          <span>Scheduling...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <CheckCircle className="h-4 w-4" />
+                          <span>Confirm Audition</span>
+                        </div>
+                      )}
                     </Button>
                   </div>
                 </CardContent>
