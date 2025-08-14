@@ -12,6 +12,7 @@ import { BulkSelectControls } from "./BulkSelectControls";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QuickAddUserForm } from "@/components/upload/QuickAddUserForm";
 import { useRoleTransitions } from "@/hooks/useRoleTransitions";
+import { useAvatarConversion } from "@/hooks/useAvatarConversion";
 
 import { User } from "@/hooks/useUsers";
 import { useToast } from "@/hooks/use-toast";
@@ -32,7 +33,9 @@ import {
   AlertCircle,
   ChevronRight,
   Music,
-  Loader2
+  Loader2,
+  Camera,
+  ImageIcon
 } from "lucide-react";
 
 interface EnhancedUserManagementProps {
@@ -61,6 +64,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
   const [changingRoles, setChangingRoles] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const { transitionUserRole } = useRoleTransitions();
+  const { converting, convertAuditionerAvatars } = useAvatarConversion();
 
   const handleUpdateSuccess = () => {
     toast({
@@ -117,6 +121,14 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
         newSet.delete(userId);
         return newSet;
       });
+    }
+  };
+
+  const handleConvertAvatars = async () => {
+    const result = await convertAuditionerAvatars();
+    if (result && result.successful > 0) {
+      // Refresh the user list to show updated avatars
+      onRefetch();
     }
   };
 
@@ -212,6 +224,19 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <Button 
+                  onClick={handleConvertAvatars}
+                  disabled={converting}
+                  variant="secondary"
+                  className="gap-2 bg-secondary hover:bg-secondary/80"
+                >
+                  {converting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
+                  Convert Auditioner Avatars
+                </Button>
                 <Button onClick={() => setAddDialogOpen(true)} className="gap-2 bg-primary hover:bg-primary/90">
                   <UserPlus className="h-4 w-4" />
                   Add User
@@ -453,10 +478,28 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                       >
                         <td className="px-6 py-4 whitespace-nowrap border-r border-primary/5">
                           <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                              user.verified ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                            }`}>
-                              {user.full_name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || '?'}
+                            <div className="relative">
+                              {user.avatar_url ? (
+                                <img 
+                                  src={user.avatar_url} 
+                                  alt={`${user.full_name || user.email} avatar`}
+                                  className="w-10 h-10 rounded-full object-cover border-2 border-primary/20"
+                                  onError={(e) => {
+                                    // Fallback to initials if image fails to load
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const fallback = target.nextElementSibling as HTMLElement;
+                                    if (fallback) fallback.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium border-2 border-primary/20 ${
+                                user.avatar_url ? 'hidden' : 'flex'
+                              } ${
+                                user.verified ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {user.full_name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || '?'}
+                              </div>
                             </div>
                             <div>
                               <div className="text-sm font-medium text-foreground">

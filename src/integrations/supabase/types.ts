@@ -13437,6 +13437,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      convert_auditioner_images_to_avatars: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       create_notification_with_delivery: {
         Args: {
           p_action_label?: string
@@ -13538,6 +13542,17 @@ export type Database = {
       get_audition_stats: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      get_auditioner_images_for_conversion: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          email: string
+          full_name: string
+          source_image_url: string
+          suggested_avatar_filename: string
+          target_avatar_url: string
+          user_id: string
+        }[]
       }
       get_available_time_slots: {
         Args: { p_date: string; p_service_id: string }
