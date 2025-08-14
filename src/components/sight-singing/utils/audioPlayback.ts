@@ -1,0 +1,143 @@
+import { ParsedScore, ParsedNote } from './musicXMLParser';
+
+export class MusicXMLPlayer {
+  private audioContext: AudioContext | null = null;
+  private scheduledNodes: Array<{ oscillator: OscillatorNode; gain: GainNode; timeout: NodeJS.Timeout }> = [];
+  private isPlaying = false;
+  private startTime = 0;
+  private clickTrack: Array<NodeJS.Timeout> = [];
+
+  constructor() {
+    this.initAudioContext();
+  }
+
+  private initAudioContext(): AudioContext {
+    if (!this.audioContext || this.audioContext.state === 'closed') {
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    
+    if (this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
+    
+    return this.audioContext;
+  }
+
+  private createTone(frequency: number, startTime: number, duration: number, volume: number = 0.3): void {
+    const audioContext = this.initAudioContext();
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = 'sine';
+    
+    // Envelope: fade in and out
+    const fadeTime = 0.02;
+    gainNode.gain.setValueAtTime(0, startTime);
+    gainNode.gain.linearRampToValueAtTime(volume, startTime + fadeTime);
+    gainNode.gain.linearRampToValueAtTime(volume, startTime + duration - fadeTime);
+    gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+    
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
+    
+    // Store reference for cleanup
+    const timeout = setTimeout(() => {
+      this.scheduledNodes = this.scheduledNodes.filter(node => node.oscillator !== oscillator);
+    }, (startTime - audioContext.currentTime + duration) * 1000);
+    
+    this.scheduledNodes.push({ oscillator, gain: gainNode, timeout });
+  }
+
+  private createClickTrack(tempo: number, measures: number, timeSignature: { beats: number; beatType: number }): void {
+    const audioContext = this.initAudioContext();
+    const beatDuration = 60 / tempo; // seconds per beat
+    const totalBeats = measures * timeSignature.beats + timeSignature.beats; // +1 measure for intro
+    
+    // Start with one measure click intro
+    for (let beat = 0; beat < totalBeats; beat++) {
+      const beatTime = audioContext.currentTime + beat * beatDuration;
+      const isDownbeat = beat % timeSignature.beats === 0;
+      const frequency = isDownbeat ? 800 : 600; // Higher pitch for downbeats
+      
+      this.createTone(frequency, beatTime, 0.1, 0.2);
+    }
+  }
+
+  async playScore(parsedScore: ParsedScore, mode: 'click-only' | 'click-and-score' = 'click-and-score'): Promise<void> {
+    if (this.isPlaying) {
+      this.stop();
+    }
+
+    const audioContext = this.initAudioContext();
+    await audioContext.resume();
+    
+    this.isPlaying = true;
+    this.startTime = audioContext.currentTime;
+    
+    // Calculate intro duration (one measure of clicks)
+    const beatDuration = 60 / parsedScore.tempo;
+    const introDuration = parsedScore.timeSignature.beats * beatDuration;
+    
+    if (mode === 'click-only' || mode === 'click-and-score') {
+      // Play click track for intro + all measures
+      this.createClickTrack(parsedScore.tempo, parsedScore.measures.length, parsedScore.timeSignature);
+    }
+    
+    if (mode === 'click-and-score') {
+      // Schedule all notes with intro delay
+      parsedScore.measures.forEach(measure => {
+        measure.notes.forEach(note => {
+          const noteStartTime = this.startTime + introDuration + note.startTime;
+          this.createTone(note.frequency, noteStartTime, note.duration, 0.4);
+        });
+      });
+    }
+    
+    // Auto-stop when complete
+    const totalDuration = introDuration + parsedScore.totalDuration + 1; // +1 second buffer
+    const stopTimeout = setTimeout(() => {
+      this.stop();
+    }, totalDuration * 1000);
+    
+    this.clickTrack.push(stopTimeout);
+  }
+
+  stop(): void {
+    this.isPlaying = false;
+    
+    // Stop all scheduled audio nodes
+    this.scheduledNodes.forEach(({ oscillator, timeout }) => {
+      try {
+        clearTimeout(timeout);
+        if (oscillator.context.state !== 'closed') {
+          oscillator.stop();
+        }
+      } catch (error) {
+        // Node might already be stopped
+      }
+    });
+    
+    this.scheduledNodes = [];
+    
+    // Clear click track timeouts
+    this.clickTrack.forEach(timeout => clearTimeout(timeout));
+    this.clickTrack = [];
+  }
+
+  getIsPlaying(): boolean {
+    return this.isPlaying;
+  }
+
+  dispose(): void {
+    this.stop();
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
+  }
+}
