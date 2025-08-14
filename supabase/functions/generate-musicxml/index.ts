@@ -108,15 +108,23 @@ Example structure:
     const openaiApiKey2 = Deno.env.get('OPENAI_API_KEY_SECRET');
     
     console.log('OPENAI_API_KEY present:', !!openAIApiKey);
+    console.log('OPENAI_API_KEY length:', openAIApiKey?.length || 0);
     console.log('OPENAI_KEY present:', !!openaiKey);
     console.log('OPENAI_API_KEY_SECRET present:', !!openaiApiKey2);
 
     const finalApiKey = openAIApiKey || openaiKey || openaiApiKey2;
     
-    if (!finalApiKey) {
+    if (!finalApiKey || finalApiKey.trim() === '') {
+      console.error('No valid OpenAI API key found');
       return new Response(JSON.stringify({
-        error: 'No OpenAI API key found in environment variables',
-        success: false
+        error: 'OpenAI API key is not configured or is empty. Please set up your API key in Supabase secrets.',
+        success: false,
+        debug: {
+          openAIApiKey_exists: !!openAIApiKey,
+          openAIApiKey_length: openAIApiKey?.length || 0,
+          openaiKey_exists: !!openaiKey,
+          openaiApiKey2_exists: !!openaiApiKey2
+        }
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -124,6 +132,7 @@ Example structure:
     }
 
     if (!finalApiKey.startsWith('sk-')) {
+      console.error('Invalid OpenAI API key format:', finalApiKey.substring(0, 10) + '...');
       return new Response(JSON.stringify({
         error: 'Invalid OpenAI API key format - should start with sk-',
         success: false
