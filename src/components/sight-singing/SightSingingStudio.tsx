@@ -5,7 +5,6 @@ import { ScoreDisplay } from './ScoreDisplay';
 import { PlaybackControls } from './PlaybackControls';
 import { RecordingControls } from './RecordingControls';
 import { GradingResults } from './GradingResults';
-import { UniversalHeader } from '@/components/shared/UniversalHeader';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 import { useTonePlayback } from './hooks/useTonePlayback';
 import { useGrading } from './hooks/useGrading';
@@ -270,11 +269,8 @@ export const SightSingingStudio: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-background overflow-hidden">
-      {/* Universal Header */}
-      <UniversalHeader />
-      
-      <div className="h-full flex flex-col p-6">
+    <div className="h-screen bg-background p-6 overflow-hidden">
+      <div className="h-full flex flex-col">
         {/* Main Content */}
         <div className="flex-1 grid gap-6 grid-cols-3 min-h-0">
           {/* Left Column - Parameters & Controls (1/3 width) */}
