@@ -958,10 +958,10 @@ const SightReadingGeneratorPage = () => {
               musicXML={generatedMusicXML}
               exerciseMetadata={{
                 difficulty,
-                keySignature,
+                key: keySignature,
                 timeSignature,
-                measures: measures[0],
-                noteRange
+                length: measures[0],
+                description: `${measures[0]} measures • ${keySignature} • ${timeSignature} • ${noteRange}`
               }}
               onRecordingChange={setIsRecording}
               onSolfegeChange={setSolfegeEnabled}
