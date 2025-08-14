@@ -50,14 +50,15 @@ serve(async (req) => {
     return new Response(null, cors(origin, 204, { "Access-Control-Allow-Headers": reqHeaders }));
   }
 
-  // ---- your existing logic below ----
-  console.log("OPENAI set:", !!Deno.env.get("OPENAI_API_KEY"));
-  console.log("ENV check timestamp:", new Date().toISOString());
-  
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!apiKey) {
-    // Temporary mock response for testing
-    const mockMusicXML = `<?xml version="1.0" encoding="UTF-8"?>
+  try {
+    console.log("Function called at:", new Date().toISOString());
+    console.log("OPENAI_API_KEY exists:", !!Deno.env.get("OPENAI_API_KEY"));
+    
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) {
+      console.log("No OpenAI API key found, returning mock response");
+      // Temporary mock response for testing
+      const mockMusicXML = `<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="3.1">
   <part-list>
     <score-part id="P1">
@@ -92,11 +93,11 @@ serve(async (req) => {
   </part>
 </score-partwise>`;
 
-    return new Response(JSON.stringify({
-      success: true,
-      musicXML: mockMusicXML
-    }), cors(origin, 200));
-  }
+      return new Response(JSON.stringify({
+        success: true,
+        musicXML: mockMusicXML
+      }), cors(origin, 200));
+    }
 
   const params: GenerateRequest = await req.json().catch(() => ({
     keySignature: "C major",
@@ -172,4 +173,12 @@ serve(async (req) => {
     success: true,
     musicXML: musicXML
   }), cors(origin, 200));
+  
+  } catch (error) {
+    console.error("Function error:", error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message || "Internal server error"
+    }), cors(origin, 500));
+  }
 });
