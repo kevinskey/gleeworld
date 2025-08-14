@@ -269,28 +269,52 @@ export const SightSingingStudio: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Sight-Singing Studio</h1>
-          <p className="text-muted-foreground">Generate, practice, and evaluate sight-singing exercises</p>
+    <div className="h-screen bg-background p-4 overflow-hidden">
+      <div className="h-full flex flex-col">
+        {/* Header */}
+        <div className="text-center mb-4 flex-shrink-0">
+          <h1 className="text-2xl font-bold text-foreground mb-1">Sight-Singing Studio</h1>
+          <p className="text-sm text-muted-foreground">Generate, practice, and evaluate sight-singing exercises</p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-6">
-            <Card className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">Exercise Parameters</h2>
-              <ParameterForm 
-                onGenerate={handleGenerateExercise}
-                isGenerating={isGenerating}
-                onReset={handleReset}
-                hasExercise={!!currentMusicXML}
-              />
+        {/* Main Content */}
+        <div className="flex-1 grid gap-4 lg:grid-cols-3 min-h-0">
+          {/* Left Column - Parameters */}
+          <div className="lg:col-span-1">
+            <Card className="p-4 h-full flex flex-col">
+              <h2 className="text-lg font-semibold mb-3 flex-shrink-0">Exercise Parameters</h2>
+              <div className="flex-1 overflow-y-auto min-h-0">
+                <ParameterForm 
+                  onGenerate={handleGenerateExercise}
+                  isGenerating={isGenerating}
+                  onReset={handleReset}
+                  hasExercise={!!currentMusicXML}
+                />
+              </div>
             </Card>
+          </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card className="p-6">
-                <h2 className="text-2xl font-semibold mb-4">Playback Controls</h2>
+          {/* Middle Column - Score Display */}
+          <div className="lg:col-span-1">
+            <Card className="p-4 h-full flex flex-col">
+              <h2 className="text-lg font-semibold mb-3 flex-shrink-0">Musical Score</h2>
+              <div className="flex-1 min-h-0">
+                <ScoreDisplay
+                  musicXML={currentMusicXML}
+                  onGradeRecording={handleGradeRecording}
+                  hasRecording={!!audioBlob}
+                  isGrading={isGrading}
+                />
+              </div>
+            </Card>
+          </div>
+
+          {/* Right Column - Controls & Results */}
+          <div className="lg:col-span-1 flex flex-col gap-4">
+            {/* Playback Controls */}
+            <Card className="p-4 flex-1 flex flex-col">
+              <h2 className="text-lg font-semibold mb-3 flex-shrink-0">Playback</h2>
+              <div className="flex-1">
                 <PlaybackControls
                   isPlaying={isPlaying}
                   mode={mode}
@@ -300,10 +324,13 @@ export const SightSingingStudio: React.FC = () => {
                   onDownload={handleDownloadMusicXML}
                   hasExercise={!!currentMusicXML}
                 />
-              </Card>
+              </div>
+            </Card>
 
-              <Card className="p-6">
-                <h2 className="text-2xl font-semibold mb-4">Recording & Grading</h2>
+            {/* Recording Controls */}
+            <Card className="p-4 flex-1 flex flex-col">
+              <h2 className="text-lg font-semibold mb-3 flex-shrink-0">Recording</h2>
+              <div className="flex-1 flex flex-col">
                 <RecordingControls
                   isRecording={isRecording}
                   duration={recordingDuration}
@@ -314,21 +341,15 @@ export const SightSingingStudio: React.FC = () => {
                 />
                 
                 {gradingResults && (
-                  <div className="mt-4">
-                    <GradingResults results={gradingResults} />
+                  <div className="mt-3 pt-3 border-t flex-shrink-0">
+                    <h3 className="text-sm font-medium mb-2">Results</h3>
+                    <div className="text-xs">
+                      <GradingResults results={gradingResults} />
+                    </div>
                   </div>
                 )}
-              </Card>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <ScoreDisplay 
-              musicXML={currentMusicXML}
-              onGradeRecording={handleGradeRecording}
-              hasRecording={!!audioBlob}
-              isGrading={isGrading}
-            />
+              </div>
+            </Card>
           </div>
         </div>
       </div>
