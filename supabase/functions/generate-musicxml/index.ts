@@ -39,7 +39,7 @@ function attributesXml(mIndex:number, key:any, time:any, role:"S"|"A"){
   const clef = `<clef><sign>G</sign><line>2</line></clef>`;
   if (mIndex!==0) return "";
   // write key/time once at measure 1
-  const fifthsMap: Record<string, number> = { C:0, G:1, D:2, A:3, E:4, B:5, F#:6, C#:7, F:-1, Bb:-2, Eb:-3, Ab:-4, Db:-5, Gb:-6, Cb:-7 };
+  const fifthsMap: Record<string, number> = { C:0, G:1, D:2, A:3, E:4, B:5, "F#":6, "C#":7, F:-1, "Bb":-2, "Eb":-3, "Ab":-4, "Db":-5, "Gb":-6, "Cb":-7 };
   const fifths = fifthsMap[key.tonic] ?? 0; // simplistic; expand if using enharmonics
   return `<attributes><divisions>16</divisions><key><fifths>${fifths}</fifths></key><time><beats>${time.num}</beats><beat-type>${time.den}</beat-type></time>${clef}</attributes>`;
 }
