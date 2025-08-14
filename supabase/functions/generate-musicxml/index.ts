@@ -166,9 +166,29 @@ serve(async (req) => {
       let measures = '';
       const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
       
+      // Map note lengths to duration values (assuming divisions=4)
+      const noteDurations = {
+        'whole': { duration: 16, type: 'whole' },
+        'half': { duration: 8, type: 'half' },
+        'quarter': { duration: 4, type: 'quarter' },
+        'eighth': { duration: 2, type: 'eighth' },
+        'sixteenth': { duration: 1, type: 'sixteenth' }
+      };
+      
+      // Use the selected note lengths, or default to quarter notes
+      const selectedNoteLengths = params.noteLengths && params.noteLengths.length > 0 
+        ? params.noteLengths 
+        : ['quarter'];
+      
+      console.log("Using note lengths:", selectedNoteLengths);
+      
       for (let i = 1; i <= params.measures; i++) {
         const isFirst = i === 1;
         const isLast = i === params.measures;
+        
+        // Pick a random note length from the selected ones
+        const randomNoteLength = selectedNoteLengths[Math.floor(Math.random() * selectedNoteLengths.length)];
+        const noteInfo = noteDurations[randomNoteLength] || noteDurations['quarter'];
         
         measures += `    <measure number="${i}">
 ${isFirst ? `      <attributes>
@@ -190,16 +210,16 @@ ${isFirst ? `      <attributes>
           <step>${notes[i % notes.length]}</step>
           <octave>4</octave>
         </pitch>
-        <duration>${isLast ? '16' : '8'}</duration>
-        <type>${isLast ? 'whole' : 'half'}</type>
+        <duration>${isLast ? '16' : noteInfo.duration}</duration>
+        <type>${isLast ? 'whole' : noteInfo.type}</type>
       </note>
-${!isLast ? `      <note>
+${!isLast && noteInfo.duration < 16 ? `      <note>
         <pitch>
           <step>${notes[(i + 1) % notes.length]}</step>
           <octave>4</octave>
         </pitch>
-        <duration>8</duration>
-        <type>half</type>
+        <duration>${16 - noteInfo.duration}</duration>
+        <type>${16 - noteInfo.duration === 8 ? 'half' : 16 - noteInfo.duration === 4 ? 'quarter' : 'whole'}</type>
       </note>` : ''}
     </measure>
 `;
