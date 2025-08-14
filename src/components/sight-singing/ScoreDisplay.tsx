@@ -21,15 +21,20 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   const scoreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!scoreRef.current || !musicXML) return;
+    if (!scoreRef.current) return;
+    
+    // Always clear the score container first
+    scoreRef.current.innerHTML = '';
+    
+    // If no musicXML, just leave it empty (this handles the reset case)
+    if (!musicXML) {
+      return;
+    }
 
     const renderScore = async () => {
       try {
         console.log('Rendering MusicXML with OSMD...');
         console.log('MusicXML length:', musicXML.length);
-        
-        // Clear previous score
-        scoreRef.current!.innerHTML = '';
         
         // Create OSMD instance
         const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
