@@ -39,13 +39,13 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   const watchedAllowedDur = watch('allowedDur');
   const watchedNumMeasures = watch('numMeasures');
 
-  const tonics = ["C", "D", "E", "F", "G", "A", "B"];
+  const tonics = ["C", "D", "E", "F", "G", "A", "B", "Db", "Eb", "Gb", "Ab", "Bb"];
   const modes = ["major", "minor"];
   const timeSignatures = [
     { num: 2, den: 4 }, { num: 3, den: 4 }, { num: 4, den: 4 }, 
-    { num: 6, den: 8 }
+    { num: 6, den: 8 }, { num: 9, den: 8 }
   ];
-  const durations = ["quarter", "half", "eighth"];
+  const durations = ["whole", "half", "quarter", "eighth", "16th"];
 
   const handleDurationChange = (duration: string, checked: boolean) => {
     const current = watchedAllowedDur || [];
@@ -53,6 +53,18 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
       setValue('allowedDur', [...current, duration as any]);
     } else {
       setValue('allowedDur', current.filter(d => d !== duration));
+    }
+  };
+
+  const handlePartCountChange = (count: string) => {
+    const numParts = parseInt(count);
+    if (numParts === 1) {
+      setValue('parts', [{ role: "S", range: { min: "C4", max: "C5" } }]);
+    } else {
+      setValue('parts', [
+        { role: "S", range: { min: "C4", max: "C5" } },
+        { role: "A", range: { min: "F3", max: "F4" } }
+      ]);
     }
   };
 
@@ -144,10 +156,27 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         />
       </div>
 
+      {/* Voice Parts */}
+      <div className="space-y-1">
+        <Label className="text-xs font-medium">Parts</Label>
+        <Select 
+          value={watchedParts?.length?.toString() || "1"} 
+          onValueChange={handlePartCountChange}
+        >
+          <SelectTrigger className="h-6 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1">Soprano Only</SelectItem>
+            <SelectItem value="2">Soprano + Alto</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Durations */}
       <div className="space-y-1">
         <Label className="text-xs font-medium">Note Values</Label>
-        <div className="flex flex-wrap gap-1">
+        <div className="grid grid-cols-3 gap-1">
           {durations.map((duration) => (
             <div key={duration} className="flex items-center space-x-1">
               <Checkbox
@@ -156,11 +185,40 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 onCheckedChange={(checked) => handleDurationChange(duration, checked as boolean)}
               />
               <Label htmlFor={duration} className="text-xs">
-                {duration === 'quarter' ? '♩' : duration === 'half' ? '♪' : '♫'}
+                {duration === 'whole' ? '𝅝' : 
+                 duration === 'half' ? '𝅗𝅥' : 
+                 duration === 'quarter' ? '𝅘𝅥' : 
+                 duration === 'eighth' ? '𝅘𝅥𝅮' : '𝅘𝅥𝅯'}
               </Label>
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Allow Dots */}
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="allowDots"
+          checked={watch('allowDots')}
+          onCheckedChange={(checked) => setValue('allowDots', checked as boolean)}
+        />
+        <Label htmlFor="allowDots" className="text-xs font-medium">Allow Dotted Notes</Label>
+      </div>
+
+      {/* Cadence Frequency */}
+      <div className="space-y-1">
+        <Label className="text-xs font-medium">Cadence Every</Label>
+        <Input
+          type="number"
+          min="2"
+          max={watchedNumMeasures}
+          className="h-6 text-xs"
+          {...register('cadenceEvery', { 
+            required: true,
+            min: { value: 2, message: 'Min 2' },
+            max: { value: watchedNumMeasures, message: 'Max measures' }
+          })}
+        />
       </div>
 
       <div className="space-y-1">
