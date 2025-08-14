@@ -19,6 +19,7 @@ export interface ExerciseParameters {
   allowedDur: Array<"whole"|"half"|"quarter"|"eighth"|"16th">;
   allowDots: boolean;
   allowAccidentals: boolean;
+  intervalMotion: Array<"step"|"skip"|"leap"|"repeat">;
   cadenceEvery: number;
   bpm: number;
   title: string;

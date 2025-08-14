@@ -154,6 +154,7 @@ interface SightSingingParams {
   allowedDur?: string[];
   allowDots?: boolean;
   allowAccidentals?: boolean;
+  intervalMotion?: string[];
   cadenceEvery?: number;
   bpm?: string;
   title?: string;
@@ -343,17 +344,21 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
         const notes = [];
         let currentTicks = 0;
         
-        // Scale degree patterns for variety
-        const degreePatterns = [
-          [1,2,3,4], // Scale up: do-re-mi-fa
-          [5,4,3,2], // Scale down: sol-fa-mi-re
-          [1,3,5,1], // Arpeggio up: do-mi-sol-do (octave)
-          [1,3,2,4], // Thirds: do-mi-re-fa
-          [5,3,1,7], // Descending chord tones
-          [1,2,1,3], // Neighboring tones
-        ];
+        // Use interval motion preferences
+        const allowedMotion = params.intervalMotion || ["step", "skip"];
         
-        const pattern = degreePatterns[measureIndex % degreePatterns.length];
+        // Scale degree patterns based on motion preferences
+        const patterns = {
+          step: [[1,2,3,2], [3,2,1,2], [1,2,1,3]], // stepwise motion
+          skip: [[1,3,5,3], [5,3,1,3], [1,3,2,4]], // thirds
+          leap: [[1,5,1,4], [1,4,1,5], [5,1,5,2]], // fourths and fifths
+          repeat: [[1,1,2,2], [3,3,2,2], [5,5,4,4]] // repeated notes
+        };
+        
+        // Get available patterns based on selected motions
+        const availablePatterns = allowedMotion.flatMap(motion => patterns[motion as keyof typeof patterns] || []);
+        const pattern = availablePatterns[measureIndex % availablePatterns.length] || [1,2,3,4];
+        
         let noteIndex = 0;
         
         while (currentTicks < measureTicks && noteIndex < pattern.length) {
@@ -363,6 +368,8 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
             const ticksNeeded = TICKS[dur as DurBase];
             return ticksNeeded <= remainingTicks;
           });
+          
+          console.log(`Measure ${measureIndex}, Beat ${noteIndex}: Available durations:`, availableDurs, 'from selected:', durOptions);
           
           if (availableDurs.length === 0) {
             // Fill remaining with rest

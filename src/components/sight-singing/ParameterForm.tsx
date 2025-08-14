@@ -30,6 +30,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
       allowedDur: ["quarter"],
       allowDots: false,
       allowAccidentals: false,
+      intervalMotion: ["step", "skip"],
       cadenceEvery: 4,
       bpm: 120,
       title: "Sight-Singing Exercise"
@@ -38,6 +39,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
 
   const watchedParts = watch('parts');
   const watchedAllowedDur = watch('allowedDur');
+  const watchedIntervalMotion = watch('intervalMotion');
   const watchedNumMeasures = watch('numMeasures');
 
   const tonics = ["C", "D", "E", "F", "G", "A", "B", "Db", "Eb", "Gb", "Ab", "Bb"];
@@ -47,6 +49,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     { num: 6, den: 8 }, { num: 9, den: 8 }
   ];
   const durations = ["whole", "half", "quarter", "eighth", "16th"];
+  const motions = ["step", "skip", "leap", "repeat"];
 
   const handleDurationChange = (duration: string, checked: boolean) => {
     const current = watchedAllowedDur || [];
@@ -54,6 +57,16 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
       setValue('allowedDur', [...current, duration as any]);
     } else {
       setValue('allowedDur', current.filter(d => d !== duration));
+    }
+    console.log('Updated allowedDur:', checked ? [...current, duration] : current.filter(d => d !== duration));
+  };
+
+  const handleMotionChange = (motion: string, checked: boolean) => {
+    const current = watchedIntervalMotion || [];
+    if (checked) {
+      setValue('intervalMotion', [...current, motion as any]);
+    } else {
+      setValue('intervalMotion', current.filter(m => m !== motion));
     }
   };
 
@@ -73,6 +86,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     if (!data.allowedDur || data.allowedDur.length === 0) {
       return;
     }
+    console.log('Form submission data:', data);
     onGenerate(data);
   };
 
@@ -214,6 +228,23 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         </div>
       </div>
 
+      {/* Interval Motion */}
+      <div className="space-y-1">
+        <Label className="text-xs font-medium">Interval Motion</Label>
+        <div className="grid grid-cols-2 gap-1">
+          {motions.map((motion) => (
+            <div key={motion} className="flex items-center space-x-1">
+              <Checkbox
+                id={motion}
+                checked={watchedIntervalMotion?.includes(motion as any) || false}
+                onCheckedChange={(checked) => handleMotionChange(motion, checked as boolean)}
+              />
+              <Label htmlFor={motion} className="text-xs capitalize">{motion}</Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Allow Dots */}
       <div className="flex items-center space-x-2">
         <Checkbox
@@ -245,7 +276,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           type="submit" 
           size="sm"
           className="w-full h-7 text-xs" 
-          disabled={isGenerating || !watchedAllowedDur || watchedAllowedDur.length === 0}
+          disabled={isGenerating || !watchedAllowedDur || watchedAllowedDur.length === 0 || !watchedIntervalMotion || watchedIntervalMotion.length === 0}
         >
           {isGenerating ? 'Generating...' : 'Generate'}
         </Button>
