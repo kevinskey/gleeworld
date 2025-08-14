@@ -284,7 +284,7 @@ export const SightSingingStudio: React.FC = () => {
             {/* Parameters */}
             <Card className="p-4 flex-shrink-0">
               <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Parameters</h2>
-              <div className="max-h-40 overflow-y-auto">
+              <div className="max-h-80 overflow-y-auto">
                 <ParameterForm 
                   onGenerate={handleGenerateExercise}
                   isGenerating={isGenerating}
