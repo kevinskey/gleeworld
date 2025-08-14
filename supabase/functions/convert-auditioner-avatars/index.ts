@@ -34,20 +34,61 @@ Deno.serve(async (req) => {
 
     console.log('Starting auditioner avatar conversion process...');
 
-    // Get list of auditioners that need conversion
-    const { data: auditioners, error: fetchError } = await supabase
-      .rpc('get_auditioner_images_for_conversion');
+    // Get auditioners from both tables
+    const { data: auditionApplications, error: appsError } = await supabase
+      .from('audition_applications')
+      .select('user_id, full_name, email, profile_image_url')
+      .not('profile_image_url', 'is', null);
 
-    if (fetchError) {
-      console.error('Error fetching auditioners:', fetchError);
-      throw fetchError;
+    const { data: gwAuditions, error: gwError } = await supabase
+      .from('gw_auditions')
+      .select('user_id, first_name, last_name, email, selfie_url')
+      .not('selfie_url', 'is', null);
+
+    if (appsError) {
+      console.error('Error fetching audition applications:', appsError);
+    }
+    if (gwError) {
+      console.error('Error fetching gw_auditions:', gwError);
     }
 
-    if (!auditioners || auditioners.length === 0) {
+    // Combine and format the data
+    const allAuditioners = [];
+    
+    if (auditionApplications) {
+      auditionApplications.forEach(app => {
+        allAuditioners.push({
+          user_id: app.user_id,
+          full_name: app.full_name,
+          email: app.email,
+          source_image_url: app.profile_image_url,
+          suggested_avatar_filename: `${app.user_id}/avatar-${Date.now()}.jpg`,
+          target_avatar_url: `https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/avatars/${app.user_id}/avatar-${Date.now()}.jpg`
+        });
+      });
+    }
+
+    if (gwAuditions) {
+      gwAuditions.forEach(audition => {
+        allAuditioners.push({
+          user_id: audition.user_id,
+          full_name: `${audition.first_name || ''} ${audition.last_name || ''}`.trim(),
+          email: audition.email,
+          source_image_url: audition.selfie_url,
+          suggested_avatar_filename: `${audition.user_id}/avatar-${Date.now()}.jpg`,
+          target_avatar_url: `https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/avatars/${audition.user_id}/avatar-${Date.now()}.jpg`
+        });
+      });
+    }
+
+    if (!allAuditioners || allAuditioners.length === 0) {
       return new Response(
         JSON.stringify({ 
           success: true, 
           message: 'No auditioners need avatar conversion',
+          total_processed: 0,
+          successful: 0,
+          failed: 0,
           results: []
         }),
         { 
@@ -57,11 +98,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Found ${auditioners.length} auditioners to convert`);
+    console.log(`Found ${allAuditioners.length} auditioners to convert`);
 
     const results: ConversionResult[] = [];
 
-    for (const auditioner of auditioners) {
+    for (const auditioner of allAuditioners) {
       try {
         console.log(`Processing ${auditioner.full_name} (${auditioner.email})`);
         
