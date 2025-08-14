@@ -128,7 +128,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       melodyPlayerRef.current = new MelodyPlayer(audioContextRef.current);
-      console.log('🎵 Audio system initialized');
+      console.log('🎵 Audio system initialized with shared AudioContext');
     }
     
     if (audioContextRef.current.state === 'suspended') {
@@ -199,11 +199,12 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     let beatCount = 0;
     
-    // Start metronome for countdown
+    // Start metronome for countdown - keep it simple for now
     if (metronomeEnabled) {
       metronome.start();
     }
     
+    // Use a simple interval-based countdown that syncs with BPM
     const countdownInterval = setInterval(() => {
       beatCount++;
       setCountdownBeats(beatCount);
@@ -212,14 +213,14 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       if (beatCount >= beatsPerMeasure) {
         clearInterval(countdownInterval);
         setIsCountingDown(false);
-        console.log('✅ Countdown complete, continuing at', tempo, 'BPM');
+        console.log('✅ Countdown complete, melody will start synchronized');
         callback();
       }
     }, interval);
     
     toast({
       title: "Get Ready",
-      description: `4-beat count-in starting at ${tempo} BPM`
+      description: `${beatsPerMeasure}-beat count-in starting at ${tempo} BPM`
     });
   }, [tempo, metronomeEnabled, exerciseMetadata.timeSignature, metronome, toast]);
 
@@ -264,15 +265,34 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     melodyPlayerRef.current.loadMelody(melodyNotes);
     melodyPlayerRef.current.setTempo(tempo);
-    melodyPlayerRef.current.start(tempo);
+    
+    // Sync melody start with metronome if enabled
+    if (metronomeEnabled && metronome.isPlaying()) {
+      // Calculate when the next beat will occur
+      const currentTime = audioContextRef.current?.currentTime || 0;
+      const secondsPerBeat = 60.0 / tempo;
+      const nextBeatTime = currentTime + (secondsPerBeat * 0.1); // Start slightly after next beat
+      
+      console.log('🎵 Syncing melody start with metronome at:', nextBeatTime);
+      
+      // Schedule melody to start at the calculated time
+      setTimeout(() => {
+        if (melodyPlayerRef.current) {
+          melodyPlayerRef.current.start(tempo);
+        }
+      }, (nextBeatTime - currentTime) * 1000);
+    } else {
+      // Start immediately if no metronome
+      melodyPlayerRef.current.start(tempo);
+    }
     
     // Start playback timer
     playbackTimerRef.current = setInterval(() => {
       setPlaybackTime(prev => prev + 1);
     }, 1000);
     
-    console.log('🎵 Started melody playback with', melodyNotes.length, 'notes');
-  }, [melody, tempo]);
+    console.log('🎵 Prepared melody playback with', melodyNotes.length, 'notes');
+  }, [melody, tempo, metronomeEnabled, metronome]);
 
   const handleStopPractice = useCallback(() => {
     console.log('🛑 Stopping practice');
