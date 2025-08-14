@@ -1,17 +1,24 @@
 import React, { useEffect, useRef } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Download, CheckCircle } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 
 interface ScoreDisplayProps {
   musicXML: string;
+  onGradeRecording?: () => void;
+  hasRecording?: boolean;
+  isGrading?: boolean;
 }
 
-export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ musicXML }) => {
+export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ 
+  musicXML,
+  onGradeRecording,
+  hasRecording = false,
+  isGrading = false
+}) => {
   const scoreRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!scoreRef.current || !musicXML) return;
@@ -30,7 +37,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ musicXML }) => {
           drawTitle: false,
           backend: "svg",
           drawCredits: false,
-          drawPartNames: false,
+          drawPartNames: true,
           drawMeasureNumbers: true,
           coloringMode: 0, // No coloring
           cursorsOptions: [{
@@ -68,7 +75,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ musicXML }) => {
     };
 
     renderScore();
-  }, [musicXML, toast]);
+  }, [musicXML]);
 
   const handleDownloadMusicXML = () => {
     try {
@@ -97,10 +104,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ musicXML }) => {
   };
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Musical Score</h3>
+    <Card className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Musical Score</h3>
+        <div className="flex gap-2">
           {musicXML && (
             <Button 
               variant="outline" 
@@ -111,19 +118,31 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ musicXML }) => {
               Download MusicXML
             </Button>
           )}
+          
+          {hasRecording && onGradeRecording && (
+            <Button 
+              onClick={onGradeRecording}
+              disabled={isGrading}
+              variant="default"
+              size="sm"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              {isGrading ? 'Grading...' : 'Grade Performance'}
+            </Button>
+          )}
         </div>
-        
-        <div 
-          ref={scoreRef}
-          className="min-h-[300px] bg-background rounded-lg border p-4 overflow-auto"
-        />
-        
-        {!musicXML && (
-          <div className="min-h-[300px] flex items-center justify-center text-muted-foreground">
-            Generate an exercise to see the musical notation
-          </div>
-        )}
-      </CardContent>
+      </div>
+      
+      <div 
+        ref={scoreRef}
+        className="min-h-[400px] bg-background rounded-lg border p-4 overflow-auto"
+      />
+      
+      {!musicXML && (
+        <div className="min-h-[400px] flex items-center justify-center text-muted-foreground">
+          Generate an exercise to see the musical notation
+        </div>
+      )}
     </Card>
   );
 };

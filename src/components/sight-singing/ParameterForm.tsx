@@ -1,14 +1,14 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
-import { Music, Sparkles } from 'lucide-react';
-import type { ExerciseParameters } from './SightSingingStudio';
+import { Separator } from '@/components/ui/separator';
+import { ExerciseParameters } from './SightSingingStudio';
 
 interface ParameterFormProps {
   onGenerate: (parameters: ExerciseParameters) => void;
@@ -21,290 +21,253 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
 }) => {
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<ExerciseParameters>({
     defaultValues: {
-      keySignature: 'C major',
-      timeSignature: '4/4',
-      tempo: 120,
-      measures: 4,
-      register: 'soprano',
-      pitchRangeMin: 'C4',
-      pitchRangeMax: 'C5',
-      motionTypes: ['stepwise'],
-      noteLengths: ['quarter', 'half'],
-      difficultyLevel: 2,
-      title: 'Sight-Singing Exercise'
+      key: { tonic: "C", mode: "major" },
+      time: { num: 4, den: 4 },
+      numMeasures: 4,
+      parts: [{ role: "S", range: { min: "C4", max: "C5" } }],
+      allowedDur: ["quarter"],
+      allowDots: false,
+      cadenceEvery: 4,
+      bpm: 120,
+      title: "Sight-Singing Exercise"
     }
   });
 
-  const watchedValues = watch();
+  const watchedParts = watch('parts');
+  const watchedAllowedDur = watch('allowedDur');
+  const watchedNumMeasures = watch('numMeasures');
 
-  const keySignatures = [
-    'C major', 'G major', 'D major', 'A major', 'E major', 'B major', 'F# major',
-    'C# major', 'F major', 'Bb major', 'Eb major', 'Ab major', 'Db major', 'Gb major',
-    'Cb major', 'A minor', 'E minor', 'B minor', 'F# minor', 'C# minor', 'G# minor',
-    'D# minor', 'A# minor', 'D minor', 'G minor', 'C minor', 'F minor', 'Bb minor',
-    'Eb minor', 'Ab minor'
+  const tonics = ["C", "D", "E", "F", "G", "A", "B", "Db", "Eb", "Gb", "Ab", "Bb", "F#", "C#"];
+  const modes = ["major", "minor"];
+  const timeSignatures = [
+    { num: 2, den: 4 }, { num: 3, den: 4 }, { num: 4, den: 4 }, 
+    { num: 6, den: 8 }, { num: 9, den: 8 }, { num: 12, den: 8 }
   ];
+  const durations = ["whole", "half", "quarter", "eighth", "16th"];
+  const cadenceTypes = ["PAC", "IAC", "HC", "PL", "DC"];
 
-  const timeSignatures = ['4/4', '3/4', '2/4', '6/8', '9/8', '12/8'];
-
-  const registers = [
-    { value: 'soprano', label: 'Soprano (C4-C6)' },
-    { value: 'alto', label: 'Alto (G3-G5)' },
-    { value: 'tenor', label: 'Tenor (C3-C5)' },
-    { value: 'bass', label: 'Bass (E2-E4)' }
-  ];
-
-  const motionOptions = [
-    { value: 'stepwise', label: 'Stepwise motion' },
-    { value: 'thirds', label: 'Thirds' },
-    { value: 'fourths', label: 'Fourths' },
-    { value: 'fifths', label: 'Fifths' },
-    { value: 'sevenths', label: 'Sevenths' },
-    { value: 'octaves', label: 'Octaves' }
-  ];
-
-  const noteLengthOptions = [
-    { value: 'whole', label: 'Whole notes' },
-    { value: 'half', label: 'Half notes' },
-    { value: 'quarter', label: 'Quarter notes' },
-    { value: 'eighth', label: 'Eighth notes' },
-    { value: 'sixteenth', label: 'Sixteenth notes' }
-  ];
-
-  const handleMotionTypeChange = (motionType: string, checked: boolean) => {
-    const current = watchedValues.motionTypes || [];
+  const handleDurationChange = (duration: string, checked: boolean) => {
+    const current = watchedAllowedDur || [];
     if (checked) {
-      setValue('motionTypes', [...current, motionType]);
+      setValue('allowedDur', [...current, duration as any]);
     } else {
-      setValue('motionTypes', current.filter(t => t !== motionType));
+      setValue('allowedDur', current.filter(d => d !== duration));
     }
   };
 
-  const handleNoteLengthChange = (noteLength: string, checked: boolean) => {
-    const current = watchedValues.noteLengths || [];
-    if (checked) {
-      const newLengths = [...current, noteLength];
-      setValue('noteLengths', newLengths);
-      console.log('Added note length:', noteLength, 'Current selections:', newLengths);
+  const handlePartCountChange = (count: string) => {
+    const numParts = parseInt(count);
+    if (numParts === 1) {
+      setValue('parts', [{ role: "S", range: { min: "C4", max: "C5" } }]);
     } else {
-      const newLengths = current.filter(l => l !== noteLength);
-      setValue('noteLengths', newLengths);
-      console.log('Removed note length:', noteLength, 'Current selections:', newLengths);
+      setValue('parts', [
+        { role: "S", range: { min: "C4", max: "C5" } },
+        { role: "A", range: { min: "F3", max: "F4" } }
+      ]);
     }
   };
 
   const onSubmit = (data: ExerciseParameters) => {
-    console.log('Form submission - Note lengths selected:', data.noteLengths);
+    // Validate that at least one duration is selected
+    if (!data.allowedDur || data.allowedDur.length === 0) {
+      return;
+    }
     onGenerate(data);
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Music className="h-5 w-5" />
-          Exercise Parameters
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Settings */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Exercise Title</Label>
-              <Input
-                id="title"
-                {...register('title')}
-                placeholder="My Sight-Singing Exercise"
-              />
-            </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Basic Settings */}
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="title">Exercise Title</Label>
+          <Input
+            id="title"
+            {...register('title', { required: 'Title is required' })}
+            placeholder="Enter exercise title"
+          />
+          {errors.title && <span className="text-sm text-destructive">{errors.title.message}</span>}
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="keySignature">Key Signature</Label>
-              <Select 
-                value={watchedValues.keySignature} 
-                onValueChange={(value) => setValue('keySignature', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {keySignatures.map(key => (
-                    <SelectItem key={key} value={key}>{key}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="timeSignature">Time Signature</Label>
-              <Select 
-                value={watchedValues.timeSignature} 
-                onValueChange={(value) => setValue('timeSignature', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSignatures.map(time => (
-                    <SelectItem key={time} value={time}>{time}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tempo">Tempo (BPM)</Label>
-              <Input
-                id="tempo"
-                type="number"
-                min="60"
-                max="200"
-                {...register('tempo', { valueAsNumber: true })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="measures">Number of Measures</Label>
-              <Input
-                id="measures"
-                type="number"
-                min="2"
-                max="16"
-                {...register('measures', { valueAsNumber: true })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="register">Voice Register</Label>
-              <Select 
-                value={watchedValues.register} 
-                onValueChange={(value) => setValue('register', value as any)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {registers.map(register => (
-                    <SelectItem key={register.value} value={register.value}>
-                      {register.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Parts</Label>
+            <Select onValueChange={handlePartCountChange} defaultValue="1">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1 Part (Monophonic)</SelectItem>
+                <SelectItem value="2">2 Parts (Harmony)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Pitch Range */}
-          <div className="space-y-4">
-            <Label>Pitch Range</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="pitchRangeMin">Lowest Note</Label>
-                <Input
-                  id="pitchRangeMin"
-                  {...register('pitchRangeMin')}
-                  placeholder="C4"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="pitchRangeMax">Highest Note</Label>
-                <Input
-                  id="pitchRangeMax"
-                  {...register('pitchRangeMax')}
-                  placeholder="C5"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Motion Types */}
-          <div className="space-y-4">
-            <Label>Motion Types</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {motionOptions.map(option => (
-                <div key={option.value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`motion-${option.value}`}
-                    checked={watchedValues.motionTypes?.includes(option.value)}
-                    onCheckedChange={(checked) => 
-                      handleMotionTypeChange(option.value, checked as boolean)
-                    }
-                  />
-                  <Label 
-                    htmlFor={`motion-${option.value}`}
-                    className="text-sm font-normal"
-                  >
-                    {option.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Note Lengths */}
-          <div className="space-y-4">
-            <Label>Note Lengths (Current: {watchedValues.noteLengths?.join(', ') || 'None'})</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {noteLengthOptions.map(option => (
-                <div key={option.value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`length-${option.value}`}
-                    checked={watchedValues.noteLengths?.includes(option.value)}
-                    onCheckedChange={(checked) => 
-                      handleNoteLengthChange(option.value, checked as boolean)
-                    }
-                  />
-                  <Label 
-                    htmlFor={`length-${option.value}`}
-                    className="text-sm font-normal"
-                  >
-                    {option.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Difficulty Level */}
-          <div className="space-y-4">
-            <Label>Difficulty Level: {watchedValues.difficultyLevel}/5</Label>
-            <Slider
-              value={[watchedValues.difficultyLevel]}
-              onValueChange={([value]) => setValue('difficultyLevel', value)}
-              min={1}
-              max={5}
-              step={1}
-              className="w-full"
+          <div>
+            <Label htmlFor="numMeasures">Number of Measures</Label>
+            <Input
+              id="numMeasures"
+              type="number"
+              min="1"
+              max="32"
+              {...register('numMeasures', { 
+                required: 'Number of measures is required',
+                min: { value: 1, message: 'Minimum 1 measure' },
+                max: { value: 32, message: 'Maximum 32 measures' }
+              })}
             />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Beginner</span>
-              <span>Intermediate</span>
-              <span>Advanced</span>
+            {errors.numMeasures && <span className="text-sm text-destructive">{errors.numMeasures.message}</span>}
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Key and Time Signature */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Musical Settings</h3>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Key Signature</Label>
+            <div className="flex gap-2">
+              <Select 
+                onValueChange={(value) => setValue('key.tonic', value)}
+                defaultValue="C"
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {tonics.map(tonic => (
+                    <SelectItem key={tonic} value={tonic}>{tonic}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select 
+                onValueChange={(value) => setValue('key.mode', value as "major"|"minor")}
+                defaultValue="major"
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {modes.map(mode => (
+                    <SelectItem key={mode} value={mode}>{mode}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          {/* Generate Button */}
-          <Button 
-            type="submit" 
-            className="w-full" 
-            size="lg"
-            disabled={isGenerating || !watchedValues.motionTypes?.length || !watchedValues.noteLengths?.length}
-          >
-            {isGenerating ? (
-              <>
-                <Sparkles className="h-4 w-4 mr-2 animate-spin" />
-                Generating Exercise...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Generate Exercise
-              </>
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+          <div>
+            <Label>Time Signature</Label>
+            <Select 
+              onValueChange={(value) => {
+                const [num, den] = value.split('/').map(Number);
+                setValue('time', { num, den: den as 1|2|4|8|16 });
+              }}
+              defaultValue="4/4"
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {timeSignatures.map(ts => (
+                  <SelectItem key={`${ts.num}/${ts.den}`} value={`${ts.num}/${ts.den}`}>
+                    {ts.num}/{ts.den}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="bpm">Tempo (BPM)</Label>
+          <Input
+            id="bpm"
+            type="number"
+            min="60"
+            max="200"
+            {...register('bpm', { 
+              required: 'Tempo is required',
+              min: { value: 60, message: 'Minimum 60 BPM' },
+              max: { value: 200, message: 'Maximum 200 BPM' }
+            })}
+          />
+          {errors.bpm && <span className="text-sm text-destructive">{errors.bpm.message}</span>}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Duration Settings */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Note Durations</h3>
+        
+        <div className="space-y-3">
+          <Label>Allowed Durations</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {durations.map((duration) => (
+              <div key={duration} className="flex items-center space-x-2">
+                <Checkbox
+                  id={duration}
+                  checked={watchedAllowedDur?.includes(duration as any)}
+                  onCheckedChange={(checked) => handleDurationChange(duration, checked as boolean)}
+                />
+                <Label htmlFor={duration} className="text-sm font-normal">
+                  {duration.charAt(0).toUpperCase() + duration.slice(1)}
+                </Label>
+              </div>
+            ))}
+          </div>
+          {(!watchedAllowedDur || watchedAllowedDur.length === 0) && (
+            <span className="text-sm text-destructive">Select at least one duration</span>
+          )}
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="allowDots"
+            {...register('allowDots')}
+          />
+          <Label htmlFor="allowDots" className="text-sm font-normal">
+            Allow Dotted Notes (up to 2 dots)
+          </Label>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Cadence Settings */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Cadence Settings</h3>
+        
+        <div>
+          <Label htmlFor="cadenceEvery">Cadence Every N Bars</Label>
+          <Input
+            id="cadenceEvery"
+            type="number"
+            min="2"
+            max={watchedNumMeasures}
+            {...register('cadenceEvery', { 
+              required: 'Cadence frequency is required',
+              min: { value: 2, message: 'Minimum every 2 bars' },
+              max: { value: watchedNumMeasures, message: 'Cannot exceed number of measures' }
+            })}
+          />
+          {errors.cadenceEvery && <span className="text-sm text-destructive">{errors.cadenceEvery.message}</span>}
+        </div>
+      </div>
+
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={isGenerating || !watchedAllowedDur || watchedAllowedDur.length === 0}
+      >
+        {isGenerating ? 'Generating Exercise...' : 'Generate Exercise'}
+      </Button>
+    </form>
   );
 };
