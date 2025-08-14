@@ -19,6 +19,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
   const { events, loading: eventsLoading, fetchEvents } = useGleeWorldEvents();
   const { data: appointments, isLoading: appointmentsLoading } = useAppointments();
+  const [auditionApplications, setAuditionApplications] = useState<any[]>([]);
+  const [auditionTimeBlocks, setAuditionTimeBlocks] = useState<any[]>([]);
+  const [loadingAuditions, setLoadingAuditions] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -33,6 +36,40 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
     registration_required: false,
   });
 
+  // Fetch audition data
+  useEffect(() => {
+    const fetchAuditionData = async () => {
+      setLoadingAuditions(true);
+      try {
+        // Fetch audition applications
+        const { data: applications, error: appError } = await supabase
+          .from('audition_applications')
+          .select('*')
+          .not('audition_time_slot', 'is', null)
+          .order('audition_time_slot');
+
+        if (appError) throw appError;
+
+        // Fetch audition time blocks
+        const { data: timeBlocks, error: blocksError } = await supabase
+          .from('audition_time_blocks')
+          .select('*')
+          .eq('is_active', true);
+
+        if (blocksError) throw blocksError;
+
+        setAuditionApplications(applications || []);
+        setAuditionTimeBlocks(timeBlocks || []);
+      } catch (error) {
+        console.error('Error fetching audition data:', error);
+      } finally {
+        setLoadingAuditions(false);
+      }
+    };
+
+    fetchAuditionData();
+  }, []);
+
   // Calculate stats from real data
   const currentDate = new Date();
   const weekStart = new Date(currentDate);
@@ -45,6 +82,13 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
     return eventDate >= weekStart && eventDate < weekEnd;
   });
 
+  // Include auditions in weekly stats
+  const thisWeekAuditions = auditionApplications.filter(audition => {
+    if (!audition.audition_time_slot) return false;
+    const auditionDate = new Date(audition.audition_time_slot);
+    return auditionDate >= weekStart && auditionDate < weekEnd;
+  });
+
   const totalHours = thisWeekEvents.reduce((acc, event) => {
     const start = new Date(event.start_date);
     const end = new Date(event.end_date || event.start_date);
@@ -52,10 +96,23 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
     return acc + duration;
   }, 0);
 
+  // Add audition hours (estimate 0.5 hours per audition)
+  const auditionHours = thisWeekAuditions.length * 0.5;
+  const totalScheduledHours = totalHours + auditionHours;
+
   const upcomingEvents = events
     .filter(event => new Date(event.start_date) > currentDate)
     .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
-    .slice(0, 5);
+    .slice(0, 3);
+
+  // Include upcoming auditions
+  const upcomingAuditions = auditionApplications
+    .filter(audition => {
+      if (!audition.audition_time_slot) return false;
+      return new Date(audition.audition_time_slot) > currentDate;
+    })
+    .sort((a, b) => new Date(a.audition_time_slot).getTime() - new Date(b.audition_time_slot).getTime())
+    .slice(0, 2);
 
   // Mock attendance rate - in real implementation, get from attendance data
   const attendanceRate = 94;
@@ -251,13 +308,18 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold">{thisWeekEvents.length}</div>
+              <div className="text-2xl font-bold">{thisWeekEvents.length + thisWeekAuditions.length}</div>
               <div className="text-sm text-muted-foreground">Events This Week</div>
+              {thisWeekAuditions.length > 0 && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  {thisWeekEvents.length} events + {thisWeekAuditions.length} auditions
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold">{Math.round(totalHours)}</div>
+              <div className="text-2xl font-bold">{Math.round(totalScheduledHours)}</div>
               <div className="text-sm text-muted-foreground">Total Hours Scheduled</div>
             </CardContent>
           </Card>
@@ -291,7 +353,7 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
             </div>
           </CardHeader>
           <CardContent>
-            {eventsLoading ? (
+            {eventsLoading || loadingAuditions ? (
               <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex items-center justify-between p-4 border rounded-lg animate-pulse">
@@ -305,10 +367,10 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
                   </div>
                 ))}
               </div>
-            ) : upcomingEvents.length === 0 ? (
+            ) : upcomingEvents.length === 0 && upcomingAuditions.length === 0 ? (
               <div className="text-center py-8">
                 <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No upcoming events scheduled</p>
+                <p className="text-muted-foreground">No upcoming events or auditions scheduled</p>
                 <Button variant="outline" className="mt-2" onClick={() => setShowCreateDialog(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create First Event
@@ -316,6 +378,41 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
               </div>
             ) : (
               <div className="space-y-4">
+                {/* Show upcoming auditions first */}
+                {upcomingAuditions.map((audition) => {
+                  const auditionDate = new Date(audition.audition_time_slot);
+                  
+                  return (
+                    <div key={`audition-${audition.id}`} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors border-l-4 border-l-purple-500">
+                      <div className="flex items-center gap-4">
+                        <div className="h-2 w-2 rounded-full bg-purple-500" />
+                        <div>
+                          <div className="font-medium">Audition - {audition.full_name}</div>
+                          <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {format(auditionDate, 'MMM dd')} at {format(auditionDate, 'h:mm a')}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              Audition Interview
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge variant={
+                          audition.status === 'confirmed' ? 'default' : 
+                          audition.status === 'submitted' ? 'secondary' : 'outline'
+                        }>
+                          {audition.status.charAt(0).toUpperCase() + audition.status.slice(1)}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Show upcoming events */}
                 {upcomingEvents.map((event) => {
                   const eventDate = new Date(event.start_date);
                   const endDate = event.end_date ? new Date(event.end_date) : null;
@@ -367,6 +464,76 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
           </CardContent>
         </Card>
 
+        {/* Audition Schedule Section for Full Page */}
+        {auditionTimeBlocks.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Audition Schedule</CardTitle>
+              <CardDescription>
+                {auditionApplications.length} applications across {auditionTimeBlocks.length} time blocks
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {auditionTimeBlocks.map((block) => {
+                  const blockDate = new Date(block.start_date);
+                  const blockApplications = auditionApplications.filter(app => {
+                    if (!app.audition_time_slot) return false;
+                    const appDate = new Date(app.audition_time_slot);
+                    return appDate.toDateString() === blockDate.toDateString();
+                  });
+
+                  return (
+                    <div key={block.id} className="p-3 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <div className="font-medium">
+                            {format(blockDate, 'EEEE, MMMM dd, yyyy')}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {format(new Date(block.start_date), 'h:mm a')} - {format(new Date(block.end_date), 'h:mm a')}
+                          </div>
+                        </div>
+                        <Badge variant="outline">
+                          {blockApplications.length} scheduled
+                        </Badge>
+                      </div>
+                      {blockApplications.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
+                          {blockApplications.slice(0, 6).map((app) => (
+                            <div key={app.id} className="text-xs p-2 bg-muted/50 rounded flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${
+                                app.status === 'confirmed' ? 'bg-green-500' :
+                                app.status === 'submitted' ? 'bg-blue-500' : 'bg-gray-400'
+                              }`} />
+                              <span className="truncate">{app.full_name}</span>
+                              <span className="text-muted-foreground">
+                                {format(new Date(app.audition_time_slot), 'h:mm a')}
+                              </span>
+                            </div>
+                          ))}
+                          {blockApplications.length > 6 && (
+                            <div className="text-xs p-2 bg-muted/30 rounded text-center text-muted-foreground">
+                              +{blockApplications.length - 6} more
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <Button 
+                variant="outline" 
+                className="w-full mt-4"
+                onClick={() => onNavigate?.('auditions')}
+              >
+                View Full Audition Schedule
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Additional section for appointments if user has access */}
         {appointments && appointments.length > 0 && (
           <Card>
@@ -404,6 +571,7 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
   }
 
   const nextEvent = upcomingEvents[0];
+  const nextAudition = upcomingAuditions[0];
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -412,10 +580,10 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
           <Clock className="h-5 w-5" />
           Scheduling
         </CardTitle>
-        <CardDescription>Manage rehearsals and events</CardDescription>
+        <CardDescription>Manage rehearsals, events, and auditions</CardDescription>
       </CardHeader>
       <CardContent>
-        {eventsLoading ? (
+        {eventsLoading || loadingAuditions ? (
           <div className="space-y-2">
             <div className="h-4 bg-muted rounded animate-pulse" />
             <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
@@ -424,13 +592,25 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
         ) : (
           <div className="space-y-3">
             <div className="text-sm flex items-center justify-between">
-              <span>{thisWeekEvents.length} events this week</span>
-              <Badge variant="outline">{Math.round(totalHours)}h total</Badge>
+              <span>{thisWeekEvents.length + thisWeekAuditions.length} events this week</span>
+              <Badge variant="outline">{Math.round(totalScheduledHours)}h total</Badge>
             </div>
+            {thisWeekAuditions.length > 0 && (
+              <div className="text-sm text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                {thisWeekAuditions.length} audition{thisWeekAuditions.length !== 1 ? 's' : ''} scheduled
+              </div>
+            )}
             <div className="text-sm text-muted-foreground">
               {attendanceRate}% attendance rate
             </div>
-            {nextEvent ? (
+            {nextAudition ? (
+              <div className="text-sm p-2 bg-purple-50 border border-purple-200 rounded-lg">
+                <div className="font-medium text-purple-800">Next: Audition - {nextAudition.full_name}</div>
+                <div className="text-xs text-purple-600 mt-1">
+                  {format(new Date(nextAudition.audition_time_slot), 'MMM dd')} at {format(new Date(nextAudition.audition_time_slot), 'h:mm a')}
+                </div>
+              </div>
+            ) : nextEvent ? (
               <div className="text-sm p-2 bg-muted/50 rounded-lg">
                 <div className="font-medium">Next: {nextEvent.title}</div>
                 <div className="text-xs text-muted-foreground mt-1">
