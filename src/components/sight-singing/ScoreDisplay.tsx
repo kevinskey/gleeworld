@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 
 interface ScoreDisplayProps {
   musicXML: string;
@@ -17,127 +18,57 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ musicXML }) => {
 
     const renderScore = async () => {
       try {
-        // Dynamic import of VexFlow with proper destructuring
-        const VF = await import('vexflow');
-        const { Flow } = VF;
-        const { Renderer, Stave, StaveNote, Voice, Formatter } = Flow;
+        console.log('Rendering MusicXML with OSMD...');
+        console.log('MusicXML length:', musicXML.length);
         
         // Clear previous score
         scoreRef.current!.innerHTML = '';
         
-        // Create SVG renderer
-        const renderer = new Renderer(scoreRef.current!, Renderer.Backends.SVG);
-        renderer.resize(800, 200);
-        const context = renderer.getContext();
+        // Create OSMD instance
+        const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
+          autoResize: true,
+          drawTitle: false,
+          backend: "svg",
+          drawCredits: false,
+          drawPartNames: false,
+          drawMeasureNumbers: true,
+          coloringMode: 0, // No coloring
+          cursorsOptions: [{
+            type: 3, // Thin cursor
+            color: '#3B82F6',
+            alpha: 0.7,
+            follow: true
+          }]
+        });
+
+        // Load and render the MusicXML
+        await osmd.load(musicXML);
+        osmd.render();
         
-        // Parse basic info from MusicXML
-        const { notes, keySignature, timeSignature } = parseMusicXMLForVexFlow(musicXML);
-        
-        // Create a stave
-        const stave = new Stave(10, 40, 750);
-        stave.addClef("treble");
-        stave.addTimeSignature(timeSignature);
-        
-        // Add key signature if not C major
-        if (keySignature !== "C") {
-          stave.addKeySignature(keySignature);
-        }
-        
-        stave.setContext(context).draw();
-        
-        // Create notes for VexFlow
-        const vexFlowNotes = notes.map(note => 
-          new StaveNote({
-            clef: "treble",
-            keys: [`${note.step}/${note.octave}`],
-            duration: note.duration
-          })
-        );
-        
-        if (vexFlowNotes.length > 0) {
-          // Create a voice and add notes
-          const voice = new Voice({ num_beats: 4, beat_value: 4 });
-          voice.addTickables(vexFlowNotes);
-          
-          // Format and draw
-          const formatter = new Formatter().joinVoices([voice]).format([voice], 700);
-          voice.draw(context, stave);
-        }
+        console.log('OSMD rendering completed successfully');
 
       } catch (error) {
-        console.error("Error rendering score:", error);
-        // Fallback to simple display
+        console.error("Error rendering score with OSMD:", error);
+        // Fallback display
         if (scoreRef.current) {
           scoreRef.current.innerHTML = `
             <div class="p-4 text-center text-muted-foreground">
-              <p>Musical notation display</p>
-              <p class="text-sm">Exercise generated successfully</p>
+              <p>Score rendering error</p>
+              <p class="text-sm">MusicXML generated successfully - use download button</p>
             </div>
           `;
         }
+        
+        toast({
+          title: "Score Display Error", 
+          description: "Failed to render musical notation",
+          variant: "destructive"
+        });
       }
     };
 
     renderScore();
-  }, [musicXML]);
-
-  const parseMusicXMLForVexFlow = (xml: string) => {
-    try {
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xml, 'text/xml');
-      
-      const notes: Array<{step: string, octave: number, duration: string}> = [];
-      const noteElements = xmlDoc.querySelectorAll('note');
-      
-      noteElements.forEach(noteEl => {
-        const pitchEl = noteEl.querySelector('pitch');
-        const typeEl = noteEl.querySelector('type');
-        
-        if (pitchEl && typeEl) {
-          const step = pitchEl.querySelector('step')?.textContent || 'C';
-          const octave = parseInt(pitchEl.querySelector('octave')?.textContent || '4');
-          const type = typeEl.textContent || 'quarter';
-          
-          // Convert MusicXML duration to VexFlow duration
-          const durationMap: {[key: string]: string} = {
-            'whole': 'w',
-            'half': 'h', 
-            'quarter': 'q',
-            'eighth': '8',
-            'sixteenth': '16'
-          };
-          
-          notes.push({
-            step: step.toLowerCase(),
-            octave,
-            duration: durationMap[type] || 'q'
-          });
-        }
-      });
-      
-      // Extract key and time signature
-      const keyEl = xmlDoc.querySelector('fifths');
-      const timeBeats = xmlDoc.querySelector('beats')?.textContent || '4';
-      const timeBeatType = xmlDoc.querySelector('beat-type')?.textContent || '4';
-      
-      const keySignature = keyEl ? getKeySignatureFromFifths(parseInt(keyEl.textContent || '0')) : 'C';
-      const timeSignature = `${timeBeats}/${timeBeatType}`;
-      
-      return { notes, keySignature, timeSignature };
-    } catch (error) {
-      console.error("Error parsing MusicXML:", error);
-      return { 
-        notes: [{ step: 'c', octave: 4, duration: 'q' }], 
-        keySignature: 'C', 
-        timeSignature: '4/4' 
-      };
-    }
-  };
-
-  const getKeySignatureFromFifths = (fifths: number): string => {
-    const keys = ['Cb', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F', 'C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
-    return keys[fifths + 7] || 'C';
-  };
+  }, [musicXML, toast]);
 
   const handleDownloadMusicXML = () => {
     try {
@@ -158,7 +89,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ musicXML }) => {
     } catch (error) {
       console.error('Error downloading MusicXML:', error);
       toast({
-        title: "Download Failed",
+        title: "Download Failed", 
         description: "Failed to download MusicXML file",
         variant: "destructive"
       });
