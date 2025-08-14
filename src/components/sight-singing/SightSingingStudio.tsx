@@ -295,7 +295,7 @@ export const SightSingingStudio: React.FC = () => {
             </Card>
 
             {/* Playback Controls */}
-            <Card className="p-2 flex-1">
+            <Card className="p-2 flex-shrink-0">
               <h2 className="text-sm font-semibold mb-1">Playback</h2>
               <PlaybackControls
                 isPlaying={isPlaying}
