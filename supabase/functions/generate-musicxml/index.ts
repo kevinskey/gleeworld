@@ -50,11 +50,15 @@ interface ExerciseData {
 }
 
 // Validation functions
-function beats(dur: string): number {
-  return dur === "half" ? 2 : dur === "quarter" ? 1 : 0;
-}
+const beats: Record<string, number> = {
+  whole: 4,
+  half: 2,
+  quarter: 1,
+  eighth: 0.5,
+  sixteenth: 0.25
+};
 
-function validateExerciseData(data: ExerciseData): string | null {
+function validateExerciseData(data: ExerciseData, allowedDurations: string[]): string | null {
   // Check structure
   if (!data.measures || !Array.isArray(data.measures)) {
     return "Invalid measures structure";
@@ -66,17 +70,21 @@ function validateExerciseData(data: ExerciseData): string | null {
     
     let sum = 0;
     for (const note of measure) {
-      if (!["quarter", "half"].includes(note.dur)) {
-        return `Invalid duration: ${note.dur}. Only quarter and half notes allowed.`;
+      if (!allowedDurations.includes(note.dur)) {
+        return `Disallowed duration: ${note.dur}. Only allowed: ${allowedDurations.join(", ")}`;
       }
-      sum += beats(note.dur);
+      const noteBeats = beats[note.dur];
+      if (!noteBeats) {
+        return `Unknown duration: ${note.dur}`;
+      }
+      sum += noteBeats;
     }
     if (sum !== 4) {
       return `Measure has ${sum} beats, expected 4`;
     }
   }
 
-  // Stepwise motion check
+  // Stepwise motion check (only if stepwise is required)
   const scale = ["C", "D", "E", "F", "G", "A", "B"];
   let prev: Note | null = null;
   
@@ -98,45 +106,81 @@ function validateExerciseData(data: ExerciseData): string | null {
   return null; // Valid
 }
 
+function createExampleJSON(allowedDurations: string[]): string {
+  if (allowedDurations.includes("whole")) {
+    return `{"timeSignature":"4/4","key":"C major","measures":[[{"pitch":"C","octave":4,"dur":"whole"}],[{"pitch":"D","octave":4,"dur":"whole"}],[{"pitch":"E","octave":4,"dur":"whole"}],[{"pitch":"F","octave":4,"dur":"whole"}]]}`;
+  } else if (allowedDurations.includes("half") && allowedDurations.includes("quarter")) {
+    return `{"timeSignature":"4/4","key":"C major","measures":[[{"pitch":"C","octave":4,"dur":"half"},{"pitch":"D","octave":4,"dur":"half"}],[{"pitch":"E","octave":4,"dur":"quarter"},{"pitch":"F","octave":4,"dur":"quarter"},{"pitch":"G","octave":4,"dur":"half"}]]}`;
+  } else {
+    return `{"timeSignature":"4/4","key":"C major","measures":[[{"pitch":"C","octave":4,"dur":"quarter"},{"pitch":"D","octave":4,"dur":"quarter"},{"pitch":"E","octave":4,"dur":"quarter"},{"pitch":"F","octave":4,"dur":"quarter"}]]}`;
+  }
+}
+
 async function generateWithOpenAI(params: GenerateRequest, apiKey: string, maxRetries: number = 3): Promise<ExerciseData> {
-  const allowedDurations = params.noteLengths.filter(d => ["quarter", "half"].includes(d));
+  const allowedDurations = params.noteLengths.filter(d => Object.keys(beats).includes(d));
   if (allowedDurations.length === 0) allowedDurations.push("quarter");
 
-  // Create detailed prompt using the template
-  const detailedPrompt = `You are generating sight-singing exercises as valid MusicXML 3.1 files for ${params.register} in ${params.keySignature} at ${params.tempo} BPM, ${params.timeSignature}, ${params.measures} measures long.
+  console.log("Allowed durations:", allowedDurations);
 
-Rules:
-1. Only use the note lengths provided: ${allowedDurations.join(", ")} (no other durations allowed).
-2. Only use the motion types provided: ${params.motionTypes.join(", ")} (no other intervals allowed).
-3. Pitch range is ${params.pitchRangeMin} to ${params.pitchRangeMax}. Stay within this range.
-4. Fill each measure exactly to match the beats required by the time signature.
-5. Do not include any text, commentary, or explanation in the output—only the MusicXML.
-6. MusicXML must load correctly in standard notation software without errors.
+  // Build dynamic JSON schema
+  const schema = {
+    type: "object",
+    required: ["measures"],
+    properties: {
+      measures: {
+        type: "array",
+        minItems: 1,
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["pitch", "octave", "dur"],
+            properties: {
+              pitch: { type: "string", enum: ["C", "D", "E", "F", "G", "A", "B"] },
+              octave: { type: "integer", minimum: 3, maximum: 6 },
+              dur: { type: "string", enum: allowedDurations }, // Dynamic enforcement
+              tie: { type: "boolean" }
+            }
+          }
+        }
+      },
+      timeSignature: { type: "string", enum: ["4/4"] },
+      key: { type: "string", enum: ["C major"] }
+    }
+  };
 
-Example constraints:
-- If noteLengths = ["quarter","half"], then no whole, eighth, sixteenth notes, etc.
-- If motionTypes = ["stepwise"], then every note must be a step (±1 scale degree).
-
-Output format:
-Return only a complete \`<score-partwise>\` MusicXML document with a single \`<part>\` for the voice. Do not wrap in code fences or JSON. Ensure \`<?xml version="1.0" encoding="UTF-8"?>\` is the first line.`;
+  const messages = [
+    {
+      role: "system",
+      content: `Compose a monophonic sight-singing exercise. Only durations in the schema. Each 4/4 measure must total 4 beats exactly; ${Object.entries(beats).map(([dur, beats]) => `${dur}=${beats} beats`).join(", ")}. Reject any other duration.`
+    },
+    {
+      role: "system", 
+      content: `Example JSON for ${allowedDurations.join(" and ")} notes:\n${createExampleJSON(allowedDurations)}\nFollow the schema and this style exactly.`
+    },
+    {
+      role: "user",
+      content: `${params.measures} measures, stepwise only, ${params.register} range ${params.pitchRangeMin}–${params.pitchRangeMax}.`
+    }
+  ];
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    console.log(`OpenAI generation attempt ${attempt}/${maxRetries}`);
+    console.log(`OpenAI JSON generation attempt ${attempt}/${maxRetries}`);
     
     const body = {
       model: "gpt-5-mini-2025-08-07",
-      messages: [
-        {
-          role: "system",
-          content: "You are a music composition expert. Generate valid MusicXML for sight-singing exercises following the exact specifications provided."
-        },
-        {
-          role: "user",
-          content: detailedPrompt
+      temperature: 0,
+      top_p: 0,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "exercise",
+          strict: true,
+          schema
         }
-      ],
-      temperature: 0.1,
-      max_completion_tokens: 2000
+      },
+      messages,
+      max_completion_tokens: 1000
     };
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -149,37 +193,42 @@ Return only a complete \`<score-partwise>\` MusicXML document with a single \`<p
     });
 
     if (!response.ok) {
+      console.log(`OpenAI API error on attempt ${attempt}: ${response.status}`);
       if (attempt === maxRetries) throw new Error(`OpenAI API error: ${response.status}`);
       continue;
     }
 
-    const data = await response.json();
-    const musicXML = data.choices[0].message.content;
+    const responseData = await response.json();
+    console.log(`Raw OpenAI response (attempt ${attempt}):`, JSON.stringify(responseData, null, 2));
     
-    console.log(`Received MusicXML (attempt ${attempt}):`, musicXML.substring(0, 200) + '...');
+    let exerciseData: ExerciseData;
+    try {
+      exerciseData = JSON.parse(responseData.choices[0].message.content);
+      console.log(`Parsed JSON (attempt ${attempt}):`, JSON.stringify(exerciseData, null, 2));
+    } catch (error) {
+      console.log(`JSON parsing failed on attempt ${attempt}:`, error);
+      if (attempt === maxRetries) throw new Error("Failed to parse OpenAI JSON response");
+      continue;
+    }
     
-    // Validate the generated MusicXML
-    if (!validateMusicXML(musicXML)) {
-      console.log(`MusicXML validation failed on attempt ${attempt}`);
+    // Validate against our constraints
+    const validationError = validateExerciseData(exerciseData, allowedDurations);
+    if (validationError) {
+      console.log(`Validation failed on attempt ${attempt}: ${validationError}`);
+      
+      // Add corrective message for next attempt
+      messages.push({
+        role: "system",
+        content: `Violation: ${validationError}. Regenerate strictly within schema and rules.`
+      });
+      
       if (attempt === maxRetries) {
-        throw new Error(`MusicXML validation failed after ${maxRetries} attempts`);
+        throw new Error(`Validation failed: ${validationError}`);
       }
       continue;
     }
     
-    // Parse MusicXML back to structured data for consistency
-    const exerciseData = parseMusicXMLToData(musicXML);
-    const structuralValidation = validateExerciseData(exerciseData);
-    
-    if (structuralValidation) {
-      console.log(`Structural validation failed on attempt ${attempt}: ${structuralValidation}`);
-      if (attempt === maxRetries) {
-        throw new Error(`Structural validation failed: ${structuralValidation}`);
-      }
-      continue;
-    }
-    
-    console.log(`All validation passed on attempt ${attempt}`);
+    console.log(`Validation passed on attempt ${attempt}`);
     return exerciseData;
   }
   
@@ -188,8 +237,10 @@ Return only a complete \`<score-partwise>\` MusicXML document with a single \`<p
 
 function generateFallbackData(params: GenerateRequest): ExerciseData {
   console.log("Generating fallback exercise data");
-  const allowedDurations = params.noteLengths.filter(d => ["quarter", "half"].includes(d));
+  const allowedDurations = params.noteLengths.filter(d => Object.keys(beats).includes(d));
   const durations = allowedDurations.length > 0 ? allowedDurations : ["quarter"];
+  
+  console.log("Fallback using durations:", durations);
   
   const measures: Note[][] = [];
   const scale = ["C", "D", "E", "F", "G"];
@@ -201,8 +252,8 @@ function generateFallbackData(params: GenerateRequest): ExerciseData {
     let remainingBeats = 4;
     
     while (remainingBeats > 0) {
-      // Choose duration that fits
-      const availableDurations = durations.filter(d => beats(d) <= remainingBeats);
+      // Choose duration that fits and is allowed
+      const availableDurations = durations.filter(d => beats[d] <= remainingBeats);
       const duration = availableDurations[Math.floor(Math.random() * availableDurations.length)] || "quarter";
       
       measure.push({
@@ -211,7 +262,7 @@ function generateFallbackData(params: GenerateRequest): ExerciseData {
         dur: duration
       });
       
-      remainingBeats -= beats(duration);
+      remainingBeats -= beats[duration];
       
       // Move stepwise
       if (Math.random() > 0.5) {
@@ -270,7 +321,15 @@ ${isFirst ? `      <attributes>
       </attributes>` : ''}`;
 
     measure.forEach(note => {
-      const duration = note.dur === "half" ? 8 : 4; // divisions=4, so half=8, quarter=4
+      // Map all supported durations to MusicXML divisions (divisions=4)
+      const durationMap: Record<string, number> = {
+        whole: 16,
+        half: 8,
+        quarter: 4,
+        eighth: 2,
+        sixteenth: 1
+      };
+      const duration = durationMap[note.dur] || 4;
       
       measuresXML += `
       <note>
