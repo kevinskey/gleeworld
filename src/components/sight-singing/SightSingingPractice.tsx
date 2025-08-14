@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { VirtualPiano } from './VirtualPiano';
 import { SolfegeAnnotations } from './SolfegeAnnotations';
+import { HighQualityRecorder } from './HighQualityRecorder';
 import { Metronome } from './Metronome';
 import { 
   Play, 
@@ -458,7 +459,12 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     const startCountdownMetronome = async () => {
       if (metronomeEnabled) {
         await initializeAudioSystem();
-        // Ensure metronome uses the correct tempo
+        // STOP any existing metronome first to prevent doubling
+        if (metronomePlayerRef.current) {
+          metronomePlayerRef.current.stop();
+          console.log('🛑 Stopped existing metronome before countdown');
+        }
+        // Now start fresh metronome with correct tempo
         if (metronomePlayerRef.current) {
           metronomePlayerRef.current.setTempo(tempo);
           metronomePlayerRef.current.start(tempo, beatsPerMeasure);
@@ -802,12 +808,14 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       console.log('🎙️ Starting actual recording with provided stream');
       console.log('🎯 Current tempo during recording start:', tempo);
       
-      // Ensure metronome is running at correct tempo for recording
+      // DON'T restart metronome - it should already be running from countdown
+      // Just ensure the tempo is correct (but don't restart it)
       if (metronomeEnabled && metronomePlayerRef.current) {
-        console.log('🎯 Ensuring metronome tempo is correct for recording...');
+        console.log('🎯 Metronome already running from countdown - maintaining tempo:', tempo);
+        // Only set tempo if it's different, don't restart
         metronomePlayerRef.current.setTempo(tempo);
         metronomePlayerRef.current.setVolume(metronomeVolume);
-        console.log('🎯 Metronome tempo set to:', tempo, 'BPM for recording');
+        console.log('🎯 Metronome tempo confirmed at:', tempo, 'BPM for recording');
       }
       
       const recorder = new MediaRecorder(stream, {
@@ -1369,6 +1377,33 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
           </CardContent>
         </Card>
       )}
+      
+      {/* High-Quality Recording System */}
+      <HighQualityRecorder
+        isRecording={isRecording}
+        onRecordingStart={() => {
+          setIsRecording(true);
+          onRecordingChange?.(true);
+        }}
+        onRecordingStop={(blob) => {
+          setAudioBlob(blob);
+          setIsRecording(false);
+          onRecordingChange?.(false);
+          
+          // Stop metronome when recording ends
+          if (metronomePlayerRef.current) {
+            metronomePlayerRef.current.stop();
+            console.log('🎯 Metronome stopped at end of recording');
+          }
+        }}
+        onError={(error) => {
+          toast({
+            title: "Recording Error",
+            description: error,
+            variant: "destructive"
+          });
+        }}
+      />
       
       {/* Microphone Testing */}
       <MicTester className="w-full" />
