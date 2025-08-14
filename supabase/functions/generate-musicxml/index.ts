@@ -10,6 +10,74 @@ function cors(origin: string|null) {
   };
 }
 
+// --- Scale Degree System ---
+type Mode = "major"|"minor";
+const SHARP_ORDER = ["F","C","G","D","A","E","B"];
+const FLAT_ORDER  = ["B","E","A","D","G","C","F"];
+
+// fifths for MAJOR keys
+const FIFTHS_MAJOR: Record<string, number> = { C:0, G:1, D:2, A:3, E:4, B:5, "F#":6, "C#":7, F:-1, "Bb":-2, "Eb":-3, "Ab":-4, "Db":-5, "Gb":-6, "Cb":-7 };
+// fifths for MINOR keys (relative minor offsets)
+const FIFTHS_MINOR: Record<string, number> = { A:0, E:1, B:2, "F#":3, "C#":4, "G#":5, "D#":6, "A#":7, D:-1, G:-2, C:-3, F:-4, "Bb":-5, "Eb":-6, "Ab":-7 };
+
+function keyFifths(tonic:string, mode:Mode){
+  return (mode==="major"? FIFTHS_MAJOR : FIFTHS_MINOR)[tonic] ?? 0;
+}
+
+function defaultAlterMap(tonic:string, mode:Mode){
+  const fifths = keyFifths(tonic, mode);
+  const map: Record<string, number> = { A:0,B:0,C:0,D:0,E:0,F:0,G:0 };
+  if (fifths>0){
+    for (let i=0;i<fifths;i++) map[SHARP_ORDER[i]] = 1;
+  } else if (fifths<0){
+    for (let i=0;i<(-fifths);i++) map[FLAT_ORDER[i]] = -1;
+  }
+  return map; // e.g., in G major: {F:1} meaning F#
+}
+
+const LETTERS = ["C","D","E","F","G","A","B"];
+function degreeToLetter(tonicLetter:string, degree:number){
+  // degree 1..7 mapped to diatonic letters starting at tonic
+  const start = LETTERS.indexOf(tonicLetter[0]); // use first char of tonic
+  const idx = (start + (degree-1)) % 7;
+  return LETTERS[idx];
+}
+
+function degreeToPitch(
+  key:{tonic:string, mode:Mode}, 
+  degree:number, oct:number, acc:number=0
+){
+  const tonicLetter = key.tonic.replace(/b|#/g,"")[0]; // letter only
+  const letter = degreeToLetter(tonicLetter, degree);
+  const baseAlter = defaultAlterMap(key.tonic, key.mode)[letter] || 0;
+  const alter = baseAlter + (acc||0);
+  return { step: letter, alter, oct };
+}
+
+function isDiatonicToKey(step:string, alter:number, key:any){
+  const base = defaultAlterMap(key.tonic, key.mode)[step] || 0;
+  return alter === base;
+}
+
+function canonicalizeEvent(ev:any, key:any, allowAccidentals:boolean){
+  if (ev.kind!=="note") return ev;
+  // Prefer degree→pitch
+  if (ev.pitch?.degree){
+    const {degree, oct, acc=0} = ev.pitch;
+    const accUse = allowAccidentals ? acc : 0;
+    ev.pitch = degreeToPitch(key, degree, oct, accUse);
+    return ev;
+  }
+  // If you only have step/alter, snap to key when not allowing accidentals
+  if (!allowAccidentals){
+    const map = defaultAlterMap(key.tonic, key.mode);
+    const step = ev.pitch.step as string;
+    ev.pitch.alter = map[step] ?? 0;
+    delete ev.accidental; // never emit <accidental>natural
+  }
+  return ev;
+}
+
 // --- MusicXML Builder Helpers ---
 type DurBase = "whole"|"half"|"quarter"|"eighth"|"16th";
 const TICKS: Record<DurBase, number> = { "16th":4, eighth:8, quarter:16, half:32, whole:64 }; // divisions=16 -> quarter=16
@@ -38,13 +106,13 @@ function attributesXml(mIndex:number, key:any, time:any, role:"S"|"A"){
   // clef treble for both (adjust if you want)
   const clef = `<clef><sign>G</sign><line>2</line></clef>`;
   if (mIndex!==0) return "";
-  // write key/time once at measure 1
-  const fifthsMap: Record<string, number> = { C:0, G:1, D:2, A:3, E:4, B:5, "F#":6, "C#":7, F:-1, "Bb":-2, "Eb":-3, "Ab":-4, "Db":-5, "Gb":-6, "Cb":-7 };
-  const fifths = fifthsMap[key.tonic] ?? 0; // simplistic; expand if using enharmonics
-  return `<attributes><divisions>16</divisions><key><fifths>${fifths}</fifths></key><time><beats>${time.num}</beats><beat-type>${time.den}</beat-type></time>${clef}</attributes>`;
+  // write key/time once at measure 1 using new key signature system
+  const fifths = keyFifths(key.tonic, key.mode as Mode);
+  const mode = key.mode === "minor" ? "<mode>minor</mode>" : "";
+  return `<attributes><divisions>16</divisions><key><fifths>${fifths}</fifths>${mode}</key><time><beats>${time.num}</beats><beat-type>${time.den}</beat-type></time>${clef}</attributes>`;
 }
 
-function toMusicXML(score:any){
+function toMusicXML(score:any, allowAccidentals:boolean=false){
   const parts = score.parts as any[];
   const key   = score.key;
   const time  = score.time;
@@ -53,7 +121,9 @@ function toMusicXML(score:any){
   const partsXml = parts.map((p,idx)=>{
     const measuresXml = p.measures.slice(0, numMeasures).map((m: any[], i: number)=>{
       const attrs = attributesXml(i, key, time, p.role);
-      const content = m.map(noteXml).join("");
+      // Canonicalize all events before building XML
+      const canonicalizedEvents = m.map(ev => canonicalizeEvent(ev, key, allowAccidentals));
+      const content = canonicalizedEvents.map(noteXml).join("");
       return `<measure number="${i+1}">${attrs}${content}</measure>`;
     }).join("");
     return `<part id="P${idx+1}">${measuresXml}</part>`;
@@ -69,6 +139,7 @@ interface SightSingingParams {
   parts?: Array<{ role: string; range: { min: string; max: string } }>;
   allowedDur?: string[];
   allowDots?: boolean;
+  allowAccidentals?: boolean;
   cadenceEvery?: number;
   bpm?: string;
   title?: string;
@@ -179,9 +250,28 @@ serve(async (req) => {
     const allowed = params.allowedDur ?? ["quarter","half"];
     console.log("Generating", numMeasures, "measures with durations:", allowed);
 
-    // 1) Ask OpenAI for JSON score structure (optional - can enhance later)
+    // Extract allowAccidentals parameter
+    const allowAccidentals = params.allowAccidentals ?? false;
+    console.log("Allow accidentals:", allowAccidentals);
+
+    // 1) Ask OpenAI for JSON score structure using scale degrees
     let aiJson = null;
     try {
+      const systemPrompt = `You are a music theory expert. Generate a JSON sight-singing exercise using scale degrees (1-7) instead of letter names.
+
+Use this JSON schema for pitches:
+{
+  "pitch": {
+    "degree": 1-7,    // Scale degree in the current key (1=tonic, 2=supertonic, etc.)
+    "oct": 3-6,       // Octave number
+    "acc": 0          // Chromatic offset: -1=flat, 0=natural, 1=sharp ${allowAccidentals ? '' : '(ALWAYS use 0 - no accidentals allowed)'}
+  }
+}
+
+Create varied melodies using ONLY these durations: ${allowed.join(", ")}.
+Focus on diatonic motion and musical phrase structure.
+${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
+
       const apiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -193,11 +283,11 @@ serve(async (req) => {
           messages: [
             {
               role: "system",
-              content: `You are a music theory expert. Generate a JSON sight-singing exercise using ONLY these note durations: ${allowed.join(", ")}. Create varied melodies in the specified key and time signature.`
+              content: systemPrompt
             },
             {
               role: "user", 
-              content: `Create a ${numMeasures}-measure sight-singing exercise in ${params.key?.tonic || 'C'} ${params.key?.mode || 'major'} with ${time.num}/${time.den} time signature using durations: ${allowed.join(", ")}`
+              content: `Create a ${numMeasures}-measure sight-singing exercise in ${params.key?.tonic || 'C'} ${params.key?.mode || 'major'} with ${time.num}/${time.den} time signature. Use scale degrees and durations: ${allowed.join(", ")}`
             }
           ],
           max_tokens: 1000,
@@ -208,7 +298,17 @@ serve(async (req) => {
       if (apiResponse.ok) {
         const aiResult = await apiResponse.json();
         console.log("OpenAI response received successfully");
-        // Could parse aiResult.choices[0].message.content for JSON, but using fallback for now
+        try {
+          // Try to parse JSON from AI response
+          const content = aiResult.choices[0].message.content;
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            aiJson = JSON.parse(jsonMatch[0]);
+            console.log("Successfully parsed AI JSON response");
+          }
+        } catch (parseError) {
+          console.log("Could not parse AI JSON, using fallback");
+        }
       } else {
         console.log("OpenAI API call failed, using fallback generation");
       }
@@ -216,10 +316,10 @@ serve(async (req) => {
       console.log("OpenAI API error, using fallback generation:", error.message);
     }
 
-    // 2) Generate score JSON with proper measure count
+    // 2) Generate score JSON with proper measure count and validation
     let scoreJson = aiJson;
     if (!scoreJson || !Array.isArray(scoreJson?.parts)) {
-      // Fallback: synthesize varied measures using requested durations
+      // Fallback: synthesize varied measures using scale degrees
       const durOptions = allowed.filter(d => ["whole","half","quarter","eighth","16th"].includes(d));
       const primaryDur = durOptions[0] || "quarter";
       
@@ -231,18 +331,18 @@ serve(async (req) => {
           role: pr.role,
           range: pr.range ?? {min:"C4",max:"A5"},
           measures: Array.from({length:numMeasures},(_,i)=>{
-            // Create varied measures - scale patterns, arpeggios, intervals
-            const patterns = [
-              // Scale up
-              [{step:"C",alter:0,oct:4},{step:"D",alter:0,oct:4},{step:"E",alter:0,oct:4},{step:"F",alter:0,oct:4}],
-              // Scale down  
-              [{step:"G",alter:0,oct:4},{step:"F",alter:0,oct:4},{step:"E",alter:0,oct:4},{step:"D",alter:0,oct:4}],
-              // Arpeggio up
-              [{step:"C",alter:0,oct:4},{step:"E",alter:0,oct:4},{step:"G",alter:0,oct:4},{step:"C",alter:0,oct:5}],
-              // Thirds
-              [{step:"C",alter:0,oct:4},{step:"E",alter:0,oct:4},{step:"D",alter:0,oct:4},{step:"F",alter:0,oct:4}]
+            // Create varied measures using scale degrees - scale patterns, arpeggios, intervals
+            const degreePatterns = [
+              // Scale up: do-re-mi-fa
+              [{degree:1,oct:4,acc:0},{degree:2,oct:4,acc:0},{degree:3,oct:4,acc:0},{degree:4,oct:4,acc:0}],
+              // Scale down: sol-fa-mi-re
+              [{degree:5,oct:4,acc:0},{degree:4,oct:4,acc:0},{degree:3,oct:4,acc:0},{degree:2,oct:4,acc:0}],
+              // Arpeggio up: do-mi-sol-do
+              [{degree:1,oct:4,acc:0},{degree:3,oct:4,acc:0},{degree:5,oct:4,acc:0},{degree:1,oct:5,acc:0}],
+              // Thirds: do-mi-re-fa
+              [{degree:1,oct:4,acc:0},{degree:3,oct:4,acc:0},{degree:2,oct:4,acc:0},{degree:4,oct:4,acc:0}]
             ];
-            const pattern = patterns[i % patterns.length];
+            const pattern = degreePatterns[i % degreePatterns.length];
             
             return pattern.map(pitch => ({
               kind:"note", 
@@ -265,8 +365,42 @@ serve(async (req) => {
       }
     }
 
-    // 3) Build MusicXML from ALL measures using helper
-    const xml = toMusicXML(scoreJson);
+    // 3) Validation step - check for diatonic compliance when accidentals are disabled
+    if (!allowAccidentals && scoreJson.parts) {
+      console.log("Validating diatonic compliance...");
+      let invalidFound = false;
+      
+      for (const part of scoreJson.parts) {
+        for (const measure of part.measures || []) {
+          for (const event of measure) {
+            if (event.kind === "note" && event.pitch) {
+              // If using degree notation, check acc field
+              if (event.pitch.degree && event.pitch.acc && event.pitch.acc !== 0) {
+                console.log("Invalid accidental found in degree notation, forcing to 0");
+                event.pitch.acc = 0;
+                invalidFound = true;
+              }
+              // If using step/alter notation, check against key
+              else if (event.pitch.step) {
+                const canonEvent = canonicalizeEvent(event, scoreJson.key, allowAccidentals);
+                if (!isDiatonicToKey(canonEvent.pitch.step, canonEvent.pitch.alter, scoreJson.key)) {
+                  console.log("Invalid step/alter found, correcting to key signature");
+                  event.pitch = canonEvent.pitch;
+                  invalidFound = true;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      if (invalidFound) {
+        console.log("Corrected invalid notes to comply with key signature");
+      }
+    }
+
+    // 4) Build MusicXML from ALL measures using helper with allowAccidentals parameter
+    const xml = toMusicXML(scoreJson, allowAccidentals);
 
     console.log("=== EDGE FUNCTION SUCCESS ===");
     console.log("Generated", numMeasures, "measures successfully");
