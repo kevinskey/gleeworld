@@ -134,7 +134,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.generate-musicxml]
-verify_jwt = true
+verify_jwt = false
 
 [functions.evaluate-singing] 
 verify_jwt = true
