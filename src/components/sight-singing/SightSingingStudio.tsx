@@ -280,10 +280,10 @@ export const SightSingingStudio: React.FC = () => {
         {/* Main Content */}
         <div className="flex-1 grid gap-4 grid-cols-3 min-h-0">
           {/* Left Column - Parameters & Controls (1/3 width) */}
-          <div className="col-span-1 flex flex-col gap-3">
+          <div className="col-span-1 flex flex-col gap-2">
             {/* Parameters */}
-            <Card className="p-3 flex-1 flex flex-col">
-              <h2 className="text-base font-semibold mb-2 flex-shrink-0">Parameters</h2>
+            <Card className="p-3 flex flex-col" style={{ height: '60%' }}>
+              <h2 className="text-sm font-semibold mb-2 flex-shrink-0">Parameters</h2>
               <div className="flex-1 overflow-y-auto min-h-0">
                 <ParameterForm 
                   onGenerate={handleGenerateExercise}
@@ -295,8 +295,8 @@ export const SightSingingStudio: React.FC = () => {
             </Card>
 
             {/* Playback Controls */}
-            <Card className="p-3 flex-shrink-0">
-              <h2 className="text-base font-semibold mb-2">Playback</h2>
+            <Card className="p-2" style={{ height: '20%' }}>
+              <h2 className="text-sm font-semibold mb-1">Playback</h2>
               <PlaybackControls
                 isPlaying={isPlaying}
                 mode={mode}
@@ -309,25 +309,27 @@ export const SightSingingStudio: React.FC = () => {
             </Card>
 
             {/* Recording Controls */}
-            <Card className="p-3 flex-shrink-0">
-              <h2 className="text-base font-semibold mb-2">Recording</h2>
-              <RecordingControls
-                isRecording={isRecording}
-                duration={recordingDuration}
-                onStartRecording={handleStartRecording}
-                onStopRecording={stopRecording}
-                hasRecording={!!audioBlob}
-                onClearRecording={clearRecording}
-              />
-              
-              {gradingResults && (
-                <div className="mt-2 pt-2 border-t">
-                  <h3 className="text-xs font-medium mb-1">Results</h3>
-                  <div className="text-xs">
-                    <GradingResults results={gradingResults} />
+            <Card className="p-2 flex-1 flex flex-col">
+              <h2 className="text-sm font-semibold mb-1 flex-shrink-0">Recording</h2>
+              <div className="flex-1 flex flex-col min-h-0">
+                <RecordingControls
+                  isRecording={isRecording}
+                  duration={recordingDuration}
+                  onStartRecording={handleStartRecording}
+                  onStopRecording={stopRecording}
+                  hasRecording={!!audioBlob}
+                  onClearRecording={clearRecording}
+                />
+                
+                {gradingResults && (
+                  <div className="mt-2 pt-2 border-t flex-shrink-0">
+                    <h3 className="text-xs font-medium mb-1">Results</h3>
+                    <div className="text-xs">
+                      <GradingResults results={gradingResults} />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </Card>
           </div>
 
