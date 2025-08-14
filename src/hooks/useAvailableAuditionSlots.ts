@@ -245,6 +245,10 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
         });
 
         console.log('⏰ Generated time slots:', slots);
+        console.log('⏰ Final slots breakdown:');
+        slots.forEach(slot => {
+          console.log(`  ${slot.time}: ${slot.isAvailable ? 'AVAILABLE' : 'BOOKED by ' + slot.auditionerName}`);
+        });
         setTimeSlots(slots);
       } catch (error) {
         console.error('Error fetching slots:', error);
