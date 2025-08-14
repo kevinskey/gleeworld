@@ -23,10 +23,30 @@ export const useAuditionerManagement = () => {
   const [auditioners, setAuditioners] = useState<AuditionerProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const syncAuditionerNames = async () => {
+    try {
+      const { data, error } = await supabase.rpc('sync_auditioner_names_from_applications');
+      if (error) throw error;
+      
+      if (data > 0) {
+        toast.success(`Updated ${data} auditioner names from applications`);
+        return data;
+      }
+      return 0;
+    } catch (error) {
+      console.error('Error syncing auditioner names:', error);
+      toast.error('Failed to sync auditioner names');
+      return 0;
+    }
+  };
+
   const fetchAuditioners = async () => {
     if (!user) return;
 
     try {
+      // First, sync any missing names from applications
+      await syncAuditionerNames();
+
       // Get all users with "auditioner" role
       const { data: profiles, error: profilesError } = await supabase
         .from('gw_profiles')
@@ -51,7 +71,8 @@ export const useAuditionerManagement = () => {
           status,
           audition_time_slot,
           academic_year,
-          voice_part_preference
+          voice_part_preference,
+          full_name
         `)
         .in('user_id', userIds);
 
@@ -79,6 +100,7 @@ export const useAuditionerManagement = () => {
   return {
     auditioners,
     loading,
-    refetch: fetchAuditioners
+    refetch: fetchAuditioners,
+    syncAuditionerNames
   };
 };

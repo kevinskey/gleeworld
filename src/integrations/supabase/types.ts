@@ -13910,6 +13910,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      sync_auditioner_names_from_applications: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       toggle_love_message_like: {
         Args: { message_id_param: string }
         Returns: Json
