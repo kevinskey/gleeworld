@@ -18,6 +18,7 @@ import { MemberSearchDropdown, Member } from '@/components/shared/MemberSearchDr
 import { MetronomePlayer } from '@/components/sight-singing/MetronomePlayer';
 import { NotePlayer } from '@/components/sight-singing/NotePlayer';
 import { parseMusicXMLForPlayback, ParsedNote } from '@/utils/musicxml-parser';
+import { ContractErrorBoundary } from '@/components/contract-signing/ContractErrorBoundary';
 
 interface OSMDViewerProps {
   musicXML: string;
@@ -348,13 +349,14 @@ const SightReadingGeneratorPage = () => {
   };
 
   const generateExercise = async () => {
+    console.log('🎵 Generate button clicked');
     setIsGenerating(true);
     setGeneratedMusicXML('');
     setExerciseGenerated(false);
 
     try {
-      console.log('Generating sight-reading exercise...');
-      console.log('Parameters:', {
+      console.log('🎵 Generating sight-reading exercise...');
+      console.log('🎵 Parameters:', {
         difficulty,
         keySignature,
         timeSignature,
@@ -385,10 +387,10 @@ const SightReadingGeneratorPage = () => {
         }
       });
 
-      console.log('Function response:', { data, error });
+      console.log('🎵 Function response:', { data, error });
 
       if (error) {
-        console.error('Supabase function error:', error);
+        console.error('🚨 Supabase function error:', error);
         throw error;
       }
 
@@ -404,12 +406,12 @@ const SightReadingGeneratorPage = () => {
       
       const validation = validateMusicXML(musicXML);
       if (!validation.valid) {
-        console.error('Invalid MusicXML generated:', validation.error);
-        console.error('MusicXML preview:', musicXML?.substring(0, 500));
+        console.error('🚨 Invalid MusicXML generated:', validation.error);
+        console.error('🚨 MusicXML preview:', musicXML?.substring(0, 500));
         throw new Error(`Generated MusicXML is invalid: ${validation.error}. Please try generating again with different parameters.`);
       }
 
-      console.log('Valid MusicXML generated, length:', musicXML.length);
+      console.log('✅ Valid MusicXML generated, length:', musicXML.length);
       setGeneratedMusicXML(musicXML);
       setExerciseGenerated(true);
       
@@ -419,15 +421,15 @@ const SightReadingGeneratorPage = () => {
       });
 
     } catch (error) {
-      console.error('Error generating exercise:', error);
+      console.error('🚨 Error generating exercise:', error);
       
       let errorMessage = "Failed to generate sight-reading exercise";
       
-      if (error.message?.includes('Failed to fetch')) {
+      if (error?.message?.includes('Failed to fetch')) {
         errorMessage = "Network error: Unable to connect to the generation service. Please check your internet connection and try again.";
-      } else if (error.message?.includes('500')) {
+      } else if (error?.message?.includes('500')) {
         errorMessage = "Server error: The music generation service is currently unavailable. Please try again in a moment.";
-      } else if (error.message) {
+      } else if (error?.message) {
         errorMessage = error.message;
       }
       
@@ -437,13 +439,15 @@ const SightReadingGeneratorPage = () => {
         variant: "destructive"
       });
     } finally {
+      console.log('🎵 Generation process completed');
       setIsGenerating(false);
     }
   };
 
   return (
-    <UniversalLayout>
-      <div className="h-screen flex flex-col overflow-hidden">
+    <ContractErrorBoundary>
+      <UniversalLayout>
+        <div className="h-screen flex flex-col overflow-hidden">
         {/* Header - Compact */}
         <div className="flex-shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-4 py-3">
@@ -658,6 +662,7 @@ const SightReadingGeneratorPage = () => {
         </div>
       </div>
     </UniversalLayout>
+    </ContractErrorBoundary>
   );
 };
 
