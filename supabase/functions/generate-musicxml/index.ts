@@ -102,6 +102,11 @@ Example structure:
   </part>
 </score-partwise>`;
 
+    // Debug: List all environment variables
+    const allEnvVars = Object.keys(Deno.env.toObject());
+    console.log('All available environment variables:', allEnvVars);
+    console.log('OpenAI-related env vars:', allEnvVars.filter(key => key.includes('OPENAI') || key.includes('API_KEY')));
+
     // Check for OpenAI API key with multiple variations
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     const openaiKey = Deno.env.get('OPENAI_KEY');
