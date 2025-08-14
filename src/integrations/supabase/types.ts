@@ -13350,8 +13350,8 @@ export type Database = {
       get_booked_audition_slots: {
         Args: { p_start: string; p_end: string } | { selected_date: string }
         Returns: {
-          audition_time_slot: string
           auditioner_name: string
+          audition_time_slot: string
         }[]
       }
       get_current_user_admin_status: {
