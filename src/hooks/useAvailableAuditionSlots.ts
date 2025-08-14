@@ -121,18 +121,30 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
 
         console.log('🔍 Fetching booked appointments for date:', selectedDateString);
         console.log('🔍 Date range query:', selectedDateString + 'T00:00:00.000Z', 'to', new Date(new Date(selectedDateString + 'T00:00:00.000Z').getTime() + 24 * 60 * 60 * 1000).toISOString());
+        
+        // Simplified query - just get all audition appointments for debugging
         const { data: appointments, error: appointmentsError } = await supabase
           .from('gw_appointments')
           .select('id, client_name, appointment_date, status')
           .eq('appointment_type', 'audition')
-          .gte('appointment_date', selectedDateString + 'T00:00:00.000Z')
-          .lt('appointment_date', new Date(new Date(selectedDateString + 'T00:00:00.000Z').getTime() + 24 * 60 * 60 * 1000).toISOString())
           .eq('status', 'scheduled');
 
         console.log('🔍 Appointments query result:', { appointments, appointmentsError });
         if (!appointmentsError && appointments && appointments.length > 0) {
           console.log('📋 Found booked appointments:', appointments);
-          appointments.forEach(appointment => {
+          
+          // Filter appointments for the selected date
+          const filteredAppointments = appointments.filter(appointment => {
+            const appointmentDate = new Date(appointment.appointment_date);
+            const easternTime = toZonedTime(appointmentDate, EASTERN_TZ);
+            const appointmentDateString = format(easternTime, 'yyyy-MM-dd');
+            console.log(`🗓️ Appointment date: ${appointmentDateString} vs selected: ${selectedDateString}`);
+            return appointmentDateString === selectedDateString;
+          });
+          
+          console.log('📋 Filtered appointments for selected date:', filteredAppointments);
+          
+          filteredAppointments.forEach(appointment => {
             console.log('Processing appointment:', appointment);
             const appointmentDate = new Date(appointment.appointment_date);
             console.log('Appointment raw date:', appointment.appointment_date);
