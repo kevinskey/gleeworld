@@ -51,6 +51,10 @@ function degreeToPitch(
   const letter = degreeToLetter(tonicLetter, degree);
   const baseAlter = defaultAlterMap(key.tonic, key.mode)[letter] || 0;
   const alter = baseAlter + (acc||0);
+  
+  console.log(`degreeToPitch: key=${key.tonic} ${key.mode}, degree=${degree}, oct=${oct}, acc=${acc}`);
+  console.log(`  tonicLetter=${tonicLetter}, letter=${letter}, baseAlter=${baseAlter}, finalAlter=${alter}`);
+  
   return { step: letter, alter, oct };
 }
 
@@ -117,12 +121,22 @@ function toMusicXML(score:any, allowAccidentals:boolean=false){
   const key   = score.key;
   const time  = score.time;
   const numMeasures = score.numMeasures;
+  
+  console.log("Converting to MusicXML for key:", key.tonic, key.mode);
+  console.log("Allow accidentals:", allowAccidentals);
+  
   let partList = `<part-list>` + parts.map((p,idx)=>`<score-part id="P${idx+1}"><part-name>${p.role==="S"?"Soprano":"Alto"}</part-name></score-part>`).join("") + `</part-list>`;
   const partsXml = parts.map((p,idx)=>{
     const measuresXml = p.measures.slice(0, numMeasures).map((m: any[], i: number)=>{
       const attrs = attributesXml(i, key, time, p.role);
       // Canonicalize all events before building XML
-      const canonicalizedEvents = m.map(ev => canonicalizeEvent(ev, key, allowAccidentals));
+      const canonicalizedEvents = m.map(ev => {
+        const result = canonicalizeEvent(ev, key, allowAccidentals);
+        if (ev.kind === "note") {
+          console.log(`Measure ${i+1}, original pitch:`, ev.pitch, "-> canonical:", result.pitch);
+        }
+        return result;
+      });
       const content = canonicalizedEvents.map(noteXml).join("");
       return `<measure number="${i+1}">${attrs}${content}</measure>`;
     }).join("");

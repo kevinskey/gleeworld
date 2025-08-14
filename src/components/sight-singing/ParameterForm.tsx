@@ -29,6 +29,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
       parts: [{ role: "S", range: { min: "C4", max: "C5" } }],
       allowedDur: ["quarter"],
       allowDots: false,
+      allowAccidentals: false,
       cadenceEvery: 4,
       bpm: 120,
       title: "Sight-Singing Exercise"

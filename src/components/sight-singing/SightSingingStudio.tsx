@@ -18,6 +18,7 @@ export interface ExerciseParameters {
   parts: Array<{ role: "S"|"A"; range: { min: string; max: string } }>;
   allowedDur: Array<"whole"|"half"|"quarter"|"eighth"|"16th">;
   allowDots: boolean;
+  allowAccidentals: boolean;
   cadenceEvery: number;
   bpm: number;
   title: string;
