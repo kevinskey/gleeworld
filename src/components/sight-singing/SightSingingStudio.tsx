@@ -135,6 +135,16 @@ export const SightSingingStudio: React.FC = () => {
   const handleGenerateExercise = async (parameters: ExerciseParameters) => {
     setIsGenerating(true);
     try {
+      // First test the OpenAI API
+      console.log('Testing OpenAI API...');
+      const testResponse = await supabase.functions.invoke('test-openai');
+      console.log('Test response:', testResponse);
+      
+      if (testResponse.error) {
+        throw new Error(`API Test Failed: ${testResponse.error.message}`);
+      }
+
+      console.log('OpenAI API test successful, generating exercise...');
       const { data, error } = await supabase.functions.invoke('generate-musicxml', {
         body: parameters
       });
@@ -157,7 +167,7 @@ export const SightSingingStudio: React.FC = () => {
       console.error('Error generating exercise:', error);
       toast({
         title: "Generation Failed",
-        description: "Failed to generate exercise. Please try again.",
+        description: `Failed to generate exercise: ${error.message}`,
         variant: "destructive"
       });
     } finally {

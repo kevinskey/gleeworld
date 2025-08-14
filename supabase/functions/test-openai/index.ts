@@ -1,86 +1,81 @@
-import { serve } from "https://deno.land/std/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "*",
-      },
-    });
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { prompt } = await req.json();
-    console.log('Received prompt:', prompt);
-    
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
-    console.log('API key exists:', !!apiKey);
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    console.log('Testing OpenAI API...');
+    console.log('API Key present:', !!openAIApiKey);
+    console.log('API Key length:', openAIApiKey?.length || 0);
+    console.log('API Key starts with sk-:', openAIApiKey?.startsWith('sk-') || false);
 
-    if (!apiKey) {
-      return new Response(JSON.stringify({ 
-        error: "OpenAI API key not configured" 
-      }), {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
-        },
-      });
+    if (!openAIApiKey) {
+      throw new Error('OPENAI_API_KEY not found in environment');
     }
 
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
+    // Test with a simple request
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: 'gpt-5-2025-08-07',
         messages: [
-          { role: "user", content: prompt || "Say 'Hello World'" }
+          { role: 'user', content: 'Say hello' }
         ],
-        max_tokens: 50,
+        max_completion_tokens: 10
       }),
     });
 
-    const data = await openaiRes.json();
-    console.log('OpenAI response status:', openaiRes.status);
-    console.log('OpenAI response:', data);
+    console.log('OpenAI Response Status:', response.status);
+    console.log('OpenAI Response Headers:', Object.fromEntries(response.headers.entries()));
 
-    if (!openaiRes.ok) {
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI Error Response:', errorText);
+      
       return new Response(JSON.stringify({ 
-        error: data.error?.message || "OpenAI request failed",
-        details: data 
+        success: false,
+        error: 'OpenAI API Error',
+        status: response.status,
+        details: errorText
       }), {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
-        },
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    const result = await response.json();
+    console.log('OpenAI Success Response:', result);
+
     return new Response(JSON.stringify({ 
       success: true,
-      message: data.choices[0].message.content,
-      data: data 
+      message: 'OpenAI API is working',
+      response: result
     }), {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json",
-      },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-  } catch (err) {
-    console.error('Function error:', err);
+  } catch (error) {
+    console.error('Test function error:', error);
     return new Response(JSON.stringify({ 
-      error: err.message 
+      success: false,
+      error: error.message 
     }), {
       status: 500,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json",
-      },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
