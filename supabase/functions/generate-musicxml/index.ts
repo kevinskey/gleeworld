@@ -102,7 +102,7 @@ Example structure:
   </part>
 </score-partwise>`;
 
-    // Debug: List all environment variables (forced redeploy)
+    // Debug: List all environment variables (redeploy after secret update)
     const allEnvVars = Object.keys(Deno.env.toObject());
     console.log('Total env vars count:', allEnvVars.length);
     console.log('All available environment variables:', allEnvVars);
