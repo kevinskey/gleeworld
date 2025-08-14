@@ -110,8 +110,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Musical Score</h3>
+      <div className="flex items-center justify-end mb-4">
         <div className="flex gap-2">
           {musicXML && (
             <Button 
