@@ -145,29 +145,51 @@ export const SightSingingStudio: React.FC = () => {
       }
 
       console.log('OpenAI API test successful, generating exercise...');
-      const { data, error } = await supabase.functions.invoke('generate-musicxml', {
-        body: parameters
-      });
+      
+      // Try to get detailed error info by making a direct fetch first
+      try {
+        const response = await fetch('https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/generate-musicxml', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg'
+          },
+          body: JSON.stringify(parameters)
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Direct fetch error response:', errorText);
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch {
+            errorData = { error: errorText };
+          }
+          throw new Error(errorData.error || `HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Direct fetch success:', data);
+        
+        if (!data || !data.musicXML) {
+          console.error('Invalid response data:', data);
+          throw new Error('Invalid response: no musicXML generated');
+        }
+        
+        const exercise: GeneratedExercise = {
+          musicXML: data.musicXML,
+          parameters
+        };
 
-      console.log('Generate musicxml response:', { data, error });
-
-      if (error) {
-        console.error('Function error:', error);
-        throw error;
+        setGeneratedExercise(exercise);
+        setCurrentStep('score');
+        
+      } catch (fetchError) {
+        console.error('Direct fetch failed, trying supabase client:', fetchError);
+        throw fetchError;
       }
-
-      if (!data || !data.musicXML) {
-        console.error('Invalid response data:', data);
-        throw new Error('Invalid response: no musicXML generated');
-      }
-
-      const exercise: GeneratedExercise = {
-        musicXML: data.musicXML,
-        parameters
-      };
-
-      setGeneratedExercise(exercise);
-      setCurrentStep('score');
       
       toast({
         title: "Exercise Generated!",
