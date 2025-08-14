@@ -446,6 +446,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   };
 
   const startCountdown = (callback: () => void) => {
+    console.log('🎯 startCountdown called with tempo:', tempo);
+    console.log('🎯 Metronome enabled:', metronomeEnabled);
     setIsCountingDown(true);
     setCountdownBeats(0);
     
@@ -498,6 +500,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   };
 
   const startPractice = async () => {
+    console.log('🎵 startPractice called with tempo:', tempo);
     try {
       // Initialize audio context on user interaction
       if (!audioContextRef.current) {
@@ -686,6 +689,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
   // Start metronome with precise timing
   const startMetronomeWithPreciseTiming = () => {
+    console.log('🎯 startMetronomeWithPreciseTiming called with tempo:', tempo);
     if (!metronomePlayerRef.current) return;
     
     const [beatsPerMeasure] = exerciseMetadata.timeSignature.split('/').map(Number);
@@ -742,6 +746,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
 
 
   const startRecording = async () => {
+    console.log('🎙️ startRecording called with tempo:', tempo);
     try {
       // First, request microphone permission
       toast({
@@ -806,16 +811,17 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const actuallyStartRecording = async (stream: MediaStream) => {
     try {
       console.log('🎙️ Starting actual recording with provided stream');
-      console.log('🎯 Current tempo during recording start:', tempo);
+      console.log('🎯 RECORDING MODE - Current tempo:', tempo);
+      console.log('🎯 RECORDING MODE - Metronome enabled:', metronomeEnabled);
+      console.log('🎯 RECORDING MODE - Metronome is playing:', metronomePlayerRef.current?.getBeatPosition());
       
-      // DON'T restart metronome - it should already be running from countdown
-      // Just ensure the tempo is correct (but don't restart it)
+      // DON'T modify metronome tempo - it should already be correct from countdown
+      // Just log the current state to verify consistency
       if (metronomeEnabled && metronomePlayerRef.current) {
-        console.log('🎯 Metronome already running from countdown - maintaining tempo:', tempo);
-        // Only set tempo if it's different, don't restart
-        metronomePlayerRef.current.setTempo(tempo);
+        console.log('🎯 RECORDING MODE - Metronome continuing from countdown at tempo:', tempo);
+        // Only adjust volume if needed, but NEVER change tempo during recording
         metronomePlayerRef.current.setVolume(metronomeVolume);
-        console.log('🎯 Metronome tempo confirmed at:', tempo, 'BPM for recording');
+        console.log('🎯 RECORDING MODE - Metronome volume set, tempo remains:', tempo);
       }
       
       const recorder = new MediaRecorder(stream, {
@@ -1122,6 +1128,11 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                   className="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                 />
                 <span className="text-sm font-mono min-w-[3rem] text-center">{tempo}</span>
+                <div className="text-xs text-muted-foreground ml-2">
+                  {isPlaying && '🎵'} 
+                  {isRecording && '🎙️'}
+                  {!isPlaying && !isRecording && '⏸️'}
+                </div>
               </div>
             </div>
             

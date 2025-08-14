@@ -40,7 +40,16 @@ export class MetronomePlayer {
   }
 
   setTempo(tempo: number) {
+    const oldTempo = this.tempo;
     this.tempo = tempo;
+    
+    // If we're currently playing, adjust the next note time to maintain timing continuity
+    if (this.isPlaying && oldTempo !== tempo) {
+      const currentTime = this.audioContext.currentTime;
+      const timeElapsed = currentTime - (this.nextNoteTime - (60.0 / oldTempo));
+      this.nextNoteTime = currentTime + Math.max(0, (60.0 / tempo) - timeElapsed);
+      console.log(`🎯 Tempo changed from ${oldTempo} to ${tempo} BPM during playback`);
+    }
   }
 
   setVolume(volume: number) {
