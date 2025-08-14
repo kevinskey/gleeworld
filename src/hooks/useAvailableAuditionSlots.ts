@@ -118,6 +118,43 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
           });
         }
 
+        // Also check for booked appointments from gw_appointments table
+        console.log('🔍 Fetching booked appointments for date:', selectedDateString);
+        const { data: appointments, error: appointmentsError } = await supabase
+          .from('gw_appointments')
+          .select('id, client_name, appointment_date, status')
+          .eq('appointment_type', 'audition')
+          .gte('appointment_date', selectedDateString + 'T00:00:00.000Z')
+          .lt('appointment_date', new Date(new Date(selectedDateString + 'T00:00:00.000Z').getTime() + 24 * 60 * 60 * 1000).toISOString())
+          .eq('status', 'scheduled');
+
+        if (!appointmentsError && appointments && appointments.length > 0) {
+          console.log('📋 Found booked appointments:', appointments);
+          appointments.forEach(appointment => {
+            const appointmentDate = new Date(appointment.appointment_date);
+            const easternTime = toZonedTime(appointmentDate, EASTERN_TZ);
+            const timeString = format(easternTime, 'h:mm a');
+            
+            // Check if this slot is already marked as unavailable
+            const existingSlotIndex = slots.findIndex(slot => slot.time === timeString);
+            if (existingSlotIndex >= 0) {
+              // Update existing slot
+              slots[existingSlotIndex] = {
+                time: timeString,
+                isAvailable: false,
+                auditionerName: appointment.client_name
+              };
+            } else {
+              // Add new booked slot
+              slots.push({
+                time: timeString,
+                isAvailable: false,
+                auditionerName: appointment.client_name
+              });
+            }
+          });
+        }
+
         // Also check for available time slots from time blocks if they exist
         const { data: timeBlocks, error: blockError } = await supabase
           .from('audition_time_blocks')
