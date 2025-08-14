@@ -149,7 +149,17 @@ export const SightSingingStudio: React.FC = () => {
         body: parameters
       });
 
-      if (error) throw error;
+      console.log('Generate musicxml response:', { data, error });
+
+      if (error) {
+        console.error('Function error:', error);
+        throw error;
+      }
+
+      if (!data || !data.musicXML) {
+        console.error('Invalid response data:', data);
+        throw new Error('Invalid response: no musicXML generated');
+      }
 
       const exercise: GeneratedExercise = {
         musicXML: data.musicXML,
