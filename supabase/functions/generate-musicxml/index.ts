@@ -187,9 +187,8 @@ serve(async (req) => {
       
       for (let i = 1; i <= params.measures; i++) {
         const isFirst = i === 1;
-        const isLast = i === params.measures;
         
-        // Pick a random note length from the selected ones
+        // Pick a random note length from the selected ones for each measure
         const randomNoteLength = selectedNoteLengths[Math.floor(Math.random() * selectedNoteLengths.length)];
         const noteInfo = noteDurations[randomNoteLength] || noteDurations['quarter'];
         
@@ -213,10 +212,10 @@ ${isFirst ? `      <attributes>
           <step>${notes[i % notes.length]}</step>
           <octave>4</octave>
         </pitch>
-        <duration>${isLast ? '16' : noteInfo.duration}</duration>
-        <type>${isLast ? 'whole' : noteInfo.type}</type>
+        <duration>${noteInfo.duration}</duration>
+        <type>${noteInfo.type}</type>
       </note>
-${!isLast && noteInfo.duration < 16 ? `      <note>
+${noteInfo.duration < 16 ? `      <note>
         <pitch>
           <step>${notes[(i + 1) % notes.length]}</step>
           <octave>4</octave>
