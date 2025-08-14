@@ -143,9 +143,12 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
         while (currentTime < endTime) {
           const timeString = format(currentTime, 'h:mm a');
           
+          console.log(`⏰ Generated time slot: "${timeString}" at ${currentTime.toISOString()}`);
+          
           // Check if this slot is already taken and get the auditioner name
           const bookedAppointment = existingAppointments?.find(apt => {
             const takenTime = format(new Date(apt.audition_time_slot), 'h:mm a');
+            console.log(`🔍 Checking if "${timeString}" matches "${takenTime}" for ${apt.auditioner_name}`);
             return takenTime === timeString;
           });
 

@@ -16,10 +16,16 @@ interface AuditionAppointment {
   status: string;
 }
 
+interface BookedSlot {
+  audition_time_slot: string;
+  auditioner_name: string;
+}
+
 export const AuditionTimeGrid = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [appointments, setAppointments] = useState<AuditionAppointment[]>([]);
   const [allAppointments, setAllAppointments] = useState<AuditionAppointment[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<BookedSlot[]>([]);
   const [loading, setLoading] = useState(false);
   
   const { allTimeSlots, loading: slotsLoading, availableDates } = useAvailableAuditionSlots(selectedDate);
@@ -103,6 +109,24 @@ export const AuditionTimeGrid = () => {
       const endOfDay = new Date(selectedDate);
       endOfDay.setHours(23, 59, 59, 999);
 
+      console.log(`📅 Fetching appointments for ${selectedDate.toDateString()}`);
+      console.log(`🕐 Date range: ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
+
+      // Get booked slots using the RPC function
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_booked_audition_slots', {
+          p_start: startOfDay.toISOString(),
+          p_end: endOfDay.toISOString(),
+        });
+
+      if (rpcError) {
+        console.error('Error fetching booked slots via RPC:', rpcError);
+      } else {
+        console.log(`🎯 RPC returned ${rpcData?.length || 0} booked slots:`, rpcData);
+        setBookedSlots(rpcData || []);
+      }
+
+      // Also get full appointment details for display
       const { data, error } = await supabase
         .from('audition_applications')
         .select('id, full_name, email, audition_time_slot, status')
@@ -111,6 +135,7 @@ export const AuditionTimeGrid = () => {
         .order('audition_time_slot');
 
       if (error) throw error;
+      console.log(`📋 Found ${data?.length || 0} appointments:`, data);
       setAppointments(data || []);
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -120,15 +145,50 @@ export const AuditionTimeGrid = () => {
   };
 
   const getAppointmentForSlot = (timeString: string) => {
-    return appointments.find(apt => {
+    // First try to find in the booked slots from RPC
+    const bookedSlot = bookedSlots.find(slot => {
+      const slotTime = toZonedTime(new Date(slot.audition_time_slot), 'America/New_York');
+      const slotTimeString = slotTime.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      });
+      
+      console.log(`🔍 Comparing slot time "${timeString}" with booked slot time "${slotTimeString}" for ${slot.auditioner_name}`);
+      
+      return slotTimeString === timeString;
+    });
+
+    if (bookedSlot) {
+      console.log(`✅ Found booked slot for ${timeString}:`, bookedSlot.auditioner_name);
+      return {
+        id: `booked-${timeString}`,
+        full_name: bookedSlot.auditioner_name,
+        email: '',
+        audition_time_slot: bookedSlot.audition_time_slot,
+        status: 'scheduled'
+      };
+    }
+
+    // Fallback to regular appointments
+    const foundAppointment = appointments.find(apt => {
       const aptTime = toZonedTime(new Date(apt.audition_time_slot), 'America/New_York');
       const aptTimeString = aptTime.toLocaleTimeString('en-US', { 
         hour: 'numeric', 
         minute: '2-digit', 
         hour12: true 
       });
+      
+      console.log(`🔍 Comparing slot time "${timeString}" with appointment time "${aptTimeString}" for ${apt.full_name}`);
+      
       return aptTimeString === timeString;
     });
+    
+    if (foundAppointment) {
+      console.log(`✅ Found appointment for ${timeString}:`, foundAppointment.full_name);
+    }
+    
+    return foundAppointment;
   };
 
   const getStatusColor = (status: string) => {
