@@ -269,7 +269,7 @@ export const SightSingingStudio: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-background p-6 overflow-hidden">
+    <div className="h-screen bg-slate-50 p-6 overflow-hidden">
       <div className="h-full flex flex-col">
         {/* Main Content */}
         <div className="flex-1 grid gap-6 grid-cols-3 min-h-0">
