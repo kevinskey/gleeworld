@@ -269,21 +269,21 @@ export const SightSingingStudio: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-background p-4 overflow-hidden">
+    <div className="h-screen bg-background p-6 overflow-hidden">
       <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="text-center mb-4 flex-shrink-0">
+        <div className="text-center mb-6 flex-shrink-0">
           <h1 className="text-2xl font-bold text-foreground mb-1">Sight-Singing Studio</h1>
           <p className="text-sm text-muted-foreground">Generate, practice, and evaluate sight-singing exercises</p>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 grid gap-4 grid-cols-3 min-h-0">
+        <div className="flex-1 grid gap-6 grid-cols-3 min-h-0">
           {/* Left Column - Parameters & Controls (1/3 width) */}
-          <div className="col-span-1 flex flex-col gap-2">
+          <div className="col-span-1 flex flex-col gap-4">
             {/* Parameters */}
-            <Card className="p-2 flex-shrink-0">
-              <h2 className="text-sm font-semibold mb-1 flex-shrink-0">Parameters</h2>
+            <Card className="p-4 flex-shrink-0">
+              <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Parameters</h2>
               <div className="max-h-40 overflow-y-auto">
                 <ParameterForm 
                   onGenerate={handleGenerateExercise}
@@ -295,8 +295,8 @@ export const SightSingingStudio: React.FC = () => {
             </Card>
 
             {/* Playback Controls */}
-            <Card className="p-2 flex-shrink-0">
-              <h2 className="text-sm font-semibold mb-1">Playback</h2>
+            <Card className="p-4 flex-shrink-0">
+              <h2 className="text-sm font-semibold mb-3">Playback</h2>
               <PlaybackControls
                 isPlaying={isPlaying}
                 mode={mode}
@@ -309,8 +309,8 @@ export const SightSingingStudio: React.FC = () => {
             </Card>
 
             {/* Recording Controls */}
-            <Card className="p-2 flex-1 flex flex-col">
-              <h2 className="text-sm font-semibold mb-1 flex-shrink-0">Recording</h2>
+            <Card className="p-4 flex-1 flex flex-col">
+              <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Recording</h2>
               <div className="flex-1 flex flex-col min-h-0">
                 <RecordingControls
                   isRecording={isRecording}
@@ -322,8 +322,8 @@ export const SightSingingStudio: React.FC = () => {
                 />
                 
                 {gradingResults && (
-                  <div className="mt-2 pt-2 border-t flex-shrink-0">
-                    <h3 className="text-xs font-medium mb-1">Results</h3>
+                  <div className="mt-4 pt-3 border-t flex-shrink-0">
+                    <h3 className="text-xs font-medium mb-2">Results</h3>
                     <div className="text-xs">
                       <GradingResults results={gradingResults} />
                     </div>
@@ -335,7 +335,7 @@ export const SightSingingStudio: React.FC = () => {
 
           {/* Middle Column - Score Display (2/3 width) */}
           <div className="col-span-2">
-            <Card className="p-4 h-full flex flex-col">
+            <Card className="p-6 h-full flex flex-col">
               <h2 className="text-base font-semibold mb-2 flex-shrink-0">Musical Score</h2>
               <div className="flex-1 min-h-0">
                 <ScoreDisplay
