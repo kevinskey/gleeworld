@@ -800,6 +800,15 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   const actuallyStartRecording = async (stream: MediaStream) => {
     try {
       console.log('🎙️ Starting actual recording with provided stream');
+      console.log('🎯 Current tempo during recording start:', tempo);
+      
+      // Ensure metronome is running at correct tempo for recording
+      if (metronomeEnabled && metronomePlayerRef.current) {
+        console.log('🎯 Ensuring metronome tempo is correct for recording...');
+        metronomePlayerRef.current.setTempo(tempo);
+        metronomePlayerRef.current.setVolume(metronomeVolume);
+        console.log('🎯 Metronome tempo set to:', tempo, 'BPM for recording');
+      }
       
       const recorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm'
@@ -852,7 +861,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       
       toast({
         title: "Recording Started",
-        description: "Sing the exercise with the metronome"
+        description: `Sing with metronome at ${tempo} BPM`
       });
       
     } catch (error) {
