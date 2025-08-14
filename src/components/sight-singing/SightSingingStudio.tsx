@@ -74,6 +74,20 @@ export const SightSingingStudio: React.FC = () => {
     gradeRecording
   } = useGrading();
 
+  const handleReset = () => {
+    setCurrentScore(null);
+    setCurrentMusicXML('');
+    setCurrentExerciseId(null);
+    setCurrentBpm(120);
+    clearRecording();
+    stopPlayback();
+    
+    toast({
+      title: "Exercise Reset",
+      description: "All exercise data has been cleared",
+    });
+  };
+
   const handleGenerateExercise = async (parameters: ExerciseParameters) => {
     setIsGenerating(true);
     setCurrentBpm(parameters.bpm);
@@ -269,6 +283,8 @@ export const SightSingingStudio: React.FC = () => {
               <ParameterForm 
                 onGenerate={handleGenerateExercise}
                 isGenerating={isGenerating}
+                onReset={handleReset}
+                hasExercise={!!currentMusicXML}
               />
             </Card>
 

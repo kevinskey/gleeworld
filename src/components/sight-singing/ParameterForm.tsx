@@ -13,11 +13,15 @@ import { ExerciseParameters } from './SightSingingStudio';
 interface ParameterFormProps {
   onGenerate: (parameters: ExerciseParameters) => void;
   isGenerating: boolean;
+  onReset?: () => void;
+  hasExercise?: boolean;
 }
 
 export const ParameterForm: React.FC<ParameterFormProps> = ({
   onGenerate,
-  isGenerating
+  isGenerating,
+  onReset,
+  hasExercise
 }) => {
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<ExerciseParameters>({
     defaultValues: {
@@ -261,13 +265,27 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         </div>
       </div>
 
-      <Button 
-        type="submit" 
-        className="w-full" 
-        disabled={isGenerating || !watchedAllowedDur || watchedAllowedDur.length === 0}
-      >
-        {isGenerating ? 'Generating Exercise...' : 'Generate Exercise'}
-      </Button>
+      <div className="space-y-2">
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isGenerating || !watchedAllowedDur || watchedAllowedDur.length === 0}
+        >
+          {isGenerating ? 'Generating Exercise...' : 'Generate Exercise'}
+        </Button>
+        
+        {hasExercise && onReset && (
+          <Button 
+            type="button"
+            variant="outline" 
+            className="w-full" 
+            onClick={onReset}
+            disabled={isGenerating}
+          >
+            Reset Exercise
+          </Button>
+        )}
+      </div>
     </form>
   );
 };
