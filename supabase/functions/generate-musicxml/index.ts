@@ -11,11 +11,11 @@ const ALLOWED_ORIGINS = new Set([
 
 function corsHeaders(origin: string | null) {
   const o = origin ?? "";
-  const allowed = ALLOWED_ORIGINS.has(o) || o.endsWith(".lovableproject.com");
+  const allowed = ALLOWED_ORIGINS.has(o) || o.endsWith(".lovableproject.com") || o.endsWith(".lovable.app");
   return {
     "Content-Type": "application/json",
     "Vary": "Origin",
-    "Access-Control-Allow-Origin": allowed ? o : "https://gleeworld.org",
+    "Access-Control-Allow-Origin": allowed ? o : "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "authorization, content-type, apikey, x-client-info",
     "Access-Control-Max-Age": "86400",
