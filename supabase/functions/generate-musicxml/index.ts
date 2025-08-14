@@ -333,9 +333,72 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
     // 2) Generate score JSON with proper measure count and validation
     let scoreJson = aiJson;
     if (!scoreJson || !Array.isArray(scoreJson?.parts)) {
-      // Fallback: synthesize varied measures using scale degrees
+      // Fallback: synthesize varied measures using ALL selected durations
       const durOptions = allowed.filter(d => ["whole","half","quarter","eighth","16th"].includes(d));
-      const primaryDur = durOptions[0] || "quarter";
+      console.log("Using durations for generation:", durOptions);
+      
+      // Function to create notes that fill a measure using selected durations
+      const createMeasureNotes = (measureIndex: number, timeSignature: {num: number, den: number}) => {
+        const measureTicks = barTicks(timeSignature.num, timeSignature.den as 1|2|4|8|16);
+        const notes = [];
+        let currentTicks = 0;
+        
+        // Scale degree patterns for variety
+        const degreePatterns = [
+          [1,2,3,4], // Scale up: do-re-mi-fa
+          [5,4,3,2], // Scale down: sol-fa-mi-re
+          [1,3,5,1], // Arpeggio up: do-mi-sol-do (octave)
+          [1,3,2,4], // Thirds: do-mi-re-fa
+          [5,3,1,7], // Descending chord tones
+          [1,2,1,3], // Neighboring tones
+        ];
+        
+        const pattern = degreePatterns[measureIndex % degreePatterns.length];
+        let noteIndex = 0;
+        
+        while (currentTicks < measureTicks && noteIndex < pattern.length) {
+          // Choose duration that fits remaining ticks
+          const remainingTicks = measureTicks - currentTicks;
+          const availableDurs = durOptions.filter(dur => {
+            const ticksNeeded = TICKS[dur as DurBase];
+            return ticksNeeded <= remainingTicks;
+          });
+          
+          if (availableDurs.length === 0) {
+            // Fill remaining with rest
+            break;
+          }
+          
+          // Randomly select from available durations for variety
+          const selectedDur = availableDurs[Math.floor(Math.random() * availableDurs.length)] as DurBase;
+          const ticksUsed = TICKS[selectedDur];
+          
+          const degree = pattern[noteIndex];
+          const octave = degree === 1 && noteIndex === 3 ? 5 : 4; // Go to octave for last do
+          
+          notes.push({
+            kind: "note",
+            dur: { base: selectedDur, dots: 0 },
+            pitch: { degree, oct: octave, acc: 0 }
+          });
+          
+          currentTicks += ticksUsed;
+          noteIndex++;
+        }
+        
+        // Fill any remaining time with rest if needed
+        if (currentTicks < measureTicks) {
+          const remainingTicks = measureTicks - currentTicks;
+          // Find appropriate rest duration
+          const restDur = Object.entries(TICKS).find(([_, ticks]) => ticks <= remainingTicks)?.[0] as DurBase || "quarter";
+          notes.push({
+            kind: "rest",
+            dur: { base: restDur, dots: 0 }
+          });
+        }
+        
+        return notes;
+      };
       
       scoreJson = {
         key: params.key ?? {tonic:"C", mode:"major"},
@@ -344,26 +407,9 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
         parts: partsReq.map((pr:any)=>({
           role: pr.role,
           range: pr.range ?? {min:"C4",max:"A5"},
-          measures: Array.from({length:numMeasures},(_,i)=>{
-            // Create varied measures using scale degrees - scale patterns, arpeggios, intervals
-            const degreePatterns = [
-              // Scale up: do-re-mi-fa
-              [{degree:1,oct:4,acc:0},{degree:2,oct:4,acc:0},{degree:3,oct:4,acc:0},{degree:4,oct:4,acc:0}],
-              // Scale down: sol-fa-mi-re
-              [{degree:5,oct:4,acc:0},{degree:4,oct:4,acc:0},{degree:3,oct:4,acc:0},{degree:2,oct:4,acc:0}],
-              // Arpeggio up: do-mi-sol-do
-              [{degree:1,oct:4,acc:0},{degree:3,oct:4,acc:0},{degree:5,oct:4,acc:0},{degree:1,oct:5,acc:0}],
-              // Thirds: do-mi-re-fa
-              [{degree:1,oct:4,acc:0},{degree:3,oct:4,acc:0},{degree:2,oct:4,acc:0},{degree:4,oct:4,acc:0}]
-            ];
-            const pattern = degreePatterns[i % degreePatterns.length];
-            
-            return pattern.map(pitch => ({
-              kind:"note", 
-              dur:{base:primaryDur,dots:0}, 
-              pitch
-            }));
-          })
+          measures: Array.from({length:numMeasures}, (_, measureIndex) => 
+            createMeasureNotes(measureIndex, time)
+          )
         }))
       };
     } else {
