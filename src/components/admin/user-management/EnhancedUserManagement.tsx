@@ -125,8 +125,10 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
   };
 
   const handleConvertAvatars = async () => {
+    console.log('Starting avatar conversion process...');
     const result = await convertAuditionerAvatars();
     if (result && result.successful > 0) {
+      console.log(`Successfully converted ${result.successful} avatars`);
       // Refresh the user list to show updated avatars
       onRefetch();
     }
