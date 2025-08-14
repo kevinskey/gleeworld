@@ -442,10 +442,7 @@ const SightReadingGeneratorPage = () => {
   };
 
   return (
-    <UniversalLayout 
-      title="Sight Reading Generator" 
-      description="Generate AI-powered sight-reading exercises with professional notation"
-    >
+    <UniversalLayout>
       <div className="h-screen flex flex-col overflow-hidden">
         {/* Header - Compact */}
         <div className="flex-shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -595,7 +592,7 @@ const SightReadingGeneratorPage = () => {
                     <CardTitle className="text-base">Recent Exercises</CardTitle>
                   </CardHeader>
                   <CardContent className="overflow-y-auto">
-                    <CompletedExercisesList userId={user?.id} />
+                    <CompletedExercisesList user={user} />
                   </CardContent>
                 </Card>
               )}
