@@ -2072,6 +2072,30 @@ export type Database = {
         }
         Relationships: []
       }
+      exercises: {
+        Row: {
+          created_at: string | null
+          id: string
+          json_score: Json
+          musicxml_url: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          json_score: Json
+          musicxml_url: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          json_score?: Json
+          musicxml_url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       finance_records: {
         Row: {
           amount: number
@@ -12649,6 +12673,50 @@ export type Database = {
             columns: ["story_id"]
             isOneToOne: false
             referencedRelation: "alumnae_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submissions: {
+        Row: {
+          audio_url: string
+          bpm: number
+          created_at: string | null
+          exercise_id: string
+          id: string
+          letter: string
+          metrics: Json
+          overall: number
+          user_id: string
+        }
+        Insert: {
+          audio_url: string
+          bpm: number
+          created_at?: string | null
+          exercise_id: string
+          id?: string
+          letter: string
+          metrics: Json
+          overall: number
+          user_id: string
+        }
+        Update: {
+          audio_url?: string
+          bpm?: number
+          created_at?: string | null
+          exercise_id?: string
+          id?: string
+          letter?: string
+          metrics?: Json
+          overall?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
             referencedColumns: ["id"]
           },
         ]
