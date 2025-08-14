@@ -74,10 +74,20 @@ export class MusicXMLPlayer {
     }
 
     const audioContext = this.initAudioContext();
-    await audioContext.resume();
+    
+    // Ensure audio context is resumed (required for user interaction)
+    try {
+      await audioContext.resume();
+      console.log('Audio context state:', audioContext.state);
+    } catch (error) {
+      console.error('Failed to resume audio context:', error);
+      throw new Error('Audio playback requires user interaction. Please try again.');
+    }
     
     this.isPlaying = true;
     this.startTime = audioContext.currentTime;
+    
+    console.log('Starting playback with mode:', mode, 'at time:', this.startTime);
     
     // Calculate intro duration (one measure of clicks)
     const beatDuration = 60 / parsedScore.tempo;
@@ -85,17 +95,22 @@ export class MusicXMLPlayer {
     
     if (mode === 'click-only' || mode === 'click-and-score') {
       // Play click track for intro + all measures
+      console.log('Creating click track...');
       this.createClickTrack(parsedScore.tempo, parsedScore.measures.length, parsedScore.timeSignature);
     }
     
     if (mode === 'click-and-score') {
       // Schedule all notes with intro delay
-      parsedScore.measures.forEach(measure => {
-        measure.notes.forEach(note => {
+      console.log('Scheduling notes for playback...', parsedScore.measures.length, 'measures');
+      let noteCount = 0;
+      parsedScore.measures.forEach((measure, measureIndex) => {
+        measure.notes.forEach((note, noteIndex) => {
           const noteStartTime = this.startTime + introDuration + note.startTime;
+          console.log(`Note ${noteCount++}: freq=${note.frequency}, start=${noteStartTime}, duration=${note.duration}`);
           this.createTone(note.frequency, noteStartTime, note.duration, 0.4);
         });
       });
+      console.log(`Total notes scheduled: ${noteCount}`);
     }
     
     // Auto-stop when complete
