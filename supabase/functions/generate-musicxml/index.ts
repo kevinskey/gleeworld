@@ -102,7 +102,7 @@ Example structure:
   </part>
 </score-partwise>`;
 
-    // Debug: List all environment variables (redeploy after secret update)
+    // Debug: List all environment variables (FORCE REDEPLOY v2)
     const allEnvVars = Object.keys(Deno.env.toObject());
     console.log('Total env vars count:', allEnvVars.length);
     console.log('All available environment variables:', allEnvVars);
@@ -116,9 +116,8 @@ Example structure:
     // Additional debug logging
     console.log('OPENAI_API_KEY present:', !!openAIApiKey);
     console.log('OPENAI_API_KEY length:', openAIApiKey?.length || 0);
+    console.log('OPENAI_API_KEY first 10 chars:', openAIApiKey?.substring(0, 10) || 'NONE');
     
-    console.log('OPENAI_API_KEY present:', !!openAIApiKey);
-    console.log('OPENAI_API_KEY length:', openAIApiKey?.length || 0);
     console.log('OPENAI_KEY present:', !!openaiKey);
     console.log('OPENAI_API_KEY_SECRET present:', !!openaiApiKey2);
 
@@ -133,7 +132,9 @@ Example structure:
           openAIApiKey_exists: !!openAIApiKey,
           openAIApiKey_length: openAIApiKey?.length || 0,
           openaiKey_exists: !!openaiKey,
-          openaiApiKey2_exists: !!openaiApiKey2
+          openaiApiKey2_exists: !!openaiApiKey2,
+          allEnvVars: allEnvVars,
+          openaiRelatedVars: allEnvVars.filter(key => key.includes('OPENAI') || key.includes('API_KEY'))
         }
       }), {
         status: 500,
