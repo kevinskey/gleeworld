@@ -133,6 +133,18 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     return () => URL.revokeObjectURL(url);
   }, [audioBlob]);
 
+  // Auto-trigger assessment when recording completes
+  React.useEffect(() => {
+    if (audioBlob && !isAssessing && assessmentScore === null) {
+      console.log('🎯 Auto-triggering AI assessment for new recording...');
+      const timer = setTimeout(() => {
+        submitForAssessment();
+      }, 1500); // Give user a moment to see the recording UI
+      
+      return () => clearTimeout(timer);
+    }
+  }, [audioBlob, isAssessing, assessmentScore]);
+
   // Refs
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const playbackTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -808,6 +820,14 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         stream.getTracks().forEach(track => track.stop());
         setRecordingStream(null);
         console.log('✅ Audio blob created, size:', blob.size, 'bytes');
+        
+        // Auto-trigger assessment after a brief delay
+        setTimeout(() => {
+          if (blob.size > 0) {
+            console.log('🎯 Auto-triggering AI assessment...');
+            // We'll trigger assessment from the effect that watches audioBlob
+          }
+        }, 1000);
       };
       
       recorder.onerror = (event) => {
@@ -866,7 +886,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     toast({
       title: "Recording Stopped",
-      description: "Ready for AI assessment"
+      description: "Preparing AI assessment..."
     });
   };
 
@@ -1270,6 +1290,73 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
                 </>
               )}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Sheet Music Display */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Sheet Music</CardTitle>
+            <div className="flex items-center gap-2">
+              {/* Recording Control */}
+              <Button
+                onClick={isRecording ? stopRecording : startRecording}
+                variant={isRecording ? "destructive" : "default"}
+                className="flex items-center gap-2"
+                disabled={isPlaying}
+              >
+                {isRecording ? (
+                  <>
+                    <Square className="h-4 w-4" />
+                    Stop Recording ({formatTime(recordingTime)})
+                  </>
+                ) : (
+                  <>
+                    <Mic className="h-4 w-4" />
+                    Record Yourself
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div 
+            ref={sheetMusicRef} 
+            className="min-h-[400px] bg-white rounded-lg p-4 border border-gray-200"
+            style={{ 
+              overflow: 'auto',
+              maxHeight: '600px'
+            }}
+          />
+          
+          {/* Progress Display */}
+          {(isPlaying || isRecording) && (
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span>Progress: {formatTime(isPlaying ? playbackTime : recordingTime)}</span>
+                {currentNote && <span>Current Note: {currentNote}</span>}
+              </div>
+              <Progress value={playbackProgress * 100} className="h-2" />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Solfège Annotations */}
+      {solfegeEnabled && extractedMelody.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Solfège Guide</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SolfegeAnnotations 
+              notes={extractedMelody}
+              keySignature={exerciseMetadata.keySignature}
+              currentNoteIndex={currentNoteIndex}
+            />
           </CardContent>
         </Card>
       )}
