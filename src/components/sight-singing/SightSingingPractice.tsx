@@ -124,13 +124,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     }
   }, [musicXML, solfegeEnabled]);
 
-  // Initialize OSMD and render sheet music
-  useEffect(() => {
-    if (sheetMusicRef.current && musicXML) {
-      renderSheetMusic();
-    }
-  }, [musicXML]);
-
   const initializeAudioSystem = useCallback(async () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -142,43 +135,6 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       await audioContextRef.current.resume();
     }
   }, []);
-
-  const renderSheetMusic = async () => {
-    if (!sheetMusicRef.current || !musicXML) return;
-
-    try {
-      // Clear previous content
-      sheetMusicRef.current.innerHTML = '';
-      
-      // Create new OSMD instance
-      const osmd = new OpenSheetMusicDisplay(sheetMusicRef.current, {
-        autoResize: true,
-        backend: 'svg',
-        drawTitle: false,
-        drawComposer: false,
-        drawLyricist: false,
-        drawCredits: false,
-        pageBackgroundColor: '#FFFFFF',
-        pageFormat: 'A4_P',
-        followCursor: true
-      });
-
-      osmdRef.current = osmd;
-
-      // Load and render the MusicXML
-      await osmd.load(musicXML);
-      osmd.render();
-
-      console.log('✅ Sheet music rendered successfully');
-    } catch (error) {
-      console.error('❌ Error rendering sheet music:', error);
-      toast({
-        title: "Sheet Music Error",
-        description: "Failed to render sheet music notation",
-        variant: "destructive"
-      });
-    }
-  };
 
   const extractMelodyFromMusicXML = (xml: string): any[] => {
     if (!xml) return [];
@@ -494,140 +450,148 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Exercise Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Sight Reading Exercise</CardTitle>
-          <CardDescription>
-            Key: {exerciseMetadata.key} | Time: {exerciseMetadata.timeSignature} | 
-            Difficulty: {exerciseMetadata.difficulty}
-          </CardDescription>
-        </CardHeader>
-      </Card>
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" />
+            <span className="font-medium text-sm">Practice Controls</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {exerciseMetadata.key} • {exerciseMetadata.timeSignature} • {exerciseMetadata.difficulty}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        
+        {/* Practice Controls */}
+        <SightSingingControls
+          isPlaying={isPlaying}
+          onStartPractice={handleStartPractice}
+          onStopPractice={handleStopPractice}
+          isRecording={recording.isRecording}
+          onStartRecording={handleStartRecording}
+          onStopRecording={handleStopRecording}
+          recordingTime={recording.recordingTime}
+          tempo={tempo}
+          onTempoChange={handleTempoChange}
+          metronomeEnabled={metronomeEnabled}
+          onMetronomeToggle={handleMetronomeToggle}
+          metronomeVolume={metronomeVolume}
+          onMetronomeVolumeChange={handleMetronomeVolumeChange}
+          solfegeEnabled={solfegeEnabled}
+          onSolfegeToggle={handleSolfegeToggle}
+          countdownBeats={countdownBeats}
+          isCountingDown={isCountingDown}
+        />
 
-      {/* Sheet Music */}
-      <Card>
-        <CardContent className="pt-6">
-          <div 
-            ref={sheetMusicRef} 
-            className="w-full min-h-[300px] bg-white rounded border overflow-auto"
-            style={{ 
-              maxHeight: '500px',
-              fontFamily: 'Arial, sans-serif'
-            }}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Controls */}
-      <SightSingingControls
-        isPlaying={isPlaying}
-        onStartPractice={handleStartPractice}
-        onStopPractice={handleStopPractice}
-        isRecording={recording.isRecording}
-        onStartRecording={handleStartRecording}
-        onStopRecording={handleStopRecording}
-        recordingTime={recording.recordingTime}
-        tempo={tempo}
-        onTempoChange={handleTempoChange}
-        metronomeEnabled={metronomeEnabled}
-        onMetronomeToggle={handleMetronomeToggle}
-        metronomeVolume={metronomeVolume}
-        onMetronomeVolumeChange={handleMetronomeVolumeChange}
-        solfegeEnabled={solfegeEnabled}
-        onSolfegeToggle={handleSolfegeToggle}
-        countdownBeats={countdownBeats}
-        isCountingDown={isCountingDown}
-      />
-
-      {/* Recording Results */}
-      {audioBlob && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mic className="h-5 w-5" />
-              Recording Complete
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Badge variant="secondary">
-                {Math.round(audioBlob.size / 1024)} KB
-              </Badge>
-              <span>Audio saved successfully</span>
+        {/* Recording Playback */}
+        {audioBlob && (
+          <div className="space-y-3 pt-3 border-t">
+            <div className="flex items-center gap-2">
+              <Mic className="h-4 w-4" />
+              <span className="text-sm font-medium">Your Recording</span>
             </div>
-
-            <div className="flex gap-2">
-              {!isAssessing && assessmentScore === null && (
-                <Button onClick={submitForAssessment} className="flex-1">
-                  <GraduationCap className="h-4 w-4 mr-2" />
-                  Submit for AI Assessment
-                </Button>
-              )}
-              
-              <Button onClick={downloadRecording} variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Download
+            
+            <div className="flex items-center gap-2">
+              <audio 
+                controls 
+                src={previewUrl || undefined}
+                className="flex-1 h-8"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={downloadRecording}
+                className="h-8 px-2"
+              >
+                <Download className="h-3 w-3" />
               </Button>
             </div>
-
-            {previewUrl && (
-              <audio controls className="w-full">
-                <source src={previewUrl} type="audio/webm" />
-              </audio>
+            
+            {user && (
+              <div className="flex gap-2">
+                <Button
+                  onClick={submitForAssessment}
+                  disabled={isAssessing}
+                  size="sm"
+                  className="flex-1 h-8"
+                >
+                  {isAssessing ? (
+                    <>
+                      <GraduationCap className="h-3 w-3 mr-1" />
+                      Assessing...
+                    </>
+                  ) : (
+                    <>
+                      <GraduationCap className="h-3 w-3 mr-1" />
+                      AI Assessment
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={resetSession}
+                  size="sm"
+                  className="h-8 px-2"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </Button>
+              </div>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
 
-      {/* Assessment Results */}
-      {isAssessing && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center space-y-2">
-              <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
-              <p>AI is analyzing your performance...</p>
+        {/* Assessment Results */}
+        {assessmentScore !== null && (
+          <div className="space-y-3 pt-3 border-t">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              <span className="text-sm font-medium">Assessment Results</span>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {assessmentScore !== null && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5" />
-              AI Assessment Results
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">
+            
+            <div className="flex items-center gap-3">
+              <div className="text-2xl font-bold">
                 {assessmentScore}/100
               </div>
-              <Badge variant={assessmentScore >= 80 ? "default" : assessmentScore >= 60 ? "secondary" : "destructive"}>
+              <Badge variant={assessmentScore >= 80 ? "default" : assessmentScore >= 60 ? "secondary" : "destructive"} className="text-xs">
                 {assessmentScore >= 80 ? "Excellent" : assessmentScore >= 60 ? "Good" : "Needs Practice"}
               </Badge>
             </div>
             
             {assessmentFeedback && (
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Feedback:</h4>
-                <p className="text-sm">{assessmentFeedback}</p>
+              <div className="space-y-1">
+                <h4 className="text-xs font-medium">Feedback</h4>
+                <p className="text-xs text-muted-foreground">{assessmentFeedback}</p>
               </div>
             )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Reset Button */}
-      <div className="flex justify-center">
-        <Button onClick={resetSession} variant="outline">
-          <RotateCcw className="h-4 w-4 mr-2" />
-          Reset Session
-        </Button>
-      </div>
-    </div>
+            
+            {detailedScores && (
+              <div className="space-y-2">
+                <h4 className="text-xs font-medium">Detailed Scores</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex justify-between">
+                    <span>Pitch:</span>
+                    <span className="font-mono">{detailedScores.pitchAccuracy || 0}/100</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Rhythm:</span>
+                    <span className="font-mono">{detailedScores.rhythmAccuracy || 0}/100</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Intonation:</span>
+                    <span className="font-mono">{detailedScores.intonation || 0}/100</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Fluency:</span>
+                    <span className="font-mono">{detailedScores.fluency || 0}/100</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };

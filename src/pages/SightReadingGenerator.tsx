@@ -119,31 +119,30 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title, solfegeEnabled
       
       if (!isMountedRef.current) return;
 
-      // Create OSMD with settings optimized for content-based sizing
+      // Create OSMD with settings optimized for compact display
       osmdRef.current = new OpenSheetMusicDisplay(container, {
         autoResize: true,
         backend: 'svg',
         drawTitle: false,
         drawCredits: false,
         pageBackgroundColor: '#FFFFFF',
-        pageFormat: 'Endless', // Use endless format for dynamic sizing
+        pageFormat: 'Endless',
         autoBeam: true,
         coloringMode: 0,
         defaultFontFamily: 'Arial',
         renderSingleHorizontalStaffline: false,
-        spacingBetweenTextLines: 5,
+        spacingBetweenTextLines: 3,
         followCursor: false,
-        // Optimized sizing settings
-        zoom: 1.8, // Slightly smaller for better fitting
-        pageTopMargin: 15,
-        pageBottomMargin: 15,
-        staffDistance: 120, // Compact staff spacing
-        systemLeftMargin: 10,
-        systemRightMargin: 10,
-        compactMode: false,
-        spacingFactorSoftmax: 8, // Balanced note spacing
-        measureWidth: 200, // Reasonable measure width
-        // Solfege syllables
+        // Compact sizing settings
+        zoom: 1.2,
+        pageTopMargin: 5,
+        pageBottomMargin: 5,
+        staffDistance: 80,
+        systemLeftMargin: 5,
+        systemRightMargin: 5,
+        compactMode: true,
+        spacingFactorSoftmax: 6,
+        measureWidth: 180,
         drawSolfegeSyllables: solfegeEnabled
       } as any);
 
@@ -166,27 +165,7 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title, solfegeEnabled
         // Render the music
         osmdRef.current.render();
         
-        // Auto-size container to content after rendering
-        setTimeout(() => {
-          if (isMountedRef.current && containerRef.current && osmdRef.current) {
-            const svgElement = containerRef.current.querySelector('svg');
-            if (svgElement) {
-              const bbox = svgElement.getBBox();
-              const padding = 40; // Extra padding
-              
-              // Set container size based on content
-              containerRef.current.style.height = `${Math.max(300, bbox.height + padding)}px`;
-              containerRef.current.style.width = `${Math.min(1200, Math.max(600, bbox.width + padding))}px`;
-              
-              console.log('Auto-sized container to content:', {
-                width: bbox.width + padding,
-                height: bbox.height + padding
-              });
-            }
-          }
-        }, 100);
-        
-        console.log('MusicXML rendered successfully with auto-sizing');
+        console.log('MusicXML rendered successfully');
       } catch (renderError) {
         console.error('OSMD render error:', renderError);
         throw new Error(`Failed to render music: ${renderError.message}`);
@@ -206,59 +185,42 @@ const OSMDViewer: React.FC<OSMDViewerProps> = ({ musicXML, title, solfegeEnabled
 
   if (error) {
     return (
-      <Card className="w-full">
-        <CardContent className="p-6">
-          <div className="text-center text-destructive">
-            <Music className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium">{error}</p>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setError(null);
-                if (musicXML && isMountedRef.current) {
-                  renderMusicXML();
-                }
-              }}
-              className="mt-4"
-            >
-              Try Again
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="w-full h-full flex items-center justify-center border rounded-lg bg-muted/10">
+        <div className="text-center text-destructive p-4">
+          <Music className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">{error}</p>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              setError(null);
+              if (musicXML && isMountedRef.current) {
+                renderMusicXML();
+              }
+            }}
+            className="mt-2"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Music className="h-5 w-5" />
-          {title || 'Generated Exercise'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div 
-          id="generated-osmd"
-          ref={containerRef}
-          className="w-full border rounded-lg bg-white p-4"
-          style={{ 
-            minHeight: '300px',
-            maxWidth: '100%',
-            overflow: 'auto',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'flex-start'
-          }}
-        />
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
-            <RefreshCw className="h-8 w-8 animate-spin" />
-            <span className="ml-2">Rendering sheet music...</span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div className="w-full h-full relative">
+      <div 
+        id="generated-osmd"
+        ref={containerRef}
+        className="w-full h-full border rounded-lg bg-white flex items-center justify-center overflow-auto"
+      />
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
+          <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+          <span className="text-sm">Rendering...</span>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -479,761 +441,224 @@ const SightReadingGeneratorPage = () => {
     }
   };
 
-  const downloadGeneratedPDF = async () => {
-    if (!generatedMusicXML) return;
-    const container = document.getElementById('generated-osmd');
-    if (!container) {
-      toast({ title: 'PDF Error', description: 'Nothing to export yet.', variant: 'destructive' });
-      return;
-    }
-    try {
-      const { jsPDF } = await import('jspdf');
-      const html2canvas = await import('html2canvas');
-      const canvas = await html2canvas.default(container as HTMLElement, { backgroundColor: '#ffffff', scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-      const safeKey = keySignature.replace(/\s+/g, '-');
-      pdf.save(`sight-reading-${difficulty}-${safeKey}.pdf`);
-      toast({ title: 'PDF Downloaded', description: 'Your exercise has been exported.' });
-    } catch (e: any) {
-      console.error('PDF export error:', e);
-      toast({ title: 'PDF Error', description: e.message || 'Failed to export PDF', variant: 'destructive' });
-    }
-  };
-
-  const saveExercise = async () => {
-    if (!user) {
-      toast({ title: 'Sign in required', description: 'Please sign in to save exercises.', variant: 'destructive' });
-      return;
-    }
-    if (!generatedMusicXML) {
-      toast({ title: 'Nothing to save', description: 'Generate an exercise first.', variant: 'destructive' });
-      return;
-    }
-    setSaving(true);
-    try {
-      const title = `${difficulty} ${partMode === 'two-part' ? 'SA Two-Part' : voicePart} • ${keySignature} • ${timeSignature}`;
-      const params = {
-        difficulty,
-        keySignature,
-        timeSignature,
-        measures: measures[0],
-        noteRange,
-        partMode,
-        voicePart,
-        intervalProfile,
-        tempo,
-        rhythmicComplexity,
-        noteDensity,
-        cadenceType,
-        modulationFrequency,
-        accidentals
-      };
-      const { data, error } = await supabase
-        .from('gw_sight_reading_exercises')
-        .insert({ user_id: user.id, title, params, musicxml: generatedMusicXML })
-        .select('id')
-        .maybeSingle();
-      if (error) throw error;
-      if (data?.id) setSavedExerciseId(data.id);
-      toast({ title: 'Saved', description: 'Exercise saved to your library.' });
-    } catch (e: any) {
-      console.error('Save error:', e);
-      toast({ title: 'Save failed', description: e.message || 'Could not save exercise', variant: 'destructive' });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const startExamplePlayback = async () => {
-    if (!audioContextRef.current || !metronomeRef.current || !notePlayerRef.current) return;
-    
-    // Resume audio context if suspended
-    if (audioContextRef.current.state === 'suspended') {
-      await audioContextRef.current.resume();
-    }
-    
-    setIsPlayingExample(true);
-    setIsCountingIn(true);
-    setCountInBeats(0);
-    setCurrentBeat(0);
-    setCurrentMeasure(0);
-    
-    const beatsPerMeasure = parseInt(timeSignature.split('/')[0]);
-    const totalMeasures = measures[0];
-    const totalBeatsInExercise = totalMeasures * beatsPerMeasure;
-    const secondsPerBeat = 60.0 / tempo;
-    let exerciseBeatCount = 0;
-    
-    console.log('Starting example playback:', {
-      totalMeasures,
-      beatsPerMeasure,
-      totalBeatsInExercise,
-      tempo,
-      notesToPlay: parsedNotes.length
-    });
-    
-    // Schedule all notes based on their timing
-    const startTime = audioContextRef.current.currentTime + (4 * secondsPerBeat); // After count-in
-    
-    parsedNotes.forEach((note) => {
-      const noteStartTime = startTime + (note.startBeat * secondsPerBeat);
-      const noteDuration = note.duration * secondsPerBeat;
-      notePlayerRef.current!.playNote(note.pitch, noteDuration, noteStartTime);
-    });
-    
-    // Start metronome with count-in
-    metronomeRef.current.onBeat((beatNumber, isDownbeat) => {
-      if (beatNumber < 4) {
-        // Count-in phase (beats 0-3)
-        setCountInBeats(beatNumber + 1);
-        console.log('Count-in beat:', beatNumber + 1);
-      } else {
-        // Example playback phase starts after count-in
-        if (beatNumber === 4) {
-          setIsCountingIn(false);
-          console.log('Example playback started');
-        }
-        
-        exerciseBeatCount = beatNumber - 4; // Exercise beats start from 0
-        const currentBeatInMeasure = exerciseBeatCount % beatsPerMeasure;
-        const currentMeasureNumber = Math.floor(exerciseBeatCount / beatsPerMeasure);
-        
-        setCurrentBeat(currentBeatInMeasure);
-        setCurrentMeasure(currentMeasureNumber);
-        
-        // Stop exactly when we've completed all the measures
-        if (exerciseBeatCount >= totalBeatsInExercise) {
-          console.log('Example playback completed, stopping');
-          stopExamplePlayback();
-          return;
-        }
-      }
-    });
-    
-    metronomeRef.current.start(tempo, beatsPerMeasure);
-  };
-
-  const stopExamplePlayback = () => {
-    if (metronomeRef.current) {
-      metronomeRef.current.stop();
-    }
-    if (notePlayerRef.current) {
-      notePlayerRef.current.stop();
-    }
-    setIsPlayingExample(false);
-    setIsCountingIn(false);
-    setCountInBeats(0);
-    setCurrentBeat(0);
-    setCurrentMeasure(0);
-  };
-
-  const startPractice = async () => {
-    if (!audioContextRef.current || !metronomeRef.current) return;
-    
-    // Resume audio context if suspended
-    if (audioContextRef.current.state === 'suspended') {
-      await audioContextRef.current.resume();
-    }
-    
-    setIsPracticing(true);
-    setIsCountingIn(true);
-    setCountInBeats(0);
-    setCurrentBeat(0);
-    setCurrentMeasure(0);
-    
-    const beatsPerMeasure = parseInt(timeSignature.split('/')[0]);
-    const totalMeasures = measures[0];
-    const totalBeatsInExercise = totalMeasures * beatsPerMeasure;
-    let exerciseBeatCount = 0; // Separate counter for the actual exercise
-    
-    console.log('Starting practice:', {
-      totalMeasures,
-      beatsPerMeasure,
-      totalBeatsInExercise,
-      tempo
-    });
-    
-    // Start metronome with count-in
-    metronomeRef.current.onBeat((beatNumber, isDownbeat) => {
-      if (beatNumber < 4) {
-        // Count-in phase (beats 0-3)
-        setCountInBeats(beatNumber + 1);
-        console.log('Count-in beat:', beatNumber + 1);
-      } else {
-        // Practice phase starts after count-in
-        if (beatNumber === 4) {
-          setIsCountingIn(false);
-          console.log('Exercise started');
-        }
-        
-        exerciseBeatCount = beatNumber - 4; // Exercise beats start from 0
-        const currentBeatInMeasure = exerciseBeatCount % beatsPerMeasure;
-        const currentMeasureNumber = Math.floor(exerciseBeatCount / beatsPerMeasure);
-        
-        setCurrentBeat(currentBeatInMeasure);
-        setCurrentMeasure(currentMeasureNumber);
-        
-        console.log('Exercise beat:', {
-          exerciseBeatCount,
-          currentMeasureNumber: currentMeasureNumber + 1,
-          currentBeatInMeasure: currentBeatInMeasure + 1,
-          totalBeatsInExercise
-        });
-        
-        // Stop exactly when we've completed all the measures
-        if (exerciseBeatCount >= totalBeatsInExercise) {
-          console.log('Exercise completed, stopping metronome');
-          stopPractice();
-          return;
-        }
-      }
-    });
-    
-    metronomeRef.current.start(tempo, beatsPerMeasure);
-  };
-  const stopPractice = () => {
-    if (metronomeRef.current) {
-      metronomeRef.current.stop();
-    }
-    setIsPracticing(false);
-    setIsCountingIn(false);
-    setCountInBeats(0);
-    setCurrentBeat(0);
-    setCurrentMeasure(0);
-  };
-
-  const startNewExercise = () => {
-    stopPractice();
-    stopExamplePlayback();
-    setGeneratedMusicXML('');
-    setExerciseGenerated(false);
-    setIsPlayingExercise(false);
-    setIsRecording(false);
-    setSolfegeEnabled(false);
-    setParsedNotes([]);
-    
-    // Reset to default parameters
-    setDifficulty('beginner');
-    setKeySignature('C major');
-    setTimeSignature('4/4');
-    setMeasures([8]);
-    setNoteRange('C4-C5');
-    
-    // Dispatch reset events to clear practice component state
-    window.dispatchEvent(new CustomEvent('resetPractice'));
-  };
-
-  // Initialize audio context and players
-  useEffect(() => {
-    const initAudio = async () => {
-      try {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        metronomeRef.current = new MetronomePlayer(audioContextRef.current);
-        notePlayerRef.current = new NotePlayer(audioContextRef.current);
-        
-        // Set up beat callback
-        metronomeRef.current.onBeat((beatNumber, isDownbeat) => {
-          const beatsPerMeasure = parseInt(timeSignature.split('/')[0]);
-          setCurrentBeat(beatNumber % beatsPerMeasure);
-          setCurrentMeasure(Math.floor(beatNumber / beatsPerMeasure));
-        });
-      } catch (error) {
-        console.error('Failed to initialize audio context:', error);
-      }
-    };
-    
-    initAudio();
-    
-    return () => {
-      if (metronomeRef.current) {
-        metronomeRef.current.stop();
-      }
-      if (notePlayerRef.current) {
-        notePlayerRef.current.stop();
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-    };
-  }, [timeSignature]);
-
-  // Parse notes when exercise is generated
-  useEffect(() => {
-    if (generatedMusicXML) {
-      const parsed = parseMusicXMLForPlayback(generatedMusicXML);
-      setParsedNotes(parsed.notes);
-      console.log('Parsed exercise notes:', parsed);
-    }
-  }, [generatedMusicXML]);
-
-  // Listen for practice auto-stop to update button state
-  React.useEffect(() => {
-    const handlePracticeAutoStopped = () => {
-      setIsPlayingExercise(false);
-    };
-    
-    window.addEventListener('practiceAutoStopped', handlePracticeAutoStopped);
-    
-    return () => {
-      window.removeEventListener('practiceAutoStopped', handlePracticeAutoStopped);
-    };
-  }, []);
-
   return (
-    <UniversalLayout>
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">
-                {exerciseGenerated ? 'Sight Reading Exercise' : 'Sight Reading Generator'}
-              </h1>
-              <p className="text-muted-foreground">
-                {exerciseGenerated ? 'Practice your sight singing skills' : 'Generate AI-powered sight-reading exercises with professional notation'}
-              </p>
+    <UniversalLayout 
+      title="Sight Reading Generator" 
+      description="Generate AI-powered sight-reading exercises with professional notation"
+    >
+      <div className="h-screen flex flex-col overflow-hidden">
+        {/* Header - Compact */}
+        <div className="flex-shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/dashboard')}
+                  className="p-2 h-8"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                  <h1 className="text-xl font-bold">Sight Reading Generator</h1>
+                  <p className="text-sm text-muted-foreground hidden sm:block">
+                    Generate AI-powered sight-reading exercises
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-          
-          {/* Reset Button - Always visible */}
-          <Button
-            variant="destructive"
-            onClick={startNewExercise}
-            className="flex items-center gap-2"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset & Start Over
-          </Button>
         </div>
 
-        {/* Generated Exercise - Shows at top when available */}
-        {exerciseGenerated && generatedMusicXML && (
-          <div className="mb-8">
-            <Card className="w-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Music className="h-5 w-5" />
-                      {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Exercise
-                    </CardTitle>
-                    <CardDescription>
-                      {measures[0]} measures • {keySignature} • {timeSignature} • {noteRange}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {/* Play Example Button */}
-                    <Button
-                      variant={isPlayingExample ? "destructive" : "default"}
-                      onClick={isPlayingExample ? stopExamplePlayback : startExamplePlayback}
-                      className="flex items-center gap-2"
-                      disabled={!parsedNotes.length}
-                    >
-                      {isPlayingExample ? (
-                        <>
-                          <StopCircle className="h-4 w-4" />
-                          Stop Example
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4" />
-                          Play Example
-                        </>
-                      )}
-                    </Button>
+        {/* Main Content - Fixed Height Grid */}
+        <div className="flex-1 container mx-auto px-4 py-4 overflow-hidden">
+          <div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            {/* Left Panel - Controls (4 columns on desktop) */}
+            <div className="lg:col-span-4 space-y-4 overflow-y-auto">
+              
+              {/* Exercise Parameters - Compact */}
+              <Card className="flex-shrink-0">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Exercise Parameters</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Row 1: Difficulty & Key */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Difficulty</Label>
+                      <Select value={difficulty} onValueChange={setDifficulty}>
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="beginner">Beginner</SelectItem>
+                          <SelectItem value="intermediate">Intermediate</SelectItem>
+                          <SelectItem value="advanced">Advanced</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     
-                    {/* Practice Button with Metronome */}
-                    <Button
-                      variant={isPracticing ? "destructive" : "secondary"}
-                      onClick={isPracticing ? stopPractice : startPractice}
-                      className="flex items-center gap-2"
-                    >
-                      {isPracticing ? (
-                        <>
-                          <StopCircle className="h-4 w-4" />
-                          Stop Practice
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4" />
-                          Practice with Metronome
-                        </>
-                      )}
-                    </Button>
-                    
-                    {/* Recording Button */}
-                    <RecordingButton 
-                      isRecording={isRecording}
-                      onStartRecording={() => {
-                        console.log('Recording button clicked - start recording');
-                        setIsRecording(true);
-                        const recordingEvent = new CustomEvent('startRecording');
-                        window.dispatchEvent(recordingEvent);
-                      }}
-                      onStopRecording={() => {
-                        console.log('Recording button clicked - stop recording');
-                        setIsRecording(false);
-                        const recordingEvent = new CustomEvent('stopRecording');
-                        window.dispatchEvent(recordingEvent);
-                      }}
-                    />
-                    <Button variant="outline" onClick={startNewExercise}>
-                      Generate New Exercise
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Practice Status Display */}
-                {(isPracticing || isPlayingExample || isCountingIn) && (
-                  <div className="mb-4 p-4 bg-muted rounded-lg border">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="text-sm font-medium">
-                          {isCountingIn ? (
-                            <span className="text-primary">Count-in: {countInBeats}/4</span>
-                          ) : (
-                            <span>
-                              {isPlayingExample ? '🔊 Playing Example - ' : '🎤 Practice Mode - '}
-                              Measure {currentMeasure + 1} of {measures[0]} • Beat {currentBeat + 1}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {tempo} BPM • {timeSignature}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: parseInt(timeSignature.split('/')[0]) }).map((_, i) => (
-                          <div
-                            key={i}
-                            className={`w-3 h-3 rounded-full border-2 transition-colors ${
-                              i === currentBeat && !isCountingIn
-                                ? 'bg-primary border-primary'
-                                : 'border-muted-foreground/30'
-                            }`}
-                          />
-                        ))}
-                      </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Key</Label>
+                      <Select value={keySignature} onValueChange={setKeySignature}>
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="C major">C major</SelectItem>
+                          <SelectItem value="G major">G major</SelectItem>
+                          <SelectItem value="D major">D major</SelectItem>
+                          <SelectItem value="F major">F major</SelectItem>
+                          <SelectItem value="Bb major">B♭ major</SelectItem>
+                          <SelectItem value="A minor">A minor</SelectItem>
+                          <SelectItem value="E minor">E minor</SelectItem>
+                          <SelectItem value="D minor">D minor</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                )}
-                
-                <OSMDViewer 
-                  musicXML={generatedMusicXML} 
-                  title={`${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Exercise - ${keySignature}`}
-                  solfegeEnabled={solfegeEnabled}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
-        {/* Sight Singing Practice Component */}
-        {exerciseGenerated && generatedMusicXML && (
-          <div className="space-y-6">
-            <SightSingingPractice 
-              musicXML={generatedMusicXML}
-              exerciseMetadata={{
-                difficulty,
-                key: keySignature,
-                timeSignature,
-                length: measures[0],
-                description: `${measures[0]} measures • ${keySignature} • ${timeSignature} • ${noteRange}`
-              }}
-              onRecordingChange={setIsRecording}
-              onSolfegeChange={setSolfegeEnabled}
-            />
-            
-            {/* Completed Exercises List */}
-            {user && (
-              <CompletedExercisesList user={user} />
-            )}
-          </div>
-        )}
+                  {/* Row 2: Time & Voice */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Time</Label>
+                      <Select value={timeSignature} onValueChange={setTimeSignature}>
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="4/4">4/4</SelectItem>
+                          <SelectItem value="3/4">3/4</SelectItem>
+                          <SelectItem value="2/4">2/4</SelectItem>
+                          <SelectItem value="6/8">6/8</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-        {/* Generation Parameters - Show when no exercise is generated */}
-        {!exerciseGenerated && (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* Controls */}
-            <div className="xl:col-span-1">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Exercise Parameters</CardTitle>
-                  <CardDescription>Customize your sight-reading exercise</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="difficulty">Difficulty Level</Label>
-                    <Select value={difficulty} onValueChange={setDifficulty}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="beginner">Beginner</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="advanced">Advanced</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Voice</Label>
+                      <Select value={voicePart} onValueChange={setVoicePart as any}>
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Soprano">Soprano</SelectItem>
+                          <SelectItem value="Alto">Alto</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
+                  {/* Row 3: Measures */}
                   <div className="space-y-2">
-                    <Label htmlFor="key">Key Signature</Label>
-                    <Select value={keySignature} onValueChange={setKeySignature}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="C major">C Major</SelectItem>
-                        <SelectItem value="G major">G Major</SelectItem>
-                        <SelectItem value="D major">D Major</SelectItem>
-                        <SelectItem value="A major">A Major</SelectItem>
-                        <SelectItem value="F major">F Major</SelectItem>
-                        <SelectItem value="Bb major">B♭ Major</SelectItem>
-                        <SelectItem value="Eb major">E♭ Major</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="time">Time Signature</Label>
-                    <Select value={timeSignature} onValueChange={setTimeSignature}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="4/4">4/4</SelectItem>
-                        <SelectItem value="3/4">3/4</SelectItem>
-                        <SelectItem value="2/4">2/4</SelectItem>
-                        <SelectItem value="6/8">6/8</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="measures">Number of Measures: {measures[0]}</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Measures</Label>
+                      <span className="text-xs font-mono">{measures[0]}</span>
+                    </div>
                     <Slider
                       value={measures}
                       onValueChange={setMeasures}
+                      max={12}
                       min={4}
-                      max={16}
                       step={1}
                       className="w-full"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="range">Note Range</Label>
-                    <Select value={noteRange} onValueChange={setNoteRange}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="C4-C5">C4-C5 (Beginner)</SelectItem>
-                        <SelectItem value="G3-G5">G3-G5 (Intermediate)</SelectItem>
-                        <SelectItem value="E3-E5">E3-E5 (Advanced)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Parts</Label>
-                      <Select value={partMode} onValueChange={(v: any) => setPartMode(v)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="single">Single Part</SelectItem>
-                          <SelectItem value="two-part">Two-Part Treble (SA)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {partMode === 'single' && (
-                      <div className="space-y-2">
-                        <Label>Voice</Label>
-                        <Select value={voicePart} onValueChange={(v: any) => setVoicePart(v)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Soprano">Soprano</SelectItem>
-                            <SelectItem value="Alto">Alto</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Interval Profile</Label>
-                      <Select value={intervalProfile} onValueChange={(v: any) => setIntervalProfile(v)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="stepwise">Stepwise</SelectItem>
-                          <SelectItem value="thirds">Thirds</SelectItem>
-                          <SelectItem value="mixed">Mixed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Tempo: {tempo} BPM</Label>
-                      <Slider value={[tempo]} onValueChange={(v) => setTempo(v[0])} min={60} max={144} step={2} />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Rhythmic Complexity</Label>
-                      <Select value={rhythmicComplexity} onValueChange={(v: any) => setRhythmicComplexity(v)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="simple">Simple</SelectItem>
-                          <SelectItem value="moderate">Moderate</SelectItem>
-                          <SelectItem value="advanced">Advanced</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Note Density</Label>
-                      <Select value={noteDensity} onValueChange={(v: any) => setNoteDensity(v)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label>Cadence Type</Label>
-                      <Select value={cadenceType} onValueChange={(v: any) => setCadenceType(v)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="perfect">Perfect (V–I)</SelectItem>
-                          <SelectItem value="plagal">Plagal (IV–I)</SelectItem>
-                          <SelectItem value="half">Half (ends on V)</SelectItem>
-                          <SelectItem value="deceptive">Deceptive (V–vi)</SelectItem>
-                          <SelectItem value="phrygian-half">Phrygian Half</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Modulation</Label>
-                      <Select value={modulationFrequency} onValueChange={(v: any) => setModulationFrequency(v)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="never">Never</SelectItem>
-                          <SelectItem value="rare">Rare</SelectItem>
-                          <SelectItem value="frequent">Frequent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Accidentals</Label>
-                      <Select value={accidentals} onValueChange={(v: any) => setAccidentals(v)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          <SelectItem value="some">Some</SelectItem>
-                          <SelectItem value="many">Many</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
+                  {/* Generate Button */}
                   <Button 
-                    onClick={generateExercise} 
+                    onClick={generateExercise}
                     disabled={isGenerating}
-                    className="w-full bg-primary text-primary-foreground"
+                    className="w-full h-9"
                   >
                     {isGenerating ? (
                       <>
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Generating Exercise...
+                        Generating...
                       </>
                     ) : (
                       <>
                         <Music className="h-4 w-4 mr-2" />
-                        Generate Exercise
+                        Generate
                       </>
                     )}
                   </Button>
                 </CardContent>
               </Card>
-            </div>
 
-            {/* Preview Area */}
-            <div className="xl:col-span-2">
-              {isGenerating ? (
-                <Card>
-                  <CardContent className="p-12">
-                    <div className="flex flex-col items-center justify-center text-center space-y-4">
-                      <RefreshCw className="h-12 w-12 animate-spin text-primary" />
-                      <h3 className="text-xl font-semibold">Generating Your Exercise</h3>
-                      <p className="text-muted-foreground">
-                        Creating a {difficulty} level sight-reading exercise in {keySignature}...
-                      </p>
-                    </div>
+              {/* Recent Exercises - Compact */}
+              {user && (
+                <Card className="flex-1 min-h-0">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Recent Exercises</CardTitle>
+                  </CardHeader>
+                  <CardContent className="overflow-y-auto">
+                    <CompletedExercisesList userId={user?.id} />
                   </CardContent>
                 </Card>
+              )}
+            </div>
+
+            {/* Right Panel - Exercise Display (8 columns on desktop) */}
+            <div className="lg:col-span-8 flex flex-col min-h-0">
+              {exerciseGenerated && generatedMusicXML ? (
+                <div className="h-full flex flex-col gap-4">
+                  {/* Sheet Music - Takes available space */}
+                  <div className="flex-1 min-h-0">
+                    <Card className="h-full">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Music className="h-4 w-4" />
+                          Exercise: {keySignature}, {timeSignature}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="h-full pb-6">
+                        <OSMDViewer 
+                          musicXML={generatedMusicXML}
+                          title={`Exercise: ${keySignature}, ${timeSignature}`}
+                          solfegeEnabled={solfegeEnabled}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  {/* Practice Controls - Fixed Height */}
+                  <div className="flex-shrink-0">
+                    <SightSingingPractice 
+                      musicXML={generatedMusicXML}
+                      exerciseMetadata={{
+                        key: keySignature,
+                        timeSignature: timeSignature,
+                        difficulty: difficulty,
+                        length: measures[0],
+                        description: `${measures[0]}-measure exercise in ${keySignature}`
+                      }}
+                      user={user}
+                      onRecordingChange={setIsRecording}
+                      onSolfegeChange={setSolfegeEnabled}
+                    />
+                  </div>
+                </div>
               ) : (
-                <Card>
-                  <CardContent className="p-12">
-                    <div className="flex flex-col items-center justify-center text-center space-y-4">
-                      <Music className="h-16 w-16 text-muted-foreground" />
-                      <h3 className="text-xl font-semibold text-muted-foreground">Ready to Generate</h3>
-                      <p className="text-muted-foreground">
-                        Configure your parameters and click "Generate Exercise" to create a personalized sight-reading exercise.
-                      </p>
+                <Card className="h-full">
+                  <CardContent className="h-full flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                      <Music className="h-16 w-16 mx-auto text-muted-foreground" />
+                      <div>
+                        <h3 className="text-lg font-semibold">Ready to Practice?</h3>
+                        <p className="text-muted-foreground">
+                          Configure your exercise parameters and click "Generate" to begin.
+                        </p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               )}
             </div>
           </div>
-        )}
+        </div>
       </div>
     </UniversalLayout>
   );
