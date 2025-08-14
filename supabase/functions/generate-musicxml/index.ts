@@ -102,55 +102,41 @@ async function generateWithOpenAI(params: GenerateRequest, apiKey: string, maxRe
   const allowedDurations = params.noteLengths.filter(d => ["quarter", "half"].includes(d));
   if (allowedDurations.length === 0) allowedDurations.push("quarter");
 
+  // Create detailed prompt using the template
+  const detailedPrompt = `You are generating sight-singing exercises as valid MusicXML 3.1 files for ${params.register} in ${params.keySignature} at ${params.tempo} BPM, ${params.timeSignature}, ${params.measures} measures long.
+
+Rules:
+1. Only use the note lengths provided: ${allowedDurations.join(", ")} (no other durations allowed).
+2. Only use the motion types provided: ${params.motionTypes.join(", ")} (no other intervals allowed).
+3. Pitch range is ${params.pitchRangeMin} to ${params.pitchRangeMax}. Stay within this range.
+4. Fill each measure exactly to match the beats required by the time signature.
+5. Do not include any text, commentary, or explanation in the output—only the MusicXML.
+6. MusicXML must load correctly in standard notation software without errors.
+
+Example constraints:
+- If noteLengths = ["quarter","half"], then no whole, eighth, sixteenth notes, etc.
+- If motionTypes = ["stepwise"], then every note must be a step (±1 scale degree).
+
+Output format:
+Return only a complete \`<score-partwise>\` MusicXML document with a single \`<part>\` for the voice. Do not wrap in code fences or JSON. Ensure \`<?xml version="1.0" encoding="UTF-8"?>\` is the first line.`;
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     console.log(`OpenAI generation attempt ${attempt}/${maxRetries}`);
     
     const body = {
       model: "gpt-5-mini-2025-08-07",
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "exercise",
-          schema: {
-            type: "object",
-            required: ["timeSignature", "key", "measures"],
-            properties: {
-              timeSignature: { type: "string", enum: ["4/4"] },
-              key: { type: "string", enum: ["C major"] },
-              measures: {
-                type: "array",
-                items: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    required: ["pitch", "octave", "dur"],
-                    properties: {
-                      pitch: { type: "string", enum: ["C", "D", "E", "F", "G", "A", "B"] },
-                      octave: { type: "integer", minimum: 4, maximum: 6 },
-                      dur: { type: "string", enum: allowedDurations },
-                      tie: { type: "boolean" }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          strict: true
-        }
-      },
       messages: [
         {
           role: "system",
-          content: `Output must be JSON matching schema. ${params.measures} measures of 4/4 in C major. ` +
-                  `Only stepwise motion (±1 scale degree). Only durations: ${allowedDurations.join(" or ")}. ` +
-                  `Each measure must total 4 beats exactly. Start around C4-E4 range.`
+          content: "You are a music composition expert. Generate valid MusicXML for sight-singing exercises following the exact specifications provided."
         },
         {
           role: "user",
-          content: `Generate ${params.register} register, no leaps, no accidentals. ${params.measures} measures total.`
+          content: detailedPrompt
         }
       ],
-      temperature: 0.1
+      temperature: 0.1,
+      max_completion_tokens: 2000
     };
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -168,31 +154,33 @@ async function generateWithOpenAI(params: GenerateRequest, apiKey: string, maxRe
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    const musicXML = data.choices[0].message.content;
     
-    try {
-      const exerciseData: ExerciseData = JSON.parse(content);
-      console.log(`Received exercise data:`, JSON.stringify(exerciseData, null, 2));
-      
-      // Validate the generated data
-      const validationError = validateExerciseData(exerciseData);
-      if (validationError) {
-        console.log(`Validation failed on attempt ${attempt}: ${validationError}`);
-        if (attempt === maxRetries) {
-          throw new Error(`Validation failed after ${maxRetries} attempts: ${validationError}`);
-        }
-        continue;
-      }
-      
-      console.log(`Validation passed on attempt ${attempt}`);
-      return exerciseData;
-      
-    } catch (parseError) {
-      console.log(`JSON parse error on attempt ${attempt}:`, parseError);
+    console.log(`Received MusicXML (attempt ${attempt}):`, musicXML.substring(0, 200) + '...');
+    
+    // Validate the generated MusicXML
+    if (!validateMusicXML(musicXML)) {
+      console.log(`MusicXML validation failed on attempt ${attempt}`);
       if (attempt === maxRetries) {
-        throw new Error("Failed to parse OpenAI response as JSON");
+        throw new Error(`MusicXML validation failed after ${maxRetries} attempts`);
       }
+      continue;
     }
+    
+    // Parse MusicXML back to structured data for consistency
+    const exerciseData = parseMusicXMLToData(musicXML);
+    const structuralValidation = validateExerciseData(exerciseData);
+    
+    if (structuralValidation) {
+      console.log(`Structural validation failed on attempt ${attempt}: ${structuralValidation}`);
+      if (attempt === maxRetries) {
+        throw new Error(`Structural validation failed: ${structuralValidation}`);
+      }
+      continue;
+    }
+    
+    console.log(`All validation passed on attempt ${attempt}`);
+    return exerciseData;
   }
   
   throw new Error("Maximum retries exceeded");
@@ -304,6 +292,56 @@ ${isFirst ? `      <attributes>
 </score-partwise>`;
 
   return header + measuresXML + footer;
+}
+
+function parseMusicXMLToData(musicXML: string): ExerciseData {
+  try {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(musicXML, 'text/xml');
+    
+    const measures: Note[][] = [];
+    const measureElements = xmlDoc.querySelectorAll('measure');
+    
+    measureElements.forEach(measureEl => {
+      const measure: Note[] = [];
+      const noteElements = measureEl.querySelectorAll('note');
+      
+      noteElements.forEach(noteEl => {
+        const pitchEl = noteEl.querySelector('pitch');
+        const typeEl = noteEl.querySelector('type');
+        
+        if (pitchEl && typeEl) {
+          const step = pitchEl.querySelector('step')?.textContent || 'C';
+          const octave = parseInt(pitchEl.querySelector('octave')?.textContent || '4');
+          const dur = typeEl.textContent || 'quarter';
+          
+          measure.push({
+            pitch: step,
+            octave,
+            dur
+          });
+        }
+      });
+      
+      if (measure.length > 0) {
+        measures.push(measure);
+      }
+    });
+    
+    return {
+      timeSignature: "4/4",
+      key: "C major", 
+      measures
+    };
+  } catch (error) {
+    console.error("Error parsing MusicXML to data:", error);
+    // Return minimal valid structure
+    return {
+      timeSignature: "4/4",
+      key: "C major",
+      measures: [[{ pitch: "C", octave: 4, dur: "quarter" }]]
+    };
+  }
 }
 
 function validateMusicXML(musicXML: string): boolean {
@@ -471,26 +509,23 @@ serve(async (req) => {
       .from('musicxml-exercises')
       .getPublicUrl(filename);
 
-    // Store in database if we have request parameters
-    if (apiKey) {
-      const params = await req.json().catch(() => ({}));
-      await supabase.from('sight_singing_exercises').insert({
-        user_id: user.id,
-        title: params.title || "Generated Exercise",
-        key_signature: params.keySignature || "C major",
-        time_signature: params.timeSignature || "4/4",
-        tempo: params.tempo || 120,
-        measures: params.measures || 4,
-        register: params.register || "soprano",
-        pitch_range_min: params.pitchRangeMin || "C4",
-        pitch_range_max: params.pitchRangeMax || "C5",
-        motion_types: params.motionTypes || ["stepwise"],
-        note_lengths: params.noteLengths || ["quarter"],
-        difficulty_level: params.difficultyLevel || 2,
-        musicxml_content: musicXML,
-        file_url: publicUrl
-      });
-    }
+    // Store in database
+    await supabase.from('sight_singing_exercises').insert({
+      user_id: user.id,
+      title: params.title || "Generated Exercise",
+      key_signature: params.keySignature || "C major",
+      time_signature: params.timeSignature || "4/4",
+      tempo: params.tempo || 120,
+      measures: params.measures || 4,
+      register: params.register || "soprano",
+      pitch_range_min: params.pitchRangeMin || "C4",
+      pitch_range_max: params.pitchRangeMax || "C5",
+      motion_types: params.motionTypes || ["stepwise"],
+      note_lengths: params.noteLengths || ["quarter"],
+      difficulty_level: params.difficultyLevel || 2,
+      musicxml_content: musicXML,
+      file_url: publicUrl
+    });
 
     // Return both JSON response and file download info
     return new Response(JSON.stringify({
