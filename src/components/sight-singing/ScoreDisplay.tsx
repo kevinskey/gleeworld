@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ScoreDisplayProps {
@@ -9,55 +9,7 @@ interface ScoreDisplayProps {
 }
 
 export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ musicXML }) => {
-  const scoreRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (!scoreRef.current || !musicXML) return;
-
-    const loadOSMD = async () => {
-      try {
-        // Dynamic import of OpenSheetMusicDisplay
-        const { OpenSheetMusicDisplay } = await import('opensheetmusicdisplay');
-        
-        // Clear previous score
-        scoreRef.current!.innerHTML = '';
-        
-        // Create new OSMD instance
-        const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
-          autoResize: true,
-          drawTitle: true,
-          drawCredits: false,
-          drawPartNames: false,
-          drawMeasureNumbers: true,
-          coloringMode: 0, // No coloring
-          cursorsOptions: [{
-            type: 3, // Thin cursor
-            color: '#3B82F6',
-            alpha: 0.7,
-            follow: true
-          }]
-        });
-
-        // Load the MusicXML
-        await osmd.load(musicXML);
-        osmd.render();
-
-        // Store OSMD instance for potential cursor usage
-        (scoreRef.current as any).__osmdInstance = osmd;
-
-      } catch (error) {
-        console.error('Error loading OSMD:', error);
-        toast({
-          title: "Score Display Error",
-          description: "Failed to render musical score",
-          variant: "destructive"
-        });
-      }
-    };
-
-    loadOSMD();
-  }, [musicXML, toast]);
 
   const handleDownloadMusicXML = () => {
     try {
@@ -85,29 +37,71 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ musicXML }) => {
     }
   };
 
+  // Extract basic info from MusicXML for display
+  const extractMusicInfo = (xml: string) => {
+    const measureCount = (xml.match(/<measure\s+number=/g) || []).length;
+    const keyMatch = xml.match(/<fifths>(-?\d+)<\/fifths>/);
+    const timeMatch = xml.match(/<beats>(\d+)<\/beats>[\s\S]*?<beat-type>(\d+)<\/beat-type>/);
+    
+    const keySignature = keyMatch ? 
+      ['Cb', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F', 'C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#'][parseInt(keyMatch[1]) + 7] || 'C' : 'C';
+    const timeSignature = timeMatch ? `${timeMatch[1]}/${timeMatch[2]}` : '4/4';
+    
+    return { measureCount, keySignature, timeSignature };
+  };
+
+  const musicInfo = musicXML ? extractMusicInfo(musicXML) : null;
+
   return (
     <Card>
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Musical Score</h3>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleDownloadMusicXML}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download MusicXML
-          </Button>
+          {musicXML && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleDownloadMusicXML}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download MusicXML
+            </Button>
+          )}
         </div>
         
-        <div 
-          ref={scoreRef}
-          className="min-h-[300px] bg-background rounded-lg border p-4 overflow-auto"
-        />
-        
-        {!musicXML && (
+        {musicXML ? (
+          <div className="space-y-4">
+            <div className="bg-muted p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="h-4 w-4" />
+                <span className="font-medium">Exercise Details</span>
+              </div>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Measures:</span>
+                  <div className="font-medium">{musicInfo?.measureCount || 0}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Key:</span>
+                  <div className="font-medium">{musicInfo?.keySignature} major</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Time:</span>
+                  <div className="font-medium">{musicInfo?.timeSignature}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-background border rounded-lg p-4">
+              <div className="text-sm text-muted-foreground mb-2">MusicXML Content Preview:</div>
+              <pre className="text-xs overflow-auto max-h-[200px] whitespace-pre-wrap break-words">
+                {musicXML.substring(0, 500)}...
+              </pre>
+            </div>
+          </div>
+        ) : (
           <div className="min-h-[300px] flex items-center justify-center text-muted-foreground">
-            Generate an exercise to see the musical score
+            Generate an exercise to see the musical score details
           </div>
         )}
       </CardContent>
