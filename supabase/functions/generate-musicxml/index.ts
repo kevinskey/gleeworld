@@ -27,11 +27,21 @@ serve(async (req) => {
   }
 
   const apiKey = Deno.env.get("OPENAI_API_KEY") ?? "";
+  
+  // Debug logging
+  console.log("OPENAI_API_KEY exists:", !!Deno.env.get("OPENAI_API_KEY"));
+  console.log("API key length:", apiKey.length);
+  console.log("API key starts with sk-:", apiKey.startsWith("sk-"));
+  
   if (!apiKey) {
     return new Response(JSON.stringify({
       success: false,
       error: "Missing OPENAI_API_KEY",
-      debug: { openAIApiKey_exists: false }
+      debug: { 
+        openAIApiKey_exists: !!Deno.env.get("OPENAI_API_KEY"),
+        openAIApiKey_length: apiKey.length,
+        message: "API key not found in environment variables"
+      }
     }), { 
       status: 500, 
       headers: { ...corsHeaders, "Content-Type": "application/json" }
