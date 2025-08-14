@@ -168,11 +168,16 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
           .eq('is_active', true);
 
         if (!blockError && timeBlocks && timeBlocks.length > 0) {
+          console.log('📊 Found time blocks:', timeBlocks);
           const matchingBlocks = timeBlocks.filter(block => {
             const blockStartDateEastern = toZonedTime(new Date(block.start_date), EASTERN_TZ);
             const blockDateString = format(blockStartDateEastern, 'yyyy-MM-dd');
+            console.log(`🔍 Checking block date: ${blockDateString} vs selected: ${selectedDateString}`);
+            console.log(`🔍 Block start date (UTC): ${block.start_date}`);
+            console.log(`🔍 Block start date (Eastern): ${blockStartDateEastern}`);
             return blockDateString === selectedDateString;
           });
+          console.log('📋 Matching blocks for date:', matchingBlocks);
 
           if (matchingBlocks.length > 0) {
             const auditionBlock = matchingBlocks[0];
@@ -182,16 +187,25 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
             const blockStartEastern = toZonedTime(new Date(auditionBlock.start_date), EASTERN_TZ);
             const blockEndEastern = toZonedTime(new Date(auditionBlock.end_date), EASTERN_TZ);
             
+            console.log('🎯 Generating slots for block:', auditionBlock);
+            console.log('🎯 Block start (Eastern):', blockStartEastern);
+            console.log('🎯 Block end (Eastern):', blockEndEastern);
+            console.log('🎯 Appointment duration:', appointmentDuration);
+            
             const startTime = new Date(selectedDate);
             startTime.setHours(blockStartEastern.getHours(), blockStartEastern.getMinutes(), 0, 0);
             
             const endTime = new Date(selectedDate);
             endTime.setHours(blockEndEastern.getHours(), blockEndEastern.getMinutes(), 0, 0);
             
+            console.log('🎯 Start time for slots:', startTime);
+            console.log('🎯 End time for slots:', endTime);
+            
             const currentTime = new Date(startTime);
             
             while (currentTime < endTime) {
               const timeString = format(currentTime, 'h:mm a');
+              console.log('🕐 Generated time slot:', timeString);
               
               // Check if this slot is already booked
               const isBooked = slots.some(slot => slot.time === timeString);
