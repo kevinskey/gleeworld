@@ -455,12 +455,15 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         if (metronomePlayerRef.current) {
           metronomePlayerRef.current.stop();
           console.log('🛑 Stopped existing metronome before countdown');
+          // Small delay to ensure clean stop
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
         // Now start fresh metronome with correct tempo
         if (metronomePlayerRef.current) {
           metronomePlayerRef.current.setTempo(tempo);
+          metronomePlayerRef.current.setVolume(metronomeVolume);
           metronomePlayerRef.current.start(tempo, beatsPerMeasure);
-          console.log('🎯 Metronome started for countdown at tempo:', tempo);
+          console.log('🎯 Metronome started for countdown at tempo:', tempo, 'BPM');
         }
       }
     };
@@ -476,8 +479,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
         clearInterval(countdownInterval);
         setIsCountingDown(false);
         
-        // Keep metronome running for practice - DO NOT STOP IT
-        console.log('Countdown complete, metronome continues running for recording');
+        // Keep metronome running for practice - DO NOT RESTART IT
+        console.log('✅ Countdown complete, metronome continues at', tempo, 'BPM for recording');
         
         callback(); // Start the actual practice or recording
       }
@@ -805,13 +808,15 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
       console.log('🎯 RECORDING MODE - Metronome enabled:', metronomeEnabled);
       console.log('🎯 RECORDING MODE - Metronome is playing:', metronomePlayerRef.current?.getBeatPosition());
       
-      // DON'T modify metronome tempo - it should already be correct from countdown
-      // Just log the current state to verify consistency
+      // CRITICAL: DO NOT modify metronome - it should already be running from countdown
+      // The metronome timing must remain consistent from countdown through recording
       if (metronomeEnabled && metronomePlayerRef.current) {
-        console.log('🎯 RECORDING MODE - Metronome continuing from countdown at tempo:', tempo);
-        // Only adjust volume if needed, but NEVER change tempo during recording
+        console.log('🎯 RECORDING MODE - Metronome already running at correct tempo:', tempo);
+        console.log('🎯 RECORDING MODE - Metronome beat position:', metronomePlayerRef.current.getBeatPosition());
+        // DO NOT call setTempo, start, or stop - just verify it's running correctly
+        // Only ensure volume is set correctly
         metronomePlayerRef.current.setVolume(metronomeVolume);
-        console.log('🎯 RECORDING MODE - Metronome volume set, tempo remains:', tempo);
+        console.log('🔊 Metronome volume set to:', metronomeVolume);
       }
       
       const recorder = new MediaRecorder(stream, {
