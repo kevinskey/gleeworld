@@ -102,21 +102,28 @@ Example structure:
   </part>
 </score-partwise>`;
 
-    console.log('Making OpenAI API request...');
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    console.log('OpenAI API Key present:', !!openAIApiKey);
+    
+    if (!openAIApiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is not set');
+    }
+    
+    console.log('Making OpenAI API request with GPT-5...');
     
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-5-2025-08-07',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Generate a sight-singing exercise with the specified parameters.` }
+          { role: 'user', content: 'Generate a sight-singing exercise with the specified parameters.' }
         ],
-        max_tokens: 2000,
+        max_completion_tokens: 2000
       }),
     });
 
@@ -124,15 +131,23 @@ Example structure:
 
     if (!openAIResponse.ok) {
       const errorText = await openAIResponse.text();
-      console.error('OpenAI API error:', {
+      console.error('OpenAI API error details:', {
         status: openAIResponse.status,
         statusText: openAIResponse.statusText,
-        error: errorText
+        headers: Object.fromEntries(openAIResponse.headers.entries()),
+        body: errorText
       });
       throw new Error(`OpenAI API error: ${openAIResponse.status} - ${errorText}`);
     }
 
     const result = await openAIResponse.json();
+    console.log('OpenAI response received successfully');
+    
+    if (!result.choices || !result.choices[0] || !result.choices[0].message) {
+      console.error('Invalid OpenAI response structure:', result);
+      throw new Error('Invalid response structure from OpenAI');
+    }
+    
     const musicXML = result.choices[0].message.content;
 
     console.log('Generated MusicXML:', musicXML.substring(0, 200) + '...');
