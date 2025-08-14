@@ -201,9 +201,18 @@ serve(async (req) => {
     stage = "musicxml";
     const jsonScore = JSON.parse(ai.choices[0].message.content);
     
-    // Generate measures based on the actual JSON score
-    const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    // Duration mapping for MusicXML
+    const durationMap = {
+      "whole": { duration: 64, type: "whole" },
+      "half": { duration: 32, type: "half" },
+      "quarter": { duration: 16, type: "quarter" },
+      "eighth": { duration: 8, type: "eighth" },
+      "16th": { duration: 4, type: "16th" }
+    };
+    
+    // Generate measures based on the actual JSON score from AI
     let measuresXML = "";
+    
     for (let measureNum = 1; measureNum <= jsonScore.numMeasures; measureNum++) {
       const attributesXML = measureNum === 1 ? `
       <attributes>
@@ -217,22 +226,38 @@ serve(async (req) => {
         </time>
       </attributes>` : "";
       
-      // Generate varied notes for each measure
+      // Use the actual notes from the AI-generated score
       let notesXML = "";
-      for (let noteNum = 0; noteNum < jsonScore.time.num; noteNum++) {
-        const noteIndex = (measureNum + noteNum - 1) % notes.length;
-        const octave = measureNum <= 2 ? 4 : (measureNum % 2 === 0 ? 4 : 5);
-        const step = notes[noteIndex];
+      const part = jsonScore.parts[0]; // Use first part (Soprano)
+      
+      if (part.measures && part.measures[measureNum - 1]) {
+        const measureNotes = part.measures[measureNum - 1];
         
-        notesXML += `
+        for (const note of measureNotes) {
+          const durInfo = durationMap[note.dur.base] || durationMap["quarter"];
+          
+          if (note.kind === "note" && note.pitch) {
+            notesXML += `
       <note>
         <pitch>
-          <step>${step}</step>
-          <octave>${octave}</octave>
+          <step>${note.pitch.step}</step>
+          ${note.pitch.alter !== 0 ? `<alter>${note.pitch.alter}</alter>` : ''}
+          <octave>${note.pitch.oct}</octave>
         </pitch>
-        <duration>16</duration>
-        <type>quarter</type>
+        <duration>${durInfo.duration}</duration>
+        <type>${durInfo.type}</type>
+        ${note.dur.dots > 0 ? `<dot/>`.repeat(note.dur.dots) : ''}
       </note>`;
+          } else if (note.kind === "rest") {
+            notesXML += `
+      <note>
+        <rest/>
+        <duration>${durInfo.duration}</duration>
+        <type>${durInfo.type}</type>
+        ${note.dur.dots > 0 ? `<dot/>`.repeat(note.dur.dots) : ''}
+      </note>`;
+          }
+        }
       }
       
       measuresXML += `
