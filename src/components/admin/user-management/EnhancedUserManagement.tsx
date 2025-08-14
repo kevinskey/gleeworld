@@ -11,6 +11,7 @@ import { UserDetailPanel } from "./UserDetailPanel";
 import { BulkSelectControls } from "./BulkSelectControls";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QuickAddUserForm } from "@/components/upload/QuickAddUserForm";
+import { useRoleTransitions } from "@/hooks/useRoleTransitions";
 
 import { User } from "@/hooks/useUsers";
 import { useToast } from "@/hooks/use-toast";
@@ -30,7 +31,8 @@ import {
   UserPlus,
   AlertCircle,
   ChevronRight,
-  Music
+  Music,
+  Loader2
 } from "lucide-react";
 
 interface EnhancedUserManagementProps {
@@ -56,7 +58,9 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [sortBy, setSortBy] = useState<'full_name' | 'email'>('full_name');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [changingRoles, setChangingRoles] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const { transitionUserRole } = useRoleTransitions();
 
   const handleUpdateSuccess = () => {
     toast({
@@ -79,6 +83,41 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
   const handleUserClick = (user: User) => {
     setSelectedUser(user);
     setShowDetailPanel(true);
+  };
+
+  const handleRoleChange = async (userId: string, newRole: string, currentRole: string) => {
+    if (newRole === currentRole) return;
+    
+    setChangingRoles(prev => new Set(prev).add(userId));
+    
+    try {
+      const success = await transitionUserRole(
+        userId, 
+        newRole, 
+        'admin_role_change', 
+        `Role changed from ${currentRole} to ${newRole} via user management interface`
+      );
+      
+      if (success) {
+        onRefetch(); // Refresh the user list
+        toast({
+          title: "Role Updated",
+          description: `User role changed from ${currentRole} to ${newRole}`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update user role",
+        variant: "destructive",
+      });
+    } finally {
+      setChangingRoles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+    }
   };
 
   const filteredUsers = useMemo(() => {
@@ -251,12 +290,30 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                         <div className="text-sm leading-5 text-muted-foreground">{user.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-no-wrap border-r border-primary/5">
-                        <Badge 
-                          variant={user.role === 'admin' || user.role === 'super-admin' ? 'default' : 'secondary'}
-                          className={user.role === 'admin' || user.role === 'super-admin' ? 'bg-primary text-primary-foreground' : ''}
-                        >
-                          {user.role}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Select 
+                            value={user.role || 'guest'} 
+                            onValueChange={(newRole) => handleRoleChange(user.id, newRole, user.role || 'guest')}
+                            disabled={changingRoles.has(user.id)}
+                          >
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="guest">Guest</SelectItem>
+                              <SelectItem value="fan">Fan</SelectItem>
+                              <SelectItem value="auditioner">Auditioner</SelectItem>
+                              <SelectItem value="member">Member</SelectItem>
+                              <SelectItem value="alumna">Alumna</SelectItem>
+                              <SelectItem value="executive">Executive</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="super-admin">Super Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {changingRoles.has(user.id) && (
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-no-wrap border-r border-primary/5">
                         {user.verified ? (
