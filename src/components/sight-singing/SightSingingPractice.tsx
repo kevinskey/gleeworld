@@ -442,13 +442,16 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     let beatCount = 0;
     
-    // Initialize and start metronome for countdown
+    // Initialize and start metronome for countdown with correct tempo
     const startCountdownMetronome = async () => {
       if (metronomeEnabled) {
         await initializeAudioSystem();
-        // Start metronome immediately for countdown
-        startMetronomeWithPreciseTiming();
-        console.log('🎯 Metronome started for countdown');
+        // Ensure metronome uses the correct tempo
+        if (metronomePlayerRef.current) {
+          metronomePlayerRef.current.setTempo(tempo);
+          metronomePlayerRef.current.start(tempo, beatsPerMeasure);
+          console.log('🎯 Metronome started for countdown at tempo:', tempo);
+        }
       }
     };
     
@@ -472,7 +475,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     
     toast({
       title: "Get Ready",
-      description: `4-beat count-in starting now`
+      description: `4-beat count-in starting at ${tempo} BPM`
     });
   };
 
