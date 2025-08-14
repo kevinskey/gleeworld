@@ -89,13 +89,33 @@ export const AuditionTimeGrid = () => {
       if (error) throw error;
       
       // Transform the data to match our interface
-      const transformedData = data?.map(audition => ({
-        id: audition.id,
-        full_name: `${audition.first_name} ${audition.last_name}`.trim(),
-        email: audition.email,
-        audition_time_slot: `${audition.audition_date}T${audition.audition_time}`,
-        status: audition.status
-      })) || [];
+      const transformedData = data?.map(audition => {
+        // Handle different time formats - some are "19:30:00", others are "3:30 PM"
+        let timeString = audition.audition_time;
+        
+        // If it's in 12-hour format (contains AM/PM), convert to 24-hour format
+        if (timeString.includes('AM') || timeString.includes('PM')) {
+          const [time, meridiem] = timeString.split(' ');
+          const [hours, minutes] = time.split(':').map(Number);
+          let hour24 = hours;
+          
+          if (meridiem === 'PM' && hours !== 12) {
+            hour24 += 12;
+          } else if (meridiem === 'AM' && hours === 12) {
+            hour24 = 0;
+          }
+          
+          timeString = `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+        }
+        
+        return {
+          id: audition.id,
+          full_name: `${audition.first_name} ${audition.last_name}`.trim(),
+          email: audition.email,
+          audition_time_slot: `${audition.audition_date}T${timeString}`,
+          status: audition.status
+        };
+      }) || [];
       
       setAllAppointments(transformedData);
       console.log('📅 All auditions found from gw_auditions:', transformedData.length);
@@ -158,13 +178,33 @@ export const AuditionTimeGrid = () => {
       if (error) throw error;
       
       // Transform the data to match our interface
-      const transformedData = data?.map(audition => ({
-        id: audition.id,
-        full_name: `${audition.first_name} ${audition.last_name}`.trim(),
-        email: audition.email,
-        audition_time_slot: `${audition.audition_date}T${audition.audition_time}`,
-        status: audition.status
-      })) || [];
+      const transformedData = data?.map(audition => {
+        // Handle different time formats - some are "19:30:00", others are "3:30 PM"
+        let timeString = audition.audition_time;
+        
+        // If it's in 12-hour format (contains AM/PM), convert to 24-hour format
+        if (timeString.includes('AM') || timeString.includes('PM')) {
+          const [time, meridiem] = timeString.split(' ');
+          const [hours, minutes] = time.split(':').map(Number);
+          let hour24 = hours;
+          
+          if (meridiem === 'PM' && hours !== 12) {
+            hour24 += 12;
+          } else if (meridiem === 'AM' && hours === 12) {
+            hour24 = 0;
+          }
+          
+          timeString = `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+        }
+        
+        return {
+          id: audition.id,
+          full_name: `${audition.first_name} ${audition.last_name}`.trim(),
+          email: audition.email,
+          audition_time_slot: `${audition.audition_date}T${timeString}`,
+          status: audition.status
+        };
+      }) || [];
       
       console.log(`📋 Found ${transformedData.length} appointments for ${selectedDateString}:`, transformedData);
       setAppointments(transformedData);
