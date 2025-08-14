@@ -102,29 +102,52 @@ Example structure:
   </part>
 </score-partwise>`;
 
+    // Check for OpenAI API key with multiple variations
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    console.log('OpenAI API Key present:', !!openAIApiKey);
+    const openaiKey = Deno.env.get('OPENAI_KEY');
+    const openaiApiKey2 = Deno.env.get('OPENAI_API_KEY_SECRET');
     
-    if (!openAIApiKey) {
-      throw new Error('OPENAI_API_KEY environment variable is not set');
+    console.log('OPENAI_API_KEY present:', !!openAIApiKey);
+    console.log('OPENAI_KEY present:', !!openaiKey);
+    console.log('OPENAI_API_KEY_SECRET present:', !!openaiApiKey2);
+
+    const finalApiKey = openAIApiKey || openaiKey || openaiApiKey2;
+    
+    if (!finalApiKey) {
+      return new Response(JSON.stringify({
+        error: 'No OpenAI API key found in environment variables',
+        success: false
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!finalApiKey.startsWith('sk-')) {
+      return new Response(JSON.stringify({
+        error: 'Invalid OpenAI API key format - should start with sk-',
+        success: false
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
     
-    console.log('Making OpenAI API request with GPT-4o...');
+    console.log('Making OpenAI API request with GPT-5...');
     
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${finalApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-5-2025-08-07',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: 'Generate a sight-singing exercise with the specified parameters.' }
         ],
-        max_tokens: 2000,
-        temperature: 0.7
+        max_completion_tokens: 2000
       }),
     });
 
