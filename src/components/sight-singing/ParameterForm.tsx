@@ -182,7 +182,10 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
               <Checkbox
                 id={duration}
                 checked={watchedAllowedDur?.includes(duration as any) || false}
-                onCheckedChange={(checked) => handleDurationChange(duration, checked as boolean)}
+                onCheckedChange={(checked) => {
+                  console.log(`Duration ${duration} changed to:`, checked);
+                  handleDurationChange(duration, checked as boolean);
+                }}
               />
               <Label htmlFor={duration} className="text-sm font-medium flex items-center gap-2">
                 <div className="flex items-center gap-1">
