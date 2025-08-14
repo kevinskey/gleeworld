@@ -65,13 +65,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
           <DialogHeader>
             <DialogTitle className="text-base">Metronome</DialogTitle>
           </DialogHeader>
-          <Metronome
-            isEnabled
-            tempo={tempo}
-            isPlaying={isMetroPlaying}
-            onPlayingChange={setIsMetroPlaying}
-            timeSignature="4/4"
-          />
+          <Metronome />
         </DialogContent>
       </Dialog>
 
@@ -92,7 +86,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
             <DialogTitle className="text-base">Small Piano</DialogTitle>
           </DialogHeader>
           <div className="overflow-x-auto">
-            <VirtualPiano isEnabled customRange={SMALL_PIANO_RANGE} />
+            <VirtualPiano />
           </div>
         </DialogContent>
       </Dialog>
@@ -104,7 +98,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
             <DialogTitle className="text-base">Full Piano (C3–G5)</DialogTitle>
           </DialogHeader>
           <div className="overflow-x-auto">
-            <VirtualPiano isEnabled customRange={FULL_PIANO_RANGE} className="w-full" />
+            <VirtualPiano />
           </div>
         </DialogContent>
       </Dialog>

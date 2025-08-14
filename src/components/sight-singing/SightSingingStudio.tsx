@@ -479,7 +479,7 @@ export const SightSingingStudio: React.FC = () => {
                 <Button
                   variant={metronomeIsPlaying ? "destructive" : "default"}
                   size="sm"
-                  onClick={metronomeIsPlaying ? stopMetronome : startMetronome}
+                  onClick={metronomeIsPlaying ? stopMetronome : () => startMetronome(generatedExercise?.parameters.tempo || 120)}
                 >
                   {metronomeIsPlaying ? (
                     <>

@@ -53,7 +53,7 @@ import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
 import { StudentConductorModule } from '@/components/modules/StudentConductorModule';
 import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 import { SightSingingModule } from '@/components/modules/SightSingingModule';
-import { SightReadingPreviewModule } from '@/components/modules/SightReadingPreviewModule';
+import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
 import { PRCoordinatorHub } from '@/components/pr-coordinator/PRCoordinatorHub';
 import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
@@ -374,7 +374,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "purple",
     category: "musical-leadership",
     isActive: true,
-    component: SightReadingPreviewModule,
+    component: SightSingingPreviewModule,
     dbFunctionName: "sight-reading-preview"
   },
 
