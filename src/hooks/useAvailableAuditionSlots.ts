@@ -122,7 +122,7 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
           });
         }
 
-        console.log('🔍 Fetching booked appointments for date:', selectedDateString);
+        console.log('🔍 UPDATED CODE - Fetching booked appointments for date:', selectedDateString);
         
         // Get all audition appointments
         const { data: appointments, error: appointmentsError } = await supabase
