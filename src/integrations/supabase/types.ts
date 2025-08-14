@@ -11807,6 +11807,33 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          request_count: number | null
+          user_id: string
+          window_start: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          request_count?: number | null
+          user_id: string
+          window_start?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          request_count?: number | null
+          user_id?: string
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       receipts: {
         Row: {
           amount: number
@@ -13396,12 +13423,19 @@ export type Database = {
         Returns: boolean
       }
       check_rate_limit: {
-        Args: {
-          action_type_param: string
-          identifier_param: string
-          max_attempts?: number
-          window_minutes?: number
-        }
+        Args:
+          | {
+              action_type_param: string
+              identifier_param: string
+              max_attempts?: number
+              window_minutes?: number
+            }
+          | {
+              p_action_type: string
+              p_max_requests?: number
+              p_user_id: string
+              p_window_minutes?: number
+            }
         Returns: boolean
       }
       check_rate_limit_secure: {

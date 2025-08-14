@@ -33,6 +33,8 @@ export interface GeneratedExercise {
   id?: string;
   musicXML: string;
   parameters: ExerciseParameters;
+  downloadUrl?: string;
+  filename?: string;
 }
 
 export interface Recording {
@@ -135,65 +137,56 @@ export const SightSingingStudio: React.FC = () => {
   const handleGenerateExercise = async (parameters: ExerciseParameters) => {
     setIsGenerating(true);
     try {
-      // First test the OpenAI API
-      console.log('Testing OpenAI API...');
-      const testResponse = await supabase.functions.invoke('test-openai');
-      console.log('Test response:', testResponse);
-      console.log('Test response data:', testResponse.data);
-      console.log('Test debug data:', testResponse.data?.debug);
-      console.log('OpenAI API Key exists in test:', testResponse.data?.debug?.openaiApiKeyExists);
-      console.log('OpenAI API Key length in test:', testResponse.data?.debug?.openaiApiKeyLength);
+      console.log('Generating exercise with enhanced security...');
       
-      if (testResponse.error) {
-        throw new Error(`API Test Failed: ${testResponse.error.message}`);
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        throw new Error('Authentication required');
       }
 
-      console.log('OpenAI API test successful, generating exercise...');
+      const response = await fetch('https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/generate-musicxml', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.session.access_token}`,
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg'
+        },
+        body: JSON.stringify(parameters)
+      });
       
-      // Try to get detailed error info by making a direct fetch first
-      try {
-        const response = await fetch('https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/generate-musicxml', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-            'Content-Type': 'application/json',
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg'
-          },
-          body: JSON.stringify(parameters)
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Direct fetch error response:', errorText);
-          let errorData;
-          try {
-            errorData = JSON.parse(errorText);
-          } catch {
-            errorData = { error: errorText };
-          }
-          throw new Error(errorData.error || `HTTP ${response.status}: ${errorText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Generation error:', errorText);
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
         }
         
-        const data = await response.json();
-        console.log('Direct fetch success:', data);
-        
-        if (!data || !data.musicXML) {
-          console.error('Invalid response data:', data);
-          throw new Error('Invalid response: no musicXML generated');
+        if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please wait a moment and try again.');
         }
         
-        const exercise: GeneratedExercise = {
-          musicXML: data.musicXML,
-          parameters
-        };
-
-        setGeneratedExercise(exercise);
-        setCurrentStep('score');
-        
-      } catch (fetchError) {
-        console.error('Direct fetch failed, trying supabase client:', fetchError);
-        throw fetchError;
+        throw new Error(errorData.error || `Generation failed: ${response.status}`);
       }
+      
+      const data = await response.json();
+      console.log('Generation response:', data);
+      
+      if (!data.success || !data.musicXML) {
+        throw new Error(data.error || 'No MusicXML generated');
+      }
+      
+      const exercise: GeneratedExercise = {
+        musicXML: data.musicXML,
+        parameters,
+        downloadUrl: data.downloadUrl,
+        filename: data.filename
+      };
+
+      setGeneratedExercise(exercise);
+      setCurrentStep('score');
       
       toast({
         title: "Exercise Generated!",
@@ -203,7 +196,7 @@ export const SightSingingStudio: React.FC = () => {
       console.error('Error generating exercise:', error);
       toast({
         title: "Generation Failed",
-        description: `Failed to generate exercise: ${error.message}`,
+        description: error.message || "Failed to generate exercise",
         variant: "destructive"
       });
     } finally {
@@ -440,22 +433,61 @@ export const SightSingingStudio: React.FC = () => {
               <CardContent className="space-y-4">
                 <ScoreDisplay musicXML={generatedExercise.musicXML} />
                 
-                <div className="flex items-center gap-4">
-                  <PlaybackControls
-                    musicXML={generatedExercise.musicXML}
-                    tempo={generatedExercise.parameters.tempo}
-                    timeSignature={generatedExercise.parameters.timeSignature}
-                    isPlaying={playbackIsPlaying}
-                    onPlay={startPlayback}
-                    onStop={stopPlayback}
-                    mode={playbackMode}
-                    onModeChange={setPlaybackMode}
-                  />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <PlaybackControls
+                      musicXML={generatedExercise.musicXML}
+                      tempo={generatedExercise.parameters.tempo}
+                      timeSignature={generatedExercise.parameters.timeSignature}
+                      isPlaying={playbackIsPlaying}
+                      onPlay={startPlayback}
+                      onStop={stopPlayback}
+                      mode={playbackMode}
+                      onModeChange={setPlaybackMode}
+                    />
+                    
+                    <Button onClick={() => setCurrentStep('record')}>
+                      <Mic className="h-4 w-4 mr-2" />
+                      Start Recording
+                    </Button>
+                  </div>
                   
-                  <Button onClick={() => setCurrentStep('record')}>
-                    <Mic className="h-4 w-4 mr-2" />
-                    Start Recording
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {generatedExercise.downloadUrl && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = generatedExercise.downloadUrl!;
+                          link.download = generatedExercise.filename || 'exercise.musicxml';
+                          link.target = '_blank';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          toast({
+                            title: "Download Started",
+                            description: "MusicXML file is downloading"
+                          });
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download .musicxml
+                      </Button>
+                    )}
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setGeneratedExercise(null);
+                        setCurrentStep('parameters');
+                      }}
+                    >
+                      <RotateCcw className="h-4 w-4 mr-2" />
+                      Regenerate
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
