@@ -143,17 +143,32 @@ serve(async (req) => {
 
     if (!apiKey) {
       console.log("No OpenAI API key found, using mock response");
-      // Mock response for development
-      musicXML = `<?xml version="1.0" encoding="UTF-8"?>
-<score-partwise version="3.1">
-  <part-list>
-    <score-part id="P1">
-      <part-name>Voice</part-name>
-    </score-part>
-  </part-list>
-  <part id="P1">
-    <measure number="1">
-      <attributes>
+      
+      // Parse request parameters for mock response
+      const params: GenerateRequest = await req.json().catch(() => ({
+        keySignature: "C major",
+        timeSignature: "4/4",
+        tempo: 120,
+        measures: 4,
+        register: "soprano",
+        pitchRangeMin: "C4",
+        pitchRangeMax: "C5",
+        motionTypes: ["stepwise"],
+        noteLengths: ["quarter", "half"],
+        difficultyLevel: 2,
+        title: "Sight-Singing Exercise"
+      }));
+
+      // Generate mock measures based on requested count
+      let measures = '';
+      const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+      
+      for (let i = 1; i <= params.measures; i++) {
+        const isFirst = i === 1;
+        const isLast = i === params.measures;
+        
+        measures += `    <measure number="${i}">
+${isFirst ? `      <attributes>
         <divisions>4</divisions>
         <key>
           <fifths>0</fifths>
@@ -166,111 +181,37 @@ serve(async (req) => {
           <sign>G</sign>
           <line>2</line>
         </clef>
-      </attributes>
+      </attributes>` : ''}
       <note>
         <pitch>
-          <step>C</step>
+          <step>${notes[i % notes.length]}</step>
           <octave>4</octave>
         </pitch>
-        <duration>4</duration>
-        <type>quarter</type>
+        <duration>${isLast ? '16' : '8'}</duration>
+        <type>${isLast ? 'whole' : 'half'}</type>
       </note>
-      <note>
+${!isLast ? `      <note>
         <pitch>
-          <step>D</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>4</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>E</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>4</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>F</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>4</duration>
-        <type>quarter</type>
-      </note>
-    </measure>
-    <measure number="2">
-      <note>
-        <pitch>
-          <step>G</step>
+          <step>${notes[(i + 1) % notes.length]}</step>
           <octave>4</octave>
         </pitch>
         <duration>8</duration>
         <type>half</type>
-      </note>
-      <note>
-        <pitch>
-          <step>F</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>4</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>E</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>4</duration>
-        <type>quarter</type>
-      </note>
+      </note>` : ''}
     </measure>
-    <measure number="3">
-      <note>
-        <pitch>
-          <step>D</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>4</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>4</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>D</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>4</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>E</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>4</duration>
-        <type>quarter</type>
-      </note>
-    </measure>
-    <measure number="4">
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>16</duration>
-        <type>whole</type>
-      </note>
-    </measure>
-  </part>
+`;
+      }
+
+      // Mock response with dynamic measures
+      musicXML = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="3.1">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Voice</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+${measures}  </part>
 </score-partwise>`;
     } else {
       // Parse request parameters
