@@ -139,6 +139,7 @@ export const SightSingingStudio: React.FC = () => {
       console.log('Testing OpenAI API...');
       const testResponse = await supabase.functions.invoke('test-openai');
       console.log('Test response:', testResponse);
+      console.log('Test response data:', testResponse.data);
       
       if (testResponse.error) {
         throw new Error(`API Test Failed: ${testResponse.error.message}`);
