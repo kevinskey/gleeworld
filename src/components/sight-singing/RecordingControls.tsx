@@ -27,52 +27,46 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-      <div className="flex items-center gap-2">
+    <div className="space-y-2">
+      <div className="flex gap-1">
         <Button
           variant={isRecording ? "destructive" : "default"}
           onClick={isRecording ? onStopRecording : onStartRecording}
-          size="lg"
+          size="sm"
+          className="flex-1 h-7 text-xs"
         >
           {isRecording ? (
             <>
-              <Square className="h-4 w-4 mr-2" />
-              Stop Recording
+              <Square className="h-3 w-3 mr-1" />
+              Stop
             </>
           ) : (
             <>
-              <Mic className="h-4 w-4 mr-2" />
-              Record Performance
+              <Mic className="h-3 w-3 mr-1" />
+              Record
             </>
           )}
         </Button>
 
         {hasRecording && !isRecording && (
-          <Button variant="outline" onClick={onClearRecording}>
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Clear
+          <Button
+            variant="outline"
+            onClick={onClearRecording}
+            size="sm"
+            className="h-7 text-xs px-2"
+          >
+            <RotateCcw className="h-3 w-3" />
           </Button>
         )}
       </div>
 
-      <div className="flex items-center gap-3">
-        {isRecording && (
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-sm font-mono">REC</span>
-          </div>
-        )}
-        
-        <Badge variant={isRecording ? "destructive" : "outline"}>
-          {formatDuration(duration)}
-        </Badge>
-
-        {!isRecording && (
-          <span className="text-xs text-muted-foreground">
-            {hasRecording ? "Recording ready for evaluation" : "4-click count-off, then recording starts"}
-          </span>
-        )}
-      </div>
+      {(isRecording || hasRecording) && (
+        <div className="text-center">
+          <Badge variant={isRecording ? "destructive" : "secondary"} className="text-xs">
+            {isRecording ? `Recording ${formatDuration(duration)}` : `Recorded ${formatDuration(duration)}`}
+          </Badge>
+        </div>
+      )}
     </div>
   );
 };

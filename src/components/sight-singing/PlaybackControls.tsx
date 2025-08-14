@@ -23,35 +23,36 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
   hasExercise
 }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div>
-        <label className="text-sm font-medium mb-2 block">Playback Mode</label>
+        <label className="text-xs font-medium mb-1 block">Mode</label>
         <Select value={mode} onValueChange={onModeChange}>
-          <SelectTrigger>
+          <SelectTrigger className="h-7 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="click-only">Click Only (Metronome)</SelectItem>
-            <SelectItem value="click-and-score">Click and Score</SelectItem>
+            <SelectItem value="click-only">Click Only</SelectItem>
+            <SelectItem value="click-and-score">Click + Score</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-1">
         <Button
           onClick={isPlaying ? onStopPlayback : onStartPlayback}
           disabled={!hasExercise}
           variant={isPlaying ? "destructive" : "default"}
-          className="flex-1"
+          size="sm"
+          className="flex-1 h-7 text-xs px-2"
         >
           {isPlaying ? (
             <>
-              <Square className="h-4 w-4 mr-2" />
+              <Square className="h-3 w-3 mr-1" />
               Stop
             </>
           ) : (
             <>
-              <Play className="h-4 w-4 mr-2" />
+              <Play className="h-3 w-3 mr-1" />
               Play
             </>
           )}
@@ -61,9 +62,10 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
           onClick={onDownload}
           disabled={!hasExercise}
           variant="outline"
+          size="sm"
+          className="h-7 text-xs px-2"
         >
-          <Download className="h-4 w-4 mr-2" />
-          Download
+          <Download className="h-3 w-3" />
         </Button>
       </div>
     </div>
