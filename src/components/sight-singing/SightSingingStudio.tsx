@@ -282,9 +282,9 @@ export const SightSingingStudio: React.FC = () => {
           {/* Left Column - Parameters & Controls (1/3 width) */}
           <div className="col-span-1 flex flex-col gap-2">
             {/* Parameters */}
-            <Card className="p-3 flex flex-col" style={{ height: '60%' }}>
-              <h2 className="text-sm font-semibold mb-2 flex-shrink-0">Parameters</h2>
-              <div className="flex-1 overflow-y-auto min-h-0">
+            <Card className="p-2 flex-shrink-0">
+              <h2 className="text-sm font-semibold mb-1 flex-shrink-0">Parameters</h2>
+              <div className="max-h-40 overflow-y-auto">
                 <ParameterForm 
                   onGenerate={handleGenerateExercise}
                   isGenerating={isGenerating}
@@ -295,7 +295,7 @@ export const SightSingingStudio: React.FC = () => {
             </Card>
 
             {/* Playback Controls */}
-            <Card className="p-2" style={{ height: '20%' }}>
+            <Card className="p-2 flex-1">
               <h2 className="text-sm font-semibold mb-1">Playback</h2>
               <PlaybackControls
                 isPlaying={isPlaying}
