@@ -91,18 +91,19 @@ export const AuditionTimeGrid = () => {
       setAllAppointments(data || []);
       console.log('📅 All appointments found:', data?.length || 0);
       
-      // Extract unique dates from the audition applications
+      // Extract unique dates from the audition applications using Eastern Time
       if (data && data.length > 0) {
         const uniqueDates = Array.from(new Set(
           data.map(apt => {
-            const date = new Date(apt.audition_time_slot);
-            date.setHours(0, 0, 0, 0);
-            return date.toDateString();
+            // Convert UTC timestamp to Eastern Time, then get just the date
+            const easternTime = toZonedTime(new Date(apt.audition_time_slot), 'America/New_York');
+            const dateOnly = new Date(easternTime.getFullYear(), easternTime.getMonth(), easternTime.getDate());
+            return dateOnly.toDateString();
           })
         )).map(dateString => new Date(dateString)).sort((a, b) => a.getTime() - b.getTime());
         
         setAuditionDates(uniqueDates);
-        console.log(`📊 Found ${uniqueDates.length} unique audition dates:`, uniqueDates);
+        console.log(`📊 Found ${uniqueDates.length} unique audition dates (Eastern Time):`, uniqueDates);
       }
     } catch (error) {
       console.error('Error fetching all appointments:', error);
@@ -253,7 +254,9 @@ export const AuditionTimeGrid = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {auditionDates.map((date, index) => {
               const dayAppointments = allAppointments.filter(apt => {
-                const aptDate = new Date(apt.audition_time_slot);
+                // Convert the appointment time to Eastern Time to get the correct date
+                const aptEasternTime = toZonedTime(new Date(apt.audition_time_slot), 'America/New_York');
+                const aptDate = new Date(aptEasternTime.getFullYear(), aptEasternTime.getMonth(), aptEasternTime.getDate());
                 return aptDate.toDateString() === date.toDateString();
               });
               
