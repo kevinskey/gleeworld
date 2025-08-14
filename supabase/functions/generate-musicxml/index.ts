@@ -52,6 +52,7 @@ serve(async (req) => {
 
   // ---- your existing logic below ----
   console.log("OPENAI set:", !!Deno.env.get("OPENAI_API_KEY"));
+  console.log("ENV check timestamp:", new Date().toISOString());
   
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) {
