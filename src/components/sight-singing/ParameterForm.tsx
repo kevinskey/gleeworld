@@ -184,11 +184,14 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 checked={watchedAllowedDur?.includes(duration as any) || false}
                 onCheckedChange={(checked) => handleDurationChange(duration, checked as boolean)}
               />
-              <Label htmlFor={duration} className="text-xl font-medium">
-                {duration === 'whole' ? '𝅝' : 
-                 duration === 'half' ? '𝅗𝅥' : 
-                 duration === 'quarter' ? '𝅘𝅥' : 
-                 duration === 'eighth' ? '𝅘𝅥𝅮' : '𝅘𝅥𝅯'}
+              <Label htmlFor={duration} className="text-sm font-medium flex items-center gap-1">
+                <span className="text-xl">
+                  {duration === 'whole' ? '𝅝' : 
+                   duration === 'half' ? '𝅗𝅥' : 
+                   duration === 'quarter' ? '𝅘𝅥' : 
+                   duration === 'eighth' ? '𝅘𝅥𝅮' : '𝅘𝅥𝅯'}
+                </span>
+                <span className="text-xs capitalize">{duration}</span>
               </Label>
             </div>
           ))}
