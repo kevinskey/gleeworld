@@ -830,13 +830,6 @@ export const AuditionsManagement = () => {
               <span className="hidden sm:inline">Analytics</span>
             </TabsTrigger>
             <TabsTrigger 
-              value="reschedule" 
-              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
-            >
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Schedule</span>
-            </TabsTrigger>
-            <TabsTrigger 
               value="appointments" 
               className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
             >
@@ -2463,10 +2456,6 @@ export const AuditionsManagement = () => {
           </Card>
         </TabsContent>
 
-        {/* Schedule Grid Tab */}
-        <TabsContent value="reschedule" className="space-y-6">
-          <AuditionTimeGrid />
-        </TabsContent>
 
         {/* Appointments Management Tab */}
         <TabsContent value="appointments" className="space-y-6 pt-6">
