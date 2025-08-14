@@ -36,6 +36,276 @@ interface GenerateRequest {
   title?: string;
 }
 
+interface Note {
+  pitch: string;
+  octave: number;
+  dur: string;
+  tie?: boolean;
+}
+
+interface ExerciseData {
+  timeSignature: string;
+  key: string;
+  measures: Note[][];
+}
+
+// Validation functions
+function beats(dur: string): number {
+  return dur === "half" ? 2 : dur === "quarter" ? 1 : 0;
+}
+
+function validateExerciseData(data: ExerciseData): string | null {
+  // Check structure
+  if (!data.measures || !Array.isArray(data.measures)) {
+    return "Invalid measures structure";
+  }
+
+  // Duration whitelist + beat totals
+  for (const measure of data.measures) {
+    if (!Array.isArray(measure)) return "Invalid measure structure";
+    
+    let sum = 0;
+    for (const note of measure) {
+      if (!["quarter", "half"].includes(note.dur)) {
+        return `Invalid duration: ${note.dur}. Only quarter and half notes allowed.`;
+      }
+      sum += beats(note.dur);
+    }
+    if (sum !== 4) {
+      return `Measure has ${sum} beats, expected 4`;
+    }
+  }
+
+  // Stepwise motion check
+  const scale = ["C", "D", "E", "F", "G", "A", "B"];
+  let prev: Note | null = null;
+  
+  for (const measure of data.measures) {
+    for (const note of measure) {
+      if (prev) {
+        const prevIndex = scale.indexOf(prev.pitch) + (prev.octave - 4) * 7;
+        const currIndex = scale.indexOf(note.pitch) + (note.octave - 4) * 7;
+        const interval = Math.abs(currIndex - prevIndex);
+        
+        if (interval !== 1) {
+          return `Non-stepwise motion detected: ${prev.pitch}${prev.octave} to ${note.pitch}${note.octave}`;
+        }
+      }
+      prev = note;
+    }
+  }
+
+  return null; // Valid
+}
+
+async function generateWithOpenAI(params: GenerateRequest, apiKey: string, maxRetries: number = 3): Promise<ExerciseData> {
+  const allowedDurations = params.noteLengths.filter(d => ["quarter", "half"].includes(d));
+  if (allowedDurations.length === 0) allowedDurations.push("quarter");
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    console.log(`OpenAI generation attempt ${attempt}/${maxRetries}`);
+    
+    const body = {
+      model: "gpt-5-mini-2025-08-07",
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "exercise",
+          schema: {
+            type: "object",
+            required: ["timeSignature", "key", "measures"],
+            properties: {
+              timeSignature: { type: "string", enum: ["4/4"] },
+              key: { type: "string", enum: ["C major"] },
+              measures: {
+                type: "array",
+                items: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    required: ["pitch", "octave", "dur"],
+                    properties: {
+                      pitch: { type: "string", enum: ["C", "D", "E", "F", "G", "A", "B"] },
+                      octave: { type: "integer", minimum: 4, maximum: 6 },
+                      dur: { type: "string", enum: allowedDurations },
+                      tie: { type: "boolean" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          strict: true
+        }
+      },
+      messages: [
+        {
+          role: "system",
+          content: `Output must be JSON matching schema. ${params.measures} measures of 4/4 in C major. ` +
+                  `Only stepwise motion (±1 scale degree). Only durations: ${allowedDurations.join(" or ")}. ` +
+                  `Each measure must total 4 beats exactly. Start around C4-E4 range.`
+        },
+        {
+          role: "user",
+          content: `Generate ${params.register} register, no leaps, no accidentals. ${params.measures} measures total.`
+        }
+      ],
+      temperature: 0.1
+    };
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      if (attempt === maxRetries) throw new Error(`OpenAI API error: ${response.status}`);
+      continue;
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    
+    try {
+      const exerciseData: ExerciseData = JSON.parse(content);
+      console.log(`Received exercise data:`, JSON.stringify(exerciseData, null, 2));
+      
+      // Validate the generated data
+      const validationError = validateExerciseData(exerciseData);
+      if (validationError) {
+        console.log(`Validation failed on attempt ${attempt}: ${validationError}`);
+        if (attempt === maxRetries) {
+          throw new Error(`Validation failed after ${maxRetries} attempts: ${validationError}`);
+        }
+        continue;
+      }
+      
+      console.log(`Validation passed on attempt ${attempt}`);
+      return exerciseData;
+      
+    } catch (parseError) {
+      console.log(`JSON parse error on attempt ${attempt}:`, parseError);
+      if (attempt === maxRetries) {
+        throw new Error("Failed to parse OpenAI response as JSON");
+      }
+    }
+  }
+  
+  throw new Error("Maximum retries exceeded");
+}
+
+function generateFallbackData(params: GenerateRequest): ExerciseData {
+  console.log("Generating fallback exercise data");
+  const allowedDurations = params.noteLengths.filter(d => ["quarter", "half"].includes(d));
+  const durations = allowedDurations.length > 0 ? allowedDurations : ["quarter"];
+  
+  const measures: Note[][] = [];
+  const scale = ["C", "D", "E", "F", "G"];
+  let currentPitch = 0; // Start at C
+  let currentOctave = 4;
+  
+  for (let m = 0; m < params.measures; m++) {
+    const measure: Note[] = [];
+    let remainingBeats = 4;
+    
+    while (remainingBeats > 0) {
+      // Choose duration that fits
+      const availableDurations = durations.filter(d => beats(d) <= remainingBeats);
+      const duration = availableDurations[Math.floor(Math.random() * availableDurations.length)] || "quarter";
+      
+      measure.push({
+        pitch: scale[currentPitch],
+        octave: currentOctave,
+        dur: duration
+      });
+      
+      remainingBeats -= beats(duration);
+      
+      // Move stepwise
+      if (Math.random() > 0.5) {
+        currentPitch++;
+        if (currentPitch >= scale.length) {
+          currentPitch = scale.length - 1;
+        }
+      } else {
+        currentPitch--;
+        if (currentPitch < 0) {
+          currentPitch = 0;
+        }
+      }
+    }
+    
+    measures.push(measure);
+  }
+  
+  return {
+    timeSignature: "4/4",
+    key: "C major",
+    measures
+  };
+}
+
+function convertToMusicXML(data: ExerciseData): string {
+  const header = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="3.1">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Voice</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">`;
+
+  let measuresXML = '';
+  
+  data.measures.forEach((measure, measureIndex) => {
+    const measureNumber = measureIndex + 1;
+    const isFirst = measureIndex === 0;
+    
+    measuresXML += `    <measure number="${measureNumber}">
+${isFirst ? `      <attributes>
+        <divisions>4</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>` : ''}`;
+
+    measure.forEach(note => {
+      const duration = note.dur === "half" ? 8 : 4; // divisions=4, so half=8, quarter=4
+      
+      measuresXML += `
+      <note>
+        <pitch>
+          <step>${note.pitch}</step>
+          <octave>${note.octave}</octave>
+        </pitch>
+        <duration>${duration}</duration>
+        <type>${note.dur}</type>
+      </note>`;
+    });
+    
+    measuresXML += `
+    </measure>`;
+  });
+
+  const footer = `
+  </part>
+</score-partwise>`;
+
+  return header + measuresXML + footer;
+}
+
 function validateMusicXML(musicXML: string): boolean {
   try {
     // Basic schema validation
@@ -139,148 +409,44 @@ serve(async (req) => {
     console.log("OPENAI API Key available:", !!Deno.env.get("OPENAI_API_KEY"));
     
     const apiKey = Deno.env.get("OPENAI_API_KEY");
-    let musicXML: string;
+    
+    // Parse request parameters  
+    const params: GenerateRequest = await req.json().catch(() => ({
+      keySignature: "C major",
+      timeSignature: "4/4", 
+      tempo: 120,
+      measures: 4,
+      register: "soprano",
+      pitchRangeMin: "C4",
+      pitchRangeMax: "C5",
+      motionTypes: ["stepwise"],
+      noteLengths: ["quarter", "half"],
+      difficultyLevel: 2,
+      title: "Sight-Singing Exercise"
+    }));
 
+    console.log("=== EDGE FUNCTION: Parameters received ===");
+    console.log("Raw params:", JSON.stringify(params, null, 2));
+
+    let exerciseData: ExerciseData;
+    
     if (!apiKey) {
-      console.log("No OpenAI API key found, using mock response");
-      
-      // Parse request parameters for mock response
-      const params: GenerateRequest = await req.json().catch(() => ({
-        keySignature: "C major",
-        timeSignature: "4/4",
-        tempo: 120,
-        measures: 4,
-        register: "soprano",
-        pitchRangeMin: "C4",
-        pitchRangeMax: "C5",
-        motionTypes: ["stepwise"],
-        noteLengths: ["quarter", "half"],
-        difficultyLevel: 2,
-        title: "Sight-Singing Exercise"
-      }));
-
-      console.log("=== EDGE FUNCTION: Mock response parameters ===");
-      console.log("Raw params received:", JSON.stringify(params, null, 2));
-      console.log("Note lengths from request:", params.noteLengths);
-      console.log("Motion types from request:", params.motionTypes);
-      console.log("Measures from request:", params.measures);
-
-      // Generate mock measures based on requested count
-      let measures = '';
-      const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-      
-      // Map note lengths to duration values (assuming divisions=4)
-      const noteDurations = {
-        'whole': { duration: 16, type: 'whole' },
-        'half': { duration: 8, type: 'half' },
-        'quarter': { duration: 4, type: 'quarter' },
-        'eighth': { duration: 2, type: 'eighth' },
-        'sixteenth': { duration: 1, type: 'sixteenth' }
-      };
-      
-      // Use the selected note lengths, or default to quarter notes
-      const selectedNoteLengths = params.noteLengths && params.noteLengths.length > 0 
-        ? params.noteLengths 
-        : ['quarter'];
-      
-      console.log("Using note lengths:", selectedNoteLengths);
-      
-      for (let i = 1; i <= params.measures; i++) {
-        const isFirst = i === 1;
-        
-        // Pick a random note length from the selected ones for each measure
-        const randomNoteLength = selectedNoteLengths[Math.floor(Math.random() * selectedNoteLengths.length)];
-        const noteInfo = noteDurations[randomNoteLength] || noteDurations['quarter'];
-        
-        measures += `    <measure number="${i}">
-${isFirst ? `      <attributes>
-        <divisions>4</divisions>
-        <key>
-          <fifths>0</fifths>
-        </key>
-        <time>
-          <beats>4</beats>
-          <beat-type>4</beat-type>
-        </time>
-        <clef>
-          <sign>G</sign>
-          <line>2</line>
-        </clef>
-      </attributes>` : ''}
-      <note>
-        <pitch>
-          <step>${notes[i % notes.length]}</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>${noteInfo.duration}</duration>
-        <type>${noteInfo.type}</type>
-      </note>
-${noteInfo.duration < 16 ? `      <note>
-        <pitch>
-          <step>${notes[(i + 1) % notes.length]}</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>${16 - noteInfo.duration}</duration>
-        <type>${16 - noteInfo.duration === 8 ? 'half' : 16 - noteInfo.duration === 4 ? 'quarter' : 'whole'}</type>
-      </note>` : ''}
-    </measure>
-`;
-      }
-
-      console.log("Generated measures count:", (measures.match(/measure number/g) || []).length);
-
-      // Mock response with dynamic measures
-      musicXML = `<?xml version="1.0" encoding="UTF-8"?>
-<score-partwise version="3.1">
-  <part-list>
-    <score-part id="P1">
-      <part-name>Voice</part-name>
-    </score-part>
-  </part-list>
-  <part id="P1">
-${measures}  </part>
-</score-partwise>`;
+      console.log("No OpenAI API key found, using fallback generator");
+      exerciseData = generateFallbackData(params);
     } else {
-      // Parse request parameters
-      const params: GenerateRequest = await req.json().catch(() => ({
-        keySignature: "C major",
-        timeSignature: "4/4",
-        tempo: 120,
-        measures: 4,
-        register: "soprano",
-        pitchRangeMin: "C4",
-        pitchRangeMax: "C5",
-        motionTypes: ["stepwise"],
-        noteLengths: ["quarter", "half"],
-        difficultyLevel: 2,
-        title: "Sight-Singing Exercise"
-      }));
-
-      const input = `Create MusicXML for a ${params.measures}-bar sight-singing exercise in ${params.keySignature} at ${params.tempo} bpm. Time signature: ${params.timeSignature}. Register: ${params.register}. Use ${params.motionTypes?.join(" and ")} motion with ${params.noteLengths?.join(" and ")} notes. Output only valid MusicXML format with proper structure including divisions, key signature, time signature, and clef.`;
-
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "gpt-5-mini-2025-08-07",
-          messages: [
-            { role: "system", content: "You are a music composition expert. Generate valid MusicXML for sight-singing exercises." },
-            { role: "user", content: input }
-          ],
-          max_completion_tokens: 2000
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+      console.log("Using OpenAI with JSON schema approach");
+      try {
+        exerciseData = await generateWithOpenAI(params, apiKey);
+      } catch (error) {
+        console.log("OpenAI generation failed, falling back to algorithmic generator:", error);
+        exerciseData = generateFallbackData(params);
       }
-
-      const data = await response.json();
-      musicXML = data.choices[0].message.content;
     }
+
+    console.log("Final exercise data:", JSON.stringify(exerciseData, null, 2));
+    
+    // Convert validated JSON to MusicXML
+    const musicXML = convertToMusicXML(exerciseData);
 
     // Validate the MusicXML
     if (!validateMusicXML(musicXML)) {
