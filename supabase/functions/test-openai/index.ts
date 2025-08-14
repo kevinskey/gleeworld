@@ -13,68 +13,79 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting basic test...');
+    
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    console.log('Testing OpenAI API...');
-    console.log('API Key present:', !!openAIApiKey);
+    console.log('API Key exists:', !!openAIApiKey);
     console.log('API Key length:', openAIApiKey?.length || 0);
-    console.log('API Key starts with sk-:', openAIApiKey?.startsWith('sk-') || false);
 
     if (!openAIApiKey) {
-      throw new Error('OPENAI_API_KEY not found in environment');
-    }
-
-    // Test with a simple request
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'user', content: 'Say hello' }
-        ],
-        max_tokens: 10
-      }),
-    });
-
-    console.log('OpenAI Response Status:', response.status);
-    console.log('OpenAI Response Headers:', Object.fromEntries(response.headers.entries()));
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI Error Response:', errorText);
-      
       return new Response(JSON.stringify({ 
         success: false,
-        error: 'OpenAI API Error',
-        status: response.status,
-        details: errorText
+        error: 'No OpenAI API key found'
       }), {
-        status: 500,
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const result = await response.json();
-    console.log('OpenAI Success Response:', result);
+    if (!openAIApiKey.startsWith('sk-')) {
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Invalid OpenAI API key format - should start with sk-'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Making basic fetch request...');
+    
+    const response = await fetch('https://api.openai.com/v1/models', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API Error:', errorText);
+      
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: `OpenAI API Error: ${response.status}`,
+        details: errorText
+      }), {
+        status: 200, // Return 200 so we can see the actual error
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const models = await response.json();
+    console.log('Models retrieved successfully');
 
     return new Response(JSON.stringify({ 
       success: true,
-      message: 'OpenAI API is working',
-      response: result
+      message: 'OpenAI API is working!',
+      modelCount: models.data?.length || 0
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Test function error:', error);
+    console.error('Function error:', error);
+    console.error('Error stack:', error.stack);
+    
     return new Response(JSON.stringify({ 
       success: false,
-      error: error.message 
+      error: error.message,
+      stack: error.stack
     }), {
-      status: 500,
+      status: 200, // Return 200 so we can see the actual error
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
