@@ -102,6 +102,8 @@ Example structure:
   </part>
 </score-partwise>`;
 
+    console.log('Making OpenAI API request...');
+    
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -118,10 +120,16 @@ Example structure:
       }),
     });
 
+    console.log('OpenAI response status:', openAIResponse.status);
+
     if (!openAIResponse.ok) {
       const errorText = await openAIResponse.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
+      console.error('OpenAI API error:', {
+        status: openAIResponse.status,
+        statusText: openAIResponse.statusText,
+        error: errorText
+      });
+      throw new Error(`OpenAI API error: ${openAIResponse.status} - ${errorText}`);
     }
 
     const result = await openAIResponse.json();
