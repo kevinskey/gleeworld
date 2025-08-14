@@ -26,22 +26,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const apiKey = Deno.env.get("OPENAI_API_KEY") ?? "";
+  // Verify environment variable exists
+  console.log("env OPENAI_API_KEY?", !!Deno.env.get("OPENAI_API_KEY"));
   
-  // Debug logging
-  console.log("OPENAI_API_KEY exists:", !!Deno.env.get("OPENAI_API_KEY"));
-  console.log("API key length:", apiKey.length);
-  console.log("API key starts with sk-:", apiKey.startsWith("sk-"));
-  
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) {
     return new Response(JSON.stringify({
       success: false,
-      error: "Missing OPENAI_API_KEY",
-      debug: { 
-        openAIApiKey_exists: !!Deno.env.get("OPENAI_API_KEY"),
-        openAIApiKey_length: apiKey.length,
-        message: "API key not found in environment variables"
-      }
+      error: "Missing OPENAI_API_KEY"
     }), { 
       status: 500, 
       headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -62,37 +54,31 @@ serve(async (req) => {
     title: "Sight-Singing Exercise"
   }));
 
-  const prompt = `Create MusicXML for a ${params.measures}-bar sight-singing exercise in ${params.keySignature} at ${params.tempo} bpm. Time signature: ${params.timeSignature}. Register: ${params.register}. Use ${params.motionTypes?.join(" and ")} motion with ${params.noteLengths?.join(" and ")} notes. Output only valid MusicXML format with proper structure including divisions, key signature, time signature, and clef.`;
+  const input = `Create MusicXML for a ${params.measures}-bar sight-singing exercise in ${params.keySignature} at ${params.tempo} bpm. Time signature: ${params.timeSignature}. Register: ${params.register}. Use ${params.motionTypes?.join(" and ")} motion with ${params.noteLengths?.join(" and ")} notes. Output only valid MusicXML format with proper structure including divisions, key signature, time signature, and clef.`;
 
-  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+  const r = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "gpt-5-mini-2025-08-07",
-      messages: [
-        { role: "system", content: "You are a music composition assistant that generates valid MusicXML for sight-singing exercises. Always output properly formatted MusicXML." },
-        { role: "user", content: prompt }
-      ],
-      max_completion_tokens: 2000
+      model: "gpt-5-mini",
+      input: input
     })
   });
 
   if (!r.ok) {
     return new Response(JSON.stringify({
       success: false,
-      error: `OpenAI API error: ${r.status}`,
-      debug: { openAIApiKey_exists: true }
+      error: `OpenAI API error: ${r.status}`
     }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
 
-  const data = await r.json();
-  const musicXML = data.choices[0].message.content;
+  const musicXML = await r.text();
 
   // Store in database if user is authenticated
   const authHeader = req.headers.get('authorization');
