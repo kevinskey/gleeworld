@@ -7,6 +7,7 @@ import { useAvailableAuditionSlots } from '@/hooks/useAvailableAuditionSlots';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { toZonedTime } from 'date-fns-tz';
+import { format } from 'date-fns';
 
 interface AuditionAppointment {
   id: string;
@@ -145,18 +146,22 @@ export const AuditionTimeGrid = () => {
   };
 
   const getAppointmentForSlot = (timeString: string) => {
+    // Normalize the time string for comparison (remove extra spaces, standardize format)
+    const normalizeTimeString = (time: string) => {
+      return time.replace(/\s+/g, ' ').trim().toLowerCase();
+    };
+    
+    const normalizedTargetTime = normalizeTimeString(timeString);
+    
     // First try to find in the booked slots from RPC
     const bookedSlot = bookedSlots.find(slot => {
       const slotTime = toZonedTime(new Date(slot.audition_time_slot), 'America/New_York');
-      const slotTimeString = slotTime.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit', 
-        hour12: true 
-      });
+      const slotTimeString = format(slotTime, 'h:mm a');
+      const normalizedSlotTime = normalizeTimeString(slotTimeString);
       
-      console.log(`🔍 Comparing slot time "${timeString}" with booked slot time "${slotTimeString}" for ${slot.auditioner_name}`);
+      console.log(`🔍 Comparing "${normalizedTargetTime}" with "${normalizedSlotTime}" for ${slot.auditioner_name}`);
       
-      return slotTimeString === timeString;
+      return normalizedSlotTime === normalizedTargetTime;
     });
 
     if (bookedSlot) {
@@ -173,15 +178,12 @@ export const AuditionTimeGrid = () => {
     // Fallback to regular appointments
     const foundAppointment = appointments.find(apt => {
       const aptTime = toZonedTime(new Date(apt.audition_time_slot), 'America/New_York');
-      const aptTimeString = aptTime.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit', 
-        hour12: true 
-      });
+      const aptTimeString = format(aptTime, 'h:mm a');
+      const normalizedAptTime = normalizeTimeString(aptTimeString);
       
-      console.log(`🔍 Comparing slot time "${timeString}" with appointment time "${aptTimeString}" for ${apt.full_name}`);
+      console.log(`🔍 Comparing "${normalizedTargetTime}" with "${normalizedAptTime}" for ${apt.full_name}`);
       
-      return aptTimeString === timeString;
+      return normalizedAptTime === normalizedTargetTime;
     });
     
     if (foundAppointment) {
