@@ -269,14 +269,16 @@ export const SightSingingStudio: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-background p-6 overflow-hidden">
-      <div className="h-full flex flex-col">
-        {/* Header */}
-        <div className="text-center mb-6 flex-shrink-0">
-          <h1 className="text-2xl font-bold text-foreground mb-1">Sight-Singing Studio</h1>
-          <p className="text-sm text-muted-foreground">Generate, practice, and evaluate sight-singing exercises</p>
+    <div className="h-screen bg-background overflow-hidden">
+      {/* Blue Header Container */}
+      <div className="bg-primary text-primary-foreground py-4 px-6 flex-shrink-0">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-1">Sight-Singing Studio</h1>
+          <p className="text-sm opacity-90">Generate, practice, and evaluate sight-singing exercises</p>
         </div>
-
+      </div>
+      
+      <div className="h-full flex flex-col p-6">
         {/* Main Content */}
         <div className="flex-1 grid gap-6 grid-cols-3 min-h-0">
           {/* Left Column - Parameters & Controls (1/3 width) */}
