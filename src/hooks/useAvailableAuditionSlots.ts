@@ -129,6 +129,7 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
           .lt('appointment_date', new Date(new Date(selectedDateString + 'T00:00:00.000Z').getTime() + 24 * 60 * 60 * 1000).toISOString())
           .eq('status', 'scheduled');
 
+        console.log('🔍 Appointments query result:', { appointments, appointmentsError });
         if (!appointmentsError && appointments && appointments.length > 0) {
           console.log('📋 Found booked appointments:', appointments);
           appointments.forEach(appointment => {
@@ -159,6 +160,8 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
               });
             }
           });
+        } else {
+          console.log('📋 No appointments found or error:', appointmentsError);
         }
 
         // Also check for available time slots from time blocks if they exist
