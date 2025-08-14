@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -12191,6 +12191,216 @@ export type Database = {
         }
         Relationships: []
       }
+      sight_singing_evaluations: {
+        Row: {
+          created_at: string
+          exercise_id: string | null
+          feedback: string | null
+          id: string
+          per_measure_data: Json
+          pitch_accuracy: number
+          recording_id: string | null
+          rhythm_accuracy: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          exercise_id?: string | null
+          feedback?: string | null
+          id?: string
+          per_measure_data?: Json
+          pitch_accuracy?: number
+          recording_id?: string | null
+          rhythm_accuracy?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string | null
+          feedback?: string | null
+          id?: string
+          per_measure_data?: Json
+          pitch_accuracy?: number
+          recording_id?: string | null
+          rhythm_accuracy?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sight_singing_evaluations_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "sight_singing_exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sight_singing_evaluations_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "sight_singing_recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sight_singing_exercises: {
+        Row: {
+          created_at: string
+          difficulty_level: number
+          id: string
+          key_signature: string
+          measures: number
+          motion_types: string[]
+          musicxml_content: string
+          note_lengths: string[]
+          pitch_range_max: string
+          pitch_range_min: string
+          register: string
+          tempo: number
+          time_signature: string
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          difficulty_level?: number
+          id?: string
+          key_signature: string
+          measures?: number
+          motion_types?: string[]
+          musicxml_content: string
+          note_lengths?: string[]
+          pitch_range_max: string
+          pitch_range_min: string
+          register: string
+          tempo?: number
+          time_signature: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          difficulty_level?: number
+          id?: string
+          key_signature?: string
+          measures?: number
+          motion_types?: string[]
+          musicxml_content?: string
+          note_lengths?: string[]
+          pitch_range_max?: string
+          pitch_range_min?: string
+          register?: string
+          tempo?: number
+          time_signature?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      sight_singing_recordings: {
+        Row: {
+          audio_file_path: string
+          created_at: string
+          duration_seconds: number | null
+          exercise_id: string | null
+          id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          audio_file_path: string
+          created_at?: string
+          duration_seconds?: number | null
+          exercise_id?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          audio_file_path?: string
+          created_at?: string
+          duration_seconds?: number | null
+          exercise_id?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sight_singing_recordings_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "sight_singing_exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sight_singing_shares: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          evaluation_id: string | null
+          exercise_id: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          recording_id: string | null
+          share_token: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          evaluation_id?: string | null
+          exercise_id?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          recording_id?: string | null
+          share_token: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          evaluation_id?: string | null
+          exercise_id?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          recording_id?: string | null
+          share_token?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sight_singing_shares_evaluation_id_fkey"
+            columns: ["evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "sight_singing_evaluations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sight_singing_shares_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "sight_singing_exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sight_singing_shares_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "sight_singing_recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       singer_contract_assignments: {
         Row: {
           assigned_at: string
@@ -13140,19 +13350,19 @@ export type Database = {
         Returns: Json
       }
       block_date: {
-        Args: { date_to_block: string; block_reason?: string }
+        Args: { block_reason?: string; date_to_block: string }
         Returns: undefined
       }
       book_appointment: {
         Args: {
-          p_service_id: string
           p_appointment_date: string
-          p_start_time: string
-          p_customer_name: string
-          p_customer_email: string
-          p_customer_phone?: string
           p_attendee_count?: number
+          p_customer_email: string
+          p_customer_name: string
+          p_customer_phone?: string
+          p_service_id: string
           p_special_requests?: string
+          p_start_time: string
         }
         Returns: Json
       }
@@ -13174,10 +13384,10 @@ export type Database = {
       }
       check_appointment_availability: {
         Args: {
-          p_service_id: string
           p_appointment_date: string
-          p_start_time: string
           p_duration_minutes: number
+          p_service_id: string
+          p_start_time: string
         }
         Returns: Json
       }
@@ -13187,8 +13397,8 @@ export type Database = {
       }
       check_rate_limit: {
         Args: {
-          identifier_param: string
           action_type_param: string
+          identifier_param: string
           max_attempts?: number
           window_minutes?: number
         }
@@ -13196,8 +13406,8 @@ export type Database = {
       }
       check_rate_limit_secure: {
         Args: {
-          identifier_param: string
           action_type_param: string
+          identifier_param: string
           max_attempts?: number
           window_minutes?: number
         }
@@ -13229,40 +13439,40 @@ export type Database = {
       }
       create_notification_with_delivery: {
         Args: {
-          p_user_id: string
-          p_title: string
-          p_message: string
-          p_type?: string
-          p_category?: string
-          p_action_url?: string
           p_action_label?: string
+          p_action_url?: string
+          p_category?: string
+          p_expires_at?: string
+          p_message: string
           p_metadata?: Json
           p_priority?: number
-          p_expires_at?: string
           p_send_email?: boolean
           p_send_sms?: boolean
+          p_title: string
+          p_type?: string
+          p_user_id: string
         }
         Returns: string
       }
       create_recurring_rehearsals: {
-        Args: { start_date: string; end_date: string; created_by_id?: string }
+        Args: { created_by_id?: string; end_date: string; start_date: string }
         Returns: number
       }
       create_secure_file_access: {
         Args: {
-          p_user_id: string
+          p_access_type?: string
           p_bucket_id: string
           p_file_path: string
-          p_access_type?: string
+          p_user_id: string
         }
         Returns: boolean
       }
       create_task_notification: {
         Args: {
+          message_param: string
+          notification_type_param: string
           task_id_param: string
           user_id_param: string
-          notification_type_param: string
-          message_param: string
         }
         Returns: string
       }
@@ -13300,21 +13510,25 @@ export type Database = {
       }
       generate_sheet_music_filename: {
         Args: {
-          p_title: string
           p_composer?: string
-          p_voice_part?: string
+          p_title: string
           p_version?: number
+          p_voice_part?: string
         }
+        Returns: string
+      }
+      generate_sight_singing_share_token: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       get_all_user_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
+          created_at: string
           email: string
           full_name: string
+          id: string
           role: string
-          created_at: string
         }[]
       }
       get_audition_application_count: {
@@ -13326,11 +13540,11 @@ export type Database = {
         Returns: Json
       }
       get_available_time_slots: {
-        Args: { p_service_id: string; p_date: string }
+        Args: { p_date: string; p_service_id: string }
         Returns: {
-          start_time: string
-          end_time: string
           available: boolean
+          end_time: string
+          start_time: string
         }[]
       }
       get_avatar_url: {
@@ -13340,18 +13554,18 @@ export type Database = {
       get_blocked_dates: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
           blocked_date: string
-          reason: string
           created_at: string
           created_by: string
+          id: string
+          reason: string
         }[]
       }
       get_booked_audition_slots: {
-        Args: { p_start: string; p_end: string } | { selected_date: string }
+        Args: { p_end: string; p_start: string } | { selected_date: string }
         Returns: {
-          auditioner_name: string
           audition_time_slot: string
+          auditioner_name: string
         }[]
       }
       get_current_user_admin_status: {
@@ -13373,13 +13587,13 @@ export type Database = {
       get_on_this_day_content: {
         Args: { target_date?: string }
         Returns: {
-          id: string
-          title: string
+          category: string
           description: string
+          id: string
+          image_url: string
+          title: string
           year_occurred: number
           years_ago: number
-          category: string
-          image_url: string
         }[]
       }
       get_scheduled_auditions_count: {
@@ -13393,11 +13607,11 @@ export type Database = {
       get_upcoming_license_expirations: {
         Args: { days_ahead?: number }
         Returns: {
-          id: string
-          music_title: string
-          license_type: string
-          expires_on: string
           days_until_expiry: number
+          expires_on: string
+          id: string
+          license_type: string
+          music_title: string
         }[]
       }
       get_user_admin_status: {
@@ -13411,10 +13625,10 @@ export type Database = {
       get_user_group_permissions: {
         Args: { user_id_param: string }
         Returns: {
+          group_name: string
           permission_id: string
           permission_level: string
           permission_scope: string
-          group_name: string
         }[]
       }
       get_user_modules: {
@@ -13427,39 +13641,39 @@ export type Database = {
       get_user_modules_combined: {
         Args: { user_id_param: string }
         Returns: {
-          module_name: string
-          permissions: string[]
           can_access: boolean
           can_manage: boolean
+          module_name: string
+          permissions: string[]
           sources: string[]
         }[]
       }
       get_user_username_permissions: {
         Args: { user_email_param: string }
         Returns: {
-          module_name: string
-          granted_at: string
           expires_at: string
+          granted_at: string
+          module_name: string
           notes: string
         }[]
       }
       has_group_permission: {
         Args: {
-          user_id_param: string
           permission_id_param: string
           required_level?: string
+          user_id_param: string
         }
         Returns: boolean
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
       has_username_permission: {
-        Args: { user_email_param: string; module_name_param: string }
+        Args: { module_name_param: string; user_email_param: string }
         Returns: boolean
       }
       increment_annotation_share_views: {
@@ -13476,16 +13690,16 @@ export type Database = {
       }
       insert_performance_score: {
         Args: {
-          p_performer_id: string
-          p_performer_name: string
+          p_categories: string
+          p_comments: string
           p_evaluator_id: string
           p_event_type: string
-          p_categories: string
-          p_total_score: number
           p_max_score: number
-          p_percentage: number
           p_overall_score: number
-          p_comments: string
+          p_percentage: number
+          p_performer_id: string
+          p_performer_name: string
+          p_total_score: number
         }
         Returns: string
       }
@@ -13555,75 +13769,75 @@ export type Database = {
       }
       log_activity: {
         Args: {
-          p_user_id: string
           p_action_type: string
-          p_resource_type: string
-          p_resource_id?: string
           p_details?: Json
           p_ip_address?: unknown
+          p_resource_id?: string
+          p_resource_type: string
           p_user_agent?: string
+          p_user_id: string
         }
         Returns: string
       }
       log_admin_action: {
         Args: {
           p_action_type: string
-          p_target_user_id: string
           p_details?: Json
+          p_target_user_id: string
         }
         Returns: string
       }
       log_appointment_action: {
         Args: {
-          p_appointment_id: string
           p_action_type: string
-          p_performed_by?: string
-          p_old_values?: Json
+          p_appointment_id: string
           p_new_values?: Json
           p_notes?: string
+          p_old_values?: Json
+          p_performed_by?: string
         }
         Returns: string
       }
       log_executive_board_action: {
         Args: {
-          p_action_type: string
           p_action_description: string
-          p_related_entity_type?: string
-          p_related_entity_id?: string
+          p_action_type: string
           p_metadata?: Json
+          p_related_entity_id?: string
+          p_related_entity_type?: string
         }
         Returns: string
       }
       log_security_event: {
         Args: {
           p_action_type: string
-          p_resource_type: string
-          p_resource_id?: string
           p_details?: Json
           p_ip_address?: unknown
+          p_resource_id?: string
+          p_resource_type: string
           p_user_agent?: string
         }
         Returns: string
       }
       log_sheet_music_action: {
         Args: {
-          p_sheet_music_id: string
-          p_user_id: string
           p_action_type: string
+          p_device_type?: string
           p_page_number?: number
           p_session_duration?: number
-          p_device_type?: string
+          p_sheet_music_id: string
+          p_user_id: string
         }
         Returns: string
       }
       log_sheet_music_analytics: {
         Args: {
-          sheet_music_id_param: string
-          user_id_param: string
           action_type_param: string
+          device_type_param?: string
           page_number_param?: number
           session_duration_param?: number
-          device_type_param?: string
+          sheet_music_id_param: string
+          user_id_param: string
         }
         Returns: string
       }
@@ -13633,62 +13847,62 @@ export type Database = {
       }
       process_qr_attendance_scan: {
         Args: {
+          ip_address_param?: unknown
           qr_token_param: string
-          user_id_param: string
           scan_location_param?: Json
           user_agent_param?: string
-          ip_address_param?: unknown
+          user_id_param: string
         }
         Returns: Json
       }
       promote_auditioner_to_member: {
-        Args: { auditioner_user_id: string; audition_application_id: string }
+        Args: { audition_application_id: string; auditioner_user_id: string }
         Returns: boolean
       }
       search_hosts: {
         Args: {
-          search_term?: string
-          filter_status?: Database["public"]["Enums"]["host_status"]
           filter_source?: Database["public"]["Enums"]["host_source"]
           filter_state?: string
+          filter_status?: Database["public"]["Enums"]["host_status"]
           limit_count?: number
+          search_term?: string
         }
         Returns: {
-          id: string
-          contact_name: string
-          organization_name: string
-          contact_email: string
-          contact_phone: string
           city: string
+          contact_email: string
+          contact_name: string
+          contact_phone: string
+          id: string
+          last_contact_date: string
+          organization_name: string
+          priority_level: number
+          source: Database["public"]["Enums"]["host_source"]
           state: string
           status: Database["public"]["Enums"]["host_status"]
-          source: Database["public"]["Enums"]["host_source"]
-          last_contact_date: string
           total_performances: number
-          priority_level: number
         }[]
       }
       secure_bulk_update_user_roles: {
-        Args: { target_user_ids: string[]; new_role: string; reason?: string }
+        Args: { new_role: string; reason?: string; target_user_ids: string[] }
         Returns: Json
       }
       secure_update_user_role: {
-        Args: { target_user_id: string; new_role: string; reason?: string }
+        Args: { new_role: string; reason?: string; target_user_id: string }
         Returns: boolean
       }
       send_appointment_notification: {
         Args: {
           p_appointment_id: string
-          p_phone_number: string
           p_message: string
+          p_phone_number: string
         }
         Returns: Json
       }
       share_study_score: {
         Args: {
-          p_study_score_id: string
           p_collaborator_email: string
           p_role?: string
+          p_study_score_id: string
         }
         Returns: Json
       }
@@ -13706,10 +13920,10 @@ export type Database = {
       }
       transition_user_role: {
         Args: {
-          target_user_id: string
+          admin_notes?: string
           new_role: string
           reason?: string
-          admin_notes?: string
+          target_user_id: string
         }
         Returns: boolean
       }
@@ -13725,8 +13939,8 @@ export type Database = {
         Args: {
           p_audition_id: string
           p_new_status: string
-          p_updated_by: string
           p_notes?: string
+          p_updated_by: string
         }
         Returns: Json
       }
@@ -13735,17 +13949,17 @@ export type Database = {
         Returns: boolean
       }
       update_user_role: {
-        Args: { user_id: string; new_role: string }
+        Args: { new_role: string; user_id: string }
         Returns: boolean
       }
       upload_service_image: {
         Args: {
-          p_filename: string
-          p_original_filename: string
+          p_description?: string
           p_file_path: string
           p_file_size: number
+          p_filename: string
           p_mime_type: string
-          p_description?: string
+          p_original_filename: string
         }
         Returns: Json
       }
@@ -13779,9 +13993,9 @@ export type Database = {
       }
       user_has_function_permission: {
         Args: {
-          user_id_param: string
           function_name_param: string
           permission_type?: string
+          user_id_param: string
         }
         Returns: boolean
       }
