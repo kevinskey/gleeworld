@@ -22,14 +22,18 @@ export class MetronomePlayer {
   }
 
   start(tempo: number = 120, beatsPerMeasure: number = 4) {
-    if (this.isPlaying) return;
+    if (this.isPlaying) {
+      console.log('🎯 Metronome already playing, stopping first');
+      this.stop();
+    }
 
     this.tempo = tempo;
     this.beatsPerMeasure = beatsPerMeasure;
     this.isPlaying = true;
     this.beatNumber = 0;
-    this.nextNoteTime = this.audioContext.currentTime;
+    this.nextNoteTime = this.audioContext.currentTime + 0.1; // Small delay to avoid timing issues
 
+    console.log(`🎯 Starting metronome: ${tempo} BPM, ${beatsPerMeasure} beats per measure`);
     this.scheduler.start();
     this.scheduleNote();
   }
@@ -66,8 +70,8 @@ export class MetronomePlayer {
     const currentTime = this.audioContext.currentTime;
     const secondsPerBeat = 60.0 / this.tempo;
     
-    // Only schedule notes that are coming up soon
-    while (this.nextNoteTime < currentTime + 0.1) {
+    // Only schedule the immediate next note (not multiple notes ahead)
+    if (this.nextNoteTime <= currentTime + 0.1) {
       const isDownbeat = this.beatNumber % this.beatsPerMeasure === 0;
       
       // Schedule the metronome click
@@ -82,12 +86,14 @@ export class MetronomePlayer {
         this.onBeatCallback(this.beatNumber, isDownbeat);
       }
 
-      // Calculate next note time
+      // Calculate next note time - this is key for proper timing
       this.nextNoteTime += secondsPerBeat;
       this.beatNumber++;
+      
+      console.log(`🎯 Scheduled beat ${this.beatNumber} at ${this.nextNoteTime}, tempo=${this.tempo}, interval=${secondsPerBeat}s`);
     }
 
-    // Schedule next check
+    // Schedule next check - use shorter interval for more precise timing
     if (this.isPlaying) {
       setTimeout(() => this.scheduleNote(), 25); // Check every 25ms
     }
