@@ -258,8 +258,8 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     const melodyNotes: MelodyNote[] = melody.map((note, index) => ({
       note: note.pitch.step + note.pitch.octave,
       frequency: getFrequencyFromPitch(note.pitch),
-      duration: (60 / tempo) * (note.duration / melody[0]?.duration || 1),
-      time: note.time,
+      duration: note.duration / 4, // Convert MusicXML duration to beats (quarter note = 1 beat)
+      time: note.time / 4,         // Convert MusicXML time to beats  
       velocity: 0.3
     }));
     
