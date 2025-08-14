@@ -53,6 +53,52 @@ export class MusicXMLPlayer {
     this.scheduledNodes.push({ oscillator, gain: gainNode, timeout });
   }
 
+  private createPercussionClick(isDownbeat: boolean, startTime: number, duration: number = 0.1, volume: number = 0.3): void {
+    const audioContext = this.initAudioContext();
+    
+    // Create noise buffer for percussion sound
+    const bufferSize = audioContext.sampleRate * duration;
+    const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+    const output = buffer.getChannelData(0);
+    
+    // Generate filtered noise for click sound
+    for (let i = 0; i < bufferSize; i++) {
+      // White noise
+      let noise = Math.random() * 2 - 1;
+      
+      // Apply simple high-pass filtering for crisp click
+      if (i > 0) {
+        noise = noise * 0.7 + output[i - 1] * 0.3;
+      }
+      
+      // Shape the envelope for sharp attack
+      const envPhase = i / bufferSize;
+      const envelope = Math.exp(-envPhase * (isDownbeat ? 8 : 12)); // Downbeats ring slightly longer
+      
+      output[i] = noise * envelope;
+    }
+    
+    // Create buffer source
+    const source = audioContext.createBufferSource();
+    const gainNode = audioContext.createGain();
+    
+    source.buffer = buffer;
+    source.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Volume control
+    gainNode.gain.setValueAtTime(volume * (isDownbeat ? 1.2 : 0.8), startTime);
+    
+    source.start(startTime);
+    
+    // Store reference for cleanup
+    const timeout = setTimeout(() => {
+      this.scheduledNodes = this.scheduledNodes.filter(node => node.oscillator !== source as any);
+    }, (startTime - audioContext.currentTime + duration) * 1000);
+    
+    this.scheduledNodes.push({ oscillator: source as any, gain: gainNode, timeout });
+  }
+
   private createClickTrack(tempo: number, measures: number, timeSignature: { beats: number; beatType: number }): void {
     const audioContext = this.initAudioContext();
     const beatDuration = 60 / tempo; // seconds per beat
@@ -62,9 +108,8 @@ export class MusicXMLPlayer {
     for (let beat = 0; beat < totalBeats; beat++) {
       const beatTime = audioContext.currentTime + beat * beatDuration;
       const isDownbeat = beat % timeSignature.beats === 0;
-      const frequency = isDownbeat ? 800 : 600; // Higher pitch for downbeats
       
-      this.createTone(frequency, beatTime, 0.1, 0.2);
+      this.createPercussionClick(isDownbeat, beatTime, 0.1, 0.2);
     }
   }
 
