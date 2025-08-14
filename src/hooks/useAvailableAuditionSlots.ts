@@ -18,30 +18,30 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
   // Eastern timezone identifier
   const EASTERN_TZ = 'America/New_York';
 
-  // Fetch available audition dates from actual auditions
+  // Fetch available audition dates from time blocks
   useEffect(() => {
     const fetchAuditionDates = async () => {
       try {
-        console.log('🔍 Fetching audition dates from gw_auditions...');
-        const { data: auditions, error } = await supabase
-          .from('gw_auditions')
-          .select('audition_date')
-          .not('audition_date', 'is', null);
+        console.log('🔍 Fetching audition dates from audition_time_blocks...');
+        const { data: timeBlocks, error } = await supabase
+          .from('audition_time_blocks')
+          .select('*')
+          .eq('is_active', true);
 
         if (error) {
-          console.error('Error fetching auditions:', error);
+          console.error('Error fetching time blocks:', error);
           throw error;
         }
 
-        console.log('📊 Auditions from database:', auditions);
+        console.log('📊 Time blocks from database:', timeBlocks);
 
-        // Extract unique dates
+        // Extract unique dates from time blocks
         const uniqueDatesSet = new Set<string>();
-        auditions?.forEach(audition => {
-          if (audition.audition_date) {
-            // Parse the date string and create a clean date
-            const auditionDate = new Date(audition.audition_date);
-            const dateString = auditionDate.toISOString().split('T')[0];
+        timeBlocks?.forEach(block => {
+          if (block.start_date) {
+            // Convert UTC to Eastern and get the date
+            const blockStartEastern = toZonedTime(new Date(block.start_date), EASTERN_TZ);
+            const dateString = blockStartEastern.toISOString().split('T')[0];
             uniqueDatesSet.add(dateString);
           }
         });
