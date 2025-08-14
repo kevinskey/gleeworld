@@ -141,12 +141,14 @@ export const SightSingingStudio: React.FC = () => {
       console.log('Parameters received by handleGenerateExercise:', parameters);
       console.log('Note lengths specifically:', parameters.noteLengths);
       console.log('Motion types specifically:', parameters.motionTypes);
+      console.log('Measures requested:', parameters.measures);
       
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) {
         throw new Error('Authentication required');
       }
 
+      console.log('Making request to edge function...');
       const response = await fetch('https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/generate-musicxml', {
         method: 'POST',
         headers: {
@@ -156,6 +158,9 @@ export const SightSingingStudio: React.FC = () => {
         },
         body: JSON.stringify(parameters)
       });
+      
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -175,7 +180,12 @@ export const SightSingingStudio: React.FC = () => {
       }
       
       const data = await response.json();
-      console.log('Generation response:', data);
+      console.log('=== FRONTEND: Generation response ===');
+      console.log('Full response data:', data);
+      console.log('Success flag:', data.success);
+      console.log('Has musicXML:', !!data.musicXML);
+      console.log('MusicXML length:', data.musicXML?.length || 0);
+      console.log('MusicXML preview:', data.musicXML?.substring(0, 200) + '...');
       
       if (!data.success || !data.musicXML) {
         throw new Error(data.error || 'No MusicXML generated');
@@ -188,6 +198,7 @@ export const SightSingingStudio: React.FC = () => {
         filename: data.filename
       };
 
+      console.log('Setting generated exercise:', exercise);
       setGeneratedExercise(exercise);
       setCurrentStep('score');
       
