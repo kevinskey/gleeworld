@@ -71,6 +71,7 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
     }
 
     const fetchSlotsFromAuditions = async () => {
+      console.log('🚀 STARTING fetchSlotsFromAuditions for date:', selectedDate);
       setLoading(true);
       try {
         const selectedDateString = selectedDate.toISOString().split('T')[0];
