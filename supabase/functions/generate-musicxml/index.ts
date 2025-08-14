@@ -70,7 +70,60 @@ serve(async (req) => {
       }
       
       stage = "musicxml";
-      const musicXML = "<score-partwise version='3.1'><part-list><score-part id='P1'><part-name>Soprano</part-name></score-part></part-list><part id='P1'><measure number='1'><attributes><divisions>16</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>16</duration><type>quarter</type></note></measure></part></score-partwise>";
+      const musicXML = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="3.1">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Soprano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>16</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+      </attributes>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>16</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>16</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>16</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>16</duration>
+        <type>quarter</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>`;
       
       return new Response(JSON.stringify({success:true,json:jsonScore,musicXML}), {status:200,headers:cors(origin)});
     }
@@ -149,7 +202,36 @@ serve(async (req) => {
     // 6) build MusicXML
     stage = "musicxml";
     const jsonScore = JSON.parse(ai.choices[0].message.content);
-    const musicXML = "<score-partwise version='3.1'><part-list><score-part id='P1'><part-name>Soprano</part-name></score-part></part-list><part id='P1'><measure number='1'><attributes><divisions>16</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>16</duration><type>quarter</type></note></measure></part></score-partwise>";
+    const musicXML = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="3.1">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Soprano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>16</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+      </attributes>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>16</duration>
+        <type>quarter</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>`;
 
     return new Response(JSON.stringify({success:true,json:jsonScore,musicXML}), {status:200,headers:cors(origin)});
   } catch (e) {
