@@ -184,13 +184,25 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 checked={watchedAllowedDur?.includes(duration as any) || false}
                 onCheckedChange={(checked) => handleDurationChange(duration, checked as boolean)}
               />
-              <Label htmlFor={duration} className="text-sm font-medium flex items-center gap-1">
-                <span className="text-sm font-mono bg-slate-100 px-1 rounded">
-                  {duration === 'whole' ? 'W' : 
-                   duration === 'half' ? 'H' : 
-                   duration === 'quarter' ? 'Q' : 
-                   duration === 'eighth' ? '8th' : '16th'}
-                </span>
+              <Label htmlFor={duration} className="text-sm font-medium flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  {duration === 'whole' && <div className="w-4 h-3 border-2 border-gray-600 rounded-full"></div>}
+                  {duration === 'half' && <div className="w-3 h-4 bg-gray-600 rounded-full"></div>}
+                  {duration === 'quarter' && <div className="w-2 h-4 bg-black rounded-full"></div>}
+                  {duration === 'eighth' && (
+                    <div className="flex items-end gap-0.5">
+                      <div className="w-1.5 h-3 bg-black rounded-full"></div>
+                      <div className="w-1.5 h-2 bg-black rounded-full"></div>
+                    </div>
+                  )}
+                  {duration === '16th' && (
+                    <div className="flex items-end gap-0.5">
+                      <div className="w-1 h-3 bg-black rounded-full"></div>
+                      <div className="w-1 h-2 bg-black rounded-full"></div>
+                      <div className="w-1 h-1.5 bg-black rounded-full"></div>
+                    </div>
+                  )}
+                </div>
                 <span className="text-xs capitalize">{duration}</span>
               </Label>
             </div>
