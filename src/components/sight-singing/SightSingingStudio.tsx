@@ -288,22 +288,22 @@ export const SightSingingStudio: React.FC = () => {
               />
             </Card>
 
-            <Card className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">Playback Controls</h2>
-              <PlaybackControls
-                isPlaying={isPlaying}
-                mode={mode}
-                onModeChange={setMode}
-                onStartPlayback={handleStartPlayback}
-                onStopPlayback={stopPlayback}
-                onDownload={handleDownloadMusicXML}
-                hasExercise={!!currentMusicXML}
-              />
-            </Card>
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card className="p-6">
+                <h2 className="text-2xl font-semibold mb-4">Playback Controls</h2>
+                <PlaybackControls
+                  isPlaying={isPlaying}
+                  mode={mode}
+                  onModeChange={setMode}
+                  onStartPlayback={handleStartPlayback}
+                  onStopPlayback={stopPlayback}
+                  onDownload={handleDownloadMusicXML}
+                  hasExercise={!!currentMusicXML}
+                />
+              </Card>
 
-            <Card className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">Recording & Grading</h2>
-              <div className="space-y-4">
+              <Card className="p-6">
+                <h2 className="text-2xl font-semibold mb-4">Recording & Grading</h2>
                 <RecordingControls
                   isRecording={isRecording}
                   duration={recordingDuration}
@@ -314,10 +314,12 @@ export const SightSingingStudio: React.FC = () => {
                 />
                 
                 {gradingResults && (
-                  <GradingResults results={gradingResults} />
+                  <div className="mt-4">
+                    <GradingResults results={gradingResults} />
+                  </div>
                 )}
-              </div>
-            </Card>
+              </Card>
+            </div>
           </div>
 
           <div className="space-y-6">

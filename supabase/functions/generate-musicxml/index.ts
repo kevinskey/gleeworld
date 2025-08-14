@@ -71,8 +71,11 @@ serve(async (req) => {
       
       stage = "musicxml";
       
-      // Generate measures based on the requested number
+      // Generate varied measures based on the requested number
+      const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+      const octaves = [4, 5];
       let measuresXML = "";
+      
       for (let measureNum = 1; measureNum <= numMeasures; measureNum++) {
         const attributesXML = measureNum === 1 ? `
       <attributes>
@@ -86,40 +89,27 @@ serve(async (req) => {
         </time>
       </attributes>` : "";
         
+        // Generate 4 different notes for each measure
+        let notesXML = "";
+        for (let noteNum = 0; noteNum < 4; noteNum++) {
+          // Create variety by using measure and note position
+          const noteIndex = (measureNum + noteNum - 1) % notes.length;
+          const octave = measureNum <= 2 ? 4 : (measureNum % 2 === 0 ? 4 : 5);
+          const step = notes[noteIndex];
+          
+          notesXML += `
+      <note>
+        <pitch>
+          <step>${step}</step>
+          <octave>${octave}</octave>
+        </pitch>
+        <duration>16</duration>
+        <type>quarter</type>
+      </note>`;
+        }
+        
         measuresXML += `
-    <measure number="${measureNum}">${attributesXML}
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>16</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>D</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>16</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>E</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>16</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>F</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>16</duration>
-        <type>quarter</type>
-      </note>
+    <measure number="${measureNum}">${attributesXML}${notesXML}
     </measure>`;
       }
       
@@ -213,6 +203,7 @@ serve(async (req) => {
     const jsonScore = JSON.parse(ai.choices[0].message.content);
     
     // Generate measures based on the actual JSON score
+    const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
     let measuresXML = "";
     for (let measureNum = 1; measureNum <= jsonScore.numMeasures; measureNum++) {
       const attributesXML = measureNum === 1 ? `
@@ -227,16 +218,26 @@ serve(async (req) => {
         </time>
       </attributes>` : "";
       
-      measuresXML += `
-    <measure number="${measureNum}">${attributesXML}
+      // Generate varied notes for each measure
+      let notesXML = "";
+      for (let noteNum = 0; noteNum < jsonScore.time.num; noteNum++) {
+        const noteIndex = (measureNum + noteNum - 1) % notes.length;
+        const octave = measureNum <= 2 ? 4 : (measureNum % 2 === 0 ? 4 : 5);
+        const step = notes[noteIndex];
+        
+        notesXML += `
       <note>
         <pitch>
-          <step>C</step>
-          <octave>4</octave>
+          <step>${step}</step>
+          <octave>${octave}</octave>
         </pitch>
         <duration>16</duration>
         <type>quarter</type>
-      </note>
+      </note>`;
+      }
+      
+      measuresXML += `
+    <measure number="${measureNum}">${attributesXML}${notesXML}
     </measure>`;
     }
     
