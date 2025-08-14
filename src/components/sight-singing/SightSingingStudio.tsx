@@ -137,8 +137,10 @@ export const SightSingingStudio: React.FC = () => {
   const handleGenerateExercise = async (parameters: ExerciseParameters) => {
     setIsGenerating(true);
     try {
-      console.log('Generating exercise with enhanced security...');
-      console.log('Exercise parameters being sent:', JSON.stringify(parameters, null, 2));
+      console.log('=== FRONTEND: Generating exercise ===');
+      console.log('Parameters received by handleGenerateExercise:', parameters);
+      console.log('Note lengths specifically:', parameters.noteLengths);
+      console.log('Motion types specifically:', parameters.motionTypes);
       
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) {

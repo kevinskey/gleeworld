@@ -159,8 +159,11 @@ serve(async (req) => {
         title: "Sight-Singing Exercise"
       }));
 
-      console.log("Mock response parameters:", JSON.stringify(params));
-      console.log("Generating mock response with", params.measures, "measures");
+      console.log("=== EDGE FUNCTION: Mock response parameters ===");
+      console.log("Raw params received:", JSON.stringify(params, null, 2));
+      console.log("Note lengths from request:", params.noteLengths);
+      console.log("Motion types from request:", params.motionTypes);
+      console.log("Measures from request:", params.measures);
 
       // Generate mock measures based on requested count
       let measures = '';
