@@ -4,6 +4,7 @@ import { MelodyPlayer, MelodyNote } from './MelodyPlayer';
 import { SightSingingControls } from './SightSingingControls';
 import { useMetronomeManager } from './MetronomeManager';
 import { useRecordingManager } from './RecordingManager';
+import { parseMusicXMLForPlayback } from '@/utils/musicxml-parser';
 import './slider-styles.css';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -248,18 +249,20 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
   }, [tempo, metronomeEnabled, initializeAudioSystem, startCountdown, toast]);
 
   const startMelodyPlayback = useCallback(() => {
-    if (!melodyPlayerRef.current || melody.length === 0) return;
+    if (!melodyPlayerRef.current) return;
     
     setIsPlaying(true);
     setPlaybackTime(0);
     setCurrentNoteIndex(0);
     
-    // Convert melody to MelodyNote format for playback
-    const melodyNotes: MelodyNote[] = melody.map((note, index) => ({
-      note: note.pitch.step + note.pitch.octave,
-      frequency: getFrequencyFromPitch(note.pitch),
-      duration: note.duration / 4, // Convert MusicXML duration to beats (quarter note = 1 beat)
-      time: note.time / 4,         // Convert MusicXML time to beats  
+    // Parse the MusicXML properly using the divisions-aware parser
+    const parsedExercise = parseMusicXMLForPlayback(musicXML);
+    
+    // Convert parsed notes to MelodyNote format for playback
+    const melodyNotes: MelodyNote[] = parsedExercise.notes.map((note) => ({
+      note: note.pitch,
+      duration: note.duration, // Already converted to beats by parser
+      time: note.startBeat,    // Already converted to beats by parser
       velocity: 0.3
     }));
     
