@@ -134,17 +134,7 @@ export const SightSingingPractice: React.FC<SightSingingPracticeProps> = ({
     return () => URL.revokeObjectURL(url);
   }, [audioBlob]);
 
-  // Auto-trigger assessment when recording completes
-  React.useEffect(() => {
-    if (audioBlob && !isAssessing && assessmentScore === null) {
-      console.log('🎯 Auto-triggering AI assessment for new recording...');
-      const timer = setTimeout(() => {
-        submitForAssessment();
-      }, 1500); // Give user a moment to see the recording UI
-      
-      return () => clearTimeout(timer);
-    }
-  }, [audioBlob, isAssessing, assessmentScore]);
+  // Note: Removed auto-trigger assessment - user should manually request assessment
 
   // Refs
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
