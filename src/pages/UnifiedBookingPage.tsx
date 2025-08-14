@@ -42,6 +42,7 @@ export default function UnifiedBookingPage() {
 
   // Use the existing hook for real audition data
   const { timeSlots, allTimeSlots, loading, availableDates } = useAvailableAuditionSlots(selectedDate);
+  console.log('📊 BookingPage - allTimeSlots:', allTimeSlots, 'loading:', loading);
 
   // Set the first available date by default
   useEffect(() => {

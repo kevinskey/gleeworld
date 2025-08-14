@@ -15,6 +15,9 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
   const [loading, setLoading] = useState(false);
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
   
+  // Add a simple test
+  console.log('🎯 Current timeSlots state:', timeSlots);
+  
   // Eastern timezone identifier
   const EASTERN_TZ = 'America/New_York';
 
