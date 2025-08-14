@@ -123,25 +123,22 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
         }
 
         console.log('🔍 Fetching booked appointments for date:', selectedDateString);
-        console.log('🔍 Date range query:', selectedDateString + 'T00:00:00.000Z', 'to', new Date(new Date(selectedDateString + 'T00:00:00.000Z').getTime() + 24 * 60 * 60 * 1000).toISOString());
         
-        // Simplified query - just get all audition appointments for debugging
+        // Get all audition appointments
         const { data: appointments, error: appointmentsError } = await supabase
           .from('gw_appointments')
           .select('id, client_name, appointment_date, status')
           .eq('appointment_type', 'audition')
           .eq('status', 'scheduled');
 
-        console.log('🔍 Appointments query result:', { appointments, appointmentsError });
+        console.log('🔍 All appointments from DB:', appointments);
         if (!appointmentsError && appointments && appointments.length > 0) {
-          console.log('📋 Found booked appointments:', appointments);
-          
-          // Filter appointments for the selected date
+          // Filter appointments for the selected date by converting UTC to Eastern
           const filteredAppointments = appointments.filter(appointment => {
-            const appointmentDate = new Date(appointment.appointment_date);
-            const easternTime = toZonedTime(appointmentDate, EASTERN_TZ);
-            const appointmentDateString = format(easternTime, 'yyyy-MM-dd');
-            console.log(`🗓️ Appointment date: ${appointmentDateString} vs selected: ${selectedDateString}`);
+            const appointmentUTC = new Date(appointment.appointment_date);
+            const appointmentEastern = toZonedTime(appointmentUTC, EASTERN_TZ);
+            const appointmentDateString = format(appointmentEastern, 'yyyy-MM-dd');
+            console.log(`🗓️ Appointment ${appointment.client_name}: UTC ${appointmentUTC.toISOString()} -> Eastern ${appointmentEastern.toISOString()} -> Date ${appointmentDateString} vs selected: ${selectedDateString}`);
             return appointmentDateString === selectedDateString;
           });
           
