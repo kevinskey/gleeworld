@@ -161,6 +161,9 @@ export const AuditionsManagement = () => {
   const [selectedSession, setSelectedSession] = useState<string>("");
   const [evaluationForm, setEvaluationForm] = useState<Partial<AuditionEvaluation>>({});
   
+  // New state for appointments management
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(false);
   // Filter and sort state for roster
   const [sortBy, setSortBy] = useState<string>('full_name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -200,6 +203,7 @@ export const AuditionsManagement = () => {
   useEffect(() => {
     if (hasAuditionsAccess && !permissionsLoading) {
       fetchData();
+      fetchAppointments();
     }
   }, [hasAuditionsAccess, permissionsLoading]);
 
@@ -380,6 +384,58 @@ export const AuditionsManagement = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAppointments = async () => {
+    try {
+      setAppointmentsLoading(true);
+      const { data: appointmentsData, error } = await supabase
+        .from('gw_appointments')
+        .select('*')
+        .eq('appointment_type', 'audition')
+        .order('appointment_date', { ascending: true });
+
+      if (error) throw error;
+      setAppointments(appointmentsData || []);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load appointments",
+        variant: "destructive",
+      });
+    } finally {
+      setAppointmentsLoading(false);
+    }
+  };
+
+  const deleteAppointment = async (appointmentId: string) => {
+    if (!confirm('Are you sure you want to delete this appointment? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('gw_appointments')
+        .delete()
+        .eq('id', appointmentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Appointment deleted successfully",
+      });
+
+      fetchAppointments(); // Refresh the list
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete appointment",
+        variant: "destructive",
+      });
     }
   };
 
@@ -737,7 +793,7 @@ export const AuditionsManagement = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Responsive tab navigation */}
         <div className="border-b border-border">
-          <TabsList className="grid w-full grid-cols-6 h-auto bg-transparent p-0 gap-0">
+          <TabsList className="grid w-full grid-cols-7 h-auto bg-transparent p-0 gap-0">
             <TabsTrigger 
               value="overview" 
               className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
@@ -779,6 +835,13 @@ export const AuditionsManagement = () => {
             >
               <Calendar className="h-4 w-4" />
               <span className="hidden sm:inline">Schedule</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="appointments" 
+              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
+            >
+              <Clock className="h-4 w-4" />
+              <span className="hidden sm:inline">Appointments</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -2403,6 +2466,136 @@ export const AuditionsManagement = () => {
         {/* Schedule Grid Tab */}
         <TabsContent value="reschedule" className="space-y-6">
           <AuditionTimeGrid />
+        </TabsContent>
+
+        {/* Appointments Management Tab */}
+        <TabsContent value="appointments" className="space-y-6 pt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    Audition Appointments
+                  </CardTitle>
+                  <CardDescription>
+                    Manage scheduled audition appointments from the booking system
+                  </CardDescription>
+                </div>
+                <Button 
+                  onClick={fetchAppointments}
+                  variant="outline" 
+                  size="sm"
+                  disabled={appointmentsLoading}
+                >
+                  {appointmentsLoading ? "Loading..." : "Refresh"}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {appointmentsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Clock className="h-6 w-6 animate-spin mr-2" />
+                  <span>Loading appointments...</span>
+                </div>
+              ) : appointments.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium mb-2">No appointments found</p>
+                  <p className="text-sm">Audition appointments will appear here when students book time slots</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {appointments.map((appointment) => (
+                    <div key={appointment.id} className="border rounded-lg p-4 bg-card">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarFallback>
+                                {appointment.client_name?.split(' ').map((n: string) => n[0]).join('') || 'A'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h4 className="font-semibold text-lg">{appointment.client_name}</h4>
+                              <p className="text-sm text-muted-foreground">{appointment.client_email}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="font-medium text-muted-foreground">Date & Time:</span>
+                              <p className="font-medium">
+                                {format(new Date(appointment.appointment_date), 'MMM dd, yyyy')}
+                              </p>
+                              <p className="text-muted-foreground">
+                                {format(new Date(appointment.appointment_date), 'h:mm a')} EST
+                              </p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-muted-foreground">Phone:</span>
+                              <p>{appointment.client_phone || 'Not provided'}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-muted-foreground">Status:</span>
+                              <Badge variant={appointment.status === 'scheduled' ? 'default' : 'secondary'}>
+                                {appointment.status}
+                              </Badge>
+                            </div>
+                            <div>
+                              <span className="font-medium text-muted-foreground">Duration:</span>
+                              <p>{appointment.duration_minutes || 5} minutes</p>
+                            </div>
+                          </div>
+                          
+                          {appointment.description && (
+                            <div className="mt-3 pt-3 border-t">
+                              <span className="font-medium text-muted-foreground text-sm">Notes:</span>
+                              <p className="text-sm mt-1">{appointment.description}</p>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground mt-3 pt-3 border-t">
+                            <span>Booked: {format(new Date(appointment.created_at), 'MMM dd, yyyy h:mm a')}</span>
+                            {appointment.updated_at !== appointment.created_at && (
+                              <>
+                                <span>•</span>
+                                <span>Updated: {format(new Date(appointment.updated_at), 'MMM dd, yyyy h:mm a')}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col gap-2 ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              toast({
+                                title: "Coming Soon",
+                                description: "Appointment editing will be available soon",
+                              });
+                            }}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => deleteAppointment(appointment.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
