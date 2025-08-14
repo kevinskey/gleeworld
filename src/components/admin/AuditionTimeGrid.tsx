@@ -146,26 +146,32 @@ export const AuditionTimeGrid = () => {
   };
 
   const getAppointmentForSlot = (timeString: string) => {
+    console.log(`🎯 getAppointmentForSlot called for time: "${timeString}"`);
+    console.log(`📊 Current bookedSlots count: ${bookedSlots.length}`);
+    console.log(`📊 Current appointments count: ${appointments.length}`);
+    
     // Normalize the time string for comparison (remove extra spaces, standardize format)
     const normalizeTimeString = (time: string) => {
       return time.replace(/\s+/g, ' ').trim().toLowerCase();
     };
     
     const normalizedTargetTime = normalizeTimeString(timeString);
+    console.log(`🔧 Normalized target time: "${normalizedTargetTime}"`);
     
     // First try to find in the booked slots from RPC
+    console.log(`🔍 Searching through ${bookedSlots.length} booked slots...`);
     const bookedSlot = bookedSlots.find(slot => {
       const slotTime = toZonedTime(new Date(slot.audition_time_slot), 'America/New_York');
       const slotTimeString = format(slotTime, 'h:mm a');
       const normalizedSlotTime = normalizeTimeString(slotTimeString);
       
-      console.log(`🔍 Comparing "${normalizedTargetTime}" with "${normalizedSlotTime}" for ${slot.auditioner_name}`);
+      console.log(`   ⏰ Slot ${slot.auditioner_name}: "${normalizedSlotTime}" vs "${normalizedTargetTime}"`);
       
       return normalizedSlotTime === normalizedTargetTime;
     });
 
     if (bookedSlot) {
-      console.log(`✅ Found booked slot for ${timeString}:`, bookedSlot.auditioner_name);
+      console.log(`✅ MATCH! Found booked slot for ${timeString}: ${bookedSlot.auditioner_name}`);
       return {
         id: `booked-${timeString}`,
         full_name: bookedSlot.auditioner_name,
@@ -176,18 +182,21 @@ export const AuditionTimeGrid = () => {
     }
 
     // Fallback to regular appointments
+    console.log(`🔍 Searching through ${appointments.length} appointments...`);
     const foundAppointment = appointments.find(apt => {
       const aptTime = toZonedTime(new Date(apt.audition_time_slot), 'America/New_York');
       const aptTimeString = format(aptTime, 'h:mm a');
       const normalizedAptTime = normalizeTimeString(aptTimeString);
       
-      console.log(`🔍 Comparing "${normalizedTargetTime}" with "${normalizedAptTime}" for ${apt.full_name}`);
+      console.log(`   ⏰ Appointment ${apt.full_name}: "${normalizedAptTime}" vs "${normalizedTargetTime}"`);
       
       return normalizedAptTime === normalizedTargetTime;
     });
     
     if (foundAppointment) {
-      console.log(`✅ Found appointment for ${timeString}:`, foundAppointment.full_name);
+      console.log(`✅ MATCH! Found appointment for ${timeString}: ${foundAppointment.full_name}`);
+    } else {
+      console.log(`❌ No match found for time slot: ${timeString}`);
     }
     
     return foundAppointment;
