@@ -72,6 +72,7 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
       try {
         const selectedDateString = selectedDate.toISOString().split('T')[0];
         console.log('🔍 Fetching auditions for date:', selectedDateString);
+        console.log('🔍 Selected date object:', selectedDate);
         
         const { data: auditions, error } = await supabase
           .from('gw_auditions')
@@ -118,8 +119,8 @@ export const useAvailableAuditionSlots = (selectedDate: Date | null) => {
           });
         }
 
-        // Also check for booked appointments from gw_appointments table
         console.log('🔍 Fetching booked appointments for date:', selectedDateString);
+        console.log('🔍 Date range query:', selectedDateString + 'T00:00:00.000Z', 'to', new Date(new Date(selectedDateString + 'T00:00:00.000Z').getTime() + 24 * 60 * 60 * 1000).toISOString());
         const { data: appointments, error: appointmentsError } = await supabase
           .from('gw_appointments')
           .select('id, client_name, appointment_date, status')
