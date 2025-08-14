@@ -175,11 +175,10 @@ serve(async (req) => {
       headers:{Authorization:`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},
       body: JSON.stringify({
         model:"gpt-5-mini-2025-08-07",
-        temperature:0,
         response_format:{ type:"json_schema", json_schema:schema },
         messages:[
-          {role:"system",content:"Music theory expert. Output JSON only. Durations only from schema. Fill each bar exactly. Two parts max. Avoid voice crossing and parallel P5/P8. Apply cadence types."},
-          {role:"user",content: JSON.stringify(params) }
+          {role:"system",content:`Music theory expert. Output JSON only. Use ONLY these note durations: ${allowed.join(", ")}. Fill each bar exactly. Two parts max. Avoid voice crossing and parallel P5/P8. Apply cadence types.`},
+          {role:"user",content: `Generate a sight-singing exercise with these parameters: ${JSON.stringify(params)}. Use only the allowed note durations: ${allowed.join(", ")}.` }
         ],
         max_completion_tokens: 1000
       })
