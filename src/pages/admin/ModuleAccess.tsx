@@ -224,9 +224,9 @@ const ModuleAccess: React.FC = () => {
                             type="button"
                             className={`flex items-center gap-1 px-3 py-1 text-xs rounded-md border transition-colors ${
                               active 
-                                ? 'bg-primary text-primary-foreground border-primary' 
-                                : 'bg-background text-foreground border-border hover:bg-muted'
-                            } ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'}`}
+                                ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' 
+                                : 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200'
+                            } ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
