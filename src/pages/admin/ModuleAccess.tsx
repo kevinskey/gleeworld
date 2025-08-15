@@ -88,31 +88,38 @@ const ModuleAccess: React.FC = () => {
 
   const setAccess = async (userId: string, moduleId: string, next: boolean) => {
     const key = `${userId}:${moduleId}`;
+    console.log('setAccess called:', { userId, moduleId, next, key });
     setSavingKey(key);
     try {
       if (next) {
         // Upsert grant
-        const { error } = await supabase
+        console.log('Attempting to grant permission...');
+        const { data, error } = await supabase
           .from('gw_module_permissions')
           .upsert({ user_id: userId, module_id: moduleId, permission_type: PERMISSION_TYPE, is_active: true }, { onConflict: 'user_id,module_id,permission_type' });
+        console.log('Grant result:', { data, error });
         if (error) throw error;
         setPermissions(prev => {
           const idx = prev.findIndex(p => p.user_id === userId && p.module_id === moduleId && p.permission_type === PERMISSION_TYPE);
           if (idx >= 0) {
             const copy = [...prev];
             copy[idx] = { ...copy[idx], is_active: true };
+            console.log('Updated existing permission');
             return copy;
           }
+          console.log('Added new permission');
           return [...prev, { user_id: userId, module_id: moduleId, permission_type: PERMISSION_TYPE, is_active: true }];
         });
       } else {
         // Revoke by setting inactive
-        const { error } = await supabase
+        console.log('Attempting to revoke permission...');
+        const { data, error } = await supabase
           .from('gw_module_permissions')
           .update({ is_active: false })
           .eq('user_id', userId)
           .eq('module_id', moduleId)
           .eq('permission_type', PERMISSION_TYPE);
+        console.log('Revoke result:', { data, error });
         if (error) throw error;
         setPermissions(prev => prev.map(p => (
           p.user_id === userId && p.module_id === moduleId && p.permission_type === PERMISSION_TYPE
@@ -120,8 +127,10 @@ const ModuleAccess: React.FC = () => {
             : p
         )));
       }
+      console.log('Permission update successful');
     } catch (e) {
       console.error('Failed to update permission:', e);
+      alert(`Failed to update permission: ${e.message}`);
     } finally {
       setSavingKey(null);
     }
