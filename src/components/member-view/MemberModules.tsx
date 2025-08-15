@@ -31,23 +31,38 @@ interface MemberModulesProps {
 
 // Map module names to their React components
 const getModuleComponent = (moduleName: string) => {
+  console.log('🎯 Looking up component for module name:', moduleName);
+  
   const componentMap: Record<string, React.ComponentType<any>> = {
+    // Match actual database module names
     'music-library': MusicLibraryInlineModule,
     'user-management': UserManagementModule,
-    'wardrobe-management': WardrobeModule,
-    'auditions-management': AuditionsModule,
-    'permissions-management': PermissionsModule,
-    'attendance-management': AttendanceModule,
+    'wardrobe': WardrobeModule,
+    'auditions': AuditionsModule,
+    'permissions': PermissionsModule,
+    'attendance': AttendanceModule,
     'sight-reading-preview': SightSingingPreviewModule,
     'sight-reading-generator': SightSingingPreviewModule,
     'settings': SettingsModule,
+    
+    // Try variations that might exist in database
+    'auditions-management': AuditionsModule,
+    'wardrobe-management': WardrobeModule,
+    'permissions-management': PermissionsModule,
+    'attendance-management': AttendanceModule,
+    'user-management-module': UserManagementModule,
+    
     // Add more mappings as needed
   };
   
-  return componentMap[moduleName] || (() => (
+  const component = componentMap[moduleName];
+  console.log('🎯 Component found:', !!component, component?.name || 'No component');
+  
+  return component || (() => (
     <div className="p-8 text-center">
       <h3 className="text-lg font-semibold mb-2">Module: {moduleName}</h3>
       <p className="text-muted-foreground">Component not yet implemented</p>
+      <p className="text-xs text-muted-foreground mt-2">Available components need to be mapped for: {moduleName}</p>
     </div>
   ));
 };
@@ -78,6 +93,8 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
     accessibleModulesCount: accessibleModules.length,
     firstFewModules: availableModules.slice(0, 3).map(m => ({ id: m.id, name: m.name, canAccess: m.permissions.canAccess }))
   });
+
+  console.log('🔍 First few modules with names:', availableModules.slice(0, 5).map(m => ({ id: m.id, name: m.name, title: m.title })));
 
   const handleModuleClick = (moduleId: string) => {
     console.log('🔥 Module click attempted:', { 
