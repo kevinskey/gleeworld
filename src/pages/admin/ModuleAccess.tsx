@@ -127,6 +127,33 @@ const ModuleAccess: React.FC = () => {
     }
   };
 
+  const grantAuditionToAllExecBoard = async () => {
+    try {
+      // Get all exec board members
+      const { data: execMembers } = await supabase
+        .from('gw_executive_board_members')
+        .select('user_id')
+        .eq('is_active', true);
+      
+      // Get audition module ID
+      const { data: auditionModule } = await supabase
+        .from('gw_modules')
+        .select('id')
+        .eq('name', 'auditions')
+        .single();
+      
+      if (execMembers && auditionModule) {
+        // Grant audition access to all exec members
+        for (const member of execMembers) {
+          await setAccess(member.user_id, auditionModule.id, true);
+        }
+        console.log(`Granted audition access to ${execMembers.length} executive board members`);
+      }
+    } catch (error) {
+      console.error('Failed to grant audition access to exec board:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
       <div className="container mx-auto px-6 py-6">
@@ -138,6 +165,12 @@ const ModuleAccess: React.FC = () => {
               </CardTitle>
               <p className="text-sm text-muted-foreground">Toggle module visibility per user. Green = has access, Red = no access.</p>
             </div>
+            <Button 
+              onClick={grantAuditionToAllExecBoard}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Grant Audition Access to All Exec Board
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
