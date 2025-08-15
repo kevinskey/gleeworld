@@ -87,14 +87,17 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
 
   const accessibleModules = getAccessibleModules();
 
-  console.log('🔍 MemberModules modules state:', {
+  console.log('🔍 MemberModules render state:', {
     loading,
     availableModulesCount: availableModules.length,
     accessibleModulesCount: accessibleModules.length,
+    selectedModule: selectedModule,
     firstFewModules: availableModules.slice(0, 3).map(m => ({ id: m.id, name: m.name, canAccess: m.permissions.canAccess }))
   });
 
   console.log('🔍 First few modules with names:', availableModules.slice(0, 5).map(m => ({ id: m.id, name: m.name, title: m.title })));
+
+  console.log('🎨 About to check renderModuleComponent, selectedModule:', selectedModule);
 
   const handleModuleClick = (moduleId: string) => {
     console.log('🔥 Module click attempted:', { 
@@ -255,7 +258,10 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
           })}
         </div>
 
-        {renderModuleComponent()}
+        {(() => {
+          console.log('🎨 In JSX render section, about to call renderModuleComponent()');
+          return renderModuleComponent();
+        })()}
       </CardContent>
     </Card>
   );
