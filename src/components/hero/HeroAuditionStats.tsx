@@ -15,13 +15,14 @@ export const HeroAuditionStats: React.FC<{ className?: string }>
         setLoading(true);
         setError(null);
         
-        // Get total count from gw_auditions table
-        const { count, error: auditionsError } = await supabase
-          .from('gw_auditions')
+        // Get total count from gw_appointments table (same source as booking page)
+        const { count, error: appointmentsError } = await supabase
+          .from('gw_appointments')
           .select('*', { count: 'exact', head: true })
-          .not('audition_date', 'is', null);
+          .eq('appointment_type', 'audition')
+          .eq('status', 'scheduled');
         
-        if (auditionsError) throw auditionsError;
+        if (appointmentsError) throw appointmentsError;
         
         if (!isMounted) return;
         setTotal(count || 0);
@@ -36,13 +37,13 @@ export const HeroAuditionStats: React.FC<{ className?: string }>
 
     loadAuditionCount();
 
-    // Realtime: update count when auditions change
+    // Realtime: update count when appointments change
     const channel = supabase
-      .channel('gw_auditions_changes')
+      .channel('gw_appointments_changes')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'gw_auditions',
+        table: 'gw_appointments',
       }, () => {
         loadAuditionCount();
       })
