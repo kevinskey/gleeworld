@@ -141,17 +141,23 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
     const Component = getModuleComponent(module.name);
     console.log('🎨 Component resolved:', Component?.name || 'Anonymous Component');
     
-    return (
-      <div className="mt-4">
+    const renderedComponent = (
+      <div className="mt-4 border-2 border-red-500 p-4 bg-yellow-50">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">{module.title}</h3>
+          <h3 className="text-lg font-semibold text-red-600">MODULE: {module.title}</h3>
           <Button variant="outline" size="sm" onClick={() => setSelectedModule(null)}>
             Close
           </Button>
         </div>
-        <Component user={user} />
+        <div className="border-2 border-blue-500 p-2 bg-blue-50">
+          <p className="text-sm text-blue-600 mb-2">Component: {Component?.name || 'Anonymous'}</p>
+          <Component user={user} />
+        </div>
       </div>
     );
+    
+    console.log('🎨 Returning rendered component:', renderedComponent);
+    return renderedComponent;
   };
 
   // Group modules by category
