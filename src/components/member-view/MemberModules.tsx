@@ -31,8 +31,6 @@ interface MemberModulesProps {
 
 // Map module names to their React components
 const getModuleComponent = (moduleName: string) => {
-  console.log('🎯 Looking up component for module name:', moduleName);
-  
   const componentMap: Record<string, React.ComponentType<any>> = {
     // Match actual database module names
     'music-library': MusicLibraryInlineModule,
@@ -51,14 +49,9 @@ const getModuleComponent = (moduleName: string) => {
     'permissions-management': PermissionsModule,
     'attendance-management': AttendanceModule,
     'user-management-module': UserManagementModule,
-    
-    // Add more mappings as needed
   };
   
-  const component = componentMap[moduleName];
-  console.log('🎯 Component found:', !!component, component?.name || 'No component');
-  
-  return component || (() => (
+  return componentMap[moduleName] || (() => (
     <div className="p-8 text-center">
       <h3 className="text-lg font-semibold mb-2">Module: {moduleName}</h3>
       <p className="text-muted-foreground">Component not yet implemented</p>
@@ -70,27 +63,6 @@ const getModuleComponent = (moduleName: string) => {
 export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
-  // Track component lifecycle
-  useEffect(() => {
-    console.log('🏗️ MemberModules component mounted');
-    return () => {
-      console.log('💀 MemberModules component unmounting');
-    };
-  }, []);
-
-  // Track selectedModule state changes
-  useEffect(() => {
-    console.log('🔄 selectedModule state changed:', selectedModule);
-  }, [selectedModule]);
-
-  console.log('🔍 MemberModules rendering with user:', {
-    user,
-    hasUser: !!user,
-    userId: user?.id,
-    userRole: user?.role,
-    isAdmin: user?.is_admin || user?.is_super_admin
-  });
-
   // Use unified modules with role-based filtering and executive position
   const { modules: availableModules, loading, getAccessibleModules } = useUnifiedModules({
     userRole: user.role,
@@ -100,102 +72,47 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
 
   const accessibleModules = getAccessibleModules();
 
-  console.log('🔍 MemberModules render state:', {
-    loading,
-    availableModulesCount: availableModules.length,
-    accessibleModulesCount: accessibleModules.length,
-    selectedModule: selectedModule,
-    firstFewModules: availableModules.slice(0, 3).map(m => ({ id: m.id, name: m.name, canAccess: m.permissions.canAccess }))
-  });
-
-  console.log('🔍 First few modules with names:', availableModules.slice(0, 5).map(m => ({ id: m.id, name: m.name, title: m.title })));
-
-  console.log('🎨 About to check renderModuleComponent, selectedModule:', selectedModule);
-
   const handleModuleClick = (moduleId: string) => {
-    console.log('🔥 Module click attempted:', { 
-      moduleId, 
-      selectedModule: selectedModule,
-      availableModulesCount: availableModules.length,
-      timestamp: new Date().toISOString()
-    });
-    
     const module = availableModules.find(m => m.id === moduleId);
-    console.log('🔥 Found module:', { 
-      module: module ? { id: module.id, name: module.name, hasPermission: module.hasPermission } : null,
-      hasPermissionMethod: !!module?.hasPermission,
-      permissionResult: module?.hasPermission ? module.hasPermission('view') : false
-    });
     
     if (module && module.hasPermission && module.hasPermission('view')) {
-      console.log('🔥 BEFORE setSelectedModule - current state:', selectedModule);
-      
       // Toggle behavior: if same module is clicked, close it
       if (selectedModule === moduleId) {
-        console.log('🔥 Same module clicked - toggling OFF');
         setSelectedModule(null);
       } else {
-        console.log('🔥 Different module clicked - setting to:', moduleId);
         setSelectedModule(moduleId);
       }
-      
-      console.log('🔥 AFTER setSelectedModule called');
-      
-      // Force a small delay to see if state updates asynchronously
-      setTimeout(() => {
-        console.log('🔥 DELAYED CHECK - selectedModule should be:', moduleId);
-      }, 100);
-    } else {
-      console.log('🔥 Module click blocked - no permission or module not found');
     }
   };
 
   const renderModuleComponent = () => {
-    console.log('🎨 renderModuleComponent called with selectedModule:', selectedModule);
-    
-    if (!selectedModule) {
-      console.log('🎨 No selected module, returning null');
-      return null;
-    }
+    if (!selectedModule) return null;
     
     const module = availableModules.find(m => m.id === selectedModule);
-    console.log('🎨 Found module for rendering:', module ? { id: module.id, name: module.name } : null);
-    
-    if (!module) {
-      console.log('🎨 Module not found, returning null');
-      return null;
-    }
+    if (!module) return null;
     
     // Get the component using the module name mapping
     const Component = getModuleComponent(module.name);
-    console.log('🎨 Component resolved:', Component?.name || 'Anonymous Component');
     
-    const renderedComponent = (
-      <div className="fixed top-0 left-0 w-full h-full bg-red-500/90 z-[9999] p-8 overflow-auto">
-        <div className="bg-yellow-300 border-4 border-red-600 p-6 rounded-lg max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-2xl font-bold text-red-800">🚨 MODULE: {module.title} 🚨</h3>
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-background border border-border rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b border-border bg-muted/50">
+            <h3 className="text-xl font-semibold">{module.title}</h3>
             <Button 
               variant="outline" 
-              size="lg" 
-              className="bg-red-600 text-white border-red-800 hover:bg-red-700"
+              size="sm"
               onClick={() => setSelectedModule(null)}
             >
-              ✕ CLOSE ✕
+              Close
             </Button>
           </div>
-          <div className="bg-blue-200 border-4 border-blue-600 p-4 rounded">
-            <p className="text-xl font-bold text-blue-800 mb-4">Component: {Component?.name || 'Anonymous'}</p>
-            <div className="bg-white p-4 rounded border-2 border-green-500">
-              <Component user={user} />
-            </div>
+          <div className="p-6 overflow-auto max-h-[calc(90vh-80px)]">
+            <Component user={user} />
           </div>
         </div>
       </div>
     );
-    
-    console.log('🎨 Returning rendered component:', renderedComponent);
-    return renderedComponent;
   };
 
   // Group modules by category
@@ -302,10 +219,7 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
           })}
         </div>
 
-        {(() => {
-          console.log('🎨 In JSX render section, about to call renderModuleComponent()');
-          return renderModuleComponent();
-        })()}
+        {renderModuleComponent()}
       </CardContent>
     </Card>
   );
