@@ -128,16 +128,20 @@ export function useModulePermissionManager() {
         throw new Error(`Module '${moduleKey}' not found`);
       }
 
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
       // Upsert the role permission
       const { error } = await supabase
         .from('gw_role_module_permissions')
         .upsert({
-          role_id: roleResult.data.id,
-          module_id: moduleResult.data.id,
-          can_view: patch.can_view ?? true,
-          can_manage: patch.can_manage ?? false
+          role: roleKey,
+          module_name: moduleKey,
+          permission_type: patch.can_manage ? 'manage' : 'view',
+          is_active: true,
+          granted_by: user?.id
         }, {
-          onConflict: 'role_id,module_id'
+          onConflict: 'role,module_name'
         });
 
       if (error) throw error;
