@@ -307,12 +307,12 @@ export const SightSingingStudio: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-slate-50 px-4 lg:px-8 xl:px-12 py-6 overflow-hidden">
-      <div className="h-full flex flex-col">
+    <div className="min-h-screen bg-slate-50 px-4 lg:px-8 xl:px-12 py-6">
+      <div className="h-full flex flex-col gap-6">
         {/* Main Content */}
-        <div className="flex-1 grid gap-6 grid-cols-3 min-h-0">
-          {/* Left Column - Parameters & Controls (1/3 width) */}
-          <div className="col-span-1 flex flex-col gap-4">
+        <div className="flex-1 grid gap-6 grid-cols-1 lg:grid-cols-3 min-h-0">
+          {/* Left Column - Parameters & Controls (1/3 width on desktop, full width on mobile) */}
+          <div className="lg:col-span-1 col-span-1 flex flex-col gap-4">
             {/* Parameters */}
             <Card className="p-4 flex-shrink-0">
               <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Parameters</h2>
@@ -368,11 +368,11 @@ export const SightSingingStudio: React.FC = () => {
             </Card>
           </div>
 
-          {/* Middle Column - Score Display (2/3 width) */}
-          <div className="col-span-2">
-            <Card className="p-6 h-full flex flex-col">
+          {/* Right Column - Score Display (2/3 width on desktop, full width on mobile) */}
+          <div className="lg:col-span-2 col-span-1 order-first lg:order-last">
+            <Card className="p-6 min-h-[500px] lg:h-full flex flex-col">
               <h2 className="text-base font-semibold mb-2 flex-shrink-0">Musical Score</h2>
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-[400px]">
                 <ScoreDisplay
                   musicXML={currentMusicXML}
                   onGradeRecording={handleGradeRecording}
