@@ -29,14 +29,22 @@ const NOTE_FREQUENCIES: { [key: string]: number } = {
   'B': 493.88
 };
 
-function getNoteFrequency(step: string, octave: number): number {
+function getNoteFrequency(step: string, octave: number, alter: number = 0): number {
   const baseFreq = NOTE_FREQUENCIES[step.toUpperCase()];
   if (!baseFreq) return 440; // Default to A4
   
   // Calculate frequency for the specific octave
   // A4 is in octave 4, so we adjust from there
   const octaveAdjustment = octave - 4;
-  return baseFreq * Math.pow(2, octaveAdjustment);
+  let frequency = baseFreq * Math.pow(2, octaveAdjustment);
+  
+  // Apply accidentals (sharps/flats)
+  // Each semitone is a factor of 2^(1/12)
+  if (alter !== 0) {
+    frequency *= Math.pow(2, alter / 12);
+  }
+  
+  return frequency;
 }
 
 function parseDuration(durationType: string, divisions: number): number {
@@ -151,13 +159,14 @@ export function parseMusicXML(musicXMLString: string, tempo: number = 120): Pars
           if (pitchEl && durationEl) {
             const step = pitchEl.querySelector('step')?.textContent || 'C';
             const octave = parseInt(pitchEl.querySelector('octave')?.textContent || '4');
+            const alter = parseInt(pitchEl.querySelector('alter')?.textContent || '0');
             const durationValue = parseInt(durationEl.textContent || '0');
             
             // Calculate duration in seconds
             const quarterNotes = durationValue / divisions;
             const durationSeconds = quarterNotes * secondsPerQuarter;
             
-            const frequency = getNoteFrequency(step, octave);
+            const frequency = getNoteFrequency(step, octave, alter);
             
             allNotesInMeasure.push({
               step,
@@ -230,13 +239,14 @@ function parseSinglePart(xmlDoc: Document, tempo: number, divisions: number, tim
       if (pitchEl && durationEl) {
         const step = pitchEl.querySelector('step')?.textContent || 'C';
         const octave = parseInt(pitchEl.querySelector('octave')?.textContent || '4');
+        const alter = parseInt(pitchEl.querySelector('alter')?.textContent || '0');
         const durationValue = parseInt(durationEl.textContent || '0');
         
         // Calculate duration in seconds
         const quarterNotes = durationValue / divisions;
         const durationSeconds = quarterNotes * secondsPerQuarter;
         
-        const frequency = getNoteFrequency(step, octave);
+        const frequency = getNoteFrequency(step, octave, alter);
         
         notes.push({
           step,
