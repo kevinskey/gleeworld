@@ -80,9 +80,24 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
   });
 
   const handleModuleClick = (moduleId: string) => {
+    console.log('🔥 Module click attempted:', { 
+      moduleId, 
+      selectedModule: selectedModule,
+      availableModulesCount: availableModules.length 
+    });
+    
     const module = availableModules.find(m => m.id === moduleId);
-    if (module && module.hasPermission) {
+    console.log('🔥 Found module:', { 
+      module: module ? { id: module.id, name: module.name, hasPermission: module.hasPermission } : null,
+      hasPermissionMethod: !!module?.hasPermission,
+      permissionResult: module?.hasPermission ? module.hasPermission('view') : false
+    });
+    
+    if (module && module.hasPermission && module.hasPermission('view')) {
+      console.log('🔥 Setting selected module to:', moduleId);
       setSelectedModule(moduleId);
+    } else {
+      console.log('🔥 Module click blocked - no permission or module not found');
     }
   };
 
