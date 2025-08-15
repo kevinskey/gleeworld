@@ -6,12 +6,14 @@ import { PlaybackControls } from './PlaybackControls';
 import { RecordingControls } from './RecordingControls';
 import { GradingResults } from './GradingResults';
 import { ErrorVisualization } from './ErrorVisualization';
+import { PerformanceReport } from './PerformanceReport';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 import { useTonePlayback } from './hooks/useTonePlayback';
 import { useGrading } from './hooks/useGrading';
 import { useMetronome } from './hooks/useMetronome';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export interface ExerciseParameters {
   key: { tonic: string; mode: "major"|"minor" };
@@ -54,6 +56,8 @@ export const SightSingingStudio: React.FC = () => {
   const [currentMusicXML, setCurrentMusicXML] = useState<string>('');
   const [currentExerciseId, setCurrentExerciseId] = useState<string | null>(null);
   const [currentBpm, setCurrentBpm] = useState(120);
+  const [activeTab, setActiveTab] = useState<'practice' | 'report'>('practice');
+  const [parameters, setParameters] = useState<ExerciseParameters | null>(null);
 
   const { 
     isRecording, 
@@ -120,13 +124,14 @@ export const SightSingingStudio: React.FC = () => {
     });
   };
 
-  const handleGenerateExercise = async (parameters: ExerciseParameters) => {
+  const handleGenerateExercise = async (exerciseParams: ExerciseParameters) => {
     setIsGenerating(true);
-    setCurrentBpm(parameters.bpm);
+    setCurrentBpm(exerciseParams.bpm);
+    setParameters(exerciseParams);
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-musicxml', {
-        body: parameters
+        body: exerciseParams
       });
 
       if (error) {
@@ -309,80 +314,107 @@ export const SightSingingStudio: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 px-4 lg:px-8 xl:px-12 py-6">
       <div className="h-full flex flex-col gap-6">
-        {/* Main Content */}
-        <div className="flex-1 grid gap-6 grid-cols-1 lg:grid-cols-3 min-h-0">
-          {/* Left Column - Parameters & Controls (1/3 width on desktop, full width on mobile) */}
-          <div className="lg:col-span-1 col-span-1 flex flex-col gap-4">
-            {/* Parameters */}
-            <Card className="p-4 flex-shrink-0">
-              <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Parameters</h2>
-              <div className="max-h-96 overflow-y-auto">
-                <ParameterForm 
-                  onGenerate={handleGenerateExercise}
-                  isGenerating={isGenerating}
-                  onReset={handleReset}
-                  hasExercise={!!currentMusicXML}
-                />
-              </div>
-            </Card>
+        {/* Navigation Tabs */}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'practice' | 'report')} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="practice">Practice Studio</TabsTrigger>
+            <TabsTrigger value="report" disabled={!gradingResults || !currentMusicXML}>Performance Report</TabsTrigger>
+          </TabsList>
 
-            {/* Playback Controls */}
-            <Card className="p-4 flex-shrink-0">
-              <h2 className="text-sm font-semibold mb-3">Playback</h2>
-              <PlaybackControls
-                isPlaying={isPlaying}
-                mode={mode}
-                onModeChange={setMode}
-                onStartPlayback={handleStartPlayback}
-                onStopPlayback={stopPlayback}
-                onDownload={handleDownloadMusicXML}
-                hasExercise={!!currentMusicXML}
-              />
-            </Card>
-
-            {/* Recording Controls */}
-            <Card className="p-4 flex-1 flex flex-col">
-              <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Recording</h2>
-              <div className="flex-1 flex flex-col min-h-0">
-                <RecordingControls
-                  isRecording={isRecording}
-                  duration={recordingDuration}
-                  onStartRecording={handleStartRecording}
-                  onStopRecording={handleStopRecording}
-                  hasRecording={!!audioBlob}
-                  onClearRecording={clearRecording}
-                />
-                
-                {gradingResults && (
-                  <div className="mt-4 pt-3 border-t flex-shrink-0 space-y-3">
-                    <h3 className="text-xs font-medium mb-2">Results</h3>
-                    <div className="text-xs">
-                      <GradingResults results={gradingResults} />
-                    </div>
-                    <div className="text-xs">
-                      <ErrorVisualization results={gradingResults} />
-                    </div>
+          <TabsContent value="practice" className="mt-6">
+            {/* Main Content */}
+            <div className="flex-1 grid gap-6 grid-cols-1 lg:grid-cols-3 min-h-0">
+              {/* Left Column - Parameters & Controls (1/3 width on desktop, full width on mobile) */}
+              <div className="lg:col-span-1 col-span-1 flex flex-col gap-4">
+                {/* Parameters */}
+                <Card className="p-4 flex-shrink-0">
+                  <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Parameters</h2>
+                  <div className="max-h-96 overflow-y-auto">
+                    <ParameterForm 
+                      onGenerate={handleGenerateExercise}
+                      isGenerating={isGenerating}
+                      onReset={handleReset}
+                      hasExercise={!!currentMusicXML}
+                    />
                   </div>
-                )}
-              </div>
-            </Card>
-          </div>
+                </Card>
 
-          {/* Right Column - Score Display (2/3 width on desktop, full width on mobile) */}
-          <div className="lg:col-span-2 col-span-1 order-first lg:order-last">
-            <Card className="p-6 min-h-[500px] lg:h-full flex flex-col">
-              <h2 className="text-base font-semibold mb-2 flex-shrink-0">Musical Score</h2>
-              <div className="flex-1 min-h-[400px]">
-                <ScoreDisplay
-                  musicXML={currentMusicXML}
-                  onGradeRecording={handleGradeRecording}
-                  hasRecording={!!audioBlob}
-                  isGrading={isGrading}
-                />
+                {/* Playback Controls */}
+                <Card className="p-4 flex-shrink-0">
+                  <h2 className="text-sm font-semibold mb-3">Playback</h2>
+                  <PlaybackControls
+                    isPlaying={isPlaying}
+                    mode={mode}
+                    onModeChange={setMode}
+                    onStartPlayback={handleStartPlayback}
+                    onStopPlayback={stopPlayback}
+                    onDownload={handleDownloadMusicXML}
+                    hasExercise={!!currentMusicXML}
+                  />
+                </Card>
+
+                {/* Recording Controls */}
+                <Card className="p-4 flex-1 flex flex-col">
+                  <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Recording</h2>
+                  <div className="flex-1 flex flex-col min-h-0">
+                    <RecordingControls
+                      isRecording={isRecording}
+                      duration={recordingDuration}
+                      onStartRecording={handleStartRecording}
+                      onStopRecording={handleStopRecording}
+                      hasRecording={!!audioBlob}
+                      onClearRecording={clearRecording}
+                    />
+                    
+                    {gradingResults && (
+                      <div className="mt-4 pt-3 border-t flex-shrink-0 space-y-3">
+                        <h3 className="text-xs font-medium mb-2">Results</h3>
+                        <div className="text-xs">
+                          <GradingResults results={gradingResults} />
+                        </div>
+                        <div className="text-xs">
+                          <ErrorVisualization results={gradingResults} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
               </div>
-            </Card>
-          </div>
-        </div>
+
+              {/* Right Column - Score Display (2/3 width on desktop, full width on mobile) */}
+              <div className="lg:col-span-2 col-span-1 order-first lg:order-last">
+                <Card className="p-6 min-h-[500px] lg:h-full flex flex-col">
+                  <h2 className="text-base font-semibold mb-2 flex-shrink-0">Musical Score</h2>
+                  <div className="flex-1 min-h-[400px]">
+                    <ScoreDisplay
+                      musicXML={currentMusicXML}
+                      onGradeRecording={handleGradeRecording}
+                      hasRecording={!!audioBlob}
+                      isGrading={isGrading}
+                    />
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="report" className="mt-6">
+            {gradingResults && currentMusicXML && parameters && (
+              <PerformanceReport
+                musicXML={currentMusicXML}
+                gradingResults={gradingResults}
+                exerciseParams={{
+                  difficulty: "Advanced", // This should come from parameters
+                  keySignature: `${parameters.key.tonic} ${parameters.key.mode}`,
+                  timeSignature: `${parameters.time.num}/${parameters.time.den}`,
+                  voiceRange: parameters.parts[0]?.role || "S",
+                  bpm: parameters.bpm
+                }}
+                timestamp={new Date()}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
