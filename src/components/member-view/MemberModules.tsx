@@ -129,8 +129,17 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
     
     if (module && module.hasPermission && module.hasPermission('view')) {
       console.log('🔥 BEFORE setSelectedModule - current state:', selectedModule);
-      setSelectedModule(moduleId);
-      console.log('🔥 AFTER setSelectedModule called - requested:', moduleId);
+      
+      // Toggle behavior: if same module is clicked, close it
+      if (selectedModule === moduleId) {
+        console.log('🔥 Same module clicked - toggling OFF');
+        setSelectedModule(null);
+      } else {
+        console.log('🔥 Different module clicked - setting to:', moduleId);
+        setSelectedModule(moduleId);
+      }
+      
+      console.log('🔥 AFTER setSelectedModule called');
       
       // Force a small delay to see if state updates asynchronously
       setTimeout(() => {
