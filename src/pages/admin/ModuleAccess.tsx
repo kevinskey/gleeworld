@@ -224,7 +224,10 @@ const ModuleAccess: React.FC = () => {
                             variant={active ? 'default' : 'outline'}
                             size="sm"
                             className={`flex items-center gap-1 ${active ? '' : ''}`}
-                            onClick={() => setAccess(user.id, m.id, !active)}
+                            onClick={() => {
+                              console.log('Button clicked!', { userId: user.id, moduleId: m.id, active });
+                              setAccess(user.id, m.id, !active);
+                            }}
                             disabled={isSaving}
                             aria-label={`${active ? 'Revoke' : 'Grant'} ${m.name} for ${user.full_name || user.email}`}
                           >
