@@ -102,12 +102,24 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
   };
 
   const renderModuleComponent = () => {
-    if (!selectedModule) return null;
+    console.log('🎨 renderModuleComponent called with selectedModule:', selectedModule);
+    
+    if (!selectedModule) {
+      console.log('🎨 No selected module, returning null');
+      return null;
+    }
+    
     const module = availableModules.find(m => m.id === selectedModule);
-    if (!module) return null;
+    console.log('🎨 Found module for rendering:', module ? { id: module.id, name: module.name } : null);
+    
+    if (!module) {
+      console.log('🎨 Module not found, returning null');
+      return null;
+    }
     
     // Get the component using the module name mapping
     const Component = getModuleComponent(module.name);
+    console.log('🎨 Component resolved:', Component?.name || 'Anonymous Component');
     
     return (
       <div className="mt-4">
