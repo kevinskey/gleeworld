@@ -8,18 +8,13 @@ import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarous
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import { AuditionsModule } from '@/components/modules/AuditionsModule';
-import { AttendanceModule } from '@/components/modules/AttendanceModule';
-import { MusicLibraryModule } from '@/components/modules/MusicLibraryModule';
-import { TourManagerModule } from '@/components/modules/TourManagerModule';
-import { PRHubModule } from '@/components/modules/PRHubModule';
-import { StudentConductorModule } from '@/components/modules/StudentConductorModule';
-import { TreasurerModule } from '@/components/modules/TreasurerModule';
-import { EventPlannerModule } from '@/components/modules/EventPlannerModule';
+import { MemberModules } from '@/components/member-view/MemberModules';
+import { useUserRole } from '@/hooks/useUserRole';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
+  const { profile } = useUserRole();
   
   const [showMessages, setShowMessages] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
@@ -109,17 +104,21 @@ export const UnifiedDashboard = () => {
         )}
       </div>
 
-      {/* Row 4: Key Modules (stacked) */}
-      <div className="px-6 pb-10 space-y-6">
-        <AuditionsModule user={user} />
-        <AttendanceModule user={user} />
-        <MusicLibraryModule user={user} />
-        <TourManagerModule user={user} />
-        <PRHubModule user={user} />
-        <EventPlannerModule user={user} />
-        <TreasurerModule user={user} />
-        <StudentConductorModule user={user} />
-      </div>
+      {/* Row 4: Dynamic Modules System */}
+      {profile && (
+        <div className="px-6 pb-10">
+          <MemberModules user={{
+            id: profile.user_id,
+            email: profile.email,
+            full_name: profile.full_name,
+            role: profile.role,
+            exec_board_role: profile.exec_board_role,
+            is_exec_board: profile.is_exec_board,
+            is_admin: profile.is_admin,
+            is_super_admin: profile.is_super_admin
+          }} />
+        </div>
+      )}
 
       {/* Messages Panel Overlay */}
       {showMessages && (
