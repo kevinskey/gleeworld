@@ -60,12 +60,22 @@ export const useAudioRecorder = () => {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
       }
+      
+      // Stop metronome when recording stops
+      if (metronomeCallbackRef.current) {
+        // Signal to stop metronome (negative BPM as stop signal)
+        metronomeCallbackRef.current(-1);
+      }
     }
   }, [isRecording]);
 
   const clearRecording = useCallback(() => {
     setAudioBlob(null);
     setRecordingDuration(0);
+    // Reset metronome callback connection
+    if (metronomeCallbackRef.current) {
+      metronomeCallbackRef.current(-1); // Stop any playing metronome
+    }
   }, []);
 
   const setMetronomeCallback = useCallback((callback: (bpm: number) => void) => {

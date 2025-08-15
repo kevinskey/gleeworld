@@ -89,10 +89,21 @@ export const SightSingingStudio: React.FC = () => {
     setTempo: setMetronomeTempo
   } = useMetronome();
 
-  // Connect metronome to audio recorder
+  // Connect metronome to audio recorder with reset capability
   useEffect(() => {
-    setMetronomeCallback(startMetronome);
-  }, [setMetronomeCallback, startMetronome]);
+    const metronomeController = (bpm: number) => {
+      if (bpm > 0) {
+        console.log('Starting metronome at BPM:', bpm);
+        stopMetronome(); // Stop any existing metronome first
+        setTimeout(() => startMetronome(bpm), 100); // Small delay to ensure clean start
+      } else {
+        console.log('Stopping metronome');
+        stopMetronome();
+      }
+    };
+    
+    setMetronomeCallback(metronomeController);
+  }, [setMetronomeCallback, startMetronome, stopMetronome]);
 
   const handleReset = () => {
     setCurrentScore(null);
@@ -101,6 +112,7 @@ export const SightSingingStudio: React.FC = () => {
     setCurrentBpm(120);
     clearRecording();
     stopPlayback();
+    stopMetronome(); // Ensure metronome is stopped on reset
     
     toast({
       title: "Exercise Reset",
