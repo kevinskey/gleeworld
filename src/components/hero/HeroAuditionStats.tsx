@@ -16,21 +16,15 @@ export const HeroAuditionStats: React.FC<{ className?: string }>
         setError(null);
         let countVal = 0;
         try {
-          // Count from both gw_auditions and audition_applications tables
-          const [auditionsResult, applicationsResult] = await Promise.all([
-            supabase.from('gw_auditions').select('*', { count: 'exact', head: true }),
-            supabase.from('audition_applications').select('*', { count: 'exact', head: true })
-          ]);
-          
-          const auditionsCount = auditionsResult.count ?? 0;
-          const applicationsCount = applicationsResult.count ?? 0;
-          countVal = auditionsCount + applicationsCount;
-        } catch (_) {
-          // Fallback: try just auditions table
+          // Count from gw_auditions table (same source as schedule display)
           const { count } = await supabase
             .from('gw_auditions')
-            .select('*', { count: 'exact', head: true });
+            .select('*', { count: 'exact', head: true })
+            .not('audition_date', 'is', null);
           countVal = count ?? 0;
+        } catch (_) {
+          // Fallback to 0 if error
+          countVal = 0;
         }
         if (!isMounted) return;
         setTotal(countVal);
