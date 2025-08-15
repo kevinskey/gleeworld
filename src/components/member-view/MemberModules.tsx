@@ -31,6 +31,7 @@ import { PRHubModule } from '@/components/modules/PRHubModule';
 import { SchedulingModule } from '@/components/modules/SchedulingModule';
 import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 import { AIFinancialPlanningModule } from '@/components/financial/AIFinancialPlanningModule';
+import AlumnaeLanding from '@/pages/AlumnaeLanding';
 
 interface MemberModulesProps {
   user: {
@@ -63,6 +64,7 @@ const getModuleComponent = (moduleName: string) => {
     
     // Extended modules
     'ai-financial': AIFinancialPlanningModule,
+    'alumnae-portal': AlumnaeLanding,
     'approval-system': ApprovalSystemModule,
     'buckets-of-love': BucketsOfLoveModule,
     'budgets': BudgetsModule,
