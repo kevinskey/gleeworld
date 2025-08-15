@@ -8242,7 +8242,10 @@ export type Database = {
           thumbnail_url: string | null
           time_signature: string | null
           title: string
+          updated_at: string | null
           voice_parts: string[] | null
+          xml_content: string | null
+          xml_url: string | null
         }
         Insert: {
           archive_reason?: string | null
@@ -8276,7 +8279,10 @@ export type Database = {
           thumbnail_url?: string | null
           time_signature?: string | null
           title: string
+          updated_at?: string | null
           voice_parts?: string[] | null
+          xml_content?: string | null
+          xml_url?: string | null
         }
         Update: {
           archive_reason?: string | null
@@ -8310,7 +8316,10 @@ export type Database = {
           thumbnail_url?: string | null
           time_signature?: string | null
           title?: string
+          updated_at?: string | null
           voice_parts?: string[] | null
+          xml_content?: string | null
+          xml_url?: string | null
         }
         Relationships: [
           {

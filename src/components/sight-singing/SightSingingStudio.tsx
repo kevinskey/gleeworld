@@ -7,6 +7,8 @@ import { RecordingControls } from './RecordingControls';
 import { GradingResults } from './GradingResults';
 import { ErrorVisualization } from './ErrorVisualization';
 import { PerformanceReport } from './PerformanceReport';
+import { ScoreLibraryManager } from './ScoreLibraryManager';
+import { ScoreHistoryView } from './ScoreHistoryView';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 import { useTonePlayback } from './hooks/useTonePlayback';
 import { useGrading } from './hooks/useGrading';
@@ -56,8 +58,9 @@ export const SightSingingStudio: React.FC = () => {
   const [currentMusicXML, setCurrentMusicXML] = useState<string>('');
   const [currentExerciseId, setCurrentExerciseId] = useState<string | null>(null);
   const [currentBpm, setCurrentBpm] = useState(120);
-  const [activeTab, setActiveTab] = useState<'practice' | 'report'>('practice');
+  const [activeTab, setActiveTab] = useState<'practice' | 'library' | 'history' | 'report'>('practice');
   const [parameters, setParameters] = useState<ExerciseParameters | null>(null);
+  const [selectedScore, setSelectedScore] = useState<any>(null);
 
   const { 
     isRecording, 
@@ -128,6 +131,7 @@ export const SightSingingStudio: React.FC = () => {
     setIsGenerating(true);
     setCurrentBpm(exerciseParams.bpm);
     setParameters(exerciseParams);
+    setSelectedScore(null); // Clear selected score when generating new exercise
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-musicxml', {
@@ -240,6 +244,25 @@ export const SightSingingStudio: React.FC = () => {
           
           const { data: { user } } = await supabase.auth.getUser();
           
+          // Store score in gw_scores table
+          const scorePercentage = Math.round(results.overall * 100);
+          const { error: scoreError } = await supabase
+            .from('gw_scores')
+            .insert({
+              user_id: user?.id,
+              sheet_music_id: selectedScore?.id || null, // Link to selected score if any
+              score_value: scorePercentage,
+              max_score: 100,
+              performance_date: new Date().toISOString(),
+              notes: `Pitch: ${Math.round(results.pitchAcc * 100)}%, Rhythm: ${Math.round(results.rhythmAcc * 100)}%, BPM: ${currentBpm}`,
+              recorded_by: user?.id
+            });
+
+          if (scoreError) {
+            console.error('Failed to store score:', scoreError);
+          }
+
+          // Store detailed submission if we have an exercise ID
           const { error: submissionError } = await supabase
             .from('submissions')
             .insert({
@@ -315,9 +338,11 @@ export const SightSingingStudio: React.FC = () => {
     <div className="min-h-screen bg-slate-50 px-4 lg:px-8 xl:px-12 py-6">
       <div className="h-full flex flex-col gap-6">
         {/* Navigation Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'practice' | 'report')} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'practice' | 'library' | 'history' | 'report')} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="practice">Practice Studio</TabsTrigger>
+            <TabsTrigger value="library">Score Library</TabsTrigger>
+            <TabsTrigger value="history">Score History</TabsTrigger>
             <TabsTrigger value="report" disabled={!gradingResults || !currentMusicXML}>Performance Report</TabsTrigger>
           </TabsList>
 
@@ -396,6 +421,23 @@ export const SightSingingStudio: React.FC = () => {
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="library" className="mt-6">
+            <ScoreLibraryManager 
+              onScoreSelect={(score) => {
+                setSelectedScore(score);
+                if (score.xml_content) {
+                  setCurrentMusicXML(score.xml_content);
+                  setActiveTab('practice');
+                }
+              }}
+              selectedScoreId={selectedScore?.id}
+            />
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-6">
+            <ScoreHistoryView selectedScoreId={selectedScore?.id} />
           </TabsContent>
 
           <TabsContent value="report" className="mt-6">
