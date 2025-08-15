@@ -170,7 +170,7 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
 
   if (accessibleModules.length === 0) {
     return (
-      <Card>
+      <Card className="bg-blue-50/50 border-blue-200/50">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-brand-600" />
@@ -185,7 +185,7 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
   }
 
   return (
-    <Card>
+    <Card className="bg-blue-50/50 border-blue-200/50">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -218,10 +218,10 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
 
                 <div className="grid gap-2">
                   {modules.map((module) => (
-                    <Card
-                      key={module.id}
-                      className="cursor-pointer bg-card hover:bg-accent/10 border border-border transition-colors"
-                      onClick={() => handleModuleClick(module.id)}
+                     <Card
+                       key={module.id}
+                       className="cursor-pointer bg-blue-50/30 hover:bg-blue-100/50 border border-blue-200/40 transition-colors"
+                       onClick={() => handleModuleClick(module.id)}
                     >
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between">
