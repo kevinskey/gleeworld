@@ -6,6 +6,16 @@ import { Loader2, Users } from 'lucide-react';
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { UNIFIED_MODULE_CATEGORIES } from "@/config/unified-modules";
 
+// Import all available module components for mapping
+import { MusicLibraryInlineModule } from '@/components/modules/MusicLibraryInlineModule';
+import { UserManagementModule } from '@/components/modules/UserManagementModule';
+import { WardrobeModule } from '@/components/modules/WardrobeModule';
+import { AuditionsModule } from '@/components/modules/AuditionsModule';
+import { PermissionsModule } from '@/components/modules/PermissionsModule';
+import { AttendanceModule } from '@/components/modules/AttendanceModule';
+import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
+import { SettingsModule } from '@/components/dashboard/modules/SettingsModule';
+
 interface MemberModulesProps {
   user: {
     id: string;
@@ -18,6 +28,29 @@ interface MemberModulesProps {
     is_super_admin?: boolean;
   };
 }
+
+// Map module names to their React components
+const getModuleComponent = (moduleName: string) => {
+  const componentMap: Record<string, React.ComponentType<any>> = {
+    'music-library': MusicLibraryInlineModule,
+    'user-management': UserManagementModule,
+    'wardrobe-management': WardrobeModule,
+    'auditions-management': AuditionsModule,
+    'permissions-management': PermissionsModule,
+    'attendance-management': AttendanceModule,
+    'sight-reading-preview': SightSingingPreviewModule,
+    'sight-reading-generator': SightSingingPreviewModule,
+    'settings': SettingsModule,
+    // Add more mappings as needed
+  };
+  
+  return componentMap[moduleName] || (() => (
+    <div className="p-8 text-center">
+      <h3 className="text-lg font-semibold mb-2">Module: {moduleName}</h3>
+      <p className="text-muted-foreground">Component not yet implemented</p>
+    </div>
+  ));
+};
 
 export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
@@ -57,7 +90,10 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
     if (!selectedModule) return null;
     const module = availableModules.find(m => m.id === selectedModule);
     if (!module) return null;
-    const Component = module.component;
+    
+    // Get the component using the module name mapping
+    const Component = getModuleComponent(module.name);
+    
     return (
       <div className="mt-4">
         <div className="flex items-center justify-between mb-4">
