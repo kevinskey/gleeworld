@@ -93,7 +93,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
 
       // Get module permissions
       const { data: modulePerms } = await supabase
-        .rpc('get_user_modules', { user_id_param: user.id });
+        .rpc('get_user_modules', { p_user: user.id });
 
       // Get username permissions
       const { data: usernamePerms } = await supabase

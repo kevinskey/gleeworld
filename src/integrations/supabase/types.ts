@@ -5763,6 +5763,7 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean | null
+          key: string
           name: string
           updated_at: string | null
         }
@@ -5773,6 +5774,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean | null
+          key: string
           name: string
           updated_at?: string | null
         }
@@ -5783,6 +5785,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean | null
+          key?: string
           name?: string
           updated_at?: string | null
         }
@@ -7917,6 +7920,27 @@ export type Database = {
           permission_type?: string
           role?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      gw_roles: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          name?: string
         }
         Relationships: []
       }
@@ -13152,6 +13176,50 @@ export type Database = {
         }
         Relationships: []
       }
+      username_module_permissions: {
+        Row: {
+          can_manage: boolean
+          can_view: boolean
+          expires_at: string | null
+          granted_at: string
+          is_active: boolean
+          module_id: string
+          notes: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          can_manage?: boolean
+          can_view?: boolean
+          expires_at?: string | null
+          granted_at?: string
+          is_active?: boolean
+          module_id: string
+          notes?: string | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          can_manage?: boolean
+          can_view?: boolean
+          expires_at?: string | null
+          granted_at?: string
+          is_active?: boolean
+          module_id?: string
+          notes?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "username_module_permissions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "gw_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       username_permissions: {
         Row: {
           created_at: string | null
@@ -13811,10 +13879,13 @@ export type Database = {
         }[]
       }
       get_user_modules: {
-        Args: { user_id_param: string }
+        Args: { p_user: string }
         Returns: {
+          can_manage: boolean
+          can_view: boolean
+          category: string
+          module_key: string
           module_name: string
-          permissions: string[]
         }[]
       }
       get_user_modules_combined: {

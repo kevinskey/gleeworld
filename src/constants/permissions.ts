@@ -27,7 +27,7 @@ export const PERMISSIONS = [
   'delete_users',
   'manage_system_settings',
   'view_activity_logs',
-  // Module-specific permissions
+// Module-specific permissions (legacy - migrating to module-based system)
   'access_hero_management',
   'access_dashboard_settings',
   'access_youtube_management',
