@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { ParameterForm } from './ParameterForm';
 import { ScoreDisplay } from './ScoreDisplay';
@@ -8,6 +8,7 @@ import { GradingResults } from './GradingResults';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 import { useTonePlayback } from './hooks/useTonePlayback';
 import { useGrading } from './hooks/useGrading';
+import { useMetronome } from './hooks/useMetronome';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -59,7 +60,8 @@ export const SightSingingStudio: React.FC = () => {
     audioBlob, 
     startRecording, 
     stopRecording, 
-    clearRecording 
+    clearRecording,
+    setMetronomeCallback 
   } = useAudioRecorder();
 
   const { 
@@ -75,6 +77,21 @@ export const SightSingingStudio: React.FC = () => {
     isGrading,
     gradeRecording
   } = useGrading();
+
+  const {
+    isPlaying: metronomeIsPlaying,
+    startMetronome,
+    stopMetronome,
+    volume: metronomeVolume,
+    setVolume: setMetronomeVolume,
+    tempo: metronomeTempo,
+    setTempo: setMetronomeTempo
+  } = useMetronome();
+
+  // Connect metronome to audio recorder
+  useEffect(() => {
+    setMetronomeCallback(startMetronome);
+  }, [setMetronomeCallback, startMetronome]);
 
   const handleReset = () => {
     setCurrentScore(null);
@@ -166,7 +183,7 @@ export const SightSingingStudio: React.FC = () => {
     }
 
     try {
-      await startRecording();
+      await startRecording(currentBpm);
     } catch (error) {
       console.error('Recording error:', error);
       toast({
@@ -175,6 +192,11 @@ export const SightSingingStudio: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleStopRecording = async () => {
+    stopRecording();
+    stopMetronome();
   };
 
   const handleGradeRecording = async () => {
@@ -312,7 +334,7 @@ export const SightSingingStudio: React.FC = () => {
                   isRecording={isRecording}
                   duration={recordingDuration}
                   onStartRecording={handleStartRecording}
-                  onStopRecording={stopRecording}
+                  onStopRecording={handleStopRecording}
                   hasRecording={!!audioBlob}
                   onClearRecording={clearRecording}
                 />

@@ -7,8 +7,9 @@ export const useAudioRecorder = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const metronomeCallbackRef = useRef<((bpm: number) => void) | null>(null);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(async (bpm?: number) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -26,6 +27,11 @@ export const useAudioRecorder = () => {
         const blob = new Blob(chunks, { type: 'audio/webm' });
         setAudioBlob(blob);
       };
+      
+      // Start metronome if BPM provided and callback is set
+      if (bpm && metronomeCallbackRef.current) {
+        metronomeCallbackRef.current(bpm);
+      }
       
       mediaRecorder.start();
       setIsRecording(true);
@@ -62,12 +68,17 @@ export const useAudioRecorder = () => {
     setRecordingDuration(0);
   }, []);
 
+  const setMetronomeCallback = useCallback((callback: (bpm: number) => void) => {
+    metronomeCallbackRef.current = callback;
+  }, []);
+
   return {
     isRecording,
     recordingDuration,
     audioBlob,
     startRecording,
     stopRecording,
-    clearRecording
+    clearRecording,
+    setMetronomeCallback
   };
 };
