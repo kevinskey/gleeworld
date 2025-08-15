@@ -5,6 +5,7 @@ import { ScoreDisplay } from './ScoreDisplay';
 import { PlaybackControls } from './PlaybackControls';
 import { RecordingControls } from './RecordingControls';
 import { GradingResults } from './GradingResults';
+import { ErrorVisualization } from './ErrorVisualization';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 import { useTonePlayback } from './hooks/useTonePlayback';
 import { useGrading } from './hooks/useGrading';
@@ -340,10 +341,13 @@ export const SightSingingStudio: React.FC = () => {
                 />
                 
                 {gradingResults && (
-                  <div className="mt-4 pt-3 border-t flex-shrink-0">
+                  <div className="mt-4 pt-3 border-t flex-shrink-0 space-y-3">
                     <h3 className="text-xs font-medium mb-2">Results</h3>
                     <div className="text-xs">
                       <GradingResults results={gradingResults} />
+                    </div>
+                    <div className="text-xs">
+                      <ErrorVisualization results={gradingResults} />
                     </div>
                   </div>
                 )}
