@@ -53,14 +53,21 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
     <Card>
       <CardHeader>
         <CardTitle className="text-sm">Note-by-Note Error Analysis</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Shows how accurate each note was. The center line represents perfect timing/pitch. 
+          Bars extending left are early/flat, bars extending right are late/sharp.
+        </p>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Pitch Errors */}
         <div>
           <h4 className="text-xs font-medium mb-2 flex items-center gap-2">
-            Pitch Errors (cents)
+            Pitch Errors (cents) 
             <Badge variant="outline" className="text-xs">±{maxPitchError.toFixed(0)} max</Badge>
           </h4>
+          <p className="text-xs text-muted-foreground mb-2">
+            How sharp (+) or flat (-) each note was. 100 cents = 1 semitone.
+          </p>
           <div className="space-y-1">
             {results.perNote.map((note, index) => (
               <div key={`pitch-${index}`} className="flex items-center gap-2">
@@ -89,6 +96,9 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
             Timing Errors (ms)
             <Badge variant="outline" className="text-xs">±{maxTimingError.toFixed(0)} max</Badge>
           </h4>
+          <p className="text-xs text-muted-foreground mb-2">
+            How early (-) or late (+) each note was sung. 1000ms = 1 second.
+          </p>
           <div className="space-y-1">
             {results.perNote.map((note, index) => (
               <div key={`timing-${index}`} className="flex items-center gap-2">
@@ -117,6 +127,9 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
             Duration Errors (%)
             <Badge variant="outline" className="text-xs">±{maxDurationError.toFixed(0)} max</Badge>
           </h4>
+          <p className="text-xs text-muted-foreground mb-2">
+            How much shorter (-) or longer (+) each note was held compared to the correct duration.
+          </p>
           <div className="space-y-1">
             {results.perNote.map((note, index) => (
               <div key={`duration-${index}`} className="flex items-center gap-2">
@@ -142,24 +155,28 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
 
         {/* Legend */}
         <div className="pt-2 border-t">
-          <div className="flex flex-wrap gap-2 text-xs">
+          <h5 className="text-xs font-medium mb-2">Color Guide:</h5>
+          <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-green-500 rounded" />
-              <span>Excellent</span>
+              <span>Excellent (very accurate)</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-yellow-500 rounded" />
-              <span>Good</span>
+              <span>Good (minor errors)</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-orange-500 rounded" />
-              <span>Fair</span>
+              <span>Fair (noticeable errors)</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-red-500 rounded" />
-              <span>Needs Work</span>
+              <span>Needs Work (major errors)</span>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            N1, N2, etc. = Note number in order. ✓ = Note was overall acceptable.
+          </p>
         </div>
       </CardContent>
     </Card>
