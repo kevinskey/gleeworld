@@ -44,21 +44,20 @@ export const useModuleAssignments = () => {
         .from('gw_module_assignments')
         .select(`
           *,
-          gw_modules!inner(name),
-          assigned_user:gw_profiles!gw_module_assignments_assigned_to_user_id_fkey(full_name),
-          assigned_by_user:gw_profiles!gw_module_assignments_assigned_by_fkey(full_name)
+          gw_modules!inner(name)
         `)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const formattedAssignments = data?.map(assignment => ({
+      const formattedAssignments: ModuleAssignment[] = (data || []).map(assignment => ({
         ...assignment,
+        assignment_type: assignment.assignment_type as 'individual' | 'group' | 'role',
         module_name: assignment.gw_modules?.name,
-        assigned_user_name: assignment.assigned_user?.full_name,
-        assigned_by_name: assignment.assigned_by_user?.full_name,
-      })) || [];
+        assigned_user_name: '',
+        assigned_by_name: '',
+      }));
 
       setAssignments(formattedAssignments);
     } catch (err) {

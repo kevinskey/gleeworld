@@ -15,7 +15,7 @@ export interface UnifiedModule {
   permissions: {
     canAccess: boolean;
     canManage: boolean;
-    source: 'role' | 'individual' | 'executive' | 'none';
+    source: 'role' | 'individual' | 'executive' | 'admin' | 'none';
   };
   // Legacy properties for compatibility
   hasPermission?: (type: string) => boolean;
@@ -55,6 +55,16 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
       setLoading(true);
       setError(null);
 
+      // Debug: Check current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('Current user:', user?.id, 'Email:', user?.email);
+      
+      if (!user) {
+        console.log('No authenticated user found');
+        setModules([]);
+        return;
+      }
+
       // Fetch base modules from database
       const { data: moduleData, error: moduleError } = await supabase
         .from('gw_modules')
@@ -63,6 +73,8 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
         .order('name');
 
       if (moduleError) throw moduleError;
+      
+      console.log('Found modules:', moduleData?.length || 0);
 
       // Convert to UnifiedModule format with standardized names and legacy compatibility
       let modulesWithPerms: UnifiedModule[] = (moduleData || []).map(module => {
@@ -96,6 +108,7 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
 
       // If no user-specific filters, return base modules
       if (!filterOptions?.userRole && !filterOptions?.execPosition && !filterOptions?.isAdmin) {
+        console.log('No user filters provided, returning base modules:', modulesWithPerms.length);
         setModules(modulesWithPerms);
         return;
       }
@@ -140,12 +153,13 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
 
       // Admin override
       if (filterOptions?.isAdmin) {
+        console.log('Admin override applied - granting access to all modules');
         modulesWithPerms = modulesWithPerms.map(module => ({
           ...module,
           permissions: {
             canAccess: true,
             canManage: true,
-            source: 'role'
+            source: 'admin'
           },
           // Update legacy properties for compatibility
           canAccess: true,
@@ -153,6 +167,8 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
           hasPermission: () => true
         }));
       }
+
+      console.log('Final modules with permissions:', modulesWithPerms.filter(m => m.permissions.canAccess).length, 'accessible out of', modulesWithPerms.length);
 
       setModules(modulesWithPerms);
     } catch (err) {

@@ -387,7 +387,6 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     category: "musical-leadership",
     isActive: true,
     component: SightSingingPreviewModule, // Uses same component but can be enhanced later
-    fullPageComponent: () => import('@/pages/SightReadingGenerator').then(m => ({ default: m.default })),
     dbFunctionName: "sight-reading-generator",
     requiredRoles: ["member", "admin"]
   },
