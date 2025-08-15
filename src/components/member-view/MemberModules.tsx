@@ -30,6 +30,7 @@ import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { PRHubModule } from '@/components/modules/PRHubModule';
 import { SchedulingModule } from '@/components/modules/SchedulingModule';
 import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
+import { AIFinancialPlanningModule } from '@/components/financial/AIFinancialPlanningModule';
 
 interface MemberModulesProps {
   user: {
@@ -61,6 +62,7 @@ const getModuleComponent = (moduleName: string) => {
     'booking-forms': BookingFormsModule,
     
     // Extended modules
+    'ai-financial': AIFinancialPlanningModule,
     'approval-system': ApprovalSystemModule,
     'buckets-of-love': BucketsOfLoveModule,
     'budgets': BudgetsModule,
