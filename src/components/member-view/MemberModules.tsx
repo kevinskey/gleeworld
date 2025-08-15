@@ -15,6 +15,7 @@ import { PermissionsModule } from '@/components/modules/PermissionsModule';
 import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
 import { SettingsModule } from '@/components/dashboard/modules/SettingsModule';
+import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
 
 interface MemberModulesProps {
   user: {
@@ -42,6 +43,7 @@ const getModuleComponent = (moduleName: string) => {
     'sight-reading-preview': SightSingingPreviewModule,
     'sight-reading-generator': SightSingingPreviewModule,
     'settings': SettingsModule,
+    'booking-forms': BookingFormsModule,
     
     // Try variations that might exist in database
     'auditions-management': AuditionsModule,
