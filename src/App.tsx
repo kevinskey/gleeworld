@@ -631,6 +631,14 @@ const App = () => {
                                 } 
                               />
                               <Route 
+                                path="/admin/module-access" 
+                                element={
+                                  <ProtectedRoute>
+                                    <ModuleAccess />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
                                 path="/admin/database" 
                                 element={
                                   <ProtectedRoute>
