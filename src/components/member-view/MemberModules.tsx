@@ -32,6 +32,19 @@ import { SchedulingModule } from '@/components/modules/SchedulingModule';
 import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 import { AIFinancialPlanningModule } from '@/components/financial/AIFinancialPlanningModule';
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
+import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
+import { GleeWritingWidget } from '@/components/writing/GleeWritingWidget';
+import { RadioManagement } from '@/components/admin/RadioManagement';
+import { ReceiptsModule } from '@/components/receipts/ReceiptsModule';
+import { ReimbursementsManager } from '@/components/reimbursements/ReimbursementsManager';
+import ServiceManagement from '@/components/admin/ServiceManagement';
+import { StudentConductorModule } from '@/components/modules/StudentConductorModule';
+import { WellnessModule } from '@/components/modules/WellnessModule';
+import { MonthlyStatements } from '@/components/admin/financial/MonthlyStatements';
+import { PressKitManager } from '@/components/pr-coordinator/PressKitManager';
+import MediaLibrary from '@/pages/admin/MediaLibrary';
+import { ExecutiveBoardNavigationHub } from '@/components/executive-board/ExecutiveBoardNavigationHub';
+import { MediaLibrary as MediaLibraryComponent } from '@/components/radio/MediaLibrary';
 
 interface MemberModulesProps {
   user: {
@@ -93,6 +106,29 @@ const getModuleComponent = (moduleName: string) => {
     'email': EmailManagementModule,
     'public-relations': PRHubModule,
     'pr': PRHubModule,
+    
+    // Additional missing modules
+    'glee-ledger': GleeLedgerModule,
+    'glee-writing': GleeWritingWidget,
+    'radio-management': RadioManagement,
+    'receipts-records': ReceiptsModule,
+    'check-requests': ReimbursementsManager,
+    'service-management': ServiceManagement,
+    'student-conductor': StudentConductorModule,
+    'wellness': WellnessModule,
+    'monthly-statements': MonthlyStatements,
+    'press-kits': PressKitManager,
+    'media-library': MediaLibrary,
+    'executive-board': ExecutiveBoardNavigationHub,
+    'executive-functions': ExecutiveBoardNavigationHub,
+    'internal-communications': EmailManagementModule,
+    'merch-store': PRHubModule, // Placeholder - needs actual component
+    'tour-management': EventPlannerModule, // Placeholder
+    'ai-tools': AIFinancialPlanningModule, // Reuse for now
+    'hero-manager': MediaLibrary, // Reuse media library for hero management
+    'pr-manager': PRHubModule,
+    'sight-reading': SightSingingPreviewModule,
+    'pr-coordinator': PRHubModule,
   };
   
   return componentMap[moduleName] || (() => (
