@@ -408,9 +408,9 @@ export const SightSingingStudio: React.FC = () => {
 
               {/* Right Column - Score Display (2/3 width on desktop, full width on mobile) */}
               <div className="lg:col-span-2 col-span-1 order-first lg:order-last">
-                <Card className="p-6 min-h-[500px] lg:h-full flex flex-col">
+                <Card className="p-4 lg:p-6 h-[600px] lg:h-full flex flex-col">
                   <h2 className="text-base font-semibold mb-2 flex-shrink-0">Musical Score</h2>
-                  <div className="flex-1 min-h-[400px]">
+                  <div className="flex-1 min-h-0">
                     <ScoreDisplay
                       musicXML={currentMusicXML}
                       onGradeRecording={handleGradeRecording}

@@ -139,11 +139,11 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       
       <div 
         ref={scoreRef}
-        className="flex-1 min-h-[400px] bg-background rounded-lg border p-4 overflow-auto"
+        className="flex-1 min-h-[300px] h-full bg-background rounded-lg border p-2 lg:p-4 overflow-auto"
       />
       
       {!musicXML && (
-        <div className="flex-1 min-h-[400px] flex items-center justify-center text-muted-foreground">
+        <div className="flex-1 min-h-[300px] h-full flex items-center justify-center text-muted-foreground text-center px-4">
           Generate an exercise to see the musical notation
         </div>
       )}
