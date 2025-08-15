@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -69,6 +69,11 @@ const getModuleComponent = (moduleName: string) => {
 
 export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
+
+  // Track selectedModule state changes
+  useEffect(() => {
+    console.log('🔄 selectedModule state changed:', selectedModule);
+  }, [selectedModule]);
 
   console.log('🔍 MemberModules rendering with user:', {
     user,
