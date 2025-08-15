@@ -70,6 +70,14 @@ const getModuleComponent = (moduleName: string) => {
 export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
+  // Track component lifecycle
+  useEffect(() => {
+    console.log('🏗️ MemberModules component mounted');
+    return () => {
+      console.log('💀 MemberModules component unmounting');
+    };
+  }, []);
+
   // Track selectedModule state changes
   useEffect(() => {
     console.log('🔄 selectedModule state changed:', selectedModule);
@@ -108,7 +116,8 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
     console.log('🔥 Module click attempted:', { 
       moduleId, 
       selectedModule: selectedModule,
-      availableModulesCount: availableModules.length 
+      availableModulesCount: availableModules.length,
+      timestamp: new Date().toISOString()
     });
     
     const module = availableModules.find(m => m.id === moduleId);
@@ -119,8 +128,14 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
     });
     
     if (module && module.hasPermission && module.hasPermission('view')) {
-      console.log('🔥 Setting selected module to:', moduleId);
+      console.log('🔥 BEFORE setSelectedModule - current state:', selectedModule);
       setSelectedModule(moduleId);
+      console.log('🔥 AFTER setSelectedModule called - requested:', moduleId);
+      
+      // Force a small delay to see if state updates asynchronously
+      setTimeout(() => {
+        console.log('🔥 DELAYED CHECK - selectedModule should be:', moduleId);
+      }, 100);
     } else {
       console.log('🔥 Module click blocked - no permission or module not found');
     }
