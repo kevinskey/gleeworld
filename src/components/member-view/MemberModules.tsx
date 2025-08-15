@@ -8,6 +8,7 @@ import { UNIFIED_MODULE_CATEGORIES } from "@/config/unified-modules";
 
 // Import all available module components for mapping
 import { MusicLibraryInlineModule } from '@/components/modules/MusicLibraryInlineModule';
+import { MusicLibraryModule } from '@/components/modules/MusicLibraryModule';
 import { UserManagementModule } from '@/components/modules/UserManagementModule';
 import { WardrobeModule } from '@/components/modules/WardrobeModule';
 import { AuditionsModule } from '@/components/modules/AuditionsModule';
@@ -16,6 +17,19 @@ import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
 import { SettingsModule } from '@/components/dashboard/modules/SettingsModule';
 import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
+import { ApprovalSystemModule } from '@/components/modules/ApprovalSystemModule';
+import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
+import { BudgetsModule } from '@/components/modules/BudgetsModule';
+import { CalendarManagementModule } from '@/components/modules/CalendarManagementModule';
+import { ContractsModule } from '@/components/modules/ContractsModule';
+import { DuesCollectionModule } from '@/components/modules/DuesCollectionModule';
+import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
+import { EventPlannerModule } from '@/components/modules/EventPlannerModule';
+import { KaraokeModule } from '@/components/modules/KaraokeModule';
+import { NotificationsModule } from '@/components/modules/NotificationsModule';
+import { PRHubModule } from '@/components/modules/PRHubModule';
+import { SchedulingModule } from '@/components/modules/SchedulingModule';
+import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 
 interface MemberModulesProps {
   user: {
@@ -33,8 +47,9 @@ interface MemberModulesProps {
 // Map module names to their React components
 const getModuleComponent = (moduleName: string) => {
   const componentMap: Record<string, React.ComponentType<any>> = {
-    // Match actual database module names
+    // Core modules
     'music-library': MusicLibraryInlineModule,
+    'music-library-module': MusicLibraryModule,
     'user-management': UserManagementModule,
     'wardrobe': WardrobeModule,
     'auditions': AuditionsModule,
@@ -45,12 +60,35 @@ const getModuleComponent = (moduleName: string) => {
     'settings': SettingsModule,
     'booking-forms': BookingFormsModule,
     
-    // Try variations that might exist in database
+    // Extended modules
+    'approval-system': ApprovalSystemModule,
+    'buckets-of-love': BucketsOfLoveModule,
+    'budgets': BudgetsModule,
+    'calendar-management': CalendarManagementModule,
+    'contracts': ContractsModule,
+    'dues-collection': DuesCollectionModule,
+    'email-management': EmailManagementModule,
+    'event-planner': EventPlannerModule,
+    'karaoke': KaraokeModule,
+    'notifications': NotificationsModule,
+    'pr-hub': PRHubModule,
+    'scheduling': SchedulingModule,
+    'section-leader': SectionLeaderModule,
+    
+    // Legacy/alternative naming patterns
     'auditions-management': AuditionsModule,
     'wardrobe-management': WardrobeModule,
     'permissions-management': PermissionsModule,
     'attendance-management': AttendanceModule,
     'user-management-module': UserManagementModule,
+    'event-management': EventPlannerModule,
+    'calendar': CalendarManagementModule,
+    'budget-management': BudgetsModule,
+    'contract-management': ContractsModule,
+    'dues': DuesCollectionModule,
+    'email': EmailManagementModule,
+    'public-relations': PRHubModule,
+    'pr': PRHubModule,
   };
   
   return componentMap[moduleName] || (() => (
