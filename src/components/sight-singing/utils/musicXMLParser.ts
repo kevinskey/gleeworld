@@ -65,12 +65,12 @@ export function parseMusicXML(musicXMLString: string, tempo: number = 120): Pars
     }
 
     const measures: ParsedMeasure[] = [];
-    let currentTime = 0;
     let divisions = 4; // Default divisions per quarter note
     let timeSignature = { beats: 4, beatType: 4 };
 
-    // Get time signature and divisions from first measure
-    const firstMeasure = xmlDoc.querySelector('measure');
+    // Get time signature and divisions from first part's first measure
+    const firstPart = xmlDoc.querySelector('part');
+    const firstMeasure = firstPart?.querySelector('measure');
     if (firstMeasure) {
       const attributesEl = firstMeasure.querySelector('attributes');
       if (attributesEl) {
@@ -93,74 +93,177 @@ export function parseMusicXML(musicXMLString: string, tempo: number = 120): Pars
     // Calculate seconds per quarter note based on tempo
     const secondsPerQuarter = 60 / tempo;
 
-    // Parse each measure
-    const measureElements = xmlDoc.querySelectorAll('measure');
-    measureElements.forEach((measureEl, measureIndex) => {
-      const measureNumber = parseInt(measureEl.getAttribute('number') || (measureIndex + 1).toString());
-      const notes: ParsedNote[] = [];
-      let measureTime = currentTime;
+    // Get all parts and find the maximum number of measures
+    const partElements = xmlDoc.querySelectorAll('part');
+    console.log(`Found ${partElements.length} parts in MusicXML`);
+    
+    if (partElements.length === 0) {
+      console.warn('No parts found, falling back to legacy parsing');
+      return parseSinglePart(xmlDoc, tempo, divisions, timeSignature, secondsPerQuarter);
+    }
 
-      // Parse notes in this measure
-      const noteElements = measureEl.querySelectorAll('note');
-      noteElements.forEach((noteEl) => {
-        // Skip rests
-        const restEl = noteEl.querySelector('rest');
-        if (restEl) {
-          // Handle rest duration
-          const durationEl = noteEl.querySelector('duration');
-          if (durationEl) {
-            const durationValue = parseInt(durationEl.textContent || '0');
-            const quarterNotes = durationValue / divisions;
-            measureTime += quarterNotes * secondsPerQuarter;
+    // Find the maximum number of measures across all parts
+    let maxMeasures = 0;
+    partElements.forEach(part => {
+      const measureCount = part.querySelectorAll('measure').length;
+      maxMeasures = Math.max(maxMeasures, measureCount);
+    });
+
+    // Parse each measure across all parts
+    for (let measureIndex = 0; measureIndex < maxMeasures; measureIndex++) {
+      const measureNumber = measureIndex + 1;
+      const allNotesInMeasure: ParsedNote[] = [];
+
+      // Calculate measure start time
+      let measureStartTime = 0;
+      if (measureIndex > 0) {
+        // Calculate duration of previous measures
+        const beatsPerMeasure = timeSignature.beats;
+        const quarterNotesPerBeat = 4 / timeSignature.beatType;
+        const quarterNotesPerMeasure = beatsPerMeasure * quarterNotesPerBeat;
+        measureStartTime = measureIndex * quarterNotesPerMeasure * secondsPerQuarter;
+      }
+
+      // Parse this measure from each part
+      partElements.forEach((part, partIndex) => {
+        const measureEl = part.querySelectorAll('measure')[measureIndex];
+        if (!measureEl) return;
+
+        let noteTimeInMeasure = 0;
+        const noteElements = measureEl.querySelectorAll('note');
+        
+        noteElements.forEach((noteEl) => {
+          // Skip rests
+          const restEl = noteEl.querySelector('rest');
+          if (restEl) {
+            const durationEl = noteEl.querySelector('duration');
+            if (durationEl) {
+              const durationValue = parseInt(durationEl.textContent || '0');
+              const quarterNotes = durationValue / divisions;
+              noteTimeInMeasure += quarterNotes * secondsPerQuarter;
+            }
+            return;
           }
-          return;
-        }
 
-        const pitchEl = noteEl.querySelector('pitch');
-        const durationEl = noteEl.querySelector('duration');
-        const typeEl = noteEl.querySelector('type');
+          const pitchEl = noteEl.querySelector('pitch');
+          const durationEl = noteEl.querySelector('duration');
 
-        if (pitchEl && durationEl) {
-          const step = pitchEl.querySelector('step')?.textContent || 'C';
-          const octave = parseInt(pitchEl.querySelector('octave')?.textContent || '4');
-          const durationValue = parseInt(durationEl.textContent || '0');
-          
-          // Calculate duration in seconds
-          const quarterNotes = durationValue / divisions;
-          const durationSeconds = quarterNotes * secondsPerQuarter;
-          
-          const frequency = getNoteFrequency(step, octave);
-          
-          notes.push({
-            step,
-            octave,
-            frequency,
-            duration: durationSeconds,
-            startTime: measureTime
-          });
+          if (pitchEl && durationEl) {
+            const step = pitchEl.querySelector('step')?.textContent || 'C';
+            const octave = parseInt(pitchEl.querySelector('octave')?.textContent || '4');
+            const durationValue = parseInt(durationEl.textContent || '0');
+            
+            // Calculate duration in seconds
+            const quarterNotes = durationValue / divisions;
+            const durationSeconds = quarterNotes * secondsPerQuarter;
+            
+            const frequency = getNoteFrequency(step, octave);
+            
+            allNotesInMeasure.push({
+              step,
+              octave,
+              frequency,
+              duration: durationSeconds,
+              startTime: measureStartTime + noteTimeInMeasure
+            });
 
-          measureTime += durationSeconds;
-        }
+            noteTimeInMeasure += durationSeconds;
+          }
+        });
       });
 
       measures.push({
         number: measureNumber,
-        notes
+        notes: allNotesInMeasure
       });
+    }
 
-      currentTime = measureTime;
-    });
+    // Calculate total duration
+    const totalDuration = measures.length > 0 ? 
+      Math.max(...measures.flatMap(m => m.notes.map(n => n.startTime + n.duration))) : 0;
+
+    console.log(`Parsed ${partElements.length} parts with ${measures.length} measures, total duration: ${totalDuration}s`);
 
     return {
       measures,
       tempo,
       timeSignature,
-      totalDuration: currentTime
+      totalDuration
     };
   } catch (error) {
     console.error('Error parsing MusicXML:', error);
     return createFallbackScore(tempo);
   }
+}
+
+// Legacy single-part parsing (fallback)
+function parseSinglePart(xmlDoc: Document, tempo: number, divisions: number, timeSignature: any, secondsPerQuarter: number): ParsedScore {
+  const measures: ParsedMeasure[] = [];
+  let currentTime = 0;
+
+  // Parse each measure
+  const measureElements = xmlDoc.querySelectorAll('measure');
+  measureElements.forEach((measureEl, measureIndex) => {
+    const measureNumber = parseInt(measureEl.getAttribute('number') || (measureIndex + 1).toString());
+    const notes: ParsedNote[] = [];
+    let measureTime = currentTime;
+
+    // Parse notes in this measure
+    const noteElements = measureEl.querySelectorAll('note');
+    noteElements.forEach((noteEl) => {
+      // Skip rests
+      const restEl = noteEl.querySelector('rest');
+      if (restEl) {
+        // Handle rest duration
+        const durationEl = noteEl.querySelector('duration');
+        if (durationEl) {
+          const durationValue = parseInt(durationEl.textContent || '0');
+          const quarterNotes = durationValue / divisions;
+          measureTime += quarterNotes * secondsPerQuarter;
+        }
+        return;
+      }
+
+      const pitchEl = noteEl.querySelector('pitch');
+      const durationEl = noteEl.querySelector('duration');
+
+      if (pitchEl && durationEl) {
+        const step = pitchEl.querySelector('step')?.textContent || 'C';
+        const octave = parseInt(pitchEl.querySelector('octave')?.textContent || '4');
+        const durationValue = parseInt(durationEl.textContent || '0');
+        
+        // Calculate duration in seconds
+        const quarterNotes = durationValue / divisions;
+        const durationSeconds = quarterNotes * secondsPerQuarter;
+        
+        const frequency = getNoteFrequency(step, octave);
+        
+        notes.push({
+          step,
+          octave,
+          frequency,
+          duration: durationSeconds,
+          startTime: measureTime
+        });
+
+        measureTime += durationSeconds;
+      }
+    });
+
+    measures.push({
+      number: measureNumber,
+      notes
+    });
+
+    currentTime = measureTime;
+  });
+
+  return {
+    measures,
+    tempo,
+    timeSignature,
+    totalDuration: currentTime
+  };
 }
 
 function createFallbackScore(tempo: number): ParsedScore {
