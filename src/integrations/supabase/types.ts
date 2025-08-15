@@ -5661,6 +5661,59 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_module_assignments: {
+        Row: {
+          assigned_by: string | null
+          assigned_to_group: string | null
+          assigned_to_user_id: string | null
+          assignment_type: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          module_id: string
+          notes: string | null
+          permissions: string[]
+          updated_at: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          assigned_to_group?: string | null
+          assigned_to_user_id?: string | null
+          assignment_type: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          module_id: string
+          notes?: string | null
+          permissions?: string[]
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string | null
+          assigned_to_group?: string | null
+          assigned_to_user_id?: string | null
+          assignment_type?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          module_id?: string
+          notes?: string | null
+          permissions?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_module_assignments_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "gw_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_module_permissions: {
         Row: {
           expires_at: string | null
@@ -14127,6 +14180,10 @@ export type Database = {
           permission_type?: string
           user_id_param: string
         }
+        Returns: boolean
+      }
+      user_has_module_assignment: {
+        Args: { p_module_name: string; p_user_id: string }
         Returns: boolean
       }
       user_has_module_permission: {
