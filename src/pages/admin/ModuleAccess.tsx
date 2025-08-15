@@ -29,6 +29,7 @@ interface PermissionRecord {
 const PERMISSION_TYPE = 'view';
 
 const ModuleAccess: React.FC = () => {
+  console.log('ModuleAccess component rendering');
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [modules, setModules] = useState<ModuleRecord[]>([]);
