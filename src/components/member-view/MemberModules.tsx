@@ -171,16 +171,25 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
     console.log('🎨 Component resolved:', Component?.name || 'Anonymous Component');
     
     const renderedComponent = (
-      <div className="mt-4 border-2 border-red-500 p-4 bg-yellow-50">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-red-600">MODULE: {module.title}</h3>
-          <Button variant="outline" size="sm" onClick={() => setSelectedModule(null)}>
-            Close
-          </Button>
-        </div>
-        <div className="border-2 border-blue-500 p-2 bg-blue-50">
-          <p className="text-sm text-blue-600 mb-2">Component: {Component?.name || 'Anonymous'}</p>
-          <Component user={user} />
+      <div className="fixed top-0 left-0 w-full h-full bg-red-500/90 z-[9999] p-8 overflow-auto">
+        <div className="bg-yellow-300 border-4 border-red-600 p-6 rounded-lg max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-2xl font-bold text-red-800">🚨 MODULE: {module.title} 🚨</h3>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="bg-red-600 text-white border-red-800 hover:bg-red-700"
+              onClick={() => setSelectedModule(null)}
+            >
+              ✕ CLOSE ✕
+            </Button>
+          </div>
+          <div className="bg-blue-200 border-4 border-blue-600 p-4 rounded">
+            <p className="text-xl font-bold text-blue-800 mb-4">Component: {Component?.name || 'Anonymous'}</p>
+            <div className="bg-white p-4 rounded border-2 border-green-500">
+              <Component user={user} />
+            </div>
+          </div>
         </div>
       </div>
     );
