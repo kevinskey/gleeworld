@@ -191,10 +191,10 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-brand-600" />
             <div>
-              <CardTitle>Member Tools</CardTitle>
-              <CardDescription>
-                {accessibleModules.length} modules available for your role
-              </CardDescription>
+               <CardTitle className="text-base md:text-lg lg:text-xl">Member Tools</CardTitle>
+               <CardDescription className="text-sm md:text-base">
+                 {accessibleModules.length} modules available for your role
+               </CardDescription>
             </div>
           </div>
           <Badge variant="secondary" className="bg-brand-50 text-brand-700 border-brand-200">
@@ -210,9 +210,9 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
               <div key={category}>
                 <div className="flex items-center gap-2 mb-3">
                   {IconComponent && <IconComponent className="h-4 w-4" />}
-                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                    {UNIFIED_MODULE_CATEGORIES.find(c => c.id === category)?.title || category}
-                  </h4>
+                   <h4 className="font-medium text-sm md:text-base text-muted-foreground uppercase tracking-wide">
+                     {UNIFIED_MODULE_CATEGORIES.find(c => c.id === category)?.title || category}
+                   </h4>
                   <div className="flex-1 h-px bg-border" />
                 </div>
 
@@ -227,7 +227,7 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <h5 className="font-medium text-sm">{module.title}</h5>
+                              <h5 className="font-medium text-sm md:text-base lg:text-lg">{module.title}</h5>
                               <div className="flex gap-1">
                                 {module.canAccess && (
                                   <Badge variant="outline" className="text-xs px-1 py-0">
@@ -241,9 +241,9 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
                                 )}
                               </div>
                             </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {module.description}
-                            </p>
+                             <p className="text-xs md:text-sm lg:text-base text-muted-foreground line-clamp-2">
+                               {module.description}
+                             </p>
                           </div>
                         </div>
                       </CardContent>
