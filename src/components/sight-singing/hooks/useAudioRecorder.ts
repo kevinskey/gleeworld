@@ -11,6 +11,7 @@ export const useAudioRecorder = () => {
 
   const startRecording = useCallback(async (bpm?: number) => {
     try {
+      console.log('🎙️ Starting recording with BPM:', bpm);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
@@ -28,9 +29,12 @@ export const useAudioRecorder = () => {
         setAudioBlob(blob);
       };
       
-      // Start metronome if BPM provided and callback is set
-      if (bpm && metronomeCallbackRef.current) {
+      // Start metronome BEFORE starting recording
+      if (bpm && bpm > 0 && metronomeCallbackRef.current) {
+        console.log('🎵 Triggering metronome callback with BPM:', bpm);
         metronomeCallbackRef.current(bpm);
+      } else {
+        console.log('❌ No metronome callback or invalid BPM:', { bpm, hasCallback: !!metronomeCallbackRef.current });
       }
       
       mediaRecorder.start();
@@ -42,7 +46,7 @@ export const useAudioRecorder = () => {
       }, 1000);
       
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error('❌ Error starting recording:', error);
     }
   }, []);
 

@@ -33,8 +33,22 @@ export const useMetronome = () => {
     oscillator.stop(audioContext.currentTime + 0.1);
   }, [volume, initAudioContext]);
 
+  const stopMetronome = useCallback(() => {
+    console.log('🛑 stopMetronome called');
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      console.log('✅ Metronome stopped');
+    }
+    setIsPlaying(false);
+  }, []);
+
   const startMetronome = useCallback((bpm: number = tempo) => {
-    if (intervalRef.current) return;
+    console.log('🎵 startMetronome called with BPM:', bpm);
+    if (intervalRef.current) {
+      console.log('⚠️ Metronome already running, stopping first');
+      stopMetronome();
+    }
     
     setIsPlaying(true);
     setTempo(bpm);
@@ -43,6 +57,7 @@ export const useMetronome = () => {
     let beatCount = 0;
 
     // Play first click immediately
+    console.log('🔔 Playing first metronome click');
     playClick(true);
     beatCount++;
 
@@ -51,15 +66,9 @@ export const useMetronome = () => {
       playClick(isDownbeat);
       beatCount++;
     }, interval);
-  }, [tempo, playClick]);
-
-  const stopMetronome = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    setIsPlaying(false);
-  }, []);
+    
+    console.log('✅ Metronome started successfully at', bpm, 'BPM');
+  }, [tempo, playClick, stopMetronome]);
 
   // Cleanup on unmount
   useEffect(() => {

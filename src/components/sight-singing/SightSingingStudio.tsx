@@ -195,10 +195,11 @@ export const SightSingingStudio: React.FC = () => {
       return;
     }
 
+    console.log('🎯 handleStartRecording called with BPM:', currentBpm);
     try {
       await startRecording(currentBpm);
     } catch (error) {
-      console.error('Recording error:', error);
+      console.error('❌ Recording error:', error);
       toast({
         title: "Recording Failed",
         description: "Failed to start recording.",
