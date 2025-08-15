@@ -219,14 +219,21 @@ const ModuleAccess: React.FC = () => {
                         const active = hasAccess(user.id, m.id);
                         const isSaving = savingKey === `${user.id}:${m.id}`;
                         return (
-                          <Button
+                          <button
                             key={m.id}
-                            variant={active ? 'default' : 'outline'}
-                            size="sm"
-                            className={`flex items-center gap-1 ${active ? '' : ''}`}
-                            onClick={() => {
+                            type="button"
+                            className={`flex items-center gap-1 px-3 py-1 text-xs rounded-md border transition-colors ${
+                              active 
+                                ? 'bg-primary text-primary-foreground border-primary' 
+                                : 'bg-background text-foreground border-border hover:bg-muted'
+                            } ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                               console.log('Button clicked!', { userId: user.id, moduleId: m.id, active });
-                              setAccess(user.id, m.id, !active);
+                              if (!isSaving) {
+                                setAccess(user.id, m.id, !active);
+                              }
                             }}
                             disabled={isSaving}
                             aria-label={`${active ? 'Revoke' : 'Grant'} ${m.name} for ${user.full_name || user.email}`}
@@ -239,7 +246,7 @@ const ModuleAccess: React.FC = () => {
                               <XCircle className="h-3.5 w-3.5 text-destructive" />
                             )}
                             <span className="text-xs">{m.name}</span>
-                          </Button>
+                          </button>
                         );
                       })}
                     </div>
