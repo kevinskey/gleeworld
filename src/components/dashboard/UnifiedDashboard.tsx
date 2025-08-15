@@ -31,6 +31,8 @@ export const UnifiedDashboard = () => {
   console.log('🎯 UnifiedDashboard rendering:', {
     user: !!user,
     userEmail: user?.email,
+    profile: !!profile,
+    profileData: profile,
     timestamp: new Date().toISOString()
   });
 

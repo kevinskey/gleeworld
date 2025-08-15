@@ -22,6 +22,14 @@ interface MemberModulesProps {
 export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
+  console.log('🔍 MemberModules rendering with user:', {
+    user,
+    hasUser: !!user,
+    userId: user?.id,
+    userRole: user?.role,
+    isAdmin: user?.is_admin || user?.is_super_admin
+  });
+
   // Use unified modules with role-based filtering and executive position
   const { modules: availableModules, loading, getAccessibleModules } = useUnifiedModules({
     userRole: user.role,
@@ -30,6 +38,13 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
   });
 
   const accessibleModules = getAccessibleModules();
+
+  console.log('🔍 MemberModules modules state:', {
+    loading,
+    availableModulesCount: availableModules.length,
+    accessibleModulesCount: accessibleModules.length,
+    firstFewModules: availableModules.slice(0, 3).map(m => ({ id: m.id, name: m.name, canAccess: m.permissions.canAccess }))
+  });
 
   const handleModuleClick = (moduleId: string) => {
     const module = availableModules.find(m => m.id === moduleId);
