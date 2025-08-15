@@ -369,10 +369,11 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
             return ticksNeeded <= remainingTicks;
           });
           
-          console.log(`Measure ${measureIndex}, Beat ${noteIndex}: Available durations:`, availableDurs, 'from selected:', durOptions);
+          console.log(`Measure ${measureIndex}, Beat ${noteIndex}: Available durations:`, availableDurs, 'from selected:', durOptions, 'remaining ticks:', remainingTicks);
           
           if (availableDurs.length === 0) {
-            // Fill remaining with rest
+            // Can't fit any more notes, break and fill with rest
+            console.log(`No durations fit in ${remainingTicks} ticks, breaking`);
             break;
           }
           
@@ -396,12 +397,33 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
         // Fill any remaining time with rest if needed
         if (currentTicks < measureTicks) {
           const remainingTicks = measureTicks - currentTicks;
-          // Find appropriate rest duration
-          const restDur = Object.entries(TICKS).find(([_, ticks]) => ticks <= remainingTicks)?.[0] as DurBase || "quarter";
-          notes.push({
-            kind: "rest",
-            dur: { base: restDur, dots: 0 }
-          });
+          console.log(`Measure ${measureIndex}: Filling ${remainingTicks} remaining ticks`);
+          
+          // Find the largest rest duration that fits exactly
+          const validRestDurations = Object.entries(TICKS)
+            .filter(([_, ticks]) => ticks <= remainingTicks)
+            .sort(([_, a], [__, b]) => b - a); // Sort by ticks descending
+          
+          if (validRestDurations.length > 0) {
+            const [restDur, restTicks] = validRestDurations[0];
+            notes.push({
+              kind: "rest",
+              dur: { base: restDur as DurBase, dots: 0 }
+            });
+            currentTicks += restTicks;
+            
+            // If still have remaining ticks, add another smaller rest
+            if (currentTicks < measureTicks) {
+              const stillRemaining = measureTicks - currentTicks;
+              const smallerRest = Object.entries(TICKS).find(([_, ticks]) => ticks === stillRemaining);
+              if (smallerRest) {
+                notes.push({
+                  kind: "rest",
+                  dur: { base: smallerRest[0] as DurBase, dots: 0 }
+                });
+              }
+            }
+          }
         }
         
         return notes;
