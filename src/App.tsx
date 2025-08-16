@@ -120,6 +120,7 @@ import GoogleDocsPage from "./pages/GoogleDocs";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
 import SearchPage from "./pages/SearchPage";
+import FirstYearHub from "./pages/FirstYearHub";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -840,16 +841,24 @@ const App = () => {
                                 />
                                 
                                 {/* Site-wide Search */}
-                                <Route 
-                                  path="/search" 
-                                  element={
-                                    <PublicRoute>
-                                      <UniversalLayout>
-                                        <SearchPage />
-                                      </UniversalLayout>
-                                    </PublicRoute>
-                                  } 
-                                />
+                                 <Route 
+                                   path="/search" 
+                                   element={
+                                     <PublicRoute>
+                                       <UniversalLayout>
+                                         <SearchPage />
+                                       </UniversalLayout>
+                                     </PublicRoute>
+                                   } 
+                                 />
+                                 <Route 
+                                   path="/first-year" 
+                                   element={
+                                     <ProtectedRoute>
+                                       <FirstYearHub />
+                                     </ProtectedRoute>
+                                   } 
+                                 />
                                 
                                   <Route 
                                     path="/modules" 
