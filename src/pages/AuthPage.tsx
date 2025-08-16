@@ -189,7 +189,7 @@ export default function AuthPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required={!isLogin}
-                    className="bg-white/10 border-white/30 text-white placeholder:text-white/60 backdrop-blur-sm focus:bg-white/20 focus:border-white/50 transition-all duration-300"
+                    className="bg-white/10 border-white/30 text-white placeholder:text-white/60 backdrop-blur-sm focus:bg-white/20 focus:border-white/50 transition-all duration-300 [&_input]:text-white"
                   />
                 </div>
               )}
@@ -204,7 +204,7 @@ export default function AuthPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-white/10 border-white/30 text-white placeholder:text-white/60 backdrop-blur-sm focus:bg-white/20 focus:border-white/50 transition-all duration-300"
+                  className="bg-white/10 border-white/30 text-white placeholder:text-white/60 backdrop-blur-sm focus:bg-white/20 focus:border-white/50 transition-all duration-300 [&_input]:text-white"
                 />
               </div>
 
@@ -219,7 +219,7 @@ export default function AuthPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="bg-white/10 border-white/30 text-white placeholder:text-white/60 backdrop-blur-sm focus:bg-white/20 focus:border-white/50 transition-all duration-300 pr-10"
+                    className="bg-white/10 border-white/30 text-white placeholder:text-white/60 backdrop-blur-sm focus:bg-white/20 focus:border-white/50 transition-all duration-300 pr-10 [&_input]:text-white"
                   />
                   <Button
                     type="button"
@@ -249,7 +249,7 @@ export default function AuthPage() {
               <Button
                 variant="link"
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-white/80 hover:text-white text-sm transition-colors duration-300"
+                className="text-white/80 hover:text-white text-sm transition-colors duration-300 no-underline"
               >
                 {isLogin 
                   ? "Don't have an account? Create one here" 
