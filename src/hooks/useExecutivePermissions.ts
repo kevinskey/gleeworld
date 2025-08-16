@@ -43,7 +43,8 @@ export const EXECUTIVE_POSITIONS: ExecutivePosition[] = [
   { value: 'pr_manager', label: 'PR Manager' },
   { value: 'student_conductor', label: 'Student Conductor' },
   { value: 'set_up_crew_manager', label: 'Set Up Crew Manager' },
-  { value: 'chief_of_staff', label: 'Chief of Staff' }
+  { value: 'chief_of_staff', label: 'Chief of Staff' },
+  { value: 'alumnae_liaison', label: 'Alumnae Liaison' }
 ];
 
 export const useExecutivePermissions = () => {
