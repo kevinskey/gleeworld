@@ -34,7 +34,8 @@ export type ModuleKey =
   | 'internal-communications'
   | 'email'
   | 'public-relations'
-  | 'glee-writing';
+  | 'glee-writing'
+  | 'first-year-console';
 
 // Module permission checking utilities
 export function hasModuleView(grants: ModuleGrant[], moduleKey: string): boolean {

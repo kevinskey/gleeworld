@@ -29,6 +29,7 @@ export const STANDARD_MODULE_NAMES = {
   'receipts-records': 'Receipts & Records',
   'monthly-statements': 'Monthly Statements',
   'glee-ledger': 'Glee Ledger',
+  'first-year-console': 'First-Year Console',
   
   // Communications
   'notifications': 'Notifications',
