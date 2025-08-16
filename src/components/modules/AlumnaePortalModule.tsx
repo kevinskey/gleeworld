@@ -265,7 +265,7 @@ export function AlumnaePortalModule({ user, isFullPage, onNavigate }: ModuleProp
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => onNavigate?.('alumnae-portal')} variant="outline">
+            <Button onClick={() => window.open('/alumnae', '_blank')} variant="outline">
               <Eye className="h-4 w-4 mr-2" />
               Preview Portal
             </Button>
