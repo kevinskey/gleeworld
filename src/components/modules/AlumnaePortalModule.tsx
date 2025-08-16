@@ -413,7 +413,7 @@ export function AlumnaePortalModule({ user, isFullPage, onNavigate }: ModuleProp
             <TabsTrigger value="landing_page_hero">Hero</TabsTrigger>
             <TabsTrigger value="announcement">Announcements</TabsTrigger>
             <TabsTrigger value="portal_banner">Banners</TabsTrigger>
-            <TabsTrigger value="alumnae_users">Alumnae Users</TabsTrigger>
+            <TabsTrigger value="alumnae_users">Alumnae</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">
