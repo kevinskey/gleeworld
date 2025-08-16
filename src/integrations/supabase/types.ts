@@ -292,6 +292,33 @@ export type Database = {
         }
         Relationships: []
       }
+      app_roles: {
+        Row: {
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          is_active: boolean | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       approval_requests: {
         Row: {
           amount: number
@@ -14287,6 +14314,14 @@ export type Database = {
         Args: { class_list_id_param: string }
         Returns: boolean
       }
+      user_has_admin_role: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
+      user_has_alumnae_liaison_role: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       user_has_budget_permission: {
         Args: { budget_id_param: string; permission_type_param: string }
         Returns: boolean
@@ -14305,6 +14340,10 @@ export type Database = {
       }
       user_has_module_permission: {
         Args: { module_name_param: string; permission_type_param?: string }
+        Returns: boolean
+      }
+      user_has_super_admin_role: {
+        Args: { user_id_param: string }
         Returns: boolean
       }
       validate_password_strength: {
