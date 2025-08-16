@@ -14352,6 +14352,16 @@ export type Database = {
           auditioner_name: string
         }[]
       }
+      get_cohort_summary_stats: {
+        Args: { cohort_param: string }
+        Returns: {
+          active_voice_parts: string[]
+          avg_attendance_rate: number
+          last_event_date: string
+          total_events: number
+          total_students: number
+        }[]
+      }
       get_current_user_admin_status: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -14577,6 +14587,32 @@ export type Database = {
       is_user_tour_manager: {
         Args: { user_id_param: string }
         Returns: boolean
+      }
+      kpi_first_year_vs_overall: {
+        Args: {
+          cohort_param: string
+          range_end_param: string
+          range_start_param: string
+        }
+        Returns: {
+          cohort_pct: number
+          overall_pct: number
+        }[]
+      }
+      kpi_first_year_weekly: {
+        Args: {
+          cohort_param: string
+          week_end_param: string
+          week_start_param: string
+        }
+        Returns: {
+          absent: number
+          attendance_pct: number
+          excused: number
+          late: number
+          present: number
+          total: number
+        }[]
       }
       log_activity: {
         Args: {
