@@ -202,10 +202,6 @@ export const SpotlightContentManager = () => {
     });
   };
 
-  const handleTagsChange = (tagsString: string) => {
-    const tags = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
-    setFormData(prev => ({ ...prev, tags }));
-  };
 
   if (loading) {
     return (
@@ -244,13 +240,13 @@ export const SpotlightContentManager = () => {
               </div>
 
               <div>
-                <Label htmlFor="content_type">Content Type</Label>
+                <Label htmlFor="spotlight_type">Spotlight Type</Label>
                 <Select
-                  value={formData.content_type}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, content_type: value }))}
+                  value={formData.spotlight_type}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, spotlight_type: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select content type" />
+                    <SelectValue placeholder="Select spotlight type" />
                   </SelectTrigger>
                   <SelectContent>
                     {CONTENT_TYPES.map((type) => (
@@ -274,43 +270,34 @@ export const SpotlightContentManager = () => {
               </div>
 
               <div>
-                <Label htmlFor="content_url">Content URL</Label>
+                <Label htmlFor="content">Content</Label>
+                <Textarea
+                  id="content"
+                  value={formData.content}
+                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="Enter the main content"
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="external_link">External Link</Label>
                 <Input
-                  id="content_url"
-                  value={formData.content_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, content_url: e.target.value }))}
+                  id="external_link"
+                  value={formData.external_link}
+                  onChange={(e) => setFormData(prev => ({ ...prev, external_link: e.target.value }))}
                   placeholder="https://example.com/content"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="thumbnail_url">Thumbnail URL</Label>
-                <Input
-                  id="thumbnail_url"
-                  value={formData.thumbnail_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, thumbnail_url: e.target.value }))}
-                  placeholder="https://example.com/thumbnail.jpg"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="tags">Tags (comma-separated)</Label>
-                <Input
-                  id="tags"
-                  value={formData.tags.join(', ')}
-                  onChange={(e) => handleTagsChange(e.target.value)}
-                  placeholder="performance, behind-scenes, exclusive"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <Switch
-                    id="is_published"
-                    checked={formData.is_published}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_published: checked }))}
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
                   />
-                  <Label htmlFor="is_published">Published</Label>
+                  <Label htmlFor="is_active">Active</Label>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -344,44 +331,27 @@ export const SpotlightContentManager = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h4 className="font-semibold">{item.title}</h4>
-                    <Badge variant="secondary">{item.content_type}</Badge>
+                    <Badge variant="secondary">{item.spotlight_type}</Badge>
                     {item.is_featured && <Badge variant="default">Featured</Badge>}
-                    {item.is_published ? 
-                      <Badge variant="outline" className="text-green-600">Published</Badge> :
-                      <Badge variant="outline" className="text-orange-600">Draft</Badge>
+                    {item.is_active ? 
+                      <Badge variant="outline" className="text-green-600">Active</Badge> :
+                      <Badge variant="outline" className="text-orange-600">Inactive</Badge>
                     }
                   </div>
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                     {item.description}
                   </p>
-                  {item.tags && item.tags.length > 0 && (
-                    <div className="flex gap-1 mb-2">
-                      {item.tags.slice(0, 3).map((tag, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                      {item.tags.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{item.tags.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                  )}
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span>Created {format(new Date(item.created_at), 'MMM dd, yyyy')}</span>
-                    {item.published_at && (
-                      <span>Published {format(new Date(item.published_at), 'MMM dd, yyyy')}</span>
-                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleTogglePublished(item.id, item.is_published)}
+                    onClick={() => handleToggleActive(item.id, item.is_active)}
                   >
-                    {item.is_published ? 'Unpublish' : 'Publish'}
+                    {item.is_active ? 'Deactivate' : 'Activate'}
                   </Button>
                   <Button
                     size="sm"

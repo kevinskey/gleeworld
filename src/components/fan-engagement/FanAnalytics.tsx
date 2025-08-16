@@ -67,7 +67,7 @@ export const FanAnalytics = () => {
         .from('gw_spotlight_content')
         .select('id', { count: 'exact' })
         .eq('is_featured', true)
-        .eq('is_published', true);
+        .eq('is_active', true);
       
       if (featuredError) throw featuredError;
 
