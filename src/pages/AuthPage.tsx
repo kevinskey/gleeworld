@@ -115,10 +115,10 @@ export default function AuthPage() {
 
   return (
     <div 
-      className="min-h-screen bg-cover bg-center md:bg-center bg-no-repeat relative flex items-center justify-center p-4"
+      className="min-h-screen bg-cover bg-no-repeat relative flex items-center justify-center p-4"
       style={{ 
         backgroundImage: `url(${authBackground})`,
-        backgroundPosition: window.innerWidth <= 768 ? '300px center' : 'center center'
+        backgroundPosition: '300px center'
       }}
     >
       {/* Background Overlay */}
