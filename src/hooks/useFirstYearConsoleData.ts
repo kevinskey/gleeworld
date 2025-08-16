@@ -6,179 +6,220 @@ export const useFirstYearConsoleData = () => {
   const { user } = useAuth();
 
   // Get cohort statistics
-  const { data: cohortStats, isLoading } = useQuery({
+  const { data: cohortStats, isLoading, error } = useQuery({
     queryKey: ["fy-console-stats"],
     queryFn: async () => {
-      // Get all active cohorts
-      const { data: cohorts, error: cohortsError } = await supabase
-        .from("fy_cohorts")
-        .select("*")
-        .eq("is_active", true);
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
 
-      if (cohortsError) throw cohortsError;
+      try {
+        // Get all active cohorts
+        const { data: cohorts, error: cohortsError } = await supabase
+          .from("fy_cohorts")
+          .select("*")
+          .eq("is_active", true);
 
-      // Get total students
-      const { data: students, error: studentsError } = await supabase
-        .from("fy_students")
-        .select(`
-          *,
-          cohort:fy_cohorts!inner(*)
-        `)
-        .eq("cohort.is_active", true);
+        if (cohortsError) throw cohortsError;
 
-      if (studentsError) throw studentsError;
+        // Get total students
+        const { data: students, error: studentsError } = await supabase
+          .from("fy_students")
+          .select(`
+            *,
+            cohort:fy_cohorts!inner(*)
+          `)
+          .eq("cohort.is_active", true);
 
-      // Get recent check-ins (last 7 days)
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      
-      const { data: recentCheckins, error: checkinsError } = await supabase
-        .from("fy_checkins")
-        .select("*")
-        .gte("submitted_at", weekAgo.toISOString());
+        if (studentsError) throw studentsError;
 
-      if (checkinsError) throw checkinsError;
-
-      // Get overdue tasks
-      const { data: overdueTasks, error: tasksError } = await supabase
-        .from("fy_task_submissions")
-        .select("*")
-        .eq("status", "draft")
-        .lt("due_date", new Date().toISOString());
-
-      if (tasksError) throw tasksError;
-
-      // Calculate statistics
-      const totalStudents = students.length;
-      const studentsWithRecentCheckins = new Set(recentCheckins.map(c => c.student_id)).size;
-      const attendanceRate = totalStudents > 0 ? (studentsWithRecentCheckins / totalStudents) * 100 : 0;
-
-      // Risk flags - students who haven't checked in recently or have low mood ratings
-      const riskFlags = students.filter(student => {
-        const hasRecentCheckin = recentCheckins.some(c => c.student_id === student.id);
-        const latestCheckin = recentCheckins
-          .filter(c => c.student_id === student.id)
-          .sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())[0];
+        // Get recent check-ins (last 7 days)
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
         
-        return !hasRecentCheckin || (latestCheckin && latestCheckin.mood_rating <= 2);
-      });
+        const { data: recentCheckins, error: checkinsError } = await supabase
+          .from("fy_checkins")
+          .select("*")
+          .gte("submitted_at", weekAgo.toISOString());
 
-      return {
-        totalStudents,
-        activeCohorts: cohorts.length,
-        attendanceRate: Math.round(attendanceRate),
-        overdueTasks: overdueTasks.length,
-        riskFlags: riskFlags.length,
-        pendingMessages: 3, // Mock data
-        attendanceAlerts: Math.floor(totalStudents * 0.1), // Mock: 10% have attendance issues
-        openCases: Math.floor(totalStudents * 0.05), // Mock: 5% have open cases
-        recentActivity: {
-          checkins: recentCheckins.length,
-          submissions: 0, // Would calculate from recent submissions
-          messages: 12 // Mock data
-        }
-      };
+        if (checkinsError) throw checkinsError;
+
+        // Get overdue tasks
+        const { data: overdueTasks, error: tasksError } = await supabase
+          .from("fy_task_submissions")
+          .select("*")
+          .eq("status", "draft")
+          .lt("due_date", new Date().toISOString());
+
+        if (tasksError) throw tasksError;
+
+        // Calculate statistics
+        const totalStudents = students?.length || 0;
+        const studentsWithRecentCheckins = new Set(recentCheckins?.map(c => c.student_id) || []).size;
+        const attendanceRate = totalStudents > 0 ? (studentsWithRecentCheckins / totalStudents) * 100 : 0;
+
+        // Risk flags - students who haven't checked in recently or have low mood ratings
+        const riskFlags = students?.filter(student => {
+          const hasRecentCheckin = recentCheckins?.some(c => c.student_id === student.id);
+          const latestCheckin = recentCheckins
+            ?.filter(c => c.student_id === student.id)
+            .sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())[0];
+          
+          return !hasRecentCheckin || (latestCheckin && latestCheckin.mood_rating <= 2);
+        }) || [];
+
+        return {
+          totalStudents,
+          activeCohorts: cohorts?.length || 0,
+          attendanceRate: Math.round(attendanceRate),
+          overdueTasks: overdueTasks?.length || 0,
+          riskFlags: riskFlags.length,
+          pendingMessages: 3, // Mock data
+          attendanceAlerts: Math.floor(totalStudents * 0.1), // Mock: 10% have attendance issues
+          openCases: Math.floor(totalStudents * 0.05), // Mock: 5% have open cases
+          recentActivity: {
+            checkins: recentCheckins?.length || 0,
+            submissions: 0, // Would calculate from recent submissions
+            messages: 12 // Mock data
+          }
+        };
+      } catch (error) {
+        console.error("Error fetching first-year console data:", error);
+        // Return default values if there's an error
+        return {
+          totalStudents: 0,
+          activeCohorts: 0,
+          attendanceRate: 0,
+          overdueTasks: 0,
+          riskFlags: 0,
+          pendingMessages: 0,
+          attendanceAlerts: 0,
+          openCases: 0,
+          recentActivity: {
+            checkins: 0,
+            submissions: 0,
+            messages: 0
+          }
+        };
+      }
     },
     enabled: !!user,
     refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+    retry: 1, // Only retry once if it fails
   });
 
   // Get attendance data for donut chart
   const { data: attendanceData } = useQuery({
     queryKey: ["fy-attendance-breakdown"],
     queryFn: async () => {
-      const { data: students, error } = await supabase
-        .from("fy_students")
-        .select(`
-          *,
-          checkins:fy_checkins(*)
-        `);
+      if (!user) return [];
 
-      if (error) throw error;
+      try {
+        const { data: students, error } = await supabase
+          .from("fy_students")
+          .select(`
+            *,
+            checkins:fy_checkins(*)
+          `);
 
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
+        if (error) throw error;
 
-      let excellent = 0;
-      let good = 0;
-      let concerning = 0;
-      let critical = 0;
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
 
-      students.forEach(student => {
-        const recentCheckins = student.checkins.filter(
-          c => new Date(c.submitted_at) >= weekAgo
-        );
+        let excellent = 0;
+        let good = 0;
+        let concerning = 0;
+        let critical = 0;
 
-        if (recentCheckins.length >= 2) {
-          excellent++;
-        } else if (recentCheckins.length === 1) {
-          good++;
-        } else if (recentCheckins.length === 0) {
-          const lastCheckin = student.checkins
-            .sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())[0];
-          
-          if (lastCheckin) {
-            const daysSinceLastCheckin = Math.floor(
-              (Date.now() - new Date(lastCheckin.submitted_at).getTime()) / (24 * 60 * 60 * 1000)
-            );
+        students?.forEach(student => {
+          const recentCheckins = student.checkins?.filter(
+            c => new Date(c.submitted_at) >= weekAgo
+          ) || [];
+
+          if (recentCheckins.length >= 2) {
+            excellent++;
+          } else if (recentCheckins.length === 1) {
+            good++;
+          } else if (recentCheckins.length === 0) {
+            const lastCheckin = student.checkins
+              ?.sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())[0];
             
-            if (daysSinceLastCheckin <= 14) {
-              concerning++;
+            if (lastCheckin) {
+              const daysSinceLastCheckin = Math.floor(
+                (Date.now() - new Date(lastCheckin.submitted_at).getTime()) / (24 * 60 * 60 * 1000)
+              );
+              
+              if (daysSinceLastCheckin <= 14) {
+                concerning++;
+              } else {
+                critical++;
+              }
             } else {
               critical++;
             }
-          } else {
-            critical++;
           }
-        }
-      });
+        });
 
-      return [
-        { name: "Excellent", value: excellent, color: "#22c55e" },
-        { name: "Good", value: good, color: "#3b82f6" },
-        { name: "Concerning", value: concerning, color: "#f59e0b" },
-        { name: "Critical", value: critical, color: "#ef4444" }
-      ];
+        return [
+          { name: "Excellent", value: excellent, color: "#22c55e" },
+          { name: "Good", value: good, color: "#3b82f6" },
+          { name: "Concerning", value: concerning, color: "#f59e0b" },
+          { name: "Critical", value: critical, color: "#ef4444" }
+        ];
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+        return [];
+      }
     },
     enabled: !!user,
+    retry: 1,
   });
 
   // Get task completion heatmap data
   const { data: taskHeatmapData } = useQuery({
     queryKey: ["fy-task-heatmap"],
     queryFn: async () => {
-      const { data: submissions, error } = await supabase
-        .from("fy_task_submissions")
-        .select("*")
-        .order("created_at", { ascending: false });
+      if (!user) return [];
 
-      if (error) throw error;
+      try {
+        const { data: submissions, error } = await supabase
+          .from("fy_task_submissions")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-      // Generate heatmap data for the last 30 days
-      const heatmapData = [];
-      const today = new Date();
-      
-      for (let i = 29; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        const dateString = date.toISOString().split('T')[0];
+        if (error) throw error;
+
+        // Generate heatmap data for the last 30 days
+        const heatmapData = [];
+        const today = new Date();
         
-        const daySubmissions = submissions.filter(s => 
-          s.submitted_at && s.submitted_at.startsWith(dateString)
-        );
+        for (let i = 29; i >= 0; i--) {
+          const date = new Date(today);
+          date.setDate(date.getDate() - i);
+          const dateString = date.toISOString().split('T')[0];
+          
+          const daySubmissions = submissions?.filter(s => 
+            s.submitted_at && s.submitted_at.startsWith(dateString)
+          ) || [];
 
-        heatmapData.push({
-          date: dateString,
-          day: date.getDate(),
-          month: date.getMonth(),
-          submissions: daySubmissions.length,
-          intensity: Math.min(daySubmissions.length / 5, 1) // Normalize to 0-1
-        });
+          heatmapData.push({
+            date: dateString,
+            day: date.getDate(),
+            month: date.getMonth(),
+            submissions: daySubmissions.length,
+            intensity: Math.min(daySubmissions.length / 5, 1) // Normalize to 0-1
+          });
+        }
+
+        return heatmapData;
+      } catch (error) {
+        console.error("Error fetching task heatmap data:", error);
+        return [];
       }
-
-      return heatmapData;
     },
     enabled: !!user,
+    retry: 1,
   });
 
   return {
@@ -186,5 +227,6 @@ export const useFirstYearConsoleData = () => {
     attendanceData,
     taskHeatmapData,
     isLoading,
+    error,
   };
 };

@@ -22,7 +22,7 @@ import { useFirstYearConsoleData } from "@/hooks/useFirstYearConsoleData";
 
 export const FirstYearConsole = () => {
   const [activeTab, setActiveTab] = useState("snapshot");
-  const { cohortStats, isLoading } = useFirstYearConsoleData();
+  const { cohortStats, isLoading, error } = useFirstYearConsoleData();
 
   const tabs = [
     {
@@ -75,6 +75,30 @@ export const FirstYearConsole = () => {
       badge: null
     }
   ];
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Unable to Load First-Year Console</h3>
+            <p className="text-muted-foreground mb-4">
+              There was an issue loading the first-year data. This could be due to:
+            </p>
+            <ul className="text-sm text-muted-foreground mb-4 text-left max-w-md mx-auto">
+              <li>• Missing permissions to access first-year data</li>
+              <li>• Database connection issues</li>
+              <li>• No first-year cohorts have been set up yet</li>
+            </ul>
+            <p className="text-xs text-muted-foreground">
+              Error details: {error?.message || "Unknown error"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
