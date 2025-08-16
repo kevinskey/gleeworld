@@ -429,6 +429,48 @@ export type Database = {
           },
         ]
       }
+      attendance: {
+        Row: {
+          event_id: string
+          id: string
+          notes: string | null
+          recorded_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          notes?: string | null
+          recorded_at?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          notes?: string | null
+          recorded_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audio_archive: {
         Row: {
           artist_info: string | null
@@ -1157,6 +1199,78 @@ export type Database = {
         }
         Relationships: []
       }
+      cohort_members: {
+        Row: {
+          cohort_id: string
+          id: string
+          joined_at: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+          voice_part: string | null
+        }
+        Insert: {
+          cohort_id: string
+          id?: string
+          joined_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+          voice_part?: string | null
+        }
+        Update: {
+          cohort_id?: string
+          id?: string
+          joined_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          voice_part?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cohort_members_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cohorts: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       contract_documents: {
         Row: {
           content: string
@@ -1556,6 +1670,39 @@ export type Database = {
           },
         ]
       }
+      coordinator_cohorts: {
+        Row: {
+          assigned_at: string | null
+          cohort_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          cohort_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          cohort_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coordinator_cohorts_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coordinator_cohorts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dashboard_settings: {
         Row: {
           created_at: string
@@ -1912,6 +2059,7 @@ export type Database = {
           brief_description: string | null
           budget_status: string | null
           club_support: number | null
+          cohort_id: string | null
           contingency: number | null
           coordinator_id: string | null
           created_at: string
@@ -1962,6 +2110,7 @@ export type Database = {
           brief_description?: string | null
           budget_status?: string | null
           club_support?: number | null
+          cohort_id?: string | null
           contingency?: number | null
           coordinator_id?: string | null
           created_at?: string
@@ -2012,6 +2161,7 @@ export type Database = {
           brief_description?: string | null
           budget_status?: string | null
           club_support?: number | null
+          cohort_id?: string | null
           contingency?: number | null
           coordinator_id?: string | null
           created_at?: string
@@ -2049,7 +2199,15 @@ export type Database = {
           updated_at?: string
           volunteers?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       excuse_request_history: {
         Row: {
@@ -13573,6 +13731,30 @@ export type Database = {
           notes?: string | null
           updated_at?: string | null
           user_email?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
