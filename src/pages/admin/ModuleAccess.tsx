@@ -244,6 +244,14 @@ const ModuleAccess: React.FC = () => {
                               e.preventDefault();
                               e.stopPropagation();
                               console.log('Button clicked!', { userId: user.id, moduleId: m.id, active });
+                              
+                              // Additional validation before calling setAccess
+                              if (!user.id || user.id === 'null' || user.id === null) {
+                                console.error('Invalid user ID detected in button click:', user);
+                                alert('Error: Invalid user detected. Please refresh the page.');
+                                return;
+                              }
+                              
                               if (!isSaving) {
                                 setAccess(user.id, m.id, !active);
                               }
