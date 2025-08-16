@@ -14063,6 +14063,44 @@ export type Database = {
         }
         Relationships: []
       }
+      v_cohort_attendance: {
+        Row: {
+          attendance_id: string | null
+          cohort_id: string | null
+          cohort_name: string | null
+          cohort_year: number | null
+          event_id: string | null
+          event_title: string | null
+          recorded_at: string | null
+          starts_at: string | null
+          status: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_members_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_create_user: {
@@ -14401,6 +14439,10 @@ export type Database = {
           sources: string[]
         }[]
       }
+      get_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_username_permissions: {
         Args: { user_email_param: string }
         Returns: {
@@ -14462,6 +14504,10 @@ export type Database = {
       }
       is_alumnae_liaison: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_coordinator_for_cohort: {
+        Args: { cohort_id_param: string }
         Returns: boolean
       }
       is_current_user_admin: {
