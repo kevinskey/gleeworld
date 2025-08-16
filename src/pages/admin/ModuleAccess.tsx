@@ -61,8 +61,9 @@ const ModuleAccess: React.FC = () => {
         if (permErr) throw permErr;
 
         // Filter out users with null user_id to prevent database constraint violations
-        const validUsers = (userData as UserRecord[]).filter(user => user.id != null);
-        console.log(`Loaded ${(userData as UserRecord[]).length} total users, ${validUsers.length} with valid user_id`);
+        const validUsers = (userData as UserRecord[]).filter(user => user.id != null && user.id !== '' && user.id !== 'null');
+        console.log(`Loaded ${(userData as UserRecord[]).length} total users, ${validUsers.length} with valid user_id`, 
+          userData?.filter(u => !u.id || u.id === 'null').map(u => ({ email: u.email, id: u.id })));
         
         setUsers(validUsers);
         setModules((moduleData || []) as ModuleRecord[]);
@@ -219,7 +220,7 @@ const ModuleAccess: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {filteredUsers.map((user) => (
+              {filteredUsers.filter(user => user.id && user.id !== 'null').map((user) => (
                 <div key={user.id} className="p-4 rounded-lg border border-border/60 bg-background/40">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
