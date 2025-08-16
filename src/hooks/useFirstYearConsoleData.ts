@@ -75,13 +75,13 @@ export const useFirstYearConsoleData = () => {
           attendanceRate: Math.round(attendanceRate),
           overdueTasks: overdueTasks?.length || 0,
           riskFlags: riskFlags.length,
-          pendingMessages: 3, // Mock data
-          attendanceAlerts: Math.floor(totalStudents * 0.1), // Mock: 10% have attendance issues
-          openCases: Math.floor(totalStudents * 0.05), // Mock: 5% have open cases
+          pendingMessages: 0, // Real count would come from messages table
+          attendanceAlerts: riskFlags.length, // Use actual risk flags for attendance alerts
+          openCases: 0, // Real count would come from cases table
           recentActivity: {
             checkins: recentCheckins?.length || 0,
-            submissions: 0, // Would calculate from recent submissions
-            messages: 12 // Mock data
+            submissions: overdueTasks?.length || 0, // Use actual overdue tasks
+            messages: 0 // Real count would come from messages table
           }
         };
       } catch (error) {
