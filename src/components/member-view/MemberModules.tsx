@@ -28,6 +28,7 @@ import { EventPlannerModule } from '@/components/modules/EventPlannerModule';
 import { KaraokeModule } from '@/components/modules/KaraokeModule';
 import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { PRHubModule } from '@/components/modules/PRHubModule';
+import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
 import { SchedulingModule } from '@/components/modules/SchedulingModule';
 import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 import { AIFinancialPlanningModule } from '@/components/financial/AIFinancialPlanningModule';
@@ -91,6 +92,8 @@ const getModuleComponent = (moduleName: string) => {
     'karaoke': KaraokeModule,
     'notifications': NotificationsModule,
     'pr-hub': PRHubModule,
+    'fan-engagement': FanEngagementModule,
+    'fans': FanEngagementModule,
     'scheduling': SchedulingModule,
     'section-leader': SectionLeaderModule,
     
