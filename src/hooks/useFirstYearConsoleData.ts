@@ -22,12 +22,13 @@ export const useFirstYearConsoleData = () => {
 
         if (cohortsError) throw cohortsError;
 
-        // Get total students
+        // Get total students (including auditioners)
         const { data: students, error: studentsError } = await supabase
           .from("fy_students")
           .select(`
             *,
-            cohort:fy_cohorts!inner(*)
+            cohort:fy_cohorts!inner(*),
+            profile:gw_profiles!inner(full_name, email, role)
           `)
           .eq("cohort.is_active", true);
 
