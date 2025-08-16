@@ -60,7 +60,11 @@ const ModuleAccess: React.FC = () => {
           .eq('permission_type', PERMISSION_TYPE);
         if (permErr) throw permErr;
 
-        setUsers(userData as UserRecord[]);
+        // Filter out users with null user_id to prevent database constraint violations
+        const validUsers = (userData as UserRecord[]).filter(user => user.id != null);
+        console.log(`Loaded ${(userData as UserRecord[]).length} total users, ${validUsers.length} with valid user_id`);
+        
+        setUsers(validUsers);
         setModules((moduleData || []) as ModuleRecord[]);
         setPermissions((permData || []) as PermissionRecord[]);
       } catch (e) {
@@ -89,6 +93,14 @@ const ModuleAccess: React.FC = () => {
   const setAccess = async (userId: string, moduleId: string, next: boolean) => {
     const key = `${userId}:${moduleId}`;
     console.log('setAccess called:', { userId, moduleId, next, key });
+    
+    // Validate that userId is not null or undefined
+    if (!userId || userId === 'null' || userId === 'undefined') {
+      console.error('Invalid user ID provided:', userId);
+      alert('Error: Invalid user ID. This user may need to be recreated.');
+      return;
+    }
+    
     setSavingKey(key);
     try {
       if (next) {
