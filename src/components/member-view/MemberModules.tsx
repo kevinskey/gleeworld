@@ -32,6 +32,7 @@ import { SchedulingModule } from '@/components/modules/SchedulingModule';
 import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 import { AIFinancialPlanningModule } from '@/components/financial/AIFinancialPlanningModule';
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
+import { AlumnaePortalModule } from '@/components/modules/AlumnaePortalModule';
 import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
 import { GleeWritingWidget } from '@/components/writing/GleeWritingWidget';
 import { RadioManagement } from '@/components/admin/RadioManagement';
@@ -78,7 +79,7 @@ const getModuleComponent = (moduleName: string) => {
     
     // Extended modules
     'ai-financial': AIFinancialPlanningModule,
-    'alumnae-portal': AlumnaeLanding,
+    'alumnae-portal': AlumnaePortalModule,
     'approval-system': ApprovalSystemModule,
     'buckets-of-love': BucketsOfLoveModule,
     'budgets': BudgetsModule,

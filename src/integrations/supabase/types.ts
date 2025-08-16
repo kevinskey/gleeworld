@@ -175,6 +175,48 @@ export type Database = {
         }
         Relationships: []
       }
+      alumnae_content: {
+        Row: {
+          content: string
+          content_type: string
+          created_at: string
+          created_by: string
+          display_order: number | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content: string
+          content_type: string
+          created_at?: string
+          created_by: string
+          display_order?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          content_type?: string
+          created_at?: string
+          created_by?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       alumnae_messages: {
         Row: {
           content: string

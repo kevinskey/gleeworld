@@ -42,6 +42,7 @@ import { MusicLibraryInlineModule } from '@/components/modules/MusicLibraryInlin
 
 // Import all module components
 import { UserManagementModule } from '@/components/modules/UserManagementModule';
+import { AlumnaePortalModule } from '@/components/modules/AlumnaePortalModule';
 import { WardrobeModule } from '@/components/modules/WardrobeModule';
 import { AuditionsModule } from '@/components/modules/AuditionsModule';
 import { PermissionsModule } from '@/components/modules/PermissionsModule';
@@ -263,7 +264,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "purple",
     category: "member-management",
     isActive: true,
-    component: UserManagementModule, // TODO: Replace with AlumnaePortal component
+    component: AlumnaePortalModule,
     dbFunctionName: "alumnae-portal",
     requiredRoles: ["alumni", "admin"]
   },

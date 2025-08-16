@@ -45,6 +45,16 @@ interface Event {
   description?: string;
 }
 
+interface AlumnaeContent {
+  id: string;
+  content_type: string;
+  title: string;
+  content: string;
+  image_url?: string;
+  is_active: boolean;
+  display_order: number;
+}
+
 export default function AlumnaeLanding() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -53,6 +63,7 @@ export default function AlumnaeLanding() {
   const [bulletinPosts, setBulletinPosts] = useState<BulletinPost[]>([]);
   const [reunionEvents, setReunionEvents] = useState<Event[]>([]);
   const [alumnaeHeadshots, setAlumnaeHeadshots] = useState<string[]>([]);
+  const [alumnaeContent, setAlumnaeContent] = useState<AlumnaeContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddStoryDialogOpen, setIsAddStoryDialogOpen] = useState(false);
 
@@ -92,10 +103,19 @@ export default function AlumnaeLanding() {
           .not('headshot_url', 'is', null)
           .limit(12);
 
+        // Fetch dynamic alumnae content
+        const { data: contentData } = await supabase
+          .from('alumnae_content')
+          .select('*')
+          .eq('is_active', true)
+          .order('content_type', { ascending: true })
+          .order('display_order', { ascending: true });
+
         setStories(storiesData || []);
         setBulletinPosts(bulletinData || []);
         setReunionEvents(eventsData || []);
         setAlumnaeHeadshots(headshotsData?.map(h => h.headshot_url).filter(Boolean) || []);
+        setAlumnaeContent(contentData || []);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -105,6 +125,17 @@ export default function AlumnaeLanding() {
 
     fetchData();
   }, []);
+
+  // Helper function to get content by type
+  const getContentByType = (type: string) => {
+    return alumnaeContent.filter(content => content.content_type === type);
+  };
+
+  // Get specific content pieces
+  const heroContent = getContentByType('landing_page_hero')[0];
+  const welcomeMessage = getContentByType('welcome_message')[0];
+  const announcements = getContentByType('announcement');
+  const banners = getContentByType('portal_banner');
 
   if (loading) {
     return (
@@ -135,11 +166,17 @@ export default function AlumnaeLanding() {
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-secondary/80"></div>
           <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-serif text-white mb-4 leading-tight">
-              <span className="whitespace-nowrap">Spelman College Glee Club Alumnae,</span><br />
-              <span className="text-accent">Still Amazing, Still Inspiring!</span>
+              {heroContent ? (
+                <span>{heroContent.title}</span>
+              ) : (
+                <>
+                  <span className="whitespace-nowrap">Spelman College Glee Club Alumnae,</span><br />
+                  <span className="text-accent">Still Amazing, Still Inspiring!</span>
+                </>
+              )}
             </h1>
             <p className="text-xl text-white/90 mb-8 max-w-2xl">
-              Welcome back, {userProfile?.first_name}. Keep on singing in my ear. #SCGC4Life
+              {heroContent ? heroContent.content : `Welcome back, ${userProfile?.first_name}. Keep on singing in my ear. #SCGC4Life`}
             </p>
             <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-accent" onClick={() => navigate('/profile')}>
               <Users className="mr-2 h-5 w-5" />
@@ -149,29 +186,64 @@ export default function AlumnaeLanding() {
         </section>
 
         <div className="container mx-auto px-6 py-12 space-y-12">
-          {/* Notifications Panel */}
-          <Card className="border-l-4 border-l-primary shadow-xl">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-primary">
-                <Bell className="h-5 w-5" />
-                Alumnae Notifications
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-accent/10 rounded-lg">
-                <Calendar className="h-4 w-4 text-accent" />
-                <span>Homecoming 2024 RSVP deadline approaching - respond by October 1st</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
-                <Users className="h-4 w-4 text-primary" />
-                <span>New mentoring match available - Class of 2024 soprano seeking guidance</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg">
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
-                <span>New archival photos from 1985 Spring Concert added to Memory Wall</span>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Dynamic Banners */}
+          {banners.map((banner) => (
+            <Card key={banner.id} className="border-l-4 border-l-accent shadow-xl">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-primary">
+                  <Bell className="h-5 w-5" />
+                  {banner.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {banner.image_url && (
+                  <img src={banner.image_url} alt={banner.title} className="w-full h-32 object-cover rounded mb-4" />
+                )}
+                <p className="text-muted-foreground">{banner.content}</p>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Dynamic Announcements */}
+          {announcements.length > 0 && (
+            <Card className="border-l-4 border-l-primary shadow-xl">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-primary">
+                  <Bell className="h-5 w-5" />
+                  Alumnae Announcements
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {announcements.map((announcement) => (
+                  <div key={announcement.id} className="flex items-center gap-3 p-3 bg-accent/10 rounded-lg">
+                    <Bell className="h-4 w-4 text-accent" />
+                    <div>
+                      <h4 className="font-semibold">{announcement.title}</h4>
+                      <p className="text-sm text-muted-foreground">{announcement.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Welcome Message */}
+          {welcomeMessage && (
+            <Card className="border-l-4 border-l-secondary shadow-xl">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-primary">
+                  <Heart className="h-5 w-5" />
+                  {welcomeMessage.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {welcomeMessage.image_url && (
+                  <img src={welcomeMessage.image_url} alt={welcomeMessage.title} className="w-full h-48 object-cover rounded mb-4" />
+                )}
+                <p className="text-muted-foreground">{welcomeMessage.content}</p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Grid Layout for Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
