@@ -36,7 +36,7 @@ serve(async (req) => {
         { auth: { persistSession: false } }
       );
 
-      // Store order in database
+      // Store order in database with idempotency
       const orderData = {
         stripe_session_id: sessionId,
         customer_email: session.customer_details?.email,
@@ -54,9 +54,13 @@ serve(async (req) => {
         metadata: session.metadata,
       };
 
+      // Use upsert to handle duplicate sessions gracefully
       const { error: orderError } = await supabase
         .from('gw_user_orders')
-        .insert([orderData]);
+        .upsert(orderData, { 
+          onConflict: 'stripe_session_id',
+          ignoreDuplicates: true 
+        });
 
       if (orderError) {
         console.error('Error saving order:', orderError);

@@ -5,32 +5,29 @@ export const cleanupAuthState = () => {
   console.log('authCleanup: Cleaning up auth state...');
   
   try {
-    // Only remove specific auth keys, not all localStorage
-    const keysToRemove: string[] = [];
-    
-    // Check for Supabase auth keys
+    // Clean localStorage - Remove all Supabase auth keys (project-agnostic)
+    const localStorageKeysToRemove: string[] = [];
     Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') && key.includes('oopmlreysjzuxzylyheb')) {
-        keysToRemove.push(key);
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorageKeysToRemove.push(key);
       }
     });
     
-    // Remove the identified keys
-    keysToRemove.forEach(key => {
+    localStorageKeysToRemove.forEach(key => {
       console.log('authCleanup: Removing localStorage key:', key);
       localStorage.removeItem(key);
     });
     
-    // Remove from sessionStorage if in use
+    // Clean sessionStorage - Remove all Supabase auth keys
     if (typeof sessionStorage !== 'undefined') {
-      const sessionKeysToRemove: string[] = [];
+      const sessionStorageKeysToRemove: string[] = [];
       Object.keys(sessionStorage).forEach((key) => {
-        if (key.startsWith('supabase.auth.') && key.includes('oopmlreysjzuxzylyheb')) {
-          sessionKeysToRemove.push(key);
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+          sessionStorageKeysToRemove.push(key);
         }
       });
       
-      sessionKeysToRemove.forEach(key => {
+      sessionStorageKeysToRemove.forEach(key => {
         console.log('authCleanup: Removing sessionStorage key:', key);
         sessionStorage.removeItem(key);
       });

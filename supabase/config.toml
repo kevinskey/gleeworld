@@ -110,7 +110,13 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.google-docs-manager]
-verify_jwt = false
+verify_jwt = true
+
+[functions.auto-enroll-user]
+verify_jwt = true
+
+[functions.process-square-payment]
+verify_jwt = true
 
 [functions.google-places-lookup]
 verify_jwt = false

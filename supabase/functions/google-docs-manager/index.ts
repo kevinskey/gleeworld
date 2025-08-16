@@ -21,6 +21,17 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication for non-OAuth requests
+    if (req.method !== 'GET' || !new URL(req.url).searchParams.get('code')) {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: 'Authorization header required' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+        );
+      }
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -129,6 +140,37 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'text/html' }
         }
       );
+    }
+
+    // Verify user authentication for non-OAuth requests
+    let user = null;
+    if (req.method !== 'GET' || !new URL(req.url).searchParams.get('code')) {
+      const authHeader = req.headers.get('Authorization');
+      const token = authHeader?.replace('Bearer ', '');
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token || '');
+      
+      if (authError || !authUser) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid authentication token' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+        );
+      }
+      
+      // Check if user is admin
+      const { data: adminProfile } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin, role')
+        .eq('user_id', authUser.id)
+        .single();
+
+      if (!adminProfile || (!adminProfile.is_admin && !adminProfile.is_super_admin && adminProfile.role !== 'admin' && adminProfile.role !== 'super-admin')) {
+        return new Response(
+          JSON.stringify({ error: 'Admin access required' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+        );
+      }
+      
+      user = authUser;
     }
 
     // Handle POST requests with JSON body

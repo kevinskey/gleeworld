@@ -59,14 +59,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if user has admin privileges
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
+    // Check if user has admin privileges using gw_profiles
+    const { data: adminProfile, error: profileError } = await supabase
+      .from("gw_profiles")
+      .select("is_admin, is_super_admin, role")
+      .eq("user_id", user.id)
       .single();
 
-    if (profileError || !profile || !["admin", "super-admin"].includes(profile.role)) {
+    if (profileError || !adminProfile || (!adminProfile.is_admin && !adminProfile.is_super_admin && adminProfile.role !== 'admin' && adminProfile.role !== 'super-admin')) {
       return new Response(
         JSON.stringify({ 
           error: "Unauthorized: Admin privileges required",
@@ -98,23 +98,23 @@ const handler = async (req: Request): Promise<Response> => {
         }
       });
 
-    // Check if user already exists in profiles table
-    const { data: existingProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, email')
+    // Check if user already exists in gw_profiles table
+    const { data: existingProfile, error: checkProfileError } = await supabase
+      .from('gw_profiles')
+      .select('user_id, email')
       .eq('email', email)
       .maybeSingle();
 
-    if (profileError) {
-      console.error('Error checking existing profile:', profileError);
-      throw new Error('Failed to check existing user: ' + profileError.message);
+    if (checkProfileError) {
+      console.error('Error checking existing profile:', checkProfileError);
+      throw new Error('Failed to check existing user: ' + checkProfileError.message);
     }
 
     if (existingProfile) {
       console.log('User already exists:', email);
       return new Response(JSON.stringify({ 
         success: true, 
-        user_id: existingProfile.id,
+        user_id: existingProfile.user_id,
         message: 'User already exists',
         enrolled: false
       }), {
@@ -123,15 +123,11 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Generate a temporary password for the new user
-    const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+    console.log('Creating auth user with email:', email);
     
-    // Create the user in auth.users using admin API
-    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-      email: email,
-      password: tempPassword,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
+    // Create user in Supabase Auth without password - send invite instead
+    const { data: authUser, error: authError } = await supabase.auth.admin.inviteUserByEmail(email, {
+      data: {
         full_name: full_name || email.split('@')[0],
         auto_enrolled: true,
         enrolled_for_contract: contract_id || null
@@ -145,14 +141,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Auth user created:', authUser.user?.id);
 
-    // Create profile entry
+    // Create profile entry in gw_profiles
     const { data: profile, error: profileInsertError } = await supabase
-      .from('profiles')
+      .from('gw_profiles')
       .insert({
-        id: authUser.user!.id,
+        user_id: authUser.user!.id,
         email: email,
         full_name: full_name || email.split('@')[0],
-        role: 'user'
+        role: 'auditioner'
       })
       .select()
       .single();
@@ -178,7 +174,7 @@ const handler = async (req: Request): Promise<Response> => {
           email: email,
           full_name: full_name || email.split('@')[0],
           contract_id: contract_id,
-          temp_password: tempPassword // Store for potential future reference
+          method: 'invite_email'
         }
       });
 
@@ -186,8 +182,7 @@ const handler = async (req: Request): Promise<Response> => {
       success: true, 
       user_id: authUser.user!.id,
       profile: profile,
-      temp_password: tempPassword,
-      message: 'User auto-enrolled successfully',
+      message: 'User auto-enrolled and invited successfully',
       enrolled: true
     }), {
       status: 200,
