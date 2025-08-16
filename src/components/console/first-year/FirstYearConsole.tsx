@@ -127,7 +127,7 @@ export const FirstYearConsole = () => {
             {cohortStats?.totalStudents || 0} Students
           </Badge>
           <Badge variant="secondary">
-            2024-2025 Academic Year
+            2025-2026 Academic Year
           </Badge>
         </div>
       </div>
