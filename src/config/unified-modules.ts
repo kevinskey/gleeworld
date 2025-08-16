@@ -75,6 +75,7 @@ import { WellnessModule } from '@/components/modules/WellnessModule';
 import { GleeWritingWidget } from '@/components/writing/GleeWritingWidget';
 import MediaLibrary from '@/pages/admin/MediaLibrary';
 import { KaraokeModule } from '@/components/modules/KaraokeModule';
+import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
 
 // Single source of truth for all modules
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -152,6 +153,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: PRCoordinatorHub,
     dbFunctionName: "pr-coordinator",
     requiredRoles: ["pr_coordinator", "admin"]
+  },
+  {
+    id: "fan-engagement",
+    name: "fan-engagement",
+    title: "Fan Engagement",
+    description: "Manage fan community, bulletin posts, and exclusive content",
+    icon: Heart,
+    iconColor: "pink",
+    category: "communications",
+    isActive: true,
+    component: FanEngagementModule,
+    dbFunctionName: "fan-engagement"
   },
   {
     id: "scheduling-module",
