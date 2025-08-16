@@ -8,14 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useToast } from '@/hooks/use-toast';
-import { Music, Clock, User, Mail, Phone, GraduationCap } from 'lucide-react';
-import { fromZonedTime } from 'date-fns-tz';
+import { Music, User, Mail, Phone, GraduationCap } from 'lucide-react';
 
 export default function AuditionApplicationPage() {
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<any>(null);
   
   const [formData, setFormData] = useState({
     full_name: '',
@@ -56,16 +54,6 @@ export default function AuditionApplicationPage() {
         phone_number: user.user_metadata?.phone || ''
       }));
 
-      // Check for saved time slot
-      const savedTimeSlot = localStorage.getItem('selectedAuditionTimeSlot');
-      if (savedTimeSlot) {
-        try {
-          const timeSlotData = JSON.parse(savedTimeSlot);
-          setSelectedTimeSlot(timeSlotData);
-        } catch (error) {
-          console.error('Error parsing saved time slot:', error);
-        }
-      }
     }
   }, [user, loading]);
 
@@ -74,21 +62,6 @@ export default function AuditionApplicationPage() {
     setIsSubmitting(true);
 
     try {
-      let auditionTimeSlot = null;
-
-      // If there's a selected time slot, convert it to the proper format
-      if (selectedTimeSlot) {
-        const easternTimeZone = 'America/New_York';
-        const [hours, minutes] = selectedTimeSlot.time.split(':');
-        const selectedDate = new Date(selectedTimeSlot.date);
-        const easternDateTime = new Date(selectedDate);
-        easternDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-        
-        // Convert Eastern Time to UTC for storage
-        const utcDateTime = fromZonedTime(easternDateTime, easternTimeZone);
-        auditionTimeSlot = utcDateTime.toISOString();
-      }
-
       // Check if user already has an application
       const { data: existingApp, error: checkError } = await supabase
         .from('audition_applications')
@@ -103,7 +76,6 @@ export default function AuditionApplicationPage() {
       const applicationData = {
         ...formData,
         user_id: user?.id,
-        audition_time_slot: auditionTimeSlot,
         session_id: 'f3d4bbf8-b85c-444c-8234-526b8d497ffc', // Active audition session
         status: 'submitted',
         application_date: new Date().toISOString(),
@@ -122,9 +94,7 @@ export default function AuditionApplicationPage() {
 
         toast({
           title: "Application Updated!",
-          description: selectedTimeSlot 
-            ? `Your audition application has been updated with your selected time: ${selectedTimeSlot.displayDate} at ${selectedTimeSlot.displayTime} EST`
-            : "Your audition application has been updated successfully.",
+          description: "Your audition application has been updated successfully.",
         });
       } else {
         // Create new application
@@ -134,16 +104,27 @@ export default function AuditionApplicationPage() {
 
         if (error) throw error;
 
+        // Create user profile with auditioner role
+        await supabase
+          .from('gw_profiles')
+          .upsert({
+            user_id: user?.id,
+            email: user?.email,
+            full_name: formData.full_name,
+            role: 'auditioner',
+            phone: formData.phone_number,
+            academic_year: formData.academic_year,
+            major: formData.major,
+            minor: formData.minor,
+            gpa: formData.gpa ? parseFloat(formData.gpa) : null,
+          });
+
         toast({
           title: "Application Submitted!",
-          description: selectedTimeSlot 
-            ? `Your audition is scheduled for ${selectedTimeSlot.displayDate} at ${selectedTimeSlot.displayTime} EST`
-            : "Your audition application has been submitted successfully.",
+          description: "Your audition application has been submitted successfully.",
         });
       }
 
-      // Clean up localStorage
-      localStorage.removeItem('selectedAuditionTimeSlot');
 
       // Redirect to success page or home
       setTimeout(() => {
@@ -191,16 +172,6 @@ export default function AuditionApplicationPage() {
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Complete your application for the Spelman College Glee Club
             </p>
-            {selectedTimeSlot && (
-              <div className="mt-4 p-4 bg-primary/10 rounded-lg inline-block">
-                <div className="flex items-center text-primary">
-                  <Clock className="h-5 w-5 mr-2" />
-                  <span className="font-medium">
-                    Selected Time: {selectedTimeSlot.displayDate} at {selectedTimeSlot.displayTime} EST
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
