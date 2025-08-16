@@ -36,6 +36,7 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
     loading,
     getAccessibleModules 
   } = useUnifiedModules({
+    userId: profile?.user_id, // Pass the user ID so permissions can be fetched
     execPosition: execRole,
     userRole: profile?.role,
     isAdmin: profile?.is_admin || profile?.is_super_admin

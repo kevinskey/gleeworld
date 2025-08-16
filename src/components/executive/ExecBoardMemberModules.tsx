@@ -33,6 +33,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     error,
     getAccessibleModules 
   } = useUnifiedModules({
+    userId: user.id, // Pass the user ID so permissions can be fetched
     execPosition: user.exec_board_role,
     userRole: user.role,
     isAdmin: user.is_admin || user.is_super_admin
