@@ -24,7 +24,9 @@ import {
   Layout,
   Bell,
   Type,
-  Settings
+  Settings,
+  Users,
+  Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -43,6 +45,19 @@ interface AlumnaeContent {
   updated_at: string;
 }
 
+interface AlumnaeProfile {
+  user_id: string;
+  email: string;
+  full_name: string;
+  first_name?: string;
+  last_name?: string;
+  graduation_year?: number;
+  headshot_url?: string;
+  verified: boolean;
+  created_at: string;
+  last_login?: string;
+}
+
 const CONTENT_TYPES = [
   { value: 'landing_page_hero', label: 'Landing Page Hero' },
   { value: 'portal_banner', label: 'Portal Banner' },
@@ -58,6 +73,7 @@ export function AlumnaePortalModule({ user, isFullPage, onNavigate }: ModuleProp
   const { isAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
   
   const [contents, setContents] = useState<AlumnaeContent[]>([]);
+  const [alumnaeUsers, setAlumnaeUsers] = useState<AlumnaeProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedContent, setSelectedContent] = useState<AlumnaeContent | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -75,6 +91,7 @@ export function AlumnaePortalModule({ user, isFullPage, onNavigate }: ModuleProp
   useEffect(() => {
     if (!roleLoading) {
       fetchContent();
+      fetchAlumnaeUsers();
     }
   }, [roleLoading]);
 
@@ -93,6 +110,22 @@ export function AlumnaePortalModule({ user, isFullPage, onNavigate }: ModuleProp
       toast.error('Failed to load content');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAlumnaeUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_profiles')
+        .select('user_id, email, full_name, first_name, last_name, graduation_year, headshot_url, verified, created_at')
+        .eq('role', 'alumna')
+        .order('full_name', { ascending: true });
+
+      if (error) throw error;
+      setAlumnaeUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching alumnae users:', error);
+      toast.error('Failed to load alumnae users');
     }
   };
 
@@ -380,6 +413,7 @@ export function AlumnaePortalModule({ user, isFullPage, onNavigate }: ModuleProp
             <TabsTrigger value="landing_page_hero">Hero</TabsTrigger>
             <TabsTrigger value="announcement">Announcements</TabsTrigger>
             <TabsTrigger value="portal_banner">Banners</TabsTrigger>
+            <TabsTrigger value="alumnae_users">Alumnae Users</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">
@@ -540,6 +574,70 @@ export function AlumnaePortalModule({ user, isFullPage, onNavigate }: ModuleProp
               </Card>
             </TabsContent>
           ))}
+
+          {/* Alumnae Users Tab */}
+          <TabsContent value="alumnae_users">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Alumnae Users
+                  <Badge variant="secondary">{alumnaeUsers.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {alumnaeUsers.length > 0 ? (
+                  <div className="space-y-3">
+                    {alumnaeUsers.map((alumna) => (
+                      <div key={alumna.user_id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          {alumna.headshot_url ? (
+                            <img 
+                              src={alumna.headshot_url} 
+                              alt={alumna.full_name}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Users className="h-6 w-6 text-primary" />
+                            </div>
+                          )}
+                          <div>
+                            <h4 className="font-semibold">{alumna.full_name}</h4>
+                            <p className="text-sm text-muted-foreground">{alumna.email}</p>
+                            {alumna.graduation_year && (
+                              <p className="text-xs text-muted-foreground">
+                                Class of {alumna.graduation_year}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={alumna.verified ? "default" : "secondary"}>
+                            {alumna.verified ? "Verified" : "Unverified"}
+                          </Badge>
+                          <div className="text-xs text-muted-foreground text-right">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              Joined {format(new Date(alumna.created_at), 'MMM yyyy')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                    <h3 className="text-lg font-semibold mb-2">No Alumnae Users</h3>
+                    <p className="text-muted-foreground">
+                      No users with the 'alumna' role found.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
     </ModuleWrapper>
