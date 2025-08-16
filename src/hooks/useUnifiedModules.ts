@@ -53,8 +53,12 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  console.log('🔍 useUnifiedModules: filterOptions =', filterOptions);
+  
   // Use the new module grants system
   const { grants: moduleGrants, loading: grantsLoading } = useUserModuleGrants(filterOptions?.userId);
+  
+  console.log('🔍 useUnifiedModules: moduleGrants =', { moduleGrants, grantsLoading });
 
   const fetchBaseModules = async () => {
     try {
@@ -107,6 +111,13 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
   // Merge module data with user grants
   const modules = allModules.map(module => {
     const grant = moduleGrants.find(g => g.module_key === module.id || g.module_key === module.name);
+    
+    console.log(`🔍 Processing module ${module.name}:`, {
+      module: module.name,
+      moduleId: module.id,
+      grant,
+      isAdmin: filterOptions?.isAdmin
+    });
     
     // Admin override
     const isAdminOverride = filterOptions?.isAdmin;

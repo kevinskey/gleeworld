@@ -145,6 +145,7 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
 
   // Use unified modules with role-based filtering and executive position
   const { modules: availableModules, loading, getAccessibleModules } = useUnifiedModules({
+    userId: user.id, // Pass the user ID so permissions can be fetched
     userRole: user.role,
     execPosition: user.exec_board_role,
     isAdmin: user.is_admin || user.is_super_admin,
