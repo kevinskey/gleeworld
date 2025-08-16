@@ -14342,6 +14342,10 @@ export type Database = {
         Args: { module_name_param: string; permission_type_param?: string }
         Returns: boolean
       }
+      user_has_pr_coordinator_role: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       user_has_super_admin_role: {
         Args: { user_id_param: string }
         Returns: boolean
