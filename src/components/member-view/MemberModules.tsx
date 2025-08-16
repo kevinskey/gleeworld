@@ -45,6 +45,7 @@ import { PressKitManager } from '@/components/pr-coordinator/PressKitManager';
 import MediaLibrary from '@/pages/admin/MediaLibrary';
 import { ExecutiveBoardNavigationHub } from '@/components/executive-board/ExecutiveBoardNavigationHub';
 import { MediaLibrary as MediaLibraryComponent } from '@/components/radio/MediaLibrary';
+import { HeroManagement } from '@/components/admin/HeroManagement';
 
 interface MemberModulesProps {
   user: {
@@ -125,7 +126,7 @@ const getModuleComponent = (moduleName: string) => {
     'merch-store': PRHubModule, // Placeholder - needs actual component
     'tour-management': EventPlannerModule, // Placeholder
     'ai-tools': AIFinancialPlanningModule, // Reuse for now
-    'hero-manager': MediaLibrary, // Reuse media library for hero management
+    'hero-manager': HeroManagement, // Fixed to use proper HeroManagement component
     'pr-manager': PRHubModule,
     'sight-reading': SightSingingPreviewModule,
     'pr-coordinator': PRHubModule,
