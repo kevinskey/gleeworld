@@ -8,7 +8,7 @@ import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useToast } from '@/hooks/use-toast';
 import { Music, UserPlus, LogIn, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import authBackground from '@/assets/auth-background.jpg';
+const authBackground = '/lovable-uploads/1e93a440-6349-4948-a145-7b55dedea9fc.png';
 
 export default function AuthPage() {
   const { user, loading } = useAuth();
