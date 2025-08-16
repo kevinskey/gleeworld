@@ -104,7 +104,7 @@ export default function AuditionApplicationPage() {
         ...formData,
         user_id: user?.id,
         audition_time_slot: auditionTimeSlot,
-        session_id: '00000000-0000-0000-0000-000000000000', // Default session
+        session_id: 'f3d4bbf8-b85c-444c-8234-526b8d497ffc', // Active audition session
         status: 'submitted',
         application_date: new Date().toISOString(),
         gpa: formData.gpa ? parseFloat(formData.gpa) : null,
