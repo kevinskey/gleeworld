@@ -148,8 +148,8 @@ export default function AuthPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-2xl">
             Spelman College
           </h1>
-          <h2 className="text-2xl md:text-3xl font-semibold text-white/90 mb-4 drop-shadow-lg">
-            Glee Club
+          <h2 className="text-6xl md:text-8xl font-bold text-blue-400 mb-4 drop-shadow-lg">
+            GLEE CLUB
           </h2>
           <p className="text-white/80 text-lg drop-shadow-md">
             {isLogin ? 'Sign in to access your account' : 'Join our musical family'}
