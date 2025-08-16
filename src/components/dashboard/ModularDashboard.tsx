@@ -91,20 +91,30 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
         .eq('user_id', user.id)
         .single();
 
+      console.log('🔍 Profile data:', profile);
+
       // Get module permissions
-      const { data: modulePerms } = await supabase
+      const { data: modulePerms, error: modulePermsError } = await supabase
         .rpc('get_user_modules', { p_user: user.id });
 
+      console.log('🔍 Module permissions:', { modulePerms, modulePermsError });
+
       // Get username permissions
-      const { data: usernamePerms } = await supabase
+      const { data: usernamePerms, error: usernamePermsError } = await supabase
         .rpc('get_user_username_permissions', { user_email_param: user.email || '' });
 
-      setUserPermissions({
+      console.log('🔍 Username permissions:', { usernamePerms, usernamePermsError });
+
+      const permissions = {
         modulePermissions: modulePerms?.map((p: any) => p.module_name) || [],
         usernamePermissions: usernamePerms?.map((p: any) => p.module_name) || [],
         isAdmin: profile?.is_admin || profile?.is_super_admin || false,
         isExecBoard: profile?.is_exec_board || false
-      });
+      };
+
+      console.log('🔍 Final permissions:', permissions);
+
+      setUserPermissions(permissions);
 
     } catch (error) {
       console.error('Error fetching user permissions:', error);
@@ -173,7 +183,18 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
   };
 
   const filterAvailableModules = () => {
+    console.log('🔍 Filtering modules with permissions:', userPermissions);
+    console.log('🔍 Available unified modules:', UNIFIED_MODULES.map(m => ({ id: m.id, name: m.name })));
+    
     const filtered = UNIFIED_MODULES.filter(module => {
+      console.log(`🔍 Checking module ${module.name}:`, {
+        isAdmin: userPermissions.isAdmin,
+        hasModulePermission: userPermissions.modulePermissions.includes(module.name),
+        hasUsernamePermission: userPermissions.usernamePermissions.includes(module.name),
+        requiredRoles: module.requiredRoles,
+        isExecBoard: userPermissions.isExecBoard
+      });
+
       // Admin has access to everything
       if (userPermissions.isAdmin) return true;
 
@@ -189,11 +210,16 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
       return false;
     });
 
+    console.log('🔍 Filtered modules:', filtered.map(m => m.name));
+
     // Ensure baseline modules are always available to all authenticated members
     const baselineModules = UNIFIED_MODULES.filter(m => BASELINE_MODULE_IDS.includes(m.id));
     const uniqueById = new Map([...filtered, ...baselineModules].map(m => [m.id, m]));
 
-    setAvailableModules(Array.from(uniqueById.values()));
+    const finalModules = Array.from(uniqueById.values());
+    console.log('🔍 Final available modules:', finalModules.map(m => m.name));
+
+    setAvailableModules(finalModules);
   };
 
   // Open module based on query param or external event
