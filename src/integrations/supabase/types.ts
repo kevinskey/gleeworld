@@ -2254,6 +2254,254 @@ export type Database = {
           },
         ]
       }
+      fy_checkins: {
+        Row: {
+          academic_progress: string | null
+          challenges: string | null
+          coordinator_notes: string | null
+          goals: string | null
+          id: string
+          mentor_feedback: string | null
+          mood_rating: number | null
+          student_id: string
+          submitted_at: string
+          updated_at: string
+          vocal_progress: string | null
+          week_number: number
+        }
+        Insert: {
+          academic_progress?: string | null
+          challenges?: string | null
+          coordinator_notes?: string | null
+          goals?: string | null
+          id?: string
+          mentor_feedback?: string | null
+          mood_rating?: number | null
+          student_id: string
+          submitted_at?: string
+          updated_at?: string
+          vocal_progress?: string | null
+          week_number: number
+        }
+        Update: {
+          academic_progress?: string | null
+          challenges?: string | null
+          coordinator_notes?: string | null
+          goals?: string | null
+          id?: string
+          mentor_feedback?: string | null
+          mood_rating?: number | null
+          student_id?: string
+          submitted_at?: string
+          updated_at?: string
+          vocal_progress?: string | null
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fy_checkins_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "fy_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fy_cohorts: {
+        Row: {
+          academic_year: string
+          coordinator_id: string | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean
+          name: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          coordinator_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          coordinator_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fy_practice_logs: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          focus_areas: string[] | null
+          id: string
+          notes: string | null
+          pieces_practiced: string[] | null
+          practice_date: string
+          quality_rating: number | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes: number
+          focus_areas?: string[] | null
+          id?: string
+          notes?: string | null
+          pieces_practiced?: string[] | null
+          practice_date: string
+          quality_rating?: number | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          focus_areas?: string[] | null
+          id?: string
+          notes?: string | null
+          pieces_practiced?: string[] | null
+          practice_date?: string
+          quality_rating?: number | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fy_practice_logs_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "fy_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fy_students: {
+        Row: {
+          academic_status: string | null
+          cohort_id: string
+          created_at: string
+          id: string
+          mentor_id: string | null
+          student_id: string | null
+          updated_at: string
+          user_id: string
+          voice_part: string | null
+        }
+        Insert: {
+          academic_status?: string | null
+          cohort_id: string
+          created_at?: string
+          id?: string
+          mentor_id?: string | null
+          student_id?: string | null
+          updated_at?: string
+          user_id: string
+          voice_part?: string | null
+        }
+        Update: {
+          academic_status?: string | null
+          cohort_id?: string
+          created_at?: string
+          id?: string
+          mentor_id?: string | null
+          student_id?: string | null
+          updated_at?: string
+          user_id?: string
+          voice_part?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fy_students_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "fy_cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fy_task_submissions: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          feedback: string | null
+          grade: string | null
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string
+          submission_text: string | null
+          submission_url: string | null
+          submitted_at: string | null
+          task_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          feedback?: string | null
+          grade?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id: string
+          submission_text?: string | null
+          submission_url?: string | null
+          submitted_at?: string | null
+          task_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          feedback?: string | null
+          grade?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id?: string
+          submission_text?: string | null
+          submission_url?: string | null
+          submitted_at?: string | null
+          task_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fy_task_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "fy_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       generated_contracts: {
         Row: {
           contract_content: string
@@ -13938,6 +14186,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Database["public"]["Enums"]["executive_position"]
       }
+      get_user_fy_student_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_group_permissions: {
         Args: { user_id_param: string }
         Returns: {
@@ -14071,6 +14323,14 @@ export type Database = {
         Returns: boolean
       }
       is_executive_board_or_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_fy_coordinator: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_fy_staff: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
@@ -14312,6 +14572,10 @@ export type Database = {
       }
       user_can_view_class_list: {
         Args: { class_list_id_param: string }
+        Returns: boolean
+      }
+      user_cohort_match: {
+        Args: { cohort_id_param: string }
         Returns: boolean
       }
       user_has_admin_role: {
