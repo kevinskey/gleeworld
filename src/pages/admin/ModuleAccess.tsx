@@ -61,9 +61,14 @@ const ModuleAccess: React.FC = () => {
         if (permErr) throw permErr;
 
         // Filter out users with null user_id to prevent database constraint violations
-        const validUsers = (userData as UserRecord[]).filter(user => user.id != null && user.id !== '' && user.id !== 'null');
-        console.log(`Loaded ${(userData as UserRecord[]).length} total users, ${validUsers.length} with valid user_id`, 
-          userData?.filter(u => !u.id || u.id === 'null').map(u => ({ email: u.email, id: u.id })));
+        const validUsers = (userData as UserRecord[]).filter(user => {
+          const isValid = user.id != null && user.id !== '' && user.id !== 'null' && typeof user.id === 'string';
+          if (!isValid) {
+            console.log('Filtering out invalid user:', user);
+          }
+          return isValid;
+        });
+        console.log(`Loaded ${(userData as UserRecord[]).length} total users, ${validUsers.length} with valid user_id`);
         
         setUsers(validUsers);
         setModules((moduleData || []) as ModuleRecord[]);
