@@ -40,7 +40,7 @@ export const EventCreator = () => {
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('events')
+        .from('gw_events')
         .insert({
           title: data.title,
           description: data.description,
@@ -49,6 +49,7 @@ export const EventCreator = () => {
           location: data.location,
           created_by: user.id,
           event_type: 'executive_board',
+          calendar_id: 'c155a953-5e9d-4709-8ac7-79df616caaf3', // Exec Board calendar
         });
 
       if (error) throw error;
