@@ -121,6 +121,7 @@ import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
 import SearchPage from "./pages/SearchPage";
 import FirstYearHub from "./pages/FirstYearHub";
+import FirstYearConsolePage from "./pages/console/FirstYearConsolePage";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -856,6 +857,14 @@ const App = () => {
                                    element={
                                      <ProtectedRoute>
                                        <FirstYearHub />
+                                     </ProtectedRoute>
+                                   } 
+                                 />
+                                 <Route 
+                                   path="/console/first-year" 
+                                   element={
+                                     <ProtectedRoute>
+                                       <FirstYearConsolePage />
                                      </ProtectedRoute>
                                    } 
                                  />
