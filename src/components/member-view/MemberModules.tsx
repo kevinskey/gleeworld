@@ -48,6 +48,7 @@ import MediaLibrary from '@/pages/admin/MediaLibrary';
 import { ExecutiveBoardNavigationHub } from '@/components/executive-board/ExecutiveBoardNavigationHub';
 import { MediaLibrary as MediaLibraryComponent } from '@/components/radio/MediaLibrary';
 import { HeroManagement } from '@/components/admin/HeroManagement';
+import { FirstYearConsole } from '@/components/console/first-year/FirstYearConsole';
 
 interface MemberModulesProps {
   user: {
@@ -134,6 +135,7 @@ const getModuleComponent = (moduleName: string) => {
     'pr-manager': PRHubModule,
     'sight-reading': SightSingingPreviewModule,
     'pr-coordinator': PRHubModule,
+    'first-year-console': FirstYearConsole,
   };
   
   return componentMap[moduleName] || (() => (
