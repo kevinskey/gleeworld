@@ -90,7 +90,7 @@ const barTicks = (num:number, den:1|2|4|8|16)=> num * (64/den);
 
 function esc(s:string){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
 
-function noteXml(ev:any){
+function noteXml(ev:any, beamInfo?: {number: number, type: string}){
   const base = ev.dur.base as DurBase;
   const dur = Math.round((TICKS[base] ?? 0) * dotMul(ev.dur.dots||0));
   const typeMap: Record<DurBase,string> = { whole:"whole", half:"half", quarter:"quarter", eighth:"eighth", "16th":"16th" };
@@ -98,12 +98,89 @@ function noteXml(ev:any){
   const dotsXml = dots>0 ? "<dot/>".repeat(dots) : "";
   const tieStart = ev.tie==="start"||ev.tie==="continue" ? `<tie type="start"/>` : "";
   const tieStop  = ev.tie==="stop" ||ev.tie==="continue" ? `<tie type="stop"/>`  : "";
+  
+  // Add beam information for eighth notes and smaller
+  const needsBeam = base === "eighth" || base === "16th";
+  const beamXml = needsBeam && beamInfo ? `<beam number="${beamInfo.number}">${beamInfo.type}</beam>` : "";
+  
   if (ev.kind==="rest") {
     return `<note><rest/><duration>${dur}</duration><type>${typeMap[base]}</type>${dotsXml}</note>`;
   }
   const { step, alter=0, oct } = ev.pitch;
   const alterXml = alter ? `<alter>${alter}</alter>` : "";
-  return `<note>${tieStart}<pitch><step>${esc(step)}</step>${alterXml}<octave>${oct}</octave></pitch><duration>${dur}</duration><type>${typeMap[base]}</type>${dotsXml}${tieStop}</note>`;
+  return `<note>${tieStart}<pitch><step>${esc(step)}</step>${alterXml}<octave>${oct}</octave></pitch><duration>${dur}</duration><type>${typeMap[base]}</type>${dotsXml}${beamXml}${tieStop}</note>`;
+}
+
+// Beaming logic based on time signature and note groupings
+function calculateBeaming(events: any[], timeSignature: {num: number, den: number}) {
+  const beamableEvents = events.filter(ev => 
+    ev.kind === "note" && (ev.dur.base === "eighth" || ev.dur.base === "16th")
+  );
+  
+  if (beamableEvents.length === 0) return new Map();
+  
+  const beamMap = new Map();
+  const { num, den } = timeSignature;
+  
+  // Determine beat groupings based on time signature
+  let beatGroupings: number[] = [];
+  if (den === 4) {
+    // 4/4, 3/4, 2/4: beam by quarter note beats
+    beatGroupings = Array(num).fill(0).map((_, i) => i);
+  } else if (den === 8) {
+    // 6/8, 9/8, 12/8: beam in groups of 3 eighth notes
+    const groupsOf3 = Math.floor(num / 3);
+    beatGroupings = Array(groupsOf3).fill(0).map((_, i) => i * 3);
+  } else {
+    // Default: beam all together
+    beatGroupings = [0];
+  }
+  
+  // Group beamable notes by beat position
+  const beatGroups: any[][] = Array(beatGroupings.length).fill(null).map(() => []);
+  let currentBeat = 0;
+  let ticksInBeat = 0;
+  const ticksPerBeat = den === 8 ? 24 : 16; // 3 eighth notes for compound time, 1 quarter for simple
+  
+  beamableEvents.forEach((event, index) => {
+    const eventTicks = TICKS[event.dur.base as DurBase];
+    
+    // Check if we need to move to next beat group
+    if (ticksInBeat + eventTicks > ticksPerBeat && beatGroups[currentBeat].length > 0) {
+      currentBeat = Math.min(currentBeat + 1, beatGroups.length - 1);
+      ticksInBeat = 0;
+    }
+    
+    beatGroups[currentBeat].push(event);
+    ticksInBeat += eventTicks;
+  });
+  
+  // Apply beaming to each group
+  beatGroups.forEach(group => {
+    if (group.length >= 2) {
+      group.forEach((event, index) => {
+        let beamType: string;
+        if (index === 0) {
+          beamType = "begin";
+        } else if (index === group.length - 1) {
+          beamType = "end";
+        } else {
+          beamType = "continue";
+        }
+        
+        beamMap.set(event, { number: 1, type: beamType });
+        
+        // Add secondary beams for sixteenth notes
+        if (event.dur.base === "16th") {
+          const secondaryBeamType = index === 0 ? "begin" : 
+                                   index === group.length - 1 ? "end" : "continue";
+          // Store secondary beam info (would need to enhance noteXml to handle multiple beams)
+        }
+      });
+    }
+  });
+  
+  return beamMap;
 }
 
 function attributesXml(mIndex:number, key:any, time:any, role:"S"|"A"){
@@ -137,7 +214,15 @@ function toMusicXML(score:any, allowAccidentals:boolean=false){
         }
         return result;
       });
-      const content = canonicalizedEvents.map(noteXml).join("");
+      
+      // Calculate beaming for this measure
+      const beamMap = calculateBeaming(canonicalizedEvents, time);
+      
+      const content = canonicalizedEvents.map(ev => {
+        const beamInfo = beamMap.get(ev);
+        return noteXml(ev, beamInfo);
+      }).join("");
+      
       return `<measure number="${i+1}">${attrs}${content}</measure>`;
     }).join("");
     return `<part id="P${idx+1}">${measuresXml}</part>`;
