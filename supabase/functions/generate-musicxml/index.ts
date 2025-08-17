@@ -792,7 +792,7 @@ SPECIFIC REQUIREMENTS:
               if (availableDurs.length === 0) break;
               
               const selectedDur = rng.choice(availableDurs) as DurBase;
-            rhythmicPattern.push(selectedDur);
+              rhythmicPattern.push(selectedDur);
             currentTicks += TICKS[selectedDur];
             noteIndex++;
           }
