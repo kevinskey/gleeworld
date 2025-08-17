@@ -383,33 +383,33 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
   {
     id: "sight-reading-preview",
     name: "sight-reading-preview",
-    title: "Sight Reading Generator",
-    description: "Preview and analyze MusicXML sheet music with professional notation",
+    title: "Sight Reading Preview",
+    description: "Quick preview and analyze MusicXML sheet music with basic notation",
     icon: Music,
-    iconColor: "purple",
+    iconColor: "gray",
     category: "musical-leadership",
-    isActive: true,
+    isActive: false, // Deactivated to reduce confusion
     component: SightSingingPreviewModule,
     dbFunctionName: "sight-reading-preview"
   },
   {
     id: "sight-reading-generator",
     name: "sight-reading-generator",
-    title: "Sight Reading Generator (Full)",
-    description: "Generate AI-powered sight-reading exercises with professional notation and evaluation",
+    title: "Sight Reading Generator",
+    description: "Generate AI-powered sight-reading exercises with professional notation and evaluation (Advanced Tool)",
     icon: Music,
     iconColor: "indigo",
     category: "musical-leadership",
     isActive: true,
-    component: SightSingingPreviewModule, // Uses same component but can be enhanced later
+    component: SightSingingPreviewModule,
     dbFunctionName: "sight-reading-generator",
-    requiredRoles: ["member", "admin"]
+    requiredRoles: ["member", "admin", "super-admin"]
   },
   {
     id: "member-sight-reading-studio",
     name: "member-sight-reading-studio",
     title: "Sight Reading Studio",
-    description: "Complete assignments, practice sight reading, and track your progress",
+    description: "Complete assignments, practice sight reading, track grades, and manage submissions (Student Portal)",
     icon: Music,
     iconColor: "purple",
     category: "musical-leadership",
