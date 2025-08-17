@@ -413,6 +413,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     icon: Music,
     iconColor: "purple",
     category: "musical-leadership",
+    isNew: true,
     isActive: true,
     component: MemberSightReadingModule,
     dbFunctionName: "member-sight-reading-studio",
