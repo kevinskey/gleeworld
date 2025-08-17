@@ -45,7 +45,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                               containerWidth < 768 ? 3 : // Small tablet: 3 measures  
                               4; // iPad and desktop: exactly 4 measures (min and max)
         
-        // Create OSMD instance with responsive settings including system breaks
+        // Create OSMD instance with settings that constrain measures per system
         const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
           autoResize: true,
           backend: "svg",
@@ -60,14 +60,9 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             alpha: 0.7,
             follow: true
           }],
-          // Force specific layout based on screen size
-          measureNumberInterval: measuresPerRow, // This helps with layout calculations
-          autoBeam: true,
-          autoBeamOptions: {
-            beam_rests: false,
-            beam_middle_rests_only: false,
-            maintain_stem_directions: false
-          }
+          pageFormat: "Endless",
+          pageBackgroundColor: "#FFFFFF",
+          renderSingleHorizontalStaffline: false
         });
 
         // Store reference for cleanup and resize
@@ -76,25 +71,30 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         // Load the MusicXML first
         await osmd.load(musicXML);
         
-        console.log(`Setting up score with ${measuresPerRow} measures per row target`);
+        console.log(`Setting up score with ${measuresPerRow} measures per row target, container width: ${containerWidth}px`);
         
-        // Use OSMD's zoom feature to control measures per line
-        // Smaller zoom = more measures per line, larger zoom = fewer measures per line
+        // Use zoom to control measures per line more aggressively
+        // The key insight is that zoom affects how much music fits per line
         let zoomLevel = 1.0;
+        
         if (measuresPerRow === 2) {
-          zoomLevel = 1.4; // Larger zoom for mobile (fewer measures)
+          zoomLevel = 1.6; // Much larger zoom for mobile to force 2 measures max
         } else if (measuresPerRow === 3) {
-          zoomLevel = 1.2; // Medium zoom for tablet 
+          zoomLevel = 1.3; // Larger zoom for tablet to force 3 measures max  
         } else {
-          zoomLevel = 0.9; // Smaller zoom for desktop (more measures, but capped at 4)
+          // For desktop (4 measures), we need to calculate zoom to prevent more than 4
+          // Based on container width, determine zoom that caps at 4 measures
+          const baseWidth = 200; // Approximate width needed per measure
+          const idealWidth = measuresPerRow * baseWidth;
+          zoomLevel = Math.max(0.8, idealWidth / containerWidth);
         }
         
         osmd.zoom = zoomLevel;
         
-        // Render with the configured settings
+        // Render with the calculated zoom
         osmd.render();
         
-        console.log(`OSMD rendering completed with zoom ${zoomLevel} targeting ${measuresPerRow} measures per row`);
+        console.log(`OSMD rendering completed with zoom ${zoomLevel} targeting max ${measuresPerRow} measures per row`);
 
       } catch (error) {
         console.error("Error rendering score with OSMD:", error);
