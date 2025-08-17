@@ -214,16 +214,21 @@ export const SightSingingStudio: React.FC = () => {
   // Connect metronome to audio recorder with reset capability
   useEffect(() => {
     const metronomeController = (bpm: number) => {
+      console.log('🎛️ Metronome controller called with BPM:', bpm);
       if (bpm > 0) {
-        console.log('Starting metronome at BPM:', bpm);
+        console.log('🎵 Starting metronome at BPM:', bpm);
         stopMetronome(); // Stop any existing metronome first
-        setTimeout(() => startMetronome(bpm), 100); // Small delay to ensure clean start
+        setTimeout(() => {
+          console.log('🎵 Actually starting metronome after timeout');
+          startMetronome(bpm);
+        }, 100); // Small delay to ensure clean start
       } else {
-        console.log('Stopping metronome');
+        console.log('🛑 Stopping metronome');
         stopMetronome();
       }
     };
     
+    console.log('🔗 Setting metronome callback');
     setMetronomeCallback(metronomeController);
   }, [setMetronomeCallback, startMetronome, stopMetronome]);
 

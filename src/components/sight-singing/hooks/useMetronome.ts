@@ -16,6 +16,13 @@ export const useMetronome = () => {
 
   const playClick = useCallback((isDownbeat: boolean = false) => {
     const audioContext = initAudioContext();
+    if (!audioContext) {
+      console.error('❌ AudioContext not available for metronome click');
+      return;
+    }
+    
+    console.log('🔊 Playing metronome click, AudioContext state:', audioContext.state);
+    
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
@@ -50,6 +57,15 @@ export const useMetronome = () => {
       stopMetronome();
     }
     
+    // Initialize audio context first
+    const audioContext = initAudioContext();
+    if (!audioContext) {
+      console.error('❌ Failed to initialize AudioContext');
+      return;
+    }
+    
+    console.log('🔊 AudioContext state:', audioContext.state);
+    
     setIsPlaying(true);
     setTempo(bpm);
     
@@ -63,12 +79,13 @@ export const useMetronome = () => {
 
     intervalRef.current = setInterval(() => {
       const isDownbeat = beatCount % 4 === 0;
+      console.log('🥁 Metronome tick:', beatCount, isDownbeat ? '(downbeat)' : '');
       playClick(isDownbeat);
       beatCount++;
     }, interval);
     
-    console.log('✅ Metronome started successfully at', bpm, 'BPM');
-  }, [tempo, playClick, stopMetronome]);
+    console.log('✅ Metronome started successfully at', bpm, 'BPM with interval', interval, 'ms');
+  }, [tempo, playClick, stopMetronome, initAudioContext]);
 
   // Cleanup on unmount
   useEffect(() => {
