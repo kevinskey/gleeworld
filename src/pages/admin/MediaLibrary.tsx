@@ -273,9 +273,33 @@ const MediaLibrary = () => {
                                 Your browser does not support the video tag.
                               </video>
                             ) : (kind === 'pdf' || isPdf) && selectedItem.file_url ? (
-                              <div className="w-full flex justify-center">
-                                <PdfDocument file={selectedItem.file_url} loading={<div className="text-sm text-muted-foreground">Loading PDF...</div>}>
-                                  <PdfPage pageNumber={1} width={800} />
+                              <div className="w-full">
+                                <PdfDocument 
+                                  file={selectedItem.file_url} 
+                                  loading={<div className="text-sm text-muted-foreground">Loading PDF...</div>}
+                                  error={
+                                    <div className="text-center p-4 space-y-2">
+                                      <div className="text-sm text-destructive">Failed to load PDF preview</div>
+                                      <a 
+                                        href={selectedItem.file_url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 text-primary hover:underline text-sm"
+                                      >
+                                        Open PDF in new tab <ExternalLink className="h-4 w-4" />
+                                      </a>
+                                    </div>
+                                  }
+                                  onLoadError={(error) => {
+                                    console.error('PDF load error:', error);
+                                  }}
+                                >
+                                  <PdfPage 
+                                    pageNumber={1} 
+                                    width={Math.min(800, window.innerWidth - 100)}
+                                    renderTextLayer={false}
+                                    renderAnnotationLayer={false}
+                                  />
                                 </PdfDocument>
                               </div>
                             ) : selectedItem.file_url ? (
