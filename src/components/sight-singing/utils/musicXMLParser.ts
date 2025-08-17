@@ -140,6 +140,8 @@ export function parseMusicXML(musicXMLString: string, tempo: number = 120): Pars
         let noteTimeInMeasure = 0;
         const noteElements = measureEl.querySelectorAll('note');
         
+        const tiedNotes = new Map<string, ParsedNote>(); // Track tied notes by pitch key
+        
         noteElements.forEach((noteEl) => {
           // Skip rests
           const restEl = noteEl.querySelector('rest');
@@ -167,14 +169,56 @@ export function parseMusicXML(musicXMLString: string, tempo: number = 120): Pars
             const durationSeconds = quarterNotes * secondsPerQuarter;
             
             const frequency = getNoteFrequency(step, octave, alter);
+            const pitchKey = `${step}${octave}${alter}`;
             
-            allNotesInMeasure.push({
-              step,
-              octave,
-              frequency,
-              duration: durationSeconds,
-              startTime: measureStartTime + noteTimeInMeasure
+            // Check for ties
+            const tieEls = noteEl.querySelectorAll('tie');
+            const notationsEl = noteEl.querySelector('notations');
+            const tiedEl = notationsEl?.querySelector('tied');
+            
+            let hasTieStart = false;
+            let hasTieStop = false;
+            
+            // Check tie elements
+            tieEls.forEach(tieEl => {
+              const type = tieEl.getAttribute('type');
+              if (type === 'start') hasTieStart = true;
+              if (type === 'stop') hasTieStop = true;
             });
+            
+            // Check tied elements in notations
+            if (tiedEl) {
+              const type = tiedEl.getAttribute('type');
+              if (type === 'start') hasTieStart = true;
+              if (type === 'stop') hasTieStop = true;
+            }
+            
+            if (hasTieStop && tiedNotes.has(pitchKey)) {
+              // This note continues a tie - extend the previous note's duration
+              const previousNote = tiedNotes.get(pitchKey)!;
+              previousNote.duration += durationSeconds;
+              
+              if (!hasTieStart) {
+                // Tie ends here, remove from tracking
+                tiedNotes.delete(pitchKey);
+              }
+            } else {
+              // New note (may start a tie)
+              const newNote: ParsedNote = {
+                step,
+                octave,
+                frequency,
+                duration: durationSeconds,
+                startTime: measureStartTime + noteTimeInMeasure
+              };
+              
+              allNotesInMeasure.push(newNote);
+              
+              if (hasTieStart) {
+                // Track this note for future tie continuations
+                tiedNotes.set(pitchKey, newNote);
+              }
+            }
 
             noteTimeInMeasure += durationSeconds;
           }
