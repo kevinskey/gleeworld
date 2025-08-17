@@ -158,7 +158,7 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
             if (note.name === 'F#') gaps.push(<div key="gap2" className="flex-1"></div>);
             
             return (
-              <React.Fragment key={note.name}>
+              <div key={note.name} className="flex-1 flex">
                 <Button
                   size="sm"
                   variant={currentNote === note.name ? "default" : "secondary"}
@@ -169,7 +169,7 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
                   {note.name}
                 </Button>
                 {gaps}
-              </React.Fragment>
+              </div>
             );
           })}
           <div className="flex-1"></div>

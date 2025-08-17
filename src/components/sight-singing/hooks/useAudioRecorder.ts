@@ -29,10 +29,12 @@ export const useAudioRecorder = () => {
         setAudioBlob(blob);
       };
       
-      // Start metronome BEFORE starting recording
+      // Start metronome BEFORE starting recording with immediate playback
       if (bpm && bpm > 0 && metronomeCallbackRef.current) {
-        console.log('🎵 Triggering metronome callback with BPM:', bpm);
+        console.log('🎵 Starting metronome immediately with BPM:', bpm);
         metronomeCallbackRef.current(bpm);
+        // Add a small delay to let metronome start before recording
+        await new Promise(resolve => setTimeout(resolve, 200));
       } else {
         console.log('❌ No metronome callback or invalid BPM:', { bpm, hasCallback: !!metronomeCallbackRef.current });
       }
