@@ -679,13 +679,13 @@ export const SightSingingStudio: React.FC = () => {
 
           <TabsContent value="practice" className="mt-6">
             {/* Main Content */}
-            <div className="flex-1 grid gap-6 grid-cols-1 lg:grid-cols-3 min-h-0">
+            <div className="flex-1 grid gap-6 grid-cols-1 lg:grid-cols-3 h-[calc(100vh-200px)]">
               {/* Left Column - Parameters & Controls (1/3 width on desktop, full width on mobile) */}
-              <div className="lg:col-span-1 col-span-1 flex flex-col gap-4">
+              <div className="lg:col-span-1 col-span-1 flex flex-col gap-4 h-full">
                 {/* Parameters */}
-                <Card className="p-4 flex-shrink-0">
+                <Card className="p-4 flex-1">
                   <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Parameters</h2>
-                  <div className="max-h-96 overflow-y-auto">
+                  <div className="h-full">
                     <ParameterForm 
                       onGenerate={handleGenerateExercise}
                       isGenerating={isGenerating}
