@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useSheetMusicLibrary, SheetMusic } from '@/hooks/useSheetMusicLibrary';
 import { Upload, Download, Music, Plus, Search, Edit, Trash2, FileMusic } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { BulkXMLUpload } from './BulkXMLUpload';
 
 interface ScoreLibraryManagerProps {
   onScoreSelect?: (score: SheetMusic) => void;
@@ -170,9 +171,10 @@ export const ScoreLibraryManager: React.FC<ScoreLibraryManagerProps> = ({
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="browse" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="browse">Browse</TabsTrigger>
-            <TabsTrigger value="upload">Upload XML</TabsTrigger>
+            <TabsTrigger value="upload">Upload Single</TabsTrigger>
+            <TabsTrigger value="bulk-upload">Bulk Upload</TabsTrigger>
             <TabsTrigger value="create">Create New</TabsTrigger>
           </TabsList>
 
@@ -341,6 +343,15 @@ export const ScoreLibraryManager: React.FC<ScoreLibraryManagerProps> = ({
                 className="max-w-sm mx-auto"
               />
             </div>
+          </TabsContent>
+
+          <TabsContent value="bulk-upload" className="space-y-4">
+            <BulkXMLUpload onUploadComplete={() => {
+              toast({
+                title: "Upload Complete",
+                description: "Files uploaded successfully to your library.",
+              });
+            }} />
           </TabsContent>
 
           <TabsContent value="create" className="space-y-4">
