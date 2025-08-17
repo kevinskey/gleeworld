@@ -212,31 +212,68 @@ export class MusicXMLPlayer {
     if (mode === 'click-and-score' || mode === 'pitch-only') {
       // Schedule all notes with intro delay (only add intro delay if we have clicks)
       const introDelay = (mode === 'click-and-score') ? introDuration : 0;
-      console.log('🎹 Scheduling notes for playback with sound:', soundSettings?.notes || 'piano');
-      console.log('🎹 Intro delay:', introDelay, 'measures:', parsedScore.measures.length);
-      console.log('🎹 DEBUG: parsedScore structure:', JSON.stringify(parsedScore, null, 2));
+      console.log('🎹 NOTES SECTION: Scheduling notes for playback');
+      console.log('🎹 Mode:', mode, '| Sound:', soundSettings?.notes || 'piano');
+      console.log('🎹 Intro delay:', introDelay, 'seconds');
+      console.log('🎹 Measures to process:', parsedScore.measures.length);
+      console.log('🎹 Full parsed score structure:', JSON.stringify(parsedScore, null, 2));
       
       let noteCount = 0;
+      let notesScheduled = 0;
+      
       parsedScore.measures.forEach((measure, measureIndex) => {
-        console.log(`🎹 Processing measure ${measureIndex + 1}: notes array length = ${measure.notes?.length || 'undefined'}`);
-        console.log(`🎹 Measure ${measureIndex + 1} content:`, JSON.stringify(measure, null, 2));
+        console.log(`🎹 MEASURE ${measureIndex + 1}:`, {
+          measureNumber: measure.number,
+          notesArray: measure.notes,
+          notesLength: measure.notes?.length,
+          notesType: typeof measure.notes,
+          isArray: Array.isArray(measure.notes)
+        });
         
-        if (measure.notes && Array.isArray(measure.notes)) {
+        if (measure.notes && Array.isArray(measure.notes) && measure.notes.length > 0) {
+          console.log(`🎹 Processing ${measure.notes.length} notes in measure ${measureIndex + 1}`);
+          
           measure.notes.forEach((note, noteIndex) => {
-            console.log(`🎹 Processing note ${noteIndex} in measure ${measureIndex + 1}:`, JSON.stringify(note, null, 2));
+            console.log(`🎹 NOTE ${noteIndex} in measure ${measureIndex + 1}:`, {
+              step: note.step,
+              octave: note.octave,
+              frequency: note.frequency,
+              duration: note.duration,
+              startTime: note.startTime,
+              noteStartTime: this.startTime + introDelay + note.startTime
+            });
+            
             const noteStartTime = this.startTime + introDelay + note.startTime;
-            console.log(`🎹 Note ${noteCount++}: ${note.step}${note.octave} freq=${note.frequency}Hz, start=${noteStartTime}s, duration=${note.duration}s`);
-            this.createTone(note.frequency, noteStartTime, note.duration, 0.4, soundSettings?.notes || 'piano');
+            
+            try {
+              console.log(`🎹 CREATING TONE: ${note.step}${note.octave} at ${noteStartTime}s`);
+              this.createTone(note.frequency, noteStartTime, note.duration, 0.4, soundSettings?.notes || 'piano');
+              notesScheduled++;
+              console.log(`✅ Tone created successfully for note ${noteCount}`);
+            } catch (error) {
+              console.error(`❌ Failed to create tone for note ${noteCount}:`, error);
+            }
+            
+            noteCount++;
           });
         } else {
-          console.warn(`⚠️ Measure ${measureIndex + 1} has no valid notes array:`, measure);
+          console.warn(`⚠️ Measure ${measureIndex + 1} has invalid notes:`, {
+            hasNotes: !!measure.notes,
+            isArray: Array.isArray(measure.notes),
+            length: measure.notes?.length,
+            content: measure.notes
+          });
         }
       });
-      console.log(`🎹 Total notes scheduled: ${noteCount}`);
+      
+      console.log(`🎹 NOTES SUMMARY: Processed ${noteCount} total notes, scheduled ${notesScheduled} tones`);
       
       if (noteCount === 0) {
-        console.warn('⚠️ No notes were scheduled for playback!');
-        console.warn('⚠️ This usually means the MusicXML parser failed to extract notes properly');
+        console.error('❌ CRITICAL: No notes were found in any measure!');
+        console.error('❌ This means the MusicXML parsing failed or the exercise has no notes');
+      } else if (notesScheduled === 0) {
+        console.error('❌ CRITICAL: Notes found but no tones were scheduled!');
+        console.error('❌ This means tone creation is failing');
       }
     }
     
