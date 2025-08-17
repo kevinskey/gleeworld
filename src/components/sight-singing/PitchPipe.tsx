@@ -86,9 +86,14 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
   };
 
   const stopCurrentNote = () => {
-    if (oscillatorRef.current && gainNodeRef.current) {
+    if (oscillatorRef.current && gainNodeRef.current && audioContextRef.current) {
       try {
-        oscillatorRef.current.stop();
+        const currentTime = audioContextRef.current.currentTime;
+        // Quick fade-out to prevent click
+        gainNodeRef.current.gain.cancelScheduledValues(currentTime);
+        gainNodeRef.current.gain.setValueAtTime(gainNodeRef.current.gain.value, currentTime);
+        gainNodeRef.current.gain.exponentialRampToValueAtTime(0.001, currentTime + 0.01);
+        oscillatorRef.current.stop(currentTime + 0.01);
       } catch (e) {
         // Oscillator might already be stopped
       }
