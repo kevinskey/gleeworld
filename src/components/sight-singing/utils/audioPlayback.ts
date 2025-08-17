@@ -73,6 +73,7 @@ export class MusicXMLPlayer {
   }
 
   private createPercussionClick(isDownbeat: boolean, startTime: number, duration: number = 0.1, volume: number = 0.3, clickSound: string = 'woodblock'): void {
+    console.log('Creating percussion click with sound:', clickSound, 'isDownbeat:', isDownbeat);
     const audioContext = this.initAudioContext();
     
     // Create noise buffer for percussion sound
