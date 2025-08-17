@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Users, MessageSquare, Heart, Send, Bell } from 'lucide-react';
+import { Users, MessageSquare, Heart, Send, Bell, Clock, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { MemberDirectory } from '@/components/directory/MemberDirectory';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -12,11 +14,14 @@ import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
 import PostItGrid from '@/components/buckets-of-love/PostItGrid';
+import { useAnnouncements } from '@/hooks/useAnnouncements';
+import { format } from 'date-fns';
 export const CommunityHubModule = () => {
   const [activeTab, setActiveTab] = useState('announcements');
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { announcements, loading: announcementsLoading } = useAnnouncements();
 
   const handleTabToggle = (tab: string) => {
     if (isMobile) {
@@ -115,11 +120,63 @@ export const CommunityHubModule = () => {
           </div>
         </TabsContent>
         <TabsContent value="announcements" className="flex-1 p-4 bg-gradient-to-b from-blue-50/50 to-background max-h-[50vh] overflow-auto">
-          <div className="text-center text-muted-foreground">
-            <MessageSquare className="w-12 h-12 mx-auto mb-3 text-blue-500" />
-            <p className="font-medium text-blue-700 mb-2">No new announcements</p>
-            <p className="text-sm">Stay tuned for important updates</p>
-          </div>
+          {announcementsLoading ? (
+            <div className="text-center text-muted-foreground">
+              <MessageSquare className="w-12 h-12 mx-auto mb-3 text-blue-500 animate-pulse" />
+              <p className="font-medium text-blue-700 mb-2">Loading announcements...</p>
+            </div>
+          ) : announcements.length === 0 ? (
+            <div className="text-center text-muted-foreground">
+              <MessageSquare className="w-12 h-12 mx-auto mb-3 text-blue-500" />
+              <p className="font-medium text-blue-700 mb-2">No new announcements</p>
+              <p className="text-sm">Stay tuned for important updates</p>
+            </div>
+          ) : (
+            <ScrollArea className="h-full">
+              <div className="space-y-3">
+                {announcements.slice(0, 5).map((announcement) => (
+                  <Card key={announcement.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="text-sm font-medium text-blue-900">
+                          {announcement.title}
+                        </CardTitle>
+                        {announcement.is_featured && (
+                          <Badge variant="secondary" className="ml-2">Featured</Badge>
+                        )}
+                      </div>
+                      {announcement.created_at && (
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {format(new Date(announcement.created_at), 'MMM dd, yyyy')}
+                        </div>
+                      )}
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-foreground line-clamp-2">
+                        {announcement.content}
+                      </p>
+                      {announcement.announcement_type && (
+                        <Badge variant="outline" className="mt-2 text-xs">
+                          {announcement.announcement_type}
+                        </Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+                {announcements.length > 5 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => navigate('/announcements')}
+                  >
+                    View All Announcements
+                  </Button>
+                )}
+              </div>
+            </ScrollArea>
+          )}
         </TabsContent>
         
         <TabsContent value="buckets" className="flex-1 p-4 bg-gradient-to-b from-pink-50/50 to-background max-h-[50vh] overflow-auto">
