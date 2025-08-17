@@ -136,11 +136,11 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
       {/* Piano Keyboard Layout */}
       <div className="relative w-full h-32 mb-3 bg-gray-100 p-2 rounded-lg">
         {/* White Keys */}
-        <div className="flex h-full gap-px">
+        <div className="flex h-full">
           {whiteKeys.map((key, index) => (
             <div
               key={key.name}
-              className={`flex-1 cursor-pointer transition-all duration-100 flex items-end justify-center pb-2 text-sm font-medium select-none ${
+              className={`flex-1 cursor-pointer transition-all duration-100 flex items-end justify-center pb-2 text-sm font-medium select-none border-r border-gray-200 last:border-r-0 ${
                 currentNote === key.name
                   ? "bg-blue-200 shadow-inner transform translate-y-1"
                   : "bg-white hover:bg-gray-50 shadow-md"
@@ -158,19 +158,24 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
         </div>
         
         {/* Black Keys */}
-        <div className="absolute top-2 left-2 right-2 h-20 pointer-events-none">
+        <div className="absolute top-2 left-2 right-2 h-16 pointer-events-none">
           {blackKeys.map((key) => {
-            const leftPercentage = (key.position / whiteKeys.length) * 100;
+            const whiteKeyWidth = 100 / whiteKeys.length;
+            const leftPercentage = key.position * whiteKeyWidth;
+            const blackKeyWidth = whiteKeyWidth * 0.6; // 60% of white key width
+            
             return (
               <div
                 key={key.name}
-                className={`absolute w-6 h-full cursor-pointer transition-all duration-100 flex items-end justify-center pb-1 text-xs font-medium pointer-events-auto select-none ${
+                className={`absolute cursor-pointer transition-all duration-100 flex items-end justify-center pb-1 text-xs font-medium pointer-events-auto select-none ${
                   currentNote === key.name
                     ? "bg-gray-600 shadow-inner transform translate-y-1"
                     : "bg-gray-900 hover:bg-gray-800"
                 }`}
                 style={{
-                  left: `calc(${leftPercentage}% - 0.75rem)`,
+                  left: `${leftPercentage - blackKeyWidth/2}%`,
+                  width: `${blackKeyWidth}%`,
+                  height: '100%',
                   borderRadius: "0 0 4px 4px",
                   boxShadow: currentNote === key.name 
                     ? "inset 0 2px 4px rgba(0,0,0,0.6)" 
