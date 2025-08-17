@@ -125,11 +125,11 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   };
 
   return (
-    <div className="space-y-4 p-4 h-full flex flex-col">
-      <div className="flex-1 space-y-4">
-      <form className="space-y-3">
+    <div className="h-full flex flex-col justify-between p-2">
+      <div className="space-y-3">
+        <form className="space-y-3">
         {/* Key Selection */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label className="text-sm font-medium">Key</Label>
           <div className="grid grid-cols-6 gap-1">
             {tonics.map(tonic => (
@@ -162,7 +162,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         </div>
 
         {/* Time Signature */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label className="text-sm font-medium">Time</Label>
           <div className="grid grid-cols-5 gap-1">
             {timeSignatures.map(time => (
@@ -181,7 +181,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         </div>
 
         {/* Measures */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label className="text-sm font-medium">Measures</Label>
           <div className="grid grid-cols-4 gap-1">
             {measureOptions.map(measure => (
@@ -200,7 +200,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         </div>
 
         {/* Voice Parts */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label className="text-sm font-medium">Parts</Label>
           <div className="grid grid-cols-2 gap-1">
             <Button
@@ -228,7 +228,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         </div>
 
         {/* Note Values */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label className="text-sm font-medium">Note Values</Label>
           <div className="grid grid-cols-5 gap-1">
             {durations.map((duration) => {
@@ -253,7 +253,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         </div>
 
         {/* Interval Motion */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label className="text-sm font-medium">Motion</Label>
           <div className="grid grid-cols-4 gap-1">
             {motions.map((motion) => (
@@ -274,7 +274,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         </div>
 
         {/* Dotted Notes */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label className="text-sm font-medium">Options</Label>
           <Button
             type="button"
@@ -288,7 +288,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         </div>
 
         {/* Cadence Frequency */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label className="text-sm font-medium">Cadence Every</Label>
           <div className="grid grid-cols-3 gap-1">
             {cadenceOptions.map(cadence => (
@@ -307,7 +307,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         </div>
 
         {/* BPM */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label className="text-sm font-medium">BPM: {watchedBpm}</Label>
           <Slider
             value={[watchedBpm]}
@@ -322,11 +322,11 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
       </div>
 
       {/* Action Buttons - Fixed at bottom */}
-      <div className="flex-shrink-0 pt-3 border-t space-y-2">
+      <div className="flex-shrink-0 pt-4 border-t space-y-2">
         <Button 
           onClick={handleSubmit(onSubmit)}
           size="sm"
-          className="w-full h-10 text-sm font-medium" 
+          className="w-full h-12 text-sm font-medium" 
           disabled={isGenerating || !watchedAllowedDur || watchedAllowedDur.length === 0 || !watchedIntervalMotion || watchedIntervalMotion.length === 0}
         >
           {isGenerating ? 'Generating...' : '🎵 Generate Exercise'}
@@ -337,7 +337,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             type="button"
             variant="outline"
             size="sm" 
-            className="w-full h-8 text-xs" 
+            className="w-full h-10 text-xs" 
             onClick={onReset}
             disabled={isGenerating}
           >
