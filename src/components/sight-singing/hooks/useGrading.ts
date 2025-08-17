@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { ScoreJSON } from '../SightSingingStudio';
+import { useUserScores } from '@/hooks/useUserScores';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface GradingResults {
   pitchAcc: number;
@@ -37,6 +39,8 @@ const getExpectedNoteCount = (jsonScore: ScoreJSON): number => {
 export const useGrading = () => {
   const [gradingResults, setGradingResults] = useState<GradingResults | null>(null);
   const [isGrading, setIsGrading] = useState(false);
+  const { addScore } = useUserScores();
+  const { user } = useAuth();
 
   const gradeRecording = async (audioBlob: Blob, jsonScore: ScoreJSON, bpm: number): Promise<GradingResults> => {
     setIsGrading(true);
@@ -119,6 +123,19 @@ export const useGrading = () => {
         }
       };
       
+      // Save the score to the database
+      if (user && addScore) {
+        try {
+          await addScore({
+            score_value: Math.round(results.overall * 100),
+            notes: `Sight-singing practice - ${jsonScore.key.tonic} ${jsonScore.key.mode}, ${jsonScore.time.num}/${jsonScore.time.den}, ${bpm} BPM`
+          });
+          console.log('✅ Score saved to database');
+        } catch (error) {
+          console.error('❌ Failed to save score:', error);
+        }
+      }
+      
       setGradingResults(results);
       return results;
     } catch (error) {
@@ -140,6 +157,19 @@ export const useGrading = () => {
           f0: Array.from({ length: numNotes }, () => 220 + Math.random() * 220)
         }
       };
+      
+      // Save the fallback score to the database
+      if (user && addScore) {
+        try {
+          await addScore({
+            score_value: Math.round(fallbackResults.overall * 100),
+            notes: `Sight-singing practice (offline) - ${jsonScore.key.tonic} ${jsonScore.key.mode}, ${jsonScore.time.num}/${jsonScore.time.den}, ${bpm} BPM`
+          });
+          console.log('✅ Fallback score saved to database');
+        } catch (error) {
+          console.error('❌ Failed to save fallback score:', error);
+        }
+      }
       
       setGradingResults(fallbackResults);
       return fallbackResults;
