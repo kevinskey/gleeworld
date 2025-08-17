@@ -125,225 +125,225 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col justify-between p-2">
+    <div className="h-full flex flex-col p-2">
       <div className="space-y-3">
         <form className="space-y-3">
-        {/* Key Selection */}
-        <div className="space-y-1">
-          <Label className="text-sm font-medium">Key</Label>
-          <div className="grid grid-cols-6 gap-1">
-            {tonics.map(tonic => (
-              <Button
-                key={tonic}
-                type="button"
-                variant="outline"
-                size="sm"
-                className={`h-8 text-xs ${watchedKey.tonic === tonic ? 'bg-blue-500/20 border-blue-500' : ''}`}
-                onClick={() => setValue('key.tonic', tonic)}
-              >
-                {tonic}
-              </Button>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 gap-1 mt-2">
-            {modes.map(mode => (
-              <Button
-                key={mode}
-                type="button"
-                variant="outline"
-                size="sm"
-                className={`h-8 text-xs ${watchedKey.mode === mode ? 'bg-blue-500/20 border-blue-500' : ''}`}
-                onClick={() => setValue('key.mode', mode as "major"|"minor")}
-              >
-                {mode}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Time Signature */}
-        <div className="space-y-1">
-          <Label className="text-sm font-medium">Time</Label>
-          <div className="grid grid-cols-5 gap-1">
-            {timeSignatures.map(time => (
-              <Button
-                key={`${time.num}/${time.den}`}
-                type="button"
-                variant="outline"
-                size="sm"
-                className={`h-8 text-xs ${watchedTime.num === time.num && watchedTime.den === time.den ? 'bg-blue-500/20 border-blue-500' : ''}`}
-                onClick={() => setValue('time', { num: time.num, den: time.den as 1|2|4|8|16 })}
-              >
-                {time.num}/{time.den}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Measures */}
-        <div className="space-y-1">
-          <Label className="text-sm font-medium">Measures</Label>
-          <div className="grid grid-cols-4 gap-1">
-            {measureOptions.map(measure => (
-              <Button
-                key={measure}
-                type="button"
-                variant="outline"
-                size="sm"
-                className={`h-8 text-xs ${watchedNumMeasures === measure ? 'bg-blue-500/20 border-blue-500' : ''}`}
-                onClick={() => setValue('numMeasures', measure)}
-              >
-                {measure}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Voice Parts */}
-        <div className="space-y-1">
-          <Label className="text-sm font-medium">Parts</Label>
-          <div className="grid grid-cols-2 gap-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className={`h-8 text-xs ${watchedParts?.length === 1 ? 'bg-blue-500/20 border-blue-500' : ''}`}
-              onClick={() => setValue('parts', [{ role: "S", range: { min: "C4", max: "C5" } }])}
-            >
-              Soprano Only
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className={`h-8 text-xs ${watchedParts?.length === 2 ? 'bg-blue-500/20 border-blue-500' : ''}`}
-              onClick={() => setValue('parts', [
-                { role: "S", range: { min: "C4", max: "C5" } },
-                { role: "A", range: { min: "F3", max: "F4" } }
-              ])}
-            >
-              Soprano + Alto
-            </Button>
-          </div>
-        </div>
-
-        {/* Note Values */}
-        <div className="space-y-1">
-          <Label className="text-sm font-medium">Note Values</Label>
-          <div className="grid grid-cols-5 gap-1">
-            {durations.map((duration) => {
-              const IconComponent = NoteIcons[duration as keyof typeof NoteIcons];
-              return (
+          {/* Key Selection */}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium">Key</Label>
+            <div className="grid grid-cols-6 gap-1">
+              {tonics.map(tonic => (
                 <Button
-                  key={duration}
+                  key={tonic}
                   type="button"
                   variant="outline"
                   size="sm"
-                  className={`h-10 flex flex-col items-center gap-1 ${
-                    isSelected(duration, watchedAllowedDur) ? 'bg-blue-500/20 border-blue-500' : ''
-                  }`}
-                  onClick={() => handleDurationChange(duration)}
+                  className={`h-8 text-xs ${watchedKey.tonic === tonic ? 'bg-blue-500/20 border-blue-500' : ''}`}
+                  onClick={() => setValue('key.tonic', tonic)}
                 >
-                  <IconComponent />
-                  <span className="text-xs">{duration === '16th' ? '16th' : duration.slice(0, 1)}</span>
+                  {tonic}
                 </Button>
-              );
-            })}
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-1 mt-2">
+              {modes.map(mode => (
+                <Button
+                  key={mode}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={`h-8 text-xs ${watchedKey.mode === mode ? 'bg-blue-500/20 border-blue-500' : ''}`}
+                  onClick={() => setValue('key.mode', mode as "major"|"minor")}
+                >
+                  {mode}
+                </Button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Interval Motion */}
-        <div className="space-y-1">
-          <Label className="text-sm font-medium">Motion</Label>
-          <div className="grid grid-cols-4 gap-1">
-            {motions.map((motion) => (
+          {/* Time Signature */}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium">Time</Label>
+            <div className="grid grid-cols-5 gap-1">
+              {timeSignatures.map(time => (
+                <Button
+                  key={`${time.num}/${time.den}`}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={`h-8 text-xs ${watchedTime.num === time.num && watchedTime.den === time.den ? 'bg-blue-500/20 border-blue-500' : ''}`}
+                  onClick={() => setValue('time', { num: time.num, den: time.den as 1|2|4|8|16 })}
+                >
+                  {time.num}/{time.den}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Measures */}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium">Measures</Label>
+            <div className="grid grid-cols-4 gap-1">
+              {measureOptions.map(measure => (
+                <Button
+                  key={measure}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={`h-8 text-xs ${watchedNumMeasures === measure ? 'bg-blue-500/20 border-blue-500' : ''}`}
+                  onClick={() => setValue('numMeasures', measure)}
+                >
+                  {measure}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Voice Parts */}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium">Parts</Label>
+            <div className="grid grid-cols-2 gap-1">
               <Button
-                key={motion}
                 type="button"
                 variant="outline"
                 size="sm"
-                className={`h-8 text-xs ${
-                  isSelected(motion, watchedIntervalMotion) ? 'bg-blue-500/20 border-blue-500' : ''
-                }`}
-                onClick={() => handleMotionChange(motion)}
+                className={`h-8 text-xs ${watchedParts?.length === 1 ? 'bg-blue-500/20 border-blue-500' : ''}`}
+                onClick={() => setValue('parts', [{ role: "S", range: { min: "C4", max: "C5" } }])}
               >
-                {motion}
+                Soprano Only
               </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Dotted Notes */}
-        <div className="space-y-1">
-          <Label className="text-sm font-medium">Options</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className={`h-8 text-xs ${watchedAllowDots ? 'bg-blue-500/20 border-blue-500' : ''}`}
-            onClick={() => setValue('allowDots', !watchedAllowDots)}
-          >
-            ♪ Dotted Notes
-          </Button>
-        </div>
-
-        {/* Cadence Frequency */}
-        <div className="space-y-1">
-          <Label className="text-sm font-medium">Cadence Every</Label>
-          <div className="grid grid-cols-3 gap-1">
-            {cadenceOptions.map(cadence => (
               <Button
-                key={cadence}
                 type="button"
                 variant="outline"
                 size="sm"
-                className={`h-8 text-xs ${watchedCadenceEvery === cadence ? 'bg-blue-500/20 border-blue-500' : ''}`}
-                onClick={() => setValue('cadenceEvery', cadence)}
+                className={`h-8 text-xs ${watchedParts?.length === 2 ? 'bg-blue-500/20 border-blue-500' : ''}`}
+                onClick={() => setValue('parts', [
+                  { role: "S", range: { min: "C4", max: "C5" } },
+                  { role: "A", range: { min: "F3", max: "F4" } }
+                ])}
               >
-                {cadence} bars
+                Soprano + Alto
               </Button>
-            ))}
+            </div>
           </div>
-        </div>
 
-        {/* BPM */}
-        <div className="space-y-1">
-          <Label className="text-sm font-medium">BPM: {watchedBpm}</Label>
-          <Slider
-            value={[watchedBpm]}
-            onValueChange={(value) => setValue('bpm', value[0])}
-            min={60}
-            max={180}
-            step={5}
-            className="w-full"
-          />
-        </div>
+          {/* Note Values */}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium">Note Values</Label>
+            <div className="grid grid-cols-5 gap-1">
+              {durations.map((duration) => {
+                const IconComponent = NoteIcons[duration as keyof typeof NoteIcons];
+                return (
+                  <Button
+                    key={duration}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={`h-10 flex flex-col items-center gap-1 ${
+                      isSelected(duration, watchedAllowedDur) ? 'bg-blue-500/20 border-blue-500' : ''
+                    }`}
+                    onClick={() => handleDurationChange(duration)}
+                  >
+                    <IconComponent />
+                    <span className="text-xs">{duration === '16th' ? '16th' : duration.slice(0, 1)}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Interval Motion */}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium">Motion</Label>
+            <div className="grid grid-cols-4 gap-1">
+              {motions.map((motion) => (
+                <Button
+                  key={motion}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={`h-8 text-xs ${
+                    isSelected(motion, watchedIntervalMotion) ? 'bg-blue-500/20 border-blue-500' : ''
+                  }`}
+                  onClick={() => handleMotionChange(motion)}
+                >
+                  {motion}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Dotted Notes */}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium">Options</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={`h-8 text-xs ${watchedAllowDots ? 'bg-blue-500/20 border-blue-500' : ''}`}
+              onClick={() => setValue('allowDots', !watchedAllowDots)}
+            >
+              ♪ Dotted Notes
+            </Button>
+          </div>
+
+          {/* Cadence Frequency */}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium">Cadence Every</Label>
+            <div className="grid grid-cols-3 gap-1">
+              {cadenceOptions.map(cadence => (
+                <Button
+                  key={cadence}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={`h-8 text-xs ${watchedCadenceEvery === cadence ? 'bg-blue-500/20 border-blue-500' : ''}`}
+                  onClick={() => setValue('cadenceEvery', cadence)}
+                >
+                  {cadence} bars
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* BPM */}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium">BPM: {watchedBpm}</Label>
+            <Slider
+              value={[watchedBpm]}
+              onValueChange={(value) => setValue('bpm', value[0])}
+              min={60}
+              max={180}
+              step={5}
+              className="w-full"
+            />
+          </div>
         </form>
-      </div>
-
-      {/* Action Buttons - Fixed at bottom */}
-      <div className="flex-shrink-0 pt-4 border-t space-y-2">
-        <Button 
-          onClick={handleSubmit(onSubmit)}
-          size="sm"
-          className="w-full h-12 text-sm font-medium" 
-          disabled={isGenerating || !watchedAllowedDur || watchedAllowedDur.length === 0 || !watchedIntervalMotion || watchedIntervalMotion.length === 0}
-        >
-          {isGenerating ? 'Generating...' : '🎵 Generate Exercise'}
-        </Button>
         
-        {hasExercise && onReset && (
+        {/* Action Buttons - Right after parameters */}
+        <div className="pt-3 border-t space-y-2">
           <Button 
-            type="button"
-            variant="outline"
-            size="sm" 
-            className="w-full h-10 text-xs" 
-            onClick={onReset}
-            disabled={isGenerating}
+            onClick={handleSubmit(onSubmit)}
+            size="sm"
+            className="w-full h-12 text-sm font-medium" 
+            disabled={isGenerating || !watchedAllowedDur || watchedAllowedDur.length === 0 || !watchedIntervalMotion || watchedIntervalMotion.length === 0}
           >
-            🔄 Reset
+            {isGenerating ? 'Generating...' : '🎵 Generate Exercise'}
           </Button>
-        )}
+          
+          {hasExercise && onReset && (
+            <Button 
+              type="button"
+              variant="outline"
+              size="sm" 
+              className="w-full h-10 text-xs" 
+              onClick={onReset}
+              disabled={isGenerating}
+            >
+              🔄 Reset
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
