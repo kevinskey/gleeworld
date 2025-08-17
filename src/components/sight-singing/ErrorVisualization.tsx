@@ -55,7 +55,7 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
           icon: TrendingUp,
           title: 'Pitch Tendency: Too Sharp',
           description: `${sharpNotes.length} notes were sung too high. Try relaxing your jaw and throat, and listen more carefully to the reference pitch.`,
-          color: 'text-orange-600'
+          color: 'text-primary'
         });
       } else if (flatNotes.length > sharpNotes.length) {
         feedback.push({
@@ -63,7 +63,7 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
           icon: TrendingDown,
           title: 'Pitch Tendency: Too Flat',
           description: `${flatNotes.length} notes were sung too low. Try better breath support and more focused listening to the target pitch.`,
-          color: 'text-blue-600'
+          color: 'text-accent'
         });
       } else {
         feedback.push({
@@ -71,7 +71,7 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
           icon: Music,
           title: 'Pitch Inconsistency',
           description: 'Your pitch varies between sharp and flat. Focus on steady breath support and careful listening.',
-          color: 'text-purple-600'
+          color: 'text-muted-foreground'
         });
       }
     }
@@ -86,7 +86,7 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
           icon: AlertCircle,
           title: 'Timing: Running Behind',
           description: `${lateNotes.length} notes were late. Practice with a metronome and focus on anticipating each note's entrance.`,
-          color: 'text-red-600'
+          color: 'text-destructive'
         });
       } else if (earlyNotes.length > lateNotes.length) {
         feedback.push({
@@ -94,7 +94,7 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
           icon: AlertCircle,
           title: 'Timing: Rushing Ahead',
           description: `${earlyNotes.length} notes were early. Slow down and count carefully, making sure to hold notes for their full value.`,
-          color: 'text-amber-600'
+          color: 'text-primary'
         });
       }
     }
@@ -105,7 +105,7 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
         icon: Music,
         title: 'Note Length Issues',
         description: `${durationIssues.length} notes were held too long or too short. Practice counting while singing to maintain steady note values.`,
-        color: 'text-indigo-600'
+        color: 'text-accent'
       });
     }
     
@@ -128,31 +128,31 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
       <CardContent className="space-y-4">
         {/* Performance Summary */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
+          <div className="text-center p-3 bg-accent/10 rounded-lg border border-accent/20">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium text-green-800">Excellent</span>
+              <CheckCircle className="h-4 w-4 text-accent" />
+              <span className="text-sm font-medium text-foreground">Excellent</span>
             </div>
-            <div className="text-lg font-bold text-green-600">{excellentNotes.length}</div>
-            <div className="text-xs text-green-600">notes sung well</div>
+            <div className="text-lg font-bold text-accent">{excellentNotes.length}</div>
+            <div className="text-xs text-muted-foreground">notes sung well</div>
           </div>
           
-          <div className="text-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+          <div className="text-center p-3 bg-primary/10 rounded-lg border border-primary/20">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <AlertCircle className="h-4 w-4 text-yellow-600" />
-              <span className="text-sm font-medium text-yellow-800">Good</span>
+              <AlertCircle className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Good</span>
             </div>
-            <div className="text-lg font-bold text-yellow-600">{goodNotes.length}</div>
-            <div className="text-xs text-yellow-600">minor issues</div>
+            <div className="text-lg font-bold text-primary">{goodNotes.length}</div>
+            <div className="text-xs text-muted-foreground">minor issues</div>
           </div>
           
-          <div className="text-center p-3 bg-red-50 rounded-lg border border-red-200">
+          <div className="text-center p-3 bg-destructive/10 rounded-lg border border-destructive/20">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <XCircle className="h-4 w-4 text-red-600" />
-              <span className="text-sm font-medium text-red-800">Needs Work</span>
+              <XCircle className="h-4 w-4 text-destructive" />
+              <span className="text-sm font-medium text-foreground">Needs Work</span>
             </div>
-            <div className="text-lg font-bold text-red-600">{problematicNotes.length}</div>
-            <div className="text-xs text-red-600">notes to practice</div>
+            <div className="text-lg font-bold text-destructive">{problematicNotes.length}</div>
+            <div className="text-xs text-muted-foreground">notes to practice</div>
           </div>
         </div>
 
@@ -184,17 +184,17 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
               const isProblematic = problematicNotes.includes(note);
               
               let statusIcon = CheckCircle;
-              let statusColor = 'text-green-600';
-              let bgColor = 'bg-green-50 border-green-200';
+              let statusColor = 'text-accent';
+              let bgColor = 'bg-accent/10 border-accent/20';
               
               if (isGood) {
                 statusIcon = AlertCircle;
-                statusColor = 'text-yellow-600';
-                bgColor = 'bg-yellow-50 border-yellow-200';
+                statusColor = 'text-primary';
+                bgColor = 'bg-primary/10 border-primary/20';
               } else if (isProblematic) {
                 statusIcon = XCircle;
-                statusColor = 'text-red-600';
-                bgColor = 'bg-red-50 border-red-200';
+                statusColor = 'text-destructive';
+                bgColor = 'bg-destructive/10 border-destructive/20';
               }
               
               const StatusIcon = statusIcon;
@@ -214,25 +214,25 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
                       {Math.abs(note.pitchErrCents) > 50 && (
                         <div className="flex items-center gap-2">
                           <span className="font-medium">Pitch:</span>
-                          <span className={note.pitchErrCents > 0 ? 'text-orange-600' : 'text-blue-600'}>
-                            {note.pitchErrCents > 0 ? `${note.pitchErrCents.toFixed(0)}¢ too sharp` : `${Math.abs(note.pitchErrCents).toFixed(0)}¢ too flat`}
-                          </span>
+                           <span className={note.pitchErrCents > 0 ? 'text-primary' : 'text-accent'}>
+                             {note.pitchErrCents > 0 ? `${note.pitchErrCents.toFixed(0)}¢ too sharp` : `${Math.abs(note.pitchErrCents).toFixed(0)}¢ too flat`}
+                           </span>
                         </div>
                       )}
                       {Math.abs(note.onsetErrMs) > 100 && (
                         <div className="flex items-center gap-2">
                           <span className="font-medium">Timing:</span>
-                          <span className={note.onsetErrMs > 0 ? 'text-red-600' : 'text-amber-600'}>
-                            {note.onsetErrMs > 0 ? `${note.onsetErrMs.toFixed(0)}ms late` : `${Math.abs(note.onsetErrMs).toFixed(0)}ms early`}
-                          </span>
+                           <span className={note.onsetErrMs > 0 ? 'text-destructive' : 'text-primary'}>
+                             {note.onsetErrMs > 0 ? `${note.onsetErrMs.toFixed(0)}ms late` : `${Math.abs(note.onsetErrMs).toFixed(0)}ms early`}
+                           </span>
                         </div>
                       )}
                       {Math.abs(note.durErrPct) > 25 && (
                         <div className="flex items-center gap-2">
                           <span className="font-medium">Duration:</span>
-                          <span className={note.durErrPct > 0 ? 'text-purple-600' : 'text-indigo-600'}>
-                            {note.durErrPct > 0 ? `${note.durErrPct.toFixed(0)}% too long` : `${Math.abs(note.durErrPct).toFixed(0)}% too short`}
-                          </span>
+                           <span className={note.durErrPct > 0 ? 'text-accent' : 'text-muted-foreground'}>
+                             {note.durErrPct > 0 ? `${note.durErrPct.toFixed(0)}% too long` : `${Math.abs(note.durErrPct).toFixed(0)}% too short`}
+                           </span>
                         </div>
                       )}
                     </div>
