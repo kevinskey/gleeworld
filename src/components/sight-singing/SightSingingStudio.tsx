@@ -460,19 +460,32 @@ export const SightSingingStudio: React.FC = () => {
           hasMusicXML: !!data.musicXML,
           musicXMLLength: data.musicXML?.length,
           exerciseId: data.exerciseId,
-          firstNote: data.json?.parts?.[0]?.measures?.[0]?.[0]?.pitch
+          firstNote: data.json?.parts?.[0]?.measures?.[0]?.[0]?.pitch,
+          fullFirstMeasure: data.json?.parts?.[0]?.measures?.[0],
+          requestIdFromResponse: data.requestId
         });
         
+        // Log the actual MusicXML content to verify it's changing
+        console.log('🎼 MusicXML preview (first 200 chars):', data.musicXML?.substring(0, 200));
+        
         // Force component update by setting a new key based on timestamp
-        const newExerciseKey = `exercise-${Date.now()}`;
+        const newExerciseKey = `exercise-${Date.now()}-${Math.random()}`;
         console.log('🔄 Setting new exercise with key:', newExerciseKey);
         
-        setCurrentScore(data.json);
-        setCurrentMusicXML(data.musicXML);
-        setCurrentExerciseId(data.exerciseId);
+        // Clear previous state completely before setting new one
+        setCurrentScore(null);
+        setCurrentMusicXML('');
+        setExerciseKey(''); // Clear the key first
         
-        // Force re-render of score display by updating a key
-        setExerciseKey(newExerciseKey);
+        // Use setTimeout to ensure state is cleared before setting new values
+        setTimeout(() => {
+          setCurrentScore(data.json);
+          setCurrentMusicXML(data.musicXML);
+          setCurrentExerciseId(data.exerciseId);
+          setExerciseKey(newExerciseKey); // Set new key to force re-render
+          
+          console.log('🎯 State updated with new exercise. Key:', newExerciseKey);
+        }, 10);
         
         toast({
           title: "Exercise Generated",

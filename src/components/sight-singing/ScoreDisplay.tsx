@@ -22,6 +22,12 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
 
   useEffect(() => {
+    console.log('🎼 ScoreDisplay useEffect triggered');
+    console.log('🎼 MusicXML exists:', !!musicXML);
+    console.log('🎼 MusicXML length:', musicXML?.length);
+    console.log('🎼 MusicXML preview:', musicXML?.substring(0, 100));
+    console.log('🎼 scoreRef exists:', !!scoreRef.current);
+    
     if (!scoreRef.current) return;
     
     // Always clear the score container first
@@ -29,6 +35,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     
     // If no musicXML, just leave it empty (this handles the reset case)
     if (!musicXML) {
+      console.log('🎼 No MusicXML provided, clearing display');
       osmdRef.current = null;
       return;
     }
