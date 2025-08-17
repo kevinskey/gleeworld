@@ -8,20 +8,23 @@ interface PitchPipeProps {
   className?: string;
 }
 
-// Standard pitch frequencies (A440 tuning)
-const pitches = [
+// Piano keys data for one octave (C to B)
+const whiteKeys = [
   { note: 'C', frequency: 261.63, octave: 4 },
-  { note: 'C♯/D♭', frequency: 277.18, octave: 4 },
   { note: 'D', frequency: 293.66, octave: 4 },
-  { note: 'D♯/E♭', frequency: 311.13, octave: 4 },
   { note: 'E', frequency: 329.63, octave: 4 },
   { note: 'F', frequency: 349.23, octave: 4 },
-  { note: 'F♯/G♭', frequency: 369.99, octave: 4 },
   { note: 'G', frequency: 392.00, octave: 4 },
-  { note: 'G♯/A♭', frequency: 415.30, octave: 4 },
   { note: 'A', frequency: 440.00, octave: 4 },
-  { note: 'A♯/B♭', frequency: 466.16, octave: 4 },
   { note: 'B', frequency: 493.88, octave: 4 },
+];
+
+const blackKeys = [
+  { note: 'C♯', frequency: 277.18, octave: 4, position: 0.5 }, // Between C and D
+  { note: 'D♯', frequency: 311.13, octave: 4, position: 1.5 }, // Between D and E
+  { note: 'F♯', frequency: 369.99, octave: 4, position: 3.5 }, // Between F and G
+  { note: 'G♯', frequency: 415.30, octave: 4, position: 4.5 }, // Between G and A
+  { note: 'A♯', frequency: 466.16, octave: 4, position: 5.5 }, // Between A and B
 ];
 
 export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
@@ -132,22 +135,44 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-6 gap-2 mb-4">
-          {pitches.map((pitch) => (
-            <Button
-              key={pitch.note}
-              variant={isPlaying === pitch.note ? "default" : "outline"}
-              className={`h-12 text-sm font-medium transition-all duration-200 ${
-                isPlaying === pitch.note 
-                  ? "bg-primary text-primary-foreground shadow-lg scale-105" 
-                  : "hover:bg-muted/80"
-              }`}
-              onClick={() => playTone(pitch.frequency, pitch.note)}
-            >
-              {pitch.note}
-              <span className="text-xs ml-1">{pitch.octave}</span>
-            </Button>
-          ))}
+        {/* Piano Keyboard Layout */}
+        <div className="relative w-full h-32 mb-4">
+          {/* White Keys */}
+          <div className="flex h-full">
+            {whiteKeys.map((key, index) => (
+              <button
+                key={key.note}
+                className={`flex-1 border border-gray-300 rounded-b-lg transition-all duration-150 flex items-end justify-center pb-2 text-sm font-medium ${
+                  isPlaying === key.note
+                    ? "bg-primary text-primary-foreground shadow-lg transform scale-y-95"
+                    : "bg-white hover:bg-gray-50 text-gray-800"
+                } ${index === 0 ? "rounded-bl-lg" : ""} ${index === whiteKeys.length - 1 ? "rounded-br-lg" : ""}`}
+                onClick={() => playTone(key.frequency, key.note)}
+              >
+                {key.note}
+              </button>
+            ))}
+          </div>
+          
+          {/* Black Keys */}
+          <div className="absolute top-0 left-0 w-full h-20 pointer-events-none">
+            {blackKeys.map((key) => (
+              <button
+                key={key.note}
+                className={`absolute w-8 h-full rounded-b-lg border border-gray-600 transition-all duration-150 flex items-end justify-center pb-1 text-xs font-medium pointer-events-auto ${
+                  isPlaying === key.note
+                    ? "bg-primary text-primary-foreground shadow-lg transform scale-95"
+                    : "bg-gray-800 hover:bg-gray-700 text-white"
+                }`}
+                style={{
+                  left: `calc(${(key.position / whiteKeys.length) * 100}% - 1rem)`,
+                }}
+                onClick={() => playTone(key.frequency, key.note)}
+              >
+                {key.note}
+              </button>
+            ))}
+          </div>
         </div>
         
         <div className="text-center space-y-2">
