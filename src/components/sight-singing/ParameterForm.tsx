@@ -306,18 +306,6 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             </div>
           </div>
 
-          {/* BPM */}
-          <div className="space-y-1">
-            <Label className="text-sm font-medium">BPM: {watchedBpm}</Label>
-            <Slider
-              value={[watchedBpm]}
-              onValueChange={(value) => setValue('bpm', value[0])}
-              min={60}
-              max={180}
-              step={5}
-              className="w-full"
-            />
-          </div>
         </form>
         
         {/* Action Buttons - Right after parameters */}

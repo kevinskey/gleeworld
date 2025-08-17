@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { Download, Play, Pause, Volume2, VolumeX } from 'lucide-react';
 
@@ -816,6 +817,38 @@ export const SightSingingStudio: React.FC = () => {
                             >
                               ♪
                             </Button>
+                          </div>
+
+                          <div className="h-8 w-px bg-border"></div>
+
+                          {/* Metronome/BPM Controls */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="text-xs font-medium">{currentBpm}</div>
+                              <Slider
+                                value={[currentBpm]}
+                                onValueChange={(value) => setCurrentBpm(value[0])}
+                                min={60}
+                                max={180}
+                                step={5}
+                                orientation="vertical"
+                                className="h-16 w-4"
+                              />
+                              <div className="text-xs">BPM</div>
+                            </div>
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="text-xs font-medium">{Math.round(metronomeVolume * 100)}</div>
+                              <Slider
+                                value={[metronomeVolume]}
+                                onValueChange={(value) => setMetronomeVolume(value[0])}
+                                min={0}
+                                max={1}
+                                step={0.1}
+                                orientation="vertical"
+                                className="h-16 w-4"
+                              />
+                              <div className="text-xs">VOL</div>
+                            </div>
                           </div>
 
                           <div className="h-8 w-px bg-border"></div>
