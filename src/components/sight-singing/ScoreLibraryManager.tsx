@@ -47,10 +47,11 @@ export const ScoreLibraryManager: React.FC<ScoreLibraryManagerProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.toLowerCase().endsWith('.xml')) {
+    const fileName = file.name.toLowerCase();
+    if (!fileName.endsWith('.xml') && !fileName.endsWith('.musicxml')) {
       toast({
         title: "Invalid File",
-        description: "Please upload an XML file.",
+        description: "Please upload a .xml or .musicxml file.",
         variant: "destructive",
       });
       return;
@@ -331,11 +332,11 @@ export const ScoreLibraryManager: React.FC<ScoreLibraryManagerProps> = ({
               <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-lg font-medium mb-2">Upload MusicXML File</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Select a .xml file to add to your score library
+                Select a .xml or .musicxml file to add to your score library
               </p>
               <Input
                 type="file"
-                accept=".xml"
+                accept=".xml,.musicxml"
                 onChange={handleFileUpload}
                 className="max-w-sm mx-auto"
               />
