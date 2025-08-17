@@ -136,28 +136,28 @@ export const CommunityHubModule = () => {
               <div className="space-y-3">
                 {announcements.slice(0, 5).map((announcement) => (
                   <Card key={announcement.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-2">
+                    <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
-                        <CardTitle className="text-sm font-medium text-blue-900">
+                        <CardTitle className="text-lg font-semibold text-blue-900">
                           {announcement.title}
                         </CardTitle>
                         {announcement.is_featured && (
-                          <Badge variant="secondary" className="ml-2">Featured</Badge>
+                          <Badge variant="secondary" className="ml-2 text-sm">Featured</Badge>
                         )}
                       </div>
                       {announcement.created_at && (
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3 mr-1" />
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Clock className="w-4 h-4 mr-2" />
                           {format(new Date(announcement.created_at), 'MMM dd, yyyy')}
                         </div>
                       )}
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <p className="text-sm text-foreground line-clamp-2">
+                      <p className="text-base text-foreground leading-relaxed">
                         {announcement.content}
                       </p>
                       {announcement.announcement_type && (
-                        <Badge variant="outline" className="mt-2 text-xs">
+                        <Badge variant="outline" className="mt-3 text-sm">
                           {announcement.announcement_type}
                         </Badge>
                       )}
