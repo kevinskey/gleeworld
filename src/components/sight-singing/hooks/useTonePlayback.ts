@@ -21,11 +21,13 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
 
   const startPlayback = useCallback(async (musicXML: string, tempo: number) => {
     console.log('🎼 useTonePlayback.startPlayback called');
-    console.log('🎼 playerRef.current exists:', !!playerRef.current);
-    console.log('🎼 musicXML length:', musicXML.length);
-    console.log('🎼 tempo:', tempo);
-    console.log('🎼 mode:', mode);
-    console.log('🎼 soundSettings:', soundSettings);
+    console.log('🎼 Input validation:', {
+      playerExists: !!playerRef.current,
+      musicXMLLength: musicXML.length,
+      tempo,
+      mode,
+      soundSettings
+    });
     
     if (!playerRef.current) {
       console.error('❌ No playerRef.current available');
@@ -33,26 +35,38 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
     }
     
     try {
-      console.log('🎼 Starting playback...', { mode, tempo, soundSettings });
+      console.log('🎼 Setting isPlaying to true...');
       setIsPlaying(true);
       
       // Parse the MusicXML
       console.log('🎼 About to parse MusicXML...');
       const parsedScore = parseMusicXML(musicXML, tempo);
-      console.log('🎼 Parsed score:', parsedScore);
-      console.log('🎼 Number of measures:', parsedScore.measures.length);
-      console.log('🎼 Total duration:', parsedScore.totalDuration);
+      console.log('🎼 MusicXML parsed successfully:', {
+        measuresCount: parsedScore.measures.length,
+        totalDuration: parsedScore.totalDuration,
+        tempo: parsedScore.tempo,
+        firstMeasureNotes: parsedScore.measures[0]?.notes?.length || 0
+      });
       
       // Check if we have notes to play
-      const totalNotes = parsedScore.measures.reduce((total, measure) => total + measure.notes.length, 0);
+      const totalNotes = parsedScore.measures.reduce((total, measure) => total + (measure.notes?.length || 0), 0);
       console.log('🎼 Total notes to play:', totalNotes);
       
       if (totalNotes === 0) {
-        console.warn('⚠️ No notes found in parsed score');
+        console.warn('⚠️ No notes found in parsed score - this will be click-only playback');
       }
       
       // Play the score with sound settings
-      console.log('🎼 About to call playerRef.current.playScore...');
+      console.log('🎼 About to call playerRef.current.playScore with:', {
+        mode,
+        soundSettings,
+        parsedScore: {
+          measures: parsedScore.measures.length,
+          tempo: parsedScore.tempo,
+          totalDuration: parsedScore.totalDuration
+        }
+      });
+      
       await playerRef.current.playScore(parsedScore, mode, soundSettings);
       console.log('✅ playerRef.current.playScore completed');
       

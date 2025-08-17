@@ -410,9 +410,12 @@ export const SightSingingStudio: React.FC = () => {
     };
     
     try {
+      console.log('🏗️ Generating exercise with params:', enhancedParams);
       const { data, error } = await supabase.functions.invoke('generate-musicxml', {
         body: enhancedParams
       });
+
+      console.log('🏗️ Edge function response:', { data, error });
 
       if (error) {
         console.error('Edge function error:', error);
@@ -425,6 +428,12 @@ export const SightSingingStudio: React.FC = () => {
       }
 
       if (data.success) {
+        console.log('✅ Exercise generated successfully:', {
+          hasJSON: !!data.json,
+          hasMusicXML: !!data.musicXML,
+          musicXMLLength: data.musicXML?.length,
+          exerciseId: data.exerciseId
+        });
         setCurrentScore(data.json);
         setCurrentMusicXML(data.musicXML);
         setCurrentExerciseId(data.exerciseId);
@@ -434,6 +443,7 @@ export const SightSingingStudio: React.FC = () => {
           description: "Your sight-singing exercise is ready!",
         });
       } else {
+        console.error('❌ Generation failed:', data);
         throw new Error(data.message || 'Generation failed');
       }
     } catch (error) {
@@ -449,7 +459,18 @@ export const SightSingingStudio: React.FC = () => {
   };
 
   const handleStartPlayback = async () => {
+    console.log('🔥 BUTTON CLICKED: handleStartPlayback called');
+    console.log('🔥 Current state:', {
+      currentMusicXML: !!currentMusicXML,
+      currentScore: !!currentScore,
+      currentBpm,
+      mode,
+      isPlaying,
+      soundSettings
+    });
+    
     if (!currentMusicXML) {
+      console.error('❌ No currentMusicXML available for playback');
       toast({
         title: "No Exercise",
         description: "Please generate an exercise first.",
@@ -459,10 +480,18 @@ export const SightSingingStudio: React.FC = () => {
     }
 
     // Stop any existing playback first
+    console.log('🛑 Stopping any existing playback...');
     stopPlayback();
     
     try {
+      console.log('🎵 About to call startPlayback with:', {
+        musicXMLLength: currentMusicXML.length,
+        tempo: currentBpm,
+        mode,
+        soundSettings
+      });
       await startPlayback(currentMusicXML, currentBpm);
+      console.log('✅ startPlayback completed successfully');
     } catch (error) {
       console.error('❌ Playback error:', error);
       toast({
@@ -781,12 +810,19 @@ export const SightSingingStudio: React.FC = () => {
                                   size="sm"
                                   variant={isPlaying && mode === 'click-and-score' ? "default" : "outline"}
                                   onClick={() => {
+                                    console.log('🔥 CLICK: Notes+Click button clicked');
+                                    console.log('🔥 Current state before action:', { isPlaying, mode });
                                     if (isPlaying && mode === 'click-and-score') {
+                                      console.log('🛑 Stopping current playback...');
                                       stopPlayback();
                                     } else {
+                                      console.log('🎵 Starting click-and-score playback...');
                                       stopPlayback(); // Always stop first
                                       setMode('click-and-score');
-                                      setTimeout(() => handleStartPlayback(), 100);
+                                      setTimeout(() => {
+                                        console.log('🎵 Calling handleStartPlayback after mode change...');
+                                        handleStartPlayback();
+                                      }, 100);
                                     }
                                   }}
                                   className="h-10 lg:h-12 px-2 lg:px-4 text-sm lg:text-base font-semibold"
