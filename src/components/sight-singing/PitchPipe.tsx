@@ -110,17 +110,6 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
     <Card className={`p-3 ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium">Pitch Pipe</h3>
-        {isPlaying && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={stopCurrentNote}
-            className="text-xs"
-          >
-            <VolumeX className="h-3 w-3 mr-1" />
-            Stop
-          </Button>
-        )}
       </div>
       
       {/* Piano Keyboard Layout */}
@@ -189,14 +178,6 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
           })}
         </div>
       </div>
-      
-      {currentNote && (
-        <div className="text-center">
-          <span className="text-xs text-muted-foreground">
-            Playing: <span className="font-medium text-foreground">{currentNote}</span>
-          </span>
-        </div>
-      )}
     </Card>
   );
 };
