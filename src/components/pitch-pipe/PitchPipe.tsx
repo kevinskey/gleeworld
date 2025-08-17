@@ -136,42 +136,54 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
       </CardHeader>
       <CardContent>
         {/* Piano Keyboard Layout */}
-        <div className="relative w-full h-32 mb-4">
+        <div className="relative w-full h-40 mb-4 bg-gray-100 p-2 rounded-lg">
           {/* White Keys */}
-          <div className="flex h-full">
+          <div className="flex h-full gap-px">
             {whiteKeys.map((key, index) => (
-              <button
+              <div
                 key={key.note}
-                className={`flex-1 border border-gray-300 rounded-b-lg transition-all duration-150 flex items-end justify-center pb-2 text-sm font-medium ${
+                className={`flex-1 cursor-pointer transition-all duration-100 flex items-end justify-center pb-3 text-sm font-medium select-none ${
                   isPlaying === key.note
-                    ? "bg-primary text-primary-foreground shadow-lg transform scale-y-95"
-                    : "bg-white hover:bg-gray-50 text-gray-800"
-                } ${index === 0 ? "rounded-bl-lg" : ""} ${index === whiteKeys.length - 1 ? "rounded-br-lg" : ""}`}
+                    ? "bg-blue-200 shadow-inner transform translate-y-1"
+                    : "bg-white hover:bg-gray-50 shadow-md"
+                } ${index === 0 ? "rounded-l-md" : ""} ${index === whiteKeys.length - 1 ? "rounded-r-md" : ""}`}
+                style={{
+                  boxShadow: isPlaying === key.note 
+                    ? "inset 0 2px 4px rgba(0,0,0,0.3)" 
+                    : "0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)"
+                }}
                 onClick={() => playTone(key.frequency, key.note)}
               >
-                {key.note}
-              </button>
+                <span className="text-gray-700 font-semibold">{key.note}</span>
+              </div>
             ))}
           </div>
           
           {/* Black Keys */}
-          <div className="absolute top-0 left-0 w-full h-20 pointer-events-none">
-            {blackKeys.map((key) => (
-              <button
-                key={key.note}
-                className={`absolute w-8 h-full rounded-b-lg border border-gray-600 transition-all duration-150 flex items-end justify-center pb-1 text-xs font-medium pointer-events-auto ${
-                  isPlaying === key.note
-                    ? "bg-primary text-primary-foreground shadow-lg transform scale-95"
-                    : "bg-gray-800 hover:bg-gray-700 text-white"
-                }`}
-                style={{
-                  left: `calc(${(key.position / whiteKeys.length) * 100}% - 1rem)`,
-                }}
-                onClick={() => playTone(key.frequency, key.note)}
-              >
-                {key.note}
-              </button>
-            ))}
+          <div className="absolute top-2 left-2 right-2 h-24 pointer-events-none">
+            {blackKeys.map((key) => {
+              const leftPercentage = (key.position / whiteKeys.length) * 100;
+              return (
+                <div
+                  key={key.note}
+                  className={`absolute w-7 h-full cursor-pointer transition-all duration-100 flex items-end justify-center pb-2 text-xs font-medium pointer-events-auto select-none ${
+                    isPlaying === key.note
+                      ? "bg-gray-600 shadow-inner transform translate-y-1"
+                      : "bg-gray-900 hover:bg-gray-800"
+                  }`}
+                  style={{
+                    left: `calc(${leftPercentage}% - 0.875rem)`,
+                    borderRadius: "0 0 4px 4px",
+                    boxShadow: isPlaying === key.note 
+                      ? "inset 0 2px 4px rgba(0,0,0,0.6)" 
+                      : "0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)"
+                  }}
+                  onClick={() => playTone(key.frequency, key.note)}
+                >
+                  <span className="text-white text-xs">{key.note}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
         
