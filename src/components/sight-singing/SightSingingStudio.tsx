@@ -16,6 +16,7 @@ import { ErrorVisualization } from './ErrorVisualization';
 import { PerformanceReport } from './PerformanceReport';
 import { ScoreLibraryManager } from './ScoreLibraryManager';
 import { ScoreHistoryView } from './ScoreHistoryView';
+import { PitchPipe } from './PitchPipe';
 
 // Import hooks
 import { useAudioRecorder } from './hooks/useAudioRecorder';
@@ -533,7 +534,13 @@ export const SightSingingStudio: React.FC = () => {
               {/* Right Column - Score Display (2/3 width on desktop, full width on mobile) */}
               <div className="lg:col-span-2 col-span-1 order-first lg:order-last">
                 <Card className="p-4 lg:p-6 h-[600px] lg:h-full flex flex-col">
-                  <h2 className="text-base font-semibold mb-2 flex-shrink-0">Musical Score</h2>
+                  <h2 className="text-base font-semibold mb-3 flex-shrink-0">Musical Score</h2>
+                  
+                  {/* Pitch Pipe Component */}
+                  <div className="mb-4 flex-shrink-0">
+                    <PitchPipe />
+                  </div>
+                  
                   <div className="flex-1 min-h-0">
                     <ScoreDisplay
                       musicXML={currentMusicXML}
