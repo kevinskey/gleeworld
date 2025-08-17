@@ -25,9 +25,13 @@ export const useBucketsOfLove = () => {
       setLoading(true);
       setError(null);
       
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { data, error: fetchError } = await supabase
         .from('gw_buckets_of_love')
         .select('*')
+        .or(`recipient_user_id.is.null,recipient_user_id.eq.${user?.id || 'null'}`)
         .order('created_at', { ascending: false })
         .limit(20);
 
