@@ -145,17 +145,20 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
       {/* Measures */}
       <div className="space-y-1">
         <Label className="text-xs font-medium">Measures</Label>
-        <Input
-          type="number"
-          min="2"
-          max="8"
-          className="h-6 text-xs"
-          {...register('numMeasures', { 
-            required: true,
-            min: { value: 2, message: 'Min 2' },
-            max: { value: 8, message: 'Max 8' }
-          })}
-        />
+        <Select 
+          value={watch('numMeasures')?.toString() || "4"} 
+          onValueChange={(value) => setValue('numMeasures', parseInt(value))}
+        >
+          <SelectTrigger className="h-6 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="4">4 bars</SelectItem>
+            <SelectItem value="8">8 bars</SelectItem>
+            <SelectItem value="16">16 bars</SelectItem>
+            <SelectItem value="32">32 bars</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* BPM */}
