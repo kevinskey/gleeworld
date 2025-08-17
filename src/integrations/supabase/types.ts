@@ -8093,6 +8093,69 @@ export type Database = {
           },
         ]
       }
+      gw_recording_shares: {
+        Row: {
+          created_at: string
+          id: string
+          permission: string
+          recording_id: string
+          shared_by: string
+          shared_with: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission?: string
+          recording_id: string
+          shared_by: string
+          shared_with: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission?: string
+          recording_id?: string
+          shared_by?: string
+          shared_with?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_recording_shares_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "gw_recordings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_recording_shares_shared_by_fkey"
+            columns: ["shared_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_recording_shares_shared_by_fkey"
+            columns: ["shared_by"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_recording_shares_shared_with_fkey"
+            columns: ["shared_with"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_recording_shares_shared_with_fkey"
+            columns: ["shared_with"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       gw_recordings: {
         Row: {
           associated_sheet_music_id: string | null
@@ -8102,6 +8165,7 @@ export type Database = {
           duration: number | null
           file_size: number | null
           format: string | null
+          grading_results: Json | null
           id: string
           is_processed: boolean | null
           metadata: Json | null
@@ -8119,6 +8183,7 @@ export type Database = {
           duration?: number | null
           file_size?: number | null
           format?: string | null
+          grading_results?: Json | null
           id?: string
           is_processed?: boolean | null
           metadata?: Json | null
@@ -8136,6 +8201,7 @@ export type Database = {
           duration?: number | null
           file_size?: number | null
           format?: string | null
+          grading_results?: Json | null
           id?: string
           is_processed?: boolean | null
           metadata?: Json | null

@@ -105,6 +105,108 @@ export const useRecordings = () => {
     }
   };
 
+  const uploadRecordingFromBlob = async (
+    audioBlob: Blob,
+    recordingData: Omit<RecordingInsert, 'recorded_by' | 'audio_url' | 'created_at' | 'file_size' | 'format'>
+  ) => {
+    if (!user?.id) return;
+
+    try {
+      setLoading(true);
+      
+      // Create file from blob
+      const fileName = `recordings/${user.id}/${Date.now()}_recording.webm`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('user-files')
+        .upload(fileName, audioBlob);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-files')
+        .getPublicUrl(fileName);
+
+      // Create recording record
+      const { data, error: insertError } = await supabase
+        .from('gw_recordings')
+        .insert({
+          ...recordingData,
+          recorded_by: user.id,
+          audio_url: publicUrl,
+          file_size: audioBlob.size,
+          format: audioBlob.type || 'audio/webm',
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      setRecordings(prev => [data, ...prev]);
+      return data;
+    } catch (err) {
+      console.error('Error uploading recording from blob:', err);
+      setError(err instanceof Error ? err.message : 'Failed to upload recording');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const shareRecording = async (recordingId: string, userIds: string[]) => {
+    if (!user?.id) return;
+
+    try {
+      setLoading(true);
+      
+      // Create shares for each user
+      const shares = userIds.map(userId => ({
+        recording_id: recordingId,
+        shared_with: userId,
+        shared_by: user.id,
+      }));
+
+      const { error } = await supabase
+        .from('gw_recording_shares')
+        .insert(shares);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error('Error sharing recording:', err);
+      setError(err instanceof Error ? err.message : 'Failed to share recording');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getSharedRecordings = async () => {
+    if (!user?.id) return [];
+
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('gw_recording_shares')
+        .select(`
+          *,
+          gw_recordings:recording_id (*)
+        `)
+        .eq('shared_with', user.id);
+
+      if (error) throw error;
+
+      return data?.map(share => share.gw_recordings).filter(Boolean) || [];
+    } catch (err) {
+      console.error('Error fetching shared recordings:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch shared recordings');
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateRecording = async (id: string, updates: Partial<RecordingInsert>) => {
     try {
       setLoading(true);
@@ -183,8 +285,11 @@ export const useRecordings = () => {
     error,
     fetchRecordings,
     uploadRecording,
+    uploadRecordingFromBlob,
     updateRecording,
     deleteRecording,
     getRecordingsForSheetMusic,
+    shareRecording,
+    getSharedRecordings,
   };
 };

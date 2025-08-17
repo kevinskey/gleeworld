@@ -21,6 +21,7 @@ import { PerformanceReport } from './PerformanceReport';
 import { ScoreLibraryManager } from './ScoreLibraryManager';
 import { ScoreHistoryView } from './ScoreHistoryView';
 import { PitchPipe } from './PitchPipe';
+import { RecordingShareDialog } from './RecordingShareDialog';
 
 // Import hooks
 import { useAudioRecorder } from './hooks/useAudioRecorder';
@@ -29,6 +30,7 @@ import { useGrading } from './hooks/useGrading';
 import { useMetronome } from './hooks/useMetronome';
 import { useAudioCombiner } from './hooks/useAudioCombiner';
 import { useUserScores } from '@/hooks/useUserScores';
+import { useRecordings } from '@/hooks/useRecordings';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { ParsedScore, ParsedMeasure, ParsedNote } from './utils/musicXMLParser';
@@ -184,6 +186,8 @@ export const SightSingingStudio: React.FC = () => {
   const [soundSettings, setSoundSettings] = useState({ notes: 'piano', click: 'woodblock' });
   const [selectedScore, setSelectedScore] = useState<any>(null);
   const [transportBusy, setTransportBusy] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [currentRecording, setCurrentRecording] = useState<any>(null);
   const lastClickAtRef = useRef(0);
 
   const { 
@@ -200,6 +204,8 @@ export const SightSingingStudio: React.FC = () => {
   const [combinedAudioUrl, setCombinedAudioUrl] = useState<string | null>(null);
   const [isPlayingCombined, setIsPlayingCombined] = useState(false);
   const combinedAudioRef = useRef<HTMLAudioElement | null>(null);
+  
+  const { uploadRecordingFromBlob, shareRecording } = useRecordings();
 
   const { 
     isPlaying, 
@@ -576,7 +582,34 @@ export const SightSingingStudio: React.FC = () => {
     try {
       const results = await gradeRecording(audioBlob, currentScore, currentBpm);
       
-      // Store submission if we have an exercise ID
+      // Auto-save the recording to gw_recordings
+      try {
+        const recordingTitle = selectedScore?.title || parameters?.title || 'Sight Reading Practice';
+        const savedRecording = await uploadRecordingFromBlob(audioBlob, {
+          title: recordingTitle,
+          description: `Grade: ${results.letter} (${Math.round(results.overall * 100)}%)`,
+          associated_sheet_music_id: selectedScore?.id || null,
+          quality: 'practice',
+          grading_results: JSON.parse(JSON.stringify(results)),
+          duration: recordingDuration || 0,
+        });
+
+        if (savedRecording) {
+          setCurrentRecording(savedRecording);
+          toast({
+            title: "Recording Saved & Graded",
+            description: `Grade: ${results.letter} (${Math.round(results.overall * 100)}%)`,
+          });
+        }
+      } catch (saveError) {
+        console.error('Failed to save recording:', saveError);
+        toast({
+          title: "Graded Successfully",
+          description: `Grade: ${results.letter} (${Math.round(results.overall * 100)}%) - Recording save failed`,
+        });
+      }
+      
+      // Store submission if we have an exercise ID (legacy support)
       if (currentExerciseId && results) {
         try {
           // Convert audio blob to base64 for storage
@@ -624,19 +657,9 @@ export const SightSingingStudio: React.FC = () => {
 
           if (submissionError) {
             console.error('Failed to store submission:', submissionError);
-          } else {
-            toast({
-              title: "Results Saved",
-              description: `Grade: ${results.letter} (${Math.round(results.overall * 100)}%)`,
-            });
           }
         } catch (storageError) {
           console.error('Storage error:', storageError);
-          // Don't fail grading if storage fails
-          toast({
-            title: "Graded Successfully",
-            description: `Grade: ${results.letter} (${Math.round(results.overall * 100)}%)`,
-          });
         }
       }
 
@@ -1021,7 +1044,7 @@ export const SightSingingStudio: React.FC = () => {
                       isGrading={isGrading}
                     />
                     
-                    {/* Inline grading results summary */}
+                           {/* Inline grading results summary */}
                     {gradingResults && (
                       <Card className="mt-6">
                         <CardContent className="p-4">
@@ -1039,13 +1062,24 @@ export const SightSingingStudio: React.FC = () => {
                                 </span>
                               </div>
                             </div>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setActiveTab('report')}
-                            >
-                              View Full Report
-                            </Button>
+                            <div className="flex gap-2">
+                              {currentRecording && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setShareDialogOpen(true)}
+                                >
+                                  Share Recording
+                                </Button>
+                              )}
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setActiveTab('report')}
+                              >
+                                View Full Report
+                              </Button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -1092,6 +1126,18 @@ export const SightSingingStudio: React.FC = () => {
             )}
           </TabsContent>
         </Tabs>
+        
+        {/* Recording Share Dialog */}
+        {currentRecording && (
+          <RecordingShareDialog
+            open={shareDialogOpen}
+            onOpenChange={setShareDialogOpen}
+            recording={currentRecording}
+            onShare={async (userIds) => {
+              await shareRecording(currentRecording.id, userIds);
+            }}
+          />
+        )}
       </div>
     </div>
     </TooltipProvider>
