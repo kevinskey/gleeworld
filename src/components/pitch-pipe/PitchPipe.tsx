@@ -43,7 +43,10 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
   }, []);
 
   const playTone = useCallback((frequency: number, note: string) => {
+    console.log('PitchPipe: playTone called', { frequency, note, isPlaying });
+    
     if (isPlaying === note) {
+      console.log('PitchPipe: stopping current tone');
       stopTone();
       return;
     }
