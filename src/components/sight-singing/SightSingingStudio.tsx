@@ -24,9 +24,15 @@ import { useTonePlayback } from './hooks/useTonePlayback';
 import { useGrading } from './hooks/useGrading';
 import { useMetronome } from './hooks/useMetronome';
 import { useAudioCombiner } from './hooks/useAudioCombiner';
+import { ParsedScore, ParsedMeasure, ParsedNote } from './utils/musicXMLParser';
 
 // Import types and utilities
 import { supabase } from '@/integrations/supabase/client';
+
+// Note frequencies for conversion
+const NOTE_FREQUENCIES: { [key: string]: number } = {
+  'C': 261.63, 'D': 293.66, 'E': 329.63, 'F': 349.23, 'G': 392.00, 'A': 440.00, 'B': 493.88
+};
 
 export interface ExerciseParameters {
   key: { tonic: string; mode: "major"|"minor" };
@@ -62,6 +68,98 @@ export interface ScoreJSON {
     sopranoHint?: number[];
   }>;
 }
+
+// Helper function to convert ScoreJSON to ParsedScore format
+const convertScoreJSONToParsedScore = (scoreJSON: ScoreJSON, tempo: number): ParsedScore => {
+  console.log('🔄 Converting ScoreJSON to ParsedScore...');
+  
+  if (!scoreJSON.parts || scoreJSON.parts.length === 0) {
+    console.warn('⚠️ No parts found in score');
+    return {
+      measures: [],
+      tempo: tempo,
+      timeSignature: { beats: 4, beatType: 4 },
+      totalDuration: 0
+    };
+  }
+
+  const part = scoreJSON.parts[0]; // Use first part
+  const measures: ParsedMeasure[] = [];
+  let currentTime = 0;
+  
+  // Duration mapping (in quarter note units)
+  const durationMap = {
+    'whole': 4,
+    'half': 2,
+    'quarter': 1,
+    'eighth': 0.5,
+    '16th': 0.25
+  };
+  
+  const beatDuration = 60 / tempo; // Duration of one quarter note in seconds
+  
+  part.measures.forEach((measureNotes, measureIndex) => {
+    const notes: ParsedNote[] = [];
+    let measureTime = 0;
+    
+    measureNotes.forEach((noteData) => {
+      if (noteData.kind === 'note' && noteData.pitch) {
+        const baseDuration = durationMap[noteData.dur.base] || 1;
+        const dotMultiplier = noteData.dur.dots === 1 ? 1.5 : noteData.dur.dots === 2 ? 1.75 : 1;
+        const durationInQuarters = baseDuration * dotMultiplier;
+        const durationInSeconds = durationInQuarters * beatDuration;
+        
+        // Calculate frequency
+        let frequency = NOTE_FREQUENCIES[noteData.pitch.step] || 440;
+        if (noteData.pitch.alter) {
+          frequency *= Math.pow(2, noteData.pitch.alter / 12); // Adjust for sharps/flats
+        }
+        if (noteData.pitch.oct !== 4) {
+          frequency *= Math.pow(2, (noteData.pitch.oct - 4)); // Adjust for octave
+        }
+        
+        notes.push({
+          step: noteData.pitch.step,
+          octave: noteData.pitch.oct,
+          frequency: frequency,
+          duration: durationInSeconds,
+          startTime: currentTime + measureTime
+        });
+        
+        measureTime += durationInSeconds;
+      } else if (noteData.kind === 'rest') {
+        // Handle rests by advancing time
+        const baseDuration = durationMap[noteData.dur.base] || 1;
+        const dotMultiplier = noteData.dur.dots === 1 ? 1.5 : noteData.dur.dots === 2 ? 1.75 : 1;
+        const durationInQuarters = baseDuration * dotMultiplier;
+        const durationInSeconds = durationInQuarters * beatDuration;
+        measureTime += durationInSeconds;
+      }
+    });
+    
+    measures.push({
+      number: measureIndex + 1,
+      notes: notes
+    });
+    
+    currentTime += measureTime;
+  });
+  
+  const result = {
+    measures: measures,
+    tempo: tempo,
+    timeSignature: { beats: scoreJSON.time.num, beatType: scoreJSON.time.den },
+    totalDuration: currentTime
+  };
+  
+  console.log('✅ Conversion complete:', {
+    measuresCount: result.measures.length,
+    totalDuration: result.totalDuration,
+    tempo: result.tempo
+  });
+  
+  return result;
+};
 
 export const SightSingingStudio: React.FC = () => {
   const { toast } = useToast();
@@ -374,17 +472,35 @@ export const SightSingingStudio: React.FC = () => {
       // After grading, automatically combine the audio
       if (audioBlob && currentScore) {
         console.log('🎵 Auto-combining audio after grading...');
+        console.log('📊 Current score data:', {
+          score: currentScore,
+          parts: currentScore.parts?.length,
+          measures: currentScore.parts?.[0]?.measures?.length,
+          tempo: currentBpm
+        });
+        
         // Convert ScoreJSON to ParsedScore format for the audio combiner
-        const parsedScore = {
-          measures: currentScore.parts[0]?.measures || [],
-          tempo: currentBpm,
-          timeSignature: currentScore.time,
-          totalDuration: 4 // Estimate duration - this should be calculated properly
-        };
-        const combinedResult = await combineAudio(audioBlob, parsedScore as any, 'Sight-Reading Exercise');
-        if (combinedResult) {
-          setCombinedAudioUrl(combinedResult.downloadUrl);
+        const parsedScore = convertScoreJSONToParsedScore(currentScore, currentBpm);
+        
+        console.log('📊 Parsed score for combiner:', parsedScore);
+        
+        try {
+          const combinedResult = await combineAudio(audioBlob, parsedScore, 'Sight-Reading Exercise');
+          console.log('✅ Audio combination result:', combinedResult);
+          if (combinedResult) {
+            setCombinedAudioUrl(combinedResult.downloadUrl);
+            console.log('✅ Combined audio URL set:', combinedResult.downloadUrl);
+          } else {
+            console.warn('⚠️ Audio combination returned null result');
+          }
+        } catch (combineError) {
+          console.error('❌ Audio combination failed:', combineError);
         }
+      } else {
+        console.log('⚠️ Skipping audio combination - missing data:', {
+          hasAudioBlob: !!audioBlob,
+          hasCurrentScore: !!currentScore
+        });
       }
       
     } catch (error) {

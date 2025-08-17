@@ -69,10 +69,19 @@ export const useAudioCombiner = () => {
     
     try {
       console.log('🎯 Starting audio combination process...');
+      console.log('📊 Input data:', {
+        recordedBlobSize: recordedAudioBlob.size,
+        recordedBlobType: recordedAudioBlob.type,
+        scoreExists: !!score,
+        scoreTempo: score.tempo,
+        title: title
+      });
       
       // Convert recorded audio blob to base64
+      console.log('🔄 Converting recorded audio to base64...');
       const recordedArrayBuffer = await recordedAudioBlob.arrayBuffer();
       const recordedUint8Array = new Uint8Array(recordedArrayBuffer);
+      console.log('📊 Recorded audio buffer size:', recordedUint8Array.length);
       
       let recordedBinary = '';
       const chunkSize = 8192;
@@ -81,9 +90,12 @@ export const useAudioCombiner = () => {
         recordedBinary += String.fromCharCode.apply(null, Array.from(chunk));
       }
       const recordedBase64 = btoa(recordedBinary);
+      console.log('✅ Recorded audio converted to base64, length:', recordedBase64.length);
       
       // Generate melody audio
+      console.log('🎵 Generating melody audio...');
       const melodyBase64 = await generateMelodyAudio(score);
+      console.log('✅ Melody audio generated, length:', melodyBase64.length);
       
       console.log('📊 Calling combine-audio edge function...');
       
@@ -97,12 +109,15 @@ export const useAudioCombiner = () => {
         }
       });
 
+      console.log('📋 Edge function response:', { data, error });
+
       if (error) {
         console.error('❌ Edge function error:', error);
         throw new Error(`Failed to combine audio: ${error.message}`);
       }
 
       if (!data?.success) {
+        console.error('❌ Edge function returned failure:', data);
         throw new Error(data?.error || 'Failed to combine audio');
       }
 
