@@ -47,20 +47,8 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
     try {
       initAudioContext();
       
-      // Immediately fade out any currently playing note to prevent clicks
-      if (oscillatorRef.current && gainNodeRef.current) {
-        try {
-          const currentTime = audioContextRef.current?.currentTime || 0;
-          gainNodeRef.current.gain.cancelScheduledValues(currentTime);
-          gainNodeRef.current.gain.setValueAtTime(gainNodeRef.current.gain.value, currentTime);
-          gainNodeRef.current.gain.exponentialRampToValueAtTime(0.001, currentTime + 0.01);
-          oscillatorRef.current.stop(currentTime + 0.01);
-        } catch (e) {
-          // Oscillator might already be stopped
-        }
-        oscillatorRef.current = null;
-        gainNodeRef.current = null;
-      }
+      // Stop any currently playing note
+      stopCurrentNote();
       
       if (!audioContextRef.current) return;
 
@@ -76,14 +64,12 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
       oscillator.type = 'sine';
       oscillator.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime);
       
-      // Configure gain with fade in/out
+      // Configure gain with quick fade in only
       gainNode.gain.setValueAtTime(0, audioContextRef.current.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.3, audioContextRef.current.currentTime + 0.05);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContextRef.current.currentTime + 2);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContextRef.current.currentTime + 0.02);
       
-      // Start playing
+      // Start playing (no auto-stop)
       oscillator.start();
-      oscillator.stop(audioContextRef.current.currentTime + 2);
       
       // Store references
       oscillatorRef.current = oscillator;
@@ -92,14 +78,6 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
       setIsPlaying(true);
       setCurrentNote(noteName);
       
-      // Clean up when note ends
-      oscillator.onended = () => {
-        setIsPlaying(false);
-        setCurrentNote(null);
-        oscillatorRef.current = null;
-        gainNodeRef.current = null;
-      };
-      
     } catch (error) {
       console.error('Error playing note:', error);
       setIsPlaying(false);
@@ -107,18 +85,12 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
     }
   };
 
-  const stopNote = () => {
+  const stopCurrentNote = () => {
     if (oscillatorRef.current && gainNodeRef.current) {
       try {
-        // Fade out quickly
-        const currentTime = audioContextRef.current?.currentTime || 0;
-        gainNodeRef.current.gain.cancelScheduledValues(currentTime);
-        gainNodeRef.current.gain.setValueAtTime(gainNodeRef.current.gain.value, currentTime);
-        gainNodeRef.current.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.1);
-        
-        oscillatorRef.current.stop(currentTime + 0.1);
-      } catch (error) {
-        console.error('Error stopping note:', error);
+        oscillatorRef.current.stop();
+      } catch (e) {
+        // Oscillator might already be stopped
       }
     }
     
@@ -128,6 +100,7 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
     gainNodeRef.current = null;
   };
 
+
   return (
     <Card className={`p-3 ${className}`}>
       <div className="flex items-center justify-between mb-3">
@@ -136,7 +109,7 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
           <Button
             size="sm"
             variant="ghost"
-            onClick={stopNote}
+            onClick={stopCurrentNote}
             className="text-xs"
           >
             <VolumeX className="h-3 w-3 mr-1" />
@@ -162,7 +135,11 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
                   ? "inset 0 2px 4px rgba(0,0,0,0.3)" 
                   : "0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)"
               }}
-              onClick={() => playNote(key.frequency, key.name)}
+              onMouseDown={() => playNote(key.frequency, key.name)}
+              onMouseUp={stopCurrentNote}
+              onMouseLeave={stopCurrentNote}
+              onTouchStart={() => playNote(key.frequency, key.name)}
+              onTouchEnd={stopCurrentNote}
             >
               <span className="text-gray-700 font-semibold">{key.name}</span>
             </div>
@@ -195,7 +172,11 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
                     ? "inset 0 2px 4px rgba(0,0,0,0.6)" 
                     : "0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)"
                 }}
-                onClick={() => playNote(key.frequency, key.name)}
+                onMouseDown={() => playNote(key.frequency, key.name)}
+                onMouseUp={stopCurrentNote}
+                onMouseLeave={stopCurrentNote}
+                onTouchStart={() => playNote(key.frequency, key.name)}
+                onTouchEnd={stopCurrentNote}
               >
                 <span className="text-white text-xs">{key.name}</span>
               </div>
