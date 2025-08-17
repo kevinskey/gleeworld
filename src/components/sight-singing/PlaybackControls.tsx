@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Play, Square, Download } from 'lucide-react';
+import { Play, Square } from 'lucide-react';
 
 interface PlaybackControlsProps {
   isPlaying: boolean;
