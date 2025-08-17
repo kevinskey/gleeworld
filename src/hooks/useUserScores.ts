@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { Database } from "@/integrations/supabase/types";
 
 type UserScore = Database['public']['Tables']['gw_scores']['Row'];
@@ -19,9 +20,10 @@ export const useUserScores = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
 
   const fetchScores = async (filters?: ScoreFilters) => {
-    if (!user?.id) return;
+    if (!userProfile?.id) return;
 
     try {
       setLoading(true);
@@ -30,7 +32,7 @@ export const useUserScores = () => {
       let query = supabase
         .from('gw_scores')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userProfile.id)
         .order('created_at', { ascending: false });
 
       if (filters?.sheet_music_id) {
@@ -57,7 +59,7 @@ export const useUserScores = () => {
   };
 
   const addScore = async (scoreData: Omit<UserScoreInsert, 'user_id' | 'created_at'>) => {
-    if (!user?.id) return;
+    if (!userProfile?.id) return;
 
     try {
       setLoading(true);
@@ -65,7 +67,7 @@ export const useUserScores = () => {
         .from('gw_scores')
         .insert({
           ...scoreData,
-          user_id: user.id,
+          user_id: userProfile.id,
           created_at: new Date().toISOString(),
         })
         .select()
@@ -91,7 +93,7 @@ export const useUserScores = () => {
         .from('gw_scores')
         .update(updates)
         .eq('id', id)
-        .eq('user_id', user?.id)
+        .eq('user_id', userProfile?.id)
         .select()
         .single();
 
@@ -117,7 +119,7 @@ export const useUserScores = () => {
         .from('gw_scores')
         .delete()
         .eq('id', id)
-        .eq('user_id', user?.id);
+        .eq('user_id', userProfile?.id);
 
       if (deleteError) throw deleteError;
 
@@ -168,10 +170,10 @@ export const useUserScores = () => {
   };
 
   useEffect(() => {
-    if (user?.id) {
+    if (userProfile?.id) {
       fetchScores();
     }
-  }, [user?.id]);
+  }, [userProfile?.id]);
 
   return {
     scores,

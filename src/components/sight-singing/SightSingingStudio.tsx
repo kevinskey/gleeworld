@@ -28,6 +28,9 @@ import { useTonePlayback } from './hooks/useTonePlayback';
 import { useGrading } from './hooks/useGrading';
 import { useMetronome } from './hooks/useMetronome';
 import { useAudioCombiner } from './hooks/useAudioCombiner';
+import { useUserScores } from '@/hooks/useUserScores';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { ParsedScore, ParsedMeasure, ParsedNote } from './utils/musicXMLParser';
 
 // Import types and utilities
@@ -389,6 +392,7 @@ export const SightSingingStudio: React.FC = () => {
     clearRecording();
     stopPlayback();
     stopMetronome(); // Ensure metronome is stopped on reset
+    // Clear grading results (using gradeRecording hook)
     
     toast({
       title: "Exercise Reset",
@@ -1016,6 +1020,36 @@ export const SightSingingStudio: React.FC = () => {
                       hasRecording={!!audioBlob}
                       isGrading={isGrading}
                     />
+                    
+                    {/* Inline grading results summary */}
+                    {gradingResults && (
+                      <Card className="mt-6">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-semibold mb-2">Latest Performance Results</h4>
+                              <div className="flex items-center gap-4 text-sm">
+                                <Badge variant="outline" className="bg-primary/10">
+                                  Overall: {Math.round(gradingResults.overall * 100)}%
+                                </Badge>
+                                <span className="text-muted-foreground">
+                                  Pitch: {Math.round(gradingResults.pitchAcc * 100)}% | 
+                                  Rhythm: {Math.round(gradingResults.rhythmAcc * 100)}% | 
+                                  Rest: {Math.round(gradingResults.restAcc * 100)}%
+                                </span>
+                              </div>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setActiveTab('report')}
+                            >
+                              View Full Report
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
                 </Card>
               </div>
@@ -1038,7 +1072,7 @@ export const SightSingingStudio: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
-            <ScoreHistoryView selectedScoreId={selectedScore?.id} />
+            <ScoreHistoryView />
           </TabsContent>
 
           <TabsContent value="report" className="mt-6">
