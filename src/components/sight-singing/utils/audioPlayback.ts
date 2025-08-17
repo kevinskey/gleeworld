@@ -24,6 +24,7 @@ export class MusicXMLPlayer {
   }
 
   private createTone(frequency: number, startTime: number, duration: number, volume: number = 0.3, noteSound: string = 'piano'): void {
+    console.log('Creating tone with sound:', noteSound, 'frequency:', frequency);
     const audioContext = this.initAudioContext();
     
     const oscillator = audioContext.createOscillator();
@@ -38,20 +39,25 @@ export class MusicXMLPlayer {
     switch (noteSound) {
       case 'piano':
         oscillator.type = 'sine';
+        console.log('Using piano sound (sine wave)');
         break;
       case 'flute':
         oscillator.type = 'sine';
         volume *= 0.8; // Softer
+        console.log('Using flute sound (soft sine wave)');
         break;
       case 'xylophone':
         oscillator.type = 'square';
         volume *= 0.6; // Sharper but quieter
+        console.log('Using xylophone sound (square wave)');
         break;
       case 'synth':
         oscillator.type = 'sawtooth';
+        console.log('Using synth sound (sawtooth wave)');
         break;
       default:
         oscillator.type = 'sine';
+        console.log('Using default sound (sine wave)');
     }
     
     // Envelope: fade in and out
