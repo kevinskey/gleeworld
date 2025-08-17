@@ -188,6 +188,7 @@ export const SightSingingStudio: React.FC = () => {
   const [transportBusy, setTransportBusy] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [currentRecording, setCurrentRecording] = useState<any>(null);
+  const [exerciseKey, setExerciseKey] = useState<string>('');
   const lastClickAtRef = useRef(0);
 
   const { 
@@ -456,11 +457,20 @@ export const SightSingingStudio: React.FC = () => {
           hasJSON: !!data.json,
           hasMusicXML: !!data.musicXML,
           musicXMLLength: data.musicXML?.length,
-          exerciseId: data.exerciseId
+          exerciseId: data.exerciseId,
+          firstNote: data.json?.parts?.[0]?.measures?.[0]?.[0]?.pitch
         });
+        
+        // Force component update by setting a new key based on timestamp
+        const newExerciseKey = `exercise-${Date.now()}`;
+        console.log('🔄 Setting new exercise with key:', newExerciseKey);
+        
         setCurrentScore(data.json);
         setCurrentMusicXML(data.musicXML);
         setCurrentExerciseId(data.exerciseId);
+        
+        // Force re-render of score display by updating a key
+        setExerciseKey(newExerciseKey);
         
         toast({
           title: "Exercise Generated",
@@ -1073,6 +1083,7 @@ export const SightSingingStudio: React.FC = () => {
                       </div>
                     )}
                     <ScoreDisplay
+                      key={exerciseKey} // Force re-render when exerciseKey changes
                       musicXML={currentMusicXML}
                       onGradeRecording={handleGradeRecording}
                       hasRecording={!!audioBlob}
