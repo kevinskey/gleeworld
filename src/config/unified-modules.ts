@@ -76,6 +76,7 @@ import { GleeWritingWidget } from '@/components/writing/GleeWritingWidget';
 import MediaLibrary from '@/pages/admin/MediaLibrary';
 import { KaraokeModule } from '@/components/modules/KaraokeModule';
 import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
+import { MemberSightReadingModule } from '@/components/modules/MemberSightReadingModule';
 
 // Single source of truth for all modules
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -402,6 +403,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: SightSingingPreviewModule, // Uses same component but can be enhanced later
     dbFunctionName: "sight-reading-generator",
+    requiredRoles: ["member", "admin"]
+  },
+  {
+    id: "member-sight-reading-studio",
+    name: "member-sight-reading-studio",
+    title: "Sight Reading Studio",
+    description: "Complete assignments, practice sight reading, and track your progress",
+    icon: Music,
+    iconColor: "purple",
+    category: "musical-leadership",
+    isActive: true,
+    component: MemberSightReadingModule,
+    dbFunctionName: "member-sight-reading-studio",
     requiredRoles: ["member", "admin"]
   },
 

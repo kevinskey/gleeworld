@@ -14,6 +14,8 @@ import SendBucketOfLove from "@/components/buckets-of-love/SendBucketOfLove";
 import { WellnessCheckins } from "@/components/chaplain/WellnessCheckins";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { AuditionStatsWidget } from "@/components/member-view/AuditionStatsWidget";
+import { getModulesByCategory } from "@/config/unified-modules";
+import { MemberSightReadingModule } from "@/components/modules/MemberSightReadingModule";
 
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
@@ -193,7 +195,12 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
   )}
 </section>
 
-{/* Top grid with key modules */}
+        {/* Member Sight Reading Studio */}
+        <section className="mb-6">
+          <MemberSightReadingModule user={user} isFullPage={false} />
+        </section>
+
+        {/* Top grid with key modules */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Buckets of Love */}
           <Card className="hover:shadow-md transition-shadow">

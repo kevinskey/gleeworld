@@ -107,6 +107,7 @@ import ApprovalSystemPage from "./pages/ApprovalSystemPage";
 import SightReadingSubmission from "./pages/SightReadingSubmission";
 import SightReadingPreview from "./pages/SightReadingPreview";
 import SightReadingGeneratorPage from "./pages/SightReadingGenerator";
+import MemberSightReadingStudioPage from "./pages/MemberSightReadingStudio";
 import SchedulingPage from "./pages/SchedulingPage";
 import BookingPage from "./pages/BookingPage";
 import UnifiedBookingPage from "./pages/UnifiedBookingPage";
@@ -904,22 +905,30 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                    />
-                                    <Route 
-                                      path="/sight-reading-generator" 
-                                      element={
-                                        <ProtectedRoute>
-                                          <SightReadingGeneratorPage />
-                                        </ProtectedRoute>
-                                      } 
-                                    />
-                                    <Route 
-                                      path="/scheduling" 
-                                      element={
-                                        <ProtectedRoute>
-                                          <SchedulingPage />
-                                        </ProtectedRoute>
-                                      } 
+                                     <Route 
+                                       path="/sight-reading-generator" 
+                                       element={
+                                         <ProtectedRoute>
+                                           <SightReadingGeneratorPage />
+                                         </ProtectedRoute>
+                                       } 
                                      />
+                                     <Route 
+                                       path="/member-sight-reading-studio" 
+                                       element={
+                                         <ProtectedRoute>
+                                           <MemberSightReadingStudioPage />
+                                         </ProtectedRoute>
+                                       } 
+                                     />
+                                     <Route 
+                                       path="/scheduling" 
+                                       element={
+                                         <ProtectedRoute>
+                                           <SchedulingPage />
+                                         </ProtectedRoute>
+                                       } 
+                                      />
                                       <Route 
                                         path="/booking" 
                                         element={

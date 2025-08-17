@@ -240,12 +240,11 @@ export const AssignmentSubmissionDialog: React.FC<AssignmentSubmissionDialogProp
                 <CardContent>
                   <RecordingControls
                     isRecording={isRecording}
-                    recordingDuration={recordingDuration}
-                    audioBlob={audioBlob}
+                    duration={recordingDuration}
+                    hasRecording={!!audioBlob}
                     onStartRecording={startRecording}
                     onStopRecording={stopRecording}
                     onClearRecording={clearRecording}
-                    showMetronome={false}
                   />
                 </CardContent>
               </Card>
@@ -262,12 +261,11 @@ export const AssignmentSubmissionDialog: React.FC<AssignmentSubmissionDialogProp
                 <CardContent className="space-y-4">
                   <RecordingControls
                     isRecording={isRecording}
-                    recordingDuration={recordingDuration}
-                    audioBlob={audioBlob}
+                    duration={recordingDuration}
+                    hasRecording={!!audioBlob}
                     onStartRecording={startRecording}
                     onStopRecording={stopRecording}
                     onClearRecording={clearRecording}
-                    showMetronome={false}
                   />
 
                   <div className="space-y-2">

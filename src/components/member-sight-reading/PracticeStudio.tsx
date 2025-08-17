@@ -164,9 +164,9 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({ user }) => {
                           {score.composer && (
                             <p className="text-sm text-muted-foreground">by {score.composer}</p>
                           )}
-                          {score.voice_part && (
+                          {score.voice_parts && score.voice_parts.length > 0 && (
                             <Badge variant="outline" className="mt-1">
-                              {score.voice_part}
+                              {score.voice_parts.join(', ')}
                             </Badge>
                           )}
                         </div>
