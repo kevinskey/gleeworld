@@ -822,6 +822,50 @@ export const SightSingingStudio: React.FC = () => {
                     )}
                   </div>
                   
+                  {/* Essential Play/Record Controls - No Text */}
+                  <div className="mb-3 flex-shrink-0 flex items-center justify-center gap-2 border-b pb-3">
+                    {currentMusicXML && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant={isPlaying ? "default" : "outline"}
+                          onClick={isPlaying ? stopPlayback : handleStartPlayback}
+                          className="h-8 w-8 p-0"
+                        >
+                          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                        </Button>
+                        
+                        <Button
+                          size="sm"
+                          variant={isRecording ? "destructive" : "outline"}
+                          onClick={isRecording ? handleStopRecording : handleStartRecording}
+                          className="h-8 w-8 p-0"
+                          disabled={!currentMusicXML}
+                        >
+                          {isRecording ? (
+                            <div className="h-2 w-2 bg-white rounded-full animate-pulse" />
+                          ) : (
+                            <div className="h-3 w-3 bg-red-500 rounded-full" />
+                          )}
+                        </Button>
+                        
+                        {audioBlob && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const audio = new Audio(URL.createObjectURL(audioBlob));
+                              audio.play();
+                            }}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Volume2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  
                   {/* Pitch Pipe Component */}
                   <div className="mb-3 flex-shrink-0">
                     <PitchPipe />
