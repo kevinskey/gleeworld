@@ -707,6 +707,8 @@ export const SightSingingStudio: React.FC = () => {
                 onClearRecording={handleClearAll}
                 metronomeIsPlaying={metronomeIsPlaying}
                 currentBpm={currentBpm}
+                onBpmChange={setCurrentBpm}
+                showTempoControl={!!currentMusicXML && !currentScore} // Show tempo control for uploaded files
               />
                     
                     {/* Combined Audio Controls */}
@@ -789,6 +791,8 @@ export const SightSingingStudio: React.FC = () => {
                 setSelectedScore(score);
                 if (score.xml_content) {
                   setCurrentMusicXML(score.xml_content);
+                  setCurrentScore(null); // Clear generated score when uploading
+                  setCurrentBpm(120); // Reset to default BPM for uploaded files
                   setActiveTab('practice');
                 }
               }}

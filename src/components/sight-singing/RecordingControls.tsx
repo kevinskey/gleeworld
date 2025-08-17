@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
 import { Mic, Square, RotateCcw } from 'lucide-react';
 
 interface RecordingControlsProps {
@@ -12,6 +13,8 @@ interface RecordingControlsProps {
   onClearRecording: () => void;
   metronomeIsPlaying?: boolean;
   currentBpm?: number;
+  onBpmChange?: (bpm: number) => void;
+  showTempoControl?: boolean;
 }
 
 export const RecordingControls: React.FC<RecordingControlsProps> = ({
@@ -22,7 +25,9 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
   hasRecording,
   onClearRecording,
   metronomeIsPlaying = false,
-  currentBpm = 120
+  currentBpm = 120,
+  onBpmChange,
+  showTempoControl = false
 }) => {
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -32,6 +37,26 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
 
   return (
     <div className="space-y-2">
+      {/* Tempo Control for Uploaded Scores */}
+      {showTempoControl && !isRecording && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium">Tempo</span>
+            <Badge variant="outline" className="text-xs">
+              {currentBpm} BPM
+            </Badge>
+          </div>
+          <Slider
+            value={[currentBpm]}
+            onValueChange={(value) => onBpmChange?.(value[0])}
+            min={60}
+            max={200}
+            step={5}
+            className="w-full"
+          />
+        </div>
+      )}
+      
       <div className="flex gap-1">
         <Button
           variant={isRecording ? "destructive" : "default"}
