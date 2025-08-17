@@ -296,12 +296,36 @@ export const SightSingingStudio: React.FC = () => {
   const handleDownloadCombined = () => {
     if (!combinedAudioUrl) return;
     
-    const link = document.createElement('a');
-    link.href = combinedAudioUrl;
-    link.download = 'sight-reading-exercise-with-recording.wav';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // For data URLs, we need to create a blob URL for download
+    if (combinedAudioUrl.startsWith('data:')) {
+      // Convert data URL back to blob for download
+      const byteCharacters = atob(combinedAudioUrl.split(',')[1]);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'audio/wav' });
+      const downloadUrl = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = 'sight-reading-exercise-with-recording.wav';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the temporary URL
+      URL.revokeObjectURL(downloadUrl);
+    } else {
+      // Fallback for blob URLs
+      const link = document.createElement('a');
+      link.href = combinedAudioUrl;
+      link.download = 'sight-reading-exercise-with-recording.wav';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
     
     toast({
       title: "Download Started",

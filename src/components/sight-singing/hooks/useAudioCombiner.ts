@@ -169,7 +169,16 @@ export const useAudioCombiner = () => {
       
       // Convert to WAV blob
       const combinedBlob = createWavBlob(combinedBuffer);
-      const downloadUrl = URL.createObjectURL(combinedBlob);
+      
+      // Convert blob to data URL to avoid CSP issues with blob URLs
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(combinedBlob);
+      });
+      
+      console.log('✅ Combined audio converted to data URL');
       
       // Clean up
       await audioContext.close();
@@ -181,7 +190,7 @@ export const useAudioCombiner = () => {
 
       return {
         audioBlob: combinedBlob,
-        downloadUrl,
+        downloadUrl: dataUrl, // Use data URL instead of blob URL
         title
       };
 
