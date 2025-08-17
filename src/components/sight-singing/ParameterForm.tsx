@@ -125,7 +125,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col p-2">
+    <div className="flex flex-col p-2">
       <div className="space-y-3">
         <form className="space-y-3">
           {/* Key Selection */}
