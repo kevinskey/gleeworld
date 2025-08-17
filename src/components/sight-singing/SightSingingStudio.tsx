@@ -843,11 +843,11 @@ export const SightSingingStudio: React.FC = () => {
                               label="BPM"
                             />
                             <Knob
-                              value={Math.round(metronomeVolume * 100)}
-                              onValueChange={(value) => setMetronomeVolume(value / 100)}
+                              value={metronomeVolume}
+                              onValueChange={setMetronomeVolume}
                               min={0}
-                              max={100}
-                              step={10}
+                              max={1}
+                              step={0.05}
                               size="sm"
                               label="VOL"
                             />

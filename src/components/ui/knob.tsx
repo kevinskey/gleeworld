@@ -127,7 +127,7 @@ export const Knob: React.FC<KnobProps> = ({
     <div className={cn("flex flex-col items-center gap-2", className)}>
       {label && (
         <div className={cn("font-medium text-center", labelSizes[size])}>
-          {value}
+          {label === "VOL" ? Math.round(value * 100) : value}
         </div>
       )}
       
