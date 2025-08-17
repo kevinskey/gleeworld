@@ -191,6 +191,33 @@ export const useAnnouncements = () => {
     }
   };
 
+  const deleteCommunication = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_communications')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Communication deleted successfully",
+      });
+
+      await fetchAnnouncements();
+      return true;
+    } catch (error) {
+      console.error('Error deleting communication:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete communication",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchAnnouncements();
   }, []);
@@ -202,6 +229,7 @@ export const useAnnouncements = () => {
     publishAnnouncement,
     updateAnnouncement,
     deleteAnnouncement,
+    deleteCommunication,
     refetch: fetchAnnouncements,
   };
 };

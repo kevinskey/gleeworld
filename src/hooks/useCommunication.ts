@@ -318,6 +318,32 @@ export const useCommunication = () => {
     }
   }, [fetchTemplates, toast]);
 
+  const deleteCommunication = useCallback(async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_communications')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Communication deleted successfully",
+      });
+
+      await fetchCommunications();
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete communication: " + error.message,
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [fetchCommunications, toast]);
+
   return {
     isLoading,
     communications,
@@ -328,5 +354,6 @@ export const useCommunication = () => {
     sendCommunication,
     saveDraft,
     createTemplate,
+    deleteCommunication,
   };
 };
