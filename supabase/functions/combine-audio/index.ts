@@ -22,17 +22,44 @@ serve(async (req) => {
   }
 
   try {
-    const { recordedAudio, melodyAudio, bpm, title = 'Sight-Reading Exercise' }: CombineAudioRequest = await req.json();
+    const requestBody = await req.text();
+    console.log('📝 Request body received, length:', requestBody.length);
+    
+    const data = JSON.parse(requestBody) as CombineAudioRequest;
+    const { recordedAudio, melodyAudio, bpm, title = 'Sight-Reading Exercise' } = data;
 
     if (!recordedAudio || !melodyAudio) {
+      console.error('❌ Missing audio data:', { 
+        hasRecorded: !!recordedAudio, 
+        hasMelody: !!melodyAudio 
+      });
       throw new Error('Both recorded audio and melody audio are required');
     }
 
     console.log('🎯 Processing audio combination with BPM:', bpm);
+    console.log('📊 Input data sizes:', {
+      recordedLength: recordedAudio.length,
+      melodyLength: melodyAudio.length
+    });
 
-    // Convert base64 audio to binary
-    const recordedBinary = atob(recordedAudio);
-    const melodyBinary = atob(melodyAudio);
+    // Validate base64 data
+    if (!isValidBase64(recordedAudio)) {
+      throw new Error('Invalid recorded audio data format');
+    }
+    if (!isValidBase64(melodyAudio)) {
+      throw new Error('Invalid melody audio data format');
+    }
+
+    // Convert base64 audio to binary with error handling
+    let recordedBinary: string, melodyBinary: string;
+    
+    try {
+      recordedBinary = atob(recordedAudio);
+      melodyBinary = atob(melodyAudio);
+    } catch (error) {
+      console.error('❌ Base64 decode error:', error);
+      throw new Error('Failed to decode audio data');
+    }
     
     // Create Uint8Arrays from binary strings
     const recordedBytes = new Uint8Array(recordedBinary.length);
@@ -45,14 +72,13 @@ serve(async (req) => {
       melodyBytes[i] = melodyBinary.charCodeAt(i);
     }
 
-    console.log('📊 Audio data sizes:', {
+    console.log('📊 Audio data sizes after conversion:', {
       recorded: recordedBytes.length,
       melody: melodyBytes.length
     });
 
-    // For now, we'll use a simple approach to mix the audio
-    // In production, you might want to use FFmpeg for more sophisticated mixing
-    const combinedAudio = await mixAudioStreams(recordedBytes, melodyBytes);
+    // Create a proper WAV file with both audio tracks layered
+    const combinedAudio = await createCombinedWAV(recordedBytes, melodyBytes, bpm);
     
     console.log('✅ Audio combination complete, size:', combinedAudio.length);
 
@@ -69,18 +95,22 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       combinedAudio: combinedBase64,
-      format: 'webm',
+      format: 'wav',
       title: title,
-      bpm: bpm
+      bpm: bpm,
+      timestamp: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('❌ Error combining audio:', error);
+    console.error('❌ Error stack:', error.stack);
+    
     return new Response(JSON.stringify({ 
       success: false,
-      error: error.message 
+      error: error.message,
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -89,26 +119,123 @@ serve(async (req) => {
 });
 
 /**
- * Simple audio mixing function that combines two audio streams
- * This is a basic implementation - in production you might want to use FFmpeg
+ * Validates if a string is valid base64
  */
-async function mixAudioStreams(audio1: Uint8Array, audio2: Uint8Array): Promise<Uint8Array> {
-  console.log('🔄 Mixing audio streams...');
+function isValidBase64(str: string): boolean {
+  try {
+    return btoa(atob(str)) === str;
+  } catch (err) {
+    return false;
+  }
+}
+
+/**
+ * Creates a proper WAV file with both audio tracks mixed together
+ */
+async function createCombinedWAV(recordedBytes: Uint8Array, melodyBytes: Uint8Array, bpm: number): Promise<Uint8Array> {
+  console.log('🔄 Creating combined WAV file...');
   
-  // For now, we'll concatenate the streams rather than truly mixing them
-  // This puts the melody first, then the recorded audio
-  // In a real implementation, you'd want to synchronously mix the audio samples
+  // WAV file format constants
+  const sampleRate = 44100;
+  const channels = 2; // Stereo
+  const bitDepth = 16;
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = channels * bytesPerSample;
   
-  const totalLength = audio1.length + audio2.length;
-  const combined = new Uint8Array(totalLength);
+  // Calculate duration based on the longer audio clip
+  const recordedDuration = estimateAudioDuration(recordedBytes, sampleRate);
+  const melodyDuration = estimateAudioDuration(melodyBytes, sampleRate);
+  const maxDuration = Math.max(recordedDuration, melodyDuration);
+  const totalSamples = Math.floor(maxDuration * sampleRate) * channels;
   
-  // Copy melody audio first
-  combined.set(audio2, 0);
+  console.log('📊 Audio durations:', {
+    recorded: recordedDuration.toFixed(2) + 's',
+    melody: melodyDuration.toFixed(2) + 's',
+    final: maxDuration.toFixed(2) + 's'
+  });
   
-  // Then append recorded audio
-  combined.set(audio1, audio2.length);
+  // Create WAV header
+  const dataSize = totalSamples * bytesPerSample;
+  const fileSize = 36 + dataSize;
+  const header = new ArrayBuffer(44);
+  const view = new DataView(header);
   
-  console.log('🎯 Mixed audio streams, total length:', totalLength);
+  // WAV header
+  view.setUint32(0, 0x52494646, false); // "RIFF"
+  view.setUint32(4, fileSize, true);
+  view.setUint32(8, 0x57415645, false); // "WAVE"
+  view.setUint32(12, 0x666d7420, false); // "fmt "
+  view.setUint32(16, 16, true); // PCM format size
+  view.setUint16(20, 1, true); // PCM format
+  view.setUint16(22, channels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  view.setUint32(36, 0x64617461, false); // "data"
+  view.setUint32(40, dataSize, true);
   
-  return combined;
+  // Create audio data buffer
+  const audioData = new Int16Array(totalSamples);
+  
+  // Mix the audio by layering recorded and melody with simple amplitude adjustment
+  const recordedSamples = extractPCMSamples(recordedBytes, sampleRate);
+  const melodySamples = extractPCMSamples(melodyBytes, sampleRate);
+  
+  // Layer the audio with volume balancing
+  for (let i = 0; i < totalSamples; i += 2) {
+    const sampleIndex = Math.floor(i / 2);
+    
+    // Get samples from both sources (with bounds checking)
+    const recordedSample = sampleIndex < recordedSamples.length ? recordedSamples[sampleIndex] : 0;
+    const melodySample = sampleIndex < melodySamples.length ? melodySamples[sampleIndex] : 0;
+    
+    // Mix with 70% recorded voice, 30% melody to ensure voice is prominent
+    const mixedSample = Math.round((recordedSample * 0.7) + (melodySample * 0.3));
+    
+    // Clamp to 16-bit range to prevent distortion
+    const clampedSample = Math.max(-32768, Math.min(32767, mixedSample));
+    
+    // Set left and right channels (stereo)
+    audioData[i] = clampedSample;     // Left channel
+    audioData[i + 1] = clampedSample; // Right channel
+  }
+  
+  // Combine header and audio data
+  const combinedBuffer = new Uint8Array(44 + audioData.byteLength);
+  combinedBuffer.set(new Uint8Array(header), 0);
+  combinedBuffer.set(new Uint8Array(audioData.buffer), 44);
+  
+  console.log('🎯 Created WAV file, total size:', combinedBuffer.length);
+  
+  return combinedBuffer;
+}
+
+/**
+ * Estimates audio duration from raw audio bytes
+ */
+function estimateAudioDuration(audioBytes: Uint8Array, sampleRate: number): number {
+  // This is a rough estimation - assumes 16-bit PCM at given sample rate
+  const bytesPerSecond = sampleRate * 2; // 16-bit = 2 bytes per sample
+  return audioBytes.length / bytesPerSecond;
+}
+
+/**
+ * Extracts PCM samples from raw audio bytes
+ */
+function extractPCMSamples(audioBytes: Uint8Array, targetSampleRate: number): Int16Array {
+  // For simplicity, assume the input is already PCM data
+  // In a real implementation, you'd parse the actual audio format
+  
+  const samples = new Int16Array(audioBytes.length / 2);
+  const view = new DataView(audioBytes.buffer);
+  
+  for (let i = 0; i < samples.length; i++) {
+    const byteIndex = i * 2;
+    if (byteIndex + 1 < audioBytes.length) {
+      samples[i] = view.getInt16(byteIndex, true); // Little-endian
+    }
+  }
+  
+  return samples;
 }

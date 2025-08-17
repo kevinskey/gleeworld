@@ -115,7 +115,7 @@ export const useAudioCombiner = () => {
         combinedBytes[i] = combinedBinary.charCodeAt(i);
       }
       
-      const combinedBlob = new Blob([combinedBytes], { type: 'audio/webm' });
+      const combinedBlob = new Blob([combinedBytes], { type: 'audio/wav' });
       const downloadUrl = URL.createObjectURL(combinedBlob);
 
       toast({
