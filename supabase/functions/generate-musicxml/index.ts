@@ -122,96 +122,128 @@ function calculateBeaming(events: any[], timeSignature: {num: number, den: numbe
   const beamMap = new Map();
   const { num, den } = timeSignature;
   
-  // Calculate proper beat groupings based on time signature
+  // Calculate proper beat groupings based on time signature for music education
   let beatDivisions: number[] = [];
+  let strongBeats: number[] = [];
   
   if (den === 4) {
     // Simple time signatures - group by quarter note beats
     if (num === 2) {
       beatDivisions = [0, 16]; // 2/4: beat 1, beat 2
+      strongBeats = [0]; // Beat 1 is strong
     } else if (num === 3) {
       beatDivisions = [0, 16, 32]; // 3/4: beat 1, beat 2, beat 3
+      strongBeats = [0]; // Beat 1 is strong
     } else if (num === 4) {
       beatDivisions = [0, 16, 32, 48]; // 4/4: beat 1, beat 2, beat 3, beat 4
+      strongBeats = [0, 32]; // Beats 1 and 3 are strong
     } else {
       beatDivisions = Array(num).fill(0).map((_, i) => i * 16);
+      strongBeats = [0]; // First beat is always strong
     }
   } else if (den === 8) {
     // Compound time signatures - group by dotted quarter note beats
     if (num === 6) {
       beatDivisions = [0, 24]; // 6/8: two dotted quarter beats
+      strongBeats = [0]; // First beat is strong
     } else if (num === 9) {
       beatDivisions = [0, 24, 48]; // 9/8: three dotted quarter beats
+      strongBeats = [0]; // First beat is strong
     } else if (num === 12) {
       beatDivisions = [0, 24, 48, 72]; // 12/8: four dotted quarter beats
+      strongBeats = [0, 48]; // Beats 1 and 3 are strong
     } else {
       // Group by threes for other compound times
       const groupsOf3 = Math.floor(num / 3);
       beatDivisions = Array(groupsOf3).fill(0).map((_, i) => i * 24);
+      strongBeats = [0];
     }
   } else if (den === 2) {
     // Half note time signatures
     beatDivisions = Array(num).fill(0).map((_, i) => i * 32);
+    strongBeats = [0];
   } else {
     // Default grouping
     beatDivisions = [0];
+    strongBeats = [0];
   }
   
   // Track cumulative position in measure
   let measurePosition = 0;
-  const eventPositions: Array<{event: any, startPos: number, endPos: number}> = [];
+  const eventPositions: Array<{event: any, startPos: number, endPos: number, beatIndex: number}> = [];
   
   // Calculate positions for all events in the measure
   events.forEach(event => {
     const duration = TICKS[event.dur.base as DurBase] * dotMul(event.dur.dots || 0);
     if (beamableEvents.includes(event)) {
+      // Find which beat this event belongs to
+      let beatIndex = 0;
+      for (let i = beatDivisions.length - 1; i >= 0; i--) {
+        if (measurePosition >= beatDivisions[i]) {
+          beatIndex = i;
+          break;
+        }
+      }
+      
       eventPositions.push({
         event,
         startPos: measurePosition,
-        endPos: measurePosition + duration
+        endPos: measurePosition + duration,
+        beatIndex
       });
     }
     measurePosition += duration;
   });
   
   // Group events by beats according to time signature
-  const beatGroups: Array<{event: any, startPos: number, endPos: number}[]> = 
+  const beatGroups: Array<{event: any, startPos: number, endPos: number, beatIndex: number}[]> = 
     beatDivisions.map(() => []);
   
   eventPositions.forEach(eventPos => {
-    // Find which beat this event belongs to
-    let beatIndex = 0;
-    for (let i = beatDivisions.length - 1; i >= 0; i--) {
-      if (eventPos.startPos >= beatDivisions[i]) {
-        beatIndex = i;
-        break;
-      }
-    }
+    const beatIndex = eventPos.beatIndex;
     
-    // Don't beam across beat boundaries in simple time
-    if (den === 4) {
-      const nextBeatStart = beatDivisions[beatIndex + 1] || (beatDivisions[beatIndex] + 16);
-      if (eventPos.endPos > nextBeatStart) {
-        // Event crosses beat boundary - don't beam
-        return;
-      }
+    // Educational beaming: Don't beam across beat boundaries
+    // This helps students see beat patterns clearly
+    const nextBeatStart = beatDivisions[beatIndex + 1] || (measurePosition + 1);
+    if (eventPos.endPos <= nextBeatStart) {
+      beatGroups[beatIndex].push(eventPos);
     }
-    
-    beatGroups[beatIndex].push(eventPos);
   });
   
-  // Apply beaming within each beat group
-  beatGroups.forEach(group => {
+  // Apply beaming within each beat group with educational considerations
+  beatGroups.forEach((group, beatIndex) => {
     if (group.length >= 2) {
-      // Further subdivide compound time groups by strong vs weak beats
-      if (den === 8 && group.length > 3) {
-        // In compound time, beam in groups of 3 eighth notes
-        for (let start = 0; start < group.length; start += 3) {
-          const subGroup = group.slice(start, start + 3);
-          applyBeamingToGroup(subGroup, beamMap);
+      if (den === 8) {
+        // In compound time, beam eighth notes in groups of 3 (one beat)
+        // but break into smaller groups for clarity if needed
+        if (group.length <= 3) {
+          applyBeamingToGroup(group, beamMap);
+        } else {
+          // Break into groups of 3 eighth notes each
+          for (let start = 0; start < group.length; start += 3) {
+            const subGroup = group.slice(start, start + 3);
+            if (subGroup.length >= 2) {
+              applyBeamingToGroup(subGroup, beamMap);
+            }
+          }
         }
       } else {
-        applyBeamingToGroup(group, beamMap);
+        // In simple time, beam by subdivision of the beat
+        // For quarter note beats, beam 2-4 eighth notes together
+        if (group.length <= 4) {
+          applyBeamingToGroup(group, beamMap);
+        } else {
+          // Break into groups of 2-4 for readability
+          let start = 0;
+          while (start < group.length) {
+            const groupSize = Math.min(4, group.length - start);
+            const subGroup = group.slice(start, start + groupSize);
+            if (subGroup.length >= 2) {
+              applyBeamingToGroup(subGroup, beamMap);
+            }
+            start += groupSize;
+          }
+        }
       }
     }
   });
@@ -219,7 +251,7 @@ function calculateBeaming(events: any[], timeSignature: {num: number, den: numbe
   return beamMap;
 }
 
-// Helper function to apply beaming to a group of notes
+// Helper function to apply beaming to a group of notes with educational clarity
 function applyBeamingToGroup(group: Array<{event: any, startPos: number, endPos: number}>, beamMap: Map<any, any>) {
   if (group.length < 2) return;
   
@@ -237,24 +269,29 @@ function applyBeamingToGroup(group: Array<{event: any, startPos: number, endPos:
     
     beamMap.set(event, { number: 1, type: beamType });
     
-    // Add secondary beams for sixteenth notes
+    // Enhanced secondary beaming for sixteenth notes with educational clarity
     if (event.dur.base === "16th") {
-      // Group sixteenth notes in pairs within eighth note beats
-      const sixteenthGroupIndex = Math.floor(index / 2);
+      // Group sixteenth notes in pairs within eighth note subdivisions
+      const pairIndex = Math.floor(index / 2);
       const isFirstInPair = index % 2 === 0;
       const isLastInPair = index % 2 === 1 || index === group.length - 1;
       
+      // Always apply secondary beams for proper notation
       let secondaryBeamType: string;
-      if (isFirstInPair && isLastInPair) {
-        // Single sixteenth note - no secondary beam
-        return;
-      } else if (isFirstInPair) {
+      if (group.length === 2 && group.every(g => g.event.dur.base === "16th")) {
+        // Two sixteenth notes - beam them together
+        secondaryBeamType = isFirstInPair ? "begin" : "end";
+      } else if (isFirstInPair && !isLastInPair) {
         secondaryBeamType = "begin";
-      } else {
+      } else if (!isFirstInPair && isLastInPair) {
         secondaryBeamType = "end";
+      } else if (!isFirstInPair && !isLastInPair) {
+        secondaryBeamType = "continue";
+      } else {
+        // Single sixteenth note among eighth notes - use forward or backward hook
+        secondaryBeamType = "forward hook";
       }
       
-      // Store secondary beam info (note: would need enhanced noteXml for multiple beams)
       const currentBeamInfo = beamMap.get(event);
       beamMap.set(event, {
         ...currentBeamInfo,
@@ -504,7 +541,7 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
       const durOptions = allowed.filter(d => ["whole","half","quarter","eighth","16th"].includes(d));
       console.log("Using durations for generation:", durOptions);
       
-      // Function to create notes that fill a measure using selected durations
+      // Function to create notes that fill a measure using educational rhythmic patterns
       const createMeasureNotes = (measureIndex: number, timeSignature: {num: number, den: number}) => {
         const measureTicks = barTicks(timeSignature.num, timeSignature.den as 1|2|4|8|16);
         const notes = [];
@@ -513,81 +550,155 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
         // Use interval motion preferences
         const allowedMotion = params.intervalMotion || ["step", "skip"];
         
-        // Scale degree patterns based on motion preferences
+        // Educational scale degree patterns that help with sight-reading
         const patterns = {
-          step: [[1,2,3,2], [3,2,1,2], [1,2,1,3]], // stepwise motion
-          skip: [[1,3,5,3], [5,3,1,3], [1,3,2,4]], // thirds
-          leap: [[1,5,1,4], [1,4,1,5], [5,1,5,2]], // fourths and fifths
-          repeat: [[1,1,2,2], [3,3,2,2], [5,5,4,4]] // repeated notes
+          step: [
+            [1,2,3,2], [3,2,1,2], [1,2,1,3], [3,4,5,4], [5,4,3,4], // stepwise motion
+            [1,2,3,4], [4,3,2,1], [5,6,7,8], [8,7,6,5] // scales
+          ],
+          skip: [
+            [1,3,5,3], [5,3,1,3], [1,3,2,4], [2,4,6,4], // thirds
+            [1,5,3,1], [3,1,5,3], [5,1,3,5] // mixed skips
+          ],
+          leap: [
+            [1,5,1,4], [1,4,1,5], [5,1,5,2], [1,8,1,6], // fourths and fifths
+            [3,8,3,6], [5,1,4,8] // larger leaps
+          ],
+          repeat: [
+            [1,1,2,2], [3,3,2,2], [5,5,4,4], [1,1,1,2], // repeated notes
+            [3,3,3,4], [5,5,5,6]
+          ]
         };
         
         // Get available patterns based on selected motions
         const availablePatterns = allowedMotion.flatMap(motion => patterns[motion as keyof typeof patterns] || []);
         const pattern = availablePatterns[measureIndex % availablePatterns.length] || [1,2,3,4];
         
-        let noteIndex = 0;
+        // Create educationally appropriate rhythmic patterns based on time signature
+        let rhythmicPattern: DurBase[] = [];
         
-        while (currentTicks < measureTicks && noteIndex < pattern.length) {
-          // Choose duration that fits remaining ticks
-          const remainingTicks = measureTicks - currentTicks;
-          const availableDurs = durOptions.filter(dur => {
-            const ticksNeeded = TICKS[dur as DurBase];
-            return ticksNeeded <= remainingTicks;
-          });
-          
-          console.log(`Measure ${measureIndex}, Beat ${noteIndex}: Available durations:`, availableDurs, 'from selected:', durOptions, 'remaining ticks:', remainingTicks);
-          
-          if (availableDurs.length === 0) {
-            // Can't fit any more notes, break and fill with rest
-            console.log(`No durations fit in ${remainingTicks} ticks, breaking`);
-            break;
+        if (timeSignature.den === 4) {
+          // Simple time - emphasize quarter note pulse
+          if (durOptions.includes("quarter")) {
+            if (timeSignature.num === 4) {
+              // 4/4 time - use patterns that show strong beats 1 and 3
+              const patterns4_4 = [
+                ["quarter", "quarter", "quarter", "quarter"],
+                ["half", "quarter", "quarter"],
+                ["quarter", "half", "quarter"],
+                ["quarter", "quarter", "half"],
+                ["quarter", "eighth", "eighth", "quarter", "quarter"],
+                ["eighth", "eighth", "quarter", "quarter", "quarter"]
+              ];
+              const availablePatterns = patterns4_4.filter(p => 
+                p.every(dur => durOptions.includes(dur as DurBase))
+              );
+              rhythmicPattern = (availablePatterns[measureIndex % availablePatterns.length] || ["quarter", "quarter", "quarter", "quarter"]) as DurBase[];
+            } else if (timeSignature.num === 3) {
+              // 3/4 time - emphasize beat 1
+              const patterns3_4 = [
+                ["quarter", "quarter", "quarter"],
+                ["half", "quarter"],
+                ["quarter", "half"],
+                ["quarter", "eighth", "eighth", "quarter"],
+                ["eighth", "eighth", "quarter", "quarter"]
+              ];
+              const availablePatterns = patterns3_4.filter(p => 
+                p.every(dur => durOptions.includes(dur as DurBase))
+              );
+              rhythmicPattern = (availablePatterns[measureIndex % availablePatterns.length] || ["quarter", "quarter", "quarter"]) as DurBase[];
+            }
           }
+        } else if (timeSignature.den === 8) {
+          // Compound time - emphasize dotted quarter pulse
+          if (timeSignature.num === 6) {
+            // 6/8 time
+            const patterns6_8 = [
+              ["eighth", "eighth", "eighth", "eighth", "eighth", "eighth"],
+              ["quarter", "eighth", "quarter", "eighth"],
+              ["eighth", "quarter", "eighth", "quarter"]
+            ];
+            const availablePatterns = patterns6_8.filter(p => 
+              p.every(dur => durOptions.includes(dur as DurBase))
+            );
+            if (availablePatterns.length > 0) {
+              rhythmicPattern = availablePatterns[measureIndex % availablePatterns.length] as DurBase[];
+            }
+          }
+        }
+        
+        // Fallback: fill measure with available durations if no pattern works
+        if (rhythmicPattern.length === 0) {
+          let noteIndex = 0;
+          while (currentTicks < measureTicks && noteIndex < pattern.length) {
+            const remainingTicks = measureTicks - currentTicks;
+            const availableDurs = durOptions.filter(dur => {
+              const ticksNeeded = TICKS[dur as DurBase];
+              return ticksNeeded <= remainingTicks;
+            });
+            
+            if (availableDurs.length === 0) break;
+            
+            const selectedDur = availableDurs[Math.floor(Math.random() * availableDurs.length)] as DurBase;
+            rhythmicPattern.push(selectedDur);
+            currentTicks += TICKS[selectedDur];
+            noteIndex++;
+          }
+        }
+        
+        // Generate notes using the rhythmic pattern and melodic pattern
+        currentTicks = 0;
+        for (let i = 0; i < rhythmicPattern.length && i < pattern.length; i++) {
+          const duration = rhythmicPattern[i];
+          const degree = pattern[i % pattern.length];
           
-          // Randomly select from available durations for variety
-          const selectedDur = availableDurs[Math.floor(Math.random() * availableDurs.length)] as DurBase;
-          const ticksUsed = TICKS[selectedDur];
-          
-          const degree = pattern[noteIndex];
-          const octave = degree === 1 && noteIndex === 3 ? 5 : 4; // Go to octave for last do
+          // Smart octave placement for educational purposes
+          let octave = 4;
+          if (degree >= 8) {
+            octave = 5;
+          } else if (degree >= 1 && degree <= 7) {
+            octave = 4;
+          }
           
           notes.push({
             kind: "note",
-            dur: { base: selectedDur, dots: 0 },
-            pitch: { degree, oct: octave, acc: 0 }
+            dur: { base: duration, dots: 0 },
+            pitch: { degree: ((degree - 1) % 7) + 1, oct: octave, acc: 0 }
           });
           
-          currentTicks += ticksUsed;
-          noteIndex++;
+          currentTicks += TICKS[duration];
         }
         
-        // Fill any remaining time with rest if needed
+        // Fill any remaining time with rest if needed (for educational clarity)
         if (currentTicks < measureTicks) {
           const remainingTicks = measureTicks - currentTicks;
-          console.log(`Measure ${measureIndex}: Filling ${remainingTicks} remaining ticks`);
           
-          // Find the largest rest duration that fits exactly
-          const validRestDurations = Object.entries(TICKS)
-            .filter(([_, ticks]) => ticks <= remainingTicks)
-            .sort(([_, a], [__, b]) => b - a); // Sort by ticks descending
+          // Try to use a single rest that fits exactly
+          const restOptions = Object.entries(TICKS)
+            .filter(([_, ticks]) => ticks === remainingTicks)
+            .map(([dur, _]) => dur as DurBase);
           
-          if (validRestDurations.length > 0) {
-            const [restDur, restTicks] = validRestDurations[0];
+          if (restOptions.length > 0) {
             notes.push({
               kind: "rest",
-              dur: { base: restDur as DurBase, dots: 0 }
+              dur: { base: restOptions[0], dots: 0 }
             });
-            currentTicks += restTicks;
-            
-            // If still have remaining ticks, add another smaller rest
-            if (currentTicks < measureTicks) {
-              const stillRemaining = measureTicks - currentTicks;
-              const smallerRest = Object.entries(TICKS).find(([_, ticks]) => ticks === stillRemaining);
-              if (smallerRest) {
-                notes.push({
-                  kind: "rest",
-                  dur: { base: smallerRest[0] as DurBase, dots: 0 }
-                });
-              }
+          } else {
+            // Use multiple rests to fill the gap
+            let restTicks = remainingTicks;
+            while (restTicks > 0) {
+              const availableRests = Object.entries(TICKS)
+                .filter(([_, ticks]) => ticks <= restTicks)
+                .sort(([_, a], [__, b]) => b - a);
+              
+              if (availableRests.length === 0) break;
+              
+              const [restDur, restTickValue] = availableRests[0];
+              notes.push({
+                kind: "rest",
+                dur: { base: restDur as DurBase, dots: 0 }
+              });
+              restTicks -= restTickValue;
             }
           }
         }
