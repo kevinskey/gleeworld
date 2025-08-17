@@ -12,21 +12,43 @@ export const useAudioCombiner = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  const generateMelodyAudioBuffer = useCallback(async (score: ParsedScore, sampleRate: number = 44100): Promise<AudioBuffer> => {
+  const generateMelodyAudioBuffer = useCallback(async (score: ParsedScore, sampleRate: number = 44100, bpm: number = 120): Promise<AudioBuffer> => {
     console.log('🎵 Generating melody audio buffer from score...');
+    console.log('📊 Timing params:', { scoreDuration: score.totalDuration, bpm, sampleRate });
+    
+    // Calculate metronome count-in duration (4 clicks = 1 full bar)
+    const beatDuration = 60 / bpm; // seconds per beat
+    const countInDuration = 4 * beatDuration; // 4 beats for count-in
+    
+    console.log('⏱️ Count-in timing:', { beatDuration, countInDuration });
     
     // Create a Web Audio context to generate the melody
     const audioContext = new AudioContext({ sampleRate });
-    const duration = score.totalDuration + 2; // Add 2 seconds buffer
-    const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+    
+    // Total duration: count-in + score + buffer
+    const totalDuration = countInDuration + score.totalDuration + 2;
+    const buffer = audioContext.createBuffer(1, totalDuration * sampleRate, sampleRate);
     const channelData = buffer.getChannelData(0);
     
-    // Generate melody audio data
-    let currentTime = 0;
+    console.log('🎯 Buffer details:', { 
+      totalDuration, 
+      bufferLength: buffer.length,
+      countInSamples: countInDuration * sampleRate 
+    });
+    
+    // Generate melody audio data starting AFTER the count-in
+    let currentTime = countInDuration; // Start after count-in
     for (const measure of score.measures) {
       for (const note of measure.notes) {
         const startSample = Math.floor((currentTime + note.startTime) * sampleRate);
         const durationSamples = Math.floor(note.duration * sampleRate);
+        
+        console.log('🎵 Note timing:', {
+          noteFreq: note.frequency,
+          startTime: currentTime + note.startTime,
+          startSample,
+          durationSamples
+        });
         
         // Generate sine wave for the note
         for (let i = 0; i < durationSamples && startSample + i < channelData.length; i++) {
@@ -37,6 +59,25 @@ export const useAudioCombiner = () => {
         }
       }
     }
+    
+    // Optional: Add metronome clicks to the melody track for reference
+    // This helps with synchronization verification
+    for (let click = 0; click < 4; click++) {
+      const clickTime = click * beatDuration;
+      const clickSample = Math.floor(clickTime * sampleRate);
+      const clickDuration = 0.1; // 100ms click
+      const clickSamples = Math.floor(clickDuration * sampleRate);
+      
+      // Add a brief metronome click sound (higher frequency for count-in)
+      for (let i = 0; i < clickSamples && clickSample + i < channelData.length; i++) {
+        const t = i / sampleRate;
+        const frequency = click === 0 ? 1000 : 800; // Downbeat is higher pitched
+        const amplitude = 0.1 * Math.exp(-t * 10); // Quick decay
+        channelData[clickSample + i] += amplitude * Math.sin(2 * Math.PI * frequency * t);
+      }
+    }
+    
+    console.log('✅ Melody audio buffer generated with proper timing offset');
     
     await audioContext.close();
     return buffer;
@@ -93,7 +134,7 @@ export const useAudioCombiner = () => {
     setIsProcessing(true);
     
     try {
-      console.log('🎯 Starting client-side audio combination...');
+      console.log('🎯 Starting client-side audio combination with sync...');
       console.log('📊 Input data:', {
         recordedBlobSize: recordedAudioBlob.size,
         recordedBlobType: recordedAudioBlob.type,
@@ -116,20 +157,27 @@ export const useAudioCombiner = () => {
         sampleRate: recordedAudioBuffer.sampleRate
       });
       
-      // Generate melody audio buffer
-      console.log('🎵 Generating melody audio buffer...');
-      const melodyAudioBuffer = await generateMelodyAudioBuffer(score, sampleRate);
-      console.log('✅ Melody audio generated:', {
+      // Generate melody audio buffer with proper timing (includes count-in offset)
+      console.log('🎵 Generating melody audio buffer with BPM sync...');
+      const melodyAudioBuffer = await generateMelodyAudioBuffer(score, sampleRate, score.tempo);
+      console.log('✅ Melody audio generated with timing:', {
         duration: melodyAudioBuffer.duration,
         channels: melodyAudioBuffer.numberOfChannels,
         sampleRate: melodyAudioBuffer.sampleRate
       });
       
-      // Determine the final duration (longer of the two)
+      // Calculate final duration (use recorded audio length as reference since it includes count-in)
       const finalDuration = Math.max(recordedAudioBuffer.duration, melodyAudioBuffer.duration);
       const finalLength = Math.floor(finalDuration * sampleRate);
       
-      console.log('🔄 Creating combined audio buffer...');
+      console.log('🔄 Creating synchronized combined audio buffer...');
+      console.log('📊 Final timing:', { 
+        recordedDuration: recordedAudioBuffer.duration,
+        melodyDuration: melodyAudioBuffer.duration,
+        finalDuration,
+        finalLength 
+      });
+      
       const offlineContext = new OfflineAudioContext(2, finalLength, sampleRate);
       
       // Create sources for both audio buffers
@@ -154,14 +202,15 @@ export const useAudioCombiner = () => {
       recordedGain.connect(offlineContext.destination);
       melodyGain.connect(offlineContext.destination);
       
-      // Start both sources
+      // Start both sources at the same time (melody already has count-in offset built in)
+      console.log('🎯 Starting synchronized playback...');
       recordedSource.start(0);
       melodySource.start(0);
       
       // Render the combined audio
-      console.log('🎯 Rendering combined audio...');
+      console.log('🎯 Rendering synchronized combined audio...');
       const combinedBuffer = await offlineContext.startRendering();
-      console.log('✅ Audio combination complete:', {
+      console.log('✅ Audio combination complete with synchronization:', {
         duration: combinedBuffer.duration,
         channels: combinedBuffer.numberOfChannels,
         sampleRate: combinedBuffer.sampleRate
@@ -185,7 +234,7 @@ export const useAudioCombiner = () => {
 
       toast({
         title: "Audio Combined Successfully",
-        description: "Your recorded audio has been combined with the melody.",
+        description: "Your recorded audio has been synchronized with the melody.",
       });
 
       return {
