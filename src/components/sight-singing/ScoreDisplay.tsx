@@ -149,7 +149,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       
       <div 
         ref={scoreRef}
-        className="flex-1 min-h-[300px] w-full bg-background rounded-lg border p-2 lg:p-4 overflow-auto"
+        className="flex-1 min-h-[300px] w-full bg-white rounded-lg border-2 shadow-xl p-2 lg:p-4 overflow-auto"
         style={{ 
           width: '100%',
           display: 'flex',
