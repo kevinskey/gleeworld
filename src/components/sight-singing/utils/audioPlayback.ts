@@ -23,7 +23,7 @@ export class MusicXMLPlayer {
     return this.audioContext;
   }
 
-  private createTone(frequency: number, startTime: number, duration: number, volume: number = 0.3): void {
+  private createTone(frequency: number, startTime: number, duration: number, volume: number = 0.3, noteSound: string = 'piano'): void {
     const audioContext = this.initAudioContext();
     
     const oscillator = audioContext.createOscillator();
@@ -33,10 +33,29 @@ export class MusicXMLPlayer {
     gainNode.connect(audioContext.destination);
     
     oscillator.frequency.value = frequency;
-    oscillator.type = 'sine';
+    
+    // Set oscillator type based on sound selection
+    switch (noteSound) {
+      case 'piano':
+        oscillator.type = 'sine';
+        break;
+      case 'flute':
+        oscillator.type = 'sine';
+        volume *= 0.8; // Softer
+        break;
+      case 'xylophone':
+        oscillator.type = 'square';
+        volume *= 0.6; // Sharper but quieter
+        break;
+      case 'synth':
+        oscillator.type = 'sawtooth';
+        break;
+      default:
+        oscillator.type = 'sine';
+    }
     
     // Envelope: fade in and out
-    const fadeTime = 0.02;
+    const fadeTime = noteSound === 'xylophone' ? 0.01 : 0.02;
     gainNode.gain.setValueAtTime(0, startTime);
     gainNode.gain.linearRampToValueAtTime(volume, startTime + fadeTime);
     gainNode.gain.linearRampToValueAtTime(volume, startTime + duration - fadeTime);
@@ -53,7 +72,7 @@ export class MusicXMLPlayer {
     this.scheduledNodes.push({ oscillator, gain: gainNode, timeout });
   }
 
-  private createPercussionClick(isDownbeat: boolean, startTime: number, duration: number = 0.1, volume: number = 0.3): void {
+  private createPercussionClick(isDownbeat: boolean, startTime: number, duration: number = 0.1, volume: number = 0.3, clickSound: string = 'woodblock'): void {
     const audioContext = this.initAudioContext();
     
     // Create noise buffer for percussion sound
@@ -61,19 +80,29 @@ export class MusicXMLPlayer {
     const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
     const output = buffer.getChannelData(0);
     
-    // Generate filtered noise for click sound
+    // Generate sound based on click type
     for (let i = 0; i < bufferSize; i++) {
-      // White noise
-      let noise = Math.random() * 2 - 1;
+      let noise: number;
       
-      // Apply simple high-pass filtering for crisp click
-      if (i > 0) {
-        noise = noise * 0.7 + output[i - 1] * 0.3;
+      if (clickSound === 'beep') {
+        // Generate a pure tone for beep
+        const freq = isDownbeat ? 800 : 600;
+        noise = Math.sin(2 * Math.PI * freq * i / audioContext.sampleRate);
+      } else {
+        // White noise for woodblock
+        noise = Math.random() * 2 - 1;
+        
+        // Apply simple high-pass filtering for crisp click
+        if (i > 0) {
+          noise = noise * 0.7 + output[i - 1] * 0.3;
+        }
       }
       
       // Shape the envelope for sharp attack
       const envPhase = i / bufferSize;
-      const envelope = Math.exp(-envPhase * (isDownbeat ? 8 : 12)); // Downbeats ring slightly longer
+      const envelope = clickSound === 'beep' 
+        ? Math.exp(-envPhase * 4) // Longer for beep
+        : Math.exp(-envPhase * (isDownbeat ? 8 : 12)); // Shorter for woodblock
       
       output[i] = noise * envelope;
     }
@@ -99,7 +128,7 @@ export class MusicXMLPlayer {
     this.scheduledNodes.push({ oscillator: source as any, gain: gainNode, timeout });
   }
 
-  private createClickTrack(tempo: number, measures: number, timeSignature: { beats: number; beatType: number }): void {
+  private createClickTrack(tempo: number, measures: number, timeSignature: { beats: number; beatType: number }, clickSound: string = 'woodblock'): void {
     const audioContext = this.initAudioContext();
     const beatDuration = 60 / tempo; // seconds per beat
     const totalBeats = measures * timeSignature.beats + timeSignature.beats; // +1 measure for intro
@@ -109,11 +138,11 @@ export class MusicXMLPlayer {
       const beatTime = audioContext.currentTime + beat * beatDuration;
       const isDownbeat = beat % timeSignature.beats === 0;
       
-      this.createPercussionClick(isDownbeat, beatTime, 0.1, 0.2);
+      this.createPercussionClick(isDownbeat, beatTime, 0.1, 0.2, clickSound);
     }
   }
 
-  async playScore(parsedScore: ParsedScore, mode: 'click-only' | 'click-and-score' = 'click-and-score'): Promise<void> {
+  async playScore(parsedScore: ParsedScore, mode: 'click-only' | 'click-and-score' = 'click-and-score', soundSettings?: { notes: string; click: string }): Promise<void> {
     if (this.isPlaying) {
       this.stop();
     }
@@ -140,19 +169,19 @@ export class MusicXMLPlayer {
     
     if (mode === 'click-only' || mode === 'click-and-score') {
       // Play click track for intro + all measures
-      console.log('Creating click track...');
-      this.createClickTrack(parsedScore.tempo, parsedScore.measures.length, parsedScore.timeSignature);
+      console.log('Creating click track with sound:', soundSettings?.click || 'woodblock');
+      this.createClickTrack(parsedScore.tempo, parsedScore.measures.length, parsedScore.timeSignature, soundSettings?.click || 'woodblock');
     }
     
     if (mode === 'click-and-score') {
       // Schedule all notes with intro delay
-      console.log('Scheduling notes for playback...', parsedScore.measures.length, 'measures');
+      console.log('Scheduling notes for playback with sound:', soundSettings?.notes || 'piano', parsedScore.measures.length, 'measures');
       let noteCount = 0;
       parsedScore.measures.forEach((measure, measureIndex) => {
         measure.notes.forEach((note, noteIndex) => {
           const noteStartTime = this.startTime + introDuration + note.startTime;
           console.log(`Note ${noteCount++}: freq=${note.frequency}, start=${noteStartTime}, duration=${note.duration}`);
-          this.createTone(note.frequency, noteStartTime, note.duration, 0.4);
+          this.createTone(note.frequency, noteStartTime, note.duration, 0.4, soundSettings?.notes || 'piano');
         });
       });
       console.log(`Total notes scheduled: ${noteCount}`);

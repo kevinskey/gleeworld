@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Download, Play, Pause, Volume2, VolumeX } from 'lucide-react';
@@ -170,6 +171,7 @@ export const SightSingingStudio: React.FC = () => {
   const [currentBpm, setCurrentBpm] = useState(120);
   const [activeTab, setActiveTab] = useState<'practice' | 'library' | 'history' | 'report'>('practice');
   const [parameters, setParameters] = useState<ExerciseParameters | null>(null);
+  const [soundSettings, setSoundSettings] = useState({ notes: 'piano', click: 'woodblock' });
   const [selectedScore, setSelectedScore] = useState<any>(null);
 
   const { 
@@ -193,7 +195,7 @@ export const SightSingingStudio: React.FC = () => {
     setMode, 
     startPlayback, 
     stopPlayback 
-  } = useTonePlayback();
+  } = useTonePlayback(soundSettings);
 
   const {
     gradingResults,
@@ -765,7 +767,35 @@ export const SightSingingStudio: React.FC = () => {
               <div className="lg:col-span-2 col-span-1 order-first lg:order-last">
                 <Card className="p-4 lg:p-6 h-[600px] lg:h-full flex flex-col">
                   <div className="flex items-center justify-between mb-3 flex-shrink-0">
-                    <h2 className="text-base font-semibold">Musical Score</h2>
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-base font-semibold">Musical Score</h2>
+                      <Select 
+                        value={soundSettings.notes} 
+                        onValueChange={(value) => setSoundSettings(prev => ({ ...prev, notes: value }))}
+                      >
+                        <SelectTrigger className="h-7 w-32 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border shadow-lg z-50">
+                          <SelectItem value="piano">🎹 Piano</SelectItem>
+                          <SelectItem value="flute">🎵 Flute</SelectItem>
+                          <SelectItem value="xylophone">🎶 Xylophone</SelectItem>
+                          <SelectItem value="synth">🎛️ Synth</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select 
+                        value={soundSettings.click} 
+                        onValueChange={(value) => setSoundSettings(prev => ({ ...prev, click: value }))}
+                      >
+                        <SelectTrigger className="h-7 w-32 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border shadow-lg z-50">
+                          <SelectItem value="woodblock">🥁 Woodblock</SelectItem>
+                          <SelectItem value="beep">📢 Beep</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     {currentMusicXML && (
                       <Button
                         size="sm"

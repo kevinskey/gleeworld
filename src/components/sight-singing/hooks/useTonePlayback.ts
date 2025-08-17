@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { MusicXMLPlayer } from '../utils/audioPlayback';
 import { parseMusicXML } from '../utils/musicXMLParser';
 
-export const useTonePlayback = () => {
+export const useTonePlayback = (soundSettings?: { notes: string; click: string }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [mode, setMode] = useState<'click-only' | 'click-and-score'>('click-only');
   const playerRef = useRef<MusicXMLPlayer | null>(null);
@@ -23,15 +23,15 @@ export const useTonePlayback = () => {
     if (!playerRef.current) return;
     
     try {
-      console.log('Starting playback...', { mode, tempo });
+      console.log('Starting playback...', { mode, tempo, soundSettings });
       setIsPlaying(true);
       
       // Parse the MusicXML
       const parsedScore = parseMusicXML(musicXML, tempo);
       console.log('Parsed score:', parsedScore);
       
-      // Play the score
-      await playerRef.current.playScore(parsedScore, mode);
+      // Play the score with sound settings
+      await playerRef.current.playScore(parsedScore, mode, soundSettings);
       
       // Set up auto-stop timer
       const totalDuration = parsedScore.totalDuration + (60 / tempo * parsedScore.timeSignature.beats) + 1;
@@ -43,7 +43,7 @@ export const useTonePlayback = () => {
       console.error('Playback error:', error);
       setIsPlaying(false);
     }
-  }, [mode]);
+  }, [mode, soundSettings]);
 
   const stopPlayback = useCallback(() => {
     if (playerRef.current) {
