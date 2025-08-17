@@ -1,10 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { ExerciseParameters } from './SightSingingStudio';
 
@@ -15,13 +12,49 @@ interface ParameterFormProps {
   hasExercise?: boolean;
 }
 
+// Note value icons as SVG components
+const NoteIcons = {
+  whole: () => (
+    <svg viewBox="0 0 24 24" className="w-4 h-4">
+      <ellipse cx="12" cy="16" rx="5" ry="3" fill="none" stroke="currentColor" strokeWidth="2"/>
+    </svg>
+  ),
+  half: () => (
+    <svg viewBox="0 0 24 24" className="w-4 h-4">
+      <ellipse cx="8" cy="16" rx="4" ry="3" fill="currentColor"/>
+      <line x1="12" y1="16" x2="12" y2="4" stroke="currentColor" strokeWidth="2"/>
+    </svg>
+  ),
+  quarter: () => (
+    <svg viewBox="0 0 24 24" className="w-4 h-4">
+      <ellipse cx="8" cy="16" rx="4" ry="3" fill="currentColor"/>
+      <line x1="12" y1="16" x2="12" y2="4" stroke="currentColor" strokeWidth="2"/>
+    </svg>
+  ),
+  eighth: () => (
+    <svg viewBox="0 0 24 24" className="w-4 h-4">
+      <ellipse cx="6" cy="18" rx="3" ry="2" fill="currentColor"/>
+      <line x1="9" y1="18" x2="9" y2="6" stroke="currentColor" strokeWidth="2"/>
+      <path d="M9 6 Q15 4 15 8" fill="none" stroke="currentColor" strokeWidth="2"/>
+    </svg>
+  ),
+  '16th': () => (
+    <svg viewBox="0 0 24 24" className="w-4 h-4">
+      <ellipse cx="6" cy="18" rx="3" ry="2" fill="currentColor"/>
+      <line x1="9" y1="18" x2="9" y2="6" stroke="currentColor" strokeWidth="2"/>
+      <path d="M9 6 Q15 4 15 8" fill="none" stroke="currentColor" strokeWidth="2"/>
+      <path d="M9 9 Q15 7 15 11" fill="none" stroke="currentColor" strokeWidth="2"/>
+    </svg>
+  )
+};
+
 export const ParameterForm: React.FC<ParameterFormProps> = ({
   onGenerate,
   isGenerating,
   onReset,
   hasExercise
 }) => {
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<ExerciseParameters>({
+  const { handleSubmit, watch, setValue, formState: { errors } } = useForm<ExerciseParameters>({
     defaultValues: {
       key: { tonic: "C", mode: "major" },
       time: { num: 4, den: 4 },
@@ -37,10 +70,15 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     }
   });
 
+  const watchedKey = watch('key');
+  const watchedTime = watch('time');
+  const watchedNumMeasures = watch('numMeasures');
   const watchedParts = watch('parts');
   const watchedAllowedDur = watch('allowedDur');
   const watchedIntervalMotion = watch('intervalMotion');
-  const watchedNumMeasures = watch('numMeasures');
+  const watchedAllowDots = watch('allowDots');
+  const watchedCadenceEvery = watch('cadenceEvery');
+  const watchedBpm = watch('bpm');
 
   const tonics = ["C", "D", "E", "F", "G", "A", "B", "Db", "Eb", "Gb", "Ab", "Bb"];
   const modes = ["major", "minor"];
@@ -50,35 +88,24 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   ];
   const durations = ["whole", "half", "quarter", "eighth", "16th"];
   const motions = ["step", "skip", "leap", "repeat"];
+  const measureOptions = [4, 8, 16, 32];
+  const cadenceOptions = [2, 4, 8];
 
-  const handleDurationChange = (duration: string, checked: boolean) => {
+  const handleDurationChange = (duration: string) => {
     const current = watchedAllowedDur || [];
-    if (checked) {
-      setValue('allowedDur', [...current, duration as any]);
-    } else {
+    if (current.includes(duration as any)) {
       setValue('allowedDur', current.filter(d => d !== duration));
+    } else {
+      setValue('allowedDur', [...current, duration as any]);
     }
-    console.log('Updated allowedDur:', checked ? [...current, duration] : current.filter(d => d !== duration));
   };
 
-  const handleMotionChange = (motion: string, checked: boolean) => {
+  const handleMotionChange = (motion: string) => {
     const current = watchedIntervalMotion || [];
-    if (checked) {
-      setValue('intervalMotion', [...current, motion as any]);
-    } else {
+    if (current.includes(motion as any)) {
       setValue('intervalMotion', current.filter(m => m !== motion));
-    }
-  };
-
-  const handlePartCountChange = (count: string) => {
-    const numParts = parseInt(count);
-    if (numParts === 1) {
-      setValue('parts', [{ role: "S", range: { min: "C4", max: "C5" } }]);
     } else {
-      setValue('parts', [
-        { role: "S", range: { min: "C4", max: "C5" } },
-        { role: "A", range: { min: "F3", max: "F4" } }
-      ]);
+      setValue('intervalMotion', [...current, motion as any]);
     }
   };
 
@@ -90,198 +117,217 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     onGenerate(data);
   };
 
+  const isSelected = (value: any, currentValue: any) => {
+    if (Array.isArray(currentValue)) {
+      return currentValue.includes(value);
+    }
+    return value === currentValue;
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-      {/* Key */}
-      <div className="space-y-1">
-        <Label className="text-xs font-medium">Key</Label>
-        <div className="grid grid-cols-2 gap-1">
-          <Select value={watch('key.tonic')} onValueChange={(value) => setValue('key.tonic', value)}>
-            <SelectTrigger className="h-6 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {tonics.map(tonic => (
-                <SelectItem key={tonic} value={tonic}>{tonic}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={watch('key.mode')} onValueChange={(value) => setValue('key.mode', value as "major"|"minor")}>
-            <SelectTrigger className="h-6 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {modes.map(mode => (
-                <SelectItem key={mode} value={mode}>{mode}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Time */}
-      <div className="space-y-1">
-        <Label className="text-xs font-medium">Time</Label>
-        <Select 
-          value={`${watch('time.num')}/${watch('time.den')}`} 
-          onValueChange={(value) => {
-            const [num, den] = value.split('/').map(Number);
-            setValue('time', { num, den: den as 1|2|4|8|16 });
-          }}
-        >
-          <SelectTrigger className="h-6 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {timeSignatures.map(time => (
-              <SelectItem key={`${time.num}/${time.den}`} value={`${time.num}/${time.den}`}>
-                {time.num}/{time.den}
-              </SelectItem>
+    <div className="space-y-6 p-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Key Selection */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Key</Label>
+          <div className="grid grid-cols-6 gap-1">
+            {tonics.map(tonic => (
+              <Button
+                key={tonic}
+                type="button"
+                variant="outline"
+                size="sm"
+                className={`h-8 text-xs ${watchedKey.tonic === tonic ? 'bg-blue-500/20 border-blue-500' : ''}`}
+                onClick={() => setValue('key.tonic', tonic)}
+              >
+                {tonic}
+              </Button>
             ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Measures */}
-      <div className="space-y-1">
-        <Label className="text-xs font-medium">Measures</Label>
-        <Select 
-          value={watch('numMeasures')?.toString() || "4"} 
-          onValueChange={(value) => setValue('numMeasures', parseInt(value))}
-        >
-          <SelectTrigger className="h-6 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="4">4 bars</SelectItem>
-            <SelectItem value="8">8 bars</SelectItem>
-            <SelectItem value="16">16 bars</SelectItem>
-            <SelectItem value="32">32 bars</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* BPM */}
-      <div className="space-y-1">
-        <Label className="text-xs font-medium">BPM: {watch('bpm')}</Label>
-        <Slider
-          value={[watch('bpm')]}
-          onValueChange={(value) => setValue('bpm', value[0])}
-          min={60}
-          max={180}
-          step={5}
-          className="w-full"
-        />
-      </div>
-
-      {/* Voice Parts */}
-      <div className="space-y-1">
-        <Label className="text-xs font-medium">Parts</Label>
-        <Select 
-          value={watchedParts?.length?.toString() || "1"} 
-          onValueChange={handlePartCountChange}
-        >
-          <SelectTrigger className="h-6 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">Soprano Only</SelectItem>
-            <SelectItem value="2">Soprano + Alto</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Durations */}
-      <div className="space-y-1">
-        <Label className="text-xs font-medium">Note Values</Label>
-        <div className="grid grid-cols-3 gap-1">
-          {durations.map((duration) => (
-            <div key={duration} className="flex items-center space-x-1">
-              <Checkbox
-                id={duration}
-                checked={watchedAllowedDur?.includes(duration as any) || false}
-                onCheckedChange={(checked) => {
-                  console.log(`Duration ${duration} changed to:`, checked);
-                  handleDurationChange(duration, checked as boolean);
-                }}
-              />
-              <Label htmlFor={duration} className="text-sm font-medium flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  {duration === 'whole' && <div className="w-4 h-3 border-2 border-gray-600 rounded-full"></div>}
-                  {duration === 'half' && <div className="w-3 h-4 bg-gray-600 rounded-full"></div>}
-                  {duration === 'quarter' && <div className="w-2 h-4 bg-black rounded-full"></div>}
-                  {duration === 'eighth' && (
-                    <div className="flex items-end gap-0.5">
-                      <div className="w-1.5 h-3 bg-black rounded-full"></div>
-                      <div className="w-1.5 h-2 bg-black rounded-full"></div>
-                    </div>
-                  )}
-                  {duration === '16th' && (
-                    <div className="flex items-end gap-0.5">
-                      <div className="w-1 h-3 bg-black rounded-full"></div>
-                      <div className="w-1 h-2 bg-black rounded-full"></div>
-                      <div className="w-1 h-1.5 bg-black rounded-full"></div>
-                    </div>
-                  )}
-                </div>
-                <span className="text-xs capitalize">{duration}</span>
-              </Label>
-            </div>
-          ))}
+          </div>
+          <div className="grid grid-cols-2 gap-1 mt-2">
+            {modes.map(mode => (
+              <Button
+                key={mode}
+                type="button"
+                variant="outline"
+                size="sm"
+                className={`h-8 text-xs ${watchedKey.mode === mode ? 'bg-blue-500/20 border-blue-500' : ''}`}
+                onClick={() => setValue('key.mode', mode as "major"|"minor")}
+              >
+                {mode}
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Interval Motion */}
-      <div className="space-y-1">
-        <Label className="text-xs font-medium">Interval Motion</Label>
-        <div className="grid grid-cols-2 gap-1">
-          {motions.map((motion) => (
-            <div key={motion} className="flex items-center space-x-1">
-              <Checkbox
-                id={motion}
-                checked={watchedIntervalMotion?.includes(motion as any) || false}
-                onCheckedChange={(checked) => handleMotionChange(motion, checked as boolean)}
-              />
-              <Label htmlFor={motion} className="text-xs capitalize">{motion}</Label>
-            </div>
-          ))}
+        {/* Time Signature */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Time</Label>
+          <div className="grid grid-cols-5 gap-1">
+            {timeSignatures.map(time => (
+              <Button
+                key={`${time.num}/${time.den}`}
+                type="button"
+                variant="outline"
+                size="sm"
+                className={`h-8 text-xs ${watchedTime.num === time.num && watchedTime.den === time.den ? 'bg-blue-500/20 border-blue-500' : ''}`}
+                onClick={() => setValue('time', { num: time.num, den: time.den as 1|2|4|8|16 })}
+              >
+                {time.num}/{time.den}
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Allow Dots */}
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="allowDots"
-          checked={watch('allowDots')}
-          onCheckedChange={(checked) => setValue('allowDots', checked as boolean)}
-        />
-        <Label htmlFor="allowDots" className="text-xs font-medium">Allow Dotted Notes</Label>
-      </div>
+        {/* Measures */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Measures</Label>
+          <div className="grid grid-cols-4 gap-1">
+            {measureOptions.map(measure => (
+              <Button
+                key={measure}
+                type="button"
+                variant="outline"
+                size="sm"
+                className={`h-8 text-xs ${watchedNumMeasures === measure ? 'bg-blue-500/20 border-blue-500' : ''}`}
+                onClick={() => setValue('numMeasures', measure)}
+              >
+                {measure}
+              </Button>
+            ))}
+          </div>
+        </div>
 
-      {/* Cadence Frequency */}
-      <div className="space-y-1">
-        <Label className="text-xs font-medium">Cadence Every</Label>
-        <Input
-          type="number"
-          min="2"
-          max={watchedNumMeasures}
-          className="h-6 text-xs"
-          {...register('cadenceEvery', { 
-            required: true,
-            min: { value: 2, message: 'Min 2' },
-            max: { value: watchedNumMeasures, message: 'Max measures' }
-          })}
-        />
-      </div>
+        {/* Voice Parts */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Parts</Label>
+          <div className="grid grid-cols-2 gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={`h-8 text-xs ${watchedParts?.length === 1 ? 'bg-blue-500/20 border-blue-500' : ''}`}
+              onClick={() => setValue('parts', [{ role: "S", range: { min: "C4", max: "C5" } }])}
+            >
+              Soprano Only
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={`h-8 text-xs ${watchedParts?.length === 2 ? 'bg-blue-500/20 border-blue-500' : ''}`}
+              onClick={() => setValue('parts', [
+                { role: "S", range: { min: "C4", max: "C5" } },
+                { role: "A", range: { min: "F3", max: "F4" } }
+              ])}
+            >
+              Soprano + Alto
+            </Button>
+          </div>
+        </div>
 
-      <div className="space-y-1">
+        {/* Note Values */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Note Values</Label>
+          <div className="grid grid-cols-5 gap-1">
+            {durations.map((duration) => {
+              const IconComponent = NoteIcons[duration as keyof typeof NoteIcons];
+              return (
+                <Button
+                  key={duration}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={`h-10 flex flex-col items-center gap-1 ${
+                    isSelected(duration, watchedAllowedDur) ? 'bg-blue-500/20 border-blue-500' : ''
+                  }`}
+                  onClick={() => handleDurationChange(duration)}
+                >
+                  <IconComponent />
+                  <span className="text-xs">{duration === '16th' ? '16th' : duration.slice(0, 1)}</span>
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Interval Motion */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Motion</Label>
+          <div className="grid grid-cols-4 gap-1">
+            {motions.map((motion) => (
+              <Button
+                key={motion}
+                type="button"
+                variant="outline"
+                size="sm"
+                className={`h-8 text-xs ${
+                  isSelected(motion, watchedIntervalMotion) ? 'bg-blue-500/20 border-blue-500' : ''
+                }`}
+                onClick={() => handleMotionChange(motion)}
+              >
+                {motion}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Dotted Notes */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Options</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={`h-8 text-xs ${watchedAllowDots ? 'bg-blue-500/20 border-blue-500' : ''}`}
+            onClick={() => setValue('allowDots', !watchedAllowDots)}
+          >
+            ♪ Dotted Notes
+          </Button>
+        </div>
+
+        {/* Cadence Frequency */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Cadence Every</Label>
+          <div className="grid grid-cols-3 gap-1">
+            {cadenceOptions.map(cadence => (
+              <Button
+                key={cadence}
+                type="button"
+                variant="outline"
+                size="sm"
+                className={`h-8 text-xs ${watchedCadenceEvery === cadence ? 'bg-blue-500/20 border-blue-500' : ''}`}
+                onClick={() => setValue('cadenceEvery', cadence)}
+              >
+                {cadence} bars
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* BPM */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">BPM: {watchedBpm}</Label>
+          <Slider
+            value={[watchedBpm]}
+            onValueChange={(value) => setValue('bpm', value[0])}
+            min={60}
+            max={180}
+            step={5}
+            className="w-full"
+          />
+        </div>
+      </form>
+
+      {/* Action Buttons - Always visible at bottom */}
+      <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t pt-3 space-y-2">
         <Button 
-          type="submit" 
+          onClick={handleSubmit(onSubmit)}
           size="sm"
-          className="w-full h-7 text-xs" 
+          className="w-full h-10 text-sm font-medium" 
           disabled={isGenerating || !watchedAllowedDur || watchedAllowedDur.length === 0 || !watchedIntervalMotion || watchedIntervalMotion.length === 0}
         >
-          {isGenerating ? 'Generating...' : 'Generate'}
+          {isGenerating ? 'Generating...' : '🎵 Generate Exercise'}
         </Button>
         
         {hasExercise && onReset && (
@@ -289,14 +335,14 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             type="button"
             variant="outline"
             size="sm" 
-            className="w-full h-6 text-xs" 
+            className="w-full h-8 text-xs" 
             onClick={onReset}
             disabled={isGenerating}
           >
-            Reset
+            🔄 Reset
           </Button>
         )}
       </div>
-    </form>
+    </div>
   );
 };
