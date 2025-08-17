@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Users, MessageSquare, Heart, Send, Bell, Clock, Calendar } from 'lucide-react';
+import { Users, MessageSquare, Heart, Send, Bell, Clock, Calendar, Trash2, MoreVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { MemberDirectory } from '@/components/directory/MemberDirectory';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -21,7 +23,11 @@ export const CommunityHubModule = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { announcements, loading: announcementsLoading } = useAnnouncements();
+  const { announcements, loading: announcementsLoading, deleteAnnouncement } = useAnnouncements();
+
+  const handleDeleteAnnouncement = async (announcementId: string) => {
+    await deleteAnnouncement(announcementId);
+  };
 
   const handleTabToggle = (tab: string) => {
     if (isMobile) {
@@ -138,12 +144,50 @@ export const CommunityHubModule = () => {
                   <Card key={announcement.id} className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
-                        <CardTitle className="text-lg font-semibold text-blue-900">
+                        <CardTitle className="text-lg font-semibold text-blue-900 flex-1">
                           {announcement.title}
                         </CardTitle>
-                        {announcement.is_featured && (
-                          <Badge variant="secondary" className="ml-2 text-sm">Featured</Badge>
-                        )}
+                        <div className="flex items-center gap-2 ml-2">
+                          {announcement.is_featured && (
+                            <Badge variant="secondary" className="text-sm">Featured</Badge>
+                          )}
+                          {user?.id === announcement.created_by && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Announcement</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete this announcement? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDeleteAnnouncement(announcement.id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
                       </div>
                       {announcement.created_at && (
                         <div className="flex items-center text-sm text-muted-foreground">
