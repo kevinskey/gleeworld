@@ -7,21 +7,44 @@ export const useMetronome = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const initAudioContext = useCallback(() => {
+  const initAudioContext = useCallback(async () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
+    
+    if (audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'closed') {
+      try {
+        await audioContextRef.current.resume();
+        console.log('🔊 AudioContext resumed, state:', audioContextRef.current.state);
+      } catch (error) {
+        console.error('❌ Failed to resume AudioContext:', error);
+        // Create new AudioContext if resume fails
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+    }
+    
     return audioContextRef.current;
   }, []);
 
-  const playClick = useCallback((isDownbeat: boolean = false) => {
-    const audioContext = initAudioContext();
+  const playClick = useCallback(async (isDownbeat: boolean = false) => {
+    const audioContext = await initAudioContext();
     if (!audioContext) {
       console.error('❌ AudioContext not available for metronome click');
       return;
     }
     
     console.log('🔊 Playing metronome click, AudioContext state:', audioContext.state);
+    
+    // Ensure AudioContext is running
+    if (audioContext.state !== 'running') {
+      console.warn('⚠️ AudioContext not running, attempting to start...');
+      try {
+        await audioContext.resume();
+      } catch (error) {
+        console.error('❌ Failed to resume AudioContext:', error);
+        return;
+      }
+    }
     
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -50,7 +73,7 @@ export const useMetronome = () => {
     setIsPlaying(false);
   }, []);
 
-  const startMetronome = useCallback((bpm: number = tempo) => {
+  const startMetronome = useCallback(async (bpm: number = tempo) => {
     console.log('🎵 startMetronome called with BPM:', bpm);
     if (intervalRef.current) {
       console.log('⚠️ Metronome already running, stopping first');
@@ -58,7 +81,7 @@ export const useMetronome = () => {
     }
     
     // Initialize audio context first
-    const audioContext = initAudioContext();
+    const audioContext = await initAudioContext();
     if (!audioContext) {
       console.error('❌ Failed to initialize AudioContext');
       return;
@@ -74,13 +97,13 @@ export const useMetronome = () => {
 
     // Play first click immediately
     console.log('🔔 Playing first metronome click');
-    playClick(true);
+    await playClick(true);
     beatCount++;
 
-    intervalRef.current = setInterval(() => {
+    intervalRef.current = setInterval(async () => {
       const isDownbeat = beatCount % 4 === 0;
       console.log('🥁 Metronome tick:', beatCount, isDownbeat ? '(downbeat)' : '');
-      playClick(isDownbeat);
+      await playClick(isDownbeat);
       beatCount++;
     }, interval);
     
