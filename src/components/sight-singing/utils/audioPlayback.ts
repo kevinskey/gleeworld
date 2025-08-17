@@ -214,20 +214,29 @@ export class MusicXMLPlayer {
       const introDelay = (mode === 'click-and-score') ? introDuration : 0;
       console.log('🎹 Scheduling notes for playback with sound:', soundSettings?.notes || 'piano');
       console.log('🎹 Intro delay:', introDelay, 'measures:', parsedScore.measures.length);
+      console.log('🎹 DEBUG: parsedScore structure:', JSON.stringify(parsedScore, null, 2));
       
       let noteCount = 0;
       parsedScore.measures.forEach((measure, measureIndex) => {
-        console.log(`🎹 Measure ${measureIndex + 1}: ${measure.notes.length} notes`);
-        measure.notes.forEach((note, noteIndex) => {
-          const noteStartTime = this.startTime + introDelay + note.startTime;
-          console.log(`🎹 Note ${noteCount++}: ${note.step}${note.octave} freq=${note.frequency}Hz, start=${noteStartTime}s, duration=${note.duration}s`);
-          this.createTone(note.frequency, noteStartTime, note.duration, 0.4, soundSettings?.notes || 'piano');
-        });
+        console.log(`🎹 Processing measure ${measureIndex + 1}: notes array length = ${measure.notes?.length || 'undefined'}`);
+        console.log(`🎹 Measure ${measureIndex + 1} content:`, JSON.stringify(measure, null, 2));
+        
+        if (measure.notes && Array.isArray(measure.notes)) {
+          measure.notes.forEach((note, noteIndex) => {
+            console.log(`🎹 Processing note ${noteIndex} in measure ${measureIndex + 1}:`, JSON.stringify(note, null, 2));
+            const noteStartTime = this.startTime + introDelay + note.startTime;
+            console.log(`🎹 Note ${noteCount++}: ${note.step}${note.octave} freq=${note.frequency}Hz, start=${noteStartTime}s, duration=${note.duration}s`);
+            this.createTone(note.frequency, noteStartTime, note.duration, 0.4, soundSettings?.notes || 'piano');
+          });
+        } else {
+          console.warn(`⚠️ Measure ${measureIndex + 1} has no valid notes array:`, measure);
+        }
       });
       console.log(`🎹 Total notes scheduled: ${noteCount}`);
       
       if (noteCount === 0) {
         console.warn('⚠️ No notes were scheduled for playback!');
+        console.warn('⚠️ This usually means the MusicXML parser failed to extract notes properly');
       }
     }
     
