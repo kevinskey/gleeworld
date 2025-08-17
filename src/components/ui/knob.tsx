@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface KnobProps {
@@ -27,6 +27,12 @@ export const Knob: React.FC<KnobProps> = ({
   const isDragging = useRef(false);
   const lastY = useRef(0);
   const knobRef = useRef<HTMLDivElement>(null);
+  const currentValue = useRef(value);
+
+  // Keep current value in sync
+  useEffect(() => {
+    currentValue.current = value;
+  }, [value]);
 
   const sizeClasses = {
     sm: 'w-12 h-12',
@@ -44,32 +50,27 @@ export const Knob: React.FC<KnobProps> = ({
   const percentage = (value - min) / (max - min);
   const rotation = -135 + (percentage * 270);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (disabled) return;
-    e.preventDefault();
-    isDragging.current = true;
-    lastY.current = e.clientY;
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [disabled]);
+  const updateValue = useCallback((deltaY: number) => {
+    // Sensitivity: adjust this value to change how fast the knob responds
+    const sensitivity = (max - min) / 100;
+    const deltaValue = deltaY * sensitivity;
+    
+    const newValue = Math.min(max, Math.max(min, currentValue.current + deltaValue));
+    const steppedValue = Math.round(newValue / step) * step;
+    
+    if (steppedValue !== currentValue.current) {
+      currentValue.current = steppedValue;
+      onValueChange(steppedValue);
+    }
+  }, [min, max, step, onValueChange]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging.current) return;
     
     const deltaY = lastY.current - e.clientY; // Inverted for natural feel
     lastY.current = e.clientY;
-    
-    // Sensitivity: 1 pixel = 1 unit change
-    const sensitivity = (max - min) / 100;
-    const deltaValue = deltaY * sensitivity;
-    
-    const newValue = Math.min(max, Math.max(min, value + deltaValue));
-    const steppedValue = Math.round(newValue / step) * step;
-    
-    if (steppedValue !== value) {
-      onValueChange(steppedValue);
-    }
-  }, [value, min, max, step, onValueChange]);
+    updateValue(deltaY);
+  }, [updateValue]);
 
   const handleMouseUp = useCallback(() => {
     isDragging.current = false;
@@ -77,39 +78,50 @@ export const Knob: React.FC<KnobProps> = ({
     document.removeEventListener('mouseup', handleMouseUp);
   }, [handleMouseMove]);
 
-  // Touch events for mobile
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (disabled) return;
-    e.preventDefault();
-    isDragging.current = true;
-    lastY.current = e.touches[0].clientY;
-    document.addEventListener('touchmove', handleTouchMove);
-    document.addEventListener('touchend', handleTouchEnd);
-  }, [disabled]);
-
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!isDragging.current) return;
     e.preventDefault();
     
     const deltaY = lastY.current - e.touches[0].clientY;
     lastY.current = e.touches[0].clientY;
-    
-    const sensitivity = (max - min) / 100;
-    const deltaValue = deltaY * sensitivity;
-    
-    const newValue = Math.min(max, Math.max(min, value + deltaValue));
-    const steppedValue = Math.round(newValue / step) * step;
-    
-    if (steppedValue !== value) {
-      onValueChange(steppedValue);
-    }
-  }, [value, min, max, step, onValueChange]);
+    updateValue(deltaY);
+  }, [updateValue]);
 
   const handleTouchEnd = useCallback(() => {
     isDragging.current = false;
-    document.removeEventListener('touchmove', handleTouchMove);
+    document.removeEventListener('touchmove', handleTouchMove, { passive: false } as any);
     document.removeEventListener('touchend', handleTouchEnd);
   }, [handleTouchMove]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (disabled) return;
+    e.preventDefault();
+    isDragging.current = true;
+    lastY.current = e.clientY;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [disabled, handleMouseMove, handleMouseUp]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (disabled) return;
+    e.preventDefault();
+    isDragging.current = true;
+    lastY.current = e.touches[0].clientY;
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+  }, [disabled, handleTouchMove, handleTouchEnd]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (isDragging.current) {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+      }
+    };
+  }, [handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
   return (
     <div className={cn("flex flex-col items-center gap-2", className)}>
