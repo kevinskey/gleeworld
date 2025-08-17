@@ -721,17 +721,15 @@ export const SightSingingStudio: React.FC = () => {
                     )}
                   </div>
                   
-                  {/* Pitch Pipe Component */}
-                  <div className="mb-3 flex-shrink-0">
-                    <PitchPipe />
-                  </div>
-                  
                   <div className="flex-1 min-h-0 relative">
-                    {/* Transport spacing - ensure score doesn't overlap */}
-                    {currentMusicXML && <div className="h-20 lg:h-24 mb-4" />}
-                    {/* Floating Transport Controls */}
+                    {/* Pitch Pipe Component */}
+                    <div className="mb-3 flex-shrink-0">
+                      <PitchPipe />
+                    </div>
+                    
+                    {/* Transport Controls - Standard Container */}
                     {currentMusicXML && (
-                      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 bg-white/95 backdrop-blur-sm border rounded-lg shadow-lg p-2 lg:p-4 w-[95%] lg:w-[85%] max-w-6xl">
+                      <div className="mb-4 bg-white border rounded-lg shadow-md p-3 lg:p-4">
                         <div className="flex flex-wrap items-center justify-center gap-2 lg:gap-6">
                           {/* Sound Selectors */}
                           <div className="flex items-center gap-2 lg:gap-3 order-1">
