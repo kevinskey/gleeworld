@@ -222,7 +222,8 @@ export const SightSingingStudio: React.FC = () => {
     volume: metronomeVolume,
     setVolume: setMetronomeVolume,
     tempo: metronomeTempo,
-    setTempo: setMetronomeTempo
+    setTempo: setMetronomeTempo,
+    updateTempo: updateMetronomeTempo
   } = useMetronome();
 
   // Connect metronome to audio recorder with reset capability
@@ -835,7 +836,10 @@ export const SightSingingStudio: React.FC = () => {
                           <div className="flex items-center gap-4 order-4 lg:order-3">
                             <Knob
                               value={currentBpm}
-                              onValueChange={setCurrentBpm}
+                              onValueChange={(newBpm) => {
+                                setCurrentBpm(newBpm);
+                                updateMetronomeTempo(newBpm);
+                              }}
                               min={60}
                               max={180}
                               step={5}

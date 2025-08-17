@@ -110,6 +110,16 @@ export const useMetronome = () => {
     console.log('✅ Metronome started successfully at', bpm, 'BPM with interval', interval, 'ms');
   }, [tempo, playClick, stopMetronome, initAudioContext]);
 
+  // Live tempo update function - restart metronome with new tempo
+  const updateTempo = useCallback((newTempo: number) => {
+    setTempo(newTempo);
+    if (isPlaying) {
+      console.log('🔄 Live tempo update to', newTempo, 'BPM');
+      // Restart metronome with new tempo
+      startMetronome(newTempo);
+    }
+  }, [isPlaying, startMetronome]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -127,6 +137,7 @@ export const useMetronome = () => {
     volume,
     setVolume,
     tempo,
-    setTempo
+    setTempo,
+    updateTempo // New function for live tempo updates
   };
 };
