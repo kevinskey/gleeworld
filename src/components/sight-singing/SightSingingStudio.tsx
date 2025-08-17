@@ -844,10 +844,11 @@ export const SightSingingStudio: React.FC = () => {
                                   size="sm"
                                   variant={isPlaying && mode === 'click-only' ? "default" : "outline"}
                                   onClick={() => {
+                                    console.log('🔥 CLICK: Click-only button clicked');
                                     if (isPlaying && mode === 'click-only') {
                                       stopPlayback();
                                     } else {
-                                      stopPlayback(); // Always stop first
+                                      stopPlayback();
                                       setMode('click-only');
                                       setTimeout(() => handleStartPlayback(), 100);
                                     }
@@ -858,7 +859,7 @@ export const SightSingingStudio: React.FC = () => {
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Play metronome clicks only (no notes)</p>
+                                <p>Play metronome clicks only (no melody)</p>
                               </TooltipContent>
                             </Tooltip>
                             <Tooltip>
@@ -867,10 +868,11 @@ export const SightSingingStudio: React.FC = () => {
                                   size="sm"
                                   variant={isPlaying && mode === 'pitch-only' ? "default" : "outline"}
                                   onClick={() => {
+                                    console.log('🔥 CLICK: Pitch-only button clicked');
                                     if (isPlaying && mode === 'pitch-only') {
                                       stopPlayback();
                                     } else {
-                                      stopPlayback(); // Always stop first
+                                      stopPlayback();
                                       setMode('pitch-only');
                                       setTimeout(() => handleStartPlayback(), 100);
                                     }
@@ -881,7 +883,7 @@ export const SightSingingStudio: React.FC = () => {
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Play notes only (no metronome)</p>
+                                <p>Play melody notes only (no clicks)</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>
