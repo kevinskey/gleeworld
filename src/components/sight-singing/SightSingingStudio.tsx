@@ -687,21 +687,20 @@ export const SightSingingStudio: React.FC = () => {
             {/* Main Content */}
             <div className="flex-1 grid gap-6 grid-cols-1 lg:grid-cols-3 h-[calc(100vh-200px)]">
               {/* Left Column - Parameters & Controls (1/3 width on desktop, full width on mobile) */}
-              <div className="lg:col-span-1 col-span-1 flex flex-col gap-4 h-full">
-                {/* Parameters */}
-                <Card className="p-4 flex-1">
-                  <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Parameters</h2>
-                  <div className="h-full">
-                    <ParameterForm 
-                      onGenerate={handleGenerateExercise}
-                      isGenerating={isGenerating}
-                      onReset={handleReset}
-                      hasExercise={!!currentMusicXML}
-                    />
-                  </div>
-                </Card>
-
-              </div>
+               <div className="lg:col-span-1 col-span-1 h-full">
+                 {/* Parameters */}
+                 <Card className="p-4 h-full">
+                   <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Parameters</h2>
+                   <div className="h-full">
+                     <ParameterForm 
+                       onGenerate={handleGenerateExercise}
+                       isGenerating={isGenerating}
+                       onReset={handleReset}
+                       hasExercise={!!currentMusicXML}
+                     />
+                   </div>
+                 </Card>
+               </div>
 
               {/* Right Column - Score Display (2/3 width on desktop, full width on mobile) */}
               <div className="lg:col-span-2 col-span-1 order-first lg:order-last">
