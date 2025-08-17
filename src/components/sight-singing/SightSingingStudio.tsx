@@ -689,7 +689,6 @@ export const SightSingingStudio: React.FC = () => {
                     onModeChange={setMode}
                     onStartPlayback={handleStartPlayback}
                     onStopPlayback={stopPlayback}
-                    onDownload={handleDownloadMusicXML}
                     hasExercise={!!currentMusicXML}
                   />
                 </Card>
@@ -765,10 +764,23 @@ export const SightSingingStudio: React.FC = () => {
               {/* Right Column - Score Display (2/3 width on desktop, full width on mobile) */}
               <div className="lg:col-span-2 col-span-1 order-first lg:order-last">
                 <Card className="p-4 lg:p-6 h-[600px] lg:h-full flex flex-col">
-                  <h2 className="text-base font-semibold mb-3 flex-shrink-0">Musical Score</h2>
+                  <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                    <h2 className="text-base font-semibold">Musical Score</h2>
+                    {currentMusicXML && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleDownloadMusicXML}
+                        className="flex items-center gap-1"
+                      >
+                        <Download className="h-3 w-3" />
+                        Download XML
+                      </Button>
+                    )}
+                  </div>
                   
                   {/* Pitch Pipe Component */}
-                  <div className="mb-4 flex-shrink-0">
+                  <div className="mb-3 flex-shrink-0">
                     <PitchPipe />
                   </div>
                   

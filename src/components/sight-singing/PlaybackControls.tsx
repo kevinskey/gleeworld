@@ -9,7 +9,6 @@ interface PlaybackControlsProps {
   onModeChange: (mode: 'click-only' | 'click-and-score') => void;
   onStartPlayback: () => void;
   onStopPlayback: () => void;
-  onDownload: () => void;
   hasExercise: boolean;
 }
 
@@ -19,7 +18,6 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
   onModeChange,
   onStartPlayback,
   onStopPlayback,
-  onDownload,
   hasExercise
 }) => {
   return (
@@ -37,37 +35,25 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
         </Select>
       </div>
 
-      <div className="flex gap-1">
-        <Button
-          onClick={isPlaying ? onStopPlayback : onStartPlayback}
-          disabled={!hasExercise}
-          variant={isPlaying ? "destructive" : "default"}
-          size="sm"
-          className="flex-1 h-7 text-xs px-2"
-        >
-          {isPlaying ? (
-            <>
-              <Square className="h-3 w-3 mr-1" />
-              Stop
-            </>
-          ) : (
-            <>
-              <Play className="h-3 w-3 mr-1" />
-              Play
-            </>
-          )}
-        </Button>
-
-        <Button
-          onClick={onDownload}
-          disabled={!hasExercise}
-          variant="outline"
-          size="sm"
-          className="h-7 text-xs px-2"
-        >
-          <Download className="h-3 w-3" />
-        </Button>
-      </div>
+      <Button
+        onClick={isPlaying ? onStopPlayback : onStartPlayback}
+        disabled={!hasExercise}
+        variant={isPlaying ? "destructive" : "default"}
+        size="sm"
+        className="w-full h-7 text-xs px-2"
+      >
+        {isPlaying ? (
+          <>
+            <Square className="h-3 w-3 mr-1" />
+            Stop
+          </>
+        ) : (
+          <>
+            <Play className="h-3 w-3 mr-1" />
+            Play
+          </>
+        )}
+      </Button>
     </div>
   );
 };
