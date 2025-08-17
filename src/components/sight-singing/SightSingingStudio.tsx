@@ -569,22 +569,34 @@ export const SightSingingStudio: React.FC = () => {
       }
 
       // After grading, automatically combine the audio
-      if (audioBlob && currentScore) {
+      if (audioBlob && (currentScore || currentMusicXML)) {
         console.log('🎵 Auto-combining audio after grading...');
-        console.log('📊 Current score data:', {
-          score: currentScore,
-          parts: currentScore.parts?.length,
-          measures: currentScore.parts?.[0]?.measures?.length,
-          tempo: currentBpm
-        });
         
-        // Convert ScoreJSON to ParsedScore format for the audio combiner
-        const parsedScore = convertScoreJSONToParsedScore(currentScore, currentBpm);
+        let parsedScore: ParsedScore;
+        
+        if (currentScore) {
+          // Generated exercise - convert from ScoreJSON
+          console.log('📊 Using generated exercise score:', {
+            score: currentScore,
+            parts: currentScore.parts?.length,
+            measures: currentScore.parts?.[0]?.measures?.length,
+            tempo: currentBpm
+          });
+          parsedScore = convertScoreJSONToParsedScore(currentScore, currentBpm);
+        } else if (currentMusicXML) {
+          // Uploaded MusicXML file - parse directly
+          console.log('📊 Using uploaded MusicXML file for audio combination');
+          const { parseMusicXML } = await import('./utils/musicXMLParser');
+          parsedScore = parseMusicXML(currentMusicXML, currentBpm);
+        } else {
+          console.error('❌ No score data available for audio combination');
+          return;
+        }
         
         console.log('📊 Parsed score for combiner:', parsedScore);
         
         try {
-          const combinedResult = await combineAudio(audioBlob, parsedScore, 'Sight-Reading Exercise');
+          const combinedResult = await combineAudio(audioBlob, parsedScore, selectedScore?.title || 'Sight-Reading Exercise');
           console.log('✅ Audio combination result:', combinedResult);
           if (combinedResult) {
             setCombinedAudioUrl(combinedResult.downloadUrl);
