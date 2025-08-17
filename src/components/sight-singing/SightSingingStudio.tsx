@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { Download, Play, Pause, Volume2, VolumeX } from 'lucide-react';
+
+// Import all the components
 import { ParameterForm } from './ParameterForm';
 import { ScoreDisplay } from './ScoreDisplay';
 import { PlaybackControls } from './PlaybackControls';
@@ -9,13 +16,16 @@ import { ErrorVisualization } from './ErrorVisualization';
 import { PerformanceReport } from './PerformanceReport';
 import { ScoreLibraryManager } from './ScoreLibraryManager';
 import { ScoreHistoryView } from './ScoreHistoryView';
+
+// Import hooks
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 import { useTonePlayback } from './hooks/useTonePlayback';
 import { useGrading } from './hooks/useGrading';
 import { useMetronome } from './hooks/useMetronome';
-import { toast } from '@/hooks/use-toast';
+import { useAudioCombiner } from './hooks/useAudioCombiner';
+
+// Import types and utilities
 import { supabase } from '@/integrations/supabase/client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export interface ExerciseParameters {
   key: { tonic: string; mode: "major"|"minor" };
@@ -53,6 +63,7 @@ export interface ScoreJSON {
 }
 
 export const SightSingingStudio: React.FC = () => {
+  const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentScore, setCurrentScore] = useState<ScoreJSON | null>(null);
   const [currentMusicXML, setCurrentMusicXML] = useState<string>('');
@@ -71,6 +82,11 @@ export const SightSingingStudio: React.FC = () => {
     clearRecording,
     setMetronomeCallback 
   } = useAudioRecorder();
+  
+  const { combineAudio, isProcessing: isCombiningAudio } = useAudioCombiner();
+  const [combinedAudioUrl, setCombinedAudioUrl] = useState<string | null>(null);
+  const [isPlayingCombined, setIsPlayingCombined] = useState(false);
+  const combinedAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const { 
     isPlaying, 
@@ -111,6 +127,51 @@ export const SightSingingStudio: React.FC = () => {
     
     setMetronomeCallback(metronomeController);
   }, [setMetronomeCallback, startMetronome, stopMetronome]);
+
+  // Combined audio playback controls
+  const handlePlayCombined = () => {
+    if (!combinedAudioUrl) return;
+    
+    if (!combinedAudioRef.current) {
+      combinedAudioRef.current = new Audio(combinedAudioUrl);
+      combinedAudioRef.current.onended = () => setIsPlayingCombined(false);
+    }
+    
+    if (isPlayingCombined) {
+      combinedAudioRef.current.pause();
+      setIsPlayingCombined(false);
+    } else {
+      combinedAudioRef.current.play();
+      setIsPlayingCombined(true);
+    }
+  };
+
+  const handleDownloadCombined = () => {
+    if (!combinedAudioUrl) return;
+    
+    const link = document.createElement('a');
+    link.href = combinedAudioUrl;
+    link.download = 'sight-reading-exercise-with-recording.webm';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Download Started",
+      description: "Your combined audio file is being downloaded.",
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (combinedAudioRef.current) {
+        combinedAudioRef.current.pause();
+      }
+      if (combinedAudioUrl) {
+        URL.revokeObjectURL(combinedAudioUrl);
+      }
+    };
+  }, [combinedAudioUrl]);
 
   const handleReset = () => {
     setCurrentScore(null);
@@ -222,6 +283,16 @@ export const SightSingingStudio: React.FC = () => {
     stopMetronome();
   };
 
+  const handleClearAll = () => {
+    clearRecording();
+    setCombinedAudioUrl(null);
+    setIsPlayingCombined(false);
+    if (combinedAudioRef.current) {
+      combinedAudioRef.current.pause();
+      combinedAudioRef.current.currentTime = 0;
+    }
+  };
+
   const handleGradeRecording = async () => {
     if (!audioBlob || !currentScore) {
       toast({
@@ -298,6 +369,23 @@ export const SightSingingStudio: React.FC = () => {
           });
         }
       }
+
+      // After grading, automatically combine the audio
+      if (audioBlob && currentScore) {
+        console.log('🎵 Auto-combining audio after grading...');
+        // Convert ScoreJSON to ParsedScore format for the audio combiner
+        const parsedScore = {
+          measures: currentScore.parts[0]?.measures || [],
+          tempo: currentBpm,
+          timeSignature: currentScore.time,
+          totalDuration: 4 // Estimate duration - this should be calculated properly
+        };
+        const combinedResult = await combineAudio(audioBlob, parsedScore as any, 'Sight-Reading Exercise');
+        if (combinedResult) {
+          setCombinedAudioUrl(combinedResult.downloadUrl);
+        }
+      }
+      
     } catch (error) {
       console.error('Grading error:', error);
       toast({
@@ -388,8 +476,44 @@ export const SightSingingStudio: React.FC = () => {
                       onStartRecording={handleStartRecording}
                       onStopRecording={handleStopRecording}
                       hasRecording={!!audioBlob}
-                      onClearRecording={clearRecording}
+                      onClearRecording={handleClearAll}
                     />
+                    
+                    {/* Combined Audio Controls */}
+                    {combinedAudioUrl && (
+                      <div className="mt-4 pt-3 border-t flex-shrink-0">
+                        <h3 className="text-xs font-medium mb-2">Combined Audio</h3>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handlePlayCombined}
+                            disabled={isCombiningAudio}
+                            className="flex-1"
+                          >
+                            {isPlayingCombined ? (
+                              <><Pause className="h-3 w-3 mr-1" /> Pause</>
+                            ) : (
+                              <><Play className="h-3 w-3 mr-1" /> Play Combined</>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleDownloadCombined}
+                            disabled={isCombiningAudio}
+                          >
+                            <Download className="h-3 w-3 mr-1" />
+                            Download
+                          </Button>
+                        </div>
+                        {isCombiningAudio && (
+                          <div className="text-xs text-muted-foreground mt-2">
+                            Combining audio...
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     {gradingResults && (
                       <div className="mt-4 pt-3 border-t flex-shrink-0 space-y-3">
