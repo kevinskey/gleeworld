@@ -431,12 +431,14 @@ export const SightSingingStudio: React.FC = () => {
       console.log('🏗️ Generating exercise with params:', enhancedParams);
       console.log('🏗️ Timestamp for uniqueness:', Date.now());
       
-      // Add timestamp to ensure unique requests
+      // Add timestamp + random component to ensure unique requests
+      const uniqueId = Date.now() + Math.floor(Math.random() * 10000);
       const { data, error } = await supabase.functions.invoke('generate-musicxml', {
         body: {
           ...enhancedParams,
-          requestId: Date.now(), // Add unique identifier to prevent caching
-          randomSeed: Math.random() // Add random seed for AI generation
+          requestId: uniqueId, // Add unique identifier to prevent caching
+          randomSeed: Math.random(), // Add random seed for AI generation
+          forceRefresh: uniqueId // Additional parameter to force refresh
         }
       });
 
