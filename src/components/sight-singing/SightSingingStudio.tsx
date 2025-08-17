@@ -808,7 +808,7 @@ export const SightSingingStudio: React.FC = () => {
                   <div className="flex-1 min-h-0 relative">
                     {/* Floating Transport Controls */}
                     {currentMusicXML && (
-                      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-white/95 backdrop-blur-sm border rounded-lg shadow-lg p-4 w-[85%]">
+                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10 bg-white/95 backdrop-blur-sm border rounded-lg shadow-lg p-4 w-[85%]">
                         <div className="flex items-center justify-center gap-6">
                           {/* Sound Selectors */}
                           <div className="flex items-center gap-3">
