@@ -19,6 +19,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   isGrading = false
 }) => {
   const scoreRef = useRef<HTMLDivElement>(null);
+  const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
 
   useEffect(() => {
     if (!scoreRef.current) return;
@@ -28,6 +29,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     
     // If no musicXML, just leave it empty (this handles the reset case)
     if (!musicXML) {
+      osmdRef.current = null;
       return;
     }
 
@@ -36,11 +38,15 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         console.log('Rendering MusicXML with OSMD...');
         console.log('MusicXML length:', musicXML.length);
         
-        // Create OSMD instance
+        // Calculate responsive settings based on container width
+        const containerWidth = scoreRef.current?.clientWidth || 800;
+        const measuresPerRow = containerWidth < 640 ? 2 : containerWidth < 1024 ? 3 : 4;
+        
+        // Create OSMD instance with responsive settings
         const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
           autoResize: true,
-          drawTitle: false,
           backend: "svg",
+          drawTitle: false,
           drawCredits: false,
           drawPartNames: true,
           drawMeasureNumbers: true,
@@ -53,8 +59,14 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           }]
         });
 
+        // Store reference for cleanup and resize
+        osmdRef.current = osmd;
+
         // Load and render the MusicXML
         await osmd.load(musicXML);
+        
+        console.log(`Rendering score with ${measuresPerRow} measures per row target`);
+        
         osmd.render();
         
         console.log('OSMD rendering completed successfully');
@@ -82,6 +94,40 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     renderScore();
   }, [musicXML]);
 
+  // Handle window resize to maintain consistent formatting
+  useEffect(() => {
+    const handleResize = () => {
+      if (osmdRef.current && scoreRef.current && musicXML) {
+        try {
+          const containerWidth = scoreRef.current.clientWidth;
+          console.log('Resizing OSMD display, container width:', containerWidth);
+          
+          // Use a debounced approach to avoid excessive re-renders
+          setTimeout(() => {
+            if (osmdRef.current) {
+              osmdRef.current.render();
+            }
+          }, 250);
+        } catch (error) {
+          console.error('Error resizing score:', error);
+        }
+      }
+    };
+
+    const debouncedResize = (() => {
+      let timeoutId: NodeJS.Timeout;
+      return () => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(handleResize, 250);
+      };
+    })();
+
+    window.addEventListener('resize', debouncedResize);
+    return () => {
+      window.removeEventListener('resize', debouncedResize);
+    };
+  }, [musicXML]);
+
 
   return (
     <div className="h-full flex flex-col">
@@ -103,7 +149,13 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       
       <div 
         ref={scoreRef}
-        className="flex-1 min-h-[300px] h-full bg-background rounded-lg border p-2 lg:p-4 overflow-auto"
+        className="flex-1 min-h-[300px] w-full bg-background rounded-lg border p-2 lg:p-4 overflow-auto"
+        style={{ 
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}
       />
       
       {!musicXML && (
