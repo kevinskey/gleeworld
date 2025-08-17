@@ -234,19 +234,62 @@ export const SightSingingStudio: React.FC = () => {
 
   // Combined audio playback controls
   const handlePlayCombined = () => {
-    if (!combinedAudioUrl) return;
-    
-    if (!combinedAudioRef.current) {
-      combinedAudioRef.current = new Audio(combinedAudioUrl);
-      combinedAudioRef.current.onended = () => setIsPlayingCombined(false);
+    if (!combinedAudioUrl) {
+      console.error('❌ No combined audio URL available');
+      toast({
+        title: "No Combined Audio",
+        description: "Please combine audio first before playing.",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    console.log('🎵 Playing combined audio from URL:', combinedAudioUrl);
+    
+    // Always create a fresh audio element for reliable playback
+    if (combinedAudioRef.current) {
+      combinedAudioRef.current.pause();
+      combinedAudioRef.current.currentTime = 0;
+    }
+    
+    combinedAudioRef.current = new Audio(combinedAudioUrl);
+    combinedAudioRef.current.volume = 1.0;
+    
+    combinedAudioRef.current.onended = () => {
+      console.log('🎵 Combined audio playback ended');
+      setIsPlayingCombined(false);
+    };
+    
+    combinedAudioRef.current.onerror = (error) => {
+      console.error('❌ Combined audio playback error:', error);
+      setIsPlayingCombined(false);
+      toast({
+        title: "Playback Error",
+        description: "Failed to play combined audio.",
+        variant: "destructive",
+      });
+    };
+    
+    combinedAudioRef.current.onloadeddata = () => {
+      console.log('✅ Combined audio loaded successfully');
+    };
     
     if (isPlayingCombined) {
       combinedAudioRef.current.pause();
       setIsPlayingCombined(false);
     } else {
-      combinedAudioRef.current.play();
-      setIsPlayingCombined(true);
+      combinedAudioRef.current.play().then(() => {
+        console.log('✅ Combined audio playback started');
+        setIsPlayingCombined(true);
+      }).catch(error => {
+        console.error('❌ Error playing combined audio:', error);
+        setIsPlayingCombined(false);
+        toast({
+          title: "Playback Failed",
+          description: "Could not start combined audio playback. Check browser permissions.",
+          variant: "destructive",
+        });
+      });
     }
   };
 
@@ -255,7 +298,7 @@ export const SightSingingStudio: React.FC = () => {
     
     const link = document.createElement('a');
     link.href = combinedAudioUrl;
-    link.download = 'sight-reading-exercise-with-recording.webm';
+    link.download = 'sight-reading-exercise-with-recording.wav';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

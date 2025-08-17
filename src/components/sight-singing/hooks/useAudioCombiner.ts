@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { ParsedScore } from '../utils/musicXMLParser';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,25 +12,25 @@ export const useAudioCombiner = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  const generateMelodyAudio = useCallback(async (score: ParsedScore): Promise<string> => {
-    console.log('🎵 Generating melody audio from score...');
+  const generateMelodyAudioBuffer = useCallback(async (score: ParsedScore, sampleRate: number = 44100): Promise<AudioBuffer> => {
+    console.log('🎵 Generating melody audio buffer from score...');
     
     // Create a Web Audio context to generate the melody
-    const audioContext = new AudioContext({ sampleRate: 24000 });
+    const audioContext = new AudioContext({ sampleRate });
     const duration = score.totalDuration + 2; // Add 2 seconds buffer
-    const buffer = audioContext.createBuffer(1, duration * audioContext.sampleRate, audioContext.sampleRate);
+    const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
     const channelData = buffer.getChannelData(0);
     
     // Generate melody audio data
     let currentTime = 0;
     for (const measure of score.measures) {
       for (const note of measure.notes) {
-        const startSample = Math.floor((currentTime + note.startTime) * audioContext.sampleRate);
-        const durationSamples = Math.floor(note.duration * audioContext.sampleRate);
+        const startSample = Math.floor((currentTime + note.startTime) * sampleRate);
+        const durationSamples = Math.floor(note.duration * sampleRate);
         
         // Generate sine wave for the note
         for (let i = 0; i < durationSamples && startSample + i < channelData.length; i++) {
-          const t = i / audioContext.sampleRate;
+          const t = i / sampleRate;
           const frequency = note.frequency;
           const amplitude = 0.3 * Math.exp(-t * 2); // Simple envelope
           channelData[startSample + i] += amplitude * Math.sin(2 * Math.PI * frequency * t);
@@ -39,23 +38,49 @@ export const useAudioCombiner = () => {
       }
     }
     
-    // Convert to base64
-    const int16Array = new Int16Array(channelData.length);
-    for (let i = 0; i < channelData.length; i++) {
-      const s = Math.max(-1, Math.min(1, channelData[i]));
-      int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-    }
-    
-    const uint8Array = new Uint8Array(int16Array.buffer);
-    let binary = '';
-    const chunkSize = 8192;
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
-      binary += String.fromCharCode.apply(null, Array.from(chunk));
-    }
-    
     await audioContext.close();
-    return btoa(binary);
+    return buffer;
+  }, []);
+
+  const createWavBlob = useCallback((audioBuffer: AudioBuffer): Blob => {
+    const length = audioBuffer.length;
+    const channels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const arrayBuffer = new ArrayBuffer(44 + length * channels * 2);
+    const view = new DataView(arrayBuffer);
+    
+    // WAV header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + length * channels * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, channels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * channels * 2, true);
+    view.setUint16(32, channels * 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, length * channels * 2, true);
+    
+    // Convert float samples to 16-bit PCM
+    let offset = 44;
+    for (let i = 0; i < length; i++) {
+      for (let channel = 0; channel < channels; channel++) {
+        const sample = Math.max(-1, Math.min(1, audioBuffer.getChannelData(channel)[i]));
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+        offset += 2;
+      }
+    }
+    
+    return new Blob([arrayBuffer], { type: 'audio/wav' });
   }, []);
 
   const combineAudio = useCallback(async (
@@ -68,7 +93,7 @@ export const useAudioCombiner = () => {
     setIsProcessing(true);
     
     try {
-      console.log('🎯 Starting audio combination process...');
+      console.log('🎯 Starting client-side audio combination...');
       console.log('📊 Input data:', {
         recordedBlobSize: recordedAudioBlob.size,
         recordedBlobType: recordedAudioBlob.type,
@@ -76,62 +101,78 @@ export const useAudioCombiner = () => {
         scoreTempo: score.tempo,
         title: title
       });
+
+      // Create offline audio context for processing
+      const sampleRate = 44100;
+      const audioContext = new AudioContext({ sampleRate });
       
-      // Convert recorded audio blob to base64
-      console.log('🔄 Converting recorded audio to base64...');
+      // Decode recorded audio
+      console.log('🔄 Decoding recorded audio...');
       const recordedArrayBuffer = await recordedAudioBlob.arrayBuffer();
-      const recordedUint8Array = new Uint8Array(recordedArrayBuffer);
-      console.log('📊 Recorded audio buffer size:', recordedUint8Array.length);
-      
-      let recordedBinary = '';
-      const chunkSize = 8192;
-      for (let i = 0; i < recordedUint8Array.length; i += chunkSize) {
-        const chunk = recordedUint8Array.subarray(i, Math.min(i + chunkSize, recordedUint8Array.length));
-        recordedBinary += String.fromCharCode.apply(null, Array.from(chunk));
-      }
-      const recordedBase64 = btoa(recordedBinary);
-      console.log('✅ Recorded audio converted to base64, length:', recordedBase64.length);
-      
-      // Generate melody audio
-      console.log('🎵 Generating melody audio...');
-      const melodyBase64 = await generateMelodyAudio(score);
-      console.log('✅ Melody audio generated, length:', melodyBase64.length);
-      
-      console.log('📊 Calling combine-audio edge function...');
-      
-      // Call the edge function to combine audio
-      const { data, error } = await supabase.functions.invoke('combine-audio', {
-        body: {
-          recordedAudio: recordedBase64,
-          melodyAudio: melodyBase64,
-          bpm: score.tempo,
-          title: title
-        }
+      const recordedAudioBuffer = await audioContext.decodeAudioData(recordedArrayBuffer);
+      console.log('✅ Recorded audio decoded:', {
+        duration: recordedAudioBuffer.duration,
+        channels: recordedAudioBuffer.numberOfChannels,
+        sampleRate: recordedAudioBuffer.sampleRate
       });
-
-      console.log('📋 Edge function response:', { data, error });
-
-      if (error) {
-        console.error('❌ Edge function error:', error);
-        throw new Error(`Failed to combine audio: ${error.message}`);
-      }
-
-      if (!data?.success) {
-        console.error('❌ Edge function returned failure:', data);
-        throw new Error(data?.error || 'Failed to combine audio');
-      }
-
-      console.log('✅ Audio combination successful');
-
-      // Convert the combined audio back to a blob
-      const combinedBinary = atob(data.combinedAudio);
-      const combinedBytes = new Uint8Array(combinedBinary.length);
-      for (let i = 0; i < combinedBinary.length; i++) {
-        combinedBytes[i] = combinedBinary.charCodeAt(i);
-      }
       
-      const combinedBlob = new Blob([combinedBytes], { type: 'audio/wav' });
+      // Generate melody audio buffer
+      console.log('🎵 Generating melody audio buffer...');
+      const melodyAudioBuffer = await generateMelodyAudioBuffer(score, sampleRate);
+      console.log('✅ Melody audio generated:', {
+        duration: melodyAudioBuffer.duration,
+        channels: melodyAudioBuffer.numberOfChannels,
+        sampleRate: melodyAudioBuffer.sampleRate
+      });
+      
+      // Determine the final duration (longer of the two)
+      const finalDuration = Math.max(recordedAudioBuffer.duration, melodyAudioBuffer.duration);
+      const finalLength = Math.floor(finalDuration * sampleRate);
+      
+      console.log('🔄 Creating combined audio buffer...');
+      const offlineContext = new OfflineAudioContext(2, finalLength, sampleRate);
+      
+      // Create sources for both audio buffers
+      const recordedSource = offlineContext.createBufferSource();
+      const melodySource = offlineContext.createBufferSource();
+      
+      // Create gain nodes for volume control
+      const recordedGain = offlineContext.createGain();
+      const melodyGain = offlineContext.createGain();
+      
+      // Set volumes: recorded audio at 70%, melody at 30%
+      recordedGain.gain.value = 0.7;
+      melodyGain.gain.value = 0.3;
+      
+      // Set up the audio graph
+      recordedSource.buffer = recordedAudioBuffer;
+      melodySource.buffer = melodyAudioBuffer;
+      
+      recordedSource.connect(recordedGain);
+      melodySource.connect(melodyGain);
+      
+      recordedGain.connect(offlineContext.destination);
+      melodyGain.connect(offlineContext.destination);
+      
+      // Start both sources
+      recordedSource.start(0);
+      melodySource.start(0);
+      
+      // Render the combined audio
+      console.log('🎯 Rendering combined audio...');
+      const combinedBuffer = await offlineContext.startRendering();
+      console.log('✅ Audio combination complete:', {
+        duration: combinedBuffer.duration,
+        channels: combinedBuffer.numberOfChannels,
+        sampleRate: combinedBuffer.sampleRate
+      });
+      
+      // Convert to WAV blob
+      const combinedBlob = createWavBlob(combinedBuffer);
       const downloadUrl = URL.createObjectURL(combinedBlob);
+      
+      // Clean up
+      await audioContext.close();
 
       toast({
         title: "Audio Combined Successfully",
@@ -141,7 +182,7 @@ export const useAudioCombiner = () => {
       return {
         audioBlob: combinedBlob,
         downloadUrl,
-        title: data.title || title
+        title
       };
 
     } catch (error) {
@@ -155,7 +196,7 @@ export const useAudioCombiner = () => {
     } finally {
       setIsProcessing(false);
     }
-  }, [isProcessing, generateMelodyAudio, toast]);
+  }, [isProcessing, generateMelodyAudioBuffer, createWavBlob, toast]);
 
   return {
     combineAudio,
