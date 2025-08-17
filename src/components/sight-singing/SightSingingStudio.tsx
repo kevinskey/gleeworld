@@ -233,7 +233,7 @@ export const SightSingingStudio: React.FC = () => {
   }, [setMetronomeCallback, startMetronome, stopMetronome]);
 
   // Combined audio playback controls
-  const handlePlayCombined = () => {
+  const handlePlayCombined = async () => {
     if (!combinedAudioUrl) {
       console.error('❌ No combined audio URL available');
       toast({
@@ -244,51 +244,78 @@ export const SightSingingStudio: React.FC = () => {
       return;
     }
     
-    console.log('🎵 Playing combined audio from URL:', combinedAudioUrl);
+    console.log('🎵 Playing combined audio using Web Audio API...');
     
-    // Always create a fresh audio element for reliable playback
-    if (combinedAudioRef.current) {
-      combinedAudioRef.current.pause();
-      combinedAudioRef.current.currentTime = 0;
-    }
-    
-    combinedAudioRef.current = new Audio(combinedAudioUrl);
-    combinedAudioRef.current.volume = 1.0;
-    
-    combinedAudioRef.current.onended = () => {
-      console.log('🎵 Combined audio playback ended');
-      setIsPlayingCombined(false);
-    };
-    
-    combinedAudioRef.current.onerror = (error) => {
-      console.error('❌ Combined audio playback error:', error);
+    try {
+      // Stop any currently playing combined audio
+      if (combinedAudioRef.current) {
+        combinedAudioRef.current.pause();
+        combinedAudioRef.current.currentTime = 0;
+      }
+      
+      if (isPlayingCombined) {
+        setIsPlayingCombined(false);
+        return;
+      }
+      
+      // Use Web Audio API to play the audio to bypass CSP restrictions
+      const audioContext = new AudioContext();
+      
+      let audioBuffer: ArrayBuffer;
+      
+      if (combinedAudioUrl.startsWith('data:')) {
+        // Convert data URL to array buffer
+        const base64Data = combinedAudioUrl.split(',')[1];
+        const binaryString = atob(base64Data);
+        audioBuffer = new ArrayBuffer(binaryString.length);
+        const uint8Array = new Uint8Array(audioBuffer);
+        for (let i = 0; i < binaryString.length; i++) {
+          uint8Array[i] = binaryString.charCodeAt(i);
+        }
+      } else {
+        // Fetch blob URL
+        const response = await fetch(combinedAudioUrl);
+        audioBuffer = await response.arrayBuffer();
+      }
+      
+      // Decode audio data
+      const decodedAudio = await audioContext.decodeAudioData(audioBuffer);
+      
+      // Create audio source
+      const source = audioContext.createBufferSource();
+      source.buffer = decodedAudio;
+      source.connect(audioContext.destination);
+      
+      setIsPlayingCombined(true);
+      
+      // Handle playback end
+      source.onended = () => {
+        console.log('🎵 Combined audio playback ended');
+        setIsPlayingCombined(false);
+        audioContext.close();
+      };
+      
+      // Start playback
+      source.start(0);
+      console.log('✅ Combined audio playback started using Web Audio API');
+      
+      // Store reference for stopping
+      combinedAudioRef.current = {
+        pause: () => {
+          source.stop();
+          setIsPlayingCombined(false);
+          audioContext.close();
+        },
+        currentTime: 0
+      } as any;
+      
+    } catch (error) {
+      console.error('❌ Error playing combined audio with Web Audio API:', error);
       setIsPlayingCombined(false);
       toast({
-        title: "Playback Error",
-        description: "Failed to play combined audio.",
+        title: "Playback Failed",
+        description: "Could not play combined audio. Please try downloading instead.",
         variant: "destructive",
-      });
-    };
-    
-    combinedAudioRef.current.onloadeddata = () => {
-      console.log('✅ Combined audio loaded successfully');
-    };
-    
-    if (isPlayingCombined) {
-      combinedAudioRef.current.pause();
-      setIsPlayingCombined(false);
-    } else {
-      combinedAudioRef.current.play().then(() => {
-        console.log('✅ Combined audio playback started');
-        setIsPlayingCombined(true);
-      }).catch(error => {
-        console.error('❌ Error playing combined audio:', error);
-        setIsPlayingCombined(false);
-        toast({
-          title: "Playback Failed",
-          description: "Could not start combined audio playback. Check browser permissions.",
-          variant: "destructive",
-        });
       });
     }
   };
