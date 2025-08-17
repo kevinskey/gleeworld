@@ -111,7 +111,7 @@ function noteXml(ev:any, beamInfo?: {number: number, type: string}){
   return `<note>${tieStart}<pitch><step>${esc(step)}</step>${alterXml}<octave>${oct}</octave></pitch><duration>${dur}</duration><type>${typeMap[base]}</type>${dotsXml}${beamXml}${tieStop}</note>`;
 }
 
-// Beaming logic based on time signature and note groupings
+// Advanced beaming logic that follows proper meter groupings
 function calculateBeaming(events: any[], timeSignature: {num: number, den: number}) {
   const beamableEvents = events.filter(ev => 
     ev.kind === "note" && (ev.dur.base === "eighth" || ev.dur.base === "16th")
@@ -122,65 +122,146 @@ function calculateBeaming(events: any[], timeSignature: {num: number, den: numbe
   const beamMap = new Map();
   const { num, den } = timeSignature;
   
-  // Determine beat groupings based on time signature
-  let beatGroupings: number[] = [];
+  // Calculate proper beat groupings based on time signature
+  let beatDivisions: number[] = [];
+  
   if (den === 4) {
-    // 4/4, 3/4, 2/4: beam by quarter note beats
-    beatGroupings = Array(num).fill(0).map((_, i) => i);
+    // Simple time signatures - group by quarter note beats
+    if (num === 2) {
+      beatDivisions = [0, 16]; // 2/4: beat 1, beat 2
+    } else if (num === 3) {
+      beatDivisions = [0, 16, 32]; // 3/4: beat 1, beat 2, beat 3
+    } else if (num === 4) {
+      beatDivisions = [0, 16, 32, 48]; // 4/4: beat 1, beat 2, beat 3, beat 4
+    } else {
+      beatDivisions = Array(num).fill(0).map((_, i) => i * 16);
+    }
   } else if (den === 8) {
-    // 6/8, 9/8, 12/8: beam in groups of 3 eighth notes
-    const groupsOf3 = Math.floor(num / 3);
-    beatGroupings = Array(groupsOf3).fill(0).map((_, i) => i * 3);
+    // Compound time signatures - group by dotted quarter note beats
+    if (num === 6) {
+      beatDivisions = [0, 24]; // 6/8: two dotted quarter beats
+    } else if (num === 9) {
+      beatDivisions = [0, 24, 48]; // 9/8: three dotted quarter beats
+    } else if (num === 12) {
+      beatDivisions = [0, 24, 48, 72]; // 12/8: four dotted quarter beats
+    } else {
+      // Group by threes for other compound times
+      const groupsOf3 = Math.floor(num / 3);
+      beatDivisions = Array(groupsOf3).fill(0).map((_, i) => i * 24);
+    }
+  } else if (den === 2) {
+    // Half note time signatures
+    beatDivisions = Array(num).fill(0).map((_, i) => i * 32);
   } else {
-    // Default: beam all together
-    beatGroupings = [0];
+    // Default grouping
+    beatDivisions = [0];
   }
   
-  // Group beamable notes by beat position
-  const beatGroups: any[][] = Array(beatGroupings.length).fill(null).map(() => []);
-  let currentBeat = 0;
-  let ticksInBeat = 0;
-  const ticksPerBeat = den === 8 ? 24 : 16; // 3 eighth notes for compound time, 1 quarter for simple
+  // Track cumulative position in measure
+  let measurePosition = 0;
+  const eventPositions: Array<{event: any, startPos: number, endPos: number}> = [];
   
-  beamableEvents.forEach((event, index) => {
-    const eventTicks = TICKS[event.dur.base as DurBase];
-    
-    // Check if we need to move to next beat group
-    if (ticksInBeat + eventTicks > ticksPerBeat && beatGroups[currentBeat].length > 0) {
-      currentBeat = Math.min(currentBeat + 1, beatGroups.length - 1);
-      ticksInBeat = 0;
+  // Calculate positions for all events in the measure
+  events.forEach(event => {
+    const duration = TICKS[event.dur.base as DurBase] * dotMul(event.dur.dots || 0);
+    if (beamableEvents.includes(event)) {
+      eventPositions.push({
+        event,
+        startPos: measurePosition,
+        endPos: measurePosition + duration
+      });
     }
-    
-    beatGroups[currentBeat].push(event);
-    ticksInBeat += eventTicks;
+    measurePosition += duration;
   });
   
-  // Apply beaming to each group
+  // Group events by beats according to time signature
+  const beatGroups: Array<{event: any, startPos: number, endPos: number}[]> = 
+    beatDivisions.map(() => []);
+  
+  eventPositions.forEach(eventPos => {
+    // Find which beat this event belongs to
+    let beatIndex = 0;
+    for (let i = beatDivisions.length - 1; i >= 0; i--) {
+      if (eventPos.startPos >= beatDivisions[i]) {
+        beatIndex = i;
+        break;
+      }
+    }
+    
+    // Don't beam across beat boundaries in simple time
+    if (den === 4) {
+      const nextBeatStart = beatDivisions[beatIndex + 1] || (beatDivisions[beatIndex] + 16);
+      if (eventPos.endPos > nextBeatStart) {
+        // Event crosses beat boundary - don't beam
+        return;
+      }
+    }
+    
+    beatGroups[beatIndex].push(eventPos);
+  });
+  
+  // Apply beaming within each beat group
   beatGroups.forEach(group => {
     if (group.length >= 2) {
-      group.forEach((event, index) => {
-        let beamType: string;
-        if (index === 0) {
-          beamType = "begin";
-        } else if (index === group.length - 1) {
-          beamType = "end";
-        } else {
-          beamType = "continue";
+      // Further subdivide compound time groups by strong vs weak beats
+      if (den === 8 && group.length > 3) {
+        // In compound time, beam in groups of 3 eighth notes
+        for (let start = 0; start < group.length; start += 3) {
+          const subGroup = group.slice(start, start + 3);
+          applyBeamingToGroup(subGroup, beamMap);
         }
-        
-        beamMap.set(event, { number: 1, type: beamType });
-        
-        // Add secondary beams for sixteenth notes
-        if (event.dur.base === "16th") {
-          const secondaryBeamType = index === 0 ? "begin" : 
-                                   index === group.length - 1 ? "end" : "continue";
-          // Store secondary beam info (would need to enhance noteXml to handle multiple beams)
-        }
-      });
+      } else {
+        applyBeamingToGroup(group, beamMap);
+      }
     }
   });
   
   return beamMap;
+}
+
+// Helper function to apply beaming to a group of notes
+function applyBeamingToGroup(group: Array<{event: any, startPos: number, endPos: number}>, beamMap: Map<any, any>) {
+  if (group.length < 2) return;
+  
+  group.forEach((eventPos, index) => {
+    const event = eventPos.event;
+    let beamType: string;
+    
+    if (index === 0) {
+      beamType = "begin";
+    } else if (index === group.length - 1) {
+      beamType = "end";
+    } else {
+      beamType = "continue";
+    }
+    
+    beamMap.set(event, { number: 1, type: beamType });
+    
+    // Add secondary beams for sixteenth notes
+    if (event.dur.base === "16th") {
+      // Group sixteenth notes in pairs within eighth note beats
+      const sixteenthGroupIndex = Math.floor(index / 2);
+      const isFirstInPair = index % 2 === 0;
+      const isLastInPair = index % 2 === 1 || index === group.length - 1;
+      
+      let secondaryBeamType: string;
+      if (isFirstInPair && isLastInPair) {
+        // Single sixteenth note - no secondary beam
+        return;
+      } else if (isFirstInPair) {
+        secondaryBeamType = "begin";
+      } else {
+        secondaryBeamType = "end";
+      }
+      
+      // Store secondary beam info (note: would need enhanced noteXml for multiple beams)
+      const currentBeamInfo = beamMap.get(event);
+      beamMap.set(event, {
+        ...currentBeamInfo,
+        secondaryBeam: { number: 2, type: secondaryBeamType }
+      });
+    }
+  });
 }
 
 function attributesXml(mIndex:number, key:any, time:any, role:"S"|"A"){
