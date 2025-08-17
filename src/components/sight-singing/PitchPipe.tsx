@@ -161,8 +161,10 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
         <div className="absolute top-2 left-2 right-2 h-16 pointer-events-none">
           {blackKeys.map((key) => {
             const whiteKeyWidth = 100 / whiteKeys.length;
-            const leftPercentage = key.position * whiteKeyWidth;
             const blackKeyWidth = whiteKeyWidth * 0.6; // 60% of white key width
+            // Position black key at the right edge of the white key it follows
+            const keyIndex = Math.floor(key.position);
+            const leftPercentage = ((keyIndex + 1) * whiteKeyWidth) - (blackKeyWidth / 2);
             
             return (
               <div
@@ -173,7 +175,7 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
                     : "bg-gray-900 hover:bg-gray-800"
                 }`}
                 style={{
-                  left: `${leftPercentage - blackKeyWidth/2}%`,
+                  left: `${leftPercentage}%`,
                   width: `${blackKeyWidth}%`,
                   height: '100%',
                   borderRadius: "0 0 4px 4px",
