@@ -47,8 +47,16 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
     try {
       initAudioContext();
       
-      // Stop any currently playing note
-      stopNote();
+      // Immediately stop any currently playing note without fade
+      if (oscillatorRef.current && gainNodeRef.current) {
+        try {
+          oscillatorRef.current.stop();
+        } catch (e) {
+          // Oscillator might already be stopped
+        }
+        oscillatorRef.current = null;
+        gainNodeRef.current = null;
+      }
       
       if (!audioContextRef.current) return;
 
