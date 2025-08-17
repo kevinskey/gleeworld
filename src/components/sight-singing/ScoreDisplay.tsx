@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 
@@ -82,47 +82,11 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     renderScore();
   }, [musicXML]);
 
-  const handleDownloadMusicXML = () => {
-    try {
-      const blob = new Blob([musicXML], { type: 'application/xml' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'sight-singing-exercise.xml';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      toast({
-        title: "Download Started",
-        description: "MusicXML file is downloading",
-      });
-    } catch (error) {
-      console.error('Error downloading MusicXML:', error);
-      toast({
-        title: "Download Failed", 
-        description: "Failed to download MusicXML file",
-        variant: "destructive"
-      });
-    }
-  };
 
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-end mb-4">
         <div className="flex gap-2">
-          {musicXML && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleDownloadMusicXML}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Download MusicXML
-            </Button>
-          )}
-          
           {hasRecording && onGradeRecording && (
             <Button 
               onClick={onGradeRecording}
