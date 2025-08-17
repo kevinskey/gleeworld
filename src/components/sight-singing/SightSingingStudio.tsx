@@ -412,6 +412,11 @@ export const SightSingingStudio: React.FC = () => {
     setParameters(exerciseParams);
     setSelectedScore(null); // Clear selected score when generating new exercise
     
+    // Clear previous exercise to ensure fresh generation
+    setCurrentScore(null);
+    setCurrentMusicXML('');
+    setCurrentExerciseId(null);
+    
     // Add rhythmic preferences based on time signature
     const enhancedParams = {
       ...exerciseParams,
