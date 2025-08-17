@@ -784,7 +784,7 @@ export const SightSingingStudio: React.FC = () => {
 
               {/* Right Column - Score Display (2/3 width on desktop, full width on mobile) */}
               <div className="lg:col-span-2 col-span-1 order-first lg:order-last">
-                <Card className="p-4 lg:p-6 h-[600px] lg:h-full flex flex-col">
+                <Card className="p-4 lg:p-6 h-[600px] lg:h-full flex flex-col shadow-2xl border-2 bg-white">
                   <div className="flex items-center justify-between mb-3 flex-shrink-0">
                     <h2 className="text-base font-semibold">Musical Score</h2>
                     {currentMusicXML && (
