@@ -3370,6 +3370,74 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_assignment_submissions: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          feedback: string | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          notes: string | null
+          overall_performance: Json | null
+          pitch_accuracy: number | null
+          recording_id: string | null
+          recording_url: string | null
+          rhythm_accuracy: number | null
+          score_value: number | null
+          status: Database["public"]["Enums"]["assignment_status"]
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          feedback?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          notes?: string | null
+          overall_performance?: Json | null
+          pitch_accuracy?: number | null
+          recording_id?: string | null
+          recording_url?: string | null
+          rhythm_accuracy?: number | null
+          score_value?: number | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          feedback?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          notes?: string | null
+          overall_performance?: Json | null
+          pitch_accuracy?: number | null
+          recording_id?: string | null
+          recording_url?: string | null
+          rhythm_accuracy?: number | null
+          score_value?: number | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_assignment_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sight_reading_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_attendance_excuses: {
         Row: {
           attendance_id: string
@@ -8624,6 +8692,81 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_semester_grades: {
+        Row: {
+          created_at: string
+          current_grade: number | null
+          id: string
+          letter_grade: string | null
+          semester_name: string
+          total_points_earned: number | null
+          total_points_possible: number | null
+          updated_at: string
+          user_id: string
+          week_1_points: number | null
+          week_10_points: number | null
+          week_11_points: number | null
+          week_12_points: number | null
+          week_13_points: number | null
+          week_2_points: number | null
+          week_3_points: number | null
+          week_4_points: number | null
+          week_5_points: number | null
+          week_6_points: number | null
+          week_7_points: number | null
+          week_8_points: number | null
+          week_9_points: number | null
+        }
+        Insert: {
+          created_at?: string
+          current_grade?: number | null
+          id?: string
+          letter_grade?: string | null
+          semester_name?: string
+          total_points_earned?: number | null
+          total_points_possible?: number | null
+          updated_at?: string
+          user_id: string
+          week_1_points?: number | null
+          week_10_points?: number | null
+          week_11_points?: number | null
+          week_12_points?: number | null
+          week_13_points?: number | null
+          week_2_points?: number | null
+          week_3_points?: number | null
+          week_4_points?: number | null
+          week_5_points?: number | null
+          week_6_points?: number | null
+          week_7_points?: number | null
+          week_8_points?: number | null
+          week_9_points?: number | null
+        }
+        Update: {
+          created_at?: string
+          current_grade?: number | null
+          id?: string
+          letter_grade?: string | null
+          semester_name?: string
+          total_points_earned?: number | null
+          total_points_possible?: number | null
+          updated_at?: string
+          user_id?: string
+          week_1_points?: number | null
+          week_10_points?: number | null
+          week_11_points?: number | null
+          week_12_points?: number | null
+          week_13_points?: number | null
+          week_2_points?: number | null
+          week_3_points?: number | null
+          week_4_points?: number | null
+          week_5_points?: number | null
+          week_6_points?: number | null
+          week_7_points?: number | null
+          week_8_points?: number | null
+          week_9_points?: number | null
+        }
+        Relationships: []
+      }
       gw_service_availability: {
         Row: {
           created_at: string
@@ -9393,6 +9536,74 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      gw_sight_reading_assignments: {
+        Row: {
+          assigned_by: string
+          assignment_type: Database["public"]["Enums"]["assignment_type"]
+          audio_url: string | null
+          created_at: string
+          description: string | null
+          due_date: string
+          grading_period: Database["public"]["Enums"]["grading_period"]
+          id: string
+          is_active: boolean
+          notes: string | null
+          pdf_url: string | null
+          points_possible: number | null
+          sheet_music_id: string | null
+          target_type: string
+          target_value: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_by: string
+          assignment_type?: Database["public"]["Enums"]["assignment_type"]
+          audio_url?: string | null
+          created_at?: string
+          description?: string | null
+          due_date: string
+          grading_period: Database["public"]["Enums"]["grading_period"]
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          pdf_url?: string | null
+          points_possible?: number | null
+          sheet_music_id?: string | null
+          target_type?: string
+          target_value?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string
+          assignment_type?: Database["public"]["Enums"]["assignment_type"]
+          audio_url?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string
+          grading_period?: Database["public"]["Enums"]["grading_period"]
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          pdf_url?: string | null
+          points_possible?: number | null
+          sheet_music_id?: string | null
+          target_type?: string
+          target_value?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_sight_reading_assignments_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_sight_reading_exercises: {
         Row: {
@@ -14273,6 +14484,10 @@ export type Database = {
         Args: { event_id_param: string }
         Returns: undefined
       }
+      calculate_semester_grade: {
+        Args: { semester_name_param?: string; user_id_param: string }
+        Returns: undefined
+      }
       can_manage_appointments: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -15026,6 +15241,18 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "super-admin" | "auditioner"
+      assignment_status:
+        | "assigned"
+        | "in_progress"
+        | "submitted"
+        | "graded"
+        | "overdue"
+      assignment_type:
+        | "sight_reading"
+        | "practice_exercise"
+        | "section_notes"
+        | "pdf_resource"
+        | "audio_resource"
       executive_position:
         | "president"
         | "secretary"
@@ -15053,6 +15280,20 @@ export type Database = {
         | "Diction"
         | "Posture"
         | "Energy"
+      grading_period:
+        | "week_1"
+        | "week_2"
+        | "week_3"
+        | "week_4"
+        | "week_5"
+        | "week_6"
+        | "week_7"
+        | "week_8"
+        | "week_9"
+        | "week_10"
+        | "week_11"
+        | "week_12"
+        | "week_13"
       host_source: "booking_request" | "contract" | "manual_entry"
       host_status: "active" | "inactive" | "potential" | "blacklisted"
       hydration_level_enum: "Low" | "Normal" | "High"
@@ -15201,6 +15442,20 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "super-admin", "auditioner"],
+      assignment_status: [
+        "assigned",
+        "in_progress",
+        "submitted",
+        "graded",
+        "overdue",
+      ],
+      assignment_type: [
+        "sight_reading",
+        "practice_exercise",
+        "section_notes",
+        "pdf_resource",
+        "audio_resource",
+      ],
       executive_position: [
         "president",
         "secretary",
@@ -15229,6 +15484,21 @@ export const Constants = {
         "Diction",
         "Posture",
         "Energy",
+      ],
+      grading_period: [
+        "week_1",
+        "week_2",
+        "week_3",
+        "week_4",
+        "week_5",
+        "week_6",
+        "week_7",
+        "week_8",
+        "week_9",
+        "week_10",
+        "week_11",
+        "week_12",
+        "week_13",
       ],
       host_source: ["booking_request", "contract", "manual_entry"],
       host_status: ["active", "inactive", "potential", "blacklisted"],
