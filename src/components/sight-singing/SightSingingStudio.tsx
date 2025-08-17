@@ -226,26 +226,18 @@ export const SightSingingStudio: React.FC = () => {
     updateTempo: updateMetronomeTempo
   } = useMetronome();
 
-  // Connect metronome to audio recorder with reset capability
+  // Connect metronome to audio recorder - set once only
   useEffect(() => {
     const metronomeController = async (bpm: number) => {
-      console.log('🎛️ Metronome controller called with BPM:', bpm);
       if (bpm > 0) {
-        console.log('🎵 Starting metronome at BPM:', bpm);
-        stopMetronome(); // Stop any existing metronome first
-        setTimeout(async () => {
-          console.log('🎵 Actually starting metronome after timeout');
-          await startMetronome(bpm);
-        }, 100); // Small delay to ensure clean start
+        await startMetronome(bpm);
       } else {
-        console.log('🛑 Stopping metronome');
         stopMetronome();
       }
     };
     
-    console.log('🔗 Setting metronome callback');
     setMetronomeCallback(metronomeController);
-  }, [setMetronomeCallback, startMetronome, stopMetronome]);
+  }, []); // Empty deps - set once only
 
   // Combined audio playback controls
   const handlePlayCombined = async () => {
@@ -456,15 +448,7 @@ export const SightSingingStudio: React.FC = () => {
   };
 
   const handleStartPlayback = async () => {
-    console.log('🎵 handleStartPlayback called');
-    console.log('🎵 currentMusicXML exists:', !!currentMusicXML);
-    console.log('🎵 currentMusicXML length:', currentMusicXML?.length);
-    console.log('🎵 currentBpm:', currentBpm);
-    console.log('🎵 mode:', mode);
-    console.log('🎵 soundSettings:', soundSettings);
-    
     if (!currentMusicXML) {
-      console.error('❌ No currentMusicXML available');
       toast({
         title: "No Exercise",
         description: "Please generate an exercise first.",
@@ -473,22 +457,23 @@ export const SightSingingStudio: React.FC = () => {
       return;
     }
 
+    // Stop any existing playback first
+    stopPlayback();
+    
     try {
-      console.log('🎵 About to call startPlayback...');
       await startPlayback(currentMusicXML, currentBpm);
-      console.log('✅ startPlayback completed successfully');
     } catch (error) {
       console.error('❌ Playback error:', error);
       toast({
         title: "Playback Failed",
-        description: "Failed to start playback: " + (error instanceof Error ? error.message : String(error)),
+        description: "Failed to start playback",
         variant: "destructive",
       });
     }
   };
 
   const handleStartRecording = async () => {
-    if (!currentScore) {
+    if (!currentScore && !currentMusicXML) {
       toast({
         title: "No Exercise",
         description: "Please generate an exercise first.",
@@ -497,7 +482,10 @@ export const SightSingingStudio: React.FC = () => {
       return;
     }
 
-    console.log('🎯 handleStartRecording called with BPM:', currentBpm);
+    // Stop any existing recording/playback first
+    stopRecording();
+    stopPlayback();
+    
     try {
       await startRecording(currentBpm);
     } catch (error) {
@@ -785,8 +773,9 @@ export const SightSingingStudio: React.FC = () => {
                                 if (isPlaying && mode === 'click-and-score') {
                                   stopPlayback();
                                 } else {
+                                  stopPlayback(); // Always stop first
                                   setMode('click-and-score');
-                                  handleStartPlayback();
+                                  setTimeout(() => handleStartPlayback(), 100);
                                 }
                               }}
                               className="h-10 lg:h-12 px-2 lg:px-4 text-sm lg:text-base font-semibold"
@@ -805,8 +794,9 @@ export const SightSingingStudio: React.FC = () => {
                                 if (isPlaying && mode === 'click-only') {
                                   stopPlayback();
                                 } else {
+                                  stopPlayback(); // Always stop first
                                   setMode('click-only');
-                                  handleStartPlayback();
+                                  setTimeout(() => handleStartPlayback(), 100);
                                 }
                               }}
                               className="h-10 lg:h-12 px-2 lg:px-4 text-lg lg:text-xl"
@@ -821,8 +811,9 @@ export const SightSingingStudio: React.FC = () => {
                                 if (isPlaying && mode === 'pitch-only') {
                                   stopPlayback();
                                 } else {
+                                  stopPlayback(); // Always stop first
                                   setMode('pitch-only');
-                                  handleStartPlayback();
+                                  setTimeout(() => handleStartPlayback(), 100);
                                 }
                               }}
                               className="h-10 lg:h-12 px-2 lg:px-4 text-lg lg:text-xl"
