@@ -39,11 +39,11 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         console.log('MusicXML length:', musicXML.length);
         
         // Calculate responsive settings based on container width
-        // Ensure minimum 4 measures per row on iPad (768px+) and desktop (1024px+)
+        // Ensure exactly 4 measures per row on iPad (768px+) and desktop (1024px+)
         const containerWidth = scoreRef.current?.clientWidth || 800;
         const measuresPerRow = containerWidth < 640 ? 2 : // Mobile: 2 measures
                               containerWidth < 768 ? 3 : // Small tablet: 3 measures  
-                              4; // iPad and desktop: minimum 4 measures
+                              4; // iPad and desktop: exactly 4 measures (min and max)
         
         // Create OSMD instance with responsive settings
         const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
