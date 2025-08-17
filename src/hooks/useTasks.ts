@@ -147,6 +147,35 @@ export const useTasks = () => {
     }
   };
 
+  // Delete task (admin only)
+  const deleteTask = async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      await fetchTasks();
+      
+      toast({
+        title: "Task Deleted",
+        description: "Task has been deleted successfully",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete task",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   // Mark notification as read
   const markNotificationAsRead = async (notificationId: string) => {
     try {
@@ -262,6 +291,7 @@ export const useTasks = () => {
     loading,
     createTask,
     updateTaskStatus,
+    deleteTask,
     markNotificationAsRead,
     markAllNotificationsAsRead,
     getTasksByStatus,
