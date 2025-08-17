@@ -132,7 +132,7 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
               key={key.name}
               className={`flex-1 cursor-pointer transition-all duration-100 flex items-end justify-center pb-2 text-sm font-medium select-none border-r border-gray-200 last:border-r-0 ${
                 currentNote === key.name
-                  ? "bg-blue-200 shadow-inner transform translate-y-1"
+                  ? "bg-blue-200 shadow-inner"
                   : "bg-white hover:bg-gray-50 shadow-md"
               } ${index === 0 ? "rounded-l-md" : ""} ${index === whiteKeys.length - 1 ? "rounded-r-md" : ""}`}
               style={{
@@ -165,7 +165,7 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
                 key={key.name}
                 className={`absolute cursor-pointer transition-all duration-100 flex items-end justify-center pb-1 text-xs font-medium pointer-events-auto select-none ${
                   currentNote === key.name
-                    ? "bg-gray-600 shadow-inner transform translate-y-1"
+                    ? "bg-gray-600 shadow-inner"
                     : "bg-gray-900 hover:bg-gray-800"
                 }`}
                 style={{
