@@ -4,7 +4,7 @@ import { parseMusicXML } from '../utils/musicXMLParser';
 
 export const useTonePlayback = (soundSettings?: { notes: string; click: string }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [mode, setMode] = useState<'click-only' | 'click-and-score'>('click-only');
+  const [mode, setMode] = useState<'click-only' | 'click-and-score' | 'pitch-only'>('click-only');
   const playerRef = useRef<MusicXMLPlayer | null>(null);
 
   useEffect(() => {

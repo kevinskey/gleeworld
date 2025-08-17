@@ -199,6 +199,12 @@ export const SightSingingStudio: React.FC = () => {
     setMode, 
     startPlayback, 
     stopPlayback 
+  }: {
+    isPlaying: boolean;
+    mode: 'click-only' | 'click-and-score' | 'pitch-only';
+    setMode: (mode: 'click-only' | 'click-and-score' | 'pitch-only') => void;
+    startPlayback: (musicXML: string, tempo: number) => Promise<void>;
+    stopPlayback: () => void;
   } = useTonePlayback(soundSettings);
 
   const {
@@ -700,8 +706,8 @@ export const SightSingingStudio: React.FC = () => {
                   <h2 className="text-sm font-semibold mb-3">Playback</h2>
                   <PlaybackControls
                     isPlaying={isPlaying}
-                    mode={mode}
-                    onModeChange={setMode}
+                    mode={mode as 'click-only' | 'click-and-score'}
+                    onModeChange={(newMode) => setMode(newMode)}
                     onStartPlayback={handleStartPlayback}
                     onStopPlayback={stopPlayback}
                     hasExercise={!!currentMusicXML}
@@ -780,35 +786,7 @@ export const SightSingingStudio: React.FC = () => {
               <div className="lg:col-span-2 col-span-1 order-first lg:order-last">
                 <Card className="p-4 lg:p-6 h-[600px] lg:h-full flex flex-col">
                   <div className="flex items-center justify-between mb-3 flex-shrink-0">
-                    <div className="flex items-center gap-3">
-                      <h2 className="text-base font-semibold">Musical Score</h2>
-                      <Select 
-                        value={soundSettings.notes} 
-                        onValueChange={(value) => setSoundSettings(prev => ({ ...prev, notes: value }))}
-                      >
-                        <SelectTrigger className="h-7 w-32 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border shadow-lg z-50">
-                          <SelectItem value="piano">🎹 Piano</SelectItem>
-                          <SelectItem value="flute">🎵 Flute</SelectItem>
-                          <SelectItem value="xylophone">🎶 Xylophone</SelectItem>
-                          <SelectItem value="synth">🎛️ Synth</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Select 
-                        value={soundSettings.click} 
-                        onValueChange={(value) => setSoundSettings(prev => ({ ...prev, click: value }))}
-                      >
-                        <SelectTrigger className="h-7 w-32 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border shadow-lg z-50">
-                          <SelectItem value="woodblock">🥁 Woodblock</SelectItem>
-                          <SelectItem value="beep">📢 Beep</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <h2 className="text-base font-semibold">Musical Score</h2>
                     {currentMusicXML && (
                       <Button
                         size="sm"
@@ -827,49 +805,148 @@ export const SightSingingStudio: React.FC = () => {
                     <PitchPipe />
                   </div>
                   
-                  {/* Essential Play/Record Controls - Right above score */}
-                  {currentMusicXML && (
-                    <div className="mb-3 flex-shrink-0 flex items-center justify-center gap-2 border-b pb-3">
-                      <Button
-                        size="sm"
-                        variant={isPlaying ? "default" : "outline"}
-                        onClick={isPlaying ? stopPlayback : handleStartPlayback}
-                        className="h-8 w-8 p-0"
-                      >
-                        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                      </Button>
-                      
-                      <Button
-                        size="sm"
-                        variant={isRecording ? "destructive" : "outline"}
-                        onClick={isRecording ? handleStopRecording : handleStartRecording}
-                        className="h-8 w-8 p-0"
-                        disabled={!currentMusicXML}
-                      >
-                        {isRecording ? (
-                          <div className="h-2 w-2 bg-white rounded-full animate-pulse" />
-                        ) : (
-                          <div className="h-3 w-3 bg-red-500 rounded-full" />
-                        )}
-                      </Button>
-                      
-                      {audioBlob && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            const audio = new Audio(URL.createObjectURL(audioBlob));
-                            audio.play();
-                          }}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Volume2 className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                  
-                  <div className="flex-1 min-h-0">
+                  <div className="flex-1 min-h-0 relative">
+                    {/* Floating Transport Controls */}
+                    {currentMusicXML && (
+                      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-white/95 backdrop-blur-sm border rounded-lg shadow-lg p-3">
+                        <div className="flex items-center gap-3">
+                          {/* Sound Selectors */}
+                          <div className="flex items-center gap-2">
+                            <Select 
+                              value={soundSettings.notes} 
+                              onValueChange={(value) => setSoundSettings(prev => ({ ...prev, notes: value }))}
+                            >
+                              <SelectTrigger className="h-8 w-24 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background border shadow-lg z-50">
+                                <SelectItem value="piano">🎹 Piano</SelectItem>
+                                <SelectItem value="flute">🎵 Flute</SelectItem>
+                                <SelectItem value="xylophone">🎶 Xylophone</SelectItem>
+                                <SelectItem value="synth">🎛️ Synth</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Select 
+                              value={soundSettings.click} 
+                              onValueChange={(value) => setSoundSettings(prev => ({ ...prev, click: value }))}
+                            >
+                              <SelectTrigger className="h-8 w-24 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background border shadow-lg z-50">
+                                <SelectItem value="woodblock">🥁 Wood</SelectItem>
+                                <SelectItem value="beep">📢 Beep</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="h-6 w-px bg-border"></div>
+
+                          {/* Play Mode Buttons */}
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant={isPlaying && mode === 'click-and-score' ? "default" : "outline"}
+                              onClick={() => {
+                                if (isPlaying && mode === 'click-and-score') {
+                                  stopPlayback();
+                                } else {
+                                  setMode('click-and-score');
+                                  handleStartPlayback();
+                                }
+                              }}
+                              className="h-9 px-3 text-xs"
+                              title="Play both pitch and click"
+                            >
+                              ♪+♩
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={isPlaying && mode === 'click-only' ? "default" : "outline"}
+                              onClick={() => {
+                                if (isPlaying && mode === 'click-only') {
+                                  stopPlayback();
+                                } else {
+                                  setMode('click-only');
+                                  handleStartPlayback();
+                                }
+                              }}
+                              className="h-9 px-3 text-xs"
+                              title="Play click only"
+                            >
+                              ♩
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={isPlaying && mode === 'pitch-only' ? "default" : "outline"}
+                              onClick={() => {
+                                if (isPlaying && mode === 'pitch-only') {
+                                  stopPlayback();
+                                } else {
+                                  setMode('pitch-only');
+                                  handleStartPlayback();
+                                }
+                              }}
+                              className="h-9 px-3 text-xs"
+                              title="Play pitch only"
+                            >
+                              ♪
+                            </Button>
+                          </div>
+
+                          <div className="h-6 w-px bg-border"></div>
+
+                          {/* Record Button */}
+                          <Button
+                            size="sm"
+                            variant={isRecording ? "destructive" : "outline"}
+                            onClick={isRecording ? handleStopRecording : handleStartRecording}
+                            className="h-9 w-9 p-0"
+                            title="Record"
+                          >
+                            {isRecording ? (
+                              <div className="h-3 w-3 bg-white rounded-sm" />
+                            ) : (
+                              <div className="h-4 w-4 bg-red-500 rounded-full" />
+                            )}
+                          </Button>
+
+                          {/* Stop Button */}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              stopPlayback();
+                              if (isRecording) handleStopRecording();
+                            }}
+                            className="h-9 w-9 p-0"
+                            disabled={!isPlaying && !isRecording}
+                            title="Stop all"
+                          >
+                            <div className="h-3 w-3 bg-current" />
+                          </Button>
+
+                          {/* Audio Playback Button */}
+                          {audioBlob && (
+                            <>
+                              <div className="h-6 w-px bg-border"></div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const audio = new Audio(URL.createObjectURL(audioBlob));
+                                  audio.play();
+                                }}
+                                className="h-9 w-9 p-0"
+                                title="Play recording"
+                              >
+                                <Volume2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
                     <ScoreDisplay
                       musicXML={currentMusicXML}
                       onGradeRecording={handleGradeRecording}

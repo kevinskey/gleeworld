@@ -163,7 +163,7 @@ export class MusicXMLPlayer {
     }
   }
 
-  async playScore(parsedScore: ParsedScore, mode: 'click-only' | 'click-and-score' = 'click-and-score', soundSettings?: { notes: string; click: string }): Promise<void> {
+  async playScore(parsedScore: ParsedScore, mode: 'click-only' | 'click-and-score' | 'pitch-only' = 'click-and-score', soundSettings?: { notes: string; click: string }): Promise<void> {
     if (this.isPlaying) {
       this.stop();
     }
@@ -202,13 +202,14 @@ export class MusicXMLPlayer {
       this.createClickTrack(parsedScore.tempo, parsedScore.measures.length, parsedScore.timeSignature, soundSettings?.click || 'woodblock');
     }
     
-    if (mode === 'click-and-score') {
-      // Schedule all notes with intro delay
+    if (mode === 'click-and-score' || mode === 'pitch-only') {
+      // Schedule all notes with intro delay (only add intro delay if we have clicks)
+      const introDelay = (mode === 'click-and-score') ? introDuration : 0;
       console.log('Scheduling notes for playback with sound:', soundSettings?.notes || 'piano', parsedScore.measures.length, 'measures');
       let noteCount = 0;
       parsedScore.measures.forEach((measure, measureIndex) => {
         measure.notes.forEach((note, noteIndex) => {
-          const noteStartTime = this.startTime + introDuration + note.startTime;
+          const noteStartTime = this.startTime + introDelay + note.startTime;
           console.log(`Note ${noteCount++}: freq=${note.frequency}, start=${noteStartTime}, duration=${note.duration}`);
           this.createTone(note.frequency, noteStartTime, note.duration, 0.4, soundSettings?.notes || 'piano');
         });
@@ -216,8 +217,9 @@ export class MusicXMLPlayer {
       console.log(`Total notes scheduled: ${noteCount}`);
     }
     
-    // Auto-stop when complete
-    const totalDuration = introDuration + parsedScore.totalDuration + 1; // +1 second buffer
+    // Auto-stop when complete - adjust duration based on mode
+    const introDelay = (mode === 'click-and-score') ? introDuration : 0;
+    const totalDuration = introDelay + parsedScore.totalDuration + 1; // +1 second buffer
     const stopTimeout = setTimeout(() => {
       this.stop();
     }, totalDuration * 1000);
