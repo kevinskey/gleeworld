@@ -38,14 +38,24 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         console.log('Rendering MusicXML with OSMD...');
         console.log('MusicXML length:', musicXML.length);
         
-        // Calculate responsive settings based on container width
+        // Calculate responsive settings and constrain container width for OSMD
         // Ensure exactly 4 measures per row on iPad (768px+) and desktop (1024px+)
         const containerWidth = scoreRef.current?.clientWidth || 800;
         const measuresPerRow = containerWidth < 640 ? 2 : // Mobile: 2 measures
                               containerWidth < 768 ? 3 : // Small tablet: 3 measures  
                               4; // iPad and desktop: exactly 4 measures (min and max)
         
-        // Create OSMD instance with settings that constrain measures per system
+        // Dynamically resize the container to force the desired measures per row
+        const baseWidthPerMeasure = 160; // Approximate width needed per measure in OSMD
+        const targetContainerWidth = measuresPerRow * baseWidthPerMeasure + 60; // Add padding
+        
+        // Temporarily constrain the container width for OSMD calculation
+        if (scoreRef.current) {
+          scoreRef.current.style.width = `${targetContainerWidth}px`;
+          scoreRef.current.style.maxWidth = `${targetContainerWidth}px`;
+        }
+        
+        // Create OSMD instance with constrained container
         const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
           autoResize: true,
           backend: "svg",
@@ -61,40 +71,27 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             follow: true
           }],
           pageFormat: "Endless",
-          pageBackgroundColor: "#FFFFFF",
-          renderSingleHorizontalStaffline: false
+          pageBackgroundColor: "#FFFFFF"
         });
 
         // Store reference for cleanup and resize
         osmdRef.current = osmd;
 
-        // Load the MusicXML first
+        // Load the MusicXML
         await osmd.load(musicXML);
         
-        console.log(`Setting up score with ${measuresPerRow} measures per row target, container width: ${containerWidth}px`);
+        console.log(`Rendering score with container width constrained to ${targetContainerWidth}px for ${measuresPerRow} measures per row`);
         
-        // Use zoom to control measures per line more aggressively
-        // The key insight is that zoom affects how much music fits per line
-        let zoomLevel = 1.0;
-        
-        if (measuresPerRow === 2) {
-          zoomLevel = 1.6; // Much larger zoom for mobile to force 2 measures max
-        } else if (measuresPerRow === 3) {
-          zoomLevel = 1.3; // Larger zoom for tablet to force 3 measures max  
-        } else {
-          // For desktop (4 measures), we need to calculate zoom to prevent more than 4
-          // Based on container width, determine zoom that caps at 4 measures
-          const baseWidth = 200; // Approximate width needed per measure
-          const idealWidth = measuresPerRow * baseWidth;
-          zoomLevel = Math.max(0.8, idealWidth / containerWidth);
-        }
-        
-        osmd.zoom = zoomLevel;
-        
-        // Render with the calculated zoom
+        // Render with constrained width
         osmd.render();
         
-        console.log(`OSMD rendering completed with zoom ${zoomLevel} targeting max ${measuresPerRow} measures per row`);
+        // After rendering, restore the container to full width for responsive display
+        if (scoreRef.current) {
+          scoreRef.current.style.width = '';
+          scoreRef.current.style.maxWidth = '';
+        }
+        
+        console.log(`OSMD rendering completed with forced ${measuresPerRow} measures per row layout`);
 
       } catch (error) {
         console.error("Error rendering score with OSMD:", error);
