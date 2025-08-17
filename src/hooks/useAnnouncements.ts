@@ -166,6 +166,24 @@ export const useAnnouncements = () => {
 
   const deleteAnnouncement = async (id: string) => {
     try {
+      // First, try to find if this is an announcement or communication
+      const announcement = announcements.find(a => a.id === id);
+      
+      if (!announcement) {
+        toast({
+          title: "Error",
+          description: "Item not found",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Check if it's a communication (has announcement_type === 'communication')
+      if (announcement.announcement_type === 'communication') {
+        return await deleteCommunication(id);
+      }
+
+      // Otherwise, delete as a regular announcement
       const { error } = await supabase
         .from('gw_announcements')
         .delete()
