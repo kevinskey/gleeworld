@@ -180,6 +180,8 @@ export const SightSingingStudio: React.FC = () => {
   const [parameters, setParameters] = useState<ExerciseParameters | null>(null);
   const [soundSettings, setSoundSettings] = useState({ notes: 'piano', click: 'woodblock' });
   const [selectedScore, setSelectedScore] = useState<any>(null);
+  const [transportBusy, setTransportBusy] = useState(false);
+  const lastClickAtRef = useRef(0);
 
   const { 
     isRecording, 
@@ -206,7 +208,7 @@ export const SightSingingStudio: React.FC = () => {
     isPlaying: boolean;
     mode: 'click-only' | 'click-and-score' | 'pitch-only';
     setMode: (mode: 'click-only' | 'click-and-score' | 'pitch-only') => void;
-    startPlayback: (musicXML: string, tempo: number) => Promise<void>;
+    startPlayback: (musicXML: string, tempo: number, overrideMode?: 'click-only' | 'click-and-score' | 'pitch-only') => Promise<void>;
     stopPlayback: () => void;
   } = useTonePlayback(soundSettings);
 
@@ -458,16 +460,19 @@ export const SightSingingStudio: React.FC = () => {
     }
   };
 
-  const handleStartPlayback = async () => {
-    console.log('🔥 BUTTON CLICKED: handleStartPlayback called');
-    console.log('🔥 Current state:', {
-      currentMusicXML: !!currentMusicXML,
-      currentScore: !!currentScore,
-      currentBpm,
-      mode,
-      isPlaying,
-      soundSettings
-    });
+  // Safe start helper to manage playback transitions
+  const safeStart = useCallback(async (desiredMode: 'click-only' | 'click-and-score' | 'pitch-only') => {
+    const now = Date.now();
+    if (now - lastClickAtRef.current < 250) {
+      console.log('⚠️ Throttling click - too soon since last click');
+      return;
+    }
+    lastClickAtRef.current = now;
+    
+    if (transportBusy) {
+      console.log('⚠️ Transport busy, ignoring click');
+      return;
+    }
     
     if (!currentMusicXML) {
       console.error('❌ No currentMusicXML available for playback');
@@ -478,28 +483,39 @@ export const SightSingingStudio: React.FC = () => {
       });
       return;
     }
-
-    // Stop any existing playback first
-    console.log('🛑 Stopping any existing playback...');
-    stopPlayback();
+    
+    console.log('🚀 safeStart called with mode:', desiredMode);
+    setTransportBusy(true);
     
     try {
-      console.log('🎵 About to call startPlayback with:', {
-        musicXMLLength: currentMusicXML.length,
-        tempo: currentBpm,
-        mode,
-        soundSettings
-      });
-      await startPlayback(currentMusicXML, currentBpm);
-      console.log('✅ startPlayback completed successfully');
+      // Stop any recording first
+      if (isRecording) {
+        stopRecording();
+        stopMetronome();
+      }
+      
+      // Stop any existing playback
+      stopPlayback();
+      
+      // Update mode and start playback
+      setMode(desiredMode);
+      await startPlayback(currentMusicXML, currentBpm, desiredMode);
+      console.log('✅ safeStart completed successfully');
     } catch (error) {
-      console.error('❌ Playback error:', error);
+      console.error('❌ safeStart error:', error);
       toast({
         title: "Playback Failed",
         description: "Failed to start playback",
         variant: "destructive",
       });
+    } finally {
+      setTransportBusy(false);
     }
+  }, [currentMusicXML, currentBpm, transportBusy, isRecording, stopRecording, stopMetronome, stopPlayback, startPlayback, setMode, toast]);
+
+  const handleStartPlayback = async () => {
+    console.log('🔥 DEPRECATED: handleStartPlayback called - use safeStart instead');
+    await safeStart(mode);
   };
 
   const handleStartRecording = async () => {
@@ -811,20 +827,13 @@ export const SightSingingStudio: React.FC = () => {
                                   variant={isPlaying && mode === 'click-and-score' ? "default" : "outline"}
                                   onClick={() => {
                                     console.log('🔥 CLICK: Notes+Click button clicked');
-                                    console.log('🔥 Current state before action:', { isPlaying, mode });
                                     if (isPlaying && mode === 'click-and-score') {
-                                      console.log('🛑 Stopping current playback...');
                                       stopPlayback();
                                     } else {
-                                      console.log('🎵 Starting click-and-score playback...');
-                                      stopPlayback(); // Always stop first
-                                      setMode('click-and-score');
-                                      setTimeout(() => {
-                                        console.log('🎵 Calling handleStartPlayback after mode change...');
-                                        handleStartPlayback();
-                                      }, 100);
+                                      safeStart('click-and-score');
                                     }
                                   }}
+                                  disabled={!currentMusicXML || isRecording || transportBusy}
                                   className="h-10 lg:h-12 px-2 lg:px-4 text-sm lg:text-base font-semibold"
                                 >
                                   <div className="flex items-center gap-1">
@@ -848,11 +857,10 @@ export const SightSingingStudio: React.FC = () => {
                                     if (isPlaying && mode === 'click-only') {
                                       stopPlayback();
                                     } else {
-                                      stopPlayback();
-                                      setMode('click-only');
-                                      setTimeout(() => handleStartPlayback(), 100);
+                                      safeStart('click-only');
                                     }
                                   }}
+                                  disabled={!currentMusicXML || isRecording || transportBusy}
                                   className="h-10 lg:h-12 px-2 lg:px-4 text-lg lg:text-xl"
                                 >
                                   ♩
@@ -872,11 +880,10 @@ export const SightSingingStudio: React.FC = () => {
                                     if (isPlaying && mode === 'pitch-only') {
                                       stopPlayback();
                                     } else {
-                                      stopPlayback();
-                                      setMode('pitch-only');
-                                      setTimeout(() => handleStartPlayback(), 100);
+                                      safeStart('pitch-only');
                                     }
                                   }}
+                                  disabled={!currentMusicXML || isRecording || transportBusy}
                                   className="h-10 lg:h-12 px-2 lg:px-4 text-lg lg:text-xl"
                                 >
                                   ♪

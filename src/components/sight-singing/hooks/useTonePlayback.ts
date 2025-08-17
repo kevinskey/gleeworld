@@ -6,6 +6,9 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
   const [isPlaying, setIsPlaying] = useState(false);
   const [mode, setMode] = useState<'click-only' | 'click-and-score' | 'pitch-only'>('click-only');
   const playerRef = useRef<MusicXMLPlayer | null>(null);
+  const autoStopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const opIdRef = useRef(0);
+  const transitioningRef = useRef(false);
 
   useEffect(() => {
     // Initialize player
@@ -13,24 +16,52 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
     
     return () => {
       // Cleanup on unmount
+      if (autoStopTimeoutRef.current) {
+        clearTimeout(autoStopTimeoutRef.current);
+      }
       if (playerRef.current) {
         playerRef.current.dispose();
       }
     };
   }, []);
 
-  const startPlayback = useCallback(async (musicXML: string, tempo: number) => {
+  const startPlayback = useCallback(async (musicXML: string, tempo: number, overrideMode?: 'click-only' | 'click-and-score' | 'pitch-only') => {
     console.log('🎼 useTonePlayback.startPlayback called');
+    
+    // Check if transitioning and wait briefly if needed
+    if (transitioningRef.current) {
+      console.log('⚠️ Already transitioning, waiting...');
+      await new Promise(resolve => setTimeout(resolve, 50));
+      if (transitioningRef.current) {
+        console.log('⚠️ Still transitioning, aborting...');
+        return;
+      }
+    }
+    
+    transitioningRef.current = true;
+    const currentOpId = ++opIdRef.current;
+    console.log('🎼 Operation ID:', currentOpId);
+    
+    // Clear any existing auto-stop timer
+    if (autoStopTimeoutRef.current) {
+      clearTimeout(autoStopTimeoutRef.current);
+      autoStopTimeoutRef.current = null;
+      console.log('🎼 Cleared existing auto-stop timer');
+    }
+    
+    const activeMode = overrideMode || mode;
     console.log('🎼 Input validation:', {
       playerExists: !!playerRef.current,
       musicXMLLength: musicXML.length,
       tempo,
-      mode,
-      soundSettings
+      activeMode,
+      soundSettings,
+      opId: currentOpId
     });
     
     if (!playerRef.current) {
       console.error('❌ No playerRef.current available');
+      transitioningRef.current = false;
       return;
     }
     
@@ -58,7 +89,7 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
       
       // Play the score with sound settings
       console.log('🎼 About to call playerRef.current.playScore with:', {
-        mode,
+        activeMode,
         soundSettings,
         parsedScore: {
           measures: parsedScore.measures.length,
@@ -67,29 +98,52 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
         }
       });
       
-      await playerRef.current.playScore(parsedScore, mode, soundSettings);
+      await playerRef.current.playScore(parsedScore, activeMode, soundSettings);
       console.log('✅ playerRef.current.playScore completed');
       
-      // Set up auto-stop timer
+      // Set up auto-stop timer with opId check
       const totalDuration = parsedScore.totalDuration + (60 / tempo * parsedScore.timeSignature.beats) + 1;
       console.log('🎼 Setting auto-stop timer for:', totalDuration, 'seconds');
-      setTimeout(() => {
-        console.log('⏰ Auto-stop timer triggered');
-        setIsPlaying(false);
+      autoStopTimeoutRef.current = setTimeout(() => {
+        if (opIdRef.current === currentOpId) {
+          console.log('⏰ Auto-stop timer triggered for opId:', currentOpId);
+          setIsPlaying(false);
+        } else {
+          console.log('⏰ Auto-stop timer ignored - stale opId:', currentOpId, 'vs current:', opIdRef.current);
+        }
       }, totalDuration * 1000);
+      
+      transitioningRef.current = false;
       
     } catch (error) {
       console.error('❌ Playback error in useTonePlayback:', error);
       setIsPlaying(false);
+      transitioningRef.current = false;
       throw error; // Re-throw so handleStartPlayback can catch it
     }
   }, [mode, soundSettings]);
 
   const stopPlayback = useCallback(() => {
+    console.log('🛑 stopPlayback called');
+    
+    // Increment opId to invalidate any pending callbacks
+    const currentOpId = ++opIdRef.current;
+    console.log('🛑 New opId:', currentOpId);
+    
+    // Clear auto-stop timer
+    if (autoStopTimeoutRef.current) {
+      clearTimeout(autoStopTimeoutRef.current);
+      autoStopTimeoutRef.current = null;
+      console.log('🛑 Cleared auto-stop timer');
+    }
+    
+    // Stop player
     if (playerRef.current) {
       playerRef.current.stop();
     }
+    
     setIsPlaying(false);
+    transitioningRef.current = false;
   }, []);
 
   return {
