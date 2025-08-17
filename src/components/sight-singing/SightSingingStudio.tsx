@@ -36,17 +36,21 @@ const NOTE_FREQUENCIES: { [key: string]: number } = {
 };
 
 export interface ExerciseParameters {
-  key: { tonic: string; mode: "major"|"minor" };
+  key: { tonic: string; mode: string };
   time: { num: number; den: 1|2|4|8|16 };
   numMeasures: number;
-  parts: Array<{ role: "S"|"A"; range: { min: string; max: string } }>;
-  allowedDur: Array<"whole"|"half"|"quarter"|"eighth"|"16th">;
+  parts: Array<{ role: string; range: { min: string; max: string } }>;
+  allowedDur: Array<'whole'|'half'|'quarter'|'eighth'|'16th'>;
   allowDots: boolean;
   allowAccidentals: boolean;
-  intervalMotion: Array<"step"|"skip"|"leap"|"repeat">;
+  intervalMotion: Array<'step'|'skip'|'leap'|'repeat'>;
   cadenceEvery: number;
   bpm: number;
   title: string;
+  rhythmicPreferences?: {
+    prefer24TiedEighths?: boolean;
+    avoidWeakBeatQuarters?: boolean;
+  };
 }
 
 export interface ScoreJSON {
@@ -394,9 +398,18 @@ export const SightSingingStudio: React.FC = () => {
     setParameters(exerciseParams);
     setSelectedScore(null); // Clear selected score when generating new exercise
     
+    // Add rhythmic preferences based on time signature
+    const enhancedParams = {
+      ...exerciseParams,
+      rhythmicPreferences: {
+        prefer24TiedEighths: exerciseParams.time.num === 2 && exerciseParams.time.den === 4,
+        avoidWeakBeatQuarters: exerciseParams.time.num === 2 && exerciseParams.time.den === 4,
+      }
+    };
+    
     try {
       const { data, error } = await supabase.functions.invoke('generate-musicxml', {
-        body: exerciseParams
+        body: enhancedParams
       });
 
       if (error) {
