@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Knob } from '@/components/ui/knob';
 import { useToast } from '@/hooks/use-toast';
 import { Download, Play, Pause, Volume2, VolumeX } from 'lucide-react';
@@ -673,7 +674,8 @@ export const SightSingingStudio: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 lg:px-8 xl:px-12 py-6">
+    <TooltipProvider>
+      <div className="min-h-screen bg-slate-50 px-4 lg:px-8 xl:px-12 py-6">
       <div className="h-full flex flex-col gap-6">
         {/* Navigation Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'practice' | 'library' | 'history' | 'report')} className="w-full">
@@ -709,15 +711,22 @@ export const SightSingingStudio: React.FC = () => {
                   <div className="flex items-center justify-between mb-3 flex-shrink-0">
                     <h2 className="text-base font-semibold">Musical Score</h2>
                     {currentMusicXML && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleDownloadMusicXML}
-                        className="flex items-center gap-1"
-                      >
-                        <Download className="h-3 w-3" />
-                        Download XML
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleDownloadMusicXML}
+                            className="flex items-center gap-1"
+                          >
+                            <Download className="h-3 w-3" />
+                            Download XML
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Download the current exercise as a MusicXML file</p>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                   </div>
                   
@@ -766,86 +775,122 @@ export const SightSingingStudio: React.FC = () => {
 
                           {/* Play Mode Buttons */}
                           <div className="flex items-center gap-1 lg:gap-2 order-2 lg:order-2">
-                            <Button
-                              size="sm"
-                              variant={isPlaying && mode === 'click-and-score' ? "default" : "outline"}
-                              onClick={() => {
-                                if (isPlaying && mode === 'click-and-score') {
-                                  stopPlayback();
-                                } else {
-                                  stopPlayback(); // Always stop first
-                                  setMode('click-and-score');
-                                  setTimeout(() => handleStartPlayback(), 100);
-                                }
-                              }}
-                              className="h-10 lg:h-12 px-2 lg:px-4 text-sm lg:text-base font-semibold"
-                              title="Play both pitch and click"
-                            >
-                              <div className="flex items-center gap-1">
-                                <span className="text-base lg:text-lg">♪</span>
-                                <span className="text-xs">+</span>
-                                <span className="text-base lg:text-lg">♩</span>
-                              </div>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={isPlaying && mode === 'click-only' ? "default" : "outline"}
-                              onClick={() => {
-                                if (isPlaying && mode === 'click-only') {
-                                  stopPlayback();
-                                } else {
-                                  stopPlayback(); // Always stop first
-                                  setMode('click-only');
-                                  setTimeout(() => handleStartPlayback(), 100);
-                                }
-                              }}
-                              className="h-10 lg:h-12 px-2 lg:px-4 text-lg lg:text-xl"
-                              title="Play click only"
-                            >
-                              ♩
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={isPlaying && mode === 'pitch-only' ? "default" : "outline"}
-                              onClick={() => {
-                                if (isPlaying && mode === 'pitch-only') {
-                                  stopPlayback();
-                                } else {
-                                  stopPlayback(); // Always stop first
-                                  setMode('pitch-only');
-                                  setTimeout(() => handleStartPlayback(), 100);
-                                }
-                              }}
-                              className="h-10 lg:h-12 px-2 lg:px-4 text-lg lg:text-xl"
-                              title="Play pitch only"
-                            >
-                              ♪
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant={isPlaying && mode === 'click-and-score' ? "default" : "outline"}
+                                  onClick={() => {
+                                    if (isPlaying && mode === 'click-and-score') {
+                                      stopPlayback();
+                                    } else {
+                                      stopPlayback(); // Always stop first
+                                      setMode('click-and-score');
+                                      setTimeout(() => handleStartPlayback(), 100);
+                                    }
+                                  }}
+                                  className="h-10 lg:h-12 px-2 lg:px-4 text-sm lg:text-base font-semibold"
+                                >
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-base lg:text-lg">♪</span>
+                                    <span className="text-xs">+</span>
+                                    <span className="text-base lg:text-lg">♩</span>
+                                  </div>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Play both notes and metronome clicks</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant={isPlaying && mode === 'click-only' ? "default" : "outline"}
+                                  onClick={() => {
+                                    if (isPlaying && mode === 'click-only') {
+                                      stopPlayback();
+                                    } else {
+                                      stopPlayback(); // Always stop first
+                                      setMode('click-only');
+                                      setTimeout(() => handleStartPlayback(), 100);
+                                    }
+                                  }}
+                                  className="h-10 lg:h-12 px-2 lg:px-4 text-lg lg:text-xl"
+                                >
+                                  ♩
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Play metronome clicks only (no notes)</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant={isPlaying && mode === 'pitch-only' ? "default" : "outline"}
+                                  onClick={() => {
+                                    if (isPlaying && mode === 'pitch-only') {
+                                      stopPlayback();
+                                    } else {
+                                      stopPlayback(); // Always stop first
+                                      setMode('pitch-only');
+                                      setTimeout(() => handleStartPlayback(), 100);
+                                    }
+                                  }}
+                                  className="h-10 lg:h-12 px-2 lg:px-4 text-lg lg:text-xl"
+                                >
+                                  ♪
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Play notes only (no metronome)</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
 
                           {/* Metronome/BPM Controls */}
                           <div className="flex items-center gap-4 order-4 lg:order-3">
-                            <Knob
-                              value={currentBpm}
-                              onValueChange={(newBpm) => {
-                                setCurrentBpm(newBpm);
-                                updateMetronomeTempo(newBpm);
-                              }}
-                              min={60}
-                              max={180}
-                              step={5}
-                              size="sm"
-                              label="BPM"
-                            />
-                            <Knob
-                              value={metronomeVolume}
-                              onValueChange={setMetronomeVolume}
-                              min={0}
-                              max={1}
-                              step={0.05}
-                              size="sm"
-                              label="VOL"
-                            />
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div>
+                                  <Knob
+                                    value={currentBpm}
+                                    onValueChange={(newBpm) => {
+                                      setCurrentBpm(newBpm);
+                                      updateMetronomeTempo(newBpm);
+                                    }}
+                                    min={60}
+                                    max={180}
+                                    step={5}
+                                    size="sm"
+                                    label="BPM"
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Adjust tempo (60-180 BPM) - updates live during playback</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div>
+                                  <Knob
+                                    value={metronomeVolume}
+                                    onValueChange={setMetronomeVolume}
+                                    min={0}
+                                    max={1}
+                                    step={0.05}
+                                    size="sm"
+                                    label="VOL"
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Control metronome volume - adjusts live during recording</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
 
                           {/* Divider - hidden on mobile */}
@@ -854,49 +899,67 @@ export const SightSingingStudio: React.FC = () => {
                           {/* Control Buttons */}
                           <div className="flex items-center gap-1 lg:gap-2 order-3 lg:order-4">
                             {/* Record Button */}
-                            <Button
-                              size="sm"
-                              variant={isRecording ? "destructive" : "outline"}
-                              onClick={isRecording ? handleStopRecording : handleStartRecording}
-                              className="h-10 lg:h-12 w-10 lg:w-12 p-0"
-                              title="Record"
-                            >
-                              {isRecording ? (
-                                <div className="h-3 lg:h-4 w-3 lg:w-4 bg-white rounded-sm" />
-                              ) : (
-                                <div className="h-4 lg:h-5 w-4 lg:w-5 bg-red-500 rounded-full" />
-                              )}
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant={isRecording ? "destructive" : "outline"}
+                                  onClick={isRecording ? handleStopRecording : handleStartRecording}
+                                  className="h-10 lg:h-12 w-10 lg:w-12 p-0"
+                                >
+                                  {isRecording ? (
+                                    <div className="h-3 lg:h-4 w-3 lg:w-4 bg-white rounded-sm" />
+                                  ) : (
+                                    <div className="h-4 lg:h-5 w-4 lg:w-5 bg-red-500 rounded-full" />
+                                  )}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{isRecording ? 'Stop recording' : 'Start recording your performance'}</p>
+                              </TooltipContent>
+                            </Tooltip>
 
                             {/* Stop Button */}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                stopPlayback();
-                                if (isRecording) handleStopRecording();
-                              }}
-                              className="h-10 lg:h-12 w-10 lg:w-12 p-0"
-                              disabled={!isPlaying && !isRecording}
-                              title="Stop all"
-                            >
-                              <div className="h-3 lg:h-4 w-3 lg:w-4 bg-current" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    stopPlayback();
+                                    if (isRecording) handleStopRecording();
+                                  }}
+                                  className="h-10 lg:h-12 w-10 lg:w-12 p-0"
+                                  disabled={!isPlaying && !isRecording}
+                                >
+                                  <div className="h-3 lg:h-4 w-3 lg:w-4 bg-current" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Stop all playback and recording</p>
+                              </TooltipContent>
+                            </Tooltip>
 
                             {/* Audio Playback Button */}
                             {audioBlob && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  const audio = new Audio(URL.createObjectURL(audioBlob));
-                                  audio.play();
-                                }}
-                                className="h-10 lg:h-12 w-10 lg:w-12 p-0"
-                                title="Play recording"
-                              >
-                                <Volume2 className="h-4 lg:h-5 w-4 lg:w-5" />
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      const audio = new Audio(URL.createObjectURL(audioBlob));
+                                      audio.play();
+                                    }}
+                                    className="h-10 lg:h-12 w-10 lg:w-12 p-0"
+                                  >
+                                    <Volume2 className="h-4 lg:h-5 w-4 lg:w-5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Play back your recorded performance</p>
+                                </TooltipContent>
+                              </Tooltip>
                             )}
                           </div>
                         </div>
@@ -952,5 +1015,6 @@ export const SightSingingStudio: React.FC = () => {
         </Tabs>
       </div>
     </div>
+    </TooltipProvider>
   );
 };
