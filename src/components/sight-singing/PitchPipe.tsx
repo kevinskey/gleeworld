@@ -14,20 +14,23 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
   const oscillatorRef = useRef<OscillatorNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
 
-  // Note frequencies (A4 = 440Hz)
-  const notes = [
+  // Piano keys data for one octave (C to B)
+  const whiteKeys = [
     { name: 'C', frequency: 261.63 },
-    { name: 'C#', frequency: 277.18 },
     { name: 'D', frequency: 293.66 },
-    { name: 'D#', frequency: 311.13 },
     { name: 'E', frequency: 329.63 },
     { name: 'F', frequency: 349.23 },
-    { name: 'F#', frequency: 369.99 },
     { name: 'G', frequency: 392.00 },
-    { name: 'G#', frequency: 415.30 },
     { name: 'A', frequency: 440.00 },
-    { name: 'A#', frequency: 466.16 },
     { name: 'B', frequency: 493.88 },
+  ];
+
+  const blackKeys = [
+    { name: 'C#', frequency: 277.18, position: 0.5 }, // Between C and D
+    { name: 'D#', frequency: 311.13, position: 1.5 }, // Between D and E
+    { name: 'F#', frequency: 369.99, position: 3.5 }, // Between F and G
+    { name: 'G#', frequency: 415.30, position: 4.5 }, // Between G and A
+    { name: 'A#', frequency: 466.16, position: 5.5 }, // Between A and B
   ];
 
   const initAudioContext = () => {
@@ -113,8 +116,6 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
     gainNodeRef.current = null;
   };
 
-  const isSharpNote = (noteName: string) => noteName.includes('#');
-
   return (
     <Card className={`p-3 ${className}`}>
       <div className="flex items-center justify-between mb-3">
@@ -132,52 +133,60 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
         )}
       </div>
       
-      <div className="space-y-2">
-        {/* Natural notes row */}
-        <div className="flex gap-1">
-          {notes.filter(note => !isSharpNote(note.name)).map((note) => (
-            <Button
-              key={note.name}
-              size="sm"
-              variant={currentNote === note.name ? "default" : "outline"}
-              onClick={() => playNote(note.frequency, note.name)}
-              disabled={isPlaying && currentNote !== note.name}
-              className="flex-1 text-xs font-mono h-8"
+      {/* Piano Keyboard Layout */}
+      <div className="relative w-full h-32 mb-3 bg-gray-100 p-2 rounded-lg">
+        {/* White Keys */}
+        <div className="flex h-full gap-px">
+          {whiteKeys.map((key, index) => (
+            <div
+              key={key.name}
+              className={`flex-1 cursor-pointer transition-all duration-100 flex items-end justify-center pb-2 text-sm font-medium select-none ${
+                currentNote === key.name
+                  ? "bg-blue-200 shadow-inner transform translate-y-1"
+                  : "bg-white hover:bg-gray-50 shadow-md"
+              } ${index === 0 ? "rounded-l-md" : ""} ${index === whiteKeys.length - 1 ? "rounded-r-md" : ""}`}
+              style={{
+                boxShadow: currentNote === key.name 
+                  ? "inset 0 2px 4px rgba(0,0,0,0.3)" 
+                  : "0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)"
+              }}
+              onClick={() => playNote(key.frequency, key.name)}
             >
-              {note.name}
-            </Button>
+              <span className="text-gray-700 font-semibold">{key.name}</span>
+            </div>
           ))}
         </div>
         
-        {/* Sharp notes row */}
-        <div className="flex gap-1">
-          <div className="flex-1"></div>
-          {notes.filter(note => isSharpNote(note.name)).map((note, index) => {
-            const gaps = [];
-            if (note.name === 'C#') gaps.push(<div key="gap1" className="flex-1"></div>);
-            if (note.name === 'F#') gaps.push(<div key="gap2" className="flex-1"></div>);
-            
+        {/* Black Keys */}
+        <div className="absolute top-2 left-2 right-2 h-20 pointer-events-none">
+          {blackKeys.map((key) => {
+            const leftPercentage = (key.position / whiteKeys.length) * 100;
             return (
-              <div key={note.name} className="flex-1 flex">
-                <Button
-                  size="sm"
-                  variant={currentNote === note.name ? "default" : "secondary"}
-                  onClick={() => playNote(note.frequency, note.name)}
-                  disabled={isPlaying && currentNote !== note.name}
-                  className="flex-1 text-xs font-mono h-6 bg-muted-foreground/20 hover:bg-muted-foreground/30"
-                >
-                  {note.name}
-                </Button>
-                {gaps}
+              <div
+                key={key.name}
+                className={`absolute w-6 h-full cursor-pointer transition-all duration-100 flex items-end justify-center pb-1 text-xs font-medium pointer-events-auto select-none ${
+                  currentNote === key.name
+                    ? "bg-gray-600 shadow-inner transform translate-y-1"
+                    : "bg-gray-900 hover:bg-gray-800"
+                }`}
+                style={{
+                  left: `calc(${leftPercentage}% - 0.75rem)`,
+                  borderRadius: "0 0 4px 4px",
+                  boxShadow: currentNote === key.name 
+                    ? "inset 0 2px 4px rgba(0,0,0,0.6)" 
+                    : "0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)"
+                }}
+                onClick={() => playNote(key.frequency, key.name)}
+              >
+                <span className="text-white text-xs">{key.name}</span>
               </div>
             );
           })}
-          <div className="flex-1"></div>
         </div>
       </div>
       
       {currentNote && (
-        <div className="mt-2 text-center">
+        <div className="text-center">
           <span className="text-xs text-muted-foreground">
             Playing: <span className="font-medium text-foreground">{currentNote}</span>
           </span>
