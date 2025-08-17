@@ -417,7 +417,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: MemberSightReadingModule,
     dbFunctionName: "member-sight-reading-studio",
-    requiredRoles: ["member", "admin"]
+    requiredRoles: ["member", "admin", "super-admin"]
   },
 
   // Finance modules
