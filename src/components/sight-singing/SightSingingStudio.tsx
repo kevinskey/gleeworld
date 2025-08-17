@@ -587,14 +587,16 @@ export const SightSingingStudio: React.FC = () => {
                 <Card className="p-4 flex-1 flex flex-col">
                   <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Recording</h2>
                   <div className="flex-1 flex flex-col min-h-0">
-                    <RecordingControls
-                      isRecording={isRecording}
-                      duration={recordingDuration}
-                      onStartRecording={handleStartRecording}
-                      onStopRecording={handleStopRecording}
-                      hasRecording={!!audioBlob}
-                      onClearRecording={handleClearAll}
-                    />
+              <RecordingControls
+                isRecording={isRecording}
+                duration={recordingDuration}
+                onStartRecording={handleStartRecording}
+                onStopRecording={handleStopRecording}
+                hasRecording={!!audioBlob}
+                onClearRecording={handleClearAll}
+                metronomeIsPlaying={metronomeIsPlaying}
+                currentBpm={currentBpm}
+              />
                     
                     {/* Combined Audio Controls */}
                     {combinedAudioUrl && (

@@ -10,6 +10,8 @@ interface RecordingControlsProps {
   onStopRecording: () => void;
   hasRecording: boolean;
   onClearRecording: () => void;
+  metronomeIsPlaying?: boolean;
+  currentBpm?: number;
 }
 
 export const RecordingControls: React.FC<RecordingControlsProps> = ({
@@ -18,7 +20,9 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
   onStartRecording,
   onStopRecording,
   hasRecording,
-  onClearRecording
+  onClearRecording,
+  metronomeIsPlaying = false,
+  currentBpm = 120
 }) => {
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -61,10 +65,15 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
       </div>
 
       {(isRecording || hasRecording) && (
-        <div className="text-center">
+        <div className="text-center space-y-1">
           <Badge variant={isRecording ? "destructive" : "secondary"} className="text-xs">
             {isRecording ? `Recording ${formatDuration(duration)}` : `Recorded ${formatDuration(duration)}`}
           </Badge>
+          {isRecording && metronomeIsPlaying && (
+            <Badge variant="outline" className="text-xs">
+              ♪ {currentBpm} BPM
+            </Badge>
+          )}
         </div>
       )}
     </div>
