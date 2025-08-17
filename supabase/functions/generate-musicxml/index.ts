@@ -363,6 +363,40 @@ interface SightSingingParams {
   title?: string;
 }
 
+// Seeded random number generator for deterministic but varied fallback generation
+class SeededRandom {
+  private seed: number;
+  
+  constructor(seed: string | number) {
+    // Convert string seed to number
+    if (typeof seed === 'string') {
+      let hash = 0;
+      for (let i = 0; i < seed.length; i++) {
+        const char = seed.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+      }
+      this.seed = Math.abs(hash);
+    } else {
+      this.seed = Math.abs(seed);
+    }
+  }
+  
+  next(): number {
+    // Linear congruential generator
+    this.seed = (this.seed * 1664525 + 1013904223) % 4294967296;
+    return this.seed / 4294967296;
+  }
+  
+  nextInt(min: number, max: number): number {
+    return Math.floor(this.next() * (max - min + 1)) + min;
+  }
+  
+  choice<T>(array: T[]): T {
+    return array[this.nextInt(0, array.length - 1)];
+  }
+}
+
 serve(async (req) => {
   const origin = req.headers.get("origin");
   if (req.method === "OPTIONS") return new Response(null,{status:204,headers:cors(origin)});
@@ -372,11 +406,16 @@ serve(async (req) => {
   try {
     // 1) Parse request
     console.log("Stage: parsing request");
-    const params: SightSingingParams = await req.json().catch((e) => {
+    const body = await req.json().catch((e) => {
       console.error("JSON parse error:", e);
       throw new Error("Invalid JSON in request body");
     });
     
+    // Extract requestId and randomSeed for diagnostics and seeding
+    const { requestId, randomSeed, ...params } = body as SightSingingParams & { requestId?: string; randomSeed?: number };
+    
+    console.log("Received requestId:", requestId);
+    console.log("Received randomSeed:", randomSeed);
     console.log("Received params:", JSON.stringify(params, null, 2));
 
     // 2) Check secrets
@@ -385,78 +424,98 @@ serve(async (req) => {
     console.log("OpenAI API Key available:", !!OPENAI_API_KEY);
     
     if (!OPENAI_API_KEY) {
-      console.log("No OpenAI API key found, using fallback generator");
+      console.log("No OpenAI API key found, using seeded fallback generator");
       
-      // Simple fallback that generates basic exercises
+      // Create seeded random generator for varied but reproducible results
+      const seedString = `${requestId || 'default'}-${randomSeed || Date.now()}`;
+      const rng = new SeededRandom(seedString);
+      console.log("Using seed for fallback:", seedString);
+      
+      // Simple fallback that generates varied exercises
       const allowedDur = params.allowedDur ?? ["quarter"];
       const numMeasures = params.numMeasures ?? 4;
+      const key = params.key ?? { tonic: "C", mode: "major" };
+      const time = params.time ?? { num: 4, den: 4 };
       
-      console.log("Generating fallback with durations:", allowedDur);
+      console.log("Generating seeded fallback with durations:", allowedDur);
+      
+      // Define varied melodic patterns using scale degrees
+      const melodicPatterns = [
+        [1, 2, 3, 4], [4, 3, 2, 1], [1, 3, 5, 3], [5, 3, 1, 3],
+        [1, 2, 1, 3], [3, 4, 5, 4], [5, 4, 3, 2], [2, 3, 4, 5],
+        [1, 5, 4, 3], [3, 1, 2, 4], [4, 2, 1, 3], [5, 6, 7, 8],
+        [8, 7, 6, 5], [1, 1, 2, 2], [3, 3, 4, 4], [5, 5, 6, 6]
+      ];
+      
+      // Define rhythmic patterns for different time signatures
+      const rhythmicPatterns = {
+        "4/4": [
+          ["quarter", "quarter", "quarter", "quarter"],
+          ["half", "quarter", "quarter"],
+          ["quarter", "half", "quarter"],
+          ["quarter", "quarter", "half"]
+        ],
+        "3/4": [
+          ["quarter", "quarter", "quarter"],
+          ["half", "quarter"],
+          ["quarter", "half"]
+        ],
+        "2/4": [
+          ["quarter", "quarter"],
+          ["half"]
+        ]
+      };
+      
+      const timeKey = `${time.num}/${time.den}` as keyof typeof rhythmicPatterns;
+      const availableRhythms = rhythmicPatterns[timeKey] || rhythmicPatterns["4/4"];
+      
+      // Filter rhythmic patterns to only use allowed durations
+      const validRhythms = availableRhythms.filter(pattern => 
+        pattern.every(dur => allowedDur.includes(dur))
+      );
+      
+      const finalRhythms = validRhythms.length > 0 ? validRhythms : [Array(time.num).fill("quarter")];
+      
+      // Generate varied measures using seeded randomization
+      const measures = Array(numMeasures).fill(null).map((_, measureIndex) => {
+        const melodicPattern = rng.choice(melodicPatterns);
+        const rhythmicPattern = rng.choice(finalRhythms);
+        
+        return rhythmicPattern.map((dur, noteIndex) => ({
+          kind: "note",
+          dur: { base: dur, dots: 0 },
+          pitch: { 
+            degree: melodicPattern[noteIndex % melodicPattern.length], 
+            oct: 4, 
+            acc: 0 
+          }
+        }));
+      });
       
       const jsonScore = {
-        key: params.key ?? { tonic: "C", mode: "major" },
-        time: params.time ?? { num: 4, den: 4 },
+        key,
+        time,
         numMeasures,
         parts: [{
           role: "S",
           range: { min: "C4", max: "C5" },
-          measures: Array(numMeasures).fill(null).map(() => 
-            Array(4).fill(null).map(() => ({
-              kind: "note",
-              dur: { base: allowedDur[0], dots: 0 },
-              pitch: { step: "C", alter: 0, oct: 4 }
-            }))
-          )
+          measures
         }],
         cadencePlan: [{ bar: numMeasures, cadence: "PAC" }]
       };
       
-      const musicXML = `<?xml version="1.0" encoding="UTF-8"?>
-<score-partwise version="3.1">
-  <part-list>
-    <score-part id="P1">
-      <part-name>Soprano</part-name>
-    </score-part>
-  </part-list>
-  <part id="P1">
-    ${Array(numMeasures).fill(null).map((_, i) => `
-    <measure number="${i + 1}">
-      ${i === 0 ? `
-      <attributes>
-        <divisions>16</divisions>
-        <key><fifths>0</fifths></key>
-        <time><beats>4</beats><beat-type>4</beat-type></time>
-      </attributes>` : ''}
-      <note>
-        <pitch><step>C</step><octave>4</octave></pitch>
-        <duration>16</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch><step>D</step><octave>4</octave></pitch>
-        <duration>16</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch><step>E</step><octave>4</octave></pitch>
-        <duration>16</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch><step>F</step><octave>4</octave></pitch>
-        <duration>16</duration>
-        <type>quarter</type>
-      </note>
-    </measure>`).join('')}
-  </part>
-</score-partwise>`;
+      // Generate MusicXML using the existing helper
+      const musicXML = toMusicXML(jsonScore, params.allowAccidentals || false);
       
-      console.log("Fallback generation complete");
+      console.log("Seeded fallback generation complete");
       return new Response(JSON.stringify({
         success: true,
         json: jsonScore,
         musicXML,
-        message: "Generated using fallback (no OpenAI key)"
+        message: "Generated using seeded fallback (no OpenAI key)",
+        source: "fallback-seeded",
+        requestId,
+        randomSeed
       }), {status:200,headers:cors(origin)});
     }
 
@@ -570,9 +629,13 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
           ]
         };
         
+        // Create seeded random generator for this measure if we have seeds
+        const seedString = `${params.requestId || 'default'}-${params.randomSeed || Date.now()}-${measureIndex}`;
+        const rng = new SeededRandom(seedString);
+        
         // Get available patterns based on selected motions
         const availablePatterns = allowedMotion.flatMap(motion => patterns[motion as keyof typeof patterns] || []);
-        const pattern = availablePatterns[measureIndex % availablePatterns.length] || [1,2,3,4];
+        const pattern = availablePatterns.length > 0 ? rng.choice(availablePatterns) : [1,2,3,4];
         
         // Create educationally appropriate rhythmic patterns based on time signature
         let rhythmicPattern: DurBase[] = [];
@@ -593,7 +656,7 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
               const availablePatterns = patterns4_4.filter(p => 
                 p.every(dur => durOptions.includes(dur as DurBase))
               );
-              rhythmicPattern = (availablePatterns[measureIndex % availablePatterns.length] || ["quarter", "quarter", "quarter", "quarter"]) as DurBase[];
+              rhythmicPattern = (availablePatterns.length > 0 ? rng.choice(availablePatterns) : ["quarter", "quarter", "quarter", "quarter"]) as DurBase[];
             } else if (timeSignature.num === 3) {
               // 3/4 time - emphasize beat 1
               const patterns3_4 = [
@@ -606,7 +669,7 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
               const availablePatterns = patterns3_4.filter(p => 
                 p.every(dur => durOptions.includes(dur as DurBase))
               );
-              rhythmicPattern = (availablePatterns[measureIndex % availablePatterns.length] || ["quarter", "quarter", "quarter"]) as DurBase[];
+              rhythmicPattern = (availablePatterns.length > 0 ? rng.choice(availablePatterns) : ["quarter", "quarter", "quarter"]) as DurBase[];
             }
           }
         } else if (timeSignature.den === 8) {
@@ -622,7 +685,7 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
               p.every(dur => durOptions.includes(dur as DurBase))
             );
             if (availablePatterns.length > 0) {
-              rhythmicPattern = availablePatterns[measureIndex % availablePatterns.length] as DurBase[];
+              rhythmicPattern = rng.choice(availablePatterns) as DurBase[];
             }
           }
         }
@@ -632,14 +695,14 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
           let noteIndex = 0;
           while (currentTicks < measureTicks && noteIndex < pattern.length) {
             const remainingTicks = measureTicks - currentTicks;
-            const availableDurs = durOptions.filter(dur => {
-              const ticksNeeded = TICKS[dur as DurBase];
-              return ticksNeeded <= remainingTicks;
-            });
-            
-            if (availableDurs.length === 0) break;
-            
-            const selectedDur = availableDurs[Math.floor(Math.random() * availableDurs.length)] as DurBase;
+              const availableDurs = durOptions.filter(dur => {
+                const ticksNeeded = TICKS[dur as DurBase];
+                return ticksNeeded <= remainingTicks;
+              });
+              
+              if (availableDurs.length === 0) break;
+              
+              const selectedDur = rng.choice(availableDurs) as DurBase;
             rhythmicPattern.push(selectedDur);
             currentTicks += TICKS[selectedDur];
             noteIndex++;
@@ -774,7 +837,10 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
       success: true,
       json: scoreJson,
       musicXML: xml,
-      message: `Generated ${numMeasures} measures successfully with OpenAI`
+      message: `Generated ${numMeasures} measures successfully with OpenAI`,
+      source: aiJson ? "openai" : "fallback-seeded",
+      requestId,
+      randomSeed
     }), {status:200,headers:cors(origin)});
 
   } catch (error) {
