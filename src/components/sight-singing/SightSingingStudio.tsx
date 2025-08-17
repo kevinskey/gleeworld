@@ -26,6 +26,7 @@ import { RecordingShareDialog } from './RecordingShareDialog';
 // Import hooks
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 import { useTonePlayback } from './hooks/useTonePlayback';
+import { HarmonyControls, HarmonySettings } from './HarmonyControls';
 import { useGrading } from './hooks/useGrading';
 import { useMetronome } from './hooks/useMetronome';
 import { useAudioCombiner } from './hooks/useAudioCombiner';

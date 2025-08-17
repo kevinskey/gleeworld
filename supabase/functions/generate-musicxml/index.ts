@@ -348,7 +348,7 @@ function toMusicXML(score:any, allowAccidentals:boolean=false){
   return `<?xml version="1.0" encoding="UTF-8"?>\n<score-partwise version="3.1">${partList}${partsXml}</score-partwise>`;
 }
 
-// New interface for the sight-singing parameters
+// New interface for the sight-singing parameters with enhanced tonal harmony controls
 interface SightSingingParams {
   key?: { tonic: string; mode: string };
   time?: { num: number; den: number };
@@ -357,10 +357,29 @@ interface SightSingingParams {
   allowedDur?: string[];
   allowDots?: boolean;
   allowAccidentals?: boolean;
-  intervalMotion?: string[];
-  cadenceEvery?: number;
+  
+  // Enhanced melodic and harmonic controls
+  intervalMotion?: string[]; // ["step", "skip", "leap", "repeat"]
+  maxInterval?: number; // Maximum interval size (in semitones, default: 7 for perfect 5th)
+  avoidedIntervals?: number[]; // Intervals to avoid (e.g., [6] for tritone)
+  stepwiseMotionPercentage?: number; // Percentage of stepwise motion (0-100, default: 60)
+  
+  // Phrase and cadence controls
+  cadenceEvery?: number; // Measures between cadences
+  cadenceTypes?: string[]; // ["authentic", "half", "plagal", "deceptive"]
+  phraseStructure?: string; // "aaba", "abac", "binary", "through"
+  
+  // Voice leading and melodic rules
+  enforceVoiceLeading?: boolean; // Apply smooth voice leading rules
+  allowDirectMotion?: boolean; // Allow direct motion to perfect intervals
+  requireResolution?: boolean; // Require tendency tones to resolve properly
+  melodicRange?: { min: number; max: number }; // Scale degree range (1-8)
+  
+  // Advanced controls
   bpm?: string;
   title?: string;
+  harmonicRhythm?: number; // How often harmony changes (in beats)
+  sequencePattern?: boolean; // Use melodic sequences
 }
 
 // Seeded random number generator for deterministic but varied fallback generation
@@ -534,9 +553,17 @@ serve(async (req) => {
     // 1) Ask OpenAI for JSON score structure using scale degrees
     let aiJson = null;
     try {
-      const systemPrompt = `You are a music theory expert. Generate a JSON sight-singing exercise using scale degrees (1-7) instead of letter names.
+      const systemPrompt = `You are a music theory expert. Generate a JSON sight-singing exercise using scale degrees (1-7) that follows proper tonal harmony rules.
 
-Use this JSON schema for pitches:
+HARMONIC RULES TO FOLLOW:
+- Use proper voice leading with smooth melodic lines
+- Avoid tritones and augmented intervals unless specifically allowed
+- Use authentic cadences (7-1, 2-1) at phrase endings
+- Employ stepwise motion for at least ${params.stepwiseMotionPercentage || 60}% of intervals
+- Keep melodic leaps within reasonable bounds (max ${params.maxInterval || 7} semitones)
+- Use chord tones (1, 3, 5) on strong beats when possible
+
+JSON schema for pitches:
 {
   "pitch": {
     "degree": 1-7,    // Scale degree in the current key (1=tonic, 2=supertonic, etc.)
@@ -546,8 +573,13 @@ Use this JSON schema for pitches:
 }
 
 Create varied melodies using ONLY these durations: ${allowed.join(", ")}.
-Focus on diatonic motion and musical phrase structure.
-${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
+Focus on diatonic motion, proper phrase structure, and musical cadences.
+${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}
+
+CADENCE REQUIREMENTS:
+- End phrases with authentic cadences (scale degrees 7-1 or 2-1)
+- Use half cadences (ending on 5) for internal phrase endings
+- Create balanced phrase structures (4 or 8 measure phrases)`;
 
       const apiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -564,7 +596,16 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
             },
             {
               role: "user", 
-              content: `Create a ${numMeasures}-measure sight-singing exercise in ${params.key?.tonic || 'C'} ${params.key?.mode || 'major'} with ${time.num}/${time.den} time signature. Use scale degrees and durations: ${allowed.join(", ")}`
+              content: `Create a ${numMeasures}-measure sight-singing exercise in ${params.key?.tonic || 'C'} ${params.key?.mode || 'major'} with ${time.num}/${time.den} time signature. 
+              
+SPECIFIC REQUIREMENTS:
+- Use scale degrees and durations: ${allowed.join(", ")}
+- Apply ${params.stepwiseMotionPercentage || 60}% stepwise motion
+- Include proper cadences every ${params.cadenceEvery || 4} measures
+- Maximum interval size: ${params.maxInterval || 7} semitones
+- Cadence types to use: ${(params.cadenceTypes || ['authentic']).join(', ')}
+- Melodic range: degrees ${params.melodicRange?.min || 1} to ${params.melodicRange?.max || 8}
+- Phrase structure: ${params.phraseStructure || 'balanced phrases'}`
             }
           ],
           max_tokens: 1000,
@@ -600,42 +641,90 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
       const durOptions = allowed.filter(d => ["whole","half","quarter","eighth","16th"].includes(d));
       console.log("Using durations for generation:", durOptions);
       
-      // Function to create notes that fill a measure using educational rhythmic patterns
+      // Function to create notes that follow tonal harmony rules
       const createMeasureNotes = (measureIndex: number, timeSignature: {num: number, den: number}) => {
         const measureTicks = barTicks(timeSignature.num, timeSignature.den as 1|2|4|8|16);
         const notes = [];
         let currentTicks = 0;
         
-        // Use interval motion preferences
+        // Enhanced tonal harmony controls
+        const maxInterval = params.maxInterval ?? 7; // Perfect 5th by default
+        const avoidedIntervals = params.avoidedIntervals ?? [6]; // Avoid tritone by default
+        const stepwisePercentage = params.stepwiseMotionPercentage ?? 60;
+        const enforceVoiceLeading = params.enforceVoiceLeading ?? true;
+        const melodicRange = params.melodicRange ?? { min: 1, max: 8 };
+        
+        // Use interval motion preferences with enhanced control
         const allowedMotion = params.intervalMotion || ["step", "skip"];
         
-        // Educational scale degree patterns that help with sight-reading
+        // Enhanced melodic patterns that follow tonal harmony rules
         const patterns = {
           step: [
             [1,2,3,2], [3,2,1,2], [1,2,1,3], [3,4,5,4], [5,4,3,4], // stepwise motion
-            [1,2,3,4], [4,3,2,1], [5,6,7,8], [8,7,6,5] // scales
+            [1,2,3,4], [4,3,2,1], [5,6,7,8], [8,7,6,5], // scales
+            [1,7,1,2], [3,2,3,4], [5,4,5,6] // neighbor tones
           ],
           skip: [
-            [1,3,5,3], [5,3,1,3], [1,3,2,4], [2,4,6,4], // thirds
-            [1,5,3,1], [3,1,5,3], [5,1,3,5] // mixed skips
+            [1,3,5,3], [5,3,1,3], [1,3,2,4], [2,4,6,4], // thirds (consonant skips)
+            [1,5,3,1], [3,1,5,3], [5,1,3,5], // chord outlines
+            [1,3,5,8], [8,5,3,1], [3,5,8,5] // triad patterns
           ],
           leap: [
-            [1,5,1,4], [1,4,1,5], [5,1,5,2], [1,8,1,6], // fourths and fifths
-            [3,8,3,6], [5,1,4,8] // larger leaps
+            [1,5,1,4], [1,4,1,5], [5,1,4,3], // fourths and fifths (consonant leaps)
+            [1,6,5,4], [3,1,2,5], [5,3,6,5] // controlled larger intervals
           ],
           repeat: [
-            [1,1,2,2], [3,3,2,2], [5,5,4,4], [1,1,1,2], // repeated notes
-            [3,3,3,4], [5,5,5,6]
+            [1,1,2,2], [3,3,2,2], [5,5,4,4], [1,1,1,2], // repeated notes for stability
+            [3,3,3,4], [5,5,5,6], [2,2,1,1] // emphasis patterns
           ]
         };
         
+        // Cadential patterns based on measure position
+        const cadenceEvery = params.cadenceEvery ?? 4;
+        const isCadentialMeasure = (measureIndex + 1) % cadenceEvery === 0;
+        
         // Create seeded random generator for this measure if we have seeds
-        const seedString = `${params.requestId || 'default'}-${params.randomSeed || Date.now()}-${measureIndex}`;
+        const seedString = `${requestId || 'default'}-${randomSeed || Date.now()}-${measureIndex}`;
         const rng = new SeededRandom(seedString);
         
-        // Get available patterns based on selected motions
+        if (isCadentialMeasure) {
+          // Use cadential patterns that lead to tonic
+          const cadenceTypes = params.cadenceTypes ?? ["authentic"];
+          const cadenceType = rng.choice(cadenceTypes);
+          
+          const cadentialPatterns = {
+            authentic: [[7,1], [2,1], [5,1], [4,3,2,1]], // Leading tone to tonic, V-I motion
+            half: [[2,3], [6,5], [4,5], [1,2,3,2]], // Motion to dominant
+            plagal: [[4,1], [6,5], [4,3,2,1]], // IV-I motion
+            deceptive: [[7,6], [2,6], [5,6,5,4]] // V-vi motion
+          };
+          
+          const pattern = cadentialPatterns[cadenceType as keyof typeof cadentialPatterns] || cadentialPatterns.authentic;
+          const selectedPattern = Array.isArray(pattern[0]) ? rng.choice(pattern) : pattern;
+          
+          // Ensure cadential pattern fits the melodic range
+          const adjustedPattern = selectedPattern.map(degree => {
+            if (degree > melodicRange.max) return degree - 7; // Drop octave
+            if (degree < melodicRange.min) return degree + 7; // Raise octave
+            return degree;
+          });
+          
+          return createNotesFromPattern(adjustedPattern, rhythmicPattern || ["quarter", "quarter", "quarter", "quarter"]);
+        }
+        
+        // Get available patterns based on selected motions and voice leading rules
         const availablePatterns = allowedMotion.flatMap(motion => patterns[motion as keyof typeof patterns] || []);
-        const pattern = availablePatterns.length > 0 ? rng.choice(availablePatterns) : [1,2,3,4];
+        let pattern = availablePatterns.length > 0 ? rng.choice(availablePatterns) : [1,2,3,4];
+        
+        // Apply voice leading and interval controls
+        if (enforceVoiceLeading) {
+          pattern = applyVoiceLeadingRules(pattern, measureIndex, maxInterval, avoidedIntervals, melodicRange);
+        }
+        
+        // Ensure stepwise motion percentage
+        if (stepwisePercentage > 0) {
+          pattern = enforceStepwiseMotion(pattern, stepwisePercentage, rng);
+        }
         
         // Create educationally appropriate rhythmic patterns based on time signature
         let rhythmicPattern: DurBase[] = [];
@@ -766,7 +855,130 @@ ${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}`;
           }
         }
         
+        return createNotesFromPattern(pattern, rhythmicPattern);
+      };
+      
+      // Helper function to create notes from melodic pattern and rhythmic pattern
+      const createNotesFromPattern = (melodicPattern: number[], rhythmicPattern: DurBase[]) => {
+        const notes = [];
+        let currentTicks = 0;
+        const measureTicks = barTicks(time.num, time.den as 1|2|4|8|16);
+        
+        for (let i = 0; i < rhythmicPattern.length && i < melodicPattern.length; i++) {
+          const duration = rhythmicPattern[i];
+          const degree = melodicPattern[i % melodicPattern.length];
+          
+          // Smart octave placement for educational purposes
+          let octave = 4;
+          if (degree >= 8) {
+            octave = 5;
+          } else if (degree >= 1 && degree <= 7) {
+            octave = 4;
+          }
+          
+          notes.push({
+            kind: "note",
+            dur: { base: duration, dots: 0 },
+            pitch: { degree: ((degree - 1) % 7) + 1, oct: octave, acc: 0 }
+          });
+          
+          currentTicks += TICKS[duration];
+        }
+        
+        // Fill any remaining time with rest if needed
+        if (currentTicks < measureTicks) {
+          const remainingTicks = measureTicks - currentTicks;
+          
+          const restOptions = Object.entries(TICKS)
+            .filter(([_, ticks]) => ticks === remainingTicks)
+            .map(([dur, _]) => dur as DurBase);
+          
+          if (restOptions.length > 0) {
+            notes.push({
+              kind: "rest",
+              dur: { base: restOptions[0], dots: 0 }
+            });
+          }
+        }
+        
         return notes;
+      };
+      
+      // Helper function to apply voice leading rules
+      const applyVoiceLeadingRules = (pattern: number[], measureIndex: number, maxInterval: number, avoidedIntervals: number[], melodicRange: { min: number; max: number }) => {
+        const improvedPattern = [...pattern];
+        
+        for (let i = 1; i < improvedPattern.length; i++) {
+          const prevDegree = improvedPattern[i - 1];
+          const currentDegree = improvedPattern[i];
+          const interval = Math.abs(currentDegree - prevDegree);
+          
+          // Check if interval exceeds maximum allowed
+          if (interval > maxInterval) {
+            // Adjust to smaller interval
+            if (currentDegree > prevDegree) {
+              improvedPattern[i] = prevDegree + Math.min(maxInterval, 2); // Prefer step or small skip
+            } else {
+              improvedPattern[i] = prevDegree - Math.min(maxInterval, 2);
+            }
+          }
+          
+          // Avoid specific intervals (like tritones)
+          if (avoidedIntervals.includes(interval)) {
+            // Replace with consonant interval
+            const consonantIntervals = [1, 2, 3, 4, 5]; // unison, 2nd, 3rd, 4th, 5th
+            const replacement = consonantIntervals[Math.floor(Math.random() * consonantIntervals.length)];
+            
+            if (currentDegree > prevDegree) {
+              improvedPattern[i] = prevDegree + replacement;
+            } else {
+              improvedPattern[i] = prevDegree - replacement;
+            }
+          }
+          
+          // Ensure note stays within melodic range
+          if (improvedPattern[i] > melodicRange.max) {
+            improvedPattern[i] = melodicRange.max;
+          } else if (improvedPattern[i] < melodicRange.min) {
+            improvedPattern[i] = melodicRange.min;
+          }
+        }
+        
+        return improvedPattern;
+      };
+      
+      // Helper function to enforce stepwise motion percentage
+      const enforceStepwiseMotion = (pattern: number[], stepwisePercentage: number, rng: SeededRandom) => {
+        const improvedPattern = [...pattern];
+        const totalIntervals = improvedPattern.length - 1;
+        const requiredStepwise = Math.floor((totalIntervals * stepwisePercentage) / 100);
+        
+        let stepwiseCount = 0;
+        
+        // Count existing stepwise motion
+        for (let i = 1; i < improvedPattern.length; i++) {
+          const interval = Math.abs(improvedPattern[i] - improvedPattern[i - 1]);
+          if (interval <= 1) stepwiseCount++;
+        }
+        
+        // If we need more stepwise motion, convert some intervals
+        let conversionsNeeded = requiredStepwise - stepwiseCount;
+        
+        for (let i = 1; i < improvedPattern.length && conversionsNeeded > 0; i++) {
+          const interval = Math.abs(improvedPattern[i] - improvedPattern[i - 1]);
+          
+          if (interval > 1) {
+            // Convert to stepwise motion
+            if (improvedPattern[i] > improvedPattern[i - 1]) {
+              improvedPattern[i] = improvedPattern[i - 1] + 1;
+            } else {
+              improvedPattern[i] = improvedPattern[i - 1] - 1;
+            }
+            conversionsNeeded--;
+          }
+        }
+        
+        return improvedPattern;
       };
       
       scoreJson = {
