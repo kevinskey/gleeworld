@@ -67,7 +67,7 @@ export const UnifiedDashboard = () => {
         <div
           id="community-hub"
           className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden transition-[max-height,opacity] duration-300"
-          style={{ maxHeight: activeModuleId ? 0 : '45vh', opacity: activeModuleId ? 0 : 1 }}
+          style={{ maxHeight: activeModuleId ? 0 : 'calc(45vh + 400px)', opacity: activeModuleId ? 0 : 1 }}
         >
           <CommunityHubModule />
         </div>
