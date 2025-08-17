@@ -122,6 +122,7 @@ import Appointments from "./pages/Appointments";
 import SearchPage from "./pages/SearchPage";
 import FirstYearHub from "./pages/FirstYearHub";
 import FirstYearConsolePage from "./pages/console/FirstYearConsolePage";
+import SetupCrewPage from "./pages/SetupCrewPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -975,18 +976,26 @@ const App = () => {
                                            </PublicRoute>
                                          } 
                                        />
+                                           <Route 
+                                             path="/executive-board-dashboard" 
+                                             element={<Navigate to="/dashboard" replace />} 
+                                           />
+                                           <Route 
+                                             path="/setup-crews" 
+                                             element={
+                                               <ProtectedRoute>
+                                                 <SetupCrewPage />
+                                               </ProtectedRoute>
+                                             } 
+                                           />
                                           <Route 
-                                            path="/executive-board-dashboard" 
-                                            element={<Navigate to="/dashboard" replace />} 
+                                            path="/google-docs" 
+                                            element={
+                                              <ProtectedRoute>
+                                                <GoogleDocsPage />
+                                              </ProtectedRoute>
+                                            } 
                                           />
-                                         <Route 
-                                           path="/google-docs" 
-                                           element={
-                                             <ProtectedRoute>
-                                               <GoogleDocsPage />
-                                             </ProtectedRoute>
-                                           } 
-                                         />
                       </Routes>
                     </Suspense>
                    <GlobalMusicPlayer />

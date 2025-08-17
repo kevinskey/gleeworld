@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Settings, MessageSquare, Move, Calendar, Plus, Search } from 'lucide-react';
+import { Users, Settings, MessageSquare, Move, Calendar, Plus, Search, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ModuleProps } from '@/types/unified-modules';
 
 export const SetupCrewManagerModule: React.FC<ModuleProps> = ({ user, isFullPage }) => {
   const [activeTab, setActiveTab] = useState('crews');
+  const navigate = useNavigate();
 
   const crewMembers = [
     { id: 1, name: 'Sarah Johnson', year: 'First Year', status: 'Available', crew: 'Equipment Setup' },
@@ -60,10 +62,16 @@ export const SetupCrewManagerModule: React.FC<ModuleProps> = ({ user, isFullPage
         <TabsContent value="crews" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Crew Management</h3>
-            <Button className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Add New Member
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => navigate('/setup-crews')} className="flex items-center gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Full Setup Crew Manager
+              </Button>
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Add New Member
+              </Button>
+            </div>
           </div>
 
           <div className="flex gap-4 mb-4">

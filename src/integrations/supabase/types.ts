@@ -8761,6 +8761,77 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_setup_crew_members: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          crew_id: string
+          id: string
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          crew_id: string
+          id?: string
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          crew_id?: string
+          id?: string
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_setup_crew_members_crew_id_fkey"
+            columns: ["crew_id"]
+            isOneToOne: false
+            referencedRelation: "gw_setup_crews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_setup_crews: {
+        Row: {
+          coordinator_id: string | null
+          created_at: string
+          crew_name: string
+          event_id: string
+          id: string
+          max_members: number | null
+          notes: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          coordinator_id?: string | null
+          created_at?: string
+          crew_name: string
+          event_id: string
+          id?: string
+          max_members?: number | null
+          notes?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          coordinator_id?: string | null
+          created_at?: string
+          crew_name?: string
+          event_id?: string
+          id?: string
+          max_members?: number | null
+          notes?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_sheet_music: {
         Row: {
           archive_reason: string | null
