@@ -14,10 +14,15 @@ export class MusicXMLPlayer {
   private initAudioContext(): AudioContext {
     if (!this.audioContext || this.audioContext.state === 'closed') {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      console.log('Created new audio context, state:', this.audioContext.state);
     }
     
+    // Always ensure context is running before use
     if (this.audioContext.state === 'suspended') {
-      this.audioContext.resume();
+      console.log('Resuming suspended audio context...');
+      this.audioContext.resume().then(() => {
+        console.log('Audio context resumed, state:', this.audioContext?.state);
+      });
     }
     
     return this.audioContext;
@@ -25,7 +30,16 @@ export class MusicXMLPlayer {
 
   private createTone(frequency: number, startTime: number, duration: number, volume: number = 0.3, noteSound: string = 'piano'): void {
     console.log('Creating tone with sound:', noteSound, 'frequency:', frequency);
+    
+    // Ensure audio context is ready before creating oscillator
     const audioContext = this.initAudioContext();
+    if (audioContext.state !== 'running') {
+      console.warn('Audio context not running, state:', audioContext.state);
+      // Try to resume context synchronously if possible
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    }
     
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -156,10 +170,15 @@ export class MusicXMLPlayer {
 
     const audioContext = this.initAudioContext();
     
-    // Ensure audio context is resumed (required for user interaction)
+    // Ensure audio context is properly resumed before scheduling any audio
     try {
       await audioContext.resume();
-      console.log('Audio context state:', audioContext.state);
+      console.log('Audio context state after resume:', audioContext.state);
+      
+      if (audioContext.state !== 'running') {
+        console.error('Audio context failed to start properly, state:', audioContext.state);
+        throw new Error('Audio context failed to initialize. Please try clicking again.');
+      }
     } catch (error) {
       console.error('Failed to resume audio context:', error);
       throw new Error('Audio playback requires user interaction. Please try again.');
@@ -169,6 +188,9 @@ export class MusicXMLPlayer {
     this.startTime = audioContext.currentTime;
     
     console.log('Starting playback with mode:', mode, 'at time:', this.startTime);
+    
+    // Wait a brief moment for audio context to stabilize
+    await new Promise(resolve => setTimeout(resolve, 50));
     
     // Calculate intro duration (one measure of clicks)
     const beatDuration = 60 / parsedScore.tempo;
