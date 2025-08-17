@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
+import { Knob } from '@/components/ui/knob';
 import { useToast } from '@/hooks/use-toast';
 import { Download, Play, Pause, Volume2, VolumeX } from 'lucide-react';
 
@@ -831,33 +832,25 @@ export const SightSingingStudio: React.FC = () => {
                           </div>
 
                           {/* Metronome/BPM Controls */}
-                          <div className="flex items-center gap-2 order-4 lg:order-3">
-                            <div className="flex flex-col items-center gap-1">
-                              <div className="text-xs font-medium">{currentBpm}</div>
-                              <Slider
-                                value={[currentBpm]}
-                                onValueChange={(value) => setCurrentBpm(value[0])}
-                                min={60}
-                                max={180}
-                                step={5}
-                                orientation="vertical"
-                                className="h-12 lg:h-16 w-3 lg:w-4"
-                              />
-                              <div className="text-xs">BPM</div>
-                            </div>
-                            <div className="flex flex-col items-center gap-1">
-                              <div className="text-xs font-medium">{Math.round(metronomeVolume * 100)}</div>
-                              <Slider
-                                value={[metronomeVolume]}
-                                onValueChange={(value) => setMetronomeVolume(value[0])}
-                                min={0}
-                                max={1}
-                                step={0.1}
-                                orientation="vertical"
-                                className="h-12 lg:h-16 w-3 lg:w-4"
-                              />
-                              <div className="text-xs">VOL</div>
-                            </div>
+                          <div className="flex items-center gap-4 order-4 lg:order-3">
+                            <Knob
+                              value={currentBpm}
+                              onValueChange={setCurrentBpm}
+                              min={60}
+                              max={180}
+                              step={5}
+                              size="sm"
+                              label="BPM"
+                            />
+                            <Knob
+                              value={Math.round(metronomeVolume * 100)}
+                              onValueChange={(value) => setMetronomeVolume(value / 100)}
+                              min={0}
+                              max={100}
+                              step={10}
+                              size="sm"
+                              label="VOL"
+                            />
                           </div>
 
                           {/* Divider - hidden on mobile */}
