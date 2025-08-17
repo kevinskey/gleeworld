@@ -454,7 +454,15 @@ export const SightSingingStudio: React.FC = () => {
   };
 
   const handleStartPlayback = async () => {
+    console.log('🎵 handleStartPlayback called');
+    console.log('🎵 currentMusicXML exists:', !!currentMusicXML);
+    console.log('🎵 currentMusicXML length:', currentMusicXML?.length);
+    console.log('🎵 currentBpm:', currentBpm);
+    console.log('🎵 mode:', mode);
+    console.log('🎵 soundSettings:', soundSettings);
+    
     if (!currentMusicXML) {
+      console.error('❌ No currentMusicXML available');
       toast({
         title: "No Exercise",
         description: "Please generate an exercise first.",
@@ -464,12 +472,14 @@ export const SightSingingStudio: React.FC = () => {
     }
 
     try {
+      console.log('🎵 About to call startPlayback...');
       await startPlayback(currentMusicXML, currentBpm);
+      console.log('✅ startPlayback completed successfully');
     } catch (error) {
-      console.error('Playback error:', error);
+      console.error('❌ Playback error:', error);
       toast({
         title: "Playback Failed",
-        description: "Failed to start playback.",
+        description: "Failed to start playback: " + (error instanceof Error ? error.message : String(error)),
         variant: "destructive",
       });
     }

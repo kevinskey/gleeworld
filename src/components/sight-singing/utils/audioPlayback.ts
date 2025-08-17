@@ -164,30 +164,36 @@ export class MusicXMLPlayer {
   }
 
   async playScore(parsedScore: ParsedScore, mode: 'click-only' | 'click-and-score' | 'pitch-only' = 'click-and-score', soundSettings?: { notes: string; click: string }): Promise<void> {
+    console.log('🎹 MusicXMLPlayer.playScore called with mode:', mode);
+    console.log('🎹 ParsedScore:', parsedScore);
+    console.log('🎹 Sound settings:', soundSettings);
+    
     if (this.isPlaying) {
+      console.log('🎹 Already playing, stopping first...');
       this.stop();
     }
 
     const audioContext = this.initAudioContext();
+    console.log('🎹 Audio context state:', audioContext.state);
     
     // Ensure audio context is properly resumed before scheduling any audio
     try {
       await audioContext.resume();
-      console.log('Audio context state after resume:', audioContext.state);
+      console.log('🎹 Audio context state after resume:', audioContext.state);
       
       if (audioContext.state !== 'running') {
-        console.error('Audio context failed to start properly, state:', audioContext.state);
+        console.error('❌ Audio context failed to start properly, state:', audioContext.state);
         throw new Error('Audio context failed to initialize. Please try clicking again.');
       }
     } catch (error) {
-      console.error('Failed to resume audio context:', error);
+      console.error('❌ Failed to resume audio context:', error);
       throw new Error('Audio playback requires user interaction. Please try again.');
     }
     
     this.isPlaying = true;
     this.startTime = audioContext.currentTime;
     
-    console.log('Starting playback with mode:', mode, 'at time:', this.startTime);
+    console.log('🎹 Starting playback with mode:', mode, 'at time:', this.startTime);
     
     // Wait a brief moment for audio context to stabilize
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -195,36 +201,49 @@ export class MusicXMLPlayer {
     // Calculate intro duration (one measure of clicks)
     const beatDuration = 60 / parsedScore.tempo;
     const introDuration = parsedScore.timeSignature.beats * beatDuration;
+    console.log('🎹 Beat duration:', beatDuration, 'Intro duration:', introDuration);
     
     if (mode === 'click-only' || mode === 'click-and-score') {
       // Play click track for intro + all measures
-      console.log('Creating click track with sound:', soundSettings?.click || 'woodblock');
+      console.log('🎹 Creating click track with sound:', soundSettings?.click || 'woodblock');
       this.createClickTrack(parsedScore.tempo, parsedScore.measures.length, parsedScore.timeSignature, soundSettings?.click || 'woodblock');
     }
     
     if (mode === 'click-and-score' || mode === 'pitch-only') {
       // Schedule all notes with intro delay (only add intro delay if we have clicks)
       const introDelay = (mode === 'click-and-score') ? introDuration : 0;
-      console.log('Scheduling notes for playback with sound:', soundSettings?.notes || 'piano', parsedScore.measures.length, 'measures');
+      console.log('🎹 Scheduling notes for playback with sound:', soundSettings?.notes || 'piano');
+      console.log('🎹 Intro delay:', introDelay, 'measures:', parsedScore.measures.length);
+      
       let noteCount = 0;
       parsedScore.measures.forEach((measure, measureIndex) => {
+        console.log(`🎹 Measure ${measureIndex + 1}: ${measure.notes.length} notes`);
         measure.notes.forEach((note, noteIndex) => {
           const noteStartTime = this.startTime + introDelay + note.startTime;
-          console.log(`Note ${noteCount++}: freq=${note.frequency}, start=${noteStartTime}, duration=${note.duration}`);
+          console.log(`🎹 Note ${noteCount++}: ${note.step}${note.octave} freq=${note.frequency}Hz, start=${noteStartTime}s, duration=${note.duration}s`);
           this.createTone(note.frequency, noteStartTime, note.duration, 0.4, soundSettings?.notes || 'piano');
         });
       });
-      console.log(`Total notes scheduled: ${noteCount}`);
+      console.log(`🎹 Total notes scheduled: ${noteCount}`);
+      
+      if (noteCount === 0) {
+        console.warn('⚠️ No notes were scheduled for playback!');
+      }
     }
     
     // Auto-stop when complete - adjust duration based on mode
     const introDelay = (mode === 'click-and-score') ? introDuration : 0;
     const totalDuration = introDelay + parsedScore.totalDuration + 1; // +1 second buffer
+    console.log('🎹 Total playback duration:', totalDuration, 'seconds');
+    
     const stopTimeout = setTimeout(() => {
+      console.log('⏰ Auto-stop timeout triggered');
       this.stop();
     }, totalDuration * 1000);
     
     this.clickTrack.push(stopTimeout);
+    
+    console.log('✅ MusicXMLPlayer.playScore setup complete');
   }
 
   stop(): void {
