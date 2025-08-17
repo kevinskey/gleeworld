@@ -77,6 +77,7 @@ import MediaLibrary from '@/pages/admin/MediaLibrary';
 import { KaraokeModule } from '@/components/modules/KaraokeModule';
 import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
 import { MemberSightReadingModule } from '@/components/modules/MemberSightReadingModule';
+import MemberSightReadingStudioPage from '@/pages/MemberSightReadingStudio';
 
 // Single source of truth for all modules
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -416,6 +417,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isNew: true,
     isActive: true,
     component: MemberSightReadingModule,
+    fullPageComponent: MemberSightReadingStudioPage,
     dbFunctionName: "member-sight-reading-studio",
     requiredRoles: ["member", "admin", "super-admin"]
   },
