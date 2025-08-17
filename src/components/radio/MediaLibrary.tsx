@@ -103,6 +103,7 @@ export const MediaLibrary = ({
   const fetchMediaData = async () => {
     try {
       setLoading(true);
+      console.log('🎵 Fetching media library data...');
       
       const { data: mediaData, error: mediaError } = await supabase
         .from('gw_media_library')
@@ -110,17 +111,23 @@ export const MediaLibrary = ({
         .order('created_at', { ascending: false });
 
       if (mediaError) {
-        console.error('Error fetching media library:', mediaError);
+        console.error('❌ Error fetching media library:', mediaError);
         toast({
           title: "Error",
           description: "Failed to load media library",
           variant: "destructive",
         });
       } else {
+        console.log(`✅ Loaded ${mediaData?.length || 0} media files`);
+        console.log('📁 Media files by type:', mediaData?.reduce((acc, file) => {
+          const type = getFileTypeFromUrl(file.file_url);
+          acc[type] = (acc[type] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>));
         setMediaFiles(mediaData || []);
       }
     } catch (error) {
-      console.error('Error fetching media data:', error);
+      console.error('❌ Error fetching media data:', error);
       toast({
         title: "Error",
         description: "Failed to load media library",
@@ -188,10 +195,18 @@ export const MediaLibrary = ({
   };
 
   const resolveUrl = async (file: MediaFile) => {
+    // Handle files with bucket_id and file_path (newer storage format)
     if (file.bucket_id && file.file_path) {
-      const url = await getFileUrl(file.bucket_id, file.file_path);
-      return url || file.file_url;
+      try {
+        const url = await getFileUrl(file.bucket_id, file.file_path);
+        return url || file.file_url;
+      } catch (error) {
+        console.error('Error resolving URL for file:', file.title, error);
+        return file.file_url;
+      }
     }
+    
+    // Handle legacy files without bucket_id (direct URLs)
     return file.file_url;
   };
 
