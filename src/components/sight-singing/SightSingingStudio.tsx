@@ -808,15 +808,15 @@ export const SightSingingStudio: React.FC = () => {
                   <div className="flex-1 min-h-0 relative">
                     {/* Floating Transport Controls */}
                     {currentMusicXML && (
-                      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-white/95 backdrop-blur-sm border rounded-lg shadow-lg p-3">
-                        <div className="flex items-center gap-3">
+                      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-white/95 backdrop-blur-sm border rounded-lg shadow-lg p-4 w-[85%]">
+                        <div className="flex items-center justify-center gap-6">
                           {/* Sound Selectors */}
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3">
                             <Select 
                               value={soundSettings.notes} 
                               onValueChange={(value) => setSoundSettings(prev => ({ ...prev, notes: value }))}
                             >
-                              <SelectTrigger className="h-8 w-24 text-xs">
+                              <SelectTrigger className="h-10 w-28 text-sm">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-background border shadow-lg z-50">
@@ -830,7 +830,7 @@ export const SightSingingStudio: React.FC = () => {
                               value={soundSettings.click} 
                               onValueChange={(value) => setSoundSettings(prev => ({ ...prev, click: value }))}
                             >
-                              <SelectTrigger className="h-8 w-24 text-xs">
+                              <SelectTrigger className="h-10 w-28 text-sm">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-background border shadow-lg z-50">
@@ -840,10 +840,10 @@ export const SightSingingStudio: React.FC = () => {
                             </Select>
                           </div>
 
-                          <div className="h-6 w-px bg-border"></div>
+                          <div className="h-8 w-px bg-border"></div>
 
                           {/* Play Mode Buttons */}
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-2">
                             <Button
                               size="sm"
                               variant={isPlaying && mode === 'click-and-score' ? "default" : "outline"}
@@ -855,10 +855,14 @@ export const SightSingingStudio: React.FC = () => {
                                   handleStartPlayback();
                                 }
                               }}
-                              className="h-9 px-3 text-xs"
+                              className="h-12 px-4 text-base font-semibold"
                               title="Play both pitch and click"
                             >
-                              ♪+♩
+                              <div className="flex items-center gap-1">
+                                <span className="text-lg">♪</span>
+                                <span className="text-xs">+</span>
+                                <span className="text-lg">♩</span>
+                              </div>
                             </Button>
                             <Button
                               size="sm"
@@ -871,7 +875,7 @@ export const SightSingingStudio: React.FC = () => {
                                   handleStartPlayback();
                                 }
                               }}
-                              className="h-9 px-3 text-xs"
+                              className="h-12 px-4 text-xl"
                               title="Play click only"
                             >
                               ♩
@@ -887,27 +891,27 @@ export const SightSingingStudio: React.FC = () => {
                                   handleStartPlayback();
                                 }
                               }}
-                              className="h-9 px-3 text-xs"
+                              className="h-12 px-4 text-xl"
                               title="Play pitch only"
                             >
                               ♪
                             </Button>
                           </div>
 
-                          <div className="h-6 w-px bg-border"></div>
+                          <div className="h-8 w-px bg-border"></div>
 
                           {/* Record Button */}
                           <Button
                             size="sm"
                             variant={isRecording ? "destructive" : "outline"}
                             onClick={isRecording ? handleStopRecording : handleStartRecording}
-                            className="h-9 w-9 p-0"
+                            className="h-12 w-12 p-0"
                             title="Record"
                           >
                             {isRecording ? (
-                              <div className="h-3 w-3 bg-white rounded-sm" />
+                              <div className="h-4 w-4 bg-white rounded-sm" />
                             ) : (
-                              <div className="h-4 w-4 bg-red-500 rounded-full" />
+                              <div className="h-5 w-5 bg-red-500 rounded-full" />
                             )}
                           </Button>
 
@@ -919,17 +923,17 @@ export const SightSingingStudio: React.FC = () => {
                               stopPlayback();
                               if (isRecording) handleStopRecording();
                             }}
-                            className="h-9 w-9 p-0"
+                            className="h-12 w-12 p-0"
                             disabled={!isPlaying && !isRecording}
                             title="Stop all"
                           >
-                            <div className="h-3 w-3 bg-current" />
+                            <div className="h-4 w-4 bg-current" />
                           </Button>
 
                           {/* Audio Playback Button */}
                           {audioBlob && (
                             <>
-                              <div className="h-6 w-px bg-border"></div>
+                              <div className="h-8 w-px bg-border"></div>
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -937,10 +941,10 @@ export const SightSingingStudio: React.FC = () => {
                                   const audio = new Audio(URL.createObjectURL(audioBlob));
                                   audio.play();
                                 }}
-                                className="h-9 w-9 p-0"
+                                className="h-12 w-12 p-0"
                                 title="Play recording"
                               >
-                                <Volume2 className="h-4 w-4" />
+                                <Volume2 className="h-5 w-5" />
                               </Button>
                             </>
                           )}
