@@ -687,45 +687,6 @@ SPECIFIC REQUIREMENTS:
         const seedString = `${requestId || 'default'}-${randomSeed || Date.now()}-${measureIndex}`;
         const rng = new SeededRandom(seedString);
         
-        if (isCadentialMeasure) {
-          // Use cadential patterns that lead to tonic
-          const cadenceTypes = params.cadenceTypes ?? ["authentic"];
-          const cadenceType = rng.choice(cadenceTypes);
-          
-          const cadentialPatterns = {
-            authentic: [[7,1], [2,1], [5,1], [4,3,2,1]], // Leading tone to tonic, V-I motion
-            half: [[2,3], [6,5], [4,5], [1,2,3,2]], // Motion to dominant
-            plagal: [[4,1], [6,5], [4,3,2,1]], // IV-I motion
-            deceptive: [[7,6], [2,6], [5,6,5,4]] // V-vi motion
-          };
-          
-          const pattern = cadentialPatterns[cadenceType as keyof typeof cadentialPatterns] || cadentialPatterns.authentic;
-          const selectedPattern = Array.isArray(pattern[0]) ? rng.choice(pattern) : pattern;
-          
-          // Ensure cadential pattern fits the melodic range
-          const adjustedPattern = selectedPattern.map(degree => {
-            if (degree > melodicRange.max) return degree - 7; // Drop octave
-            if (degree < melodicRange.min) return degree + 7; // Raise octave
-            return degree;
-          });
-          
-          return createNotesFromPattern(adjustedPattern, rhythmicPattern || ["quarter", "quarter", "quarter", "quarter"]);
-        }
-        
-        // Get available patterns based on selected motions and voice leading rules
-        const availablePatterns = allowedMotion.flatMap(motion => patterns[motion as keyof typeof patterns] || []);
-        let pattern = availablePatterns.length > 0 ? rng.choice(availablePatterns) : [1,2,3,4];
-        
-        // Apply voice leading and interval controls
-        if (enforceVoiceLeading) {
-          pattern = applyVoiceLeadingRules(pattern, measureIndex, maxInterval, avoidedIntervals, melodicRange);
-        }
-        
-        // Ensure stepwise motion percentage
-        if (stepwisePercentage > 0) {
-          pattern = enforceStepwiseMotion(pattern, stepwisePercentage, rng);
-        }
-        
         // Create educationally appropriate rhythmic patterns based on time signature
         let rhythmicPattern: DurBase[] = [];
         
@@ -782,7 +743,7 @@ SPECIFIC REQUIREMENTS:
         // Fallback: fill measure with available durations if no pattern works
         if (rhythmicPattern.length === 0) {
           let noteIndex = 0;
-          while (currentTicks < measureTicks && noteIndex < pattern.length) {
+          while (currentTicks < measureTicks && noteIndex < 8) { // limit to prevent infinite loop
             const remainingTicks = measureTicks - currentTicks;
               const availableDurs = durOptions.filter(dur => {
                 const ticksNeeded = TICKS[dur as DurBase];
@@ -796,6 +757,45 @@ SPECIFIC REQUIREMENTS:
             currentTicks += TICKS[selectedDur];
             noteIndex++;
           }
+        }
+        
+        if (isCadentialMeasure) {
+          // Use cadential patterns that lead to tonic
+          const cadenceTypes = params.cadenceTypes ?? ["authentic"];
+          const cadenceType = rng.choice(cadenceTypes);
+          
+          const cadentialPatterns = {
+            authentic: [[7,1], [2,1], [5,1], [4,3,2,1]], // Leading tone to tonic, V-I motion
+            half: [[2,3], [6,5], [4,5], [1,2,3,2]], // Motion to dominant
+            plagal: [[4,1], [6,5], [4,3,2,1]], // IV-I motion
+            deceptive: [[7,6], [2,6], [5,6,5,4]] // V-vi motion
+          };
+          
+          const pattern = cadentialPatterns[cadenceType as keyof typeof cadentialPatterns] || cadentialPatterns.authentic;
+          const selectedPattern = Array.isArray(pattern[0]) ? rng.choice(pattern) : pattern;
+          
+          // Ensure cadential pattern fits the melodic range
+          const adjustedPattern = selectedPattern.map(degree => {
+            if (degree > melodicRange.max) return degree - 7; // Drop octave
+            if (degree < melodicRange.min) return degree + 7; // Raise octave
+            return degree;
+          });
+          
+          return createNotesFromPattern(adjustedPattern, rhythmicPattern || ["quarter", "quarter", "quarter", "quarter"]);
+        }
+        
+        // Get available patterns based on selected motions and voice leading rules
+        const availablePatterns = allowedMotion.flatMap(motion => patterns[motion as keyof typeof patterns] || []);
+        let pattern = availablePatterns.length > 0 ? rng.choice(availablePatterns) : [1,2,3,4];
+        
+        // Apply voice leading and interval controls
+        if (enforceVoiceLeading) {
+          pattern = applyVoiceLeadingRules(pattern, measureIndex, maxInterval, avoidedIntervals, melodicRange);
+        }
+        
+        // Ensure stepwise motion percentage
+        if (stepwisePercentage > 0) {
+          pattern = enforceStepwiseMotion(pattern, stepwisePercentage, rng);
         }
         
         // Generate notes using the rhythmic pattern and melodic pattern
@@ -855,7 +855,7 @@ SPECIFIC REQUIREMENTS:
           }
         }
         
-        return createNotesFromPattern(pattern, rhythmicPattern);
+        return notes;
       };
       
       // Helper function to create notes from melodic pattern and rhythmic pattern
