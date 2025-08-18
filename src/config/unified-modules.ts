@@ -78,6 +78,7 @@ import { KaraokeModule } from '@/components/modules/KaraokeModule';
 import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
 import { MemberSightReadingModule } from '@/components/modules/MemberSightReadingModule';
 import MemberSightReadingStudioPage from '@/pages/MemberSightReadingStudio';
+import { LibrarianModule } from '@/components/modules/LibrarianModule';
 
 // Single source of truth for all modules
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -593,6 +594,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: KaraokeModule,
     dbFunctionName: "karaoke"
+  },
+  {
+    id: "librarian",
+    name: "librarian",
+    title: "Music Librarian",
+    description: "Manage sheet music collection, PDFs, and hard copy scores",
+    icon: BookOpen,
+    iconColor: "purple",
+    category: "libraries",
+    isActive: true,
+    component: LibrarianModule,
+    dbFunctionName: "librarian"
   }
 ];
 
