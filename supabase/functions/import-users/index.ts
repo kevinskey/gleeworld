@@ -103,7 +103,7 @@ serve(async (req) => {
 
     for (const userData of users) {
       try {
-        const { email, full_name, role = 'user' } = userData
+        const { email, full_name, class_year, role = 'user' } = userData
         
         if (!email) {
           results.errors.push('Email is required')
@@ -158,6 +158,7 @@ serve(async (req) => {
             full_name: full_name || '',
             first_name: full_name ? full_name.split(' ')[0] : '',
             last_name: full_name ? full_name.split(' ').slice(1).join(' ') : null,
+            class_year: class_year || null,
           })
 
         if (gwProfileError) {

@@ -17,6 +17,7 @@ interface QuickAddUserFormProps {
 export const QuickAddUserForm = ({ onUserAdded, onCancel }: QuickAddUserFormProps) => {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
+  const [classYear, setClassYear] = useState("");
   const [role, setRole] = useState("user");
   const [isAdding, setIsAdding] = useState(false);
   const { toast } = useToast();
@@ -38,6 +39,7 @@ export const QuickAddUserForm = ({ onUserAdded, onCancel }: QuickAddUserFormProp
           users: [{
             email: email.trim(),
             full_name: fullName.trim() || null,
+            class_year: classYear.trim() || null,
             role: role
           }],
           source: 'quick_add'
@@ -75,10 +77,11 @@ export const QuickAddUserForm = ({ onUserAdded, onCancel }: QuickAddUserFormProp
         full_name: fullName.trim() || undefined
       });
 
-      // Reset form
-      setEmail("");
-      setFullName("");
-      setRole("user");
+        // Reset form
+        setEmail("");
+        setFullName("");
+        setClassYear("");
+        setRole("user");
     } catch (error) {
       console.error('Error adding user:', error);
       toast({
@@ -127,21 +130,33 @@ export const QuickAddUserForm = ({ onUserAdded, onCancel }: QuickAddUserFormProp
           </div>
         </div>
         
-        <div className="space-y-1">
-          <Label className="text-xs">Role</Label>
-          <Select value={role} onValueChange={setRole}>
-            <SelectTrigger className="h-8 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="user">User</SelectItem>
-              <SelectItem value="member">Member</SelectItem>
-              <SelectItem value="fan">Fan</SelectItem>
-              <SelectItem value="alumnae">Alumnae</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="super-admin">Super Admin</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="quick-class-year" className="text-xs">Class Year</Label>
+            <Input
+              id="quick-class-year"
+              value={classYear}
+              onChange={(e) => setClassYear(e.target.value)}
+              placeholder="2025"
+              className="h-8 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Role</Label>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="fan">Fan</SelectItem>
+                <SelectItem value="alumnae">Alumnae</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="super-admin">Super Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="flex justify-end space-x-2 pt-2">
