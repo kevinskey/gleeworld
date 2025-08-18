@@ -329,7 +329,7 @@ export const UserDetailPanel = ({
           parent_guardian_contact: parentGuardianContact,
           
           // Glee Club specific fields
-          join_date: joinDate,
+          join_date: joinDate === "" ? null : joinDate,
           mentor_opt_in: mentorOptIn,
           reunion_rsvp: reunionRsvp,
           
@@ -379,7 +379,7 @@ export const UserDetailPanel = ({
           dietary_restrictions: selectedDietaryRestrictions,
           allergies: allergies,
           parent_guardian_contact: parentGuardianContact,
-          join_date: joinDate,
+          join_date: joinDate === "" ? null : joinDate,
           mentor_opt_in: mentorOptIn,
           reunion_rsvp: reunionRsvp,
           
