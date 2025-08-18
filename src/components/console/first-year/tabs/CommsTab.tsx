@@ -14,37 +14,8 @@ export const CommsTab = () => {
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Mock data for communications
-  const recentCommunications = [
-    {
-      id: 1,
-      subject: "Rehearsal Schedule Update",
-      recipients: "First-Year Cohort",
-      type: "announcement",
-      status: "sent",
-      sentAt: "2024-01-15 10:30 AM",
-      readCount: 18,
-      totalRecipients: 22
-    },
-    {
-      id: 2,
-      subject: "Sight-Reading Assignment Due",
-      recipients: "Soprano Section",
-      type: "reminder",
-      status: "draft",
-      createdAt: "2024-01-14 3:45 PM"
-    },
-    {
-      id: 3,
-      subject: "Welcome to Glee Club!",
-      recipients: "All First-Years",
-      type: "welcome",
-      status: "sent",
-      sentAt: "2024-01-10 9:00 AM",
-      readCount: 22,
-      totalRecipients: 22
-    }
-  ];
+  // Real communications data will be implemented when communication system is built
+  const recentCommunications = [];
 
   const messageTemplates = [
     { id: 1, name: "Rehearsal Reminder", category: "reminders" },
@@ -93,7 +64,7 @@ export const CommsTab = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Sent</p>
-                <p className="text-2xl font-bold">127</p>
+                <p className="text-2xl font-bold">{recentCommunications.filter(c => c.status === 'sent').length}</p>
               </div>
             </div>
           </CardContent>
@@ -107,7 +78,7 @@ export const CommsTab = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Active Recipients</p>
-                <p className="text-2xl font-bold">22</p>
+                <p className="text-2xl font-bold">0</p>
               </div>
             </div>
           </CardContent>
@@ -121,7 +92,7 @@ export const CommsTab = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Templates</p>
-                <p className="text-2xl font-bold">12</p>
+                <p className="text-2xl font-bold">{messageTemplates.length}</p>
               </div>
             </div>
           </CardContent>
@@ -135,7 +106,7 @@ export const CommsTab = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Avg. Read Rate</p>
-                <p className="text-2xl font-bold">89%</p>
+                <p className="text-2xl font-bold">0%</p>
               </div>
             </div>
           </CardContent>
@@ -258,36 +229,46 @@ export const CommsTab = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {filteredCommunications.map(comm => (
-                  <div key={comm.id} className="p-4 border rounded-lg">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-medium">{comm.subject}</h4>
-                          <Badge className={getStatusColor(comm.status)}>
-                            {comm.status}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          To: {comm.recipients}
-                        </p>
-                        {comm.status === 'sent' ? (
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span>Sent: {comm.sentAt}</span>
-                            <span>Read: {comm.readCount}/{comm.totalRecipients}</span>
+                {filteredCommunications.length > 0 ? (
+                  filteredCommunications.map(comm => (
+                    <div key={comm.id} className="p-4 border rounded-lg">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-medium">{comm.subject}</h4>
+                            <Badge className={getStatusColor(comm.status)}>
+                              {comm.status}
+                            </Badge>
                           </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">
-                            Created: {comm.createdAt}
+                          <p className="text-sm text-muted-foreground mb-2">
+                            To: {comm.recipients}
                           </p>
-                        )}
+                          {comm.status === 'sent' ? (
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span>Sent: {comm.sentAt}</span>
+                              <span>Read: {comm.readCount}/{comm.totalRecipients}</span>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">
+                              Created: {comm.createdAt}
+                            </p>
+                          )}
+                        </div>
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No Communications Yet</h3>
+                    <p className="text-muted-foreground">
+                      Communications sent to first-year students will appear here
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>

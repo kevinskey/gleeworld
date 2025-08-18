@@ -14,47 +14,12 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { useFirstYearConsoleData } from "@/hooks/useFirstYearConsoleData";
+import { useFirstYearStudents } from "@/hooks/useFirstYearStudents";
 
 export const AttendanceTab = () => {
   const { cohortStats, attendanceData } = useFirstYearConsoleData();
+  const { data: students = [], isLoading: studentsLoading } = useFirstYearStudents();
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Mock attendance data - replace with real data
-  const mockStudentAttendance = [
-    {
-      id: 1,
-      name: "Alejandra Adelman",
-      email: "alejandraadelman@spelman.edu",
-      avatar: null,
-      checkinsThisWeek: 5,
-      totalRequired: 5,
-      lastCheckin: "2025-08-16T14:30:00Z",
-      status: "excellent",
-      riskLevel: "low"
-    },
-    {
-      id: 2,
-      name: "Akua Peprah", 
-      email: "akuapeprah711@gmail.com",
-      avatar: null,
-      checkinsThisWeek: 3,
-      totalRequired: 5,
-      lastCheckin: "2025-08-15T10:15:00Z",
-      status: "good",
-      riskLevel: "medium"
-    },
-    {
-      id: 3,
-      name: "Madison Taylor",
-      email: "madisonktaylor127@gmail.com",
-      avatar: null,
-      checkinsThisWeek: 1,
-      totalRequired: 5,
-      lastCheckin: "2025-08-14T09:00:00Z",
-      status: "concerning",
-      riskLevel: "high"
-    }
-  ];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -85,7 +50,7 @@ export const AttendanceTab = () => {
     }
   };
 
-  const filteredStudents = mockStudentAttendance.filter(student =>
+  const filteredStudents = students.filter(student =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -125,7 +90,7 @@ export const AttendanceTab = () => {
               <AlertTriangle className="h-5 w-5 text-orange-600" />
               <div>
                 <p className="text-sm text-muted-foreground">At Risk</p>
-                <p className="text-xl font-bold">{mockStudentAttendance.filter(s => s.riskLevel === 'high').length}</p>
+                <p className="text-xl font-bold">{students.filter(s => s.riskLevel === 'high').length}</p>
               </div>
             </div>
           </CardContent>
@@ -136,7 +101,7 @@ export const AttendanceTab = () => {
               <Clock className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="text-sm text-muted-foreground">This Week</p>
-                <p className="text-xl font-bold">{mockStudentAttendance.reduce((sum, s) => sum + s.checkinsThisWeek, 0)}</p>
+                <p className="text-xl font-bold">{students.reduce((sum, s) => sum + s.checkinsThisWeek, 0)}</p>
               </div>
             </div>
           </CardContent>
@@ -146,8 +111,8 @@ export const AttendanceTab = () => {
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-purple-600" />
               <div>
-                <p className="text-sm text-muted-foreground">Streak Avg</p>
-                <p className="text-xl font-bold">4.2 days</p>
+                <p className="text-sm text-muted-foreground">Avg Mood</p>
+                <p className="text-xl font-bold">{students.length > 0 ? (students.reduce((sum, s) => sum + s.averageMood, 0) / students.length).toFixed(1) : "0.0"}</p>
               </div>
             </div>
           </CardContent>
@@ -188,7 +153,7 @@ export const AttendanceTab = () => {
                     </div>
                     <p className="text-sm text-muted-foreground">{student.email}</p>
                     <p className="text-xs text-muted-foreground">
-                      Last check-in: {new Date(student.lastCheckin).toLocaleDateString()}
+                      Last check-in: {student.lastCheckin ? new Date(student.lastCheckin).toLocaleDateString() : "Never"}
                     </p>
                   </div>
                 </div>

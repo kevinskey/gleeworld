@@ -76,16 +76,8 @@ export function SimpleModuleManager() {
 
       setModules(modulesData || []);
       
-      // Transform assignments data
-      const transformedAssignments = (assignmentsData || []).map(assignment => ({
-        id: assignment.id,
-        user_email: assignment.gw_profiles.email,
-        user_name: assignment.gw_profiles.full_name || assignment.gw_profiles.email,
-        module_key: assignment.gw_modules.key,
-        module_name: assignment.gw_modules.name,
-        permission_type: assignment.permission_type as 'view' | 'manage',
-        granted_at: assignment.granted_at
-      }));
+      // Transform assignments data - temporarily return empty until foreign keys are fixed
+      const transformedAssignments = [];
       
       setAssignments(transformedAssignments);
     } catch (error) {

@@ -14,44 +14,12 @@ import {
   Clock
 } from "lucide-react";
 import { useFirstYearConsoleData } from "@/hooks/useFirstYearConsoleData";
+import { useFirstYearTasks } from "@/hooks/useFirstYearTasks";
 
 export const TasksTab = () => {
   const { cohortStats } = useFirstYearConsoleData();
+  const { data: tasks = [], isLoading: tasksLoading } = useFirstYearTasks();
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Mock task data - replace with real data from database
-  const mockTasks = [
-    {
-      id: 1,
-      title: "Complete Music Theory Assessment",
-      description: "Complete the foundational music theory assessment covering scales and intervals",
-      dueDate: "2025-08-20",
-      status: "active",
-      assignedTo: 15,
-      completed: 8,
-      priority: "high"
-    },
-    {
-      id: 2,
-      title: "Practice Sight Reading",
-      description: "Complete 30 minutes of sight reading practice using assigned materials",
-      dueDate: "2025-08-25",
-      status: "active", 
-      assignedTo: 22,
-      completed: 18,
-      priority: "medium"
-    },
-    {
-      id: 3,
-      title: "Vocal Health Journal",
-      description: "Submit weekly vocal health and practice log",
-      dueDate: "2025-08-18",
-      status: "overdue",
-      assignedTo: 20,
-      completed: 12,
-      priority: "low"
-    }
-  ];
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -71,7 +39,7 @@ export const TasksTab = () => {
     }
   };
 
-  const filteredTasks = mockTasks.filter(task =>
+  const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     task.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -100,7 +68,7 @@ export const TasksTab = () => {
               <CheckSquare className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Active Tasks</p>
-                <p className="text-xl font-bold">{mockTasks.filter(t => t.status === 'active').length}</p>
+                <p className="text-xl font-bold">{tasks.filter(t => t.status === 'active').length}</p>
               </div>
             </div>
           </CardContent>
@@ -111,7 +79,7 @@ export const TasksTab = () => {
               <AlertCircle className="h-5 w-5 text-red-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Overdue</p>
-                <p className="text-xl font-bold">{mockTasks.filter(t => t.status === 'overdue').length}</p>
+                <p className="text-xl font-bold">{tasks.filter(t => t.status === 'overdue').length}</p>
               </div>
             </div>
           </CardContent>
@@ -122,7 +90,7 @@ export const TasksTab = () => {
               <Clock className="h-5 w-5 text-green-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Completion Rate</p>
-                <p className="text-xl font-bold">73%</p>
+                <p className="text-xl font-bold">{tasks.length > 0 ? Math.round(tasks.reduce((sum, t) => sum + (t.completionRate || 0), 0) / tasks.length) : 0}%</p>
               </div>
             </div>
           </CardContent>
@@ -133,7 +101,11 @@ export const TasksTab = () => {
               <Calendar className="h-5 w-5 text-purple-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Due This Week</p>
-                <p className="text-xl font-bold">2</p>
+                <p className="text-xl font-bold">{(() => {
+                  const oneWeekFromNow = new Date();
+                  oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
+                  return tasks.filter(t => new Date(t.dueDate) <= oneWeekFromNow && new Date(t.dueDate) >= new Date()).length;
+                })()}</p>
               </div>
             </div>
           </CardContent>
@@ -179,7 +151,7 @@ export const TasksTab = () => {
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>Due: {task.dueDate}</span>
+                      <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
                       <span>Assigned to: {task.assignedTo} students</span>
                       <span>Completed: {task.completed}/{task.assignedTo}</span>
                     </div>
@@ -192,7 +164,7 @@ export const TasksTab = () => {
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className="bg-blue-600 h-2 rounded-full" 
-                    style={{ width: `${(task.completed / task.assignedTo) * 100}%` }}
+                    style={{ width: `${task.completionRate || 0}%` }}
                   ></div>
                 </div>
               </div>
