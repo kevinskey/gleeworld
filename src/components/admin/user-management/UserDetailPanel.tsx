@@ -334,8 +334,8 @@ export const UserDetailPanel = ({
           reunion_rsvp: reunionRsvp,
           
           // Executive Board assignment
-          exec_board_role: execBoardPosition === "" ? null : execBoardPosition,
-          is_exec_board: execBoardPosition !== "",
+          exec_board_role: execBoardPosition === "" || execBoardPosition === "none" ? null : execBoardPosition,
+          is_exec_board: execBoardPosition !== "" && execBoardPosition !== "none",
           
           updated_at: new Date().toISOString(),
         })
@@ -403,7 +403,7 @@ export const UserDetailPanel = ({
             .eq('is_active', true);
 
           // If assigning a new position, add it
-          if (execBoardPosition) {
+          if (execBoardPosition && execBoardPosition !== "none") {
             const { error: execError } = await supabase
               .from('gw_executive_board_members')
               .insert({
@@ -1029,12 +1029,12 @@ export const UserDetailPanel = ({
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="editExecBoardPosition">Executive Position</Label>
-                          <Select value={execBoardPosition} onValueChange={setExecBoardPosition} disabled={loading}>
+                          <Select value={execBoardPosition || "none"} onValueChange={(value) => setExecBoardPosition(value === "none" ? "" : value)} disabled={loading}>
                             <SelectTrigger>
                               <SelectValue placeholder="Select position" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">None</SelectItem>
+                              <SelectItem value="none">None</SelectItem>
                               <SelectItem value="president">President</SelectItem>
                               <SelectItem value="vice_president">Vice President</SelectItem>
                               <SelectItem value="secretary">Secretary</SelectItem>
