@@ -136,6 +136,10 @@ export const UserDetailPanel = ({
   const [mentorOptIn, setMentorOptIn] = useState(false);
   const [reunionRsvp, setReunionRsvp] = useState(false);
   
+  // Executive Board fields
+  const [execBoardPosition, setExecBoardPosition] = useState("");
+  const [isExecBoard, setIsExecBoard] = useState(false);
+  
   // Social media
   const [instagram, setInstagram] = useState("");
   const [twitter, setTwitter] = useState("");
@@ -200,6 +204,10 @@ export const UserDetailPanel = ({
         setJoinDate(""); // Will be set if field exists
         setMentorOptIn(false); // Will be set if field exists
         setReunionRsvp(false); // Will be set if field exists
+        
+        // Executive Board
+        setExecBoardPosition(profileData.exec_board_role || "");
+        setIsExecBoard(profileData.is_exec_board || false);
         
         // Social media - handle as JSON object
         const socialLinks = (profileData.social_media_links as any) || {};
@@ -325,6 +333,10 @@ export const UserDetailPanel = ({
           mentor_opt_in: mentorOptIn,
           reunion_rsvp: reunionRsvp,
           
+          // Executive Board assignment
+          exec_board_role: execBoardPosition === "" ? null : execBoardPosition,
+          is_exec_board: execBoardPosition !== "",
+          
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id);
@@ -378,6 +390,37 @@ export const UserDetailPanel = ({
       if (gwError) {
         console.warn("Error syncing with gw_profiles:", gwError);
         // Don't throw error since main profiles update succeeded
+      }
+
+      // Handle executive board assignment changes
+      if (execBoardPosition !== (user.exec_board_role || "")) {
+        try {
+          // First, remove any existing exec board assignment for this user
+          await supabase
+            .from('gw_executive_board_members')
+            .update({ is_active: false })
+            .eq('user_id', user.id)
+            .eq('is_active', true);
+
+          // If assigning a new position, add it
+          if (execBoardPosition) {
+            const { error: execError } = await supabase
+              .from('gw_executive_board_members')
+              .insert({
+                user_id: user.id,
+                position: execBoardPosition,
+                academic_year: new Date().getFullYear().toString(),
+                appointed_date: new Date().toISOString().split('T')[0],
+                is_active: true
+              });
+
+            if (execError) {
+              console.warn("Error adding executive board assignment:", execError);
+            }
+          }
+        } catch (execError) {
+          console.warn("Error updating executive board assignment:", execError);
+        }
       }
 
       // Update local user object immediately for instant UI feedback
@@ -971,6 +1014,55 @@ export const UserDetailPanel = ({
                             placeholder="Channel URL"
                             disabled={loading}
                           />
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                     {/* Executive Board Assignment */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-sm text-gray-900 flex items-center gap-2">
+                        <Shield className="h-4 w-4" />
+                        Executive Board Assignment
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="editExecBoardPosition">Executive Position</Label>
+                          <Select value={execBoardPosition} onValueChange={setExecBoardPosition} disabled={loading}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select position" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">None</SelectItem>
+                              <SelectItem value="president">President</SelectItem>
+                              <SelectItem value="vice_president">Vice President</SelectItem>
+                              <SelectItem value="secretary">Secretary</SelectItem>
+                              <SelectItem value="treasurer">Treasurer</SelectItem>
+                              <SelectItem value="chaplain">Chaplain</SelectItem>
+                              <SelectItem value="assistant_chaplain">Assistant Chaplain</SelectItem>
+                              <SelectItem value="business_manager">Business Manager</SelectItem>
+                              <SelectItem value="assistant_business_manager">Assistant Business Manager</SelectItem>
+                              <SelectItem value="tour_manager">Tour Manager</SelectItem>
+                              <SelectItem value="assistant_tour_manager">Assistant Tour Manager</SelectItem>
+                              <SelectItem value="pr_coordinator">PR Coordinator</SelectItem>
+                              <SelectItem value="assistant_pr_coordinator">Assistant PR Coordinator</SelectItem>
+                              <SelectItem value="social_media_coordinator">Social Media Coordinator</SelectItem>
+                              <SelectItem value="alumnae_liaison">Alumnae Liaison</SelectItem>
+                              <SelectItem value="assistant_alumnae_liaison">Assistant Alumnae Liaison</SelectItem>
+                              <SelectItem value="historian">Historian</SelectItem>
+                              <SelectItem value="assistant_historian">Assistant Historian</SelectItem>
+                              <SelectItem value="student_conductor">Student Conductor</SelectItem>
+                              <SelectItem value="assistant_student_conductor">Assistant Student Conductor</SelectItem>
+                              <SelectItem value="librarian">Librarian</SelectItem>
+                              <SelectItem value="assistant_librarian">Assistant Librarian</SelectItem>
+                              <SelectItem value="section_leader">Section Leader</SelectItem>
+                              <SelectItem value="class_representative">Class Representative</SelectItem>
+                              <SelectItem value="uniforms_manager">Uniforms Manager</SelectItem>
+                              <SelectItem value="set_up_crew_manager">Set Up Crew Manager</SelectItem>
+                              <SelectItem value="chief_of_staff">Chief of Staff</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </div>
