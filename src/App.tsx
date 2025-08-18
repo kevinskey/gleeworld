@@ -118,6 +118,7 @@ import CustomerInfo from "./pages/booking/CustomerInfo";
 import BookingConfirmation from "./pages/booking/BookingConfirmation";
 import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
+import QRGeneratorPage from "./pages/QRGenerator";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
 import SearchPage from "./pages/SearchPage";
@@ -390,6 +391,14 @@ const App = () => {
                   element={
                     <PublicRoute>
                       <OrderConfirmationPage />
+                    </PublicRoute>
+                  } 
+                />
+                <Route 
+                  path="/qr-generator" 
+                  element={
+                    <PublicRoute>
+                      <QRGeneratorPage />
                     </PublicRoute>
                   } 
                 />
