@@ -36,6 +36,7 @@ import PublicCalendar from "@/pages/PublicCalendar";
 import VoiceRangeAssessmentPage from "@/pages/VoiceRangeAssessmentPage";
 import ExecutiveBoardDashboard from "@/pages/ExecutiveBoardDashboard";
 import MemberSightReadingStudioPage from "@/pages/MemberSightReadingStudio";
+import LibrarianDashboardPage from "@/pages/LibrarianDashboardPage";
 
 export const router = createBrowserRouter([
   {
@@ -161,6 +162,10 @@ export const router = createBrowserRouter([
   {
     path: "/executive-board-dashboard",
     element: <Navigate to="/dashboard" replace />,
+  },
+  {
+    path: "/librarian-dashboard",
+    element: <LibrarianDashboardPage />,
   },
   {
     path: "*",

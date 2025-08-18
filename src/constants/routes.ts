@@ -32,7 +32,8 @@ export const ROUTES = {
   SIGHT_READING_GENERATOR: '/sight-reading-generator',
   
   PERMISSIONS: '/admin/permissions',
-  WELLNESS: '/wellness'
+  WELLNESS: '/wellness',
+  LIBRARIAN_DASHBOARD: '/librarian-dashboard'
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -56,7 +57,8 @@ export const PROTECTED_ROUTES = [
   ROUTES.SIGHT_READING_PREVIEW,
   ROUTES.SIGHT_READING_GENERATOR,
   ROUTES.PERMISSIONS,
-  ROUTES.WELLNESS
+  ROUTES.WELLNESS,
+  ROUTES.LIBRARIAN_DASHBOARD
 ] as const;
 
 export const PUBLIC_ROUTES = [
