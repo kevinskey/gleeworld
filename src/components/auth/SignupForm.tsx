@@ -150,7 +150,7 @@ export const SignupForm = () => {
             <Badge variant="secondary" className="text-sm">Fan Registration</Badge>
             <Users className="h-5 w-5 text-primary" />
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Join the GleeWorld fan community and get exclusive access to content and events!
           </p>
         </div>
