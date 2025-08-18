@@ -48,7 +48,7 @@
 
     /* Border and Input Styling */
     --border: 0 0% 85%; /* Visible but subtle borders */
-    --input: 0 0% 100%; /* White input backgrounds */
+    --input: 0 0% 98%; /* Very light gray input backgrounds for contrast */
     --ring: var(--spelman-blue-light); /* Blue focus rings */
 
     --radius: 0.75rem;
@@ -140,7 +140,7 @@
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 85%;
-    --input: 0 0% 100%;
+    --input: 0 0% 98%;
     --ring: var(--spelman-blue-light);
   }
 
