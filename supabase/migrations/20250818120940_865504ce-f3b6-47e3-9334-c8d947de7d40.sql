@@ -1,0 +1,2 @@
+INSERT INTO gw_modules (name, key, category, description, default_permissions, is_active) 
+VALUES ('librarian', 'librarian', 'libraries', 'Manage sheet music collection, PDFs, and hard copy scores', '["view", "manage"]'::jsonb, true)
