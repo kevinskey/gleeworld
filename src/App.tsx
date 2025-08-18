@@ -107,7 +107,7 @@ import ApprovalSystemPage from "./pages/ApprovalSystemPage";
 import SightReadingSubmission from "./pages/SightReadingSubmission";
 import SightReadingPreview from "./pages/SightReadingPreview";
 import SightReadingGeneratorPage from "./pages/SightReadingGenerator";
-import MemberSightReadingStudioPage from "./pages/MemberSightReadingStudio";
+import { MemberSightReadingStudioPage } from "./pages/MemberSightReadingStudioPage";
 import SchedulingPage from "./pages/SchedulingPage";
 import BookingPage from "./pages/BookingPage";
 import UnifiedBookingPage from "./pages/UnifiedBookingPage";
