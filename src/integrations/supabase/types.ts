@@ -9076,6 +9076,7 @@ export type Database = {
           title: string
           updated_at: string | null
           voice_parts: string[] | null
+          voicing: string | null
           xml_content: string | null
           xml_url: string | null
         }
@@ -9113,6 +9114,7 @@ export type Database = {
           title: string
           updated_at?: string | null
           voice_parts?: string[] | null
+          voicing?: string | null
           xml_content?: string | null
           xml_url?: string | null
         }
@@ -9150,6 +9152,7 @@ export type Database = {
           title?: string
           updated_at?: string | null
           voice_parts?: string[] | null
+          voicing?: string | null
           xml_content?: string | null
           xml_url?: string | null
         }

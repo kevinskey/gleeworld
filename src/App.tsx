@@ -118,6 +118,7 @@ import CustomerInfo from "./pages/booking/CustomerInfo";
 import BookingConfirmation from "./pages/booking/BookingConfirmation";
 import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
+import LibrarianDashboardPage from "./pages/LibrarianDashboardPage";
 import QRGeneratorPage from "./pages/QRGenerator";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
