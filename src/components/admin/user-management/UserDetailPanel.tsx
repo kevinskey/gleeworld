@@ -408,7 +408,7 @@ export const UserDetailPanel = ({
               .from('gw_executive_board_members')
               .insert({
                 user_id: user.id,
-                position: execBoardPosition,
+                position: execBoardPosition as any,
                 academic_year: new Date().getFullYear().toString(),
                 appointed_date: new Date().toISOString().split('T')[0],
                 is_active: true

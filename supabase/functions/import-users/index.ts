@@ -60,12 +60,12 @@ serve(async (req) => {
 
     // Check if user has admin privileges
     const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
+      .from('gw_profiles')
+      .select('role, is_admin, is_super_admin')
+      .eq('user_id', user.id)
       .single()
 
-    if (profileError || !profile || !['admin', 'super-admin'].includes(profile.role)) {
+    if (profileError || !profile || !(profile.is_admin || profile.is_super_admin || ['admin', 'super-admin'].includes(profile.role))) {
       return new Response(
         JSON.stringify({ 
           success: 0, 
