@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useToast } from "@/hooks/use-toast";
@@ -58,6 +59,7 @@ export default function Settings() {
   const { userProfile } = useUserProfile(user);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const {
     register,
@@ -452,7 +454,11 @@ export default function Settings() {
                       <p className="text-sm text-muted-foreground mb-2">
                         Update your account password
                       </p>
-                      <Button variant="outline" type="button">
+                      <Button 
+                        variant="outline" 
+                        type="button"
+                        onClick={() => setShowChangePassword(true)}
+                      >
                         Change Password
                       </Button>
                     </div>
@@ -580,6 +586,11 @@ export default function Settings() {
             </Button>
           </div>
         </form>
+
+        <ChangePasswordDialog 
+          open={showChangePassword} 
+          onOpenChange={setShowChangePassword} 
+        />
       </div>
     </UniversalLayout>
   );
