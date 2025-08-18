@@ -55,15 +55,18 @@ export function SimpleModuleManager() {
 
       // Get current assignments with user info
       const { data: assignmentsData, error: assignmentsError } = await supabase
-        .from('gw_role_module_permissions')
+        .from('gw_module_permissions')
         .select(`
           id,
-          module_name,
           permission_type,
           granted_at,
           gw_profiles!inner(
             email,
             full_name
+          ),
+          gw_modules!inner(
+            key,
+            name
           )
         `)
         .eq('is_active', true)
@@ -78,9 +81,9 @@ export function SimpleModuleManager() {
         id: assignment.id,
         user_email: assignment.gw_profiles.email,
         user_name: assignment.gw_profiles.full_name || assignment.gw_profiles.email,
-        module_key: assignment.module_name,
-        module_name: assignment.module_name,
-        permission_type: assignment.permission_type,
+        module_key: assignment.gw_modules.key,
+        module_name: assignment.gw_modules.name,
+        permission_type: assignment.permission_type as 'view' | 'manage',
         granted_at: assignment.granted_at
       }));
       
@@ -111,18 +114,27 @@ export function SimpleModuleManager() {
       // First get user info
       const { data: userProfile, error: userError } = await supabase
         .from('gw_profiles')
-        .select('user_id, role')
+        .select('user_id')
         .eq('email', selectedUser)
         .single();
 
       if (userError) throw userError;
 
-      // Add to role_module_permissions
+      // Get module info
+      const { data: moduleData, error: moduleError } = await supabase
+        .from('gw_modules')
+        .select('id')
+        .eq('key', selectedModule)
+        .single();
+
+      if (moduleError) throw moduleError;
+
+      // Add to module_permissions
       const { error } = await supabase
-        .from('gw_role_module_permissions')
+        .from('gw_module_permissions')
         .insert({
-          role: userProfile.role || 'member',
-          module_name: selectedModule,
+          user_id: userProfile.user_id,
+          module_id: moduleData.id,
           permission_type: permissionType,
           granted_by: (await supabase.auth.getUser()).data.user?.id,
           is_active: true
@@ -155,7 +167,7 @@ export function SimpleModuleManager() {
   const removeAssignment = async (assignmentId: string) => {
     try {
       const { error } = await supabase
-        .from('gw_role_module_permissions')
+        .from('gw_module_permissions')
         .update({ is_active: false })
         .eq('id', assignmentId);
 
