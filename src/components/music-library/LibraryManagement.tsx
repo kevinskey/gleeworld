@@ -184,7 +184,15 @@ export const LibraryManagement = () => {
           {/* Mobile: Stack buttons vertically, Desktop: horizontal */}
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
             <Button 
+              onClick={() => setUploadDialog(true)} 
+              className="flex items-center justify-center gap-2 w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Upload className="h-4 w-4" />
+              <span className="text-sm">Add PDF / Upload Files</span>
+            </Button>
+            <Button 
               onClick={() => setCameraDialog(true)} 
+              variant="outline"
               className="flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               <Camera className="h-4 w-4" />
@@ -197,14 +205,6 @@ export const LibraryManagement = () => {
             >
               <FileSpreadsheet className="h-4 w-4" />
               <span className="text-sm">CSV Import</span>
-            </Button>
-            <Button 
-              onClick={() => setUploadDialog(true)} 
-              variant="outline" 
-              className="flex items-center justify-center gap-2 w-full sm:w-auto"
-            >
-              <Upload className="h-4 w-4" />
-              <span className="text-sm">Upload Files</span>
             </Button>
           </div>
         </div>
