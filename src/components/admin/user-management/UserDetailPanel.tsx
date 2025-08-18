@@ -1036,31 +1036,25 @@ export const UserDetailPanel = ({
                             <SelectContent>
                               <SelectItem value="none">None</SelectItem>
                               <SelectItem value="president">President</SelectItem>
-                              <SelectItem value="vice_president">Vice President</SelectItem>
                               <SelectItem value="secretary">Secretary</SelectItem>
                               <SelectItem value="treasurer">Treasurer</SelectItem>
                               <SelectItem value="chaplain">Chaplain</SelectItem>
                               <SelectItem value="assistant_chaplain">Assistant Chaplain</SelectItem>
-                              <SelectItem value="business_manager">Business Manager</SelectItem>
-                              <SelectItem value="assistant_business_manager">Assistant Business Manager</SelectItem>
                               <SelectItem value="tour_manager">Tour Manager</SelectItem>
-                              <SelectItem value="assistant_tour_manager">Assistant Tour Manager</SelectItem>
                               <SelectItem value="pr_coordinator">PR Coordinator</SelectItem>
-                              <SelectItem value="assistant_pr_coordinator">Assistant PR Coordinator</SelectItem>
-                              <SelectItem value="social_media_coordinator">Social Media Coordinator</SelectItem>
+                              <SelectItem value="pr_manager">PR Manager</SelectItem>
                               <SelectItem value="alumnae_liaison">Alumnae Liaison</SelectItem>
-                              <SelectItem value="assistant_alumnae_liaison">Assistant Alumnae Liaison</SelectItem>
                               <SelectItem value="historian">Historian</SelectItem>
-                              <SelectItem value="assistant_historian">Assistant Historian</SelectItem>
                               <SelectItem value="student_conductor">Student Conductor</SelectItem>
-                              <SelectItem value="assistant_student_conductor">Assistant Student Conductor</SelectItem>
                               <SelectItem value="librarian">Librarian</SelectItem>
-                              <SelectItem value="assistant_librarian">Assistant Librarian</SelectItem>
-                              <SelectItem value="section_leader">Section Leader</SelectItem>
-                              <SelectItem value="class_representative">Class Representative</SelectItem>
-                              <SelectItem value="uniforms_manager">Uniforms Manager</SelectItem>
+                              <SelectItem value="section_leader_s1">Section Leader S1</SelectItem>
+                              <SelectItem value="section_leader_s2">Section Leader S2</SelectItem>
+                              <SelectItem value="section_leader_a1">Section Leader A1</SelectItem>
+                              <SelectItem value="section_leader_a2">Section Leader A2</SelectItem>
+                              <SelectItem value="wardrobe_manager">Wardrobe Manager</SelectItem>
                               <SelectItem value="set_up_crew_manager">Set Up Crew Manager</SelectItem>
                               <SelectItem value="chief_of_staff">Chief of Staff</SelectItem>
+                              <SelectItem value="data_analyst">Data Analyst</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
