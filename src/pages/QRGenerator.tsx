@@ -14,7 +14,7 @@ const QRGeneratorPage = () => {
         
         <div className="grid gap-6 md:grid-cols-2">
           <QRCodeGenerator 
-            defaultText={window.location.origin}
+            defaultText="https://gleeworld.org"
             title="GleeWorld Website"
           />
           
@@ -28,11 +28,11 @@ const QRGeneratorPage = () => {
           <h3 className="font-semibold mb-2">Quick Access</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <QRCodeGenerator 
-              defaultText={`${window.location.origin}/dashboard`}
+              defaultText="https://gleeworld.org/dashboard"
               title="Dashboard"
             />
             <QRCodeGenerator 
-              defaultText={`${window.location.origin}/qr-scanner`}
+              defaultText="https://gleeworld.org/qr-scanner"
               title="QR Scanner"
             />
           </div>

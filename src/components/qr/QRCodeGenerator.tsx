@@ -13,7 +13,7 @@ interface QRCodeGeneratorProps {
 }
 
 export const QRCodeGenerator = ({ 
-  defaultText = window.location.origin, 
+  defaultText = "https://gleeworld.org", 
   title = "QR Code Generator" 
 }: QRCodeGeneratorProps) => {
   const [text, setText] = useState(defaultText);
