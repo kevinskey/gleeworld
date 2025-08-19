@@ -54,18 +54,32 @@ export const LibraryTab = () => {
             uploaded_by,
             created_at,
             file_size,
-            file_url,
-            uploader_profile:gw_profiles!uploaded_by(
-              full_name,
-              email
-            )
+            file_url
           `)
           .eq('is_public', true)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        setResources(data || []);
+        // Fetch uploader profiles separately
+        const uploaderIds = [...new Set(data?.map(item => item.uploaded_by).filter(Boolean))];
+        let profilesData: any[] = [];
+        
+        if (uploaderIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('gw_profiles')
+            .select('user_id, full_name, email')
+            .in('user_id', uploaderIds);
+          profilesData = profiles || [];
+        }
+
+        // Combine data with profiles
+        const resourcesWithProfiles = data?.map(item => ({
+          ...item,
+          uploader_profile: profilesData.find(profile => profile.user_id === item.uploaded_by) || null
+        })) || [];
+
+        setResources(resourcesWithProfiles);
       } catch (error) {
         console.error('Error fetching resources:', error);
         toast.error('Failed to load resources');
