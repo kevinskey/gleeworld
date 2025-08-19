@@ -159,3 +159,6 @@ verify_jwt = false
 
 [functions.gw-send-email]
 verify_jwt = false
+
+[functions.reset-member-passwords]
+verify_jwt = true
