@@ -58,6 +58,7 @@ interface UserProfile extends GleeWorldProfile {
   bio?: string;
   mentor_opt_in?: boolean;
   reunion_rsvp?: boolean;
+  address?: string;
 }
 
 export const useUserProfile = (user: User | null) => {

@@ -11,6 +11,7 @@ export interface OnboardingProfile {
   last_name?: string;
   middle_name?: string;
   display_name?: string;
+  preferred_name?: string;
   pronouns?: string;
   email?: string;
   phone?: string;
@@ -33,6 +34,8 @@ export interface OnboardingProfile {
   shoe_size?: string;
   // Consent and agreements (using existing fields)
   photo_consent?: boolean;
+  media_consent?: boolean;
+  data_consent?: boolean;
   media_release_signed_at?: string;
   // Additional existing fields
   emergency_contact?: string;
@@ -71,8 +74,14 @@ export const useOnboardingProfile = () => {
       }
 
       if (data) {
-        // Profile exists, use it
-        setProfile(data);
+        // Profile exists, parse measurements if it's a string
+        const profileData = {
+          ...data,
+          measurements: typeof data.measurements === 'string' 
+            ? JSON.parse(data.measurements) 
+            : data.measurements || {}
+        };
+        setProfile(profileData);
       } else {
         // No profile exists, create a new one
         const newProfile = {
@@ -92,7 +101,13 @@ export const useOnboardingProfile = () => {
           throw createError;
         }
 
-        setProfile(createdProfile);
+        const profileData = {
+          ...createdProfile,
+          measurements: typeof createdProfile.measurements === 'string' 
+            ? JSON.parse(createdProfile.measurements) 
+            : createdProfile.measurements || {}
+        };
+        setProfile(profileData);
       }
     } catch (error) {
       toast({
