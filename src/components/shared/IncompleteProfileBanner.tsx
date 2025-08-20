@@ -28,10 +28,10 @@ export const IncompleteProfileBanner = ({ userProfile }: IncompleteProfileBanner
   };
 
   return (
-    <Alert className="mb-6 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+    <Alert className="mb-6 border-border bg-background dark:border-border dark:bg-background">
       <User className="h-4 w-4" />
       <AlertDescription className="flex items-center justify-between">
-        <span className="text-amber-800 dark:text-amber-200">
+        <span className="text-foreground dark:text-foreground">
           Your profile is incomplete. Complete your onboarding to access all features.
         </span>
         <div className="flex items-center gap-2">
@@ -39,7 +39,7 @@ export const IncompleteProfileBanner = ({ userProfile }: IncompleteProfileBanner
             variant="outline"
             size="sm"
             onClick={handleCompleteProfile}
-            className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-900"
+            className="border-border text-foreground hover:bg-muted dark:border-border dark:text-foreground dark:hover:bg-muted"
           >
             Complete Profile
           </Button>
@@ -47,7 +47,7 @@ export const IncompleteProfileBanner = ({ userProfile }: IncompleteProfileBanner
             variant="ghost"
             size="sm"
             onClick={() => setIsDismissed(true)}
-            className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
+            className="text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </Button>
