@@ -38,9 +38,26 @@ export const useRoleBasedRedirect = () => {
       return;
     }
 
-    // If user exists but no profile after loading is complete, don't auto-redirect
+    // If user exists but no profile after loading is complete, send to onboarding
     if (!userProfile) {
-      console.log('useRoleBasedRedirect: User exists but no profile found');
+      console.log('useRoleBasedRedirect: User exists but no profile found, redirecting to onboarding');
+      if (location.pathname !== '/onboarding') {
+        navigate('/onboarding', { replace: true });
+      }
+      return;
+    }
+
+    // Check if profile is incomplete (missing required onboarding fields)
+    const isProfileIncomplete = !userProfile.first_name || 
+                               !userProfile.last_name || 
+                               !userProfile.phone || 
+                               !userProfile.address;
+
+    if (isProfileIncomplete) {
+      console.log('🔄 useRoleBasedRedirect: Profile incomplete, redirecting to onboarding');
+      if (location.pathname !== '/onboarding') {
+        navigate('/onboarding', { replace: true });
+      }
       return;
     }
 
