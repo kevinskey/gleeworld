@@ -25,7 +25,7 @@ export const ReviewCard = ({ profile, onComplete, saving }: ReviewCardProps) => 
 
   const getCompletionStatus = () => {
     const profileComplete = !!(profile.first_name && profile.last_name && profile.email);
-    const uniformComplete = !!(profile.height_cm && profile.chest && profile.waist && profile.hips && profile.shoe);
+    const uniformComplete = !!(profile.measurements?.height_cm && profile.measurements?.chest && profile.measurements?.waist && profile.measurements?.hips);
     const agreementsComplete = !!(profile.photo_consent && profile.media_release_signed_at);
     
     return {
@@ -126,13 +126,13 @@ export const ReviewCard = ({ profile, onComplete, saving }: ReviewCardProps) => 
             
             <div>
               <span className="text-muted-foreground">Graduation Year:</span>
-              <p className="font-medium">{profile.grad_year || 'Not provided'}</p>
+              <p className="font-medium">{profile.graduation_year || 'Not provided'}</p>
             </div>
           </div>
         </div>
 
         {/* Measurements Summary */}
-        {(profile.height_cm || profile.chest || profile.waist || profile.hips || profile.shoe) && (
+        {(profile.measurements?.height_cm || profile.measurements?.chest || profile.measurements?.waist || profile.measurements?.hips || profile.measurements?.shoe_size) && (
           <div className="space-y-4">
             <h3 className="font-medium flex items-center gap-2">
               <Ruler className="w-4 h-4" />
@@ -140,38 +140,38 @@ export const ReviewCard = ({ profile, onComplete, saving }: ReviewCardProps) => 
             </h3>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-              {profile.height_cm && (
+              {profile.measurements?.height_cm && (
                 <div>
                   <span className="text-muted-foreground">Height:</span>
-                  <p className="font-medium">{profile.height_cm} cm</p>
+                  <p className="font-medium">{profile.measurements.height_cm} cm</p>
                 </div>
               )}
               
-              {profile.chest && (
+              {profile.measurements?.chest && (
                 <div>
                   <span className="text-muted-foreground">Chest:</span>
-                  <p className="font-medium">{profile.chest} cm</p>
+                  <p className="font-medium">{profile.measurements.chest} cm</p>
                 </div>
               )}
               
-              {profile.waist && (
+              {profile.measurements?.waist && (
                 <div>
                   <span className="text-muted-foreground">Waist:</span>
-                  <p className="font-medium">{profile.waist} cm</p>
+                  <p className="font-medium">{profile.measurements.waist} cm</p>
                 </div>
               )}
               
-              {profile.hips && (
+              {profile.measurements?.hips && (
                 <div>
                   <span className="text-muted-foreground">Hips:</span>
-                  <p className="font-medium">{profile.hips} cm</p>
+                  <p className="font-medium">{profile.measurements.hips} cm</p>
                 </div>
               )}
               
-              {profile.shoe && (
+              {profile.measurements?.shoe_size && (
                 <div>
                   <span className="text-muted-foreground">Shoe Size:</span>
-                  <p className="font-medium">{profile.shoe} US</p>
+                  <p className="font-medium">{profile.measurements.shoe_size} US</p>
                 </div>
               )}
             </div>

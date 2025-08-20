@@ -76,14 +76,14 @@ export const ProfileForm = ({ profile, onUpdate, saving }: ProfileFormProps) => 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="grad_year">Graduation Year</Label>
+            <Label htmlFor="graduation_year">Graduation Year</Label>
             <Input
-              id="grad_year"
+              id="graduation_year"
               type="number"
               min="2024"
               max="2030"
-              value={profile.grad_year || ''}
-              onChange={(e) => onUpdate('grad_year', parseInt(e.target.value) || null)}
+              value={profile.graduation_year || ''}
+              onChange={(e) => onUpdate('graduation_year', parseInt(e.target.value) || null)}
               placeholder="2025"
             />
           </div>
@@ -137,21 +137,13 @@ export const ProfileForm = ({ profile, onUpdate, saving }: ProfileFormProps) => 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="section">Section</Label>
-            <Select
-              value={profile.section || ''}
-              onValueChange={(value) => onUpdate('section', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select section" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="soprano">Soprano</SelectItem>
-                <SelectItem value="alto">Alto</SelectItem>
-                <SelectItem value="tenor">Tenor</SelectItem>
-                <SelectItem value="bass">Bass</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="academic_major">Academic Major</Label>
+            <Input
+              id="academic_major"
+              value={profile.academic_major || ''}
+              onChange={(e) => onUpdate('academic_major', e.target.value)}
+              placeholder="Computer Science"
+            />
           </div>
         </div>
       </CardContent>

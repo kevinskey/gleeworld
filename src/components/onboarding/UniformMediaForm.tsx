@@ -35,22 +35,28 @@ export const UniformMediaForm = ({ profile, onUpdate, saving }: UniformMediaForm
                 type="number"
                 min="120"
                 max="220"
-                value={profile.height_cm || ''}
-                onChange={(e) => onUpdate('height_cm', parseInt(e.target.value) || null)}
+                value={profile.measurements?.height_cm || ''}
+                onChange={(e) => onUpdate('measurements', {
+                  ...profile.measurements,
+                  height_cm: parseInt(e.target.value) || undefined
+                })}
                 placeholder="165"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="shoe">Shoe Size (US)</Label>
+              <Label htmlFor="shoe_size">Shoe Size (US)</Label>
               <Input
-                id="shoe"
+                id="shoe_size"
                 type="number"
                 step="0.5"
                 min="4"
                 max="15"
-                value={profile.shoe || ''}
-                onChange={(e) => onUpdate('shoe', parseFloat(e.target.value) || null)}
+                value={profile.measurements?.shoe_size || ''}
+                onChange={(e) => onUpdate('measurements', {
+                  ...profile.measurements,
+                  shoe_size: parseFloat(e.target.value) || undefined
+                })}
                 placeholder="8.5"
               />
             </div>
@@ -64,8 +70,11 @@ export const UniformMediaForm = ({ profile, onUpdate, saving }: UniformMediaForm
                 type="number"
                 min="60"
                 max="150"
-                value={profile.chest || ''}
-                onChange={(e) => onUpdate('chest', parseFloat(e.target.value) || null)}
+                value={profile.measurements?.chest || ''}
+                onChange={(e) => onUpdate('measurements', {
+                  ...profile.measurements,
+                  chest: parseFloat(e.target.value) || undefined
+                })}
                 placeholder="90"
               />
             </div>
@@ -77,8 +86,11 @@ export const UniformMediaForm = ({ profile, onUpdate, saving }: UniformMediaForm
                 type="number"
                 min="50"
                 max="150"
-                value={profile.waist || ''}
-                onChange={(e) => onUpdate('waist', parseFloat(e.target.value) || null)}
+                value={profile.measurements?.waist || ''}
+                onChange={(e) => onUpdate('measurements', {
+                  ...profile.measurements,
+                  waist: parseFloat(e.target.value) || undefined
+                })}
                 placeholder="75"
               />
             </div>
@@ -90,8 +102,11 @@ export const UniformMediaForm = ({ profile, onUpdate, saving }: UniformMediaForm
                 type="number"
                 min="60"
                 max="150"
-                value={profile.hips || ''}
-                onChange={(e) => onUpdate('hips', parseFloat(e.target.value) || null)}
+                value={profile.measurements?.hips || ''}
+                onChange={(e) => onUpdate('measurements', {
+                  ...profile.measurements,
+                  hips: parseFloat(e.target.value) || undefined
+                })}
                 placeholder="95"
               />
             </div>

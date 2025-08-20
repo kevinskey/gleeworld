@@ -9,20 +9,36 @@ export interface OnboardingProfile {
   user_id?: string;
   first_name?: string;
   last_name?: string;
-  preferred_name?: string;
+  middle_name?: string;
+  display_name?: string;
   pronouns?: string;
   email?: string;
   phone?: string;
+  phone_number?: string;
   voice_part?: string;
-  section?: string;
-  grad_year?: number;
-  height_cm?: number;
-  chest?: number;
-  waist?: number;
-  hips?: number;
-  shoe?: number;
+  voice_part_preference?: string;
+  graduation_year?: number;
+  academic_year?: string;
+  academic_major?: string;
+  // Measurements (stored as JSON in existing measurements field)
+  measurements?: {
+    height_cm?: number;
+    chest?: number;
+    waist?: number;
+    hips?: number;
+    shoe_size?: number;
+  };
+  // Wardrobe info (using existing fields)
+  dress_size?: string;
+  shoe_size?: string;
+  // Consent and agreements (using existing fields)
   photo_consent?: boolean;
   media_release_signed_at?: string;
+  // Additional existing fields
+  emergency_contact?: string;
+  dietary_restrictions?: string[];
+  allergies?: string;
+  parent_guardian_contact?: string;
 }
 
 export const useOnboardingProfile = () => {
@@ -139,7 +155,7 @@ export const useOnboardingProfile = () => {
   const getStepCompletion = useCallback(() => {
     return {
       profile: !!(profile.first_name && profile.last_name && profile.email),
-      uniform: !!(profile.height_cm && profile.chest && profile.waist && profile.hips && profile.shoe),
+      uniform: !!(profile.measurements?.height_cm && profile.measurements?.chest && profile.measurements?.waist && profile.measurements?.hips),
       agreements: !!(profile.photo_consent && profile.media_release_signed_at),
     };
   }, [profile]);
