@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { supabase } from '@/integrations/supabase/client';
 import { Megaphone } from 'lucide-react';
-import { HeroAuditionStats } from '@/components/hero/HeroAuditionStats';
+
 
 interface FeatureSlide {
   id: string;
@@ -62,7 +62,7 @@ export const DashboardFeaturesCarousel: React.FC = () => {
               {slides.length > 0 ? (
                 slides.map((s) => (
                   <CarouselItem key={s.id}>
-                    <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] w-full relative overflow-hidden">
+                    <div className="h-[180px] sm:h-[220px] md:h-[260px] w-full relative overflow-hidden">
                       {/* Desktop */}
                       <img
                         src={s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
@@ -120,31 +120,30 @@ export const DashboardFeaturesCarousel: React.FC = () => {
                 ))
               ) : (
                 <CarouselItem>
-                  <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] w-full relative overflow-hidden">
+                  <div className="h-[180px] sm:h-[220px] md:h-[260px] w-full relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10" />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center space-y-4 md:space-y-6 max-w-4xl mx-auto px-6 md:px-10 lg:px-14">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur px-4 py-2 text-xs md:text-sm font-medium">
-                          <Megaphone className="h-3 w-3 md:h-4 md:w-4 text-primary" />
+                      <div className="text-center space-y-3 md:space-y-4 max-w-3xl mx-auto px-4 md:px-6">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur px-3 py-1.5 text-xs font-medium">
+                          <Megaphone className="h-3 w-3 text-primary" />
                           Welcome to GleeWorld
                         </div>
-                        <div className="space-y-2 md:space-y-3">
-                          <h3 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                        <div className="space-y-2">
+                          <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
                             Your Musical Journey Starts Here
                           </h3>
-                          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-                            Join 100+ years of excellence at Spelman College Glee Club. Complete your profile, connect with sisters, and become part of our legacy.
+                          <p className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto">
+                            Join 100+ years of excellence. Complete your profile and become part of our legacy.
                           </p>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                          <Button size="lg" className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white px-6 py-3" asChild>
-                            <a href="/onboarding">Complete Your Profile</a>
+                        <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+                          <Button size="sm" className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white px-4 py-2" asChild>
+                            <a href="/onboarding">Complete Profile</a>
                           </Button>
-                          <Button size="lg" variant="outline" className="border-primary/30 text-primary hover:bg-primary/10" asChild>
+                          <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary/10" asChild>
                             <a href="/about">Learn More</a>
                           </Button>
                         </div>
-                        <HeroAuditionStats className="pt-2" />
                       </div>
                     </div>
                   </div>
