@@ -62,7 +62,7 @@ export const DashboardFeaturesCarousel: React.FC = () => {
               {slides.length > 0 ? (
                 slides.map((s) => (
                   <CarouselItem key={s.id}>
-                    <div className="h-[180px] sm:h-[220px] md:h-[260px] w-full relative overflow-hidden">
+                    <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] w-full relative overflow-hidden">
                       {/* Desktop */}
                       <img
                         src={s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
@@ -120,7 +120,7 @@ export const DashboardFeaturesCarousel: React.FC = () => {
                 ))
               ) : (
                 <CarouselItem>
-                  <div className="h-[180px] sm:h-[220px] md:h-[260px] w-full relative overflow-hidden">
+                  <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] w-full relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10" />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center space-y-3 md:space-y-4 max-w-3xl mx-auto px-4 md:px-6">
