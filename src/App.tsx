@@ -137,6 +137,7 @@ import FirstYearHub from "./pages/FirstYearHub";
 import FirstYearConsolePage from "./pages/console/FirstYearConsolePage";
 import SetupCrewPage from "./pages/SetupCrewPage";
 import { Onboarding } from "./pages/Onboarding";
+import StudentRegistration from "./pages/StudentRegistration";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -247,6 +248,14 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <AuditionApplicationPage />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/student-registration" 
+                element={
+                  <PublicRoute>
+                    <StudentRegistration />
                   </PublicRoute>
                 } 
               />
