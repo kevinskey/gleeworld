@@ -1,10 +1,29 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar as CalendarIcon, Clock, MapPin, Users, Bell } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, Users, Bell, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { usePublicGleeWorldEvents } from '@/hooks/usePublicGleeWorldEvents';
 
 const MemberCalendarPage = () => {
+  const { events, loading, getUpcomingEvents } = usePublicGleeWorldEvents();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const upcomingEvents = getUpcomingEvents(10);
+  const thisWeekEvents = events.filter(event => {
+    const eventDate = new Date(event.start_date);
+    const today = new Date();
+    const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    return eventDate >= today && eventDate <= weekFromNow;
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -24,22 +43,22 @@ const MemberCalendarPage = () => {
           <Card className="p-4 text-center bg-green-50 border-green-200">
             <CalendarIcon className="h-8 w-8 mx-auto mb-2 text-green-600" />
             <h3 className="font-semibold">This Week</h3>
-            <p className="text-sm text-muted-foreground">5 rehearsals</p>
+            <p className="text-sm text-muted-foreground">{thisWeekEvents.length} events</p>
           </Card>
           <Card className="p-4 text-center bg-blue-50 border-blue-200">
             <Clock className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-            <h3 className="font-semibold">Next Event</h3>
-            <p className="text-sm text-muted-foreground">Tonight 6PM</p>
+            <h3 className="font-semibold">Total Events</h3>
+            <p className="text-sm text-muted-foreground">{events.length} scheduled</p>
           </Card>
           <Card className="p-4 text-center bg-purple-50 border-purple-200">
             <Users className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-            <h3 className="font-semibold">Performances</h3>
-            <p className="text-sm text-muted-foreground">2 this month</p>
+            <h3 className="font-semibold">Upcoming</h3>
+            <p className="text-sm text-muted-foreground">{upcomingEvents.length} events</p>
           </Card>
           <Card className="p-4 text-center bg-orange-50 border-orange-200">
             <Bell className="h-8 w-8 mx-auto mb-2 text-orange-600" />
-            <h3 className="font-semibold">Reminders</h3>
-            <p className="text-sm text-muted-foreground">3 active</p>
+            <h3 className="font-semibold">Performance Type</h3>
+            <p className="text-sm text-muted-foreground">{events.filter(e => e.event_type === 'performance').length} concerts</p>
           </Card>
         </div>
 
@@ -51,103 +70,69 @@ const MemberCalendarPage = () => {
                 <CardTitle>Upcoming Events</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {[
-                    {
-                      title: "Tuesday Rehearsal",
-                      date: "Today",
-                      time: "6:00 PM - 8:00 PM",
-                      location: "Tapley Hall",
-                      type: "rehearsal",
-                      required: true
-                    },
-                    {
-                      title: "Section Rehearsal - Soprano",
-                      date: "Tomorrow",
-                      time: "4:00 PM - 5:30 PM",
-                      location: "Music Room 201",
-                      type: "sectional",
-                      required: true
-                    },
-                    {
-                      title: "Spring Concert",
-                      date: "March 15",
-                      time: "7:30 PM - 9:30 PM",
-                      location: "Spelman Auditorium",
-                      type: "performance",
-                      required: true
-                    },
-                    {
-                      title: "Community Outreach Performance",
-                      date: "March 22",
-                      time: "2:00 PM - 4:00 PM",
-                      location: "Downtown Community Center",
-                      type: "performance",
-                      required: false
-                    },
-                    {
-                      title: "Uniform Fitting",
-                      date: "March 8",
-                      time: "3:00 PM - 5:00 PM",
-                      location: "Wardrobe Room",
-                      type: "fitting",
-                      required: true
-                    }
-                  ].map((event, index) => (
-                    <div key={index} className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
-                      <div className="flex-shrink-0">
-                        <div className={`w-3 h-3 rounded-full mt-2 ${
-                          event.type === 'performance' ? 'bg-purple-500' :
-                          event.type === 'rehearsal' ? 'bg-blue-500' :
-                          event.type === 'sectional' ? 'bg-green-500' :
-                          'bg-orange-500'
-                        }`}></div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-semibold text-foreground">{event.title}</h4>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                              <span className="flex items-center gap-1">
-                                <CalendarIcon className="h-3 w-3" />
-                                {event.date}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {event.time}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {event.location}
-                              </span>
+                {upcomingEvents.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No upcoming events scheduled.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {upcomingEvents.map((event) => (
+                      <div key={event.id} className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
+                        <div className="flex-shrink-0">
+                          <div className={`w-3 h-3 rounded-full mt-2 ${
+                            event.event_type === 'performance' ? 'bg-purple-500' :
+                            event.event_type === 'rehearsal' ? 'bg-blue-500' :
+                            event.event_type === 'meeting' ? 'bg-green-500' :
+                            'bg-orange-500'
+                          }`}></div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-semibold text-foreground">{event.title}</h4>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                                <span className="flex items-center gap-1">
+                                  <CalendarIcon className="h-3 w-3" />
+                                  {new Date(event.start_date).toLocaleDateString()}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  All Day
+                                </span>
+                                {event.location && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" />
+                                    {event.location}
+                                  </span>
+                                )}
+                              </div>
+                              {event.description && (
+                                <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                                  {event.description}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-2 mt-2">
+                                <Badge variant="outline" className="text-xs capitalize">
+                                  {event.event_type || 'event'}
+                                </Badge>
+                                {event.is_public && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Public
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 mt-2">
-                              <Badge 
-                                variant={event.required ? 'default' : 'secondary'}
-                                className="text-xs"
-                              >
-                                {event.required ? 'Required' : 'Optional'}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs capitalize">
-                                {event.type}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 ml-4">
-                            <Button size="sm" variant="outline">
-                              Details
-                            </Button>
-                            {event.type === 'rehearsal' && (
+                            <div className="flex gap-2 ml-4">
                               <Button size="sm" variant="outline">
-                                RSVP
+                                Details
                               </Button>
-                            )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -163,19 +148,19 @@ const MemberCalendarPage = () => {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span>Rehearsals</span>
-                    <span className="font-semibold">5</span>
+                    <span className="font-semibold">{thisWeekEvents.filter(e => e.event_type === 'rehearsal').length}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Sectionals</span>
-                    <span className="font-semibold">2</span>
+                    <span>Meetings</span>
+                    <span className="font-semibold">{thisWeekEvents.filter(e => e.event_type === 'meeting').length}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Performances</span>
-                    <span className="font-semibold">1</span>
+                    <span className="font-semibold">{thisWeekEvents.filter(e => e.event_type === 'performance').length}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Total Hours</span>
-                    <span className="font-semibold">12</span>
+                    <span>Total Events</span>
+                    <span className="font-semibold">{thisWeekEvents.length}</span>
                   </div>
                 </div>
               </CardContent>

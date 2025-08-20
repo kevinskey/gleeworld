@@ -1,11 +1,25 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, Play, Download, BookOpen, Award, Clock } from 'lucide-react';
+import { Eye, Play, Download, BookOpen, Award, Clock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useSRFAssignments } from '@/hooks/useSRFAssignments';
 
 const SightReadingPage = () => {
+  const { assignments, loading } = useSRFAssignments();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const completedAssignments = assignments.filter(a => a.completedCount === a.assignedCount);
+  const pendingAssignments = assignments.filter(a => a.completedCount < a.assignedCount);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -30,17 +44,17 @@ const SightReadingPage = () => {
           <Card className="p-4 text-center bg-green-50 border-green-200">
             <BookOpen className="h-8 w-8 mx-auto mb-2 text-green-600" />
             <h3 className="font-semibold">Assignments</h3>
-            <p className="text-sm text-muted-foreground">3 pending</p>
+            <p className="text-sm text-muted-foreground">{pendingAssignments.length} pending</p>
           </Card>
           <Card className="p-4 text-center bg-purple-50 border-purple-200">
             <Play className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-            <h3 className="font-semibold">Practice Sessions</h3>
-            <p className="text-sm text-muted-foreground">12 this week</p>
+            <h3 className="font-semibold">Completed</h3>
+            <p className="text-sm text-muted-foreground">{completedAssignments.length} assignments</p>
           </Card>
           <Card className="p-4 text-center bg-orange-50 border-orange-200">
             <Clock className="h-8 w-8 mx-auto mb-2 text-orange-600" />
-            <h3 className="font-semibold">Study Time</h3>
-            <p className="text-sm text-muted-foreground">4.5 hours</p>
+            <h3 className="font-semibold">Total Assignments</h3>
+            <p className="text-sm text-muted-foreground">{assignments.length} total</p>
           </Card>
         </div>
 
@@ -53,61 +67,53 @@ const SightReadingPage = () => {
                 <CardTitle>Current Assignments</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { 
-                      title: "Major Scale Sight Reading", 
-                      dueDate: "Due tomorrow", 
-                      progress: 75, 
-                      status: "in-progress",
-                      difficulty: "Beginner"
-                    },
-                    { 
-                      title: "Interval Recognition Exercise", 
-                      dueDate: "Due in 3 days", 
-                      progress: 40, 
-                      status: "started",
-                      difficulty: "Intermediate"
-                    },
-                    { 
-                      title: "Chromatic Sight Reading", 
-                      dueDate: "Due next week", 
-                      progress: 0, 
-                      status: "not-started",
-                      difficulty: "Advanced"
-                    },
-                  ].map((assignment, index) => (
-                    <div key={index} className="p-4 bg-muted/30 rounded-lg">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h4 className="font-semibold">{assignment.title}</h4>
-                          <p className="text-sm text-muted-foreground">{assignment.dueDate}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge 
-                              variant={assignment.status === 'in-progress' ? 'default' : 'secondary'}
-                              className="text-xs"
-                            >
-                              {assignment.status.replace('-', ' ')}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              {assignment.difficulty}
-                            </Badge>
+                {assignments.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No sight reading assignments available yet.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {assignments.map((assignment) => {
+                      const progress = Math.round((assignment.completedCount / assignment.assignedCount) * 100);
+                      const isCompleted = assignment.completedCount === assignment.assignedCount;
+                      const isOverdue = new Date(assignment.dueDate) < new Date();
+                      
+                      return (
+                        <div key={assignment.id} className="p-4 bg-muted/30 rounded-lg">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <h4 className="font-semibold">{assignment.title}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                              </p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <Badge 
+                                  variant={isCompleted ? 'default' : isOverdue ? 'destructive' : 'secondary'}
+                                  className="text-xs"
+                                >
+                                  {isCompleted ? 'Completed' : isOverdue ? 'Overdue' : 'In Progress'}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  {assignment.difficulty}
+                                </Badge>
+                              </div>
+                            </div>
+                            <Button size="sm" className="ml-4" disabled={isCompleted}>
+                              {isCompleted ? 'Completed' : 'Continue'}
+                            </Button>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span>Progress ({assignment.completedCount}/{assignment.assignedCount})</span>
+                              <span>{progress}%</span>
+                            </div>
+                            <Progress value={progress} className="h-2" />
                           </div>
                         </div>
-                        <Button size="sm" className="ml-4">
-                          {assignment.status === 'not-started' ? 'Start' : 'Continue'}
-                        </Button>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>Progress</span>
-                          <span>{assignment.progress}%</span>
-                        </div>
-                        <Progress value={assignment.progress} className="h-2" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

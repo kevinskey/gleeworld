@@ -1,10 +1,25 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Music, BookOpen, Download, Play } from 'lucide-react';
+import { Music, BookOpen, Download, Play, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useSheetMusic } from '@/hooks/useSheetMusic';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 const MusicLibraryPage = () => {
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
+  const { sheetMusic, loading, error } = useSheetMusic();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -24,22 +39,22 @@ const MusicLibraryPage = () => {
           <Card className="p-4 text-center bg-purple-50 border-purple-200">
             <BookOpen className="h-8 w-8 mx-auto mb-2 text-purple-600" />
             <h3 className="font-semibold">Current Repertoire</h3>
-            <p className="text-sm text-muted-foreground">12 pieces</p>
+            <p className="text-sm text-muted-foreground">{sheetMusic.length} pieces</p>
           </Card>
           <Card className="p-4 text-center bg-blue-50 border-blue-200">
             <Download className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-            <h3 className="font-semibold">Recent Downloads</h3>
-            <p className="text-sm text-muted-foreground">5 this week</p>
+            <h3 className="font-semibold">Sheet Music Available</h3>
+            <p className="text-sm text-muted-foreground">{sheetMusic.filter(s => s.pdf_url).length} PDFs</p>
           </Card>
           <Card className="p-4 text-center bg-green-50 border-green-200">
             <Play className="h-8 w-8 mx-auto mb-2 text-green-600" />
             <h3 className="font-semibold">Practice Recordings</h3>
-            <p className="text-sm text-muted-foreground">8 available</p>
+            <p className="text-sm text-muted-foreground">{sheetMusic.filter(s => s.audio_preview_url).length} available</p>
           </Card>
           <Card className="p-4 text-center bg-orange-50 border-orange-200">
             <Music className="h-8 w-8 mx-auto mb-2 text-orange-600" />
             <h3 className="font-semibold">Voice Part</h3>
-            <p className="text-sm text-muted-foreground">Soprano 1</p>
+            <p className="text-sm text-muted-foreground">{userProfile?.voice_part || 'Not Set'}</p>
           </Card>
         </div>
 
@@ -52,38 +67,50 @@ const MusicLibraryPage = () => {
                 <CardTitle>Current Repertoire</CardTitle>
               </CardHeader>
               <CardContent>
+                {error && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Error loading sheet music: {error}
+                  </div>
+                )}
+                {!error && sheetMusic.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No sheet music available yet.
+                  </div>
+                )}
                 <div className="space-y-4">
-                  {[
-                    { title: "Amazing Grace", composer: "Traditional", status: "practicing", difficulty: "Beginner" },
-                    { title: "Wade in the Water", composer: "Spiritual", status: "performance-ready", difficulty: "Intermediate" },
-                    { title: "Lift Every Voice and Sing", composer: "James Weldon Johnson", status: "learning", difficulty: "Advanced" },
-                    { title: "His Eye Is on the Sparrow", composer: "Civilla D. Martin", status: "practicing", difficulty: "Intermediate" },
-                  ].map((piece, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                  {sheetMusic.map((piece) => (
+                    <div key={piece.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
                       <div className="flex-1">
                         <h4 className="font-semibold">{piece.title}</h4>
-                        <p className="text-sm text-muted-foreground">by {piece.composer}</p>
+                        <p className="text-sm text-muted-foreground">by {piece.composer || 'Unknown'}</p>
                         <div className="flex items-center gap-2 mt-2">
-                          <Badge 
-                            variant={piece.status === 'performance-ready' ? 'default' : 'secondary'}
-                            className="text-xs"
-                          >
-                            {piece.status.replace('-', ' ')}
-                          </Badge>
                           <Badge variant="outline" className="text-xs">
-                            {piece.difficulty}
+                            {piece.difficulty_level || 'Not Specified'}
                           </Badge>
+                          {piece.voice_parts && piece.voice_parts.length > 0 && (
+                            <Badge variant="secondary" className="text-xs">
+                              {Array.isArray(piece.voice_parts) ? piece.voice_parts.join(', ') : piece.voice_parts}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <Download className="h-4 w-4 mr-1" />
-                          Download
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Play className="h-4 w-4 mr-1" />
-                          Listen
-                        </Button>
+                        {piece.pdf_url && (
+                          <Button size="sm" variant="outline" asChild>
+                            <a href={piece.pdf_url} target="_blank" rel="noopener noreferrer">
+                              <Download className="h-4 w-4 mr-1" />
+                              Download
+                            </a>
+                          </Button>
+                        )}
+                        {piece.audio_preview_url && (
+                          <Button size="sm" variant="outline" asChild>
+                            <a href={piece.audio_preview_url} target="_blank" rel="noopener noreferrer">
+                              <Play className="h-4 w-4 mr-1" />
+                              Listen
+                            </a>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}

@@ -1,10 +1,26 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shirt, Package, Calendar, User, Camera } from 'lucide-react';
+import { Shirt, Package, Calendar, User, Camera, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 
 const WardrobePage = () => {
+  const { wardrobeItems, loading, getMeasurements } = useWardrobeItems();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const measurements = getMeasurements();
+  const uniformCount = wardrobeItems.filter(item => item.type === 'formal').length;
+  const costumeCount = wardrobeItems.filter(item => item.type === 'costume').length;
+  const needsFittingCount = wardrobeItems.filter(item => item.status === 'needs-fitting').length;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -23,23 +39,23 @@ const WardrobePage = () => {
         <div className="grid gap-4 md:grid-cols-4">
           <Card className="p-4 text-center bg-pink-50 border-pink-200">
             <Shirt className="h-8 w-8 mx-auto mb-2 text-pink-600" />
-            <h3 className="font-semibold">Uniforms</h3>
-            <p className="text-sm text-muted-foreground">3 assigned</p>
+            <h3 className="font-semibold">Formal Items</h3>
+            <p className="text-sm text-muted-foreground">{uniformCount} assigned</p>
           </Card>
           <Card className="p-4 text-center bg-purple-50 border-purple-200">
             <Package className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-            <h3 className="font-semibold">Costumes</h3>
-            <p className="text-sm text-muted-foreground">2 fitted</p>
+            <h3 className="font-semibold">Total Items</h3>
+            <p className="text-sm text-muted-foreground">{wardrobeItems.length} items</p>
           </Card>
           <Card className="p-4 text-center bg-blue-50 border-blue-200">
             <Calendar className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-            <h3 className="font-semibold">Next Fitting</h3>
-            <p className="text-sm text-muted-foreground">March 8</p>
+            <h3 className="font-semibold">Needs Fitting</h3>
+            <p className="text-sm text-muted-foreground">{needsFittingCount} items</p>
           </Card>
           <Card className="p-4 text-center bg-green-50 border-green-200">
             <User className="h-8 w-8 mx-auto mb-2 text-green-600" />
             <h3 className="font-semibold">Size Status</h3>
-            <p className="text-sm text-muted-foreground">Updated</p>
+            <p className="text-sm text-muted-foreground">{measurements ? 'Updated' : 'Not Set'}</p>
           </Card>
         </div>
 
@@ -51,101 +67,63 @@ const WardrobePage = () => {
                 <CardTitle>My Wardrobe Items</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {[
-                    {
-                      name: "Black Concert Dress",
-                      type: "formal",
-                      size: "Medium",
-                      status: "fitted",
-                      lastFitting: "Feb 15, 2024",
-                      nextPerformance: "Spring Concert - March 15"
-                    },
-                    {
-                      name: "White Blouse",
-                      type: "casual",
-                      size: "Medium",
-                      status: "assigned",
-                      lastFitting: "Jan 20, 2024",
-                      nextPerformance: "Community Event - March 22"
-                    },
-                    {
-                      name: "Black Skirt",
-                      type: "formal",
-                      size: "Medium",
-                      status: "fitted",
-                      lastFitting: "Feb 15, 2024",
-                      nextPerformance: "Spring Concert - March 15"
-                    },
-                    {
-                      name: "Spring Themed Costume",
-                      type: "costume",
-                      size: "Medium",
-                      status: "needs-fitting",
-                      lastFitting: "Never",
-                      nextPerformance: "Spring Concert - March 15"
-                    },
-                    {
-                      name: "Black Shoes",
-                      type: "accessories",
-                      size: "8.5",
-                      status: "assigned",
-                      lastFitting: "Feb 1, 2024",
-                      nextPerformance: "All Events"
-                    }
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
-                      <div className="flex-shrink-0">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                          item.type === 'formal' ? 'bg-purple-100 text-purple-600' :
-                          item.type === 'casual' ? 'bg-blue-100 text-blue-600' :
-                          item.type === 'costume' ? 'bg-pink-100 text-pink-600' :
-                          'bg-gray-100 text-gray-600'
-                        }`}>
-                          <Shirt className="h-6 w-6" />
+                {wardrobeItems.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No wardrobe items assigned yet.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {wardrobeItems.map((item) => (
+                      <div key={item.id} className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
+                        <div className="flex-shrink-0">
+                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                            item.type === 'formal' ? 'bg-purple-100 text-purple-600' :
+                            item.type === 'casual' ? 'bg-blue-100 text-blue-600' :
+                            item.type === 'costume' ? 'bg-pink-100 text-pink-600' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            <Shirt className="h-6 w-6" />
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-semibold">{item.name}</h4>
-                            <p className="text-sm text-muted-foreground">Size: {item.size}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Last fitting: {item.lastFitting}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Next use: {item.nextPerformance}
-                            </p>
-                            <div className="flex items-center gap-2 mt-2">
-                              <Badge 
-                                variant={
-                                  item.status === 'fitted' ? 'default' :
-                                  item.status === 'needs-fitting' ? 'destructive' : 'secondary'
-                                }
-                                className="text-xs"
-                              >
-                                {item.status.replace('-', ' ')}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs capitalize">
-                                {item.type}
-                              </Badge>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-semibold">{item.name}</h4>
+                              <p className="text-sm text-muted-foreground">Size: {item.size}</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Added: {new Date(item.created_at).toLocaleDateString()}
+                              </p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <Badge 
+                                  variant={
+                                    item.status === 'fitted' ? 'default' :
+                                    item.status === 'needs-fitting' ? 'destructive' : 'secondary'
+                                  }
+                                  className="text-xs"
+                                >
+                                  {item.status.replace('-', ' ')}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs capitalize">
+                                  {item.type}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex gap-2 ml-4">
+                              {item.status === 'needs-fitting' && (
+                                <Button size="sm" className="text-xs">
+                                  Schedule Fitting
+                                </Button>
+                              )}
+                              <Button size="sm" variant="outline" className="text-xs">
+                                Details
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex gap-2 ml-4">
-                            {item.status === 'needs-fitting' && (
-                              <Button size="sm" className="text-xs">
-                                Schedule Fitting
-                              </Button>
-                            )}
-                            <Button size="sm" variant="outline" className="text-xs">
-                              Details
-                            </Button>
-                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -179,24 +157,30 @@ const WardrobePage = () => {
                 <CardTitle className="text-lg">My Measurements</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span>Dress Size</span>
-                    <span className="font-semibold">Medium</span>
+                {measurements ? (
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span>Dress Size</span>
+                      <span className="font-semibold">{measurements.dressSize}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Shoe Size</span>
+                      <span className="font-semibold">{measurements.shoeSize}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Height</span>
+                      <span className="font-semibold">{measurements.height}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Last Updated</span>
+                      <span className="font-semibold">{measurements.lastUpdated}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Shoe Size</span>
-                    <span className="font-semibold">8.5</span>
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No measurements recorded yet.
                   </div>
-                  <div className="flex justify-between">
-                    <span>Height</span>
-                    <span className="font-semibold">5'6"</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Last Updated</span>
-                    <span className="font-semibold">Feb 15, 2024</span>
-                  </div>
-                </div>
+                )}
                 <Button size="sm" variant="outline" className="w-full mt-4">
                   Update Measurements
                 </Button>
