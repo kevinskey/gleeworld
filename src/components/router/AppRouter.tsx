@@ -27,6 +27,7 @@ import AlumnaeAdmin from "@/pages/admin/AlumnaeAdmin";
 import { Shop } from "@/pages/Shop";
 import { Checkout } from "@/pages/Checkout";
 import { Success } from "@/pages/shop/Success";
+import { UnifiedDashboard } from "@/components/dashboard/UnifiedDashboard";
 import BookingRequest from "@/pages/BookingRequest";
 import TourPlanner from "@/pages/TourPlanner";
 import SendNotificationPage from "@/pages/SendNotificationPage";
@@ -160,7 +161,11 @@ export const router = createBrowserRouter([
     element: <MemberSightReadingStudioPage />,
   },
   {
-    path: "/executive-board-dashboard",
+    path: "/dashboard",
+    element: <UnifiedDashboard />,
+  },
+  {
+    path: "/executive-board-dashboard", 
     element: <Navigate to="/dashboard" replace />,
   },
   {
