@@ -62,12 +62,35 @@ export const useRoleBasedRedirect = () => {
                                !userProfile.phone || 
                                !userProfile.address;
 
+    // Check if user is leadership (admin, super admin, or exec board)
+    const isLeadership = userProfile.is_super_admin || 
+                        userProfile.is_admin || 
+                        userProfile.is_exec_board || 
+                        userProfile.role === 'super-admin' || 
+                        userProfile.role === 'admin';
+
     if (isProfileIncomplete) {
-      console.log('🔄 useRoleBasedRedirect: Profile incomplete, redirecting to onboarding');
-      if (location.pathname !== '/onboarding') {
-        navigate('/onboarding', { replace: true });
+      console.log('🔄 useRoleBasedRedirect: Profile incomplete detected');
+      
+      // Allow leadership to access protected areas even with incomplete profiles
+      // They'll see a banner instead of being forced to onboarding
+      if (isLeadership) {
+        console.log('👑 useRoleBasedRedirect: Leadership with incomplete profile, allowing access');
+        return;
       }
-      return;
+
+      // For non-leadership, only redirect to onboarding if they're trying to access protected routes
+      const protectedRoutes = ['/dashboard', '/member', '/fan', '/alumnae', '/admin'];
+      const isAccessingProtectedRoute = protectedRoutes.some(route => location.pathname.startsWith(route));
+      
+      if (isAccessingProtectedRoute && location.pathname !== '/onboarding') {
+        console.log('🔄 useRoleBasedRedirect: Non-leadership accessing protected route, redirecting to onboarding');
+        navigate('/onboarding', { replace: true });
+        return;
+      }
+      
+      // Allow staying on public pages with incomplete profile
+      console.log('🌐 useRoleBasedRedirect: Incomplete profile but on public page, allowing access');
     }
 
     // Check if user is in executive board table

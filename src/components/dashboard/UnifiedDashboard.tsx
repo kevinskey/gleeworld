@@ -10,6 +10,7 @@ import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon } from 'lucide-
 import { useLocation } from 'react-router-dom';
 import { MemberNavigation } from '@/components/member/MemberNavigation';
 import { useUserRole } from '@/hooks/useUserRole';
+import { IncompleteProfileBanner } from '@/components/shared/IncompleteProfileBanner';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
 export const UnifiedDashboard = () => {
@@ -38,6 +39,11 @@ export const UnifiedDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+      
+      {/* Incomplete Profile Banner */}
+      <div className="px-6 pt-4">
+        <IncompleteProfileBanner userProfile={profile} />
+      </div>
 
       {/* Row 1: Hero + Features side-by-side */}
       <div className="px-6 py-4">

@@ -10,6 +10,7 @@ import { Navigate, Link } from "react-router-dom";
 import { UniversalHeader } from "@/components/layout/UniversalHeader";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { toast } from "sonner";
+import { IncompleteProfileBanner } from "@/components/shared/IncompleteProfileBanner";
 
 interface FanStats {
   eventsAttended: number;
@@ -142,6 +143,9 @@ export default function FanDashboard() {
       <UniversalHeader />
       
       <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Incomplete Profile Banner */}
+        <IncompleteProfileBanner userProfile={userProfile} />
+        
         {/* Welcome Section */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold text-primary">Welcome Back, Fan!</h1>
