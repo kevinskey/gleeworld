@@ -125,7 +125,7 @@ export const DashboardFeaturesCarousel: React.FC = () => {
                     <div 
                       className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                       style={{
-                        backgroundImage: `url('https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=2070&q=80&sat=-100')`
+                        backgroundImage: `url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=2070&q=80&sat=-100')`
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60" />
