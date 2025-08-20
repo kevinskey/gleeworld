@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { ConsolidatedStatsCards } from "@/components/ConsolidatedStatsCards";
 import { ContractCreationCollapsible } from "@/components/ContractCreationCollapsible";
@@ -21,6 +22,8 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
 import type { Contract } from "@/hooks/useContracts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Music, BookOpen, Users, ArrowRight, GraduationCap } from "lucide-react";
 
 const Index = () => {
   console.log('Index: Component is rendering');
@@ -211,6 +214,49 @@ const Index = () => {
     <UniversalLayout containerized={false}>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
         <div className="container mx-auto px-4 py-8">
+          {/* Class Registration Banner */}
+          <div className="mb-8">
+            <Link to="/student-registration">
+              <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border-2 border-amber-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <Music className="h-8 w-8 text-white" />
+                      </div>
+                      <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <BookOpen className="h-8 w-8 text-white" />
+                      </div>
+                      <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <GraduationCap className="h-8 w-8 text-white" />
+                      </div>
+                    </div>
+                    <div className="text-white">
+                      <h2 className="text-4xl font-bold mb-2 drop-shadow-lg">
+                        Survey of African American Music
+                      </h2>
+                      <p className="text-xl text-white/90 mb-3 drop-shadow-md">
+                        Spring 2024 Class Registration Now Open
+                      </p>
+                      <p className="text-lg text-white/80 drop-shadow-md">
+                        Explore the rich heritage and cultural impact of African American musical traditions
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Button 
+                      size="lg" 
+                      className="bg-white text-orange-600 hover:bg-white/90 font-bold text-lg px-8 py-4 shadow-xl"
+                    >
+                      REGISTER NOW
+                      <ArrowRight className="ml-2 h-6 w-6" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </div>
+
           {/* Brand Header */}
           <div className="mb-8">
             <div className="bg-card/80 backdrop-blur-sm rounded-lg p-6 border border-border shadow-lg">
