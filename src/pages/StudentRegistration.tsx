@@ -116,11 +116,11 @@ export default function StudentRegistration() {
 
         toast({
           title: "Registration Successful!",
-          description: "Welcome to the African American Music class. You can now explore the public resources.",
+          description: "Welcome to the African American Music class. You'll now be redirected to NotebookLM for class resources.",
         });
 
-        // Redirect to home page
-        navigate('/');
+        // Redirect to NotebookLM
+        window.open('https://notebooklm.google.com', '_blank');
       }
     } catch (error: any) {
       console.error('Registration error:', error);
