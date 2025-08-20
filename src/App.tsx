@@ -49,6 +49,8 @@ import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
 import Notifications from "./pages/Notifications";
 import OnboardingInfo from "./pages/OnboardingInfo";
+import MemberRegistration from "./pages/MemberRegistration";
+import ResetPassword from "./pages/ResetPassword";
 import Announcements from "./pages/Announcements";
 import CreateAnnouncement from "./pages/admin/CreateAnnouncement";
 import EditAnnouncement from "./pages/admin/EditAnnouncement";
@@ -214,6 +216,22 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <OnboardingInfo />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/join" 
+                element={
+                  <PublicRoute>
+                    <MemberRegistration />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/reset-password" 
+                element={
+                  <PublicRoute>
+                    <ResetPassword />
                   </PublicRoute>
                 } 
               />
