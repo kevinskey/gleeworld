@@ -48,6 +48,7 @@ import Calendar from "./pages/Calendar";
 import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
 import Notifications from "./pages/Notifications";
+import OnboardingInfo from "./pages/OnboardingInfo";
 import Announcements from "./pages/Announcements";
 import CreateAnnouncement from "./pages/admin/CreateAnnouncement";
 import EditAnnouncement from "./pages/admin/EditAnnouncement";
@@ -205,6 +206,14 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <Onboarding />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/onboarding-info" 
+                element={
+                  <PublicRoute>
+                    <OnboardingInfo />
                   </PublicRoute>
                 } 
               />

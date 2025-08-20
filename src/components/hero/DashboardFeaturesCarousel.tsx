@@ -148,7 +148,7 @@ export const DashboardFeaturesCarousel: React.FC = () => {
                             <a href="/onboarding">Complete Profile</a>
                           </Button>
                           <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary/10" asChild>
-                            <a href="/about">Learn More</a>
+                            <a href="/onboarding-info">Learn More</a>
                           </Button>
                         </div>
                       </div>
