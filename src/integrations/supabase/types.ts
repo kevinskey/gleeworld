@@ -7502,6 +7502,7 @@ export type Database = {
           class_year: number | null
           created_at: string | null
           current_cart_id: string | null
+          data_consent: boolean | null
           default_shipping_address: Json | null
           design_history_ids: string[] | null
           dietary_restrictions: string[] | null
@@ -7532,6 +7533,7 @@ export type Database = {
           last_sign_in_at: string | null
           major: string | null
           measurements: Json | null
+          media_consent: boolean | null
           mentor_opt_in: boolean | null
           middle_name: string | null
           minor: string | null
@@ -7541,6 +7543,7 @@ export type Database = {
           parent_guardian_contact: string | null
           phone: string | null
           phone_number: string | null
+          photo_consent: boolean | null
           preferred_payment_method: string | null
           pronouns: string | null
           reunion_rsvp: boolean | null
@@ -7577,6 +7580,7 @@ export type Database = {
           class_year?: number | null
           created_at?: string | null
           current_cart_id?: string | null
+          data_consent?: boolean | null
           default_shipping_address?: Json | null
           design_history_ids?: string[] | null
           dietary_restrictions?: string[] | null
@@ -7607,6 +7611,7 @@ export type Database = {
           last_sign_in_at?: string | null
           major?: string | null
           measurements?: Json | null
+          media_consent?: boolean | null
           mentor_opt_in?: boolean | null
           middle_name?: string | null
           minor?: string | null
@@ -7616,6 +7621,7 @@ export type Database = {
           parent_guardian_contact?: string | null
           phone?: string | null
           phone_number?: string | null
+          photo_consent?: boolean | null
           preferred_payment_method?: string | null
           pronouns?: string | null
           reunion_rsvp?: boolean | null
@@ -7652,6 +7658,7 @@ export type Database = {
           class_year?: number | null
           created_at?: string | null
           current_cart_id?: string | null
+          data_consent?: boolean | null
           default_shipping_address?: Json | null
           design_history_ids?: string[] | null
           dietary_restrictions?: string[] | null
@@ -7682,6 +7689,7 @@ export type Database = {
           last_sign_in_at?: string | null
           major?: string | null
           measurements?: Json | null
+          media_consent?: boolean | null
           mentor_opt_in?: boolean | null
           middle_name?: string | null
           minor?: string | null
@@ -7691,6 +7699,7 @@ export type Database = {
           parent_guardian_contact?: string | null
           phone?: string | null
           phone_number?: string | null
+          photo_consent?: boolean | null
           preferred_payment_method?: string | null
           pronouns?: string | null
           reunion_rsvp?: boolean | null

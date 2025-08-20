@@ -25,7 +25,7 @@ export const OnboardingStepper = ({ currentStep, completedSteps }: StepperProps)
           const Icon = step.icon;
 
           return (
-            <React.Fragment key={step.id}>
+            <div key={step.id} className="flex items-center flex-1">
               <div className="flex flex-col items-center space-y-2 min-w-0 flex-1">
                 <div className={`
                   flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all
@@ -64,7 +64,7 @@ export const OnboardingStepper = ({ currentStep, completedSteps }: StepperProps)
                   ${completedSteps.includes(step.id) ? 'bg-primary' : 'bg-muted'}
                 `} />
               )}
-            </React.Fragment>
+            </div>
           );
         })}
       </div>
