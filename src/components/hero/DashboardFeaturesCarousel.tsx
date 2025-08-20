@@ -128,7 +128,7 @@ export const DashboardFeaturesCarousel: React.FC = () => {
                         backgroundImage: `url('/lovable-uploads/46a0770f-abdd-41c3-85dc-3c75eaf35e02.png')`
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/80" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/30 to-black/50" />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center space-y-3 md:space-y-4 max-w-3xl mx-auto px-4 md:px-6">
                         <div className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/20 backdrop-blur px-3 py-1.5 text-xs font-medium text-white">
