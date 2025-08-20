@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 
 import { AccountGate } from '@/components/onboarding/AccountGate';
 import { OnboardingStepper } from '@/components/onboarding/OnboardingStepper';
+import { OnboardingHero } from '@/components/onboarding/OnboardingHero';
 import { ProfileForm } from '@/components/onboarding/ProfileForm';
 import { UniformMediaForm } from '@/components/onboarding/UniformMediaForm';
 import { AgreementsForm } from '@/components/onboarding/AgreementsForm';
@@ -20,7 +21,7 @@ export const Onboarding = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0); // Start at 0 for hero slide
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
 
@@ -29,13 +30,13 @@ export const Onboarding = () => {
     if (authLoading || loading) return;
 
     if (!user) {
-      setCurrentStep(1); // Account step
+      setCurrentStep(0); // Start with hero slide for unauthenticated users
       return;
     }
 
     // User is authenticated, check profile completion
     const completion = getStepCompletion();
-    const newCompletedSteps: number[] = [1]; // Account is always completed if authenticated
+    const newCompletedSteps: number[] = [0, 1]; // Hero and Account completed if authenticated
 
     if (completion.profile) newCompletedSteps.push(2);
     if (completion.uniform) newCompletedSteps.push(3);
@@ -44,20 +45,24 @@ export const Onboarding = () => {
     setCompletedSteps(newCompletedSteps);
 
     // Set current step to first incomplete step, or review if all complete
-    if (!completion.profile && currentStep < 2) {
+    if (!completion.profile && currentStep <= 1) {
       setCurrentStep(2);
-    } else if (!completion.uniform && completion.profile && currentStep < 3) {
+    } else if (!completion.uniform && completion.profile && currentStep <= 2) {
       setCurrentStep(3);
-    } else if (!completion.agreements && completion.profile && completion.uniform && currentStep < 4) {
+    } else if (!completion.agreements && completion.profile && completion.uniform && currentStep <= 3) {
       setCurrentStep(4);
-    } else if (completion.profile && completion.uniform && completion.agreements && currentStep < 5) {
+    } else if (completion.profile && completion.uniform && completion.agreements && currentStep <= 4) {
       setCurrentStep(5);
     }
   }, [user, authLoading, loading, getStepCompletion, currentStep]);
 
+  const handleGetStarted = () => {
+    setCurrentStep(1); // Move to authentication
+  };
+
   const handleAuthenticated = () => {
     setCurrentStep(2);
-    setCompletedSteps([1]);
+    setCompletedSteps([0, 1]);
   };
 
   const handleNext = () => {
@@ -90,13 +95,15 @@ export const Onboarding = () => {
     const completion = getStepCompletion();
     
     switch (currentStep) {
-      case 1:
+      case 0: // Hero step
+        return true;
+      case 1: // Account step
         return !!user;
-      case 2:
+      case 2: // Profile step
         return completion.profile;
-      case 3:
+      case 3: // Uniform step
         return completion.uniform;
-      case 4:
+      case 4: // Agreements step
         return completion.agreements;
       default:
         return false;
@@ -129,8 +136,13 @@ export const Onboarding = () => {
     );
   }
 
-  // Show account gate if not authenticated
-  if (!user) {
+  // Show hero slide first for unauthenticated users
+  if (currentStep === 0 && !user) {
+    return <OnboardingHero onGetStarted={handleGetStarted} />;
+  }
+
+  // Show account gate if not authenticated and past hero
+  if (!user && currentStep > 0) {
     return <AccountGate onAuthenticated={handleAuthenticated} />;
   }
 
