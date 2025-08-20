@@ -39,10 +39,19 @@ export const useRoleBasedRedirect = () => {
     }
 
     // If user exists but no profile after loading is complete, send to onboarding
+    // BUT only if they're not trying to view public pages
     if (!userProfile) {
-      console.log('useRoleBasedRedirect: User exists but no profile found, redirecting to onboarding');
-      if (location.pathname !== '/onboarding') {
+      console.log('useRoleBasedRedirect: User exists but no profile found');
+      
+      // Allow users to stay on public pages even without a profile
+      const publicPages = ['/', '/about', '/events', '/contact', '/shop', '/calendar', '/press-kit'];
+      const isOnPublicPage = publicPages.includes(location.pathname);
+      
+      if (!isOnPublicPage && location.pathname !== '/onboarding') {
+        console.log('useRoleBasedRedirect: Not on public page, redirecting to onboarding');
         navigate('/onboarding', { replace: true });
+      } else if (isOnPublicPage) {
+        console.log('useRoleBasedRedirect: On public page, allowing access without profile');
       }
       return;
     }
