@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Plus, Users, User, Settings } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowLeft, Users, User, Settings, ChevronRight } from 'lucide-react';
 import { useModuleAssignments, type CreateAssignmentData } from '@/hooks/useModuleAssignments';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -29,14 +26,10 @@ export const ModuleAssignmentManager: React.FC = () => {
   const { assignments, loading, createAssignment, deleteAssignment, refetch } = useModuleAssignments();
   const [users, setUsers] = useState<User[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedModule, setSelectedModule] = useState<Module | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const { toast } = useToast();
-
-  const [formData, setFormData] = useState<CreateAssignmentData>({
-    module_name: '',
-    assignment_type: 'individual',
-    permissions: ['view'],
-  });
 
   const groupOptions = [
     { value: 'all', label: 'All Users' },
@@ -48,12 +41,6 @@ export const ModuleAssignmentManager: React.FC = () => {
     { value: 'bass', label: 'Bass Section' },
     { value: 'member', label: 'Members' },
     { value: 'alumna', label: 'Alumnae' },
-  ];
-
-  const permissionOptions = [
-    { value: 'view', label: 'View' },
-    { value: 'manage', label: 'Manage' },
-    { value: 'admin', label: 'Admin' },
   ];
 
   useEffect(() => {
@@ -100,301 +87,270 @@ export const ModuleAssignmentManager: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleBulkAssign = async () => {
+    if (!selectedModule) return;
+
     try {
-      await createAssignment(formData);
-      setFormData({
-        module_name: '',
-        assignment_type: 'individual',
-        permissions: ['view'],
+      // Assign to selected users
+      for (const userId of selectedUsers) {
+        await createAssignment({
+          module_name: selectedModule.name,
+          assignment_type: 'individual',
+          assigned_to_user_id: userId,
+          permissions: ['view'],
+          notes: 'Bulk assignment',
+        });
+      }
+
+      // Assign to selected groups
+      for (const group of selectedGroups) {
+        await createAssignment({
+          module_name: selectedModule.name,
+          assignment_type: 'group',
+          assigned_to_group: group,
+          permissions: ['view', 'manage'],
+          notes: 'Bulk group assignment',
+        });
+      }
+
+      // Reset selections
+      setSelectedUsers([]);
+      setSelectedGroups([]);
+      setSelectedModule(null);
+      
+      toast({
+        title: "Success",
+        description: "Assignments created successfully",
       });
-      setShowCreateForm(false);
     } catch (error) {
-      // Error is handled in the hook
+      toast({
+        title: "Error", 
+        description: "Failed to create assignments",
+        variant: "destructive",
+      });
     }
   };
 
-  const quickAssignToExecBoard = async (moduleName: string) => {
-    try {
-      await createAssignment({
-        module_name: moduleName,
-        assignment_type: 'group',
-        assigned_to_group: 'executive_board',
-        permissions: ['view', 'manage'],
-        notes: 'Quick assignment to executive board',
-      });
-    } catch (error) {
-      // Error is handled in the hook
-    }
-  };
-
-  const getAssignmentTypeIcon = (type: string) => {
-    switch (type) {
-      case 'individual':
-        return <User className="h-4 w-4" />;
-      case 'group':
-        return <Users className="h-4 w-4" />;
-      case 'role':
-        return <Settings className="h-4 w-4" />;
+  const getModuleIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'system':
+        return <Settings className="h-5 w-5" />;
+      case 'education':
+        return <User className="h-5 w-5" />;
       default:
-        return <User className="h-4 w-4" />;
+        return <Users className="h-5 w-5" />;
     }
+  };
+
+  const getCurrentAssignments = (moduleName: string) => {
+    return assignments.filter(a => a.module_name === moduleName);
   };
 
   if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Loading assignments...</CardTitle>
+          <CardTitle>Loading...</CardTitle>
         </CardHeader>
       </Card>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Module Assignment Manager</h2>
-          <p className="text-muted-foreground">
-            Assign modules to individuals, groups, or all executive board members
-          </p>
-        </div>
-        <Button onClick={() => setShowCreateForm(!showCreateForm)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Assignment
-        </Button>
-      </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>
-            Quickly assign sight reading generator to common groups
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button
-              variant="outline"
-              onClick={() => quickAssignToExecBoard('sight-reading-generator')}
-              className="justify-start"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Assign to Executive Board
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => quickAssignToExecBoard('sight-reading-preview')}
-              className="justify-start"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Assign Preview to Exec Board
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => createAssignment({
-                module_name: 'sight-reading-generator',
-                assignment_type: 'group',
-                assigned_to_group: 'all',
-                permissions: ['view'],
-              })}
-              className="justify-start"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Assign to All Users
-            </Button>
+  if (selectedModule) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={() => setSelectedModule(null)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Modules
+          </Button>
+          <div>
+            <h2 className="text-2xl font-bold">Assign Users to {selectedModule.name}</h2>
+            <p className="text-muted-foreground">{selectedModule.description}</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Create Assignment Form */}
-      {showCreateForm && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Groups */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Assign to Groups</CardTitle>
+              <CardDescription>Select groups to assign this module to</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {groupOptions.map((group) => (
+                <div key={group.value} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`group-${group.value}`}
+                    checked={selectedGroups.includes(group.value)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedGroups([...selectedGroups, group.value]);
+                      } else {
+                        setSelectedGroups(selectedGroups.filter(g => g !== group.value));
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor={`group-${group.value}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    {group.label}
+                  </label>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Individual Users */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Assign to Individual Users</CardTitle>
+              <CardDescription>Select specific users to assign this module to</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 max-h-96 overflow-y-auto">
+              {users.map((user) => (
+                <div key={user.user_id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`user-${user.user_id}`}
+                    checked={selectedUsers.includes(user.user_id)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedUsers([...selectedUsers, user.user_id]);
+                      } else {
+                        setSelectedUsers(selectedUsers.filter(u => u !== user.user_id));
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor={`user-${user.user_id}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                  >
+                    <div>{user.full_name}</div>
+                    <div className="text-xs text-muted-foreground">{user.email} • {user.role}</div>
+                  </label>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Current Assignments for this module */}
         <Card>
           <CardHeader>
-            <CardTitle>Create New Assignment</CardTitle>
+            <CardTitle>Current Assignments</CardTitle>
             <CardDescription>
-              Assign a module to individuals or groups
+              Who currently has access to {selectedModule.name}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="module">Module</Label>
-                  <Select
-                    value={formData.module_name}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, module_name: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a module" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {modules.map((module) => (
-                        <SelectItem key={module.id} value={module.name}>
-                          {module.name} - {module.description}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            {(() => {
+              const currentAssignments = getCurrentAssignments(selectedModule.name);
+              if (currentAssignments.length === 0) {
+                return (
+                  <p className="text-muted-foreground text-center py-4">
+                    No current assignments for this module
+                  </p>
+                );
+              }
+              return (
+                <div className="space-y-2">
+                  {currentAssignments.map((assignment) => (
+                    <div
+                      key={assignment.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div className="flex items-center gap-2">
+                        {assignment.assignment_type === 'individual' ? <User className="h-4 w-4" /> : <Users className="h-4 w-4" />}
+                        <span className="text-sm">
+                          {assignment.assignment_type === 'individual' 
+                            ? assignment.assigned_user_name 
+                            : assignment.assigned_to_group
+                          }
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          {assignment.assignment_type}
+                        </Badge>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteAssignment(assignment.id)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-
-                <div>
-                  <Label htmlFor="assignmentType">Assignment Type</Label>
-                  <Select
-                    value={formData.assignment_type}
-                    onValueChange={(value: 'individual' | 'group' | 'role') => 
-                      setFormData(prev => ({ ...prev, assignment_type: value, assigned_to_user_id: undefined, assigned_to_group: undefined }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="individual">Individual User</SelectItem>
-                      <SelectItem value="group">Group/Role</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {formData.assignment_type === 'individual' && (
-                <div>
-                  <Label htmlFor="user">Assign to User</Label>
-                  <Select
-                    value={formData.assigned_to_user_id || ''}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to_user_id: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a user" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem key={user.user_id} value={user.user_id}>
-                          {user.full_name} ({user.email})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {formData.assignment_type === 'group' && (
-                <div>
-                  <Label htmlFor="group">Assign to Group</Label>
-                  <Select
-                    value={formData.assigned_to_group || ''}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to_group: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a group" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {groupOptions.map((group) => (
-                        <SelectItem key={group.value} value={group.value}>
-                          {group.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div>
-                <Label htmlFor="expiresAt">Expires At (Optional)</Label>
-                <Input
-                  type="datetime-local"
-                  value={formData.expires_at || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, expires_at: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="notes">Notes (Optional)</Label>
-                <Textarea
-                  value={formData.notes || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Add any notes about this assignment..."
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit">Create Assignment</Button>
-                <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
+              );
+            })()}
           </CardContent>
         </Card>
-      )}
 
-      {/* Current Assignments */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Assignments</CardTitle>
-          <CardDescription>
-            Manage existing module assignments
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {assignments.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">
-              No assignments found. Create your first assignment above.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {assignments.map((assignment) => (
-                <div
-                  key={assignment.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      {getAssignmentTypeIcon(assignment.assignment_type)}
-                      <span className="font-medium">{assignment.module_name}</span>
-                      <Badge variant="secondary">{assignment.assignment_type}</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Assigned to:{" "}
-                      {assignment.assignment_type === 'individual' 
-                        ? assignment.assigned_user_name 
-                        : assignment.assigned_to_group
-                      }
-                    </p>
-                    <div className="flex gap-1">
-                      {assignment.permissions.map((permission) => (
-                        <Badge key={permission} variant="outline" className="text-xs">
-                          {permission}
-                        </Badge>
-                      ))}
-                    </div>
-                    {assignment.expires_at && (
-                      <p className="text-xs text-muted-foreground">
-                        Expires: {new Date(assignment.expires_at).toLocaleDateString()}
-                      </p>
-                    )}
-                    {assignment.notes && (
-                      <p className="text-xs text-muted-foreground">
-                        Note: {assignment.notes}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => deleteAssignment(assignment.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+        {/* Action Buttons */}
+        {(selectedUsers.length > 0 || selectedGroups.length > 0) && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  {selectedUsers.length} users and {selectedGroups.length} groups selected
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <Button onClick={handleBulkAssign}>
+                  Assign Selected ({selectedUsers.length + selectedGroups.length})
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">Module Assignment Manager</h2>
+        <p className="text-muted-foreground">
+          Select a module to assign it to multiple users and groups
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {modules.map((module) => {
+          const currentAssignments = getCurrentAssignments(module.name);
+          return (
+            <Card 
+              key={module.id} 
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setSelectedModule(module)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {getModuleIcon(module.category)}
+                    <div>
+                      <h3 className="font-medium">{module.name}</h3>
+                      <p className="text-xs text-muted-foreground">{module.category}</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground mt-2 mb-3">
+                  {module.description}
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-muted-foreground">
+                    {currentAssignments.length} assignment{currentAssignments.length !== 1 ? 's' : ''}
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {module.category}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 };
