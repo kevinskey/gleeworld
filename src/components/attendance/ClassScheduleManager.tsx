@@ -210,9 +210,15 @@ export default function ClassScheduleManager() {
       });
     } catch (error) {
       console.error('Error saving schedule:', error);
+      console.error('Error details:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        formData,
+        user: await supabase.auth.getUser()
+      });
       toast({
         title: "Error",
-        description: "Failed to save class schedule",
+        description: `Failed to save class schedule: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     }
