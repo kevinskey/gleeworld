@@ -8,7 +8,7 @@ import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarous
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import { MemberModules } from '@/components/member-view/MemberModules';
+import { MemberNavigation } from '@/components/member/MemberNavigation';
 import { useUserRole } from '@/hooks/useUserRole';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
@@ -106,10 +106,10 @@ export const UnifiedDashboard = () => {
         )}
       </div>
 
-      {/* Row 4: Dynamic Modules System */}
+      {/* Row 4: Simple Member Navigation */}
       {profile && (
         <div className="px-6 pb-10">
-          <MemberModules user={{
+          <MemberNavigation user={{
             id: profile.user_id,
             email: profile.email,
             full_name: profile.full_name,

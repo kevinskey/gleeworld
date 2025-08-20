@@ -51,13 +51,20 @@ import Notifications from "./pages/Notifications";
 import OnboardingInfo from "./pages/OnboardingInfo";
 import MemberRegistration from "./pages/MemberRegistration";
 import ResetPassword from "./pages/ResetPassword";
+import MusicLibraryPage from "./pages/member/MusicLibraryPage";
+import SightReadingPage from "./pages/member/SightReadingPage";
+import MemberCalendarPage from "./pages/member/MemberCalendarPage";
+import AttendancePage from "./pages/member/AttendancePage";
+import WardrobePage from "./pages/member/WardrobePage";
 import Announcements from "./pages/Announcements";
 import CreateAnnouncement from "./pages/admin/CreateAnnouncement";
 import EditAnnouncement from "./pages/admin/EditAnnouncement";
 import About from "./pages/About";
 import AttendanceTestPage from "./pages/AttendanceTestPage";
-import AttendancePage from "./pages/AttendancePage";
-import MusicLibraryPage from "./pages/MusicLibrary";
+// Existing AttendancePage (legacy)
+import AttendancePageLegacy from "./pages/AttendancePage";
+// Existing MusicLibraryPage (legacy)
+import MusicLibraryPageLegacy from "./pages/MusicLibrary";
 
 import Budgets from "./pages/Budgets";
 import Treasurer from "./pages/Treasurer";
@@ -499,7 +506,7 @@ const App = () => {
                     path="/attendance" 
                     element={
                       <ProtectedRoute>
-                        <AttendancePage />
+                        <AttendancePageLegacy />
                       </ProtectedRoute>
                     } 
                   />
@@ -507,7 +514,7 @@ const App = () => {
                      path="/music-library" 
                      element={
                        <ProtectedRoute>
-                         <MusicLibraryPage />
+                         <MusicLibraryPageLegacy />
                        </ProtectedRoute>
                      } 
                    />
@@ -1050,8 +1057,59 @@ const App = () => {
                                                 <GoogleDocsPage />
                                               </ProtectedRoute>
                                             } 
-                                          />
-                      </Routes>
+                           />
+                           {/* New Member Pages */}
+                           <Route 
+                             path="/member/music-library" 
+                             element={
+                               <ProtectedRoute>
+                                 <UniversalLayout>
+                                   <MusicLibraryPage />
+                                 </UniversalLayout>
+                               </ProtectedRoute>
+                             } 
+                           />
+                           <Route 
+                             path="/member/sight-reading" 
+                             element={
+                               <ProtectedRoute>
+                                 <UniversalLayout>
+                                   <SightReadingPage />
+                                 </UniversalLayout>
+                               </ProtectedRoute>
+                             } 
+                           />
+                           <Route 
+                             path="/member/calendar" 
+                             element={
+                               <ProtectedRoute>
+                                 <UniversalLayout>
+                                   <MemberCalendarPage />
+                                 </UniversalLayout>
+                               </ProtectedRoute>
+                             } 
+                           />
+                           <Route 
+                             path="/member/attendance" 
+                             element={
+                               <ProtectedRoute>
+                                 <UniversalLayout>
+                                   <AttendancePage />
+                                 </UniversalLayout>
+                               </ProtectedRoute>
+                             } 
+                           />
+                           <Route 
+                             path="/member/wardrobe" 
+                             element={
+                               <ProtectedRoute>
+                                 <UniversalLayout>
+                                   <WardrobePage />
+                                 </UniversalLayout>
+                               </ProtectedRoute>
+                             } 
+                           />
+                       </Routes>
                     </Suspense>
                    <GlobalMusicPlayer />
                 </div>
