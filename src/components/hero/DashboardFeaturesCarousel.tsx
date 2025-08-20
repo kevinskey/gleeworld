@@ -99,10 +99,10 @@ export const DashboardFeaturesCarousel: React.FC = () => {
 
                       {/* Overlay content */}
                       {(s.title || s.description) && (
-                        <div className="absolute inset-0 flex items-end justify-start p-4 md:p-6 bg-gradient-to-t from-black/50 to-transparent">
-                          <div className="max-w-xl bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-white/20 shadow text-white space-y-2">
-                            {s.title && <h3 className="text-lg md:text-2xl font-semibold text-white">{s.title}</h3>}
-                            {s.description && <p className="text-xs md:text-sm text-white/90">{s.description}</p>}
+                        <div className="absolute inset-0 flex items-end justify-start p-4 md:p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                          <div className="max-w-xl bg-black/60 backdrop-blur-md rounded-lg p-3 sm:p-4 border border-white/30 shadow-2xl text-white space-y-2">
+                            {s.title && <h3 className="text-lg md:text-2xl font-bold text-white drop-shadow-lg">{s.title}</h3>}
+                            {s.description && <p className="text-xs md:text-sm text-white/95 drop-shadow-md">{s.description}</p>}
                             {(s.action_button_enabled && s.action_button_text && s.action_button_url) ? (
                               <Button size="sm" className="bg-primary text-primary-foreground border border-white/20 shadow" asChild>
                                 <a href={s.action_button_url} target="_blank" rel="noopener noreferrer">{s.action_button_text}</a>
