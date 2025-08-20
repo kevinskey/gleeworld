@@ -1,19 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Music, BookOpen, Download, Play, Loader2 } from 'lucide-react';
+import { Music, BookOpen, Download, Play, Loader2, List, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { useSheetMusic } from '@/hooks/useSheetMusic';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useSetlists } from '@/hooks/useSetlists';
 import { BackNavigation } from '@/components/shared/BackNavigation';
+import { MusicLibraryCard } from '@/components/music-library/MusicLibraryCard';
 
 const MusicLibraryPage = () => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
   const { sheetMusic, loading, error } = useSheetMusic();
+  const { setlists, loading: setlistsLoading } = useSetlists();
+  const [searchQuery, setSearchQuery] = useState('');
 
-  if (loading) {
+  // Filter sheet music based on search query
+  const filteredSheetMusic = sheetMusic.filter(piece =>
+    piece.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (piece.composer && piece.composer.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  if (loading || setlistsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -39,7 +50,7 @@ const MusicLibraryPage = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-5">
           <Card className="p-4 text-center bg-purple-50 border-purple-200">
             <BookOpen className="h-8 w-8 mx-auto mb-2 text-purple-600" />
             <h3 className="font-semibold">Current Repertoire</h3>
@@ -56,19 +67,34 @@ const MusicLibraryPage = () => {
             <p className="text-sm text-muted-foreground">{sheetMusic.filter(s => s.audio_preview_url).length} available</p>
           </Card>
           <Card className="p-4 text-center bg-orange-50 border-orange-200">
-            <Music className="h-8 w-8 mx-auto mb-2 text-orange-600" />
+            <List className="h-8 w-8 mx-auto mb-2 text-orange-600" />
+            <h3 className="font-semibold">Active Setlists</h3>
+            <p className="text-sm text-muted-foreground">{setlists.length} setlists</p>
+          </Card>
+          <Card className="p-4 text-center bg-pink-50 border-pink-200">
+            <Users className="h-8 w-8 mx-auto mb-2 text-pink-600" />
             <h3 className="font-semibold">Voice Part</h3>
             <p className="text-sm text-muted-foreground">{userProfile?.voice_part || 'Not Set'}</p>
           </Card>
         </div>
 
         {/* Music Library Content */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-4">
           {/* Current Repertoire */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <Card>
               <CardHeader>
-                <CardTitle>Current Repertoire</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Current Repertoire</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      placeholder="Search music..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-64"
+                    />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {error && (
@@ -76,47 +102,19 @@ const MusicLibraryPage = () => {
                     Error loading sheet music: {error}
                   </div>
                 )}
-                {!error && sheetMusic.length === 0 && (
+                {!error && filteredSheetMusic.length === 0 && !searchQuery && (
                   <div className="text-center py-8 text-muted-foreground">
                     No sheet music available yet.
                   </div>
                 )}
+                {!error && filteredSheetMusic.length === 0 && searchQuery && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No music found matching "{searchQuery}".
+                  </div>
+                )}
                 <div className="space-y-4">
-                  {sheetMusic.map((piece) => (
-                    <div key={piece.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{piece.title}</h4>
-                        <p className="text-sm text-muted-foreground">by {piece.composer || 'Unknown'}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline" className="text-xs">
-                            {piece.difficulty_level || 'Not Specified'}
-                          </Badge>
-                          {piece.voice_parts && piece.voice_parts.length > 0 && (
-                            <Badge variant="secondary" className="text-xs">
-                              {Array.isArray(piece.voice_parts) ? piece.voice_parts.join(', ') : piece.voice_parts}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        {piece.pdf_url && (
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={piece.pdf_url} target="_blank" rel="noopener noreferrer">
-                              <Download className="h-4 w-4 mr-1" />
-                              Download
-                            </a>
-                          </Button>
-                        )}
-                        {piece.audio_preview_url && (
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={piece.audio_preview_url} target="_blank" rel="noopener noreferrer">
-                              <Play className="h-4 w-4 mr-1" />
-                              Listen
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                  {filteredSheetMusic.map((piece) => (
+                    <MusicLibraryCard key={piece.id} piece={piece} />
                   ))}
                 </div>
               </CardContent>
@@ -143,6 +141,43 @@ const MusicLibraryPage = () => {
                   <Download className="h-4 w-4 mr-2" />
                   Download All Current
                 </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <List className="h-4 w-4 mr-2" />
+                  View All Setlists
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Active Setlists */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Active Setlists</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {setlists.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No active setlists</p>
+                ) : (
+                  <div className="space-y-2">
+                    {setlists.slice(0, 5).map((setlist) => (
+                      <div key={setlist.id} className="flex items-center justify-between p-2 bg-muted/30 rounded">
+                        <div>
+                          <p className="text-sm font-medium">{setlist.title}</p>
+                          {setlist.concert_name && (
+                            <p className="text-xs text-muted-foreground">{setlist.concert_name}</p>
+                          )}
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {setlist.event_date ? new Date(setlist.event_date).toLocaleDateString() : 'TBA'}
+                        </Badge>
+                      </div>
+                    ))}
+                    {setlists.length > 5 && (
+                      <p className="text-xs text-muted-foreground text-center">
+                        +{setlists.length - 5} more setlists
+                      </p>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
