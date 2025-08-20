@@ -17,9 +17,9 @@ const WardrobePage = () => {
   }
 
   const measurements = getMeasurements();
-  const uniformCount = wardrobeItems.filter(item => item.type === 'formal').length;
-  const costumeCount = wardrobeItems.filter(item => item.type === 'costume').length;
-  const needsFittingCount = wardrobeItems.filter(item => item.status === 'needs-fitting').length;
+  const formalCount = wardrobeItems.filter(item => item.category === 'formal').length;
+  const costumeCount = wardrobeItems.filter(item => item.category === 'costume').length;
+  const needsFittingCount = wardrobeItems.filter(item => item.status === 'needs_fitting').length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
@@ -40,7 +40,7 @@ const WardrobePage = () => {
           <Card className="p-4 text-center bg-pink-50 border-pink-200">
             <Shirt className="h-8 w-8 mx-auto mb-2 text-pink-600" />
             <h3 className="font-semibold">Formal Items</h3>
-            <p className="text-sm text-muted-foreground">{uniformCount} assigned</p>
+            <p className="text-sm text-muted-foreground">{formalCount} assigned</p>
           </Card>
           <Card className="p-4 text-center bg-purple-50 border-purple-200">
             <Package className="h-8 w-8 mx-auto mb-2 text-purple-600" />
@@ -73,43 +73,48 @@ const WardrobePage = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {wardrobeItems.map((item) => (
-                      <div key={item.id} className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
-                        <div className="flex-shrink-0">
-                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                            item.type === 'formal' ? 'bg-purple-100 text-purple-600' :
-                            item.type === 'casual' ? 'bg-blue-100 text-blue-600' :
-                            item.type === 'costume' ? 'bg-pink-100 text-pink-600' :
-                            'bg-gray-100 text-gray-600'
-                          }`}>
+                     {wardrobeItems.map((item) => (
+                       <div key={item.id} className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
+                         <div className="flex-shrink-0">
+                           <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                             item.category === 'formal' ? 'bg-purple-100 text-purple-600' :
+                             item.category === 'casual' ? 'bg-blue-100 text-blue-600' :
+                             item.category === 'costume' ? 'bg-pink-100 text-pink-600' :
+                             'bg-gray-100 text-gray-600'
+                           }`}>
                             <Shirt className="h-6 w-6" />
                           </div>
                         </div>
                         <div className="flex-1">
                           <div className="flex items-start justify-between">
-                            <div>
-                              <h4 className="font-semibold">{item.name}</h4>
-                              <p className="text-sm text-muted-foreground">Size: {item.size}</p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Added: {new Date(item.created_at).toLocaleDateString()}
-                              </p>
-                              <div className="flex items-center gap-2 mt-2">
-                                <Badge 
-                                  variant={
-                                    item.status === 'fitted' ? 'default' :
-                                    item.status === 'needs-fitting' ? 'destructive' : 'secondary'
-                                  }
-                                  className="text-xs"
-                                >
-                                  {item.status.replace('-', ' ')}
-                                </Badge>
-                                <Badge variant="outline" className="text-xs capitalize">
-                                  {item.type}
-                                </Badge>
-                              </div>
+                             <div>
+                               <h4 className="font-semibold">{item.name}</h4>
+                               <p className="text-sm text-muted-foreground">
+                                 {item.size && `Size: ${item.size}`}
+                                 {item.color && ` • Color: ${item.color}`}
+                               </p>
+                               <p className="text-xs text-muted-foreground mt-1">
+                                 {item.checked_out_at ? `Checked out: ${new Date(item.checked_out_at).toLocaleDateString()}` : 
+                                  `Added: ${new Date(item.created_at).toLocaleDateString()}`}
+                                 {item.due_date && ` • Due: ${new Date(item.due_date).toLocaleDateString()}`}
+                               </p>
+                               <div className="flex items-center gap-2 mt-2">
+                                 <Badge 
+                                   variant={
+                                     item.status === 'checked_out' ? 'default' :
+                                     item.status === 'needs_fitting' ? 'destructive' : 'secondary'
+                                   }
+                                   className="text-xs"
+                                 >
+                                   {item.status.replace('_', ' ')}
+                                 </Badge>
+                                 <Badge variant="outline" className="text-xs capitalize">
+                                   {item.category}
+                                 </Badge>
+                               </div>
                             </div>
-                            <div className="flex gap-2 ml-4">
-                              {item.status === 'needs-fitting' && (
+                             <div className="flex gap-2 ml-4">
+                               {item.status === 'needs_fitting' && (
                                 <Button size="sm" className="text-xs">
                                   Schedule Fitting
                                 </Button>

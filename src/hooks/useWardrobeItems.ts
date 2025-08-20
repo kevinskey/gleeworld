@@ -7,15 +7,34 @@ import { useToast } from '@/hooks/use-toast';
 export interface WardrobeItem {
   id: string;
   name: string;
-  type: 'formal' | 'casual' | 'costume' | 'accessories';
-  size: string;
-  status: 'fitted' | 'assigned' | 'needs-fitting';
+  category: string;
+  size?: string;
+  color?: string;
+  status: 'checked_out' | 'available' | 'needs_fitting';
+  checked_out_at?: string;
+  due_date?: string;
   created_at: string;
   updated_at: string;
 }
 
+export interface WardrobeProfile {
+  formal_dress_size?: string;
+  polo_size?: string;
+  tshirt_size?: string;
+  lipstick_shade?: string;
+  pearl_status?: string;
+  bust_measurement?: number;
+  waist_measurement?: number;
+  hips_measurement?: number;
+  inseam_measurement?: number;
+  height_measurement?: number;
+  measurements_taken_date?: string;
+  measurements_taken_by?: string;
+}
+
 export const useWardrobeItems = () => {
   const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
+  const [wardrobeProfile, setWardrobeProfile] = useState<WardrobeProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
@@ -27,50 +46,46 @@ export const useWardrobeItems = () => {
     try {
       setLoading(true);
       
-      // Since there's no wardrobe table yet, we'll create mock data based on user profile
-      // In a real implementation, you would query a wardrobe_items table
-      const mockItems: WardrobeItem[] = [
-        {
-          id: '1',
-          name: 'Black Concert Dress',
-          type: 'formal',
-          size: 'Medium',
-          status: 'fitted',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          name: 'White Blouse',
-          type: 'casual',
-          size: 'Medium',
-          status: 'assigned',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: '3',
-          name: 'Black Skirt',
-          type: 'formal',
-          size: 'Medium',
-          status: 'fitted',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: '4',
-          name: 'Performance Shoes',
-          type: 'accessories',
-          size: '8',
-          status: 'assigned',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
+      // Fetch user's checked out wardrobe items
+      const { data: checkouts, error: checkoutError } = await supabase
+        .from('wardrobe_checkouts')
+        .select(`
+          id,
+          quantity,
+          size,
+          color,
+          checked_out_at,
+          due_date,
+          status,
+          wardrobe_items:item_id (
+            id,
+            name,
+            category
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'checked_out');
 
-      setWardrobeItems(mockItems);
+      if (checkoutError) throw checkoutError;
+
+      // Transform the data to match our interface
+      const items: WardrobeItem[] = (checkouts || []).map(checkout => ({
+        id: checkout.id,
+        name: checkout.wardrobe_items?.name || 'Unknown Item',
+        category: checkout.wardrobe_items?.category || 'unknown',
+        size: checkout.size,
+        color: checkout.color,
+        status: 'checked_out' as const,
+        checked_out_at: checkout.checked_out_at,
+        due_date: checkout.due_date,
+        created_at: checkout.checked_out_at,
+        updated_at: checkout.checked_out_at
+      }));
+
+      setWardrobeItems(items);
     } catch (error) {
       console.error('Error fetching wardrobe items:', error);
+      setWardrobeItems([]); // Set empty array instead of mock data
       toast({
         title: "Error",
         description: "Failed to load wardrobe items",
@@ -81,25 +96,58 @@ export const useWardrobeItems = () => {
     }
   };
 
+  const fetchWardrobeProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('gw_member_wardrobe_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      setWardrobeProfile(data);
+    } catch (error) {
+      console.error('Error fetching wardrobe profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load wardrobe profile",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getMeasurements = () => {
-    if (!userProfile) return null;
-    
-    return {
+    if (!wardrobeProfile) return {
       dressSize: 'Not set',
       shoeSize: 'Not set', 
       height: 'Not set',
-      lastUpdated: userProfile.updated_at ? new Date(userProfile.updated_at).toLocaleDateString() : 'Never'
+      lastUpdated: 'Never'
+    };
+    
+    return {
+      dressSize: wardrobeProfile.formal_dress_size || 'Not set',
+      shoeSize: 'Not set', // Not in current schema
+      height: wardrobeProfile.height_measurement ? `${wardrobeProfile.height_measurement}"` : 'Not set',
+      lastUpdated: wardrobeProfile.measurements_taken_date || 'Never'
     };
   };
 
   useEffect(() => {
-    fetchWardrobeItems();
-  }, [user, userProfile]);
+    if (user) {
+      fetchWardrobeItems();
+      fetchWardrobeProfile();
+    }
+  }, [user]);
 
   return {
     wardrobeItems,
+    wardrobeProfile,
     loading,
     fetchWardrobeItems,
+    fetchWardrobeProfile,
     getMeasurements
   };
 };
