@@ -1099,17 +1099,57 @@ const App = () => {
                                </ProtectedRoute>
                              } 
                            />
-                           <Route 
-                             path="/member/wardrobe" 
-                             element={
-                               <ProtectedRoute>
-                                 <UniversalLayout>
-                                   <WardrobePage />
-                                 </UniversalLayout>
-                               </ProtectedRoute>
-                             } 
-                           />
-                       </Routes>
+                            <Route 
+                              path="/member/wardrobe" 
+                              element={
+                                <ProtectedRoute>
+                                  <UniversalLayout>
+                                    <WardrobePage />
+                                  </UniversalLayout>
+                                </ProtectedRoute>
+                              } 
+                            />
+                            <Route 
+                              path="/member/member-management" 
+                              element={
+                                <ProtectedRoute>
+                                  <UniversalLayout>
+                                    <UserManagement />
+                                  </UniversalLayout>
+                                </ProtectedRoute>
+                              } 
+                            />
+                            <Route 
+                              path="/member/notifications" 
+                              element={
+                                <ProtectedRoute>
+                                  <UniversalLayout>
+                                    <Notifications />
+                                  </UniversalLayout>
+                                </ProtectedRoute>
+                              } 
+                            />
+                            <Route 
+                              path="/member/settings" 
+                              element={
+                                <ProtectedRoute>
+                                  <UniversalLayout>
+                                    <SystemSettings />
+                                  </UniversalLayout>
+                                </ProtectedRoute>
+                              } 
+                            />
+                            <Route 
+                              path="/member/profile" 
+                              element={
+                                <ProtectedRoute>
+                                  <UniversalLayout>
+                                    <Profile />
+                                  </UniversalLayout>
+                                </ProtectedRoute>
+                              } 
+                            />
+                        </Routes>
                     </Suspense>
                    <GlobalMusicPlayer />
                 </div>
