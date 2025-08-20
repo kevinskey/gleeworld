@@ -38,6 +38,7 @@ import VoiceRangeAssessmentPage from "@/pages/VoiceRangeAssessmentPage";
 import ExecutiveBoardDashboard from "@/pages/ExecutiveBoardDashboard";
 import MemberSightReadingStudioPage from "@/pages/MemberSightReadingStudio";
 import LibrarianDashboardPage from "@/pages/LibrarianDashboardPage";
+import Onboarding from "@/pages/Onboarding";
 
 export const router = createBrowserRouter([
   {
@@ -171,6 +172,10 @@ export const router = createBrowserRouter([
   {
     path: "/librarian-dashboard",
     element: <LibrarianDashboardPage />,
+  },
+  {
+    path: "/onboarding",
+    element: <Onboarding />,
   },
   {
     path: "*",
