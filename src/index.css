@@ -383,6 +383,27 @@
     @apply py-0.5 px-1 leading-tight;
   }
 
+  /* Fix auth page input visibility - override system CSS injection */
+  .auth-page input,
+  .auth-page textarea,
+  .auth-page select {
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+
+  .auth-page input:focus,
+  .auth-page textarea:focus,
+  .auth-page select:focus {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .auth-page input::placeholder,
+  .auth-page textarea::placeholder {
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+
   /* Enhanced Tooltip Styling */
   .tippy-box[data-theme~='custom'] {
     background-color: hsl(var(--popover));

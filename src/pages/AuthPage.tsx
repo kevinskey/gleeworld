@@ -101,7 +101,7 @@ export default function AuthPage() {
   if (loading) {
     return (
       <div 
-        className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative"
+        className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative auth-page"
         style={{ backgroundImage: `url(${authBackground})` }}
       >
         <div className="absolute inset-0 bg-black/60" />
@@ -115,7 +115,7 @@ export default function AuthPage() {
 
   return (
     <div 
-      className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center p-4"
+      className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center p-4 auth-page"
       style={{ backgroundImage: `url(${authBackground})` }}
     >
       {/* Background Overlay */}
