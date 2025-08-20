@@ -121,16 +121,30 @@ export const DashboardFeaturesCarousel: React.FC = () => {
               ) : (
                 <CarouselItem>
                   <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] w-full relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20" />
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="px-6 md:px-10 lg:px-14 space-y-3 md:space-y-4 max-w-2xl bg-background/70 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-white/10 shadow text-foreground">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/20 backdrop-blur px-3 py-1 text-xs md:text-sm">
-                          <Megaphone className="h-3 w-3 md:h-4 md:w-4" />
-                          Featured
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center space-y-4 md:space-y-6 max-w-4xl mx-auto px-6 md:px-10 lg:px-14">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur px-4 py-2 text-xs md:text-sm font-medium">
+                          <Megaphone className="h-3 w-3 md:h-4 md:w-4 text-primary" />
+                          Welcome to GleeWorld
                         </div>
-                        <h3 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-tight">Welcome Glee Class of 2029</h3>
-                        <p className="text-sm md:text-base text-muted-foreground">Welcome to the glee sisterhood! Explore the app, send some buckets of love and Amaze & Inspire!</p>
-                        <HeroAuditionStats className="pt-1" />
+                        <div className="space-y-2 md:space-y-3">
+                          <h3 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                            Your Musical Journey Starts Here
+                          </h3>
+                          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+                            Join 100+ years of excellence at Spelman College Glee Club. Complete your profile, connect with sisters, and become part of our legacy.
+                          </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                          <Button size="lg" className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white px-6 py-3" asChild>
+                            <a href="/onboarding">Complete Your Profile</a>
+                          </Button>
+                          <Button size="lg" variant="outline" className="border-primary/30 text-primary hover:bg-primary/10" asChild>
+                            <a href="/about">Learn More</a>
+                          </Button>
+                        </div>
+                        <HeroAuditionStats className="pt-2" />
                       </div>
                     </div>
                   </div>
