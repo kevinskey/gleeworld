@@ -33,7 +33,8 @@ export const ROUTES = {
   
   PERMISSIONS: '/admin/permissions',
   WELLNESS: '/wellness',
-  LIBRARIAN_DASHBOARD: '/librarian-dashboard'
+  LIBRARIAN_DASHBOARD: '/librarian-dashboard',
+  STUDENT_REGISTRATION: '/student-registration'
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -69,5 +70,6 @@ export const PUBLIC_ROUTES = [
   ROUTES.CALENDAR,
   ROUTES.SHOP,
   ROUTES.CHECKOUT,
-  ROUTES.SHOP_SUCCESS
+  ROUTES.SHOP_SUCCESS,
+  ROUTES.STUDENT_REGISTRATION
 ] as const;

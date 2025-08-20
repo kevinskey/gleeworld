@@ -13598,6 +13598,65 @@ export type Database = {
           },
         ]
       }
+      student_registrations: {
+        Row: {
+          african_american_music_interests: string | null
+          cohort_id: string | null
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          middle_name: string | null
+          music_history: string | null
+          phone: string | null
+          status: string | null
+          student_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          african_american_music_interests?: string | null
+          cohort_id?: string | null
+          created_at?: string | null
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          middle_name?: string | null
+          music_history?: string | null
+          phone?: string | null
+          status?: string | null
+          student_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          african_american_music_interests?: string | null
+          cohort_id?: string | null
+          created_at?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          middle_name?: string | null
+          music_history?: string | null
+          phone?: string | null
+          status?: string | null
+          student_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_registrations_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       submissions: {
         Row: {
           audio_url: string

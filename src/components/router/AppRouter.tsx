@@ -39,6 +39,7 @@ import ExecutiveBoardDashboard from "@/pages/ExecutiveBoardDashboard";
 import MemberSightReadingStudioPage from "@/pages/MemberSightReadingStudio";
 import LibrarianDashboardPage from "@/pages/LibrarianDashboardPage";
 import { Onboarding } from "@/pages/Onboarding";
+import StudentRegistration from "@/pages/StudentRegistration";
 
 export const router = createBrowserRouter([
   {
@@ -176,6 +177,10 @@ export const router = createBrowserRouter([
   {
     path: "/onboarding",
     element: <Onboarding />,
+  },
+  {
+    path: "/student-registration",
+    element: <StudentRegistration />,
   },
   {
     path: "*",
