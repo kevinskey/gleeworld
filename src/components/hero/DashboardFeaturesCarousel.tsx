@@ -121,7 +121,14 @@ export const DashboardFeaturesCarousel: React.FC = () => {
               ) : (
                 <CarouselItem>
                   <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] w-full relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10" />
+                    {/* Historic street background image */}
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                      style={{
+                        backgroundImage: `url('https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=2070&q=80&sat=-100')`
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60" />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center space-y-3 md:space-y-4 max-w-3xl mx-auto px-4 md:px-6">
                         <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur px-3 py-1.5 text-xs font-medium">
