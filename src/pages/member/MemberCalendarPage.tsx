@@ -4,6 +4,7 @@ import { Calendar as CalendarIcon, Clock, MapPin, Users, Bell, Loader2 } from 'l
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { usePublicGleeWorldEvents } from '@/hooks/usePublicGleeWorldEvents';
+import { BackNavigation } from '@/components/shared/BackNavigation';
 
 const MemberCalendarPage = () => {
   const { events, loading, getUpcomingEvents } = usePublicGleeWorldEvents();
@@ -27,6 +28,9 @@ const MemberCalendarPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Back Navigation */}
+        <BackNavigation />
+        
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <div className="rounded-lg p-3 bg-green-100 text-green-600">

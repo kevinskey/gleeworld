@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useSheetMusic } from '@/hooks/useSheetMusic';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { BackNavigation } from '@/components/shared/BackNavigation';
 
 const MusicLibraryPage = () => {
   const { user } = useAuth();
@@ -23,6 +24,9 @@ const MusicLibraryPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Back Navigation */}
+        <BackNavigation />
+        
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <div className="rounded-lg p-3 bg-purple-100 text-purple-600">

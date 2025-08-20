@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useSRFAssignments } from '@/hooks/useSRFAssignments';
+import { BackNavigation } from '@/components/shared/BackNavigation';
 
 const SightReadingPage = () => {
   const { assignments, loading } = useSRFAssignments();
@@ -23,6 +24,9 @@ const SightReadingPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Back Navigation */}
+        <BackNavigation />
+        
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <div className="rounded-lg p-3 bg-blue-100 text-blue-600">
