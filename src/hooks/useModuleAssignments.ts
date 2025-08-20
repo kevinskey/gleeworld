@@ -70,15 +70,28 @@ export const useModuleAssignments = () => {
 
   const createAssignment = async (assignmentData: CreateAssignmentData) => {
     try {
+      console.log('Creating assignment for module:', assignmentData.module_name);
+      
       // First get the module ID
       const { data: moduleData, error: moduleError } = await supabase
         .from('gw_modules')
-        .select('id')
+        .select('id, name')
         .eq('name', assignmentData.module_name)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
-      if (moduleError) throw moduleError;
+      console.log('Module lookup result:', { moduleData, moduleError });
+
+      if (moduleError) {
+        console.error('Module lookup error:', moduleError);
+        throw moduleError;
+      }
+
+      if (!moduleData) {
+        const errorMsg = `Module "${assignmentData.module_name}" not found`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
 
       const { data, error } = await supabase
         .from('gw_module_assignments')
@@ -94,7 +107,12 @@ export const useModuleAssignments = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Assignment creation error:', error);
+        throw error;
+      }
+
+      console.log('Assignment created successfully:', data);
 
       toast({
         title: "Assignment Created",

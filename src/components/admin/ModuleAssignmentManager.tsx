@@ -91,25 +91,57 @@ export const ModuleAssignmentManager: React.FC = () => {
     if (!selectedModule) return;
 
     try {
+      const results = [];
+      
       // Assign to selected users
       for (const userId of selectedUsers) {
-        await createAssignment({
-          module_name: selectedModule.name,
-          assignment_type: 'individual',
-          assigned_to_user_id: userId,
-          permissions: ['view'],
-          notes: 'Bulk assignment',
-        });
+        try {
+          await createAssignment({
+            module_name: selectedModule.name,
+            assignment_type: 'individual',
+            assigned_to_user_id: userId,
+            permissions: ['view'],
+            notes: 'Bulk assignment',
+          });
+          results.push({ type: 'user', id: userId, success: true });
+        } catch (error) {
+          console.error(`Failed to assign to user ${userId}:`, error);
+          results.push({ type: 'user', id: userId, success: false, error });
+        }
       }
 
       // Assign to selected groups
       for (const group of selectedGroups) {
-        await createAssignment({
-          module_name: selectedModule.name,
-          assignment_type: 'group',
-          assigned_to_group: group,
-          permissions: ['view', 'manage'],
-          notes: 'Bulk group assignment',
+        try {
+          await createAssignment({
+            module_name: selectedModule.name,
+            assignment_type: 'group',
+            assigned_to_group: group,
+            permissions: ['view', 'manage'],
+            notes: 'Bulk group assignment',
+          });
+          results.push({ type: 'group', id: group, success: true });
+        } catch (error) {
+          console.error(`Failed to assign to group ${group}:`, error);
+          results.push({ type: 'group', id: group, success: false, error });
+        }
+      }
+
+      const successful = results.filter(r => r.success).length;
+      const failed = results.filter(r => !r.success).length;
+
+      if (successful > 0) {
+        toast({
+          title: "Success",
+          description: `${successful} assignment${successful !== 1 ? 's' : ''} created successfully${failed > 0 ? `, ${failed} failed` : ''}`,
+        });
+      }
+
+      if (failed > 0 && successful === 0) {
+        toast({
+          title: "Error", 
+          description: `All ${failed} assignments failed to create`,
+          variant: "destructive",
         });
       }
 
@@ -118,11 +150,8 @@ export const ModuleAssignmentManager: React.FC = () => {
       setSelectedGroups([]);
       setSelectedModule(null);
       
-      toast({
-        title: "Success",
-        description: "Assignments created successfully",
-      });
     } catch (error) {
+      console.error('Bulk assignment error:', error);
       toast({
         title: "Error", 
         description: "Failed to create assignments",
