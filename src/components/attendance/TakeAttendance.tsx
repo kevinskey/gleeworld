@@ -100,7 +100,6 @@ export const TakeAttendance = () => {
         .from('gw_events')
         .select('id, title, event_type, start_date, end_date, attendance_required')
         .gte('start_date', new Date().toISOString())
-        .eq('attendance_required', true) // Only events where attendance will be taken
         .order('start_date')
         .limit(10);
 
