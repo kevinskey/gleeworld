@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -91,6 +91,9 @@ function App() {
               <Route path="users" element={<UserAdmin />} />
               <Route path="handbook" element={<HandbookAdmin />} />
             </Route>
+
+            {/* Redirect /dashboard to /app */}
+            <Route path="/dashboard" element={<Navigate to="/app" replace />} />
           </Routes>
         </Router>
       </AuthProvider>
