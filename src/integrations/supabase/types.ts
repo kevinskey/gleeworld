@@ -15517,6 +15517,17 @@ export type Database = {
         Args: { audition_application_id: string; auditioner_user_id: string }
         Returns: boolean
       }
+      save_onboarding_signature: {
+        Args: {
+          p_full_name: string
+          p_ip_address?: unknown
+          p_onboarding_step?: string
+          p_signature_data: string
+          p_signature_type?: string
+          p_user_agent?: string
+        }
+        Returns: string
+      }
       search_hosts: {
         Args: {
           filter_source?: Database["public"]["Enums"]["host_source"]
