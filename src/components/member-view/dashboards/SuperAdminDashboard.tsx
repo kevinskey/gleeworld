@@ -193,8 +193,16 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
 
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [showAllModules, setShowAllModules] = useState(false);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [overviewCollapsed, setOverviewCollapsed] = useState(false);
+
+  // Initialize collapsed sections - default all categories to collapsed
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
+    const initialCollapsed: Record<string, boolean> = {};
+    categories.forEach(category => {
+      initialCollapsed[category] = true; // Default to collapsed
+    });
+    return initialCollapsed;
+  });
 
   // Sort modules within categories based on custom ordering
   const sortedModulesByCategory = useMemo(() => {
