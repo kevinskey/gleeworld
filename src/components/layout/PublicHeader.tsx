@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Music, Settings } from "lucide-react";
-import { ResponsiveNavigation } from "@/components/navigation/ResponsiveNavigation";
+import ResponsiveNavigation from "@/components/navigation/ResponsiveNavigation";
 import { HeaderClock } from "@/components/ui/header-clock";
 import { MusicStaffMenu } from "@/components/ui/music-staff-menu";
 

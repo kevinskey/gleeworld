@@ -1,355 +1,229 @@
-
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from 'react';
+import { Calendar } from 'react-date-range';
+import 'react-date-range/dist/styles.css'; // main style file
+import 'react-date-range/dist/theme/default.css'; // theme css file
+import { format } from 'date-fns';
+import { addDays, setHours, setMinutes, isPast } from 'date-fns';
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useToast } from "@/hooks/use-toast"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { format, addDays, isSameDay, parseISO, isAfter, isBefore } from 'date-fns';
-import { Clock, User, Mail, MessageSquare, Calendar as CalendarIcon } from 'lucide-react';
 
-interface PublicAppointmentBookingProps {
-  title?: string;
-  subtitle?: string;
-  appointmentType?: string;
-  defaultDuration?: number;
-  maxDuration?: number;
-  allowedDays?: number[]; // 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun
-  startHour?: Record<number, number> | number; // Hour by day or single hour
-  endHour?: Record<number, number> | number; // Hour by day or single hour
-  busyCalendarName?: string;
-}
-
-export const PublicAppointmentBooking: React.FC<PublicAppointmentBookingProps> = ({
-  title = "Book an Appointment",
-  subtitle = "Schedule a time that works for you",
-  appointmentType = "consultation",
-  defaultDuration = 30,
-  maxDuration = 60,
-  allowedDays = [1, 2, 3, 4, 5], // Mon-Fri by default
-  startHour = 9,
-  endHour = 17,
-  busyCalendarName
-}) => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [selectedTime, setSelectedTime] = useState<string>('');
-  const [duration, setDuration] = useState<number>(defaultDuration);
+const PublicAppointmentBooking = () => {
+  const [date, setDate] = useState(new Date());
+  const [selectedSlot, setSelectedSlot] = useState<Date | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  const [busySlots, setBusySlots] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const { toast } = useToast();
 
-  // Fetch busy times from specified calendar
-  const fetchBusyTimes = async (date: Date) => {
-    if (!busyCalendarName) return [];
-    
-    try {
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
+  const timeSlots = generateTimeSlots(date);
 
-      const { data: calendar } = await supabase
-        .from('gw_calendars')
-        .select('id')
-        .eq('name', busyCalendarName)
-        .single();
+  function generateTimeSlots(date: Date) {
+    const slots = [];
+    let current = setHours(setMinutes(new Date(date), 0), 9); // Start at 9:00 AM
+    const end = setHours(setMinutes(new Date(date), 0), 17);   // End at 5:00 PM
 
-      if (!calendar) return [];
-
-      const { data: events } = await supabase
-        .from('gw_events')
-        .select('start_date, end_date')
-        .eq('calendar_id', calendar.id)
-        .gte('start_date', startOfDay.toISOString())
-        .lte('end_date', endOfDay.toISOString());
-
-      return events || [];
-    } catch (error) {
-      console.error('Error fetching busy times:', error);
-      return [];
-    }
-  };
-
-  // Generate available time slots
-  const generateTimeSlots = async (date: Date) => {
-    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay(); // Convert Sunday from 0 to 7
-    
-    // Check if this day is allowed
-    if (!allowedDays.includes(dayOfWeek)) {
-      return [];
-    }
-
-    // Get start and end hours for this day
-    const dayStartHour = typeof startHour === 'object' ? startHour[dayOfWeek] || 9 : startHour;
-    const dayEndHour = typeof endHour === 'object' ? endHour[dayOfWeek] || 17 : endHour;
-
-    // Fetch busy times
-    const busyEvents = await fetchBusyTimes(date);
-    const busyTimes: string[] = [];
-
-    busyEvents.forEach(event => {
-      const start = new Date(event.start_date);
-      const end = new Date(event.end_date);
-      
-      // Generate 30-minute intervals that overlap with this busy time
-      for (let hour = dayStartHour; hour < dayEndHour; hour++) {
-        for (let minute = 0; minute < 60; minute += 30) {
-          const slotStart = new Date(date);
-          slotStart.setHours(hour, minute, 0, 0);
-          const slotEnd = new Date(slotStart);
-          slotEnd.setMinutes(slotEnd.getMinutes() + 30);
-
-          // Check if this slot overlaps with the busy event
-          if (slotStart < end && slotEnd > start) {
-            busyTimes.push(format(slotStart, 'HH:mm'));
-          }
-        }
+    while (current < end) {
+      if (!isPast(current)) {
+        slots.push(current);
       }
-    });
-
-    setBusySlots(busyTimes);
-
-    // Generate available slots
-    const slots: string[] = [];
-    for (let hour = dayStartHour; hour < dayEndHour; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        
-        // Check if this slot or the next slots (for longer appointments) are busy
-        let isSlotAvailable = true;
-        for (let d = 0; d < duration; d += 30) {
-          const checkHour = hour + Math.floor((minute + d) / 60);
-          const checkMinute = (minute + d) % 60;
-          const checkTimeString = `${checkHour.toString().padStart(2, '0')}:${checkMinute.toString().padStart(2, '0')}`;
-          
-          if (busyTimes.includes(checkTimeString) || checkHour >= dayEndHour) {
-            isSlotAvailable = false;
-            break;
-          }
-        }
-
-        if (isSlotAvailable) {
-          slots.push(timeString);
-        }
-      }
+      current = addDays(current, 0);
+      current = setMinutes(current, (getMinutes(current) + 30)); // 30-minute intervals
     }
-
     return slots;
+  }
+
+  const handleDateChange = (newDate: Date) => {
+    setDate(newDate);
+    setSelectedSlot(null); // Clear selected slot when date changes
   };
 
-  // Update available slots when date or duration changes
-  useEffect(() => {
-    if (selectedDate) {
-      setLoading(true);
-      generateTimeSlots(selectedDate).then(slots => {
-        setAvailableSlots(slots);
-        setLoading(false);
-        // Clear selected time if it's no longer available
-        if (selectedTime && !slots.includes(selectedTime)) {
-          setSelectedTime('');
-        }
-      });
-    }
-  }, [selectedDate, duration, busyCalendarName]);
-
-  // Check if date should be disabled
-  const isDateDisabled = (date: Date) => {
-    const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    return !allowedDays.includes(dayOfWeek) || date < today;
+  const handleSlotSelect = (slot: Date) => {
+    setSelectedSlot(slot);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!selectedDate || !selectedTime || !name || !email) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    setSubmitting(true);
+  const handleBooking = async () => {
+    if (!selectedSlot || !name || !email) return;
 
     try {
-      const appointmentDateTime = new Date(selectedDate);
-      const [hours, minutes] = selectedTime.split(':').map(Number);
-      appointmentDateTime.setHours(hours, minutes, 0, 0);
-
-      const endDateTime = new Date(appointmentDateTime);
-      endDateTime.setMinutes(endDateTime.getMinutes() + duration);
-
+      setBookingLoading(true);
+      
       const { error } = await supabase
         .from('gw_appointments')
         .insert({
-          name,
-          email,
-          appointment_type: appointmentType,
-          start_time: appointmentDateTime.toISOString(),
-          end_time: endDateTime.toISOString(),
-          duration_minutes: duration,
-          notes,
-          status: 'scheduled'
+          client_name: name,
+          client_email: email,
+          client_phone: phone,
+          appointment_type: 'office_hours',
+          appointment_date: selectedSlot.toISOString(),
+          status: 'confirmed',
+          description: notes || 'Office hours appointment'
         });
 
       if (error) throw error;
 
-      toast.success('Appointment booked successfully! You will receive a confirmation email shortly.');
-      
-      // Reset form
-      setSelectedDate(undefined);
-      setSelectedTime('');
+      setShowSuccess(true);
+      setSelectedSlot(null);
       setName('');
       setEmail('');
+      setPhone('');
       setNotes('');
-      setDuration(defaultDuration);
-
-    } catch (error: any) {
-      console.error('Error booking appointment:', error);
-      toast.error('Failed to book appointment. Please try again.');
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast({
+        title: "Booking Failed",
+        description: "There was an error booking your appointment. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setSubmitting(false);
+      setBookingLoading(false);
     }
   };
 
+  const getMinutes = (date: Date): number => {
+    return date.getMinutes();
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">{title}</h2>
-        <p className="text-gray-600">{subtitle}</p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Date Selection */}
-        <div className="space-y-3">
-          <Label className="text-base font-semibold flex items-center gap-2">
-            <CalendarIcon className="w-4 h-4" />
-            Select Date
-          </Label>
-          <div className="flex justify-center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              disabled={isDateDisabled}
-              className="rounded-md border bg-white"
-            />
-          </div>
-        </div>
-
-        {/* Duration Selection */}
-        <div className="space-y-3">
-          <Label className="text-base font-semibold flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Duration
-          </Label>
-          <Select value={duration.toString()} onValueChange={(value) => setDuration(Number(value))}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="30">30 minutes</SelectItem>
-              {maxDuration >= 60 && <SelectItem value="60">60 minutes</SelectItem>}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Time Selection */}
-        {selectedDate && (
-          <div className="space-y-3">
-            <Label className="text-base font-semibold flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              Available Times
-            </Label>
-            {loading ? (
-              <div className="text-center py-4 text-gray-500">Loading available times...</div>
-            ) : availableSlots.length > 0 ? (
-              <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
-                {availableSlots.map((time) => (
+    <div className="container mx-auto py-12">
+      <Card>
+        <CardHeader>
+          <CardTitle>Book an Office Hours Appointment</CardTitle>
+          <CardDescription>
+            Select a date and time to book your appointment.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="date">Select Date</Label>
+              <Sheet open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                <SheetTrigger asChild>
                   <Button
-                    key={time}
-                    type="button"
-                    variant={selectedTime === time ? "default" : "outline"}
-                    className="text-sm"
-                    onClick={() => setSelectedTime(time)}
+                    variant="outline"
+                    id="date"
+                    className="w-full justify-start text-left font-normal"
                   >
-                    {time}
+                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="grid gap-6 p-4" side="bottom">
+                  <SheetHeader>
+                    <SheetTitle>Calendar</SheetTitle>
+                    <SheetDescription>
+                      Choose a date to book your appointment.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onDateChange={handleDateChange}
+                    disabledDates={[
+                      addDays(new Date(), 7),
+                      addDays(new Date(), 8),
+                      addDays(new Date(), 9),
+                    ]}
+                    className="rounded-md border"
+                  />
+                  <Button onClick={() => setIsCalendarOpen(false)}>
+                    Close Calendar
+                  </Button>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            <div>
+              <Label htmlFor="time">Select Time Slot</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {timeSlots.map((slot) => (
+                  <Button
+                    key={slot.toISOString()}
+                    variant={selectedSlot?.toISOString() === slot.toISOString() ? "secondary" : "outline"}
+                    onClick={() => handleSlotSelect(slot)}
+                    disabled={isPast(slot)}
+                  >
+                    {format(slot, 'h:mm a')}
                   </Button>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-4 text-gray-500">
-                No available times for this date. Please select another date.
-              </div>
-            )}
+            </div>
           </div>
-        )}
 
-        {/* Contact Information */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="name" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Full Name *
-            </Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your full name"
-              required
-            />
+          <div className="grid gap-4">
+            <div>
+              <Label htmlFor="name">Your Name</Label>
+              <Input
+                type="text"
+                id="name"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Your Email</Label>
+              <Input
+                type="email"
+                id="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Your Phone (Optional)</Label>
+              <Input
+                type="tel"
+                id="phone"
+                placeholder="Enter your phone number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="notes">Additional Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Any additional notes for your appointment"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email" className="flex items-center gap-2">
-              <Mail className="w-4 h-4" />
-              Email Address *
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              required
-            />
-          </div>
-        </div>
 
-        {/* Notes */}
-        <div className="space-y-2">
-          <Label htmlFor="notes" className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" />
-            Additional Notes (Optional)
-          </Label>
-          <Textarea
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Anything specific you'd like to discuss?"
-            rows={3}
-          />
-        </div>
+          <Button onClick={handleBooking} disabled={bookingLoading || !selectedSlot || !name || !email}>
+            {bookingLoading ? "Booking..." : "Book Appointment"}
+          </Button>
 
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={submitting || !selectedDate || !selectedTime || !name || !email}
-        >
-          {submitting ? 'Booking...' : 'Book Appointment'}
-        </Button>
-      </form>
+          {showSuccess && (
+            <div className="rounded-md bg-green-100 p-4">
+              <h2 className="text-lg font-semibold text-green-800">Appointment Booked!</h2>
+              <p className="text-sm text-green-700">
+                Your appointment has been successfully booked for {selectedSlot ? format(selectedSlot, 'PPP h:mm a') : ''}.
+                A confirmation email has been sent to your email address.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
+
+export default PublicAppointmentBooking;

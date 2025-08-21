@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import Index from "@/pages/Index";
 import Profile from "@/pages/Profile";
@@ -24,7 +23,7 @@ import AlumnaeLegacyLounge from "@/pages/AlumnaeLegacyLounge";
 import AlumnaeStorySubmission from "@/pages/AlumnaeStorySubmission";
 import AlumnaeMessages from "@/pages/AlumnaeMessages";
 import AlumnaeAdmin from "@/pages/admin/AlumnaeAdmin";
-import { Shop } from "@/pages/Shop";
+import Shop from "@/pages/Shop";
 import { Checkout } from "@/pages/Checkout";
 import { Success } from "@/pages/shop/Success";
 import { UnifiedDashboard } from "@/components/dashboard/UnifiedDashboard";
@@ -167,7 +166,7 @@ export const router = createBrowserRouter([
     element: <UnifiedDashboard />,
   },
   {
-    path: "/executive-board-dashboard", 
+    path: "/executive-board-dashboard",
     element: <Navigate to="/dashboard" replace />,
   },
   {

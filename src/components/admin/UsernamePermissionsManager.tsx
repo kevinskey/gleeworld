@@ -1,128 +1,164 @@
 
-import React, { useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Search, User, Settings, RefreshCw, AlertCircle } from 'lucide-react';
+import { Trash2, Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { UserModuleMatrix } from './UserModuleMatrix';
-import { toast } from 'sonner';
+
+interface Permission {
+  id: string;
+  user_email: string;
+  module_name: string;
+  granted_at: string;
+  expires_at: string | null;
+  notes: string | null;
+}
 
 export const UsernamePermissionsManager = () => {
-  const [username, setUsername] = useState<string>('');
-  const [userId, setUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [userNotFound, setUserNotFound] = useState<boolean>(false);
-  const [profile, setProfile] = useState<any>(null);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [newModule, setNewModule] = useState('');
+  const { toast } = useToast();
 
-  const handleSearch = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setUserNotFound(false);
-    setUserId(null);
-    setProfile(null);
-
+  const fetchPermissions = async () => {
     try {
-      // Fetch user profile by username
-      const { data: profileData, error: profileError } = await supabase
-        .from('gw_profiles')
-        .select('user_id, full_name, email, role, is_admin, is_super_admin, is_exec_board, exec_board_role')
-        .eq('username', username)
-        .single();
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('username_permissions')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
 
-      if (profileError) {
-        if (profileError.message.includes('No rows found')) {
-          setUserNotFound(true);
-          return;
-        }
-        throw profileError;
-      }
-
-      setProfile(profileData);
-      setUserId(profileData.user_id);
-    } catch (e: any) {
-      console.error('Failed to fetch user', e);
-      setError(e.message || 'Failed to fetch user');
-      toast.error('Failed to fetch user');
+      if (error) throw error;
+      setPermissions(data || []);
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch permissions",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  }, [username]);
-
-  const handleClear = () => {
-    setUsername('');
-    setUserId(null);
-    setError(null);
-    setLoading(false);
-    setUserNotFound(false);
-    setProfile(null);
   };
 
+  const grantPermission = async () => {
+    if (!newEmail || !newModule) return;
+
+    try {
+      const { error } = await supabase
+        .from('username_permissions')
+        .upsert({
+          user_email: newEmail,
+          module_name: newModule,
+          is_active: true
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Permission Granted",
+        description: `${newModule} access granted to ${newEmail}`,
+      });
+
+      setNewEmail('');
+      setNewModule('');
+      fetchPermissions();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: "Failed to grant permission",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const revokePermission = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('username_permissions')
+        .update({ is_active: false })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Permission Revoked",
+        description: "Permission has been revoked",
+      });
+
+      fetchPermissions();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: "Failed to revoke permission",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchPermissions();
+  }, []);
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>User-Specific Permissions</CardTitle>
-        <CardDescription>
-          Search for a user by username to manage their individual module permissions.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Input
-            type="text"
-            placeholder="Enter username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            disabled={loading}
-          />
-          <Button onClick={handleSearch} disabled={loading}>
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-            Search
-          </Button>
-          <Button type="button" variant="secondary" onClick={handleClear} disabled={loading}>
-            Clear
-          </Button>
-        </div>
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {userNotFound && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>User not found. Please check the username.</AlertDescription>
-          </Alert>
-        )}
-
-        {profile && (
-          <div className="border rounded-md p-4 bg-muted">
-            <div className="flex items-center space-x-3 mb-2">
-              <User className="h-5 w-5 text-gray-500" />
-              <h3 className="text-lg font-semibold">{profile.full_name}</h3>
-              <Badge variant="secondary">{profile.role}</Badge>
-              {profile.is_super_admin && <Badge>Super Admin</Badge>}
-              {profile.is_admin && <Badge>Admin</Badge>}
-              {profile.is_exec_board && <Badge>Exec Board</Badge>}
-            </div>
-            <p className="text-sm text-gray-500">
-              <strong>Username:</strong> {username}
-              <br />
-              <strong>Email:</strong> {profile.email}
-            </p>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Grant New Permission</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              placeholder="User email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+            />
+            <Input
+              placeholder="Module name"
+              value={newModule}
+              onChange={(e) => setNewModule(e.target.value)}
+            />
           </div>
-        )}
+          <Button onClick={grantPermission} className="w-full">
+            <Plus className="h-4 w-4 mr-2" />
+            Grant Permission
+          </Button>
+        </CardContent>
+      </Card>
 
-        {userId && !loading && !error && !userNotFound && (
-          <UserModuleMatrix userId={userId} />
-        )}
-      </CardContent>
-    </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Active Permissions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <p>Loading permissions...</p>
+          ) : (
+            <div className="space-y-2">
+              {permissions.map((permission) => (
+                <div key={permission.id} className="flex items-center justify-between p-3 border rounded">
+                  <div>
+                    <Badge variant="outline">{permission.user_email}</Badge>
+                    <span className="ml-2">{permission.module_name}</span>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => revokePermission(permission.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };

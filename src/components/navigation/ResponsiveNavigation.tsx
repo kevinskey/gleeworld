@@ -17,13 +17,20 @@ import { Button } from '@/components/ui/button';
 import { Menu } from "lucide-react";
 
 interface ResponsiveNavigationProps {
-  isAuthenticated: boolean;
-  user: any;
+  isAuthenticated?: boolean;
+  user?: any;
+  mobile?: boolean;
+  onItemClick?: () => void;
 }
 
-const ResponsiveNavigation: React.FC<ResponsiveNavigationProps> = ({ user, isAuthenticated }) => {
+const ResponsiveNavigation: React.FC<ResponsiveNavigationProps> = ({ 
+  user, 
+  isAuthenticated, 
+  mobile = false, 
+  onItemClick 
+}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
   const { userProfile } = useUserProfile(user);
 
@@ -32,8 +39,8 @@ const ResponsiveNavigation: React.FC<ResponsiveNavigationProps> = ({ user, isAut
   };
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    await signOut();
+    navigate('/');
   };
 
   const publicNavItems = [
@@ -47,148 +54,54 @@ const ResponsiveNavigation: React.FC<ResponsiveNavigationProps> = ({ user, isAut
   ];
 
   const authNavItems = [
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Music Library', href: '/music' },
-    { name: 'Events', href: '/my-events' },
-    { name: 'Profile', href: '/profile' },
+    { name: 'Dashboard', href: '/app/dashboard' },
+    { name: 'Music Library', href: '/app/music' },
+    { name: 'Auditions', href: '/app/auditions' },
+    { name: 'Communications', href: '/app/communications' },
+    { name: 'Budgeting', href: '/app/budgeting' },
+    { name: 'Wellness', href: '/app/wellness' },
+    { name: 'First Year', href: '/app/first-year' },
+    { name: 'Handbook Exam', href: '/app/handbook-exam' },
+    { name: 'Handbook Signature', href: '/app/handbook-signature' },
+    { name: 'Profile', href: '/app/profile' },
   ];
 
   const adminNavItems = [
     { name: 'Admin Dashboard', href: '/admin/dashboard' },
     { name: 'Access Control', href: '/admin/access' },
+    { name: 'Roles', href: '/admin/roles' },
+    { name: 'Modules', href: '/admin/modules' },
     { name: 'Calendar Admin', href: '/admin/calendar' },
-    { name: 'Communications', href: '/admin/communications' },
+    { name: 'Events', href: '/admin/events' },
+    { name: 'Budgets', href: '/admin/budgets' },
+    { name: 'Users', href: '/admin/users' },
+    { name: 'Handbook', href: '/admin/handbook' },
   ];
 
-  return (
-    <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b">
-      <div className="container flex items-center justify-between py-4">
-        <Link to="/" className="font-bold text-xl">
-          GleeWorld
-        </Link>
-
-        {/* Mobile Menu */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-full sm:w-64">
-            <SheetHeader>
-              <SheetTitle>Menu</SheetTitle>
-              <SheetDescription>
-                Explore GleeWorld
-              </SheetDescription>
-            </SheetHeader>
-
-            <div className="grid gap-4 py-4">
-              {publicNavItems.map((item) => (
-                <Link key={item.name} to={item.href} className="block py-2 hover:bg-gray-100 rounded-md px-3">
-                  {item.name}
-                </Link>
-              ))}
-
-              {isAuthenticated && (
-                <>
-                  <h4 className="font-semibold text-sm text-muted-foreground px-3">My Account</h4>
-                  {authNavItems.map((item) => (
-                    <Link key={item.name} to={item.href} className="block py-2 hover:bg-gray-100 rounded-md px-3">
-                      {item.name}
-                    </Link>
-                  ))}
-
-                  {userProfile?.is_admin && (
-                    <>
-                      <h4 className="font-semibold text-sm text-muted-foreground px-3">Admin Tools</h4>
-                      {adminNavItems.map((item) => (
-                        <Link key={item.name} to={item.href} className="block py-2 hover:bg-gray-100 rounded-md px-3">
-                          {item.name}
-                        </Link>
-                      ))}
-                    </>
-                  )}
-
-                  <Button variant="destructive" size="sm" onClick={handleLogout} className="w-full">
-                    Logout
-                  </Button>
-                </>
-              )}
-
-              {!isAuthenticated && (
-                <>
-                  <Link to="/login" className="block py-2 hover:bg-gray-100 rounded-md px-3">
-                    Login
-                  </Link>
-                  <Link to="/register" className="block py-2 hover:bg-gray-100 rounded-md px-3">
-                    Register
-                  </Link>
-                </>
-              )}
-
-              <ModeToggle />
-            </div>
-          </SheetContent>
-        </Sheet>
-
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-4">
-          {publicNavItems.map((item) => (
-            <Link key={item.name} to={item.href} className="hidden md:block text-gray-700 hover:text-gray-900">
-              {item.name}
-            </Link>
-          ))}
-
-          {isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.full_name} />
-                    <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                {authNavItems.map((item) => (
-                  <DropdownMenuItem key={item.name} asChild>
-                    <Link to={item.href}>{item.name}</Link>
-                  </DropdownMenuItem>
-                ))}
-
-                {userProfile?.is_admin && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Admin Tools</DropdownMenuLabel>
-                    {adminNavItems.map((item) => (
-                      <DropdownMenuItem key={item.name} asChild>
-                        <Link to={item.href}>{item.name}</Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </>
-                )}
-
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <ModeToggle />
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <>
-              <Link to="/login" className="hidden md:block text-gray-700 hover:text-gray-900">
-                Login
-              </Link>
-              <Link to="/register" className="hidden md:block text-gray-700 hover:text-gray-900">
-                Register
-              </Link>
-            </>
-          )}
-        </div>
+  if (mobile) {
+    return (
+      <div className="flex flex-col gap-2">
+        {publicNavItems.map((item) => (
+          <Link 
+            key={item.name} 
+            to={item.href} 
+            className="block py-2 hover:bg-gray-100 rounded-md px-3"
+            onClick={onItemClick}
+          >
+            {item.name}
+          </Link>
+        ))}
       </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center space-x-4">
+      {publicNavItems.map((item) => (
+        <Link key={item.name} to={item.href} className="text-gray-700 hover:text-gray-900">
+          {item.name}
+        </Link>
+      ))}
     </div>
   );
 };
