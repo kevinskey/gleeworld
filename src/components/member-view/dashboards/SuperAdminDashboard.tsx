@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { useModuleOrdering } from "@/hooks/useModuleOrdering";
+import { ModuleRegistry } from '@/utils/moduleRegistry';
 import {
   DndContext,
   closestCenter,
@@ -178,7 +179,6 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
 
   // Create modulesByCategory object from the function, enhanced with component data
   const modulesByCategory = useMemo(() => {
-    const { ModuleRegistry } = require('@/utils/moduleRegistry');
     const result: Record<string, any[]> = {};
     categories.forEach(category => {
       const modules = getModulesByCategory(category)
@@ -404,8 +404,6 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
 
   // If a specific module is selected, show it full page
   if (selectedModule) {
-    // Import the ModuleRegistry to get the actual component
-    const { ModuleRegistry } = require('@/utils/moduleRegistry');
     const moduleConfig = ModuleRegistry.getModule(selectedModule);
     
     if (moduleConfig && moduleConfig.component) {
