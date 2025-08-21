@@ -181,17 +181,19 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
     const { ModuleRegistry } = require('@/utils/moduleRegistry');
     const result: Record<string, any[]> = {};
     categories.forEach(category => {
-      const modules = getModulesByCategory(category).map(module => {
-        // Get the full module config from registry
-        const moduleConfig = ModuleRegistry.getModule(module.id);
-        return {
-          ...module,
-          icon: moduleConfig?.icon,
-          iconColor: moduleConfig?.iconColor || 'blue',
-          component: moduleConfig?.component,
-          isNew: moduleConfig?.isNew || false
-        };
-      });
+      const modules = getModulesByCategory(category)
+        .map(module => {
+          // Get the full module config from registry
+          const moduleConfig = ModuleRegistry.getModule(module.id);
+          return {
+            ...module,
+            icon: moduleConfig?.icon,
+            iconColor: moduleConfig?.iconColor || 'blue',
+            component: moduleConfig?.component,
+            isNew: moduleConfig?.isNew || false
+          };
+        })
+        .filter(module => module.component !== undefined); // Filter out modules without components
       result[category] = modules;
     });
     return result;
