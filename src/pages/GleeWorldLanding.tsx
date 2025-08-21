@@ -20,7 +20,7 @@ import { CountdownTimer } from "@/components/landing/CountdownTimer";
 import { FeaturedProducts } from "@/components/products/FeaturedProducts";
 import { AuditionHoverCard } from "@/components/audition/AuditionHoverCard";
 import { MusicStaffIcon } from "@/components/icons/MusicStaffIcon";
-import { FAQNavigationCards } from "@/components/landing/FAQNavigationCards";
+
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
@@ -318,28 +318,6 @@ export const GleeWorldLanding = () => {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
-        <div className="w-full max-w-screen-2xl mx-auto">
-          <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
-            <div className="text-center mb-4 sm:mb-6 md:mb-8">
-              <div className="inline-flex items-center justify-center space-x-2 mb-4">
-                <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-                <MessageCircleQuestion className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-              </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-gray-900 mb-2">
-                Frequently Asked Questions
-              </h2>
-              <p className="text-base md:text-xl text-muted-foreground">
-                Spelman College Glee Club
-              </p>
-            </div>
-            
-            {/* FAQ Navigation and Content */}
-            <FAQNavigationCards />
-          </Card>
-        </div>
-      </section>
 
       {/* Hero Section */}
       <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
