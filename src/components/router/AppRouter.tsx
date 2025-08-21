@@ -39,6 +39,7 @@ import ExecutiveBoardDashboard from "@/pages/ExecutiveBoardDashboard";
 import MemberSightReadingStudioPage from "@/pages/MemberSightReadingStudio";
 import LibrarianDashboardPage from "@/pages/LibrarianDashboardPage";
 import { Onboarding } from "@/pages/Onboarding";
+import { MessagingInterface } from '@/components/messaging/MessagingInterface';
 import StudentRegistration from "@/pages/StudentRegistration";
 
 export const router = createBrowserRouter([
@@ -101,6 +102,10 @@ export const router = createBrowserRouter([
   {
     path: "/announcements",
     element: <Announcements />,
+  },
+  {
+    path: "/messages",
+    element: <MessagingInterface />,
   },
   {
     path: "/budget-approvals",
