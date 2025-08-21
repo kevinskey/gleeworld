@@ -45,33 +45,75 @@ export default function UnifiedBookingPage() {
   const [allTimeSlots, setAllTimeSlots] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Generate standard office hours time slots
+  // Generate standard appointment time slots and check availability
   useEffect(() => {
     if (!selectedDate) {
       setAllTimeSlots([]);
       return;
     }
 
-    setLoading(true);
-    
-    // Generate time slots from 9 AM to 5 PM in 30-minute intervals
-    const timeSlots = [];
-    for (let hour = 9; hour < 17; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const time12Hour = hour > 12 ? `${hour - 12}:${minute.toString().padStart(2, '0')} PM` 
-                         : hour === 12 ? `12:${minute.toString().padStart(2, '0')} PM`
-                         : `${hour}:${minute.toString().padStart(2, '0')} AM`;
+    const generateTimeSlots = async () => {
+      setLoading(true);
+      
+      try {
+        // Get existing appointments for this date
+        const startDate = new Date(selectedDate);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(selectedDate);
+        endDate.setHours(23, 59, 59, 999);
+
+        const { data: existingAppointments } = await supabase
+          .from('gw_appointments')
+          .select('appointment_date, duration_minutes')
+          .gte('appointment_date', startDate.toISOString())
+          .lte('appointment_date', endDate.toISOString())
+          .neq('status', 'cancelled');
+
+        // Generate time slots from 9 AM to 5 PM in 30-minute intervals
+        const timeSlots = [];
+        for (let hour = 9; hour < 17; hour++) {
+          for (let minute = 0; minute < 60; minute += 30) {
+            const slotTime = new Date(selectedDate);
+            slotTime.setHours(hour, minute, 0, 0);
+            
+            // Don't show past time slots for today
+            const now = new Date();
+            if (selectedDate.toDateString() === now.toDateString() && slotTime <= now) {
+              continue;
+            }
+
+            const time12Hour = hour > 12 ? `${hour - 12}:${minute.toString().padStart(2, '0')} PM` 
+                             : hour === 12 ? `12:${minute.toString().padStart(2, '0')} PM`
+                             : `${hour}:${minute.toString().padStart(2, '0')} AM`;
+            
+            // Check if this slot conflicts with existing appointments (30-minute slots)
+            const isAvailable = !existingAppointments?.some(apt => {
+              const aptStart = new Date(apt.appointment_date);
+              const aptEnd = new Date(aptStart.getTime() + (apt.duration_minutes || 30) * 60000);
+              const slotEnd = new Date(slotTime.getTime() + 30 * 60000);
+              
+              // Check for overlap
+              return slotTime < aptEnd && slotEnd > aptStart;
+            });
+            
+            timeSlots.push({
+              time: time12Hour,
+              isAvailable,
+              auditionerName: null
+            });
+          }
+        }
         
-        timeSlots.push({
-          time: time12Hour,
-          isAvailable: true, // For now, all slots are available
-          auditionerName: null
-        });
+        setAllTimeSlots(timeSlots);
+      } catch (error) {
+        console.error('Error fetching appointment data:', error);
+        setAllTimeSlots([]);
+      } finally {
+        setLoading(false);
       }
-    }
-    
-    setAllTimeSlots(timeSlots);
-    setLoading(false);
+    };
+
+    generateTimeSlots();
   }, [selectedDate]);
 
   // Restore selected time slot from localStorage when user returns from auth
@@ -218,10 +260,10 @@ export default function UnifiedBookingPage() {
           const { error: appointmentUpdateError } = await supabase
             .from('gw_appointments')
             .update({
-              title: `Office Hours - ${contactInfo.name}`,
+              title: `Appointment - ${contactInfo.name}`,
               client_name: contactInfo.name,
-              description: `Office Hours with Dr. Johnson (30 minutes) - ${selectedSlot.displayTime} EST`,
-              appointment_date: utcDateTime.toISOString(), // Use the UTC datetime instead of date string
+              description: `30-minute appointment - ${selectedSlot.displayTime} EST`,
+              appointment_date: utcDateTime.toISOString(),
               client_email: contactInfo.email,
               client_phone: contactInfo.phone,
               status: 'scheduled',
@@ -236,14 +278,14 @@ export default function UnifiedBookingPage() {
           const { error: appointmentError } = await supabase
             .from('gw_appointments')
             .insert({
-              title: `Office Hours - ${contactInfo.name}`,
+              title: `Appointment - ${contactInfo.name}`,
               client_name: contactInfo.name,
-              description: `Office Hours with Dr. Johnson (30 minutes) - ${selectedSlot.displayTime} EST`,
-              appointment_date: utcDateTime.toISOString(), // Use the UTC datetime instead of date string
+              description: `30-minute appointment - ${selectedSlot.displayTime} EST`,
+              appointment_date: utcDateTime.toISOString(),
               client_email: contactInfo.email,
               client_phone: contactInfo.phone,
               status: 'scheduled',
-              appointment_type: 'office_hours',
+              appointment_type: 'consultation',
               duration_minutes: 30
             });
 
@@ -255,8 +297,8 @@ export default function UnifiedBookingPage() {
       toast({
         title: isUpdate ? "Appointment Time Updated!" : "Appointment Scheduled!",
         description: isUpdate 
-          ? "Your office hours appointment has been successfully updated."
-          : "Your office hours appointment has been confirmed.",
+          ? "Your appointment has been successfully updated."
+          : "Your appointment has been confirmed.",
       });
 
       // Force a refresh of the page to update the available slots
@@ -293,7 +335,7 @@ export default function UnifiedBookingPage() {
                   Appointment Confirmed!
                 </h1>
                 <p className="text-lg text-muted-foreground mb-8">
-                  Your office hours appointment with Dr. Johnson has been scheduled.
+                  Your appointment has been scheduled successfully.
                 </p>
               </div>
 
@@ -349,14 +391,14 @@ export default function UnifiedBookingPage() {
               <CalendarIcon className="h-10 w-10 text-primary" />
             </div>
             <h1 className="text-6xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-6 leading-tight">
-              Dr. Johnson Office Hours
+              Schedule an Appointment
             </h1>
             <h2 className="text-3xl font-semibold text-foreground/90 mb-4">
-              Schedule an Appointment
+              Book Your Appointment
             </h2>
             <div className="max-w-3xl mx-auto">
               <p className="text-xl text-muted-foreground leading-relaxed mb-6">
-                Schedule your 30-minute office hours appointment with Dr. Johnson for academic guidance and support
+                Schedule your 30-minute appointment for meetings, consultations, and more
               </p>
               <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground/80">
                 <div className="flex items-center gap-2">
