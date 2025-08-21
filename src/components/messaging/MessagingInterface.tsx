@@ -9,11 +9,29 @@ import { MessageSquare, Users } from 'lucide-react';
 export const MessagingInterface: React.FC = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showMembers, setShowMembers] = useState(false);
-  const { data: groups, isLoading } = useMessageGroups();
+  const { data: groups, isLoading, error } = useMessageGroups();
+
+  console.log('MessagingInterface: Component loaded');
+  console.log('MessagingInterface: Groups data:', groups);
+  console.log('MessagingInterface: Loading state:', isLoading);
+  console.log('MessagingInterface: Error state:', error);
 
   const selectedGroup = groups?.find(g => g.id === selectedGroupId);
 
+  if (error) {
+    console.error('MessagingInterface: Error loading groups:', error);
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 mb-2">Error loading messages</div>
+          <div className="text-sm text-muted-foreground">{error.message}</div>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
+    console.log('MessagingInterface: Showing loading state');
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
