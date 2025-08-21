@@ -33,7 +33,7 @@ const Auth = () => {
         navigate(redirectPath, { replace: true });
       } else {
         // Simple redirect based on admin status
-        const defaultPath = isAdmin() ? '/admin' : '/app';
+        const defaultPath = isAdmin() ? '/admin' : '/dashboard';
         console.log('Auth: Redirecting to default path:', defaultPath);
         navigate(defaultPath, { replace: true });
       }
