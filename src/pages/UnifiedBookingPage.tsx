@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, User, Mail, Phone } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, CheckCircle, User, Mail, Phone } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAvailableAuditionSlots } from '@/hooks/useAvailableAuditionSlots';
+
 import { cn } from '@/lib/utils';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,16 +41,38 @@ export default function UnifiedBookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
 
-  // Use the existing hook for real audition data
-  const { timeSlots, allTimeSlots, loading, availableDates } = useAvailableAuditionSlots(selectedDate);
-  console.log('📊 BookingPage - allTimeSlots:', allTimeSlots, 'loading:', loading);
+  // Generate available time slots for any selected date
+  const [allTimeSlots, setAllTimeSlots] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Set the first available date by default
+  // Generate standard office hours time slots
   useEffect(() => {
-    if (availableDates.length > 0 && !selectedDate) {
-      setSelectedDate(availableDates[0]);
+    if (!selectedDate) {
+      setAllTimeSlots([]);
+      return;
     }
-  }, [availableDates, selectedDate]);
+
+    setLoading(true);
+    
+    // Generate time slots from 9 AM to 5 PM in 30-minute intervals
+    const timeSlots = [];
+    for (let hour = 9; hour < 17; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const time12Hour = hour > 12 ? `${hour - 12}:${minute.toString().padStart(2, '0')} PM` 
+                         : hour === 12 ? `12:${minute.toString().padStart(2, '0')} PM`
+                         : `${hour}:${minute.toString().padStart(2, '0')} AM`;
+        
+        timeSlots.push({
+          time: time12Hour,
+          isAvailable: true, // For now, all slots are available
+          auditionerName: null
+        });
+      }
+    }
+    
+    setAllTimeSlots(timeSlots);
+    setLoading(false);
+  }, [selectedDate]);
 
   // Restore selected time slot from localStorage when user returns from auth
   useEffect(() => {
@@ -323,7 +346,7 @@ export default function UnifiedBookingPage() {
           {/* Header */}
           <div className="text-center mb-16 pt-8">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl mb-8 shadow-lg">
-              <Calendar className="h-10 w-10 text-primary" />
+              <CalendarIcon className="h-10 w-10 text-primary" />
             </div>
             <h1 className="text-6xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-6 leading-tight">
               Dr. Johnson Office Hours
@@ -341,7 +364,7 @@ export default function UnifiedBookingPage() {
                   30-minute sessions
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
+                  <CalendarIcon className="h-4 w-4" />
                   Multiple dates available
                 </div>
                 <div className="flex items-center gap-2">
@@ -372,49 +395,30 @@ export default function UnifiedBookingPage() {
                 </Card>
               )}
               
-              {availableDates.length > 0 && (
-                <Card className="shadow-xl border-2 border-primary/10">
-                  <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-lg">
-                    <CardTitle className="flex items-center text-2xl font-bold">
-                      <Calendar className="h-6 w-6 mr-3 text-primary" />
-                      Choose Your Appointment Date
-                    </CardTitle>
-                    <p className="text-muted-foreground">
-                      Select from available office hours dates below
-                    </p>
-                  </CardHeader>
-                  <CardContent className="p-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {availableDates.map((date, index) => (
-                        <Button
-                          key={index}
-                          variant={selectedDate?.toDateString() === date.toDateString() ? "default" : "outline"}
-                          onClick={() => setSelectedDate(date)}
-                          className={cn(
-                            "p-6 h-auto text-left flex flex-col items-start space-y-2 transition-all duration-200",
-                            selectedDate?.toDateString() === date.toDateString() 
-                              ? "bg-primary text-primary-foreground shadow-lg scale-105" 
-                              : "hover:bg-primary/5 hover:border-primary/30 hover:scale-102"
-                          )}
-                        >
-                          <div className="text-lg font-semibold">
-                            {date.toLocaleDateString('en-US', { 
-                              weekday: 'long'
-                            })}
-                          </div>
-                          <div className="text-sm opacity-90">
-                            {date.toLocaleDateString('en-US', { 
-                              month: 'long', 
-                              day: 'numeric',
-                              year: 'numeric'
-                            })}
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              <Card className="shadow-xl border-2 border-primary/10">
+                <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-lg">
+                  <CardTitle className="flex items-center text-2xl font-bold">
+                    <CalendarIcon className="h-6 w-6 mr-3 text-primary" />
+                    Choose Your Appointment Date
+                  </CardTitle>
+                  <p className="text-muted-foreground">
+                    Select any available date from the calendar below
+                  </p>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <div className="flex justify-center">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => setSelectedDate(date || null)}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                      className="pointer-events-auto border rounded-lg p-4"
+                      numberOfMonths={2}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
               {selectedDate && (
                 <Card className="shadow-xl border-2 border-primary/10">
@@ -495,19 +499,16 @@ export default function UnifiedBookingPage() {
                 </Card>
               )}
 
-              {!selectedDate && availableDates.length === 0 && (
+              {!selectedDate && (
                 <Card className="shadow-lg">
                   <CardContent className="text-center py-16">
                     <div className="inline-flex items-center justify-center w-20 h-20 bg-muted rounded-full mb-6">
-                      <Calendar className="h-10 w-10 text-muted-foreground" />
+                      <CalendarIcon className="h-10 w-10 text-muted-foreground" />
                     </div>
-                    <h3 className="text-2xl font-semibold mb-4">No Audition Dates Available</h3>
+                    <h3 className="text-2xl font-semibold mb-4">Select a Date</h3>
                     <p className="text-lg text-muted-foreground mb-6 max-w-md mx-auto">
-                      There are currently no audition dates scheduled. Please check back later or contact us for more information.
+                      Please select a date from the calendar above to view available appointment times.
                     </p>
-                    <Button variant="outline" onClick={() => window.location.href = '/'}>
-                      Return to Home
-                    </Button>
                   </CardContent>
                 </Card>
               )}
