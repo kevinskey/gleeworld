@@ -14,31 +14,14 @@ export const MessagingInterface: React.FC = () => {
   
   console.log('MessagingInterface: State initialized, calling useMessageGroups...');
   
-  let groups, isLoading, error;
-  
-  try {
-    const result = useMessageGroups();
-    groups = result.data;
-    isLoading = result.isLoading;
-    error = result.error;
+  const { data: groups, isLoading, error } = useMessageGroups();
 
-    console.log('MessagingInterface: Hook executed successfully:', { 
-      groups: groups?.length || 0, 
-      isLoading, 
-      error: error?.message || 'none',
-      groupsData: groups 
-    });
-  } catch (hookError) {
-    console.error('MessagingInterface: Hook error:', hookError);
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-destructive mb-2">Failed to initialize messaging</div>
-          <div className="text-sm text-muted-foreground">{String(hookError)}</div>
-        </div>
-      </div>
-    );
-  }
+  console.log('MessagingInterface: Hook executed successfully:', { 
+    groups: groups?.length || 0, 
+    isLoading, 
+    error: error?.message || 'none',
+    groupsData: groups 
+  });
 
   const selectedGroup = groups?.find(g => g.id === selectedGroupId);
 
