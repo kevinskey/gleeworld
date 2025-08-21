@@ -192,48 +192,48 @@ export default function UnifiedBookingPage() {
       // Update or create appointment in gw_appointments
       if (existingAppointment) {
         // Update existing appointment
-        const { error: appointmentUpdateError } = await supabase
-          .from('gw_appointments')
-          .update({
-            title: `Audition - ${contactInfo.name}`,
-            client_name: contactInfo.name,
-            description: `Spelman College Glee Club Audition (5 minutes) - ${selectedSlot.displayTime} EST`,
-            appointment_date: utcDateTime.toISOString(), // Use the UTC datetime instead of date string
-            client_email: contactInfo.email,
-            client_phone: contactInfo.phone,
-            status: 'scheduled',
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingAppointment.id);
+          const { error: appointmentUpdateError } = await supabase
+            .from('gw_appointments')
+            .update({
+              title: `Office Hours - ${contactInfo.name}`,
+              client_name: contactInfo.name,
+              description: `Office Hours with Dr. Johnson (30 minutes) - ${selectedSlot.displayTime} EST`,
+              appointment_date: utcDateTime.toISOString(), // Use the UTC datetime instead of date string
+              client_email: contactInfo.email,
+              client_phone: contactInfo.phone,
+              status: 'scheduled',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingAppointment.id);
 
-        if (appointmentUpdateError) throw appointmentUpdateError;
-        isUpdate = true;
-      } else {
-        // Create new appointment
-        const { error: appointmentError } = await supabase
-          .from('gw_appointments')
-          .insert({
-            title: `Audition - ${contactInfo.name}`,
-            client_name: contactInfo.name,
-            description: `Spelman College Glee Club Audition (5 minutes) - ${selectedSlot.displayTime} EST`,
-            appointment_date: utcDateTime.toISOString(), // Use the UTC datetime instead of date string
-            client_email: contactInfo.email,
-            client_phone: contactInfo.phone,
-            status: 'scheduled',
-            appointment_type: 'audition',
-            duration_minutes: 5
-          });
+          if (appointmentUpdateError) throw appointmentUpdateError;
+          isUpdate = true;
+        } else {
+          // Create new appointment
+          const { error: appointmentError } = await supabase
+            .from('gw_appointments')
+            .insert({
+              title: `Office Hours - ${contactInfo.name}`,
+              client_name: contactInfo.name,
+              description: `Office Hours with Dr. Johnson (30 minutes) - ${selectedSlot.displayTime} EST`,
+              appointment_date: utcDateTime.toISOString(), // Use the UTC datetime instead of date string
+              client_email: contactInfo.email,
+              client_phone: contactInfo.phone,
+              status: 'scheduled',
+              appointment_type: 'office_hours',
+              duration_minutes: 30
+            });
 
-        if (appointmentError) throw appointmentError;
-      }
+          if (appointmentError) throw appointmentError;
+        }
 
       setIsConfirmed(true);
       
       toast({
-        title: isUpdate ? "Audition Time Updated!" : "Audition Scheduled!",
+        title: isUpdate ? "Appointment Time Updated!" : "Appointment Scheduled!",
         description: isUpdate 
-          ? "Your audition time has been successfully updated."
-          : "Your audition appointment has been confirmed.",
+          ? "Your office hours appointment has been successfully updated."
+          : "Your office hours appointment has been confirmed.",
       });
 
       // Force a refresh of the page to update the available slots
@@ -245,7 +245,7 @@ export default function UnifiedBookingPage() {
       console.error('Error booking audition:', error);
       toast({
         title: "Booking Failed",
-        description: "There was an error scheduling your audition. Please try again.",
+        description: "There was an error scheduling your appointment. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -267,16 +267,16 @@ export default function UnifiedBookingPage() {
               
               <div>
                 <h1 className="text-3xl font-bold text-foreground mb-4">
-                  Audition Confirmed!
+                  Appointment Confirmed!
                 </h1>
                 <p className="text-lg text-muted-foreground mb-8">
-                  Your Spelman College Glee Club audition has been scheduled.
+                  Your office hours appointment with Dr. Johnson has been scheduled.
                 </p>
               </div>
 
               <Card className="max-w-md mx-auto">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Audition Details</h3>
+                  <h3 className="text-lg font-semibold mb-4">Appointment Details</h3>
                   <div className="space-y-3 text-left">
                     <div>
                       <span className="text-sm text-muted-foreground">Date & Time:</span>
@@ -286,7 +286,7 @@ export default function UnifiedBookingPage() {
                     </div>
                     <div>
                       <span className="text-sm text-muted-foreground">Duration:</span>
-                      <p className="font-medium">5 minutes</p>
+                      <p className="font-medium">30 minutes</p>
                     </div>
                     <div>
                       <span className="text-sm text-muted-foreground">Name:</span>
@@ -326,19 +326,19 @@ export default function UnifiedBookingPage() {
               <Calendar className="h-10 w-10 text-primary" />
             </div>
             <h1 className="text-6xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-6 leading-tight">
-              Spelman College Glee Club
+              Dr. Johnson Office Hours
             </h1>
             <h2 className="text-3xl font-semibold text-foreground/90 mb-4">
-              Audition Booking
+              Schedule an Appointment
             </h2>
             <div className="max-w-3xl mx-auto">
               <p className="text-xl text-muted-foreground leading-relaxed mb-6">
-                Schedule your 5-minute audition appointment and take the first step toward joining our celebrated musical family
+                Schedule your 30-minute office hours appointment with Dr. Johnson for academic guidance and support
               </p>
               <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground/80">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  5-minute sessions
+                  30-minute sessions
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
@@ -366,7 +366,7 @@ export default function UnifiedBookingPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground text-sm mb-4">
-                      Already have an audition? Select a new time below to update your appointment.
+                      Already have an appointment? Select a new time below to update your appointment.
                     </p>
                   </CardContent>
                 </Card>
@@ -377,10 +377,10 @@ export default function UnifiedBookingPage() {
                   <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-lg">
                     <CardTitle className="flex items-center text-2xl font-bold">
                       <Calendar className="h-6 w-6 mr-3 text-primary" />
-                      Choose Your Audition Date
+                      Choose Your Appointment Date
                     </CardTitle>
                     <p className="text-muted-foreground">
-                      Select from available audition dates below
+                      Select from available office hours dates below
                     </p>
                   </CardHeader>
                   <CardContent className="p-8">
