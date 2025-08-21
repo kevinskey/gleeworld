@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const publicNavItems = [
   { href: "/", label: "Home", shortLabel: "Home" },
   { href: "/about", label: "About", shortLabel: "About" },
-  { href: "/calendar", label: "Events", shortLabel: "Events" },
+  { href: "/calendar", label: "Calendar", shortLabel: "Calendar" },
   { href: "/booking", label: "Office Hours", shortLabel: "Office Hours" },
   { href: "/booking-request", label: "Book Us", shortLabel: "Book Us" },
   { href: "/shop", label: "Shop", shortLabel: "Shop" },
