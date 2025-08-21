@@ -10,7 +10,6 @@ const publicNavItems = [
   { href: "/booking-request", label: "Book Us", shortLabel: "Book Us" },
   { href: "/shop", label: "Shop", shortLabel: "Shop" },
   { href: "/press-kit", label: "Press Kit", shortLabel: "Press" },
-  { href: "/student-registration", label: "Class Registration", shortLabel: "Register" },
 ];
 
 interface ResponsiveNavigationProps {
