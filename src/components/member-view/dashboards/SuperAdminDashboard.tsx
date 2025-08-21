@@ -33,11 +33,12 @@ import {
   Activity,
   Lock,
   GraduationCap,
-  Grid3X3
+  Grid3X3,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
-
 
 interface SuperAdminDashboardProps {
   user: {
@@ -68,6 +69,8 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
 
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [showAllModules, setShowAllModules] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [overviewCollapsed, setOverviewCollapsed] = useState(false);
   
   // Format events for AnnouncementsEventsSection
   const formattedUpcomingEvents = upcomingEvents
@@ -245,6 +248,14 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
     fetchSuperAdminData();
   }, []);
 
+  // Toggle section collapse
+  const toggleSectionCollapse = (sectionName: string) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [sectionName]: !prev[sectionName]
+    }));
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with Module Toggle */}
@@ -281,16 +292,34 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
               return (
                 <div key={categoryName} className="space-y-4">
                   <div className="border-l-4 border-primary pl-4">
-                    <h2 className="text-xl lg:text-2xl font-semibold mb-3 flex items-center gap-3">
-                      <Grid3X3 className="h-6 w-6 text-primary" />
-                      {categoryName.charAt(0).toUpperCase() + categoryName.slice(1).replace('-', ' ')}
-                    </h2>
-                    <p className="text-sm lg:text-base text-muted-foreground">
-                      Administrative modules for {categoryName}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl lg:text-2xl font-semibold mb-3 flex items-center gap-3">
+                          <Grid3X3 className="h-6 w-6 text-primary" />
+                          {categoryName.charAt(0).toUpperCase() + categoryName.slice(1).replace('-', ' ')}
+                        </h2>
+                        <p className="text-sm lg:text-base text-muted-foreground">
+                          Administrative modules for {categoryName}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleSectionCollapse(categoryName)}
+                        className="flex items-center gap-2"
+                      >
+                        {collapsedSections[categoryName] ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronUp className="h-4 w-4" />
+                        )}
+                        {collapsedSections[categoryName] ? 'Expand' : 'Collapse'}
+                      </Button>
+                    </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {!collapsedSections[categoryName] && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                      {categoryModules.map((module) => (
                         <Button
                           key={module.id}
@@ -305,8 +334,9 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                             </p>
                           </div>
                         </Button>
-                     ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })
@@ -314,273 +344,301 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
         </div>
       ) : (
         /* Dashboard Overview */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* System Overview Card */}
-          <Card className="border-2 border-purple-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-base lg:text-lg font-medium">System Overview</CardTitle>
-              <Crown className="h-5 w-5 lg:h-6 lg:w-6 text-purple-600" />
+        <div className="space-y-6">
+          {/* Overview Cards Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl lg:text-2xl font-semibold">System Overview</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setOverviewCollapsed(!overviewCollapsed)}
+                className="flex items-center gap-2"
+              >
+                {overviewCollapsed ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
+                {overviewCollapsed ? 'Expand' : 'Collapse'}
+              </Button>
+            </div>
+            
+            {!overviewCollapsed && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* System Overview Card */}
+                <Card className="border-2 border-purple-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                    <CardTitle className="text-base lg:text-lg font-medium">System Overview</CardTitle>
+                    <Crown className="h-5 w-5 lg:h-6 lg:w-6 text-purple-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl lg:text-4xl font-bold">{superAdminData.systemOverview.systemUptime}%</div>
+                    <p className="text-sm lg:text-base text-muted-foreground">System uptime</p>
+                    <div className="mt-3 space-y-2">
+                      <div className="flex justify-between text-sm lg:text-base">
+                        <span>Total Users</span>
+                        <span>{superAdminData.systemOverview.totalUsers}</span>
+                      </div>
+                      <div className="flex justify-between text-sm lg:text-base">
+                        <span>Active Now</span>
+                        <span>{superAdminData.systemOverview.activeUsers}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Security Metrics Card */}
+                <Card className="border-2 border-red-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Security Metrics</CardTitle>
+                    <Shield className="h-4 w-4 text-red-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{superAdminData.securityMetrics.suspiciousActivity}</div>
+                    <p className="text-xs text-muted-foreground">Suspicious activities</p>
+                    <div className="mt-2 space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span>Active Logins</span>
+                        <span>{superAdminData.securityMetrics.activeLogins}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span>Failed Attempts</span>
+                        <span>{superAdminData.securityMetrics.failedLoginAttempts}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Administrative Stats Card */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Administrative Stats</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{superAdminData.administrativeStats.totalAdmins}</div>
+                    <p className="text-xs text-muted-foreground">Total administrators</p>
+                    <div className="mt-2 space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span>Super Admins</span>
+                        <span>{superAdminData.administrativeStats.superAdmins}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span>Pending Permissions</span>
+                        <span>{superAdminData.administrativeStats.pendingPermissions}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Storage Usage Card */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Storage Usage</CardTitle>
+                    <Server className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{superAdminData.systemOverview.usedStorage}GB</div>
+                    <p className="text-xs text-muted-foreground">
+                      of {superAdminData.systemOverview.totalStorage}GB used
+                    </p>
+                    <Progress 
+                      value={(superAdminData.systemOverview.usedStorage / superAdminData.systemOverview.totalStorage) * 100} 
+                      className="mt-2" 
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Global Metrics Card */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Global Metrics</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{superAdminData.globalMetrics.membershipGrowth}%</div>
+                    <p className="text-xs text-muted-foreground">Membership growth</p>
+                    <div className="mt-2 space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span>Total Events</span>
+                        <span>{superAdminData.globalMetrics.totalEvents}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span>Total Revenue</span>
+                        <span>${superAdminData.globalMetrics.totalRevenue.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Critical Tasks Card */}
+                <Card className="border-2 border-yellow-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Critical Tasks</CardTitle>
+                    <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{superAdminData.criticalTasks.length}</div>
+                    <p className="text-xs text-muted-foreground">Requires immediate attention</p>
+                    <div className="mt-2 space-y-2">
+                      {superAdminData.criticalTasks.map((task) => (
+                        <div key={task.id} className="flex items-center justify-between text-xs">
+                          <span className="font-medium truncate">{task.title}</span>
+                          <Badge variant={task.priority === 'critical' ? 'destructive' : 'secondary'}>
+                            {task.priority}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Super Admin Actions Card */}
+                <Card className="md:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Recent Super Admin Actions</CardTitle>
+                    <CardDescription>Latest system-level administrative actions</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {superAdminData.recentActions.map((action) => (
+                        <div key={action.id} className="flex items-center gap-3">
+                          <Crown className="h-5 w-5 text-purple-500" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{action.action}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {action.target} • {action.timestamp}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {action.type}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* System Administration Tools Card */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">System Admin Tools</CardTitle>
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full justify-start" 
+                        onClick={() => navigate('/admin/alumnae')}
+                      >
+                        <GraduationCap className="mr-2 h-4 w-4" />
+                        Alumnae Portal Admin
+                      </Button>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span>User Role Management</span>
+                          <Badge variant="outline">Full Control</Badge>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span>System Configuration</span>
+                          <Badge variant="outline">Admin</Badge>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span>Database Access</span>
+                          <Badge variant="outline">Super Admin</Badge>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span>Security Settings</span>
+                          <Badge variant="outline">Full Access</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Community Hub & Announcements Section */}
+                <div className="md:col-span-2 lg:col-span-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <CommunityHubWidget />
+                    <AnnouncementsEventsSection upcomingEvents={formattedUpcomingEvents} />
+                  </div>
+                  {/* Unified Calendar for Super Admins (collapsed by default) */}
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <CardTitle className="text-base">Glee Calendar</CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-controls="superadmin-glee-calendar"
+                        aria-expanded={!calendarCollapsed}
+                        onClick={() => setCalendarCollapsed((v) => !v)}
+                      >
+                        {calendarCollapsed ? 'Expand' : 'Collapse'}
+                      </Button>
+                    </div>
+                    {!calendarCollapsed && (
+                      <Suspense fallback={
+                        <Card className="glass-dashboard-card">
+                          <CardHeader>
+                            <CardTitle>Glee Calendar</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="py-6">Loading calendar…</div>
+                          </CardContent>
+                        </Card>
+                      }>
+                        <div id="superadmin-glee-calendar">
+                          <CalendarViewsLazy />
+                        </div>
+                      </Suspense>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Access Modules Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Grid3X3 className="h-5 w-5" />
+                    Quick Access Modules
+                  </CardTitle>
+                  <CardDescription>
+                    Most frequently used administrative modules
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl lg:text-4xl font-bold">{superAdminData.systemOverview.systemUptime}%</div>
-              <p className="text-sm lg:text-base text-muted-foreground">System uptime</p>
-              <div className="mt-3 space-y-2">
-                <div className="flex justify-between text-sm lg:text-base">
-                  <span>Total Users</span>
-                  <span>{superAdminData.systemOverview.totalUsers}</span>
-                </div>
-                <div className="flex justify-between text-sm lg:text-base">
-                  <span>Active Now</span>
-                  <span>{superAdminData.systemOverview.activeUsers}</span>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {allModules
+                  .filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id))
+                  .slice(0, 6)
+                  .map((module) => (
+                     <Button
+                       key={module.id}
+                       variant="outline"
+                       className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent"
+                       onClick={() => setSelectedModule(module.id)}
+                     >
+                       <div className="w-full">
+                         <h3 className="font-semibold text-base lg:text-lg">{module.title}</h3>
+                         <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
+                           {module.description}
+                         </p>
+                       </div>
+                     </Button>
+                  ))}
               </div>
             </CardContent>
           </Card>
-
-      {/* Security Metrics Card */}
-      <Card className="border-2 border-red-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Security Metrics</CardTitle>
-          <Shield className="h-4 w-4 text-red-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{superAdminData.securityMetrics.suspiciousActivity}</div>
-          <p className="text-xs text-muted-foreground">Suspicious activities</p>
-          <div className="mt-2 space-y-1">
-            <div className="flex justify-between text-xs">
-              <span>Active Logins</span>
-              <span>{superAdminData.securityMetrics.activeLogins}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span>Failed Attempts</span>
-              <span>{superAdminData.securityMetrics.failedLoginAttempts}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Administrative Stats Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Administrative Stats</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{superAdminData.administrativeStats.totalAdmins}</div>
-          <p className="text-xs text-muted-foreground">Total administrators</p>
-          <div className="mt-2 space-y-1">
-            <div className="flex justify-between text-xs">
-              <span>Super Admins</span>
-              <span>{superAdminData.administrativeStats.superAdmins}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span>Pending Permissions</span>
-              <span>{superAdminData.administrativeStats.pendingPermissions}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Storage Usage Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Storage Usage</CardTitle>
-          <Server className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{superAdminData.systemOverview.usedStorage}GB</div>
-          <p className="text-xs text-muted-foreground">
-            of {superAdminData.systemOverview.totalStorage}GB used
-          </p>
-          <Progress 
-            value={(superAdminData.systemOverview.usedStorage / superAdminData.systemOverview.totalStorage) * 100} 
-            className="mt-2" 
-          />
-        </CardContent>
-      </Card>
-
-      {/* Global Metrics Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Global Metrics</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{superAdminData.globalMetrics.membershipGrowth}%</div>
-          <p className="text-xs text-muted-foreground">Membership growth</p>
-          <div className="mt-2 space-y-1">
-            <div className="flex justify-between text-xs">
-              <span>Total Events</span>
-              <span>{superAdminData.globalMetrics.totalEvents}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span>Total Revenue</span>
-              <span>${superAdminData.globalMetrics.totalRevenue.toLocaleString()}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Critical Tasks Card */}
-      <Card className="border-2 border-yellow-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Critical Tasks</CardTitle>
-          <AlertCircle className="h-4 w-4 text-yellow-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{superAdminData.criticalTasks.length}</div>
-          <p className="text-xs text-muted-foreground">Requires immediate attention</p>
-          <div className="mt-2 space-y-2">
-            {superAdminData.criticalTasks.map((task) => (
-              <div key={task.id} className="flex items-center justify-between text-xs">
-                <span className="font-medium truncate">{task.title}</span>
-                <Badge variant={task.priority === 'critical' ? 'destructive' : 'secondary'}>
-                  {task.priority}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Super Admin Actions Card */}
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle>Recent Super Admin Actions</CardTitle>
-          <CardDescription>Latest system-level administrative actions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {superAdminData.recentActions.map((action) => (
-              <div key={action.id} className="flex items-center gap-3">
-                <Crown className="h-5 w-5 text-purple-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{action.action}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {action.target} • {action.timestamp}
-                  </p>
-                </div>
-                <Badge variant="outline" className="text-xs">
-                  {action.type}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* System Administration Tools Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">System Admin Tools</CardTitle>
-          <Lock className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full justify-start" 
-              onClick={() => navigate('/admin/alumnae')}
-            >
-              <GraduationCap className="mr-2 h-4 w-4" />
-              Alumnae Portal Admin
-            </Button>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span>User Role Management</span>
-                <Badge variant="outline">Full Control</Badge>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span>System Configuration</span>
-                <Badge variant="outline">Admin</Badge>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span>Database Access</span>
-                <Badge variant="outline">Super Admin</Badge>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span>Security Settings</span>
-                <Badge variant="outline">Full Access</Badge>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Community Hub & Announcements Section */}
-      <div className="md:col-span-2 lg:col-span-3">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <CommunityHubWidget />
-          <AnnouncementsEventsSection upcomingEvents={formattedUpcomingEvents} />
-        </div>
-        {/* Unified Calendar for Super Admins (collapsed by default) */}
-        <div className="mt-6">
-          <div className="flex items-center justify-between mb-2">
-            <CardTitle className="text-base">Glee Calendar</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-controls="superadmin-glee-calendar"
-              aria-expanded={!calendarCollapsed}
-              onClick={() => setCalendarCollapsed((v) => !v)}
-            >
-              {calendarCollapsed ? 'Expand' : 'Collapse'}
-            </Button>
-          </div>
-          {!calendarCollapsed && (
-            <Suspense fallback={
-              <Card className="glass-dashboard-card">
-                <CardHeader>
-                  <CardTitle>Glee Calendar</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="py-6">Loading calendar…</div>
-                </CardContent>
-              </Card>
-            }>
-              <div id="superadmin-glee-calendar">
-                <CalendarViewsLazy />
-              </div>
-            </Suspense>
-          )}
-        </div>
-      </div>
-
-      {/* Quick Access Modules - Show 6 most important ones in overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Grid3X3 className="h-5 w-5" />
-            Quick Access Modules
-          </CardTitle>
-          <CardDescription>
-            Most frequently used administrative modules
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {allModules
-              .filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id))
-              .slice(0, 6)
-              .map((module) => (
-                 <Button
-                   key={module.id}
-                   variant="outline"
-                   className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent"
-                   onClick={() => setSelectedModule(module.id)}
-                 >
-                   <div className="w-full">
-                     <h3 className="font-semibold text-base lg:text-lg">{module.title}</h3>
-                     <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
-                       {module.description}
-                     </p>
-                   </div>
-                 </Button>
-              ))}
-          </div>
-        </CardContent>
-      </Card>
         </div>
       )}
     </div>
