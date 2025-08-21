@@ -76,26 +76,9 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
   }
 
   return (
-    <nav className="hidden lg:flex items-center">
-      {/* Large screens - Full labels with generous spacing */}
-      <div className="hidden xl:flex items-center gap-12 2xl:gap-16">
-        {publicNavItems.map((item) => (
-          <Link
-            key={item.href}
-            to={item.href}
-            className={cn(
-              "px-4 py-2 rounded-lg text-base font-medium transition-all duration-200",
-              "text-foreground hover:text-primary hover:bg-accent/10",
-              isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
-            )}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </div>
-
-      {/* Medium-Large screens - Short labels with normal size */}
-      <div className="hidden lg:flex xl:hidden items-center gap-5">
+    <nav className="hidden md:flex items-center">
+      {/* Extra Large screens - Full labels with generous spacing */}
+      <div className="hidden 2xl:flex items-center gap-8">
         {publicNavItems.map((item) => (
           <Link
             key={item.href}
@@ -106,19 +89,36 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
               isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
             )}
           >
-            {item.shortLabel}
+            {item.label}
           </Link>
         ))}
       </div>
 
-      {/* Small-Medium screens - Compact labels with readable size */}
-      <div className="flex md:flex lg:hidden items-center gap-2">
+      {/* Large screens - Short labels with compact spacing */}
+      <div className="hidden xl:flex 2xl:hidden items-center gap-4">
         {publicNavItems.map((item) => (
           <Link
             key={item.href}
             to={item.href}
             className={cn(
-              "px-3 py-2 rounded text-base font-medium transition-all duration-200",
+              "px-2 py-1.5 rounded text-sm font-medium transition-all duration-200",
+              "text-foreground hover:text-primary hover:bg-accent/10",
+              isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
+            )}
+          >
+            {item.shortLabel}
+          </Link>
+        ))}
+      </div>
+
+      {/* Medium-Large screens - Very compact short labels */}
+      <div className="hidden lg:flex xl:hidden items-center gap-2">
+        {publicNavItems.map((item) => (
+          <Link
+            key={item.href}
+            to={item.href}
+            className={cn(
+              "px-2 py-1 rounded text-xs font-medium transition-all duration-200",
               "text-foreground hover:text-primary hover:bg-accent/10",
               isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
             )}
@@ -128,6 +128,8 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
           </Link>
         ))}
       </div>
+
+      {/* Medium screens - Hide navigation, show in mobile menu only */}
     </nav>
   );
 };
