@@ -176,11 +176,23 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
 
   const { saveCategoryOrder } = useModuleOrdering(user.id);
 
-  // Create modulesByCategory object from the function
+  // Create modulesByCategory object from the function, enhanced with component data
   const modulesByCategory = useMemo(() => {
+    const { ModuleRegistry } = require('@/utils/moduleRegistry');
     const result: Record<string, any[]> = {};
     categories.forEach(category => {
-      result[category] = getModulesByCategory(category);
+      const modules = getModulesByCategory(category).map(module => {
+        // Get the full module config from registry
+        const moduleConfig = ModuleRegistry.getModule(module.id);
+        return {
+          ...module,
+          icon: moduleConfig?.icon,
+          iconColor: moduleConfig?.iconColor,
+          component: moduleConfig?.component,
+          isNew: moduleConfig?.isNew
+        };
+      });
+      result[category] = modules;
     });
     return result;
   }, [categories, getModulesByCategory]);
@@ -390,9 +402,12 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
 
   // If a specific module is selected, show it full page
   if (selectedModule) {
-    const module = allModules.find(m => m.id === selectedModule);
-    if (module) {
-      const ModuleComponent = module.component;
+    // Import the ModuleRegistry to get the actual component
+    const { ModuleRegistry } = require('@/utils/moduleRegistry');
+    const moduleConfig = ModuleRegistry.getModule(selectedModule);
+    
+    if (moduleConfig && moduleConfig.component) {
+      const ModuleComponent = moduleConfig.component;
       return (
         <div className="min-h-screen p-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
@@ -405,7 +420,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
               Super Admin Dashboard
             </Button>
             <span>/</span>
-            <span className="text-foreground font-medium">{module.title}</span>
+            <span className="text-foreground font-medium">{moduleConfig.title}</span>
           </div>
           
           <ModuleComponent 
