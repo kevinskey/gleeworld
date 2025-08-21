@@ -1,228 +1,117 @@
+
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { 
-  standardizeModuleName, 
-  getModuleDisplayName,
-  type StandardModuleName 
-} from '@/utils/moduleHelpers';
-import { useUserModuleGrants } from './useUserModuleGrants';
-import { ModuleGrant } from '@/lib/authz';
+import { UNIFIED_MODULES } from '@/config/unified-modules';
+import { useUserModuleGrants } from '@/hooks/useUserModuleGrants';
+import { ModuleWithPermissions, ModuleFilterOptions } from '@/types/unified-modules';
 
-export interface UnifiedModule {
-  id: string;
-  name: StandardModuleName | string;
-  title: string;
-  description: string;
-  category: string;
-  permissions: {
-    canAccess: boolean;
-    canManage: boolean;
-    source: 'role' | 'individual' | 'executive' | 'admin' | 'none';
-  };
-  // Legacy properties for compatibility
-  hasPermission?: (type: string) => boolean;
-  canAccess?: boolean;
-  canManage?: boolean;
-  component?: any;
-  icon?: any;
-}
-
-export interface ModuleFilterOptions {
-  userRole?: string;
+interface UseUnifiedModulesOptions extends ModuleFilterOptions {
   userId?: string;
-  execPosition?: string;
-  isAdmin?: boolean;
-  category?: string;
-  showInactive?: boolean;
 }
 
-interface UseUnifiedModulesReturn {
-  modules: UnifiedModule[];
-  categories: string[];
-  loading: boolean;
-  error: string | null;
-  getModuleById: (id: string) => UnifiedModule | undefined;
-  getModulesByCategory: (category: string) => UnifiedModule[];
-  getAccessibleModules: () => UnifiedModule[];
-  getManageableModules: () => UnifiedModule[];
-  refetch: () => Promise<void>;
-}
-
-export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifiedModulesReturn => {
-  const [allModules, setAllModules] = useState<UnifiedModule[]>([]);
+export const useUnifiedModules = (options: UseUnifiedModulesOptions = {}) => {
+  const [modules, setModules] = useState<ModuleWithPermissions[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  console.log('🔍 useUnifiedModules: filterOptions =', filterOptions);
-  
-  // Use the new module grants system
-  const { grants: moduleGrants, loading: grantsLoading } = useUserModuleGrants(filterOptions?.userId);
-  
-  console.log('🔍 useUnifiedModules: moduleGrants =', { moduleGrants, grantsLoading });
 
-  const fetchBaseModules = async () => {
+  const { grants, loading: grantsLoading, error: grantsError, refetch } = useUserModuleGrants(options.userId);
+
+  useEffect(() => {
     try {
-      setLoading(true);
-      setError(null);
+      setLoading(grantsLoading);
+      setError(grantsError);
 
-      // Fetch base modules from database
-      const { data: moduleData, error: moduleError } = await supabase
-        .from('gw_modules')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
+      if (grantsLoading) return;
 
-      if (moduleError) throw moduleError;
+      console.log('useUnifiedModules - Processing modules with grants:', grants.length);
 
-      // Convert to UnifiedModule format with standardized names and legacy compatibility
-      const baseModules: UnifiedModule[] = (moduleData || []).map(module => {
-        const baseModule: UnifiedModule = {
-          id: module.key || module.name, // Use key if available
-          name: standardizeModuleName(module.name),
-          title: getModuleDisplayName(module.name),
-          description: module.description || '',
-          category: module.category || 'general',
-          permissions: {
-            canAccess: false,
-            canManage: false,
-            source: 'none'
-          },
-          // Legacy compatibility properties - will be updated with grants
-          canAccess: false,
-          canManage: false,
-          hasPermission: () => false
-        };
-        return baseModule;
+      // Get all unified modules and enhance with permission information
+      const enhancedModules = UNIFIED_MODULES.map(module => {
+        // Find matching grant for this module
+        const grant = grants.find(g => 
+          g.module_key === module.id || 
+          g.module_name === module.title ||
+          g.module_name === module.name
+        );
+
+        // Check role-based access
+        const hasRoleAccess = !module.requiredRoles || 
+          module.requiredRoles.length === 0 || 
+          (options.userRole && module.requiredRoles.includes(options.userRole));
+
+        // Check executive position access
+        const hasExecAccess = !module.requiredExecPositions || 
+          module.requiredExecPositions.length === 0 || 
+          (options.execPosition && module.requiredExecPositions.includes(options.execPosition));
+
+        // Admin override
+        const isAdminOverride = options.isAdmin === true;
+
+        // Determine final permissions
+        const canAccess = grant?.can_view || hasRoleAccess || hasExecAccess || isAdminOverride;
+        const canManage = grant?.can_manage || isAdminOverride;
+        const hasPermission = canAccess;
+
+        return {
+          ...module,
+          canAccess,
+          canManage,
+          hasPermission
+        } as ModuleWithPermissions;
       });
 
-      setAllModules(baseModules);
+      // Apply filters
+      let filteredModules = enhancedModules;
+
+      if (options.category) {
+        filteredModules = filteredModules.filter(m => m.category === options.category);
+      }
+
+      if (options.showInactive !== true) {
+        filteredModules = filteredModules.filter(m => m.isActive);
+      }
+
+      console.log('useUnifiedModules - Final filtered modules:', filteredModules.length);
+      setModules(filteredModules);
     } catch (err) {
-      console.error('Error fetching base modules:', err);
+      console.error('Error processing unified modules:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
+      setModules([]);
     } finally {
       setLoading(false);
     }
+  }, [grants, grantsLoading, grantsError, options]);
+
+  const getAccessibleModules = () => {
+    return modules.filter(m => m.hasPermission);
   };
 
-  useEffect(() => {
-    fetchBaseModules();
-  }, []);
-
-  // Merge module data with user grants
-  const modules = allModules.map(module => {
-    const grant = moduleGrants.find(g => g.module_key === module.id || g.module_key === module.name);
-    
-    console.log(`🔍 Processing module ${module.name}:`, {
-      module: module.name,
-      moduleId: module.id,
-      grant,
-      isAdmin: filterOptions?.isAdmin
-    });
-    
-    // Admin override
-    const isAdminOverride = filterOptions?.isAdmin;
-    
-    const canAccess = isAdminOverride || grant?.can_view || false;
-    const canManage = isAdminOverride || grant?.can_manage || false;
-    
-    return {
-      ...module,
-      permissions: {
-        canAccess,
-        canManage,
-        source: isAdminOverride ? 'admin' as const : grant ? 'role' as const : 'none' as const
-      },
-      // Update legacy properties for compatibility
-      canAccess,
-      canManage,
-      hasPermission: (type: string) => {
-        if (type === 'view' || type === 'access') return canAccess;
-        if (type === 'manage') return canManage;
-        return false;
-      }
-    };
-  });
-
-  // Apply filters
-  const filteredModules = modules.filter(module => {
-    if (filterOptions?.category && module.category !== filterOptions.category) {
-      return false;
-    }
-    if (filterOptions?.showInactive === false && !module.permissions.canAccess) {
-      return false;
-    }
-    return true;
-  });
-
-  const getModuleById = (id: string) => {
-    return modules.find(m => m.id === id || m.name === id);
+  const getManageableModules = () => {
+    return modules.filter(m => m.canManage);
   };
 
   const getModulesByCategory = (category: string) => {
     return modules.filter(m => m.category === category);
   };
 
-  const getAccessibleModules = () => {
-    return modules.filter(m => m.permissions.canAccess);
+  const hasModuleAccess = (moduleId: string) => {
+    const module = modules.find(m => m.id === moduleId);
+    return module?.hasPermission || false;
   };
 
-  const getManageableModules = () => {
-    return modules.filter(m => m.permissions.canManage);
+  const hasModuleManage = (moduleId: string) => {
+    const module = modules.find(m => m.id === moduleId);
+    return module?.canManage || false;
   };
-
-  const categories = [...new Set(modules.map(m => m.category))];
 
   return {
-    modules: filteredModules,
-    categories,
-    loading: loading || grantsLoading,
+    modules,
+    loading,
     error,
-    getModuleById,
-    getModulesByCategory,
     getAccessibleModules,
     getManageableModules,
-    refetch: fetchBaseModules
+    getModulesByCategory,
+    hasModuleAccess,
+    hasModuleManage,
+    refetch
   };
-};
-
-export const useUnifiedModulesSimple = () => {
-  const [modules, setModules] = useState<UnifiedModule[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchModules = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('gw_modules')
-          .select('*')
-          .eq('is_active', true)
-          .order('name');
-
-        if (error) throw error;
-
-        const moduleList: UnifiedModule[] = (data || []).map(module => ({
-          id: module.name,
-          name: standardizeModuleName(module.name),
-          title: getModuleDisplayName(module.name),
-          description: module.description || '',
-          category: module.category || 'general',
-          permissions: {
-            canAccess: false,
-            canManage: false,
-            source: 'none'
-          }
-        }));
-
-        setModules(moduleList);
-      } catch (err) {
-        console.error('Error fetching modules:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchModules();
-  }, []);
-
-  return { modules, loading };
 };

@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Crown, Settings } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Crown, Settings, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { UNIFIED_MODULE_CATEGORIES } from "@/config/unified-modules";
 
@@ -23,17 +25,16 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
   console.log('ExecBoardMemberModules - User:', user);
-  console.log('ExecBoardMemberModules - user.exec_board_role:', user.exec_board_role);
-  console.log('ExecBoardMemberModules - user.is_exec_board:', user.is_exec_board);
 
   // Use unified modules with executive position filtering
   const { 
     modules: availableModules, 
     loading, 
     error,
-    getAccessibleModules 
+    getAccessibleModules,
+    refetch
   } = useUnifiedModules({
-    userId: user.id, // Pass the user ID so permissions can be fetched
+    userId: user.id,
     execPosition: user.exec_board_role,
     userRole: user.role,
     isAdmin: user.is_admin || user.is_super_admin
@@ -55,16 +56,18 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     }
   };
 
+  const handleRefresh = () => {
+    console.log('Refreshing module permissions...');
+    refetch();
+  };
+
   const renderModuleComponent = () => {
-    console.log('ExecBoardMemberModules - renderModuleComponent called, selectedModule:', selectedModule);
     if (!selectedModule) return null;
     
     const module = availableModules.find(m => m.id === selectedModule);
-    console.log('ExecBoardMemberModules - Module config for selectedModule:', module?.title);
     if (!module) return null;
 
     const Component = module.component;
-    console.log('ExecBoardMemberModules - About to render component:', Component?.name);
     return (
       <div className="mt-4">
         <div className="flex items-center justify-between mb-4">
@@ -72,10 +75,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => {
-              console.log('ExecBoardMemberModules - Close button clicked');
-              setSelectedModule(null);
-            }}
+            onClick={() => setSelectedModule(null)}
           >
             Close
           </Button>
@@ -127,6 +127,32 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     );
   }
 
+  // Show error state with recovery options
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Crown className="h-5 w-5 text-brand-600" />
+            <CardTitle>Executive Board Modules</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>Unable to load your modules. This may be a temporary system issue.</span>
+              <Button variant="outline" size="sm" onClick={handleRefresh}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
   console.log('ExecBoardMemberModules - Rendering with modules:', accessibleModules.length);
 
   if (accessibleModules.length === 0) {
@@ -139,9 +165,26 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
             <CardTitle>Executive Board Modules</CardTitle>
           </div>
           <CardDescription>
-            No modules have been assigned to your executive position yet.
+            Your executive board modules are being configured.
           </CardDescription>
         </CardHeader>
+        <CardContent>
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">No modules available</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Your module permissions may still be setting up. Try refreshing in a moment.
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleRefresh}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </CardContent>
       </Card>
     );
   }
@@ -159,9 +202,14 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
               </CardDescription>
             </div>
           </div>
-          <Badge variant="secondary" className="bg-brand-50 text-brand-700 border-brand-200">
-            Executive Access
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="bg-brand-50 text-brand-700 border-brand-200">
+              Executive Access
+            </Badge>
+            <Button variant="ghost" size="sm" onClick={handleRefresh}>
+              <RefreshCw className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -184,10 +232,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
                     <Card 
                       key={module.id} 
                       className="cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => {
-                        console.log('Card clicked for module:', module.id);
-                        handleModuleClick(module.id);
-                      }}
+                      onClick={() => handleModuleClick(module.id)}
                     >
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between">

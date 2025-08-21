@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -5,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Settings, Crown } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Settings, Crown, AlertTriangle, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,9 +36,11 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
   const { 
     modules: availableModules, 
     loading,
-    getAccessibleModules 
+    error,
+    getAccessibleModules,
+    refetch
   } = useUnifiedModules({
-    userId: profile?.user_id, // Pass the user ID so permissions can be fetched
+    userId: profile?.user_id,
     execPosition: execRole,
     userRole: profile?.role,
     isAdmin: profile?.is_admin || profile?.is_super_admin
@@ -102,6 +106,11 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
     }
   };
 
+  const handleRefresh = () => {
+    console.log('Refreshing executive hub modules...');
+    refetch();
+  };
+
   // Get enabled modules based on both accessibility and user preferences
   const enabledModules = accessibleModules.filter(module => 
     modulePreferences[module.id] !== false // Default to true if no preference set
@@ -127,6 +136,32 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
     );
   }
 
+  // Show error state
+  if (error) {
+    return (
+      <Card className={`bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 border-purple-200 ${className}`}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Crown className="h-6 w-6 text-purple-600" />
+            Executive Board Hub
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>Unable to load executive modules. Please try refreshing.</span>
+              <Button variant="outline" size="sm" onClick={handleRefresh}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={`bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 border-purple-200 ${className}`}>
       <CardHeader className="pb-3">
@@ -145,19 +180,42 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
               </div>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsConfigMode(!isConfigMode)}
-            className="text-purple-600 hover:text-purple-700"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsConfigMode(!isConfigMode)}
+              className="text-purple-600 hover:text-purple-700"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleRefresh}>
+              <RefreshCw className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
       <CardContent>
-        {isConfigMode ? (
+        {accessibleModules.length === 0 ? (
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">No executive modules available</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Your module permissions may still be configuring. Please try refreshing.
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleRefresh}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        ) : isConfigMode ? (
           <div className="space-y-4">
             <h3 className="font-medium text-sm text-muted-foreground mb-3">Module Configuration</h3>
             <div className="grid gap-3">
