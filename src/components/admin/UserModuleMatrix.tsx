@@ -35,12 +35,22 @@ export const UserModuleMatrix: React.FC<UserModuleMatrixProps> = ({ userId }) =>
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('gw_module_grants')
+        .from('username_module_permissions')
         .select('*')
         .eq('user_id', userId);
 
       if (error) throw error;
-      setGrants(data || []);
+      
+      // Transform the data to match our interface
+      const transformedData = (data || []).map(item => ({
+        id: item.id,
+        module_key: item.module_name, // Using module_name as key
+        module_name: item.module_name,
+        can_view: item.can_view || false,
+        can_manage: item.can_manage || false
+      }));
+      
+      setGrants(transformedData);
     } catch (error: any) {
       console.error('Error fetching user grants:', error);
       toast.error('Failed to fetch user permissions');
@@ -74,7 +84,7 @@ export const UserModuleMatrix: React.FC<UserModuleMatrixProps> = ({ userId }) =>
         if (existingGrant) {
           // Update existing grant
           const { error } = await supabase
-            .from('gw_module_grants')
+            .from('username_module_permissions')
             .update({
               can_view: changes.can_view ?? existingGrant.can_view,
               can_manage: changes.can_manage ?? existingGrant.can_manage
@@ -86,11 +96,10 @@ export const UserModuleMatrix: React.FC<UserModuleMatrixProps> = ({ userId }) =>
           // Create new grant
           const module = UNIFIED_MODULES.find(m => m.id === moduleKey);
           const { error } = await supabase
-            .from('gw_module_grants')
+            .from('username_module_permissions')
             .insert({
               user_id: userId,
-              module_key: moduleKey,
-              module_name: module?.title || moduleKey,
+              module_name: moduleKey,
               can_view: changes.can_view ?? false,
               can_manage: changes.can_manage ?? false
             });

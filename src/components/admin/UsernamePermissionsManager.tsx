@@ -26,7 +26,7 @@ export const UsernamePermissionsManager = () => {
     setProfile(null);
 
     try {
-      // Fetch user profile by username - removed is_active since it doesn't exist
+      // Fetch user profile by username
       const { data: profileData, error: profileError } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email, role, is_admin, is_super_admin, is_exec_board, exec_board_role')

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,7 +45,18 @@ export const RoleModuleMatrix: React.FC = () => {
         .select('*');
 
       if (error) throw error;
-      setPermissions(data || []);
+      
+      // Transform the data to match our interface
+      const transformedData = (data || []).map(item => ({
+        id: item.id,
+        role: item.role,
+        module_key: item.module_key || item.module_name,
+        module_name: item.module_name,
+        can_view: item.can_view || false,
+        can_manage: item.can_manage || false
+      }));
+      
+      setPermissions(transformedData);
     } catch (error: any) {
       console.error('Error fetching role permissions:', error);
       toast.error('Failed to fetch role permissions');
