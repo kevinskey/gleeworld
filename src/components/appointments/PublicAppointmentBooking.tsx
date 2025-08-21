@@ -1,8 +1,6 @@
 
 import React, { useState } from 'react';
-import { Calendar } from 'react-date-range';
-import 'react-date-range/dist/styles.css'; // main style file
-import 'react-date-range/dist/theme/default.css'; // theme css file
+import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { addDays, setHours, setMinutes, isPast } from 'date-fns';
 import { Button } from "@/components/ui/button"
@@ -80,9 +78,13 @@ const PublicAppointmentBooking = ({
     return slots;
   }
 
-  const handleDateChange = (newDate: Date) => {
-    setDate(newDate);
-    setSelectedSlot(null); // Clear selected slot when date changes
+  const handleDateChange = (newDate: Date | undefined) => {
+    if (newDate) {
+      console.log('Date selected:', newDate);
+      setDate(newDate);
+      setSelectedSlot(null); // Clear selected slot when date changes
+      setIsCalendarOpen(false); // Close calendar after selection
+    }
   };
 
   const handleSlotSelect = (slot: Date) => {
@@ -165,12 +167,11 @@ const PublicAppointmentBooking = ({
                   <Calendar
                     mode="single"
                     selected={date}
-                    onDateChange={handleDateChange}
-                    disabledDates={[
-                      addDays(new Date(), 7),
-                      addDays(new Date(), 8),
-                      addDays(new Date(), 9),
-                    ]}
+                    onSelect={handleDateChange}
+                    disabled={(date) => {
+                      const dayOfWeek = date.getDay();
+                      return isPast(date) || !allowedDays.includes(dayOfWeek);
+                    }}
                     className="rounded-md border"
                   />
                   <Button onClick={() => setIsCalendarOpen(false)}>
