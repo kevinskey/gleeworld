@@ -170,14 +170,26 @@ export const PublicAppointmentBooking = () => {
 
       setAppointmentId(appointment.id);
 
-      // Send SMS to the specified approval number
+      // Send SMS notifications
       try {
-        await supabase.functions.invoke('gw-send-sms', {
-          body: {
-            to: '470-622-4845',
-            message: `New appointment request from ${data.name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Purpose: ${data.purpose}. Reply APPROVE ${appointment.id} or DENY ${appointment.id}`
-          }
-        });
+        // Get admin phone number for notifications
+        const { data: adminUsers } = await supabase
+          .from('gw_profiles')
+          .select('phone_number')
+          .or('is_admin.eq.true,is_super_admin.eq.true')
+          .not('phone_number', 'is', null)
+          .limit(1);
+
+        const adminPhone = adminUsers?.[0]?.phone_number;
+
+        if (adminPhone) {
+          await supabase.functions.invoke('gw-send-sms', {
+            body: {
+              to: adminPhone,
+              message: `New appointment request from ${data.name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Purpose: ${data.purpose}. Reply APPROVE ${appointment.id} or DENY ${appointment.id}`
+            }
+          });
+        }
 
         // Send confirmation SMS to client
         await supabase.functions.invoke('gw-send-sms', {

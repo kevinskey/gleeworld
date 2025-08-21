@@ -212,7 +212,7 @@ export const AppointmentScheduler = () => {
           .not('phone_number', 'is', null)
           .limit(1);
 
-        const adminPhone = adminUsers?.[0]?.phone_number || '(470) 622-1392'; // Fallback number
+        const adminPhone = adminUsers?.[0]?.phone_number;
 
         // Send approval SMS to admin/receiver
         await supabase.functions.invoke('gw-send-sms', {

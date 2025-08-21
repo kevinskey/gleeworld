@@ -119,17 +119,7 @@ export const DayScheduleView = () => {
         endDate.setHours(23, 59, 59, 999);
       }
 
-      console.log('Fetching for view mode:', viewMode);
-      console.log('Date range:', format(startDate, 'yyyy-MM-dd'), 'to', format(endDate, 'yyyy-MM-dd'));
 
-      // First check if there are any auditions at all to help with debugging
-      const { data: allAuditions } = await supabase
-        .from('gw_auditions')
-        .select('audition_date, first_name, last_name')
-        .order('audition_date', { ascending: true })
-        .limit(5);
-      
-      console.log('Sample auditions in database:', allAuditions);
 
       // Fetch auditions for the date range
       const { data: auditions, error: auditionsError } = await supabase
@@ -138,7 +128,7 @@ export const DayScheduleView = () => {
         .gte('audition_date', `${format(startDate, 'yyyy-MM-dd')}T00:00:00.000Z`)
         .lt('audition_date', `${format(addDays(endDate, 1), 'yyyy-MM-dd')}T00:00:00.000Z`);
 
-      console.log('Auditions found for range:', auditions);
+      
 
       if (auditionsError) throw auditionsError;
 
@@ -149,7 +139,7 @@ export const DayScheduleView = () => {
         .gte('appointment_date', `${format(startDate, 'yyyy-MM-dd')}T00:00:00.000Z`)
         .lt('appointment_date', `${format(addDays(endDate, 1), 'yyyy-MM-dd')}T00:00:00.000Z`);
 
-      console.log('Appointments found for range:', appointments);
+      
 
       if (appointmentsError) throw appointmentsError;
 
@@ -163,7 +153,7 @@ export const DayScheduleView = () => {
         const end = new Date(start.getTime() + duration * 60000);
         const endTime = format(end, 'h:mm a');
 
-        console.log('Processing audition:', audition.first_name, audition.last_name, 'at', startTime, 'on', audition.audition_date);
+        
 
         return {
           id: audition.id,
@@ -189,7 +179,7 @@ export const DayScheduleView = () => {
         const end = new Date(aptDate.getTime() + duration * 60000);
         const endTime = format(end, 'h:mm a');
 
-        console.log('Processing appointment:', apt.client_name, 'at', startTime, 'on', apt.appointment_date);
+        
 
         return {
           id: apt.id,
@@ -207,7 +197,6 @@ export const DayScheduleView = () => {
       });
 
       const allEvents = [...auditionEvents, ...appointmentEvents];
-      console.log('Total events found:', allEvents.length, allEvents);
       setDayEvents(allEvents);
 
     } catch (error) {
