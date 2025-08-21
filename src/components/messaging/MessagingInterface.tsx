@@ -9,12 +9,17 @@ import { MessageSquare, Users } from 'lucide-react';
 export const MessagingInterface: React.FC = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showMembers, setShowMembers] = useState(false);
+  
+  console.log('MessagingInterface: Component MOUNTED and RENDERING');
+  
   const { data: groups, isLoading, error } = useMessageGroups();
 
-  console.log('MessagingInterface: Component loaded');
-  console.log('MessagingInterface: Groups data:', groups);
-  console.log('MessagingInterface: Loading state:', isLoading);
-  console.log('MessagingInterface: Error state:', error);
+  console.log('MessagingInterface: Hook returned:', { 
+    groups: groups?.length || 0, 
+    isLoading, 
+    error: error?.message || 'none',
+    groupsData: groups 
+  });
 
   const selectedGroup = groups?.find(g => g.id === selectedGroupId);
 
