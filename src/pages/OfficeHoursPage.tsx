@@ -80,7 +80,7 @@ const OfficeHoursPage: React.FC = () => {
                 <PublicAppointmentBooking
                   title="Schedule Your Office Hours"
                   subtitle="Select your preferred date and time below"
-                  appointmentType="office-hours"
+                  appointmentType="consultation"
                   defaultDuration={30}
                   maxDuration={60}
                   allowedDays={[1, 2, 3, 4]} // Mon, Tue, Wed, Thu
