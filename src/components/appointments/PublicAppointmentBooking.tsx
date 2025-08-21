@@ -1,366 +1,518 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Clock, CalendarIcon, User, CheckCircle, ArrowRight } from "lucide-react";
+import { format, addDays, startOfDay, endOfDay, isSameDay, parseISO } from "date-fns";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
-import React, { useState, useEffect } from 'react';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { addDays, setHours, setMinutes, isPast } from 'date-fns';
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import { supabase } from '@/integrations/supabase/client';
+const bookingSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().min(10, "Valid phone number is required"),
+  purpose: z.string().min(1, "Purpose is required"),
+  notes: z.string().optional(),
+});
 
-interface PublicAppointmentBookingProps {
-  title?: string;
-  subtitle?: string;
-  appointmentType?: string;
-  defaultDuration?: number;
-  maxDuration?: number;
-  allowedDays?: number[];
-  startHour?: Record<number, number>;
-  endHour?: Record<number, number>;
-  busyCalendarName?: string;
+type BookingForm = z.infer<typeof bookingSchema>;
+
+interface TimeSlot {
+  time: string;
+  available: boolean;
 }
 
-const PublicAppointmentBooking = ({
-  title = "Book an Appointment",
-  subtitle = "Select a date and time to book your appointment.",
-  appointmentType = "general",
-  defaultDuration = 30,
-  maxDuration = 60,
-  allowedDays = [1, 2, 3, 4, 5], // Mon-Fri by default
-  startHour = { 1: 9, 2: 9, 3: 9, 4: 9, 5: 9 },
-  endHour = { 1: 17, 2: 17, 3: 17, 4: 17, 5: 17 },
-  busyCalendarName = "Schedule"
-}: PublicAppointmentBookingProps) => {
-  const [date, setDate] = useState(new Date());
-  const [selectedSlot, setSelectedSlot] = useState<Date | null>(null);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [notes, setNotes] = useState('');
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [bookingLoading, setBookingLoading] = useState(false);
-  const [bookedSlots, setBookedSlots] = useState<Date[]>([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
+export const PublicAppointmentBooking = () => {
+  const [currentStep, setCurrentStep] = useState<'type' | 'calendar' | 'details' | 'auth' | 'confirmation'>('type');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [appointmentId, setAppointmentId] = useState<string>("");
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  // Fetch booked slots for the selected date
-  const fetchBookedSlots = async (targetDate: Date) => {
-    setLoadingSlots(true);
-    try {
-      const startOfDay = new Date(targetDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      
-      const endOfDay = new Date(targetDate);
-      endOfDay.setHours(23, 59, 59, 999);
+  const form = useForm<BookingForm>({
+    resolver: zodResolver(bookingSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      purpose: "",
+      notes: "",
+    },
+  });
 
-      const { data: bookedAppointments, error } = await supabase
-        .from('gw_appointments')
-        .select('appointment_date')
-        .gte('appointment_date', startOfDay.toISOString())
-        .lte('appointment_date', endOfDay.toISOString())
-        .in('status', ['confirmed', 'pending']);
+  // Generate time slots for selected date
+  const generateTimeSlots = async (date: Date) => {
+    if (!date) return;
 
-      if (error) throw error;
+    const { data: existingAppointments } = await supabase
+      .from('gw_appointments')
+      .select('appointment_date, duration_minutes')
+      .gte('appointment_date', startOfDay(date).toISOString())
+      .lte('appointment_date', endOfDay(date).toISOString())
+      .neq('status', 'cancelled');
 
-      const bookedTimes = bookedAppointments?.map(appointment => 
-        new Date(appointment.appointment_date)
-      ) || [];
-      
-      setBookedSlots(bookedTimes);
-    } catch (error) {
-      console.error('Error fetching booked slots:', error);
-    } finally {
-      setLoadingSlots(false);
-    }
-  };
+    const slots: TimeSlot[] = [];
+    const duration = 30; // 30-minute slots
+    
+    // Business hours: 9 AM to 5 PM
+    for (let hour = 9; hour < 17; hour++) {
+      for (let minute = 0; minute < 60; minute += duration) {
+        const currentTime = new Date(date);
+        currentTime.setHours(hour, minute, 0, 0);
+        
+        const slotEndTime = new Date(currentTime.getTime() + duration * 60000);
+        
+        if (slotEndTime.getHours() >= 17) continue;
+        
+        const timeString = format(currentTime, 'h:mm a');
+        
+        // Check availability
+        const isAvailable = !existingAppointments?.some(apt => {
+          const aptStart = new Date(apt.appointment_date);
+          const aptEnd = new Date(aptStart.getTime() + apt.duration_minutes * 60000);
+          const newSlotEnd = new Date(currentTime.getTime() + duration * 60000);
+          
+          return (currentTime < aptEnd && newSlotEnd > aptStart);
+        });
 
-  // Set up real-time updates for appointment bookings
-  useEffect(() => {
-    const channel = supabase
-      .channel('appointment-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'gw_appointments'
-        },
-        (payload) => {
-          console.log('New appointment booked:', payload);
-          // Refresh booked slots when a new appointment is created
-          fetchBookedSlots(date);
+        // Only show future slots
+        const now = new Date();
+        const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+        if (currentTime > oneHourFromNow) {
+          slots.push({ time: timeString, available: isAvailable });
         }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [date]);
-
-  // Fetch booked slots when date changes
-  useEffect(() => {
-    fetchBookedSlots(date);
-  }, [date]);
-
-  const timeSlots = generateTimeSlots(date);
-
-  function generateTimeSlots(date: Date) {
-    const slots = [];
-    const dayOfWeek = date.getDay();
-    
-    if (!allowedDays.includes(dayOfWeek)) {
-      return [];
-    }
-
-    const startTime = startHour[dayOfWeek] || 9;
-    const endTime = endHour[dayOfWeek] || 17;
-    
-    let current = setHours(setMinutes(new Date(date), 0), startTime);
-    const end = setHours(setMinutes(new Date(date), 0), endTime);
-
-    while (current < end) {
-      // Check if the slot is in the past or already booked
-      const isSlotBooked = bookedSlots.some(bookedSlot => 
-        bookedSlot.getTime() === current.getTime()
-      );
-      
-      if (!isPast(current) && !isSlotBooked) {
-        slots.push(new Date(current));
       }
-      current = new Date(current.getTime() + defaultDuration * 60000); // Add duration in milliseconds
     }
-    return slots;
-  }
 
-  const handleDateChange = (newDate: Date | undefined) => {
-    if (newDate) {
-      console.log('Date selected:', newDate);
-      setDate(newDate);
-      setSelectedSlot(null); // Clear selected slot when date changes
-      setShowSuccess(false); // Clear success message when date changes
-      setIsCalendarOpen(false); // Close calendar after selection
+    setAvailableSlots(slots);
+  };
+
+  useEffect(() => {
+    if (selectedDate) {
+      generateTimeSlots(selectedDate);
+    }
+  }, [selectedDate]);
+
+  const handleTypeSelection = () => {
+    setCurrentStep('calendar');
+  };
+
+  const handleDateTimeSelection = () => {
+    if (!selectedDate || !selectedTime) {
+      toast({
+        title: "Selection Required",
+        description: "Please select both a date and time",
+        variant: "destructive"
+      });
+      return;
+    }
+    setCurrentStep('details');
+  };
+
+  const handleDetailsSubmit = async (data: BookingForm) => {
+    if (user) {
+      // User is logged in, proceed with booking
+      await createAppointment(data);
+    } else {
+      // User needs to register/login
+      setCurrentStep('auth');
     }
   };
 
-  const handleSlotSelect = (slot: Date) => {
-    setSelectedSlot(slot);
-    setShowSuccess(false); // Clear success message when selecting a new slot
-  };
+  const createAppointment = async (data: BookingForm) => {
+    if (!selectedDate || !selectedTime) return;
 
-  const handleBooking = async () => {
-    if (!selectedSlot || !name || !email) return;
-
+    setLoading(true);
     try {
-      setBookingLoading(true);
-      
-      const { data: appointmentData, error } = await supabase
+      const [hour, minute] = selectedTime.split(':');
+      const appointmentDateTime = new Date(selectedDate);
+      appointmentDateTime.setHours(
+        parseInt(hour) + (selectedTime.includes('PM') && parseInt(hour) !== 12 ? 12 : 0),
+        parseInt(minute.split(' ')[0]),
+        0,
+        0
+      );
+
+      const appointmentData = {
+        title: 'Office Hour Appointment',
+        description: data.purpose,
+        appointment_date: appointmentDateTime.toISOString(),
+        duration_minutes: 30,
+        appointment_type: 'Office Hour',
+        client_name: data.name,
+        client_email: data.email,
+        client_phone: data.phone,
+        status: 'pending_approval',
+        notes: data.notes,
+        ...(user?.id && { created_by: user.id }),
+      };
+
+      const { data: appointment, error } = await supabase
         .from('gw_appointments')
-        .insert({
-          title: `${appointmentType} appointment with ${name}`,
-          client_name: name,
-          client_email: email,
-          client_phone: phone,
-          appointment_type: appointmentType,
-          appointment_date: selectedSlot.toISOString(),
-          status: 'confirmed',
-          description: notes || `${appointmentType} appointment`
-        })
+        .insert(appointmentData)
         .select()
         .single();
 
       if (error) throw error;
 
-      console.log('Appointment created successfully:', appointmentData);
+      setAppointmentId(appointment.id);
 
-      // Send confirmation email
+      // Send SMS to the specified approval number
       try {
-        console.log('Sending appointment confirmation email...');
-        const emailResponse = await supabase.functions.invoke('send-appointment-notification', {
+        await supabase.functions.invoke('gw-send-sms', {
           body: {
-            appointmentId: appointmentData.id,
-            type: 'confirmation'
+            to: '470-622-4845',
+            message: `New appointment request from ${data.name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Purpose: ${data.purpose}. Reply APPROVE ${appointment.id} or DENY ${appointment.id}`
           }
         });
 
-        if (emailResponse.error) {
-          console.error('Email notification failed:', emailResponse.error);
-          // Don't throw error - appointment was still created successfully
-        } else {
-          console.log('Email notification sent successfully:', emailResponse.data);
-        }
-      } catch (emailError) {
-        console.error('Failed to send email notification:', emailError);
-        // Don't throw error - appointment was still created successfully
+        // Send confirmation SMS to client
+        await supabase.functions.invoke('gw-send-sms', {
+          body: {
+            to: data.phone,
+            message: `Your appointment request for ${format(appointmentDateTime, 'PPP')} at ${selectedTime} has been submitted. You'll receive confirmation once approved.`
+          }
+        });
+      } catch (smsError) {
+        console.error('SMS sending failed:', smsError);
       }
 
-      setShowSuccess(true);
-      setSelectedSlot(null);
-      setName('');
-      setEmail('');
-      setPhone('');
-      setNotes('');
-    } catch (error) {
-      console.error('Booking error:', error);
+      setCurrentStep('confirmation');
       toast({
-        title: "Booking Failed",
-        description: "There was an error booking your appointment. Please try again.",
-        variant: "destructive",
+        title: "Appointment Requested",
+        description: "Your appointment has been submitted for approval.",
+      });
+
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create appointment",
+        variant: "destructive"
       });
     } finally {
-      setBookingLoading(false);
+      setLoading(false);
     }
   };
 
-  const getMinutes = (date: Date): number => {
-    return date.getMinutes();
+  const handleAuthSuccess = () => {
+    // After successful auth, create the appointment
+    const formData = form.getValues();
+    createAppointment(formData);
+  };
+
+  const resetFlow = () => {
+    setCurrentStep('type');
+    setSelectedDate(undefined);
+    setSelectedTime("");
+    setAvailableSlots([]);
+    form.reset();
+    setAppointmentId("");
   };
 
   return (
-    <div className="container mx-auto py-12">
-      <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>
-            {subtitle}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="date">Select Date</Label>
-              <Sheet open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="outline"
-                    id="date"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="grid gap-6 p-4" side="bottom">
-                  <SheetHeader>
-                    <SheetTitle>Calendar</SheetTitle>
-                    <SheetDescription>
-                      Choose a date to book your appointment.
-                    </SheetDescription>
-                  </SheetHeader>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-primary mb-2">Book an Office Hour</h1>
+          <p className="text-muted-foreground text-lg">Schedule a one-on-one consultation session</p>
+        </div>
+
+        {/* Progress Steps */}
+        <div className="flex items-center justify-center mb-8">
+          <div className="flex items-center space-x-4">
+            {['type', 'calendar', 'details', currentStep === 'auth' ? 'auth' : 'confirmation'].map((step, index) => (
+              <div key={step} className="flex items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  ['type', 'calendar', 'details'].indexOf(currentStep) >= index || currentStep === 'confirmation'
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {['type', 'calendar', 'details'].indexOf(currentStep) > index || currentStep === 'confirmation' ? (
+                    <CheckCircle className="w-4 h-4" />
+                  ) : (
+                    index + 1
+                  )}
+                </div>
+                {index < 3 && <ArrowRight className="w-4 h-4 mx-2 text-muted-foreground" />}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Step 1: Appointment Type */}
+        {currentStep === 'type' && (
+          <Card className="max-w-md mx-auto">
+            <CardHeader className="text-center">
+              <CardTitle>Select Appointment Type</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={handleTypeSelection}
+                className="w-full h-16 text-left"
+                variant="outline"
+              >
+                <div className="flex items-center space-x-3">
+                  <User className="w-8 h-8 text-primary" />
+                  <div>
+                    <div className="font-semibold">Office Hour</div>
+                    <div className="text-sm text-muted-foreground">One-on-one consultation session (30 min)</div>
+                  </div>
+                </div>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 2: Calendar Selection */}
+        {currentStep === 'calendar' && (
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle>Select Date & Time</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-medium mb-3">Choose Date</h3>
                   <Calendar
                     mode="single"
-                    selected={date}
-                    onSelect={handleDateChange}
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
                     disabled={(date) => {
-                      const dayOfWeek = date.getDay();
-                      return isPast(date) || !allowedDays.includes(dayOfWeek);
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return date < today;
                     }}
                     className="rounded-md border"
                   />
-                  <Button onClick={() => setIsCalendarOpen(false)}>
-                    Close Calendar
-                  </Button>
-                </SheetContent>
-              </Sheet>
-            </div>
+                </div>
 
-            <div>
-              <Label htmlFor="time">Select Time Slot</Label>
-              {loadingSlots ? (
-                <div className="flex items-center justify-center py-4">
-                  <div className="text-sm text-muted-foreground">Loading available times...</div>
+                <div>
+                  <h3 className="font-medium mb-3">Available Times</h3>
+                  {selectedDate ? (
+                    <div className="space-y-2 max-h-80 overflow-y-auto">
+                      {availableSlots.filter(slot => slot.available).map((slot) => (
+                        <Button
+                          key={slot.time}
+                          variant={selectedTime === slot.time ? "default" : "outline"}
+                          onClick={() => setSelectedTime(slot.time)}
+                          className="w-full justify-start"
+                        >
+                          <Clock className="w-4 h-4 mr-2" />
+                          {slot.time}
+                        </Button>
+                      ))}
+                      {availableSlots.filter(slot => slot.available).length === 0 && (
+                        <p className="text-center text-muted-foreground py-4">
+                          No available slots for this date
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">
+                      Please select a date first
+                    </p>
+                  )}
                 </div>
-              ) : timeSlots.length === 0 ? (
-                <div className="text-sm text-muted-foreground py-4">
-                  No available time slots for this date.
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  {timeSlots.map((slot) => (
-                    <Button
-                      key={slot.toISOString()}
-                      variant={selectedSlot?.toISOString() === slot.toISOString() ? "secondary" : "outline"}
-                      onClick={() => handleSlotSelect(slot)}
-                      disabled={isPast(slot) || loadingSlots}
-                    >
-                      {format(slot, 'h:mm a')}
+              </div>
+
+              <div className="flex justify-between mt-6">
+                <Button variant="outline" onClick={() => setCurrentStep('type')}>
+                  Back
+                </Button>
+                <Button onClick={handleDateTimeSelection}>
+                  Continue
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 3: Contact Details */}
+        {currentStep === 'details' && (
+          <Card className="max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle>Your Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleDetailsSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter your full name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email Address</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="your.email@example.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="tel" 
+                            placeholder="(555) 123-4567" 
+                            {...field}
+                            onChange={(e) => {
+                              let value = e.target.value.replace(/\D/g, '');
+                              if (value.length >= 6) {
+                                value = `(${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6, 10)}`;
+                              } else if (value.length >= 3) {
+                                value = `(${value.slice(0, 3)}) ${value.slice(3)}`;
+                              }
+                              field.onChange(value);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="purpose"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Purpose of Meeting</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Academic advising, Q&A session" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Additional Notes (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Any specific topics or questions you'd like to discuss..."
+                            className="resize-none"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex justify-between pt-4">
+                    <Button variant="outline" onClick={() => setCurrentStep('calendar')}>
+                      Back
                     </Button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+                    <Button type="submit" disabled={loading}>
+                      {loading ? 'Processing...' : (user ? 'Book Appointment' : 'Continue')}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        )}
 
-          <div className="grid gap-4">
-            <div>
-              <Label htmlFor="name">Your Name</Label>
-              <Input
-                type="text"
-                id="name"
-                placeholder="Enter your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Your Email</Label>
-              <Input
-                type="email"
-                id="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">Your Phone (Optional)</Label>
-              <Input
-                type="tel"
-                id="phone"
-                placeholder="Enter your phone number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="notes">Additional Notes (Optional)</Label>
-              <Textarea
-                id="notes"
-                placeholder="Any additional notes for your appointment"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <Button onClick={handleBooking} disabled={bookingLoading || !selectedSlot || !name || !email}>
-            {bookingLoading ? "Booking..." : "Book Appointment"}
-          </Button>
-
-          {showSuccess && (
-            <div className="rounded-md bg-green-100 p-4">
-              <h2 className="text-lg font-semibold text-green-800">Appointment Booked!</h2>
-              <p className="text-sm text-green-700">
-                Your appointment has been successfully booked for {selectedSlot ? format(selectedSlot, 'PPP h:mm a') : ''}.
-                A confirmation email has been sent to your email address.
+        {/* Step 4: Authentication (for non-logged in users) */}
+        {currentStep === 'auth' && !user && (
+          <Card className="max-w-md mx-auto">
+            <CardHeader className="text-center">
+              <CardTitle>Create Account or Sign In</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                To complete your appointment booking, please create an account or sign in.
               </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button 
+                onClick={() => window.location.href = '/auth?redirect=' + encodeURIComponent(window.location.pathname)}
+                className="w-full"
+              >
+                Sign In / Create Account
+              </Button>
+              
+              <div className="text-center">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setCurrentStep('details')}
+                  className="w-full"
+                >
+                  Back to Details
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 5: Confirmation */}
+        {currentStep === 'confirmation' && (
+          <Card className="max-w-md mx-auto">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <CardTitle>Appointment Requested!</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center space-y-4">
+              <div className="bg-muted p-4 rounded-lg">
+                <p className="font-medium">Office Hour</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedDate && format(selectedDate, 'PPP')} at {selectedTime}
+                </p>
+              </div>
+              
+              <div className="space-y-2 text-sm">
+                <p>✅ Request submitted for approval</p>
+                <p>📱 SMS confirmation sent to your phone</p>
+                <p>⏳ You'll receive an email once approved</p>
+                <p>💰 Payment will be collected in person</p>
+              </div>
+
+              <Button onClick={resetFlow} className="w-full">
+                Book Another Appointment
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
-
-export default PublicAppointmentBooking;

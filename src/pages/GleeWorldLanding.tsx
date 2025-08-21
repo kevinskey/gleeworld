@@ -20,7 +20,7 @@ import { CountdownTimer } from "@/components/landing/CountdownTimer";
 import { FeaturedProducts } from "@/components/products/FeaturedProducts";
 import { AuditionHoverCard } from "@/components/audition/AuditionHoverCard";
 import { MusicStaffIcon } from "@/components/icons/MusicStaffIcon";
-
+import { FAQNavigationCards } from "@/components/landing/FAQNavigationCards";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
@@ -36,7 +36,7 @@ import {
   Youtube,
   Play,
   AlertCircle,
-  
+  MessageCircleQuestion
 } from "lucide-react";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import {
@@ -282,6 +282,64 @@ export const GleeWorldLanding = () => {
       
       <PublicLayout>
 
+      {/* Audition Section */}
+      <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+        <div className="w-full max-w-screen-2xl mx-auto text-center">
+          <Card className="relative overflow-hidden p-5 sm:p-6 md:p-8 bg-card border-2 border-primary/20 shadow-xl animate-fade-in">
+            {/* Background image from choir library */}
+            <img 
+              src="/lovable-uploads/90bc1107-92d3-42f5-8c88-fc7a000d9c42.png" 
+              alt="Spelman College Glee Club choir performing at 2025 championship" 
+              className="absolute inset-0 w-full h-full object-cover opacity-100" 
+              loading="lazy"
+            />
+            {/* Soft brand gradient overlay for readability */}
+            <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
+            <div className="relative z-10 space-y-6">
+              <div className="space-y-4 text-center">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-white drop-shadow-2xl">
+                  Join Our Legacy
+                </h2>
+                <p className="text-lg md:text-xl text-white/90 drop-shadow-lg max-w-2xl mx-auto">
+                  Ready to be part of something extraordinary? Auditions are now open for the Spelman College Glee Club.
+                </p>
+              </div>
+              <Button 
+                size="lg"
+                onClick={goToAuditions}
+                className="w-[60%] mx-auto px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 text-sm sm:text-base md:text-lg font-bold bg-gradient-to-b from-spelman-blue-light via-spelman-blue-light/90 to-spelman-blue-dark hover:from-spelman-blue-light/80 hover:via-spelman-blue-light/70 hover:to-spelman-blue-dark/90 text-white border-2 border-spelman-blue-light shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+              >
+                <Music className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+                <span className="truncate">SIGN UP FOR AUDITIONS</span>
+                <MusicStaffIcon className="ml-2 sm:ml-3 text-white" size={16} />
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+        <div className="w-full max-w-screen-2xl mx-auto">
+          <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
+            <div className="text-center mb-4 sm:mb-6 md:mb-8">
+              <div className="inline-flex items-center justify-center space-x-2 mb-4">
+                <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+                <MessageCircleQuestion className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-gray-900 mb-2">
+                Frequently Asked Questions
+              </h2>
+              <p className="text-base md:text-xl text-muted-foreground">
+                Spelman College Glee Club
+              </p>
+            </div>
+            
+            {/* FAQ Navigation and Content */}
+            <FAQNavigationCards />
+          </Card>
+        </div>
+      </section>
 
       {/* Hero Section */}
       <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">

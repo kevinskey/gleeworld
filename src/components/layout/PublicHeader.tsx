@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Music, Settings } from "lucide-react";
-import ResponsiveNavigation from "@/components/navigation/ResponsiveNavigation";
+import { ResponsiveNavigation } from "@/components/navigation/ResponsiveNavigation";
 import { HeaderClock } from "@/components/ui/header-clock";
 import { MusicStaffMenu } from "@/components/ui/music-staff-menu";
-
+import { HeaderRadioPlayer } from "@/components/radio/HeaderRadioPlayer";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const PublicHeader = () => {
@@ -61,6 +61,9 @@ export const PublicHeader = () => {
 
             {/* Right side actions */}
             <div className="flex items-center gap-2 lg:gap-3">
+              {/* Radio Player */}
+              <HeaderRadioPlayer />
+              
               {/* Dashboard Link for Authenticated Users */}
               {user && (
                 <Button asChild variant="outline" className="hidden md:flex lg:text-base">
