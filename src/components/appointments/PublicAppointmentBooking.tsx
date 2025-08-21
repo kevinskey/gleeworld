@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { addDays, setHours, setMinutes, isPast } from 'date-fns';
@@ -51,7 +51,69 @@ const PublicAppointmentBooking = ({
   const [notes, setNotes] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookedSlots, setBookedSlots] = useState<Date[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const { toast } = useToast();
+
+  // Fetch booked slots for the selected date
+  const fetchBookedSlots = async (targetDate: Date) => {
+    setLoadingSlots(true);
+    try {
+      const startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const { data: bookedAppointments, error } = await supabase
+        .from('gw_appointments')
+        .select('appointment_date')
+        .gte('appointment_date', startOfDay.toISOString())
+        .lte('appointment_date', endOfDay.toISOString())
+        .in('status', ['confirmed', 'pending']);
+
+      if (error) throw error;
+
+      const bookedTimes = bookedAppointments?.map(appointment => 
+        new Date(appointment.appointment_date)
+      ) || [];
+      
+      setBookedSlots(bookedTimes);
+    } catch (error) {
+      console.error('Error fetching booked slots:', error);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  // Set up real-time updates for appointment bookings
+  useEffect(() => {
+    const channel = supabase
+      .channel('appointment-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'gw_appointments'
+        },
+        (payload) => {
+          console.log('New appointment booked:', payload);
+          // Refresh booked slots when a new appointment is created
+          fetchBookedSlots(date);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [date]);
+
+  // Fetch booked slots when date changes
+  useEffect(() => {
+    fetchBookedSlots(date);
+  }, [date]);
 
   const timeSlots = generateTimeSlots(date);
 
@@ -70,8 +132,13 @@ const PublicAppointmentBooking = ({
     const end = setHours(setMinutes(new Date(date), 0), endTime);
 
     while (current < end) {
-      if (!isPast(current)) {
-        slots.push(current);
+      // Check if the slot is in the past or already booked
+      const isSlotBooked = bookedSlots.some(bookedSlot => 
+        bookedSlot.getTime() === current.getTime()
+      );
+      
+      if (!isPast(current) && !isSlotBooked) {
+        slots.push(new Date(current));
       }
       current = new Date(current.getTime() + defaultDuration * 60000); // Add duration in milliseconds
     }
@@ -210,18 +277,28 @@ const PublicAppointmentBooking = ({
 
             <div>
               <Label htmlFor="time">Select Time Slot</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {timeSlots.map((slot) => (
-                  <Button
-                    key={slot.toISOString()}
-                    variant={selectedSlot?.toISOString() === slot.toISOString() ? "secondary" : "outline"}
-                    onClick={() => handleSlotSelect(slot)}
-                    disabled={isPast(slot)}
-                  >
-                    {format(slot, 'h:mm a')}
-                  </Button>
-                ))}
-              </div>
+              {loadingSlots ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="text-sm text-muted-foreground">Loading available times...</div>
+                </div>
+              ) : timeSlots.length === 0 ? (
+                <div className="text-sm text-muted-foreground py-4">
+                  No available time slots for this date.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {timeSlots.map((slot) => (
+                    <Button
+                      key={slot.toISOString()}
+                      variant={selectedSlot?.toISOString() === slot.toISOString() ? "secondary" : "outline"}
+                      onClick={() => handleSlotSelect(slot)}
+                      disabled={isPast(slot) || loadingSlots}
+                    >
+                      {format(slot, 'h:mm a')}
+                    </Button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
