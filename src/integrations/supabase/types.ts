@@ -5453,6 +5453,107 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_group_members: {
+        Row: {
+          group_id: string
+          id: string
+          is_muted: boolean
+          joined_at: string
+          last_read_at: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          is_muted?: boolean
+          joined_at?: string
+          last_read_at?: string | null
+          role?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          is_muted?: boolean
+          joined_at?: string
+          last_read_at?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "gw_message_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_group_messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          edited_at: string | null
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
+          group_id: string
+          id: string
+          is_edited: boolean
+          message_type: string
+          reply_to_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          edited_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          group_id: string
+          id?: string
+          is_edited?: boolean
+          message_type?: string
+          reply_to_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          edited_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          group_id?: string
+          id?: string
+          is_edited?: boolean
+          message_type?: string
+          reply_to_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_group_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "gw_message_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_group_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "gw_group_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_hero_settings: {
         Row: {
           background_image_url: string | null
@@ -6093,6 +6194,77 @@ export type Database = {
           waist_measurement?: number | null
         }
         Relationships: []
+      }
+      gw_message_groups: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          group_type: string
+          id: string
+          is_archived: boolean
+          is_private: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          group_type?: string
+          id?: string
+          is_archived?: boolean
+          is_private?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          group_type?: string
+          id?: string
+          is_archived?: boolean
+          is_private?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gw_message_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "gw_group_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_message_reads: {
         Row: {
@@ -10672,6 +10844,35 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "gw_tour_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_typing_indicators: {
+        Row: {
+          expires_at: string
+          group_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string
+          group_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string
+          group_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_typing_indicators_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "gw_message_groups"
             referencedColumns: ["id"]
           },
         ]

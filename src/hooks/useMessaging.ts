@@ -1,0 +1,377 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+
+export interface MessageGroup {
+  id: string;
+  name: string;
+  description?: string;
+  avatar_url?: string;
+  group_type: 'general' | 'executive' | 'voice_section' | 'event' | 'private';
+  is_private: boolean;
+  is_archived: boolean;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GroupMessage {
+  id: string;
+  group_id: string;
+  user_id?: string;
+  content?: string;
+  message_type: 'text' | 'image' | 'file' | 'audio' | 'system';
+  file_url?: string;
+  file_name?: string;
+  file_size?: number;
+  reply_to_id?: string;
+  is_edited: boolean;
+  edited_at?: string;
+  created_at: string;
+  updated_at: string;
+  user_profile?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
+  reactions?: MessageReaction[];
+  reply_to?: GroupMessage;
+}
+
+export interface MessageReaction {
+  id: string;
+  message_id: string;
+  user_id: string;
+  emoji: string;
+  created_at: string;
+  user_profile?: {
+    full_name?: string;
+  };
+}
+
+export interface GroupMember {
+  id: string;
+  group_id: string;
+  user_id: string;
+  role: 'member' | 'admin' | 'moderator';
+  joined_at: string;
+  last_read_at?: string;
+  is_muted: boolean;
+  user_profile?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
+}
+
+export interface TypingIndicator {
+  group_id: string;
+  user_id: string;
+  user_name: string;
+}
+
+// Hook to get user's message groups
+export const useMessageGroups = () => {
+  return useQuery({
+    queryKey: ['message-groups'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_message_groups')
+        .select(`
+          *,
+          gw_group_members!inner(
+            role,
+            last_read_at,
+            is_muted
+          )
+        `)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      return data as MessageGroup[];
+    },
+  });
+};
+
+// Hook to get messages for a specific group
+export const useGroupMessages = (groupId?: string) => {
+  return useQuery({
+    queryKey: ['group-messages', groupId],
+    queryFn: async () => {
+      if (!groupId) return [];
+
+      const { data, error } = await supabase
+        .from('gw_group_messages')
+        .select(`
+          *,
+          user_profile:gw_profiles!gw_group_messages_user_id_fkey(
+            full_name,
+            avatar_url
+          ),
+          reactions:gw_message_reactions(
+            id,
+            emoji,
+            user_id,
+            message_id,
+            created_at,
+            user_profile:gw_profiles!gw_message_reactions_user_id_fkey(
+              full_name
+            )
+          ),
+          reply_to:gw_group_messages!gw_group_messages_reply_to_id_fkey(
+            id,
+            content,
+            message_type,
+            user_profile:gw_profiles!gw_group_messages_user_id_fkey(
+              full_name
+            )
+          )
+        `)
+        .eq('group_id', groupId)
+        .order('created_at', { ascending: true })
+        .limit(100);
+
+      if (error) throw error;
+
+      return (data || []) as any[];
+    },
+    enabled: !!groupId,
+  });
+};
+
+// Hook to get group members
+export const useGroupMembers = (groupId?: string) => {
+  return useQuery({
+    queryKey: ['group-members', groupId],
+    queryFn: async () => {
+      if (!groupId) return [];
+
+      const { data, error } = await supabase
+        .from('gw_group_members')
+        .select(`
+          *,
+          gw_profiles!gw_group_members_user_id_fkey(
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('group_id', groupId)
+        .order('joined_at');
+
+      if (error) throw error;
+
+      return data.map(member => ({
+        ...member,
+        user_profile: member.gw_profiles
+      })) as GroupMember[];
+    },
+    enabled: !!groupId,
+  });
+};
+
+// Hook for real-time messaging
+export const useRealtimeMessaging = (groupId?: string) => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
+
+  useEffect(() => {
+    if (!groupId) return;
+
+    // Subscribe to new messages
+    const messagesChannel = supabase
+      .channel(`group-messages-${groupId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'gw_group_messages',
+          filter: `group_id=eq.${groupId}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['group-messages', groupId] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'gw_group_messages',
+          filter: `group_id=eq.${groupId}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['group-messages', groupId] });
+        }
+      )
+      .subscribe();
+
+    // Subscribe to message reactions
+    const reactionsChannel = supabase
+      .channel(`message-reactions-${groupId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'gw_message_reactions'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['group-messages', groupId] });
+        }
+      )
+      .subscribe();
+
+    // Subscribe to typing indicators
+    const typingChannel = supabase
+      .channel(`typing-${groupId}`)
+      .on('presence', { event: 'sync' }, () => {
+        const state = typingChannel.presenceState();
+        const typing = Object.values(state)
+          .flat()
+          .filter((indicator: any) => indicator.user_id !== user?.id) as any[];
+        setTypingUsers(typing);
+      })
+      .on('presence', { event: 'join' }, ({ newPresences }) => {
+        const typing = newPresences.filter((indicator: any) => indicator.user_id !== user?.id) as any[];
+        setTypingUsers(prev => [...prev, ...typing]);
+      })
+      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+        const leftUserIds = leftPresences.map((indicator: any) => indicator.user_id);
+        setTypingUsers(prev => prev.filter(t => !leftUserIds.includes(t.user_id)));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(reactionsChannel);
+      supabase.removeChannel(typingChannel);
+    };
+  }, [groupId, user?.id, queryClient]);
+
+  return { typingUsers };
+};
+
+// Send message mutation
+export const useSendMessage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      groupId,
+      content,
+      messageType = 'text',
+      fileUrl,
+      fileName,
+      fileSize,
+      replyToId
+    }: {
+      groupId: string;
+      content?: string;
+      messageType?: 'text' | 'image' | 'file' | 'audio';
+      fileUrl?: string;
+      fileName?: string;
+      fileSize?: number;
+      replyToId?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from('gw_group_messages')
+        .insert({
+          group_id: groupId,
+          content,
+          message_type: messageType,
+          file_url: fileUrl,
+          file_name: fileName,
+          file_size: fileSize,
+          reply_to_id: replyToId
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['group-messages', variables.groupId] });
+      queryClient.invalidateQueries({ queryKey: ['message-groups'] });
+    },
+    onError: (error) => {
+      toast.error('Failed to send message: ' + error.message);
+    },
+  });
+};
+
+// Add reaction mutation
+export const useAddReaction = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      messageId,
+      emoji
+    }: {
+      messageId: string;
+      emoji: string;
+    }) => {
+      const { data, error } = await supabase
+        .from('gw_message_reactions')
+        .insert({
+          message_id: messageId,
+          emoji,
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+        .single();
+
+      if (error) {
+        // If reaction already exists, remove it instead
+        if (error.code === '23505') {
+          const userId = (await supabase.auth.getUser()).data.user?.id;
+          const { error: deleteError } = await supabase
+            .from('gw_message_reactions')
+            .delete()
+            .eq('message_id', messageId)
+            .eq('emoji', emoji)
+            .eq('user_id', userId);
+          
+          if (deleteError) throw deleteError;
+          return null;
+        }
+        throw error;
+      }
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['group-messages'] });
+    },
+    onError: (error) => {
+      toast.error('Failed to add reaction: ' + error.message);
+    },
+  });
+};
+
+// Update typing indicator
+export const useTypingIndicator = (groupId?: string) => {
+  const { user } = useAuth();
+
+  const startTyping = () => {
+    if (!groupId || !user) return;
+
+    const channel = supabase.channel(`typing-${groupId}`);
+    channel.track({
+      user_id: user.id,
+      user_name: user.user_metadata?.full_name || user.email,
+      group_id: groupId
+    });
+  };
+
+  const stopTyping = () => {
+    if (!groupId) return;
+    
+    const channel = supabase.channel(`typing-${groupId}`);
+    channel.untrack();
+  };
+
+  return { startTyping, stopTyping };
+};
