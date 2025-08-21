@@ -172,24 +172,15 @@ export const PublicAppointmentBooking = () => {
 
       // Send SMS notifications
       try {
-        // Get admin phone number for notifications
-        const { data: adminUsers } = await supabase
-          .from('gw_profiles')
-          .select('phone_number')
-          .or('is_admin.eq.true,is_super_admin.eq.true')
-          .not('phone_number', 'is', null)
-          .limit(1);
-
-        const adminPhone = adminUsers?.[0]?.phone_number;
-
-        if (adminPhone) {
-          await supabase.functions.invoke('gw-send-sms', {
-            body: {
-              to: adminPhone,
-              message: `New appointment request from ${data.name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Purpose: ${data.purpose}. Reply APPROVE ${appointment.id} or DENY ${appointment.id}`
-            }
-          });
-        }
+        // Send SMS to your specific number for approval
+        const adminPhone = '+14706221392';
+        
+        await supabase.functions.invoke('gw-send-sms', {
+          body: {
+            to: adminPhone,
+            message: `New appointment request from ${data.name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Type: ${data.purpose}. Reply APPROVE ${appointment.id} or DENY ${appointment.id}`
+          }
+        });
 
         // Send confirmation SMS to client
         await supabase.functions.invoke('gw-send-sms', {

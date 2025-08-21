@@ -65,8 +65,8 @@ const handler = async (req: Request): Promise<Response> => {
     const [, action, appointmentId] = match;
     console.log(`Processing ${action} for appointment ${appointmentId} from ${phoneNumber}`);
 
-    // Verify the phone number is authorized (470-622-4845)
-    const authorizedNumber = "+14706224845"; // Normalized format
+    // Verify the phone number is authorized (470-622-1392)
+    const authorizedNumber = "+14706221392"; // Normalized format
     const normalizedFrom = phoneNumber.replace(/\D/g, ''); // Remove non-digits
     const normalizedAuth = authorizedNumber.replace(/\D/g, '');
 

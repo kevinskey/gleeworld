@@ -204,21 +204,14 @@ export const AppointmentScheduler = () => {
           }
         });
 
-        // Get admin phone number from user profiles (admins)
-        const { data: adminUsers } = await supabase
-          .from('gw_profiles')
-          .select('phone_number')
-          .or('is_admin.eq.true,is_super_admin.eq.true')
-          .not('phone_number', 'is', null)
-          .limit(1);
-
-        const adminPhone = adminUsers?.[0]?.phone_number;
+        // Send approval SMS to your specific number for approval
+        const adminPhone = '+14706221392';
 
         // Send approval SMS to admin/receiver
         await supabase.functions.invoke('gw-send-sms', {
           body: {
             to: adminPhone,
-            message: `New appointment request from ${data.client_name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Login to manage appointments.`
+            message: `New appointment request from ${data.client_name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Type: ${data.appointment_type}. Reply APPROVE ${appointment.id} or DENY ${appointment.id}`
           }
         });
       } catch (smsError) {
