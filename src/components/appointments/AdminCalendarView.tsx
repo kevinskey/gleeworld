@@ -69,8 +69,10 @@ export const AdminCalendarView = () => {
 
   const blockDate = async (date: Date, reason?: string) => {
     try {
+      // Ensure we get the local date without timezone issues
+      const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
       const { error } = await supabase.rpc('block_date', {
-        date_to_block: format(date, 'yyyy-MM-dd'),
+        date_to_block: format(localDate, 'yyyy-MM-dd'),
         block_reason: reason || 'Date blocked by admin'
       });
 
