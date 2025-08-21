@@ -3,6 +3,8 @@ import { Calendar as CalendarIcon, Clock, CheckCircle, User, Mail, Phone } from 
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +28,15 @@ interface ContactInfo {
   phone: string;
 }
 
+interface AppointmentType {
+  id: string;
+  name: string;
+  description: string;
+  default_duration_minutes: number;
+  color: string;
+  is_active: boolean;
+}
+
 export default function UnifiedBookingPage() {
   const { user, loading: authLoading } = useAuth();
   console.log('🔍 UnifiedBookingPage component loading...');
@@ -40,10 +51,32 @@ export default function UnifiedBookingPage() {
   const [showContactForm, setShowContactForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [appointmentTypes, setAppointmentTypes] = useState<AppointmentType[]>([]);
+  const [selectedAppointmentType, setSelectedAppointmentType] = useState<AppointmentType | null>(null);
 
   // Generate available time slots for any selected date
   const [allTimeSlots, setAllTimeSlots] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Load appointment types on mount
+  useEffect(() => {
+    fetchAppointmentTypes();
+  }, []);
+
+  const fetchAppointmentTypes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_appointment_types')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setAppointmentTypes(data || []);
+    } catch (error) {
+      console.error('Error fetching appointment types:', error);
+    }
+  };
 
   // Generate standard appointment time slots and check availability
   useEffect(() => {
@@ -181,7 +214,7 @@ export default function UnifiedBookingPage() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedSlot || !selectedDate) return;
+    if (!selectedSlot || !selectedDate || !selectedAppointmentType) return;
     
     setIsSubmitting(true);
     
@@ -212,22 +245,10 @@ export default function UnifiedBookingPage() {
       // Convert Eastern Time to UTC for storage
       const utcDateTime = fromZonedTime(easternDateTime, easternTimeZone);
       
-      // Check if this person already has an audition application
-      const { data: existingApplication, error: checkError } = await supabase
-        .from('audition_applications')
-        .select('id, full_name, email')
-        .or(`full_name.ilike.%${contactInfo.name}%,email.ilike.%${contactInfo.email}%`)
-        .maybeSingle();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        throw checkError;
-      }
-
-      // Check if this person already has an audition appointment
+      // Check if this person already has an appointment
       const { data: existingAppointment, error: appointmentCheckError } = await supabase
         .from('gw_appointments')
         .select('id, client_name, client_email')
-        .eq('appointment_type', 'audition')
         .or(`client_name.ilike.%${contactInfo.name}%,client_email.ilike.%${contactInfo.email}%`)
         .maybeSingle();
 
@@ -237,36 +258,21 @@ export default function UnifiedBookingPage() {
 
       let isUpdate = false;
 
-      // Update existing audition application if found
-      if (existingApplication) {
-        const { error: updateError } = await supabase
-          .from('audition_applications')
-          .update({
-            audition_time_slot: utcDateTime.toISOString(),
-            phone_number: contactInfo.phone,
-            email: contactInfo.email,
-            full_name: contactInfo.name,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingApplication.id);
-
-        if (updateError) throw updateError;
-        isUpdate = true;
-      }
-
       // Update or create appointment in gw_appointments
       if (existingAppointment) {
         // Update existing appointment
           const { error: appointmentUpdateError } = await supabase
             .from('gw_appointments')
             .update({
-              title: `Appointment - ${contactInfo.name}`,
+              title: `${selectedAppointmentType.name} - ${contactInfo.name}`,
               client_name: contactInfo.name,
-              description: `30-minute appointment - ${selectedSlot.displayTime} EST`,
+              description: `${selectedAppointmentType.default_duration_minutes}-minute ${selectedAppointmentType.name.toLowerCase()} - ${selectedSlot.displayTime} EST`,
               appointment_date: utcDateTime.toISOString(),
               client_email: contactInfo.email,
               client_phone: contactInfo.phone,
               status: 'scheduled',
+              appointment_type: selectedAppointmentType.name.toLowerCase(),
+              duration_minutes: selectedAppointmentType.default_duration_minutes,
               updated_at: new Date().toISOString()
             })
             .eq('id', existingAppointment.id);
@@ -278,15 +284,15 @@ export default function UnifiedBookingPage() {
           const { error: appointmentError } = await supabase
             .from('gw_appointments')
             .insert({
-              title: `Appointment - ${contactInfo.name}`,
+              title: `${selectedAppointmentType.name} - ${contactInfo.name}`,
               client_name: contactInfo.name,
-              description: `30-minute appointment - ${selectedSlot.displayTime} EST`,
+              description: `${selectedAppointmentType.default_duration_minutes}-minute ${selectedAppointmentType.name.toLowerCase()} - ${selectedSlot.displayTime} EST`,
               appointment_date: utcDateTime.toISOString(),
               client_email: contactInfo.email,
               client_phone: contactInfo.phone,
               status: 'scheduled',
-              appointment_type: 'consultation',
-              duration_minutes: 30
+              appointment_type: selectedAppointmentType.name.toLowerCase(),
+              duration_minutes: selectedAppointmentType.default_duration_minutes
             });
 
           if (appointmentError) throw appointmentError;
@@ -296,7 +302,7 @@ export default function UnifiedBookingPage() {
       if (contactInfo.phone) {
         try {
           const appointmentDateTime = new Date(utcDateTime);
-          const smsMessage = `Hi ${contactInfo.name}! 🎵 Your appointment has been confirmed for ${selectedSlot.displayDate} at ${selectedSlot.displayTime} EST. Please arrive 5 minutes early. Looking forward to seeing you! - Dr. Johnson`;
+          const smsMessage = `Hi ${contactInfo.name}! 🎵 Your ${selectedAppointmentType.name.toLowerCase()} appointment has been confirmed for ${selectedSlot.displayDate} at ${selectedSlot.displayTime} EST. Please arrive 5 minutes early. Looking forward to seeing you! - Dr. Johnson`;
           
           await supabase.functions.invoke('gw-send-sms', {
             body: {
@@ -309,7 +315,7 @@ export default function UnifiedBookingPage() {
           await supabase.functions.invoke('gw-send-sms', {
             body: {
               to: '+14706221392',
-              message: `APPOINTMENT BOOKED: ${contactInfo.name} (${contactInfo.phone}) scheduled for ${selectedSlot.displayDate} at ${selectedSlot.displayTime} EST`
+              message: `${selectedAppointmentType.name.toUpperCase()} BOOKED: ${contactInfo.name} (${contactInfo.phone}) scheduled for ${selectedSlot.displayDate} at ${selectedSlot.displayTime} EST`
             }
           });
         } catch (smsError) {
@@ -333,7 +339,7 @@ export default function UnifiedBookingPage() {
       }, 2000);
 
     } catch (error) {
-      console.error('Error booking audition:', error);
+      console.error('Error booking appointment:', error);
       toast({
         title: "Booking Failed",
         description: "There was an error scheduling your appointment. Please try again.",
@@ -344,9 +350,9 @@ export default function UnifiedBookingPage() {
     }
   };
 
-  const isFormValid = contactInfo.name && contactInfo.email && contactInfo.phone;
+  const isFormValid = contactInfo.name && contactInfo.email && contactInfo.phone && selectedAppointmentType;
 
-  if (isConfirmed && selectedSlot) {
+  if (isConfirmed && selectedSlot && selectedAppointmentType) {
     return (
       <PublicLayout>
         <div className="min-h-screen bg-background">
@@ -370,6 +376,10 @@ export default function UnifiedBookingPage() {
                   <h3 className="text-lg font-semibold mb-4">Appointment Details</h3>
                   <div className="space-y-3 text-left">
                     <div>
+                      <span className="text-sm text-muted-foreground">Appointment Type:</span>
+                      <p className="font-medium">{selectedAppointmentType.name}</p>
+                    </div>
+                    <div>
                       <span className="text-sm text-muted-foreground">Date & Time:</span>
                       <p className="font-medium">
                         {selectedSlot.displayDate} at {selectedSlot.displayTime}
@@ -377,7 +387,7 @@ export default function UnifiedBookingPage() {
                     </div>
                     <div>
                       <span className="text-sm text-muted-foreground">Duration:</span>
-                      <p className="font-medium">30 minutes</p>
+                      <p className="font-medium">{selectedAppointmentType.default_duration_minutes} minutes</p>
                     </div>
                     <div>
                       <span className="text-sm text-muted-foreground">Name:</span>
@@ -424,12 +434,12 @@ export default function UnifiedBookingPage() {
             </h2>
             <div className="max-w-3xl mx-auto">
               <p className="text-xl text-muted-foreground leading-relaxed mb-6">
-                Schedule your 30-minute appointment for meetings, consultations, and more
+                Schedule your appointment for meetings, consultations, lessons, and more
               </p>
               <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground/80">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  30-minute sessions
+                  Multiple durations available
                 </div>
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
@@ -592,11 +602,41 @@ export default function UnifiedBookingPage() {
                       {selectedSlot?.displayDate} at {selectedSlot?.displayTime} EST
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      5-minute audition session
+                      Please select appointment type and provide your details
                     </p>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6 p-8">
+                  <div className="space-y-2">
+                    <Label htmlFor="appointmentType" className="flex items-center text-base font-semibold text-foreground">
+                      <CalendarIcon className="h-5 w-5 mr-3 text-primary" />
+                      Appointment Type *
+                    </Label>
+                    <Select 
+                      value={selectedAppointmentType?.id || ''} 
+                      onValueChange={(value) => {
+                        const type = appointmentTypes.find(t => t.id === value);
+                        setSelectedAppointmentType(type || null);
+                      }}
+                    >
+                      <SelectTrigger className="h-12 text-base border-2 focus:border-primary">
+                        <SelectValue placeholder="Select appointment type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {appointmentTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{type.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {type.default_duration_minutes} minutes - {type.description}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="space-y-2">
                     <label className="flex items-center text-base font-semibold text-foreground">
                       <User className="h-5 w-5 mr-3 text-primary" />
@@ -665,7 +705,7 @@ export default function UnifiedBookingPage() {
                       ) : (
                         <div className="flex items-center space-x-2">
                           <CheckCircle className="h-4 w-4" />
-                          <span>Confirm Audition</span>
+                          <span>Confirm Appointment</span>
                         </div>
                       )}
                     </Button>
