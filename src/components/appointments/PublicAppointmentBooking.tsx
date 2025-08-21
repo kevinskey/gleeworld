@@ -97,7 +97,7 @@ const PublicAppointmentBooking = ({
     try {
       setBookingLoading(true);
       
-      const { error } = await supabase
+      const { data: appointmentData, error } = await supabase
         .from('gw_appointments')
         .insert({
           title: `${appointmentType} appointment with ${name}`,
@@ -108,9 +108,34 @@ const PublicAppointmentBooking = ({
           appointment_date: selectedSlot.toISOString(),
           status: 'confirmed',
           description: notes || `${appointmentType} appointment`
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      console.log('Appointment created successfully:', appointmentData);
+
+      // Send confirmation email
+      try {
+        console.log('Sending appointment confirmation email...');
+        const emailResponse = await supabase.functions.invoke('send-appointment-notification', {
+          body: {
+            appointmentId: appointmentData.id,
+            type: 'confirmation'
+          }
+        });
+
+        if (emailResponse.error) {
+          console.error('Email notification failed:', emailResponse.error);
+          // Don't throw error - appointment was still created successfully
+        } else {
+          console.log('Email notification sent successfully:', emailResponse.data);
+        }
+      } catch (emailError) {
+        console.error('Failed to send email notification:', emailError);
+        // Don't throw error - appointment was still created successfully
+      }
 
       setShowSuccess(true);
       setSelectedSlot(null);
