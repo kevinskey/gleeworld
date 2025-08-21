@@ -150,15 +150,19 @@ export const AdminCalendarView = () => {
   }, []);
 
   const getDateAppointments = (date: Date) => {
-    return appointments.filter(apt => 
-      isSameDay(new Date(apt.appointment_date), date)
-    );
+    return appointments.filter(apt => {
+      const aptDate = new Date(apt.appointment_date);
+      return isSameDay(aptDate, date);
+    });
   };
 
   const getDateBlocked = (date: Date) => {
-    return blockedDates.find(blocked => 
-      isSameDay(new Date(blocked.blocked_date), date)
-    );
+    return blockedDates.find(blocked => {
+      // Parse the blocked date string as a local date to avoid timezone issues
+      const [year, month, day] = blocked.blocked_date.split('-').map(Number);
+      const blockedDate = new Date(year, month - 1, day); // month is 0-indexed
+      return isSameDay(blockedDate, date);
+    });
   };
 
   const selectedDateAppointments = selectedDate ? getDateAppointments(selectedDate) : [];
