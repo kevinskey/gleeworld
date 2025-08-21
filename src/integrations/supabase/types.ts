@@ -12244,6 +12244,54 @@ export type Database = {
           },
         ]
       }
+      onboarding_signatures: {
+        Row: {
+          agreement_version: string | null
+          created_at: string
+          date_signed: string
+          full_name: string
+          id: string
+          ip_address: unknown | null
+          is_valid: boolean
+          onboarding_step: string
+          signature_data: string
+          signature_type: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          agreement_version?: string | null
+          created_at?: string
+          date_signed?: string
+          full_name: string
+          id?: string
+          ip_address?: unknown | null
+          is_valid?: boolean
+          onboarding_step?: string
+          signature_data: string
+          signature_type?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          agreement_version?: string | null
+          created_at?: string
+          date_signed?: string
+          full_name?: string
+          id?: string
+          ip_address?: unknown | null
+          is_valid?: boolean
+          onboarding_step?: string
+          signature_data?: string
+          signature_type?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       performers: {
         Row: {
           address: string | null
@@ -15644,6 +15692,10 @@ export type Database = {
       validate_password_strength: {
         Args: { password_text: string }
         Returns: Json
+      }
+      validate_signature_data: {
+        Args: { signature_data: string }
+        Returns: boolean
       }
       verify_admin_access: {
         Args: { user_id_param: string }
