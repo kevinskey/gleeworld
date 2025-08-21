@@ -292,13 +292,39 @@ export default function UnifiedBookingPage() {
           if (appointmentError) throw appointmentError;
         }
 
+      // Send SMS notification to client if phone number is provided
+      if (contactInfo.phone) {
+        try {
+          const appointmentDateTime = new Date(utcDateTime);
+          const smsMessage = `Hi ${contactInfo.name}! 🎵 Your appointment has been confirmed for ${selectedSlot.displayDate} at ${selectedSlot.displayTime} EST. Please arrive 5 minutes early. Looking forward to seeing you! - Dr. Johnson`;
+          
+          await supabase.functions.invoke('gw-send-sms', {
+            body: {
+              to: contactInfo.phone,
+              message: smsMessage
+            }
+          });
+          
+          // Send copy to admin
+          await supabase.functions.invoke('gw-send-sms', {
+            body: {
+              to: '+14706221392',
+              message: `APPOINTMENT BOOKED: ${contactInfo.name} (${contactInfo.phone}) scheduled for ${selectedSlot.displayDate} at ${selectedSlot.displayTime} EST`
+            }
+          });
+        } catch (smsError) {
+          console.error('Error sending SMS:', smsError);
+          // Don't fail the booking if SMS fails
+        }
+      }
+
       setIsConfirmed(true);
       
       toast({
         title: isUpdate ? "Appointment Time Updated!" : "Appointment Scheduled!",
         description: isUpdate 
           ? "Your appointment has been successfully updated."
-          : "Your appointment has been confirmed.",
+          : "Your appointment has been confirmed. You'll receive an SMS confirmation shortly.",
       });
 
       // Force a refresh of the page to update the available slots
