@@ -11,6 +11,7 @@ import { useLocation } from 'react-router-dom';
 import { MemberNavigation } from '@/components/member/MemberNavigation';
 import { useUserRole } from '@/hooks/useUserRole';
 import { IncompleteProfileBanner } from '@/components/shared/IncompleteProfileBanner';
+import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
 export const UnifiedDashboard = () => {
@@ -36,6 +37,28 @@ export const UnifiedDashboard = () => {
     profileData: profile,
     timestamp: new Date().toISOString()
   });
+
+  // If user is super admin, show the SuperAdminDashboard instead
+  if (profile?.is_super_admin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+        <div className="px-6 pt-4">
+          <IncompleteProfileBanner userProfile={profile} />
+        </div>
+        <div className="px-6 py-4">
+          <SuperAdminDashboard user={{
+            id: profile.user_id,
+            email: profile.email || '',
+            full_name: profile.full_name || '',
+            role: profile.role || 'super-admin',
+            exec_board_role: profile.exec_board_role,
+            is_exec_board: profile.is_exec_board || false,
+            created_at: new Date().toISOString()
+          }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">

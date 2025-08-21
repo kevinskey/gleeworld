@@ -304,6 +304,16 @@ const App = () => {
                  } 
                />
                <Route 
+                 path="/admin" 
+                 element={
+                   <ProtectedRoute>
+                     <UniversalLayout>
+                       <UnifiedDashboard />
+                     </UniversalLayout>
+                   </ProtectedRoute>
+                  } 
+                />
+               <Route 
                  path="/fan" 
                  element={
                    <ProtectedRoute>
