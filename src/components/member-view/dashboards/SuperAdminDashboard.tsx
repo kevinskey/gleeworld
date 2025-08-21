@@ -68,7 +68,7 @@ import {
   Heart
 } from "lucide-react";
 
-const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
+const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(module => ({ default: module.CalendarViews })));
 
 // Sortable Module Card Component
 interface SortableModuleCardProps {
@@ -179,24 +179,43 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
 
   // Create modulesByCategory object from the function, enhanced with component data
   const modulesByCategory = useMemo(() => {
-    const result: Record<string, any[]> = {};
-    categories.forEach(category => {
-      const modules = getModulesByCategory(category)
-        .map(module => {
-          // Get the full module config from registry
-          const moduleConfig = ModuleRegistry.getModule(module.id);
-          return {
-            ...module,
-            icon: moduleConfig?.icon,
-            iconColor: moduleConfig?.iconColor || 'blue',
-            component: moduleConfig?.component,
-            isNew: moduleConfig?.isNew || false
-          };
-        })
-        .filter(module => module.component !== undefined); // Filter out modules without components
-      result[category] = modules;
-    });
-    return result;
+    try {
+      const result: Record<string, any[]> = {};
+      categories.forEach(category => {
+        try {
+          const modules = getModulesByCategory(category)
+            .map(module => {
+              try {
+                // Get the full module config from registry
+                const moduleConfig = ModuleRegistry.getModule(module.id);
+                if (!moduleConfig) {
+                  console.warn(`Module config not found for: ${module.id}`);
+                  return null;
+                }
+                return {
+                  ...module,
+                  icon: moduleConfig.icon,
+                  iconColor: moduleConfig.iconColor || 'blue',
+                  component: moduleConfig.component,
+                  isNew: moduleConfig.isNew || false
+                };
+              } catch (error) {
+                console.error(`Error processing module ${module.id}:`, error);
+                return null;
+              }
+            })
+            .filter(module => module !== null && module.component !== undefined); // Filter out null modules and modules without components
+          result[category] = modules;
+        } catch (error) {
+          console.error(`Error processing category ${category}:`, error);
+          result[category] = [];
+        }
+      });
+      return result;
+    } catch (error) {
+      console.error('Error in modulesByCategory useMemo:', error);
+      return {};
+    }
   }, [categories, getModulesByCategory]);
 
   const sensors = useSensors(
