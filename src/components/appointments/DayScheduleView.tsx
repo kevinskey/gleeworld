@@ -37,7 +37,7 @@ interface DayEvent {
   startTime: string;
   endTime: string;
   status: string;
-  type: 'audition' | 'appointment';
+  type: 'appointment';
   duration: number;
   email?: string;
   phone?: string;
@@ -58,7 +58,6 @@ export const DayScheduleView = () => {
   const [dayEvents, setDayEvents] = useState<DayEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('day');
-  const [showAuditions, setShowAuditions] = useState(true);
   const [showAppointments, setShowAppointments] = useState(true);
   const [showPendingAppointments, setShowPendingAppointments] = useState(true);
   const [showGoogleCalendarEvents, setShowGoogleCalendarEvents] = useState(false);
@@ -121,17 +120,6 @@ export const DayScheduleView = () => {
 
 
 
-      // Fetch auditions for the date range
-      const { data: auditions, error: auditionsError } = await supabase
-        .from('gw_auditions')
-        .select('*')
-        .gte('audition_date', `${format(startDate, 'yyyy-MM-dd')}T00:00:00.000Z`)
-        .lt('audition_date', `${format(addDays(endDate, 1), 'yyyy-MM-dd')}T00:00:00.000Z`);
-
-      
-
-      if (auditionsError) throw auditionsError;
-
       // Fetch appointments for the date range
       const { data: appointments, error: appointmentsError } = await supabase
         .from('gw_appointments')
@@ -139,37 +127,9 @@ export const DayScheduleView = () => {
         .gte('appointment_date', `${format(startDate, 'yyyy-MM-dd')}T00:00:00.000Z`)
         .lt('appointment_date', `${format(addDays(endDate, 1), 'yyyy-MM-dd')}T00:00:00.000Z`);
 
-      
-
       if (appointmentsError) throw appointmentsError;
 
       // Transform data to DayEvent format
-      const auditionEvents: DayEvent[] = (auditions || []).map(audition => {
-        const startTime = audition.audition_time || '12:00 PM';
-        const duration = 30; // 30 minutes for auditions
-        
-        // Calculate end time
-        const start = parse(startTime, 'h:mm a', new Date());
-        const end = new Date(start.getTime() + duration * 60000);
-        const endTime = format(end, 'h:mm a');
-
-        
-
-        return {
-          id: audition.id,
-          title: 'Glee Club Audition',
-          clientName: `${audition.first_name} ${audition.last_name}`,
-          startTime,
-          endTime,
-          status: audition.status || 'scheduled',
-          type: 'audition' as const,
-          duration,
-          email: audition.email,
-          phone: audition.phone,
-          date: audition.audition_date // Add the actual date for filtering
-        };
-      });
-
       const appointmentEvents: DayEvent[] = (appointments || []).map(apt => {
         const aptDate = parseISO(apt.appointment_date);
         const startTime = format(aptDate, 'h:mm a');
@@ -179,11 +139,9 @@ export const DayScheduleView = () => {
         const end = new Date(aptDate.getTime() + duration * 60000);
         const endTime = format(end, 'h:mm a');
 
-        
-
         return {
           id: apt.id,
-          title: apt.title || 'Appointment',
+          title: apt.appointment_type || 'Appointment',
           clientName: apt.client_name,
           startTime,
           endTime,
@@ -192,12 +150,11 @@ export const DayScheduleView = () => {
           duration,
           email: apt.client_email,
           phone: apt.client_phone,
-          date: apt.appointment_date // Add the actual date for filtering
+          date: apt.appointment_date
         };
       });
 
-      const allEvents = [...auditionEvents, ...appointmentEvents];
-      setDayEvents(allEvents);
+      setDayEvents(appointmentEvents);
 
     } catch (error) {
       console.error('Error fetching day schedule:', error);
@@ -237,28 +194,18 @@ export const DayScheduleView = () => {
     });
   };
 
-  const getStatusColor = (status: string, type: 'audition' | 'appointment') => {
+  const getStatusColor = (status: string, type: 'appointment') => {
     // Return background colors for appointment blocks
-    if (type === 'audition') {
-      switch (status) {
-        case 'confirmed': return 'bg-purple-50 border-l-4 border-purple-500';
-        case 'pending': return 'bg-orange-50 border-l-4 border-orange-500';
-        case 'cancelled': return 'bg-red-50 border-l-4 border-red-500';
-        default: return 'bg-purple-50 border-l-4 border-purple-400';
-      }
-    } else {
-      switch (status) {
-        case 'confirmed': return 'bg-blue-50 border-l-4 border-blue-500';
-        case 'pending': return 'bg-yellow-50 border-l-4 border-yellow-500';
-        case 'cancelled': return 'bg-red-50 border-l-4 border-red-500';
-        default: return 'bg-blue-50 border-l-4 border-blue-400';
-      }
+    switch (status) {
+      case 'confirmed': return 'bg-blue-50 border-l-4 border-blue-500';
+      case 'pending': return 'bg-yellow-50 border-l-4 border-yellow-500';
+      case 'cancelled': return 'bg-red-50 border-l-4 border-red-500';
+      default: return 'bg-blue-50 border-l-4 border-blue-400';
     }
   };
 
   // Filter events based on current filters
   const filteredEvents = dayEvents.filter(event => {
-    if (!showAuditions && event.type === 'audition') return false;
     if (!showAppointments && event.type === 'appointment') return false;
     if (!showPendingAppointments && event.status === 'pending') return false;
     if (statusFilter !== 'all' && event.status !== statusFilter) return false;
@@ -648,12 +595,6 @@ export const DayScheduleView = () => {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Filter Events</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                checked={showAuditions}
-                onCheckedChange={setShowAuditions}
-              >
-                Show Auditions
-              </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={showAppointments}
                 onCheckedChange={setShowAppointments}

@@ -257,7 +257,7 @@ export const AppointmentScheduler = () => {
           <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-2">
             <p className="text-sm text-blue-800 dark:text-blue-200">
               <strong>Appointment Scheduling:</strong> Select a date and available time slot to schedule your appointment.
-              Available appointment types include meetings, consultations, auditions, and more.
+              Available appointment types include meetings, consultations, office hours, and more.
             </p>
           </div>
         </DialogHeader>
@@ -349,7 +349,6 @@ export const AppointmentScheduler = () => {
                           <SelectItem value="tutorial">Tutorial</SelectItem>
                           <SelectItem value="consultation">Consultation</SelectItem>
                           <SelectItem value="rehearsal">Rehearsal</SelectItem>
-                          <SelectItem value="audition">Audition</SelectItem>
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>

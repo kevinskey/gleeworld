@@ -77,23 +77,9 @@ export const ProviderDashboard = () => {
       const monthEnd = new Date();
       monthEnd.setDate(monthEnd.getDate() + 30);
       
-      console.log('Fetching auditions from:', monthStart.toISOString(), 'to:', monthEnd.toISOString());
-      
-      // Fetch auditions as primary appointments
-      const { data: auditions, error: auditionsError } = await supabase
-        .from('gw_auditions')
-        .select('*')
-        .gte('audition_date', monthStart.toISOString())
-        .lte('audition_date', monthEnd.toISOString());
+      console.log('Fetching appointments from:', monthStart.toISOString(), 'to:', monthEnd.toISOString());
 
-      if (auditionsError) {
-        console.error('Error fetching auditions:', auditionsError);
-        throw auditionsError;
-      }
-
-      console.log('Found auditions:', auditions?.length || 0, auditions);
-
-      // Fetch regular appointments
+      // Fetch appointments
       const { data: appointments, error } = await supabase
         .from('gw_appointments')
         .select('*')
@@ -102,52 +88,22 @@ export const ProviderDashboard = () => {
 
       if (error) throw error;
 
-      // Transform auditions to appointment format (primary)
-      const auditionAppointments: RecentAppointment[] = (auditions || []).map(audition => {
-        // Combine audition_date and audition_time properly
-        let combinedDateTime: Date;
-        try {
-          const dateOnly = audition.audition_date.split('T')[0];
-          const timeString = audition.audition_time || '12:00 PM';
-          
-          const timeParsed = parse(timeString, 'h:mm a', new Date());
-          const hours = timeParsed.getHours();
-          const minutes = timeParsed.getMinutes();
-          
-          combinedDateTime = new Date(dateOnly + 'T00:00:00');
-          combinedDateTime.setHours(hours, minutes, 0, 0);
-        } catch (error) {
-          console.error('Error parsing audition time:', error);
-          combinedDateTime = parseISO(audition.audition_date);
-        }
+      console.log('Found appointments:', appointments?.length || 0);
 
-        return {
-          id: audition.id,
-          date: format(combinedDateTime, 'MMMM d, yyyy'),
-          time: audition.audition_time || format(combinedDateTime, 'h:mm a'),
-          service: 'Audition Appointment',
-          clientName: `${audition.first_name} ${audition.last_name}`,
-          status: audition.status || 'scheduled',
-          avatar: ''
-        };
-      });
-
-      // Transform regular appointments (secondary)
-      const regularAppointments: RecentAppointment[] = (appointments || []).map(apt => ({
+      // Transform appointments  
+      const recentAppointments: RecentAppointment[] = (appointments || []).map(apt => ({
         id: apt.id,
         date: format(new Date(apt.appointment_date), 'MMMM d, yyyy'),
         time: format(new Date(apt.appointment_date), 'h:mm a'),
-        service: apt.title || 'General Appointment',
+        service: 'General Appointment',
         clientName: apt.client_name,
         status: apt.status,
         avatar: ''
       }));
 
-      // Calculate stats (auditions as primary appointments)
-      const totalAppointments = (auditions?.length || 0) + (appointments?.length || 0);
-      const cancelledCount = (auditions?.filter(aud => aud.status === 'cancelled').length || 0) + 
-                           (appointments?.filter(apt => apt.status === 'cancelled').length || 0);
-      
+      // Calculate stats
+      const totalAppointments = appointments?.length || 0;
+      const cancelledCount = appointments?.filter(apt => apt.status === 'cancelled').length || 0;
       const bookedCount = totalAppointments - cancelledCount;
       
       // Generate daily occupancy data (use current week for display)
@@ -155,14 +111,13 @@ export const ProviderDashboard = () => {
       const weekEnd = endOfWeek(new Date());
       const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
       const occupancyData = daysInWeek.map(day => {
-        const dayAuditions = auditions?.filter(aud => isSameDay(new Date(aud.audition_date), day)) || [];
-        const dayAppointments = appointments?.filter(apt => isSameDay(new Date(apt.appointment_date), day)) || [];
-        const totalDayAppointments = dayAuditions.length + dayAppointments.length;
+        const dayAppointments = appointments?.filter(apt => 
+          isSameDay(new Date(apt.appointment_date), day)
+        ) || [];
         
-        
-        // Assuming 8 hours per day, 15-minute audition slots = 32 possible slots
-        const maxSlots = 32;
-        const occupancy = Math.min((totalDayAppointments / maxSlots) * 100, 100);
+        // Assuming 8 hours per day, 30-minute slots = 16 possible slots
+        const maxSlots = 16;
+        const occupancy = Math.min((dayAppointments.length / maxSlots) * 100, 100);
         
         return {
           date: format(day, 'yyyy-MM-dd'),
@@ -170,22 +125,21 @@ export const ProviderDashboard = () => {
         };
       });
 
-      // Generate weekly trend data (auditions focused)
+      // Generate weekly trend data
       const trendData = daysInWeek.map(day => {
-        const dayAuditions = auditions?.filter(aud => isSameDay(new Date(aud.audition_date), day)) || [];
-        const dayAppointments = appointments?.filter(apt => isSameDay(new Date(apt.appointment_date), day)) || [];
-        
-        const totalDaily = dayAuditions.length + dayAppointments.length;
+        const dayAppointments = appointments?.filter(apt => 
+          isSameDay(new Date(apt.appointment_date), day)
+        ) || [];
         
         return {
           day: format(day, 'EEE'),
-          appointments: totalDaily,
-          revenue: totalDaily * 150 // Estimated revenue per appointment
+          appointments: dayAppointments.length,
+          revenue: dayAppointments.length * 100 // Estimated revenue per appointment
         };
       });
 
-      // Combine all appointments (auditions first, then regular appointments)
-      const allRecentAppointments = [...auditionAppointments, ...regularAppointments]
+      // Sort appointments by date
+      const allRecentAppointments = recentAppointments
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 8);
 
@@ -193,10 +147,10 @@ export const ProviderDashboard = () => {
       console.log('Recent appointments:', allRecentAppointments);
 
       const avgOccupancy = Math.round(occupancyData.reduce((sum, day) => sum + day.occupancy, 0) / occupancyData.length);
-      const estimatedRevenue = bookedCount * 75; // $75 per audition appointment estimate
+      const estimatedRevenue = bookedCount * 100; // $100 per appointment estimate
 
       setStats({
-        newCustomers: Math.floor(auditions?.length * 0.8 || 0), // Most auditioners are new students
+        newCustomers: Math.floor(totalAppointments * 0.3), // 30% of appointments are new customers
         weeklyRevenue: estimatedRevenue,
         occupancyRate: avgOccupancy,
         bookedAppointments: bookedCount,
@@ -259,7 +213,7 @@ export const ProviderDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">New Students</CardTitle>
+            <CardTitle className="text-sm font-medium">New Clients</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -392,7 +346,7 @@ export const ProviderDashboard = () => {
                 <div className="text-center py-8">
                   <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                   <p className="text-gray-500 font-medium">No appointments found</p>
-                  <p className="text-sm text-gray-400">Recent auditions and appointments will appear here</p>
+                  <p className="text-sm text-gray-400">Recent appointments will appear here</p>
                 </div>
               ) : (
                 recentAppointments.map((appointment) => (
