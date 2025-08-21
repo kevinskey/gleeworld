@@ -12,10 +12,9 @@ import { toast } from 'sonner';
 interface RolePermission {
   id: string;
   role: string;
-  module_key: string;
   module_name: string;
-  can_view: boolean;
-  can_manage: boolean;
+  permission_type: string;
+  is_active: boolean;
 }
 
 const AVAILABLE_ROLES = [
@@ -31,7 +30,7 @@ export const RoleModuleMatrix: React.FC = () => {
   const [permissions, setPermissions] = useState<RolePermission[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [pendingChanges, setPendingChanges] = useState<Record<string, { can_view: boolean; can_manage: boolean }>>({});
+  const [pendingChanges, setPendingChanges] = useState<Record<string, { view: boolean; manage: boolean }>>({});
 
   useEffect(() => {
     fetchRolePermissions();
@@ -46,17 +45,7 @@ export const RoleModuleMatrix: React.FC = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our interface
-      const transformedData = (data || []).map(item => ({
-        id: item.id,
-        role: item.role,
-        module_key: item.module_key || item.module_name,
-        module_name: item.module_name,
-        can_view: item.can_view || false,
-        can_manage: item.can_manage || false
-      }));
-      
-      setPermissions(transformedData);
+      setPermissions(data || []);
     } catch (error: any) {
       console.error('Error fetching role permissions:', error);
       toast.error('Failed to fetch role permissions');
@@ -65,7 +54,7 @@ export const RoleModuleMatrix: React.FC = () => {
     }
   };
 
-  const handlePermissionChange = (role: string, moduleKey: string, permission: 'can_view' | 'can_manage', value: boolean) => {
+  const handlePermissionChange = (role: string, moduleKey: string, permission: 'view' | 'manage', value: boolean) => {
     const key = `${role}-${moduleKey}`;
     setPendingChanges(prev => ({
       ...prev,
@@ -87,33 +76,55 @@ export const RoleModuleMatrix: React.FC = () => {
 
       for (const [key, changes] of Object.entries(pendingChanges)) {
         const [role, moduleKey] = key.split('-');
-        const existingPermission = permissions.find(p => p.role === role && p.module_key === moduleKey);
         
-        if (existingPermission) {
-          // Update existing permission
-          const { error } = await supabase
-            .from('gw_role_module_permissions')
-            .update({
-              can_view: changes.can_view ?? existingPermission.can_view,
-              can_manage: changes.can_manage ?? existingPermission.can_manage
-            })
-            .eq('id', existingPermission.id);
-
-          if (error) throw error;
-        } else {
-          // Create new permission
-          const module = UNIFIED_MODULES.find(m => m.id === moduleKey);
-          const { error } = await supabase
-            .from('gw_role_module_permissions')
-            .insert({
-              role,
-              module_key: moduleKey,
-              module_name: module?.title || moduleKey,
-              can_view: changes.can_view ?? false,
-              can_manage: changes.can_manage ?? false
-            });
-
-          if (error) throw error;
+        // Handle view permission
+        if (changes.view !== undefined) {
+          const existingView = permissions.find(p => 
+            p.role === role && 
+            p.module_name === moduleKey && 
+            p.permission_type === 'view'
+          );
+          
+          if (existingView) {
+            await supabase
+              .from('gw_role_module_permissions')
+              .update({ is_active: changes.view })
+              .eq('id', existingView.id);
+          } else if (changes.view) {
+            await supabase
+              .from('gw_role_module_permissions')
+              .insert({
+                role,
+                module_name: moduleKey,
+                permission_type: 'view',
+                is_active: true
+              });
+          }
+        }
+        
+        // Handle manage permission
+        if (changes.manage !== undefined) {
+          const existingManage = permissions.find(p => 
+            p.role === role && 
+            p.module_name === moduleKey && 
+            p.permission_type === 'manage'
+          );
+          
+          if (existingManage) {
+            await supabase
+              .from('gw_role_module_permissions')
+              .update({ is_active: changes.manage })
+              .eq('id', existingManage.id);
+          } else if (changes.manage) {
+            await supabase
+              .from('gw_role_module_permissions')
+              .insert({
+                role,
+                module_name: moduleKey,
+                permission_type: 'manage',
+                is_active: true
+              });
+          }
         }
       }
 
@@ -131,11 +142,21 @@ export const RoleModuleMatrix: React.FC = () => {
   const getEffectivePermissions = (role: string, moduleKey: string) => {
     const key = `${role}-${moduleKey}`;
     const pending = pendingChanges[key];
-    const existing = permissions.find(p => p.role === role && p.module_key === moduleKey);
+    
+    const existingView = permissions.find(p => 
+      p.role === role && 
+      p.module_name === moduleKey && 
+      p.permission_type === 'view'
+    );
+    const existingManage = permissions.find(p => 
+      p.role === role && 
+      p.module_name === moduleKey && 
+      p.permission_type === 'manage'
+    );
     
     return {
-      can_view: pending?.can_view ?? existing?.can_view ?? false,
-      can_manage: pending?.can_manage ?? existing?.can_manage ?? false
+      view: pending?.view ?? existingView?.is_active ?? false,
+      manage: pending?.manage ?? existingManage?.is_active ?? false
     };
   };
 
@@ -196,15 +217,15 @@ export const RoleModuleMatrix: React.FC = () => {
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center space-x-2">
                         <Switch
-                          checked={permissions.can_view}
-                          onCheckedChange={(checked) => handlePermissionChange(role, module.id, 'can_view', checked)}
+                          checked={permissions.view}
+                          onCheckedChange={(checked) => handlePermissionChange(role, module.id, 'view', checked)}
                         />
                         <span className="text-sm">View</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
-                          checked={permissions.can_manage}
-                          onCheckedChange={(checked) => handlePermissionChange(role, module.id, 'can_manage', checked)}
+                          checked={permissions.manage}
+                          onCheckedChange={(checked) => handlePermissionChange(role, module.id, 'manage', checked)}
                         />
                         <span className="text-sm">Manage</span>
                       </div>

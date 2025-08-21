@@ -14,11 +14,15 @@ interface UserModuleMatrixProps {
 }
 
 interface ModuleGrant {
-  id: string;
-  module_key: string;
-  module_name: string;
+  user_id: string;
+  module_id: string;
   can_view: boolean;
   can_manage: boolean;
+  is_active: boolean;
+  source: string;
+  notes: string;
+  granted_at: string;
+  expires_at: string;
 }
 
 export const UserModuleMatrix: React.FC<UserModuleMatrixProps> = ({ userId }) => {
@@ -41,16 +45,7 @@ export const UserModuleMatrix: React.FC<UserModuleMatrixProps> = ({ userId }) =>
 
       if (error) throw error;
       
-      // Transform the data to match our interface
-      const transformedData = (data || []).map(item => ({
-        id: item.id,
-        module_key: item.module_name, // Using module_name as key
-        module_name: item.module_name,
-        can_view: item.can_view || false,
-        can_manage: item.can_manage || false
-      }));
-      
-      setGrants(transformedData);
+      setGrants(data || []);
     } catch (error: any) {
       console.error('Error fetching user grants:', error);
       toast.error('Failed to fetch user permissions');
@@ -79,7 +74,7 @@ export const UserModuleMatrix: React.FC<UserModuleMatrixProps> = ({ userId }) =>
       setSaving(true);
 
       for (const [moduleKey, changes] of Object.entries(pendingChanges)) {
-        const existingGrant = grants.find(g => g.module_key === moduleKey);
+        const existingGrant = grants.find(g => g.module_id === moduleKey);
         
         if (existingGrant) {
           // Update existing grant
@@ -89,19 +84,22 @@ export const UserModuleMatrix: React.FC<UserModuleMatrixProps> = ({ userId }) =>
               can_view: changes.can_view ?? existingGrant.can_view,
               can_manage: changes.can_manage ?? existingGrant.can_manage
             })
-            .eq('id', existingGrant.id);
+            .eq('user_id', userId)
+            .eq('module_id', moduleKey);
 
           if (error) throw error;
         } else {
           // Create new grant
-          const module = UNIFIED_MODULES.find(m => m.id === moduleKey);
           const { error } = await supabase
             .from('username_module_permissions')
             .insert({
               user_id: userId,
-              module_name: moduleKey,
+              module_id: moduleKey,
               can_view: changes.can_view ?? false,
-              can_manage: changes.can_manage ?? false
+              can_manage: changes.can_manage ?? false,
+              is_active: true,
+              source: 'admin',
+              notes: 'Manually granted by admin'
             });
 
           if (error) throw error;
@@ -121,7 +119,7 @@ export const UserModuleMatrix: React.FC<UserModuleMatrixProps> = ({ userId }) =>
 
   const getEffectivePermissions = (moduleKey: string) => {
     const pending = pendingChanges[moduleKey];
-    const existing = grants.find(g => g.module_key === moduleKey);
+    const existing = grants.find(g => g.module_id === moduleKey);
     
     return {
       can_view: pending?.can_view ?? existing?.can_view ?? false,
