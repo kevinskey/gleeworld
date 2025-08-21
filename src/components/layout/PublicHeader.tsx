@@ -61,8 +61,6 @@ export const PublicHeader = () => {
 
             {/* Right side actions */}
             <div className="flex items-center gap-2 lg:gap-3">
-              {/* Radio Player */}
-              <HeaderRadioPlayer />
               
               {/* Dashboard Link for Authenticated Users */}
               {user && (
