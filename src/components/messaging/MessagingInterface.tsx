@@ -7,19 +7,38 @@ import { useMessageGroups } from '@/hooks/useMessaging';
 import { MessageSquare, Users } from 'lucide-react';
 
 export const MessagingInterface: React.FC = () => {
+  console.log('MessagingInterface: Component starting to render...');
+  
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showMembers, setShowMembers] = useState(false);
   
-  console.log('MessagingInterface: Component MOUNTED and RENDERING');
+  console.log('MessagingInterface: State initialized, calling useMessageGroups...');
   
-  const { data: groups, isLoading, error } = useMessageGroups();
+  let groups, isLoading, error;
+  
+  try {
+    const result = useMessageGroups();
+    groups = result.data;
+    isLoading = result.isLoading;
+    error = result.error;
 
-  console.log('MessagingInterface: Hook returned:', { 
-    groups: groups?.length || 0, 
-    isLoading, 
-    error: error?.message || 'none',
-    groupsData: groups 
-  });
+    console.log('MessagingInterface: Hook executed successfully:', { 
+      groups: groups?.length || 0, 
+      isLoading, 
+      error: error?.message || 'none',
+      groupsData: groups 
+    });
+  } catch (hookError) {
+    console.error('MessagingInterface: Hook error:', hookError);
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-destructive mb-2">Failed to initialize messaging</div>
+          <div className="text-sm text-muted-foreground">{String(hookError)}</div>
+        </div>
+      </div>
+    );
+  }
 
   const selectedGroup = groups?.find(g => g.id === selectedGroupId);
 
@@ -28,7 +47,7 @@ export const MessagingInterface: React.FC = () => {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-600 mb-2">Error loading messages</div>
+          <div className="text-destructive mb-2">Error loading messages</div>
           <div className="text-sm text-muted-foreground">{error.message}</div>
         </div>
       </div>
@@ -43,6 +62,8 @@ export const MessagingInterface: React.FC = () => {
       </div>
     );
   }
+
+  console.log('MessagingInterface: Rendering main interface...');
 
   return (
     <div className="h-screen flex bg-background">
