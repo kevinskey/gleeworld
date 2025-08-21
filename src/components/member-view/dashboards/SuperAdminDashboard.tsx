@@ -527,7 +527,46 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
       ) : (
         /* Dashboard Overview */
         <div className="space-y-6">
-          {/* Overview Cards Section */}
+          {/* Quick Access Modules Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Grid3X3 className="h-5 w-5" />
+                    Quick Access Modules
+                  </CardTitle>
+                  <CardDescription>
+                    Most frequently used administrative modules
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {allModules
+                  .filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id))
+                  .slice(0, 6)
+                  .map((module) => (
+                     <Button
+                       key={module.id}
+                       variant="outline"
+                       className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent"
+                       onClick={() => setSelectedModule(module.id)}
+                     >
+                       <div className="w-full">
+                         <h3 className="font-semibold text-base lg:text-lg">{module.title}</h3>
+                         <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
+                           {module.description}
+                         </p>
+                       </div>
+                     </Button>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Overview Cards Section - moved to bottom */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl lg:text-2xl font-semibold">System Overview</h2>
@@ -782,45 +821,6 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
               </div>
             )}
           </div>
-
-          {/* Quick Access Modules Section */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Grid3X3 className="h-5 w-5" />
-                    Quick Access Modules
-                  </CardTitle>
-                  <CardDescription>
-                    Most frequently used administrative modules
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {allModules
-                  .filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id))
-                  .slice(0, 6)
-                  .map((module) => (
-                     <Button
-                       key={module.id}
-                       variant="outline"
-                       className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent"
-                       onClick={() => setSelectedModule(module.id)}
-                     >
-                       <div className="w-full">
-                         <h3 className="font-semibold text-base lg:text-lg">{module.title}</h3>
-                         <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
-                           {module.description}
-                         </p>
-                       </div>
-                     </Button>
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       )}
     </div>
