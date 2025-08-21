@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ModuleCard } from '@/components/shared/ModuleWrapper';
+import { useUnifiedModules } from '@/hooks/useUnifiedModules';
 import { 
   Calendar, 
   CheckCircle, 
@@ -30,7 +32,8 @@ import {
   Server,
   Activity,
   Lock,
-  GraduationCap
+  GraduationCap,
+  Grid3X3
 } from "lucide-react";
 
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
@@ -52,6 +55,19 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
   console.log('SuperAdminDashboard: Component loaded with user:', user);
   const navigate = useNavigate();
   const { events: upcomingEvents } = usePublicGleeWorldEvents();
+  
+  // Get all modules available to super admin
+  const { 
+    modules: allModules, 
+    categories, 
+    loading: modulesLoading 
+  } = useUnifiedModules({
+    userRole: 'super-admin',
+    isAdmin: true
+  });
+
+  const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [showAllModules, setShowAllModules] = useState(false);
   
   // Format events for AnnouncementsEventsSection
   const formattedUpcomingEvents = upcomingEvents
@@ -103,6 +119,40 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
   });
 
   const [calendarCollapsed, setCalendarCollapsed] = useState(true);
+
+  // If a specific module is selected, show it full page
+  if (selectedModule) {
+    const module = allModules.find(m => m.id === selectedModule);
+    if (module) {
+      const ModuleComponent = module.component;
+      return (
+        <div className="min-h-screen p-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedModule(null)}
+              className="p-0 h-auto"
+            >
+              Super Admin Dashboard
+            </Button>
+            <span>/</span>
+            <span className="text-foreground font-medium">{module.title}</span>
+          </div>
+          
+          <ModuleComponent 
+            user={{
+              ...user,
+              is_admin: true,
+              is_super_admin: true
+            }} 
+            isFullPage={true}
+            onNavigate={(moduleId: string) => setSelectedModule(moduleId)}
+          />
+        </div>
+      );
+    }
+  }
 
   useEffect(() => {
     const fetchSuperAdminData = async () => {
@@ -196,28 +246,96 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {/* System Overview Card */}
-      <Card className="border-2 border-purple-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">System Overview</CardTitle>
-          <Crown className="h-4 w-4 text-purple-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{superAdminData.systemOverview.systemUptime}%</div>
-          <p className="text-xs text-muted-foreground">System uptime</p>
-          <div className="mt-2 space-y-1">
-            <div className="flex justify-between text-xs">
-              <span>Total Users</span>
-              <span>{superAdminData.systemOverview.totalUsers}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span>Active Now</span>
-              <span>{superAdminData.systemOverview.activeUsers}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+      {/* Header with Module Toggle */}
+      <div className="flex items-center justify-between">
+        <div className="border-l-4 border-primary pl-4">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Crown className="h-6 w-6 text-purple-600" />
+            Super Admin Dashboard
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Complete system administration and module management
+          </p>
+        </div>
+        <Button
+          onClick={() => setShowAllModules(!showAllModules)}
+          variant={showAllModules ? "default" : "outline"}
+          className="flex items-center gap-2"
+        >
+          <Grid3X3 className="h-4 w-4" />
+          {showAllModules ? "Show Overview" : "Show All Modules"}
+        </Button>
+      </div>
+
+      {showAllModules ? (
+        /* All Modules View */
+        <div className="space-y-8">
+          {modulesLoading ? (
+            <div className="text-center py-8">Loading modules...</div>
+          ) : (
+            categories.map((categoryName) => {
+              const categoryModules = allModules.filter(m => m.category === categoryName && m.canAccess);
+              if (categoryModules.length === 0) return null;
+              
+              return (
+                <div key={categoryName} className="space-y-4">
+                  <div className="border-l-4 border-primary pl-4">
+                    <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <Grid3X3 className="h-5 w-5 text-primary" />
+                      {categoryName.charAt(0).toUpperCase() + categoryName.slice(1).replace('-', ' ')}
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Administrative modules for {categoryName}
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                     {categoryModules.map((module) => (
+                       <Button
+                         key={module.id}
+                         variant="outline"
+                         className="h-[160px] p-4 flex flex-col items-start gap-2 text-left hover:bg-accent"
+                         onClick={() => setSelectedModule(module.id)}
+                       >
+                         <div className="w-full">
+                           <h3 className="font-semibold text-sm">{module.title}</h3>
+                           <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
+                             {module.description}
+                           </p>
+                         </div>
+                       </Button>
+                     ))}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      ) : (
+        /* Dashboard Overview */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* System Overview Card */}
+          <Card className="border-2 border-purple-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">System Overview</CardTitle>
+              <Crown className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{superAdminData.systemOverview.systemUptime}%</div>
+              <p className="text-xs text-muted-foreground">System uptime</p>
+              <div className="mt-2 space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span>Total Users</span>
+                  <span>{superAdminData.systemOverview.totalUsers}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span>Active Now</span>
+                  <span>{superAdminData.systemOverview.activeUsers}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
       {/* Security Metrics Card */}
       <Card className="border-2 border-red-200">
@@ -428,6 +546,43 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
           )}
         </div>
       </div>
+
+      {/* Quick Access Modules - Show 6 most important ones in overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Grid3X3 className="h-5 w-5" />
+            Quick Access Modules
+          </CardTitle>
+          <CardDescription>
+            Most frequently used administrative modules
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {allModules
+              .filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id))
+              .slice(0, 6)
+              .map((module) => (
+                 <Button
+                   key={module.id}
+                   variant="outline"
+                   className="h-[140px] p-4 flex flex-col items-start gap-2 text-left hover:bg-accent"
+                   onClick={() => setSelectedModule(module.id)}
+                 >
+                   <div className="w-full">
+                     <h3 className="font-semibold text-sm">{module.title}</h3>
+                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                       {module.description}
+                     </p>
+                   </div>
+                 </Button>
+              ))}
+          </div>
+        </CardContent>
+      </Card>
+        </div>
+      )}
     </div>
   );
 };
