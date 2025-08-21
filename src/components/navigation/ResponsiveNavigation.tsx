@@ -6,7 +6,7 @@ const publicNavItems = [
   { href: "/", label: "Home", shortLabel: "Home" },
   { href: "/about", label: "About", shortLabel: "About" },
   { href: "/calendar", label: "Events", shortLabel: "Events" },
-  { href: "/booking", label: "Booking", shortLabel: "Book" },
+  { href: "/booking", label: "Office Hours", shortLabel: "Office Hours" },
   { href: "/booking-request", label: "Book Us", shortLabel: "Book Us" },
   { href: "/shop", label: "Shop", shortLabel: "Shop" },
   { href: "/press-kit", label: "Press Kit", shortLabel: "Press" },
