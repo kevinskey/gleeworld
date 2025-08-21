@@ -75,14 +75,23 @@ export const useMessageGroups = () => {
   return useQuery({
     queryKey: ['message-groups'],
     queryFn: async () => {
+      console.log('useMessageGroups: Starting query...');
+      
       // Check if user is authenticated
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('useMessageGroups: Current user:', user?.id);
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('useMessageGroups: Auth check result:', { user: user?.id, userError });
+      
+      if (userError) {
+        console.error('useMessageGroups: Auth error:', userError);
+        throw userError;
+      }
       
       if (!user) {
         console.log('useMessageGroups: No authenticated user found');
         throw new Error('Authentication required');
       }
+
+      console.log('useMessageGroups: Making database query for user:', user.id);
 
       const { data, error } = await supabase
         .from('gw_message_groups')
@@ -97,10 +106,17 @@ export const useMessageGroups = () => {
         .eq('gw_group_members.user_id', user.id)
         .order('updated_at', { ascending: false });
 
-      console.log('useMessageGroups: Query result:', { data, error });
-      if (error) throw error;
+      console.log('useMessageGroups: Database query result:', { data, error, count: data?.length });
+      
+      if (error) {
+        console.error('useMessageGroups: Database error:', error);
+        throw error;
+      }
+      
       return data as MessageGroup[];
     },
+    retry: 1,
+    staleTime: 0, // Always fetch fresh data
   });
 };
 
