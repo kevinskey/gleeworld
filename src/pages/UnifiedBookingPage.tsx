@@ -258,6 +258,29 @@ export default function UnifiedBookingPage() {
 
       let isUpdate = false;
 
+      // Map appointment type names to valid database constraint values
+      const getValidAppointmentType = (typeName: string): string => {
+        const lowerName = typeName.toLowerCase();
+        switch (lowerName) {
+          case 'advising':
+          case 'consultation':
+            return 'consultation';
+          case 'lesson':
+          case 'tutoring':
+            return 'general';
+          case 'meeting':
+            return 'meeting';
+          case 'audition':
+            return 'audition';
+          case 'rehearsal':
+            return 'rehearsal';
+          default:
+            return 'other';
+        }
+      };
+
+      const validAppointmentType = getValidAppointmentType(selectedAppointmentType.name);
+
       // Update or create appointment in gw_appointments
       if (existingAppointment) {
         // Update existing appointment
@@ -271,7 +294,7 @@ export default function UnifiedBookingPage() {
               client_email: contactInfo.email,
               client_phone: contactInfo.phone,
               status: 'scheduled',
-              appointment_type: selectedAppointmentType.name.toLowerCase(),
+              appointment_type: validAppointmentType,
               duration_minutes: selectedAppointmentType.default_duration_minutes,
               updated_at: new Date().toISOString()
             })
@@ -291,7 +314,7 @@ export default function UnifiedBookingPage() {
               client_email: contactInfo.email,
               client_phone: contactInfo.phone,
               status: 'scheduled',
-              appointment_type: selectedAppointmentType.name.toLowerCase(),
+              appointment_type: validAppointmentType,
               duration_minutes: selectedAppointmentType.default_duration_minutes
             });
 
