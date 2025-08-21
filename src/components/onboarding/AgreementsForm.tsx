@@ -4,6 +4,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ESignaturePad } from './ESignaturePad';
 import { OnboardingProfile } from '@/hooks/useOnboardingProfile';
+import { useOnboardingSignature } from '@/hooks/useOnboardingSignature';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface AgreementsFormProps {
   profile: OnboardingProfile;
@@ -12,11 +15,44 @@ interface AgreementsFormProps {
 }
 
 export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProps) => {
-  const handleSignature = (signature: string | null) => {
-    if (signature) {
-      onUpdate('media_release_signed_at', new Date().toISOString());
-      onUpdate('media_release_signature', signature);
+  const { user } = useAuth();
+  const { saveSignature, saving: signatureSaving } = useOnboardingSignature();
+
+  const handleSignature = async (signature: string | null) => {
+    if (signature && user) {
+      try {
+        console.log('Saving signature for user:', user.id);
+        console.log('User profile name:', `${profile.first_name || ''} ${profile.last_name || ''}`.trim());
+        
+        // Use name from profile, or fall back to user email
+        const firstName = profile.first_name || '';
+        const lastName = profile.last_name || '';
+        const fullName = `${firstName} ${lastName}`.trim() || user.email || 'Unknown User';
+        
+        // Save the signature to our onboarding_signatures table
+        const signatureId = await saveSignature({
+          signatureData: signature,
+          fullName: fullName,
+          onboardingStep: 'media_release_agreement',
+          signatureType: 'digital'
+        });
+        
+        console.log('Signature saved with ID:', signatureId);
+        
+        // Update the profile with signature data
+        onUpdate('media_release_signed_at', new Date().toISOString());
+        onUpdate('media_release_signature', signature);
+        
+        toast.success('Signature saved successfully!');
+      } catch (error) {
+        console.error('Failed to save signature:', error);
+        toast.error('Failed to save signature. Please try again.');
+        
+        // Don't update the profile if saving failed
+        return;
+      }
     } else {
+      // Clear signature
       onUpdate('media_release_signed_at', null);
       onUpdate('media_release_signature', null);
     }
@@ -28,7 +64,7 @@ export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProp
         <CardTitle>Agreements & Consent</CardTitle>
         <CardDescription>
           Please review and agree to the following terms and conditions.
-          {saving && <span className="text-muted-foreground text-sm ml-2">Saving...</span>}
+          {(saving || signatureSaving) && <span className="text-muted-foreground text-sm ml-2">Saving...</span>}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
