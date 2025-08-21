@@ -37,6 +37,7 @@ export interface OnboardingProfile {
   media_consent?: boolean;
   data_consent?: boolean;
   media_release_signed_at?: string;
+  media_release_signature?: string;
   // Additional existing fields
   emergency_contact?: string;
   dietary_restrictions?: string[];

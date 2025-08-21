@@ -15,8 +15,10 @@ export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProp
   const handleSignature = (signature: string | null) => {
     if (signature) {
       onUpdate('media_release_signed_at', new Date().toISOString());
+      onUpdate('media_release_signature', signature);
     } else {
       onUpdate('media_release_signed_at', null);
+      onUpdate('media_release_signature', null);
     }
   };
 
@@ -74,7 +76,7 @@ export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProp
 
           <ESignaturePad 
             onSignatureChange={handleSignature}
-            signature={profile.media_release_signed_at ? 'signed' : null}
+            signature={profile.media_release_signature}
           />
 
           {profile.media_release_signed_at && (
