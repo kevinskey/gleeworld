@@ -26,6 +26,7 @@ import Wellness from '@/pages/Wellness';
 import FirstYearConsole from '@/pages/FirstYearConsole';
 import HandbookExam from '@/pages/HandbookExam';
 import HandbookSignature from '@/pages/HandbookSignature';
+import Appointments from '@/pages/Appointments';
 
 // Admin Pages
 import AccessControl from '@/pages/admin/AccessControl';
@@ -58,6 +59,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/booking" element={<OfficeHoursPage />} />
+            <Route path="/appointments" element={<Appointments />} />
 
             {/* App Routes - Requires Authentication */}
             <Route path="/app" element={<AppLayout />} >
