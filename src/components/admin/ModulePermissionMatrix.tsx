@@ -1,254 +1,122 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useUnifiedModulesSimple } from '@/hooks/useUnifiedModulesSimple';
-import { useModulePermissionManager } from '@/hooks/useModulePermissionManager';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, Users, User, Settings } from 'lucide-react';
+import { UNIFIED_MODULES } from '@/config/unified-modules';
+import { RoleModuleMatrix } from './RoleModuleMatrix';
+import { UserModuleMatrix } from './UserModuleMatrix';
+import { UsernamePermissionsManager } from './UsernamePermissionsManager';
 
-interface Role {
-  id: string;
-  key: string;
-  name: string;
-}
+type TabType = 'overview' | 'roles' | 'users' | 'username';
 
-interface ModulePermission {
-  role_id: string;
-  module_id: string;
-  can_view: boolean;
-  can_manage: boolean;
-}
+export const ModulePermissionMatrix: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
 
-interface PermissionMatrix {
-  [moduleKey: string]: {
-    [roleKey: string]: {
-      can_view: boolean;
-      can_manage: boolean;
-    };
-  };
-}
+  const activeModules = UNIFIED_MODULES.filter(m => m.isActive !== false);
+  const modulesByCategory = activeModules.reduce((acc, module) => {
+    if (!acc[module.category]) acc[module.category] = [];
+    acc[module.category].push(module);
+    return acc;
+  }, {} as Record<string, typeof UNIFIED_MODULES>);
 
-export function ModulePermissionMatrix() {
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [selectedRole, setSelectedRole] = useState<string>('');
-  const [permissions, setPermissions] = useState<PermissionMatrix>({});
-  const [loading, setLoading] = useState(true);
-  
-  const { modules } = useUnifiedModulesSimple();
-  const { setRoleModulePermissions } = useModulePermissionManager();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    fetchRolesAndPermissions();
-  }, []);
-
-  const fetchRolesAndPermissions = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch roles
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('gw_roles')
-        .select('*')
-        .order('name');
-
-      if (rolesError) throw rolesError;
-      setRoles(rolesData || []);
-
-      // Fetch existing permissions
-      const { data: permsData, error: permsError } = await supabase
-        .from('gw_role_module_permissions')
-        .select(`
-          can_view,
-          can_manage,
-          gw_roles!inner(key),
-          gw_modules!inner(key)
-        `);
-
-      if (permsError) throw permsError;
-
-      // Build permission matrix
-      const matrix: PermissionMatrix = {};
-      
-      for (const perm of permsData || []) {
-        const moduleKey = (perm as any).gw_modules.key;
-        const roleKey = (perm as any).gw_roles.key;
+  const renderOverview = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <Settings className="h-8 w-8 text-blue-500" />
+              <div>
+                <h3 className="text-lg font-semibold">Total Modules</h3>
+                <p className="text-2xl font-bold">{activeModules.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         
-        if (!matrix[moduleKey]) {
-          matrix[moduleKey] = {};
-        }
-        
-        matrix[moduleKey][roleKey] = {
-          can_view: (perm as any).can_view,
-          can_manage: (perm as any).can_manage
-        };
-      }
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <Users className="h-8 w-8 text-green-500" />
+              <div>
+                <h3 className="text-lg font-semibold">Categories</h3>
+                <p className="text-2xl font-bold">{Object.keys(modulesByCategory).length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      setPermissions(matrix);
-    } catch (error) {
-      console.error('Error fetching roles and permissions:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load roles and permissions',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePermissionChange = async (
-    moduleKey: string,
-    roleKey: string,
-    permissionType: 'can_view' | 'can_manage',
-    value: boolean
-  ) => {
-    const currentPerms = permissions[moduleKey]?.[roleKey] || { can_view: false, can_manage: false };
-    
-    // If disabling manage, also disable view unless explicitly keeping it
-    let newPerms = { ...currentPerms, [permissionType]: value };
-    
-    // If enabling manage, also enable view
-    if (permissionType === 'can_manage' && value) {
-      newPerms.can_view = true;
-    }
-    
-    // If disabling view, also disable manage
-    if (permissionType === 'can_view' && !value) {
-      newPerms.can_manage = false;
-    }
-
-    const success = await setRoleModulePermissions(roleKey, moduleKey, newPerms);
-    
-    if (success) {
-      // Update local state
-      setPermissions(prev => ({
-        ...prev,
-        [moduleKey]: {
-          ...prev[moduleKey],
-          [roleKey]: newPerms
-        }
-      }));
-    }
-  };
-
-  const filteredModules = selectedRole 
-    ? modules.filter(module => 
-        permissions[module.id]?.[selectedRole]?.can_view || 
-        permissions[module.id]?.[selectedRole]?.can_manage
-      )
-    : modules;
-
-  if (loading) {
-    return (
       <Card>
         <CardHeader>
-          <CardTitle>Module Permission Matrix</CardTitle>
+          <CardTitle>Modules by Category</CardTitle>
+          <CardDescription>
+            Overview of all available modules organized by category
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="animate-pulse">Loading permissions...</div>
+          <div className="space-y-4">
+            {Object.entries(modulesByCategory).map(([category, modules]) => (
+              <div key={category} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold capitalize">{category}</h3>
+                  <Badge variant="secondary">{modules.length} modules</Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {modules.map(module => (
+                    <Badge key={module.id} variant="outline">
+                      {module.title}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
-    );
-  }
+    </div>
+  );
+
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: Settings },
+    { id: 'roles', label: 'Role Permissions', icon: Users },
+    { id: 'username', label: 'Username Permissions', icon: User }
+  ] as const;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Module Permission Matrix</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Manage which roles can view and manage different modules
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex gap-4 items-center">
-          <Select value={selectedRole} onValueChange={setSelectedRole}>
-            <SelectTrigger className="w-64">
-              <SelectValue placeholder="Filter by role (optional)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Roles</SelectItem>
-              {roles.map(role => (
-                <SelectItem key={role.key} value={role.key}>
-                  {role.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {selectedRole && (
-            <Badge variant="outline">
-              Showing modules for: {roles.find(r => r.key === selectedRole)?.name}
-            </Badge>
-          )}
-        </div>
-
-        <div className="border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted">
-              <tr>
-                <th className="text-left p-3 font-medium">Module</th>
-                <th className="text-left p-3 font-medium">Category</th>
-                {roles.map(role => (
-                  <th key={role.key} className="text-center p-3 font-medium min-w-24">
-                    {role.name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredModules.map(module => (
-                <tr key={module.id} className="border-t">
-                  <td className="p-3">
-                    <div>
-                      <div className="font-medium">{module.title}</div>
-                      <div className="text-sm text-muted-foreground">{module.description}</div>
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    <Badge variant="outline">{module.category}</Badge>
-                  </td>
-                  {roles.map(role => {
-                    const rolePerms = permissions[module.id]?.[role.key] || { can_view: false, can_manage: false };
-                    return (
-                      <td key={role.key} className="p-3 text-center">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-center gap-1">
-                            <Switch
-                              checked={rolePerms.can_view}
-                              onCheckedChange={(checked) => 
-                                handlePermissionChange(module.id, role.key, 'can_view', checked)
-                              }
-                            />
-                            <span className="text-xs">View</span>
-                          </div>
-                          <div className="flex items-center justify-center gap-1">
-                            <Switch
-                              checked={rolePerms.can_manage}
-                              onCheckedChange={(checked) => 
-                                handlePermissionChange(module.id, role.key, 'can_manage', checked)
-                              }
-                            />
-                            <span className="text-xs">Manage</span>
-                          </div>
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredModules.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            {selectedRole ? 'No modules assigned to this role' : 'No modules found'}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Module Permission Management</CardTitle>
+          <CardDescription>
+            Manage permissions for modules across roles and individual users
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex space-x-2 mb-6 border-b">
+            {tabs.map(tab => {
+              const Icon = tab.icon;
+              return (
+                <Button
+                  key={tab.id}
+                  variant={activeTab === tab.id ? "default" : "ghost"}
+                  onClick={() => setActiveTab(tab.id as TabType)}
+                  className="flex items-center space-x-2"
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                </Button>
+              );
+            })}
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {activeTab === 'overview' && renderOverview()}
+          {activeTab === 'roles' && <RoleModuleMatrix />}
+          {activeTab === 'username' && <UsernamePermissionsManager />}
+        </CardContent>
+      </Card>
+    </div>
   );
-}
+};

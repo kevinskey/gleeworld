@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Search, User, Settings, RefreshCw, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUnifiedModulesSimple } from '@/hooks/useUnifiedModulesSimple';
 import { UserModuleMatrix } from './UserModuleMatrix';
 import { toast } from 'sonner';
 
@@ -26,10 +26,10 @@ export const UsernamePermissionsManager = () => {
     setProfile(null);
 
     try {
-      // Fetch user profile by username
+      // Fetch user profile by username - removed is_active since it doesn't exist
       const { data: profileData, error: profileError } = await supabase
         .from('gw_profiles')
-        .select('user_id, full_name, email, role, is_active, is_super_admin, is_admin, is_exec_board, exec_board_role')
+        .select('user_id, full_name, email, role, is_admin, is_super_admin, is_exec_board, exec_board_role')
         .eq('username', username)
         .single();
 

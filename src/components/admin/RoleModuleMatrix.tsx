@@ -1,191 +1,208 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useUnifiedModulesSimple } from '@/hooks/useUnifiedModulesSimple';
-import { USER_ROLES } from '@/constants/permissions';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { standardizeModuleName } from '@/utils/moduleHelpers';
+import { Loader2, Save, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { UNIFIED_MODULES } from '@/config/unified-modules';
 import { toast } from 'sonner';
 
-interface PermissionMap {
-  [moduleName: string]: {
-    view: boolean;
-    manage: boolean;
-  };
+interface RolePermission {
+  id: string;
+  role: string;
+  module_key: string;
+  module_name: string;
+  can_view: boolean;
+  can_manage: boolean;
 }
 
+const AVAILABLE_ROLES = [
+  'student',
+  'member', 
+  'alumna',
+  'executive',
+  'admin',
+  'super-admin'
+];
+
 export const RoleModuleMatrix: React.FC = () => {
-  const { modules } = useUnifiedModulesSimple();
-  const [role, setRole] = useState<string>('member');
-  const [loading, setLoading] = useState<boolean>(false);
-  const [permMap, setPermMap] = useState<PermissionMap>({});
-
-  const moduleList = useMemo(
-    () => modules.map(m => ({ name: m.name, title: m.title })).sort((a, b) => a.title.localeCompare(b.title)),
-    [modules]
-  );
-
-  const loadRolePermissions = async (targetRole: string) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('gw_role_module_permissions')
-        .select('module_name, permission_type')
-        .eq('role', targetRole)
-        .eq('is_active', true);
-
-      if (error) throw error;
-
-      const next: PermissionMap = {};
-      moduleList.forEach(m => (next[m.name] = { view: false, manage: false }));
-      (data || []).forEach(row => {
-        if (!next[row.module_name]) next[row.module_name] = { view: false, manage: false };
-        if (row.permission_type === 'view') next[row.module_name].view = true;
-        if (row.permission_type === 'manage') next[row.module_name].manage = true;
-      });
-      // Ensure Manage implies View in UI map
-      Object.keys(next).forEach(k => {
-        if (next[k].manage) next[k].view = true;
-      });
-      setPermMap(next);
-    } catch (e: any) {
-      console.error('Failed to load role permissions', e);
-      toast.error('Failed to load role permissions');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [permissions, setPermissions] = useState<RolePermission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [pendingChanges, setPendingChanges] = useState<Record<string, { can_view: boolean; can_manage: boolean }>>({});
 
   useEffect(() => {
-    loadRolePermissions(role);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role]);
+    fetchRolePermissions();
+  }, []);
 
-  const enablePermission = async (moduleName: string, permission: 'view' | 'manage') => {
-    const payload = {
-      role,
-      module_name: standardizeModuleName(moduleName),
-      permission_type: permission,
-      is_active: true,
-    } as const;
-
-    const { error } = await supabase
-      .from('gw_role_module_permissions')
-      .upsert(payload, { onConflict: 'role,module_name,permission_type' });
-
-    if (error) throw error;
-  };
-
-  const disablePermission = async (moduleName: string, permission: 'view' | 'manage') => {
-    const { error } = await supabase
-      .from('gw_role_module_permissions')
-      .delete()
-      .eq('role', role)
-      .eq('module_name', standardizeModuleName(moduleName))
-      .eq('permission_type', permission);
-
-    if (error) throw error;
-  };
-
-  const toggle = async (moduleName: string, key: 'view' | 'manage', nextVal: boolean) => {
+  const fetchRolePermissions = async () => {
     try {
       setLoading(true);
-      // Manage implies View
-      if (key === 'manage' && nextVal) {
-        // ensure view
-        if (!permMap[moduleName]?.view) await enablePermission(moduleName, 'view');
-        await enablePermission(moduleName, 'manage');
-      } else if (key === 'view' && !nextVal) {
-        // turning view off disables manage too
-        if (permMap[moduleName]?.manage) await disablePermission(moduleName, 'manage');
-        await disablePermission(moduleName, 'view');
-      } else {
-        // simple flip
-        if (nextVal) await enablePermission(moduleName, key);
-        else await disablePermission(moduleName, key);
-      }
-      await loadRolePermissions(role);
-      toast.success('Permissions updated');
-    } catch (e: any) {
-      console.error('Failed to update permission', e);
-      toast.error('Failed to update permission');
+      const { data, error } = await supabase
+        .from('gw_role_module_permissions')
+        .select('*');
+
+      if (error) throw error;
+      setPermissions(data || []);
+    } catch (error: any) {
+      console.error('Error fetching role permissions:', error);
+      toast.error('Failed to fetch role permissions');
     } finally {
       setLoading(false);
     }
   };
 
-  const roleOptions = useMemo(() => {
-    return Object.values(USER_ROLES) as string[];
-  }, []);
+  const handlePermissionChange = (role: string, moduleKey: string, permission: 'can_view' | 'can_manage', value: boolean) => {
+    const key = `${role}-${moduleKey}`;
+    setPendingChanges(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [permission]: value
+      }
+    }));
+  };
+
+  const saveChanges = async () => {
+    if (Object.keys(pendingChanges).length === 0) {
+      toast.info('No changes to save');
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      for (const [key, changes] of Object.entries(pendingChanges)) {
+        const [role, moduleKey] = key.split('-');
+        const existingPermission = permissions.find(p => p.role === role && p.module_key === moduleKey);
+        
+        if (existingPermission) {
+          // Update existing permission
+          const { error } = await supabase
+            .from('gw_role_module_permissions')
+            .update({
+              can_view: changes.can_view ?? existingPermission.can_view,
+              can_manage: changes.can_manage ?? existingPermission.can_manage
+            })
+            .eq('id', existingPermission.id);
+
+          if (error) throw error;
+        } else {
+          // Create new permission
+          const module = UNIFIED_MODULES.find(m => m.id === moduleKey);
+          const { error } = await supabase
+            .from('gw_role_module_permissions')
+            .insert({
+              role,
+              module_key: moduleKey,
+              module_name: module?.title || moduleKey,
+              can_view: changes.can_view ?? false,
+              can_manage: changes.can_manage ?? false
+            });
+
+          if (error) throw error;
+        }
+      }
+
+      setPendingChanges({});
+      await fetchRolePermissions();
+      toast.success('Role permissions updated successfully');
+    } catch (error: any) {
+      console.error('Error saving changes:', error);
+      toast.error('Failed to save changes');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getEffectivePermissions = (role: string, moduleKey: string) => {
+    const key = `${role}-${moduleKey}`;
+    const pending = pendingChanges[key];
+    const existing = permissions.find(p => p.role === role && p.module_key === moduleKey);
+    
+    return {
+      can_view: pending?.can_view ?? existing?.can_view ?? false,
+      can_manage: pending?.can_manage ?? existing?.can_manage ?? false
+    };
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center p-6">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          <span>Loading role permissions...</span>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Role → Module Permissions</CardTitle>
-        <CardDescription>Toggle View/Manage per module. Manage implies View.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-4 mb-4">
-          <div className="min-w-56">
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger aria-label="Select role">
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                {roleOptions.map((r) => (
-                  <SelectItem key={r} value={r}>{r}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button variant="outline" onClick={() => loadRolePermissions(role)} disabled={loading}>Refresh</Button>
+        <CardTitle>Role-Based Module Permissions</CardTitle>
+        <CardDescription>
+          Configure default permissions for each role across all modules
+        </CardDescription>
+        <div className="flex items-center space-x-2">
+          <Button onClick={fetchRolePermissions} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Refresh
+          </Button>
+          <Button 
+            onClick={saveChanges} 
+            disabled={saving || Object.keys(pendingChanges).length === 0}
+            size="sm"
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+            Save Changes
+          </Button>
         </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {AVAILABLE_ROLES.map(role => (
+          <div key={role}>
+            <h3 className="text-lg font-semibold mb-3 capitalize">{role}</h3>
+            <div className="space-y-2">
+              {UNIFIED_MODULES.filter(m => m.isActive !== false).map(module => {
+                const permissions = getEffectivePermissions(role, module.id);
+                const hasChanges = pendingChanges[`${role}-${module.id}`];
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left">
-                <th className="py-1.5 px-1">Module</th>
-                <th className="py-1.5 px-1">View</th>
-                <th className="py-1.5 px-1">Manage</th>
-              </tr>
-            </thead>
-            <tbody>
-              {moduleList.map((m) => {
-                const state = permMap[m.name] || { view: false, manage: false };
                 return (
-                  <tr key={m.name} className="border-b last:border-b-0 hover:bg-muted/40">
-                    <td className="py-1.5 px-1">{m.title}</td>
-                    <td className="py-1.5 px-1">
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={!!state.view}
-                          onCheckedChange={(val) => toggle(m.name, 'view', val)}
-                          disabled={loading}
-                          aria-label={`Toggle view for ${m.title}`}
-                        />
-                        <span className="text-xs text-muted-foreground">View</span>
+                  <div 
+                    key={`${role}-${module.id}`}
+                    className={`flex items-center justify-between p-3 border rounded-lg ${hasChanges ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'}`}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <h4 className="font-medium">{module.title}</h4>
+                        <Badge variant="secondary">{module.category}</Badge>
+                        {hasChanges && <Badge variant="outline">Modified</Badge>}
                       </div>
-                    </td>
-                    <td className="py-1.5 px-1">
-                      <div className="flex items-center gap-2">
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
                         <Switch
-                          checked={!!state.manage}
-                          onCheckedChange={(val) => toggle(m.name, 'manage', val)}
-                          disabled={loading}
-                          aria-label={`Toggle manage for ${m.title}`}
+                          checked={permissions.can_view}
+                          onCheckedChange={(checked) => handlePermissionChange(role, module.id, 'can_view', checked)}
                         />
-                        <span className="text-xs text-muted-foreground">Manage</span>
+                        <span className="text-sm">View</span>
                       </div>
-                    </td>
-                  </tr>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={permissions.can_manage}
+                          onCheckedChange={(checked) => handlePermissionChange(role, module.id, 'can_manage', checked)}
+                        />
+                        <span className="text-sm">Manage</span>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );
