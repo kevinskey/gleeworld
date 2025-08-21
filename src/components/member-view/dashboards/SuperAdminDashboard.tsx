@@ -200,10 +200,13 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
   const sortedModulesByCategory = useMemo(() => {
     const result: Record<string, any[]> = {};
     
-    Object.entries(modulesByCategory).forEach(([category, categoryModules]) => {
-      // For now, we'll keep the default order but this is where custom ordering would be applied
-      result[category] = [...categoryModules];
-    });
+    // Add null check to prevent Object.entries error
+    if (modulesByCategory && typeof modulesByCategory === 'object') {
+      Object.entries(modulesByCategory).forEach(([category, categoryModules]) => {
+        // For now, we'll keep the default order but this is where custom ordering would be applied
+        result[category] = categoryModules ? [...categoryModules] : [];
+      });
+    }
     
     return result;
   }, [modulesByCategory]);
