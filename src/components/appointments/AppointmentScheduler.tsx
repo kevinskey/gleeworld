@@ -272,11 +272,12 @@ export const AppointmentScheduler = () => {
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   disabled={(date) => {
-                    // Allow appointments from today onwards, but check availability dynamically
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     return date < today;
                   }}
+                  numberOfMonths={2}
+                  showOutsideDays={true}
                   className="rounded-md border"
                 />
             </div>

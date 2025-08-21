@@ -288,9 +288,10 @@ export const PublicAppointmentBooking = () => {
               <CardTitle>Select Date & Time</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 <div>
-                  <h3 className="font-medium mb-3">Choose Date</h3>
+                  <h3 className="font-medium mb-3">Choose Any Available Date</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Select any future date - all available days are shown below</p>
                   <Calendar
                     mode="single"
                     selected={selectedDate}
@@ -300,11 +301,13 @@ export const PublicAppointmentBooking = () => {
                       today.setHours(0, 0, 0, 0);
                       return date < today;
                     }}
+                    numberOfMonths={2}
+                    showOutsideDays={true}
                     className="rounded-md border"
                   />
                 </div>
 
-                <div>
+                <div className="mt-6">
                   <h3 className="font-medium mb-3">Available Times</h3>
                   {selectedDate ? (
                     <div className="space-y-2 max-h-80 overflow-y-auto">
