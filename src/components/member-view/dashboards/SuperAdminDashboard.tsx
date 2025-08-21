@@ -250,20 +250,20 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
       {/* Header with Module Toggle */}
       <div className="flex items-center justify-between">
         <div className="border-l-4 border-primary pl-4">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Crown className="h-6 w-6 text-purple-600" />
+          <h1 className="text-3xl lg:text-4xl font-bold flex items-center gap-3">
+            <Crown className="h-8 w-8 text-purple-600" />
             Super Admin Dashboard
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-base lg:text-lg text-muted-foreground mt-2">
             Complete system administration and module management
           </p>
         </div>
         <Button
           onClick={() => setShowAllModules(!showAllModules)}
           variant={showAllModules ? "default" : "outline"}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 h-12 px-6 text-base"
         >
-          <Grid3X3 className="h-4 w-4" />
+          <Grid3X3 className="h-5 w-5" />
           {showAllModules ? "Show Overview" : "Show All Modules"}
         </Button>
       </div>
@@ -272,7 +272,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
         /* All Modules View */
         <div className="space-y-8">
           {modulesLoading ? (
-            <div className="text-center py-8">Loading modules...</div>
+            <div className="text-center py-8 text-lg">Loading modules...</div>
           ) : (
             categories.map((categoryName) => {
               const categoryModules = allModules.filter(m => m.category === categoryName && m.canAccess);
@@ -281,30 +281,30 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
               return (
                 <div key={categoryName} className="space-y-4">
                   <div className="border-l-4 border-primary pl-4">
-                    <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                      <Grid3X3 className="h-5 w-5 text-primary" />
+                    <h2 className="text-xl lg:text-2xl font-semibold mb-3 flex items-center gap-3">
+                      <Grid3X3 className="h-6 w-6 text-primary" />
                       {categoryName.charAt(0).toUpperCase() + categoryName.slice(1).replace('-', ' ')}
                     </h2>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-sm lg:text-base text-muted-foreground">
                       Administrative modules for {categoryName}
                     </p>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                      {categoryModules.map((module) => (
-                       <Button
-                         key={module.id}
-                         variant="outline"
-                         className="h-[160px] p-4 flex flex-col items-start gap-2 text-left hover:bg-accent"
-                         onClick={() => setSelectedModule(module.id)}
-                       >
-                         <div className="w-full">
-                           <h3 className="font-semibold text-sm">{module.title}</h3>
-                           <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
-                             {module.description}
-                           </p>
-                         </div>
-                       </Button>
+                        <Button
+                          key={module.id}
+                          variant="outline"
+                          className="h-[180px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent"
+                          onClick={() => setSelectedModule(module.id)}
+                        >
+                          <div className="w-full">
+                            <h3 className="font-semibold text-base lg:text-lg">{module.title}</h3>
+                            <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-3">
+                              {module.description}
+                            </p>
+                          </div>
+                        </Button>
                      ))}
                   </div>
                 </div>
@@ -317,19 +317,19 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* System Overview Card */}
           <Card className="border-2 border-purple-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">System Overview</CardTitle>
-              <Crown className="h-4 w-4 text-purple-600" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-base lg:text-lg font-medium">System Overview</CardTitle>
+              <Crown className="h-5 w-5 lg:h-6 lg:w-6 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{superAdminData.systemOverview.systemUptime}%</div>
-              <p className="text-xs text-muted-foreground">System uptime</p>
-              <div className="mt-2 space-y-1">
-                <div className="flex justify-between text-xs">
+              <div className="text-3xl lg:text-4xl font-bold">{superAdminData.systemOverview.systemUptime}%</div>
+              <p className="text-sm lg:text-base text-muted-foreground">System uptime</p>
+              <div className="mt-3 space-y-2">
+                <div className="flex justify-between text-sm lg:text-base">
                   <span>Total Users</span>
                   <span>{superAdminData.systemOverview.totalUsers}</span>
                 </div>
-                <div className="flex justify-between text-xs">
+                <div className="flex justify-between text-sm lg:text-base">
                   <span>Active Now</span>
                   <span>{superAdminData.systemOverview.activeUsers}</span>
                 </div>
@@ -567,12 +567,12 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                  <Button
                    key={module.id}
                    variant="outline"
-                   className="h-[140px] p-4 flex flex-col items-start gap-2 text-left hover:bg-accent"
+                   className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent"
                    onClick={() => setSelectedModule(module.id)}
                  >
                    <div className="w-full">
-                     <h3 className="font-semibold text-sm">{module.title}</h3>
-                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                     <h3 className="font-semibold text-base lg:text-lg">{module.title}</h3>
+                     <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
                        {module.description}
                      </p>
                    </div>
