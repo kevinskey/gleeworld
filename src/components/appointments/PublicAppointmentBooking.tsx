@@ -83,12 +83,14 @@ const PublicAppointmentBooking = ({
       console.log('Date selected:', newDate);
       setDate(newDate);
       setSelectedSlot(null); // Clear selected slot when date changes
+      setShowSuccess(false); // Clear success message when date changes
       setIsCalendarOpen(false); // Close calendar after selection
     }
   };
 
   const handleSlotSelect = (slot: Date) => {
     setSelectedSlot(slot);
+    setShowSuccess(false); // Clear success message when selecting a new slot
   };
 
   const handleBooking = async () => {
