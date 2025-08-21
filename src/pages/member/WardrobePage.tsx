@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shirt, Package, Calendar, User, Camera, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { BackNavigation } from '@/components/shared/BackNavigation';
+import { FittingScheduleDialog } from '@/components/wardrobe/FittingScheduleDialog';
 
 const WardrobePage = () => {
   const { wardrobeItems, loading, getMeasurements } = useWardrobeItems();
+  const [isFittingDialogOpen, setIsFittingDialogOpen] = useState(false);
+  const [selectedFittingItem, setSelectedFittingItem] = useState<{ id: string; name: string } | null>(null);
   
   if (loading) {
     return (
@@ -118,11 +121,18 @@ const WardrobePage = () => {
                                </div>
                             </div>
                              <div className="flex gap-2 ml-4">
-                               {item.status === 'needs_fitting' && (
-                                <Button size="sm" className="text-xs">
-                                  Schedule Fitting
-                                </Button>
-                              )}
+                                {item.status === 'needs_fitting' && (
+                                 <Button 
+                                   size="sm" 
+                                   className="text-xs"
+                                   onClick={() => {
+                                     setSelectedFittingItem({ id: item.id, name: item.name });
+                                     setIsFittingDialogOpen(true);
+                                   }}
+                                 >
+                                   Schedule Fitting
+                                 </Button>
+                               )}
                               <Button size="sm" variant="outline" className="text-xs">
                                 Details
                               </Button>
@@ -145,7 +155,14 @@ const WardrobePage = () => {
                 <CardTitle className="text-lg">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => {
+                    setSelectedFittingItem(null);
+                    setIsFittingDialogOpen(true);
+                  }}
+                >
                   <Calendar className="h-4 w-4 mr-2" />
                   Schedule Fitting
                 </Button>
@@ -237,6 +254,17 @@ const WardrobePage = () => {
             </Card>
           </div>
         </div>
+
+        {/* Fitting Schedule Dialog */}
+        <FittingScheduleDialog
+          isOpen={isFittingDialogOpen}
+          onClose={() => {
+            setIsFittingDialogOpen(false);
+            setSelectedFittingItem(null);
+          }}
+          wardrobeItemId={selectedFittingItem?.id}
+          wardrobeItemName={selectedFittingItem?.name}
+        />
       </div>
     </div>
   );
