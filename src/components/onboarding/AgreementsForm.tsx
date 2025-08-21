@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -17,9 +17,14 @@ interface AgreementsFormProps {
 export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProps) => {
   const { user } = useAuth();
   const { saveSignature, saving: signatureSaving } = useOnboardingSignature();
+  const [signatureSaved, setSignatureSaved] = useState(false);
 
-  const handleSignature = async (signature: string | null) => {
-    if (signature && user) {
+  const handleSignature = (signature: string | null) => {
+    // Just store the signature locally, don't save to database yet
+  };
+
+  const handleSignatureSave = async (signature: string) => {
+    if (user) {
       try {
         console.log('Saving signature for user:', user.id);
         console.log('User profile name:', `${profile.first_name || ''} ${profile.last_name || ''}`.trim());
@@ -39,13 +44,15 @@ export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProp
         
         console.log('Signature saved with ID:', signatureId);
         
+        // Update the profile with signature timestamp to mark step as complete
+        onUpdate('media_release_signed_at', new Date().toISOString());
+        setSignatureSaved(true);
+        
         toast.success('Signature saved successfully!');
+        
       } catch (error) {
         console.error('Failed to save signature:', error);
         toast.error('Failed to save signature. Please try again.');
-        
-        // Don't update the profile if saving failed
-        return;
       }
     }
   };
@@ -104,12 +111,13 @@ export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProp
 
           <ESignaturePad 
             onSignatureChange={handleSignature}
-            signature={profile.media_release_signature}
+            onSignatureSave={handleSignatureSave}
+            signature={null}
           />
 
-          {profile.media_release_signed_at && (
+          {(profile.media_release_signed_at || signatureSaved) && (
             <p className="text-sm text-green-600">
-              ✓ Signed on {new Date(profile.media_release_signed_at).toLocaleDateString()}
+              ✓ Signed on {new Date(profile.media_release_signed_at || new Date()).toLocaleDateString()}
             </p>
           )}
         </div>

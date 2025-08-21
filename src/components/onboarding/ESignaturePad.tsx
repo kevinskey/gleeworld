@@ -4,13 +4,15 @@ import { Card } from '@/components/ui/card';
 
 interface ESignaturePadProps {
   onSignatureChange: (signature: string | null) => void;
+  onSignatureSave?: (signature: string) => void;
   signature?: string | null;
 }
 
-export const ESignaturePad = ({ onSignatureChange, signature }: ESignaturePadProps) => {
+export const ESignaturePad = ({ onSignatureChange, onSignatureSave, signature }: ESignaturePadProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(!!signature);
+  const [currentSignature, setCurrentSignature] = useState<string | null>(signature);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -86,8 +88,9 @@ export const ESignaturePad = ({ onSignatureChange, signature }: ESignaturePadPro
 
     ctx.beginPath();
     
-    // Convert to data URL and notify parent
+    // Convert to data URL and store locally
     const dataURL = canvas.toDataURL();
+    setCurrentSignature(dataURL);
     onSignatureChange(dataURL);
   };
 
@@ -100,7 +103,14 @@ export const ESignaturePad = ({ onSignatureChange, signature }: ESignaturePadPro
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     setHasSignature(false);
+    setCurrentSignature(null);
     onSignatureChange(null);
+  };
+
+  const saveSignature = () => {
+    if (currentSignature && onSignatureSave) {
+      onSignatureSave(currentSignature);
+    }
   };
 
   return (
@@ -125,15 +135,27 @@ export const ESignaturePad = ({ onSignatureChange, signature }: ESignaturePadPro
             {hasSignature ? 'Signature captured' : 'Sign above with your finger or mouse'}
           </p>
           
-          {hasSignature && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={clearSignature}
-            >
-              Clear
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {hasSignature && (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={clearSignature}
+                >
+                  Clear
+                </Button>
+                {onSignatureSave && (
+                  <Button 
+                    size="sm"
+                    onClick={saveSignature}
+                  >
+                    Save Signature
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </Card>
     </div>
