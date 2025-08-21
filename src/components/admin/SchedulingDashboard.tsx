@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,8 @@ import {
   Star,
   Bell
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 interface Appointment {
   id: string;
@@ -27,43 +29,42 @@ interface Appointment {
   avatar?: string;
 }
 
-const mockAppointments: Appointment[] = [
-  {
-    id: '1',
-    date: 'August 7, 2025',
-    time: '10:30 AM',
-    service: 'THE STANDARD GENTLEMAN HAIRCUT',
-    client: 'Korey Collins',
-    status: 'approved'
-  },
-  {
-    id: '2',
-    date: 'August 16, 2025',
-    time: '8:30 AM',
-    service: 'LITTLE KINGS (BOYS & TODDLERS) HAIRCUT',
-    client: 'Rai Tubbs',
-    status: 'approved'
-  },
-  {
-    id: '3',
-    date: 'August 6, 2025',
-    time: '1:00 PM',
-    service: 'MENS SENIORS CITIZEN 60 YEARS AND UP',
-    client: 'Eldridge Edgecombe',
-    status: 'approved'
-  },
-  {
-    id: '4',
-    date: 'August 6, 2025',
-    time: '11:00 AM',
-    service: 'MENS SENIORS CITIZEN 60 YEARS AND UP',
-    client: 'Johnathan Bowens',
-    status: 'approved'
-  }
-];
-
 export const SchedulingDashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('Current Week');
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  const fetchAppointments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_appointments')
+        .select('*')
+        .order('appointment_date', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      const formattedAppointments: Appointment[] = (data || []).map(apt => ({
+        id: apt.id,
+        date: format(new Date(apt.appointment_date), 'MMMM d, yyyy'),
+        time: format(new Date(apt.appointment_date), 'h:mm a'),
+        service: apt.appointment_type || 'General Appointment',
+        client: apt.client_name,
+        status: apt.status as 'approved' | 'pending' | 'cancelled'
+      }));
+
+      setAppointments(formattedAppointments);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+      setAppointments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -327,7 +328,16 @@ export const SchedulingDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockAppointments.map((appointment) => (
+                {loading ? (
+                  <div className="text-center py-8">Loading appointments...</div>
+                ) : appointments.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-500 font-medium">No appointments found</p>
+                    <p className="text-sm text-gray-400">Recent appointments will appear here</p>
+                  </div>
+                ) : (
+                  appointments.map((appointment) => (
                   <div key={appointment.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="text-sm text-muted-foreground w-32">
@@ -356,7 +366,8 @@ export const SchedulingDashboard = () => {
                       </Avatar>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
