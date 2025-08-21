@@ -187,9 +187,9 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
         return {
           ...module,
           icon: moduleConfig?.icon,
-          iconColor: moduleConfig?.iconColor,
+          iconColor: moduleConfig?.iconColor || 'blue',
           component: moduleConfig?.component,
-          isNew: moduleConfig?.isNew
+          isNew: moduleConfig?.isNew || false
         };
       });
       result[category] = modules;

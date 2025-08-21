@@ -56,6 +56,7 @@ import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 import { SightSingingModule } from '@/components/modules/SightSingingModule';
 import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
 import { PRCoordinatorHub } from '@/components/pr-coordinator/PRCoordinatorHub';
+import { PRHubModule } from '@/components/modules/PRHubModule';
 import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
 import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
@@ -155,6 +156,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: PRCoordinatorHub,
     dbFunctionName: "pr-coordinator",
+    requiredRoles: ["pr_coordinator", "admin"]
+  },
+  {
+    id: "pr-hub",
+    name: "pr-hub", 
+    title: "PR Hub",
+    description: "Public relations, media, and press tools",
+    icon: Megaphone,
+    iconColor: "orange",
+    category: "communications",
+    isActive: true,
+    component: PRHubModule,
+    dbFunctionName: "pr-coordinator", // Maps to pr-coordinator in database
     requiredRoles: ["pr_coordinator", "admin"]
   },
   {
