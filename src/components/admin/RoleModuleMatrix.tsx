@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUnifiedModulesSimple } from '@/hooks/useUnifiedModules';
+import { useUnifiedModulesSimple } from '@/hooks/useUnifiedModulesSimple';
 import { USER_ROLES } from '@/constants/permissions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

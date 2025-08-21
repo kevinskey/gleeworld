@@ -1,8 +1,8 @@
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUnifiedModulesSimple } from '@/hooks/useUnifiedModules';
+import { useUnifiedModulesSimple } from '@/hooks/useUnifiedModulesSimple';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 
@@ -145,7 +145,11 @@ export const UserModuleMatrix: React.FC<Props> = ({ userId }) => {
   };
 
   const rows = useMemo(() => {
-    return [...mods].sort((a, b) => titleFor(a.name).localeCompare(titleFor(b.name)));
+    return [...mods].sort((a, b) => {
+      const titleA = titleFor(a.name);
+      const titleB = titleFor(b.name);
+      return titleA.localeCompare(titleB);
+    });
   }, [mods, titleFor]);
 
   return (
@@ -167,16 +171,17 @@ export const UserModuleMatrix: React.FC<Props> = ({ userId }) => {
             <tbody>
               {rows.map((m) => {
                 const state = permMap[m.id] || { view: false, manage: false };
+                const moduleTitle = titleFor(m.name);
                 return (
                   <tr key={m.id} className="border-b last:border-b-0 hover:bg-muted/40">
-                    <td className="py-1 px-1">{titleFor(m.name)}</td>
+                    <td className="py-1 px-1">{moduleTitle}</td>
                     <td className="py-1 px-0.5">
                       <div className="flex items-center gap-1">
                         <Switch
                           checked={!!state.view}
                           onCheckedChange={(val) => toggle(m.id, 'view', val)}
                           disabled={loading || isDirector}
-                          aria-label={`Toggle view for ${titleFor(m.name)}`}
+                          aria-label={`Toggle view for ${moduleTitle}`}
                         />
                       </div>
                     </td>
@@ -186,7 +191,7 @@ export const UserModuleMatrix: React.FC<Props> = ({ userId }) => {
                           checked={!!state.manage}
                           onCheckedChange={(val) => toggle(m.id, 'manage', val)}
                           disabled={loading || isDirector}
-                          aria-label={`Toggle manage for ${titleFor(m.name)}`}
+                          aria-label={`Toggle manage for ${moduleTitle}`}
                         />
                       </div>
                     </td>

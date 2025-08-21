@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useUnifiedModulesSimple } from '@/hooks/useUnifiedModules';
+import { useUnifiedModulesSimple } from '@/hooks/useUnifiedModulesSimple';
 import { useModulePermissionManager } from '@/hooks/useModulePermissionManager';
 
 interface Role {
