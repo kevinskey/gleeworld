@@ -63,7 +63,8 @@ import {
   ChevronUp,
   GripVertical,
   Globe,
-  Zap
+  Zap,
+  Heart
 } from "lucide-react";
 
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
