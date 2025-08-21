@@ -36,7 +36,7 @@ import {
   Youtube,
   Play,
   AlertCircle,
-  MessageCircleQuestion
+  
 } from "lucide-react";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import {
