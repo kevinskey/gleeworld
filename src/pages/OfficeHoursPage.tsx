@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { PublicAppointmentBooking } from '@/components/appointments/PublicAppointmentBooking';
+import PublicAppointmentBooking from '@/components/appointments/PublicAppointmentBooking';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Clock, User, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';

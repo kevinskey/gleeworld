@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { PublicAppointmentBooking } from '@/components/appointments/PublicAppointmentBooking';
+import PublicAppointmentBooking from '@/components/appointments/PublicAppointmentBooking';
 import { AppointmentDashboard } from '@/components/appointments/AppointmentDashboard';
 import { AppointmentApprovalHandler } from '@/components/appointments/AppointmentApprovalHandler';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';

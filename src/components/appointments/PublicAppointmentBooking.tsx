@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Calendar } from 'react-date-range';
 import 'react-date-range/dist/styles.css'; // main style file
@@ -20,7 +21,29 @@ import {
 } from "@/components/ui/sheet"
 import { supabase } from '@/integrations/supabase/client';
 
-const PublicAppointmentBooking = () => {
+interface PublicAppointmentBookingProps {
+  title?: string;
+  subtitle?: string;
+  appointmentType?: string;
+  defaultDuration?: number;
+  maxDuration?: number;
+  allowedDays?: number[];
+  startHour?: Record<number, number>;
+  endHour?: Record<number, number>;
+  busyCalendarName?: string;
+}
+
+const PublicAppointmentBooking = ({
+  title = "Book an Appointment",
+  subtitle = "Select a date and time to book your appointment.",
+  appointmentType = "general",
+  defaultDuration = 30,
+  maxDuration = 60,
+  allowedDays = [1, 2, 3, 4, 5], // Mon-Fri by default
+  startHour = { 1: 9, 2: 9, 3: 9, 4: 9, 5: 9 },
+  endHour = { 1: 17, 2: 17, 3: 17, 4: 17, 5: 17 },
+  busyCalendarName = "Schedule"
+}: PublicAppointmentBookingProps) => {
   const [date, setDate] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState<Date | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -36,15 +59,23 @@ const PublicAppointmentBooking = () => {
 
   function generateTimeSlots(date: Date) {
     const slots = [];
-    let current = setHours(setMinutes(new Date(date), 0), 9); // Start at 9:00 AM
-    const end = setHours(setMinutes(new Date(date), 0), 17);   // End at 5:00 PM
+    const dayOfWeek = date.getDay();
+    
+    if (!allowedDays.includes(dayOfWeek)) {
+      return [];
+    }
+
+    const startTime = startHour[dayOfWeek] || 9;
+    const endTime = endHour[dayOfWeek] || 17;
+    
+    let current = setHours(setMinutes(new Date(date), 0), startTime);
+    const end = setHours(setMinutes(new Date(date), 0), endTime);
 
     while (current < end) {
       if (!isPast(current)) {
         slots.push(current);
       }
-      current = addDays(current, 0);
-      current = setMinutes(current, (getMinutes(current) + 30)); // 30-minute intervals
+      current = new Date(current.getTime() + defaultDuration * 60000); // Add duration in milliseconds
     }
     return slots;
   }
@@ -67,13 +98,14 @@ const PublicAppointmentBooking = () => {
       const { error } = await supabase
         .from('gw_appointments')
         .insert({
+          title: `${appointmentType} appointment with ${name}`,
           client_name: name,
           client_email: email,
           client_phone: phone,
-          appointment_type: 'office_hours',
+          appointment_type: appointmentType,
           appointment_date: selectedSlot.toISOString(),
           status: 'confirmed',
-          description: notes || 'Office hours appointment'
+          description: notes || `${appointmentType} appointment`
         });
 
       if (error) throw error;
@@ -104,9 +136,9 @@ const PublicAppointmentBooking = () => {
     <div className="container mx-auto py-12">
       <Card>
         <CardHeader>
-          <CardTitle>Book an Office Hours Appointment</CardTitle>
+          <CardTitle>{title}</CardTitle>
           <CardDescription>
-            Select a date and time to book your appointment.
+            {subtitle}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
