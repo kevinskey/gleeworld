@@ -1,15 +1,40 @@
+import React, { useState, useMemo } from 'react';
+import { useUnifiedModules } from "@/hooks/useUnifiedModules";
+import { useModuleOrdering } from "@/hooks/useModuleOrdering";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { AnnouncementsEventsSection } from "@/components/user-dashboard/sections/AnnouncementsEventsSection";
 import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState as reactUseState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ModuleCard } from '@/components/shared/ModuleWrapper';
-import { useUnifiedModules } from '@/hooks/useUnifiedModules';
+import { UNIFIED_MODULE_CATEGORIES } from '@/config/unified-modules';
 import { 
   Calendar, 
   CheckCircle, 
@@ -35,10 +60,90 @@ import {
   GraduationCap,
   Grid3X3,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  GripVertical,
+  Globe,
+  Zap
 } from "lucide-react";
 
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
+
+// Sortable Module Card Component
+interface SortableModuleCardProps {
+  module: any;
+  onModuleClick: (moduleId: string) => void;
+  isDragging?: boolean;
+}
+
+const SortableModuleCard = ({ module, onModuleClick, isDragging }: SortableModuleCardProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging,
+  } = useSortable({ id: module.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isSortableDragging ? 0.5 : 1,
+  };
+
+  const IconComponent = module.icon;
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <Card 
+        className={`cursor-pointer hover:shadow-md transition-all duration-200 ${
+          isSortableDragging ? 'shadow-lg ring-2 ring-primary/20' : ''
+        }`}
+      >
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3 flex-1">
+              <div 
+                {...listeners}
+                className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+              >
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+              </div>
+              {IconComponent && (
+                <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
+                  <IconComponent className={`h-4 w-4 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-sm font-medium leading-tight line-clamp-2">
+                  {module.title}
+                </CardTitle>
+                <CardDescription className="text-xs mt-1 line-clamp-2">
+                  {module.description}
+                </CardDescription>
+              </div>
+            </div>
+            {module.isNew && (
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 ml-2">
+                New
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full"
+            onClick={() => onModuleClick(module.id)}
+          >
+            Open Module
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
 interface SuperAdminDashboardProps {
   user: {
@@ -61,16 +166,65 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
   const { 
     modules: allModules, 
     categories, 
-    loading: modulesLoading 
+    loading: modulesLoading,
+    getModulesByCategory
   } = useUnifiedModules({
     userRole: 'super-admin',
     isAdmin: true
   });
 
+  const { saveCategoryOrder } = useModuleOrdering(user.id);
+
+  // Create modulesByCategory object from the function
+  const modulesByCategory = useMemo(() => {
+    const result: Record<string, any[]> = {};
+    categories.forEach(category => {
+      result[category] = getModulesByCategory(category);
+    });
+    return result;
+  }, [categories, getModulesByCategory]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [showAllModules, setShowAllModules] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [overviewCollapsed, setOverviewCollapsed] = useState(false);
+
+  // Sort modules within categories based on custom ordering
+  const sortedModulesByCategory = useMemo(() => {
+    const result: Record<string, any[]> = {};
+    
+    Object.entries(modulesByCategory).forEach(([category, categoryModules]) => {
+      // For now, we'll keep the default order but this is where custom ordering would be applied
+      result[category] = [...categoryModules];
+    });
+    
+    return result;
+  }, [modulesByCategory]);
+
+  const handleDragEnd = (event: DragEndEvent, category: string) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const categoryModules = sortedModulesByCategory[category];
+      const oldIndex = categoryModules.findIndex(module => module.id === active.id);
+      const newIndex = categoryModules.findIndex(module => module.id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newOrder = arrayMove(categoryModules, oldIndex, newIndex);
+        const orderedModuleKeys = newOrder.map(module => module.id);
+        
+        // Save the new order
+        saveCategoryOrder(category, orderedModuleKeys);
+      }
+    }
+  };
   
   // Format events for AnnouncementsEventsSection
   const formattedUpcomingEvents = upcomingEvents
@@ -285,58 +439,75 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
           {modulesLoading ? (
             <div className="text-center py-8 text-lg">Loading modules...</div>
           ) : (
-            categories.map((categoryName) => {
-              const categoryModules = allModules.filter(m => m.category === categoryName && m.canAccess);
+            Object.entries(sortedModulesByCategory).map(([categoryName, categoryModules]) => {
+              const categoryConfig = UNIFIED_MODULE_CATEGORIES.find(c => c.id === categoryName);
+              const IconComponent = categoryConfig?.icon || Users;
+              const isCollapsed = collapsedSections[categoryName];
+              const isSingleModule = categoryModules.length === 1;
+              
               if (categoryModules.length === 0) return null;
               
               return (
-                <div key={categoryName} className="space-y-4">
-                  <div className="border-l-4 border-primary pl-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-xl lg:text-2xl font-semibold mb-3 flex items-center gap-3">
-                          <Grid3X3 className="h-6 w-6 text-primary" />
-                          {categoryName.charAt(0).toUpperCase() + categoryName.slice(1).replace('-', ' ')}
-                        </h2>
-                        <p className="text-sm lg:text-base text-muted-foreground">
-                          Administrative modules for {categoryName}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleSectionCollapse(categoryName)}
-                        className="flex items-center gap-2"
-                      >
-                        {collapsedSections[categoryName] ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronUp className="h-4 w-4" />
-                        )}
-                        {collapsedSections[categoryName] ? 'Expand' : 'Collapse'}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {!collapsedSections[categoryName] && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                     {categoryModules.map((module) => (
-                        <Button
-                          key={module.id}
-                          variant="outline"
-                          className="h-[180px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent"
-                          onClick={() => setSelectedModule(module.id)}
-                        >
-                          <div className="w-full">
-                            <h3 className="font-semibold text-base lg:text-lg">{module.title}</h3>
-                            <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-3">
-                              {module.description}
+                <div key={categoryName} className="space-y-3">
+                  {/* Category Header */}
+                  <Collapsible 
+                    open={!isCollapsed}
+                    onOpenChange={(open) => {
+                      if (!isSingleModule) {
+                        setCollapsedSections(prev => ({
+                          ...prev,
+                          [categoryName]: !open
+                        }));
+                      }
+                    }}
+                  >
+                    <CollapsibleTrigger 
+                      className={`w-full ${isSingleModule ? 'cursor-default' : 'cursor-pointer'}`}
+                      disabled={isSingleModule}
+                    >
+                      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <IconComponent className="h-5 w-5 text-primary" />
+                          <div className="text-left">
+                            <h3 className="font-semibold text-base lg:text-lg">
+                              {categoryConfig?.title || categoryName.charAt(0).toUpperCase() + categoryName.slice(1).replace('-', ' ')}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {categoryConfig?.description || `Administrative modules for ${categoryName}`}
                             </p>
                           </div>
-                        </Button>
-                      ))}
-                    </div>
-                  )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="font-medium">
+                            {categoryModules.length} module{categoryModules.length !== 1 ? 's' : ''}
+                          </Badge>
+                          {!isSingleModule && (
+                            isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />
+                          )}
+                        </div>
+                      </div>
+                    </CollapsibleTrigger>
+                    
+                    <CollapsibleContent className="space-y-3">
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={(event) => handleDragEnd(event, categoryName)}
+                      >
+                        <SortableContext items={categoryModules.map(m => m.id)} strategy={verticalListSortingStrategy}>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+                            {categoryModules.map((module) => (
+                              <SortableModuleCard
+                                key={module.id}
+                                module={module}
+                                onModuleClick={(moduleId) => setSelectedModule(moduleId)}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </div>
               );
             })

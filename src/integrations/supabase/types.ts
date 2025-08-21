@@ -6429,6 +6429,36 @@ export type Database = {
           },
         ]
       }
+      gw_module_ordering: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          module_key: string
+          sort_order: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          module_key: string
+          sort_order?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          module_key?: string
+          sort_order?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_module_permissions: {
         Row: {
           expires_at: string | null
