@@ -219,24 +219,6 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
     return result;
   }, [modulesByCategory]);
 
-  const handleDragEnd = (event: DragEndEvent, category: string) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const categoryModules = sortedModulesByCategory[category];
-      const oldIndex = categoryModules.findIndex(module => module.id === active.id);
-      const newIndex = categoryModules.findIndex(module => module.id === over.id);
-
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const newOrder = arrayMove(categoryModules, oldIndex, newIndex);
-        const orderedModuleKeys = newOrder.map(module => module.id);
-        
-        // Save the new order
-        saveCategoryOrder(category, orderedModuleKeys);
-      }
-    }
-  };
-  
   // Format events for AnnouncementsEventsSection
   const formattedUpcomingEvents = upcomingEvents
     .filter(event => {
@@ -288,39 +270,31 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
 
   const [calendarCollapsed, setCalendarCollapsed] = useState(true);
 
-  // If a specific module is selected, show it full page
-  if (selectedModule) {
-    const module = allModules.find(m => m.id === selectedModule);
-    if (module) {
-      const ModuleComponent = module.component;
-      return (
-        <div className="min-h-screen p-6">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedModule(null)}
-              className="p-0 h-auto"
-            >
-              Super Admin Dashboard
-            </Button>
-            <span>/</span>
-            <span className="text-foreground font-medium">{module.title}</span>
-          </div>
-          
-          <ModuleComponent 
-            user={{
-              ...user,
-              is_admin: true,
-              is_super_admin: true
-            }} 
-            isFullPage={true}
-            onNavigate={(moduleId: string) => setSelectedModule(moduleId)}
-          />
-        </div>
-      );
+  const handleDragEnd = (event: DragEndEvent, category: string) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const categoryModules = sortedModulesByCategory[category];
+      const oldIndex = categoryModules.findIndex(module => module.id === active.id);
+      const newIndex = categoryModules.findIndex(module => module.id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newOrder = arrayMove(categoryModules, oldIndex, newIndex);
+        const orderedModuleKeys = newOrder.map(module => module.id);
+        
+        // Save the new order
+        saveCategoryOrder(category, orderedModuleKeys);
+      }
     }
-  }
+  };
+
+  // Toggle section collapse
+  const toggleSectionCollapse = (sectionName: string) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [sectionName]: !prev[sectionName]
+    }));
+  };
 
   useEffect(() => {
     const fetchSuperAdminData = async () => {
@@ -413,13 +387,40 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
     fetchSuperAdminData();
   }, []);
 
-  // Toggle section collapse
-  const toggleSectionCollapse = (sectionName: string) => {
-    setCollapsedSections(prev => ({
-      ...prev,
-      [sectionName]: !prev[sectionName]
-    }));
-  };
+  // If a specific module is selected, show it full page
+  if (selectedModule) {
+    const module = allModules.find(m => m.id === selectedModule);
+    if (module) {
+      const ModuleComponent = module.component;
+      return (
+        <div className="min-h-screen p-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedModule(null)}
+              className="p-0 h-auto"
+            >
+              Super Admin Dashboard
+            </Button>
+            <span>/</span>
+            <span className="text-foreground font-medium">{module.title}</span>
+          </div>
+          
+          <ModuleComponent 
+            user={{
+              ...user,
+              is_admin: true,
+              is_super_admin: true
+            }} 
+            isFullPage={true}
+            onNavigate={(moduleId: string) => setSelectedModule(moduleId)}
+          />
+        </div>
+      );
+    }
+  }
+
 
   return (
     <div className="space-y-6">
