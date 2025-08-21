@@ -441,36 +441,38 @@ export default function UnifiedBookingPage() {
 
   return (
     <PublicLayout>
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/5">
-        <div className="max-w-5xl mx-auto px-4 py-12">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-30" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000' fill-opacity='0.02'%3E%3Ccircle cx='7' cy='7' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+        }}></div>
+        
+        <div className="relative max-w-6xl mx-auto px-4 py-8">
           
           {/* Header */}
-          <div className="text-center mb-16 pt-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl mb-8 shadow-lg">
-              <CalendarIcon className="h-10 w-10 text-primary" />
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-primary to-primary/80 rounded-full mb-6 shadow-xl animate-fade-in">
+              <CalendarIcon className="h-12 w-12 text-primary-foreground" />
             </div>
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-6 leading-tight">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent mb-4 leading-tight">
               Schedule an Appointment
             </h1>
-            <h2 className="text-3xl font-semibold text-foreground/90 mb-4">
-              Book Your Appointment
-            </h2>
-            <div className="max-w-3xl mx-auto">
-              <p className="text-xl text-muted-foreground leading-relaxed mb-6">
-                Schedule your appointment for meetings, consultations, lessons, and more
+            <div className="max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground leading-relaxed mb-6">
+                Book your consultation, lesson, or meeting with our team
               </p>
-              <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground/80">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Multiple durations available
+              <div className="flex flex-wrap justify-center gap-4 text-sm">
+                <div className="flex items-center gap-2 bg-primary/10 px-3 py-2 rounded-full">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <span className="text-primary">Flexible scheduling</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4" />
-                  Multiple dates available
+                <div className="flex items-center gap-2 bg-secondary/10 px-3 py-2 rounded-full">
+                  <CalendarIcon className="h-4 w-4 text-secondary" />
+                  <span className="text-secondary">Multiple options</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" />
-                  Instant confirmation
+                <div className="flex items-center gap-2 bg-accent/10 px-3 py-2 rounded-full">
+                  <CheckCircle className="h-4 w-4 text-accent" />
+                  <span className="text-accent">Instant confirmation</span>
                 </div>
               </div>
             </div>
@@ -478,26 +480,26 @@ export default function UnifiedBookingPage() {
 
           {!showContactForm ? (
             /* Time Selection */
-            <div className="space-y-8">
-              {/* Show existing booking info for authenticated users */}
+            <div className="space-y-6">
+              {/* Welcome Back Card for authenticated users */}
               {user && (
-                <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 shadow-lg">
-                  <CardHeader>
+                <Card className="border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent shadow-lg backdrop-blur-sm animate-fade-in">
+                  <CardHeader className="pb-4">
                     <CardTitle className="flex items-center text-lg text-primary">
                       <User className="h-5 w-5 mr-2" />
-                      Welcome Back!
+                      Welcome Back, {user.email}!
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Already have an appointment? Select a new time below to update your appointment.
+                    <p className="text-muted-foreground text-sm">
+                      Select a new time below to schedule or update your appointment.
                     </p>
                   </CardContent>
                 </Card>
               )}
               
-              <Card className="shadow-xl border-2 border-primary/10">
-                <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-lg">
+              <Card className="shadow-xl border border-border/50 backdrop-blur-sm bg-card/80">
+                <CardHeader className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-t-lg border-b border-border/50">
                   <CardTitle className="flex items-center text-2xl font-bold">
                     <CalendarIcon className="h-6 w-6 mr-3 text-primary" />
                     Choose Your Appointment Date
@@ -522,8 +524,8 @@ export default function UnifiedBookingPage() {
               </Card>
 
               {selectedDate && (
-                <Card className="shadow-xl border-2 border-primary/10">
-                  <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-lg">
+                <Card className="shadow-xl border border-border/50 backdrop-blur-sm bg-card/90">
+                  <CardHeader className="bg-gradient-to-r from-primary/10 via-primary/5 to-secondary/5 rounded-t-lg border-b border-border/50">
                     <CardTitle className="flex items-center text-2xl font-bold">
                       <Clock className="h-6 w-6 mr-3 text-primary" />
                       Select Your Time Slot
@@ -539,15 +541,15 @@ export default function UnifiedBookingPage() {
                   </CardHeader>
                   <CardContent className="p-8">
                     {loading ? (
-                      <div className="text-center py-12">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
-                          <Clock className="h-8 w-8 text-primary animate-spin" />
+                      <div className="text-center py-16">
+                        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full mb-6 animate-pulse">
+                          <Clock className="h-10 w-10 text-primary animate-spin" />
                         </div>
                         <p className="text-lg text-muted-foreground">Loading available times...</p>
                       </div>
                     ) : allTimeSlots.length > 0 ? (
                       <div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
                           {allTimeSlots.map((slot, index) => (
                             <Button
                               key={index}
@@ -555,42 +557,42 @@ export default function UnifiedBookingPage() {
                               onClick={() => slot.isAvailable && selectTimeSlot(slot.time)}
                               disabled={!slot.isAvailable}
                               className={cn(
-                                "py-4 px-3 h-auto flex flex-col items-center space-y-1 transition-all duration-200",
+                                "h-16 flex flex-col items-center justify-center space-y-1 transition-all duration-300 rounded-xl text-sm font-medium",
                                 slot.isAvailable 
-                                  ? "hover:bg-primary hover:text-primary-foreground hover:scale-105 border-primary/20" 
-                                  : "bg-destructive/20 text-destructive border-destructive/30 cursor-not-allowed"
+                                  ? "hover:bg-gradient-to-br hover:from-primary hover:to-primary/80 hover:text-primary-foreground hover:scale-105 hover:shadow-lg border-2 border-primary/20 bg-gradient-to-br from-background to-muted/30" 
+                                  : "bg-gradient-to-br from-destructive/10 to-destructive/5 text-destructive/70 border-2 border-destructive/20 cursor-not-allowed"
                               )}
                             >
-                              <span className="font-semibold text-sm">{slot.time}</span>
+                              <span className="font-bold">{slot.time}</span>
                               {slot.isAvailable ? (
-                                <span className="text-xs text-muted-foreground">Available</span>
+                                <span className="text-xs text-primary/80">Available</span>
                               ) : (
-                                <span className="text-xs font-medium truncate w-full text-center">
-                                  {slot.auditionerName || 'Booked'}
+                                <span className="text-xs font-medium">
+                                  Booked
                                 </span>
                               )}
                             </Button>
                           ))}
                         </div>
-                        <div className="bg-muted/50 rounded-lg p-4">
-                          <div className="flex items-center justify-center space-x-6 text-sm">
-                            <div className="flex items-center space-x-2">
-                              <div className="w-3 h-3 bg-primary rounded-sm"></div>
-                              <span>Available</span>
+                        <div className="bg-gradient-to-r from-muted/50 to-muted/30 rounded-xl p-6 border border-border/30">
+                          <div className="flex items-center justify-center space-x-8 text-sm">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-4 h-4 bg-gradient-to-br from-primary to-primary/80 rounded-md shadow-sm"></div>
+                              <span className="font-medium">Available</span>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <div className="w-3 h-3 bg-destructive/20 border border-destructive/30 rounded-sm"></div>
-                              <span>Booked</span>
+                            <div className="flex items-center space-x-3">
+                              <div className="w-4 h-4 bg-gradient-to-br from-destructive/20 to-destructive/10 border-2 border-destructive/30 rounded-md"></div>
+                              <span className="font-medium text-destructive/80">Booked</span>
                             </div>
                           </div>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center py-12">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-muted rounded-full mb-6">
-                          <Clock className="h-8 w-8 text-muted-foreground" />
+                      <div className="text-center py-16">
+                        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-muted/50 to-muted/30 rounded-full mb-6">
+                          <Clock className="h-10 w-10 text-muted-foreground" />
                         </div>
-                        <h3 className="text-lg font-semibold mb-2">No Available Times</h3>
+                        <h3 className="text-xl font-bold mb-3 text-foreground">No Available Times</h3>
                         <p className="text-muted-foreground">
                           All time slots are booked for this date. Please select a different date.
                         </p>
