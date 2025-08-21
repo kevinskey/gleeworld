@@ -39,10 +39,6 @@ export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProp
         
         console.log('Signature saved with ID:', signatureId);
         
-        // Update the profile with signature data
-        onUpdate('media_release_signed_at', new Date().toISOString());
-        onUpdate('media_release_signature', signature);
-        
         toast.success('Signature saved successfully!');
       } catch (error) {
         console.error('Failed to save signature:', error);
@@ -51,10 +47,6 @@ export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProp
         // Don't update the profile if saving failed
         return;
       }
-    } else {
-      // Clear signature
-      onUpdate('media_release_signed_at', null);
-      onUpdate('media_release_signature', null);
     }
   };
 
