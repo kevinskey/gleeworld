@@ -214,7 +214,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Track attendance, manage QR codes, process excuses, and generate reports",
     icon: ClipboardCheck,
     iconColor: "green",
-    category: "attendance",
+    category: "member-management",
     isActive: true,
     component: AttendanceModule,
     dbFunctionName: "attendance-management"
@@ -228,7 +228,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Comprehensive tour planning, logistics, and management system",
     icon: Route,
     iconColor: "blue",
-    category: "tours",
+    category: "communications",
     isActive: true,
     component: TourManagerModule,
     dbFunctionName: "tour-management"
@@ -240,7 +240,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Manage performance requests and booking inquiries from external organizations",
     icon: FileText,
     iconColor: "cyan",
-    category: "tours",
+    category: "communications",
     isActive: true,
     component: BookingFormsModule,
     dbFunctionName: "booking-forms"
@@ -553,7 +553,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Manage sheet music, recordings, and musical resources",
     icon: Music,
     iconColor: "pink",
-    category: "libraries",
+    category: "musical-leadership",
     isActive: true,
     component: MusicLibraryInlineModule,
     dbFunctionName: "music-library"
@@ -565,7 +565,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Manage Glee World Radio station, commercials, and broadcasting",
     icon: Radio,
     iconColor: "blue",
-    category: "libraries",
+    category: "musical-leadership",
     isActive: true,
     component: RadioManagement,
     dbFunctionName: "radio-management"
@@ -577,7 +577,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Manage images, audio, videos, and documents",
     icon: Camera,
     iconColor: "pink",
-    category: "libraries",
+    category: "musical-leadership",
     isActive: true,
     component: MediaLibrary,
     dbFunctionName: "media-library",
@@ -590,7 +590,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Record over backing tracks and save mixes",
     icon: Mic2,
     iconColor: "pink",
-    category: "libraries",
+    category: "musical-leadership",
     isActive: true,
     component: KaraokeModule,
     dbFunctionName: "karaoke"
@@ -602,74 +602,50 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Manage sheet music collection, PDFs, and hard copy scores",
     icon: BookOpen,
     iconColor: "purple",
-    category: "libraries",
+    category: "musical-leadership",
     isActive: true,
     component: LibrarianModule,
     dbFunctionName: "librarian"
   }
 ];
 
-// Categories with modules grouped
+// Categories with modules grouped - Logically combined for fewer groups
 export const UNIFIED_MODULE_CATEGORIES: UnifiedModuleCategory[] = [
   {
     id: "communications",
-    title: "Communications",
-    description: "Notifications, emails, community hub, and messaging tools",
+    title: "Communications & Events",
+    description: "Notifications, emails, messaging, scheduling, tours, and event management",
     icon: MessageSquare,
     color: "blue",
     modules: UNIFIED_MODULES.filter(m => m.category === "communications")
   },
   {
-    id: "attendance",
-    title: "Attendance",
-    description: "Attendance tracking, QR codes, excuse management, and reporting",
-    icon: ClipboardCheck,
-    color: "green",
-    modules: UNIFIED_MODULES.filter(m => m.category === "attendance")
-  },
-  {
-    id: "tours",
-    title: "Tours and Concert Logistics",
-    description: "Tour planning, concert logistics, scheduling, and management",
-    icon: Route,
-    color: "blue",
-    modules: UNIFIED_MODULES.filter(m => m.category === "tours")
-  },
-  {
-    id: "member-management",
+    id: "member-management", 
     title: "Member Management",
-    description: "User management, executive board, auditions, permissions, and statistics",
+    description: "User management, attendance, executive board, auditions, permissions, and wellness",
     icon: Users,
     color: "cyan",
     modules: UNIFIED_MODULES.filter(m => m.category === "member-management")
   },
   {
     id: "musical-leadership",
-    title: "Musical Leadership",
-    description: "Student conductor oversight, section leader management, and sight singing coordination",
+    title: "Musical Leadership & Resources",
+    description: "Student conductor, section leaders, sight singing, music library, and media resources",
     icon: Music,
     color: "purple",
     modules: UNIFIED_MODULES.filter(m => m.category === "musical-leadership")
   },
   {
     id: "finances",
-    title: "Finances",
-    description: "Financial management, budgets, dues, and glee merch store",
+    title: "Financial Management",
+    description: "Budgets, dues collection, contracts, receipts, and merchandise store",
     icon: DollarSign,
     color: "green",
     modules: UNIFIED_MODULES.filter(m => m.category === "finances")
   },
   {
-    id: "libraries",
-    title: "Libraries",
-    description: "PDF sheet music, MP3 audio files, picture collections, and radio management",
-    icon: BookOpen,
-    color: "emerald",
-    modules: UNIFIED_MODULES.filter(m => m.category === "libraries")
-  },
-  {
     id: "system",
-    title: "System",
+    title: "System Administration",
     description: "Platform settings, logs, and administrative tools",
     icon: Settings,
     color: "gray",
