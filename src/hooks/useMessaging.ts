@@ -75,6 +75,15 @@ export const useMessageGroups = () => {
   return useQuery({
     queryKey: ['message-groups'],
     queryFn: async () => {
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('useMessageGroups: Current user:', user?.id);
+      
+      if (!user) {
+        console.log('useMessageGroups: No authenticated user found');
+        throw new Error('Authentication required');
+      }
+
       const { data, error } = await supabase
         .from('gw_message_groups')
         .select(`
@@ -85,8 +94,10 @@ export const useMessageGroups = () => {
             is_muted
           )
         `)
+        .eq('gw_group_members.user_id', user.id)
         .order('updated_at', { ascending: false });
 
+      console.log('useMessageGroups: Query result:', { data, error });
       if (error) throw error;
       return data as MessageGroup[];
     },
