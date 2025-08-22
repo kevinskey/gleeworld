@@ -13,8 +13,8 @@ export const IncompleteProfileBanner = ({ userProfile }: IncompleteProfileBanner
   const navigate = useNavigate();
 
   // Debug: Log the profile data to see what's missing
-  console.log('IncompleteProfileBanner - userProfile:', userProfile);
-  console.log('IncompleteProfileBanner - measurements:', userProfile?.measurements);
+  console.log('🔍 IncompleteProfileBanner - Full userProfile:', JSON.stringify(userProfile, null, 2));
+  console.log('🔍 IncompleteProfileBanner - measurements:', userProfile?.measurements);
   
   // Check if profile is incomplete based on onboarding requirements
   const profileChecks = {
@@ -31,7 +31,14 @@ export const IncompleteProfileBanner = ({ userProfile }: IncompleteProfileBanner
     media_release_signed_at: !!userProfile?.media_release_signed_at,
   };
   
-  console.log('IncompleteProfileBanner - profile checks:', profileChecks);
+  console.log('🔍 IncompleteProfileBanner - profile checks:', profileChecks);
+  
+  // List missing fields
+  const missingFields = Object.entries(profileChecks)
+    .filter(([key, value]) => !value)
+    .map(([key]) => key);
+  
+  console.log('🔍 IncompleteProfileBanner - Missing fields:', missingFields);
   
   const isProfileIncomplete = !userProfile?.first_name || 
                              !userProfile?.last_name || 
@@ -45,7 +52,7 @@ export const IncompleteProfileBanner = ({ userProfile }: IncompleteProfileBanner
                              !userProfile?.photo_consent ||
                              !userProfile?.media_release_signed_at;
 
-  console.log('IncompleteProfileBanner - isProfileIncomplete:', isProfileIncomplete);
+  console.log('🔍 IncompleteProfileBanner - isProfileIncomplete:', isProfileIncomplete);
 
   // Don't show if profile is complete or banner is dismissed
   if (!isProfileIncomplete || isDismissed) {
