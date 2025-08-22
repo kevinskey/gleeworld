@@ -10,8 +10,11 @@ import { UserSelector } from './UserSelector';
 import { useMessageGroups } from '@/hooks/useMessaging';
 import { MessageSquare, Users, Plus, Settings, UserPlus } from 'lucide-react';
 
-export const MessagingInterface: React.FC = () => {
-  console.log('MessagingInterface: Component starting to render...');
+interface MessagingInterfaceProps {
+  embedded?: boolean;
+}
+
+export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded = false }) => {
   
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showMembers, setShowMembers] = useState(false);
@@ -54,7 +57,7 @@ export const MessagingInterface: React.FC = () => {
   console.log('MessagingInterface: Rendering main interface...');
 
   return (
-    <div className="h-screen flex bg-background">
+    <div className={`${embedded ? 'h-full' : 'h-screen'} flex bg-background`}>
       {/* Groups Sidebar */}
       <div className="w-80 border-r border-border flex flex-col">
         <div className="p-4 border-b border-border">

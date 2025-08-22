@@ -121,6 +121,7 @@ import { MemberSightReadingStudioPage } from "./pages/MemberSightReadingStudioPa
 import SchedulingPage from "./pages/SchedulingPage";
 import BookingPage from "./pages/BookingPage";
 import { MessagingInterface } from "./components/messaging/MessagingInterface";
+import CommunityHub from "./pages/CommunityHub";
 import UnifiedBookingPage from "./pages/UnifiedBookingPage";
 import ServiceSelection from "./pages/booking/ServiceSelection";
 import DateTimeSelection from "./pages/booking/DateTimeSelection";
@@ -406,7 +407,15 @@ const App = () => {
                    path="/community-hub" 
                    element={
                      <ProtectedRoute>
-                       <SendNotificationPage />
+                       <CommunityHub />
+                     </ProtectedRoute>
+                   } 
+                  />
+                 <Route
+                   path="/community" 
+                   element={
+                     <ProtectedRoute>
+                       <CommunityHub />
                      </ProtectedRoute>
                    } 
                   />
@@ -422,10 +431,10 @@ const App = () => {
                    path="/messages" 
                    element={
                      <ProtectedRoute>
-                       <MessagingInterface />
+                       <Navigate to="/community?tab=messages" replace />
                      </ProtectedRoute>
                    } 
-                 />
+                  />
                  <Route
                    path="/admin/announcements/new" 
                    element={
