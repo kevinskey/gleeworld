@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -145,25 +145,21 @@ export const useGroupMessages = (groupId?: string) => {
             user_profile:gw_profiles!fk_gw_message_reactions_user_profile(
               full_name
             )
-          ),
-          reply_to:gw_group_messages!gw_group_messages_reply_to_id_fkey(
-            id,
-            content,
-            message_type,
-            user_profile:gw_profiles!fk_gw_group_messages_user_profile(
-              full_name
-            )
           )
         `)
         .eq('group_id', groupId)
         .order('created_at', { ascending: true })
         .limit(100);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching group messages:', error);
+        throw error;
+      }
 
-      return (data || []) as any[];
+      return data as GroupMessage[];
     },
     enabled: !!groupId,
+    refetchInterval: 30000, // Refetch every 30 seconds as fallback
   });
 };
 
@@ -205,11 +201,13 @@ export const useRealtimeMessaging = (groupId?: string) => {
   const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
 
   useEffect(() => {
-    if (!groupId) return;
+    if (!groupId || !user) return;
 
-    // Subscribe to new messages
-    const messagesChannel = supabase
-      .channel(`group-messages-${groupId}`)
+    console.log('Setting up realtime for group:', groupId);
+
+    // Single channel for all message-related updates
+    const channel = supabase
+      .channel(`group-${groupId}`)
       .on(
         'postgres_changes',
         {
@@ -218,7 +216,8 @@ export const useRealtimeMessaging = (groupId?: string) => {
           table: 'gw_group_messages',
           filter: `group_id=eq.${groupId}`
         },
-        () => {
+        (payload) => {
+          console.log('New message received:', payload);
           queryClient.invalidateQueries({ queryKey: ['group-messages', groupId] });
         }
       )
@@ -230,15 +229,11 @@ export const useRealtimeMessaging = (groupId?: string) => {
           table: 'gw_group_messages',
           filter: `group_id=eq.${groupId}`
         },
-        () => {
+        (payload) => {
+          console.log('Message updated:', payload);
           queryClient.invalidateQueries({ queryKey: ['group-messages', groupId] });
         }
       )
-      .subscribe();
-
-    // Subscribe to message reactions
-    const reactionsChannel = supabase
-      .channel(`message-reactions-${groupId}`)
       .on(
         'postgres_changes',
         {
@@ -246,36 +241,33 @@ export const useRealtimeMessaging = (groupId?: string) => {
           schema: 'public',
           table: 'gw_message_reactions'
         },
-        () => {
+        (payload) => {
+          console.log('Reaction updated:', payload);
           queryClient.invalidateQueries({ queryKey: ['group-messages', groupId] });
         }
       )
-      .subscribe();
-
-    // Subscribe to typing indicators
-    const typingChannel = supabase
-      .channel(`typing-${groupId}`)
       .on('presence', { event: 'sync' }, () => {
-        const state = typingChannel.presenceState();
+        const state = channel.presenceState();
         const typing = Object.values(state)
           .flat()
-          .filter((indicator: any) => indicator.user_id !== user?.id) as any[];
+          .filter((indicator: any) => indicator.user_id !== user.id) as any[];
         setTypingUsers(typing);
       })
       .on('presence', { event: 'join' }, ({ newPresences }) => {
-        const typing = newPresences.filter((indicator: any) => indicator.user_id !== user?.id) as any[];
+        const typing = newPresences.filter((indicator: any) => indicator.user_id !== user.id) as any[];
         setTypingUsers(prev => [...prev, ...typing]);
       })
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
         const leftUserIds = leftPresences.map((indicator: any) => indicator.user_id);
         setTypingUsers(prev => prev.filter(t => !leftUserIds.includes(t.user_id)));
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime status:', status);
+      });
 
     return () => {
-      supabase.removeChannel(messagesChannel);
-      supabase.removeChannel(reactionsChannel);
-      supabase.removeChannel(typingChannel);
+      console.log('Cleaning up realtime for group:', groupId);
+      supabase.removeChannel(channel);
     };
   }, [groupId, user?.id, queryClient]);
 
@@ -387,24 +379,50 @@ export const useAddReaction = () => {
 // Update typing indicator
 export const useTypingIndicator = (groupId?: string) => {
   const { user } = useAuth();
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const startTyping = () => {
-    if (!groupId || !user) return;
+  const startTyping = useCallback(async () => {
+    if (!groupId || !user || isTyping) return;
 
-    const channel = supabase.channel(`typing-${groupId}`);
-    channel.track({
-      user_id: user.id,
-      user_name: user.user_metadata?.full_name || user.email,
-      group_id: groupId
-    });
-  };
-
-  const stopTyping = () => {
-    if (!groupId) return;
+    setIsTyping(true);
     
-    const channel = supabase.channel(`typing-${groupId}`);
-    channel.untrack();
-  };
+    try {
+      const channel = supabase.channel(`typing-${groupId}`);
+      await channel.track({
+        user_id: user.id,
+        user_name: user.user_metadata?.full_name || user.email,
+        typing: true
+      });
+    } catch (error) {
+      console.error('Error starting typing indicator:', error);
+    }
+  }, [groupId, user, isTyping]);
+
+  const stopTyping = useCallback(async () => {
+    if (!groupId || !user || !isTyping) return;
+
+    setIsTyping(false);
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    try {
+      const channel = supabase.channel(`typing-${groupId}`);
+      await channel.untrack();
+    } catch (error) {
+      console.error('Error stopping typing indicator:', error);
+    }
+  }, [groupId, user, isTyping]);
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return { startTyping, stopTyping };
 };

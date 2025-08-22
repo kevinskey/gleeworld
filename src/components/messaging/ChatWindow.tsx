@@ -10,7 +10,7 @@ interface ChatWindowProps {
 }
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
-  const { data: messages, isLoading } = useGroupMessages(groupId || undefined);
+  const { data: messages, isLoading, error } = useGroupMessages(groupId || undefined);
   const { typingUsers } = useRealtimeMessaging(groupId || undefined);
   const sendMessage = useSendMessage();
   const { startTyping, stopTyping } = useTypingIndicator(groupId || undefined);
@@ -25,6 +25,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (error) {
+      console.error('Error loading messages:', error);
+    }
+  }, [error]);
 
   const handleSendMessage = async (content: string, file?: File) => {
     if (!groupId) return;
@@ -63,6 +69,17 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
     return null;
   }
 
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-destructive mb-2">Error loading messages</div>
+          <div className="text-sm text-muted-foreground">Please try selecting the group again</div>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -78,21 +95,28 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
       {/* Messages Area */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {messages?.map((message, index) => {
-            const prevMessage = index > 0 ? messages[index - 1] : null;
-            const isFirstInGroup = !prevMessage || 
-              prevMessage.user_id !== message.user_id ||
-              new Date(message.created_at).getTime() - new Date(prevMessage.created_at).getTime() > 300000; // 5 minutes
+          {messages && messages.length > 0 ? (
+            messages.map((message, index) => {
+              const prevMessage = index > 0 ? messages[index - 1] : null;
+              const isFirstInGroup = !prevMessage || 
+                prevMessage.user_id !== message.user_id ||
+                new Date(message.created_at).getTime() - new Date(prevMessage.created_at).getTime() > 300000; // 5 minutes
 
-            return (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                isFirstInGroup={isFirstInGroup}
-                onReply={() => setReplyingTo(message.id)}
-              />
-            );
-          })}
+              return (
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  isFirstInGroup={isFirstInGroup}
+                  onReply={() => setReplyingTo(message.id)}
+                />
+              );
+            })
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <div className="text-lg mb-2">No messages yet</div>
+              <div className="text-sm">Be the first to send a message in this group!</div>
+            </div>
+          )}
           
           {typingUsers.length > 0 && (
             <TypingIndicator users={typingUsers} />
