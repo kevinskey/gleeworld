@@ -5539,6 +5539,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_gw_group_messages_user_profile"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_gw_group_messages_user_profile"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "gw_group_messages_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
@@ -6257,6 +6271,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_gw_message_reactions_user_profile"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_gw_message_reactions_user_profile"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "gw_message_reactions_message_id_fkey"
             columns: ["message_id"]

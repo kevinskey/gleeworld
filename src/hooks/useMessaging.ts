@@ -302,10 +302,14 @@ export const useSendMessage = () => {
       fileSize?: number;
       replyToId?: string;
     }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('gw_group_messages')
         .insert({
           group_id: groupId,
+          user_id: user.id,
           content,
           message_type: messageType,
           file_url: fileUrl,
