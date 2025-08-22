@@ -51,8 +51,18 @@ export const TemplateDialogsManager = ({
 
   const handleUseTemplate = async (template: ContractTemplate) => {
     console.log('TemplateDialogsManager: Using template:', template.name);
+    console.log('TemplateDialogsManager: onUseTemplate provided:', !!onUseTemplate);
     
-    // Open recipient selection dialog
+    // If a parent onUseTemplate callback is provided, use it directly (e.g., for navigation)
+    if (onUseTemplate) {
+      console.log('TemplateDialogsManager: Calling parent onUseTemplate callback directly');
+      onUseTemplate(template.template_content, template.name, template.header_image_url, template.contract_type);
+      onViewOpenChange(false);
+      return;
+    }
+    
+    // Otherwise, open recipient selection dialog for contract creation
+    console.log('TemplateDialogsManager: Opening recipient selection dialog');
     setSelectedTemplateForRecipient(template);
     setIsRecipientSelectionOpen(true);
   };
