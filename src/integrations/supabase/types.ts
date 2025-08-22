@@ -7736,6 +7736,7 @@ export type Database = {
           major: string | null
           measurements: Json | null
           media_consent: boolean | null
+          media_release_signed_at: string | null
           mentor_opt_in: boolean | null
           middle_name: string | null
           minor: string | null
@@ -7814,6 +7815,7 @@ export type Database = {
           major?: string | null
           measurements?: Json | null
           media_consent?: boolean | null
+          media_release_signed_at?: string | null
           mentor_opt_in?: boolean | null
           middle_name?: string | null
           minor?: string | null
@@ -7892,6 +7894,7 @@ export type Database = {
           major?: string | null
           measurements?: Json | null
           media_consent?: boolean | null
+          media_release_signed_at?: string | null
           mentor_opt_in?: boolean | null
           middle_name?: string | null
           minor?: string | null
