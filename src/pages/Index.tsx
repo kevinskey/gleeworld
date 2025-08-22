@@ -112,14 +112,22 @@ const Index = () => {
 
   const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
     console.log('🚀 Dashboard: handleUseTemplate called with template:', templateName);
+    console.log('🚀 Dashboard: Template content length:', templateContent?.length);
+    console.log('🚀 Dashboard: Contract type:', contractType);
     console.log('🚀 Dashboard: About to navigate to tour manager...');
     
-    // Use React Router navigation instead of window.location
+    // Use window.location.href for navigation
     try {
-      // Navigate to tour manager contracts with the template pre-selected
       const targetUrl = `/tour-manager?tab=contracts&template=${encodeURIComponent(templateName)}`;
-      console.log('🚀 Dashboard: Navigating to:', targetUrl);
-      window.location.href = targetUrl;
+      console.log('🚀 Dashboard: Target URL:', targetUrl);
+      console.log('🚀 Dashboard: Current location before navigation:', window.location.href);
+      
+      // Force navigation
+      setTimeout(() => {
+        console.log('🚀 Dashboard: Executing navigation now...');
+        window.location.href = targetUrl;
+      }, 100);
+      
     } catch (error) {
       console.error('🚨 Navigation error:', error);
     }
