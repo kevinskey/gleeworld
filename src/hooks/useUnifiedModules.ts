@@ -7,6 +7,7 @@ import {
 } from '@/utils/moduleHelpers';
 import { useUserModuleGrants } from './useUserModuleGrants';
 import { ModuleGrant } from '@/lib/authz';
+import { UNIFIED_MODULES } from '@/config/unified-modules';
 
 export interface UnifiedModule {
   id: string;
@@ -58,7 +59,9 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
   // Use the new module grants system
   const { grants: moduleGrants, loading: grantsLoading } = useUserModuleGrants(filterOptions?.userId);
   
-  console.log('🔍 useUnifiedModules: moduleGrants =', { moduleGrants, grantsLoading });
+  console.log('🔍 useUnifiedModules: filterOptions =', filterOptions);
+  console.log('🔍 useUnifiedModules: moduleGrants =', { moduleGrants, grantsLoading, count: moduleGrants?.length });
+  console.log('🔍 useUnifiedModules: allModules =', { allModules, count: allModules?.length });
 
   const fetchBaseModules = async () => {
     try {
@@ -108,14 +111,23 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
     fetchBaseModules();
   }, []);
 
-  // Merge module data with user grants
+  // Merge module data with user grants and frontend config
   const modules = allModules.map(module => {
     const grant = moduleGrants.find(g => g.module_key === module.id || g.module_key === module.name);
+    
+    // Find the corresponding frontend module definition
+    const frontendModule = UNIFIED_MODULES.find(fm => 
+      fm.id === module.id || 
+      fm.name === module.name || 
+      fm.dbFunctionName === module.id ||
+      fm.dbFunctionName === module.name
+    );
     
     console.log(`🔍 Processing module ${module.name}:`, {
       module: module.name,
       moduleId: module.id,
       grant,
+      frontendModule: frontendModule?.name,
       isAdmin: filterOptions?.isAdmin
     });
     
@@ -127,6 +139,13 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
     
     return {
       ...module,
+      // Merge in frontend module properties if found
+      ...(frontendModule && {
+        icon: frontendModule.icon,
+        component: frontendModule.component,
+        fullPageComponent: frontendModule.fullPageComponent,
+        iconColor: frontendModule.iconColor
+      }),
       permissions: {
         canAccess,
         canManage,

@@ -43,6 +43,11 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
   });
 
   const accessibleModules = getAccessibleModules();
+  
+  console.log('🎭 ExecBoardModularHub: User profile =', { profile, execRole, isExecBoard });
+  console.log('🎭 ExecBoardModularHub: Available modules =', { availableModules, count: availableModules?.length });
+  console.log('🎭 ExecBoardModularHub: Accessible modules =', { accessibleModules, count: accessibleModules?.length });
+  console.log('🎭 ExecBoardModularHub: Loading =', loading);
 
   useEffect(() => {
     if (isExecBoard && user) {
