@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import backgroundImage from '@/assets/mus240-background.jpg';
 
 export default function ClassLanding() {
   const cards = [
@@ -14,7 +15,7 @@ export default function ClassLanding() {
       <div 
         className="min-h-screen bg-cover bg-center bg-no-repeat relative"
         style={{
-          backgroundImage: "url('/images/mus240-background.png')",
+          backgroundImage: `url(${backgroundImage})`,
           backgroundColor: '#8B4513' // Fallback warm brown color
         }}
       >
