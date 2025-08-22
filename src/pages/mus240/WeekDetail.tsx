@@ -4,6 +4,35 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
+// Helper function to convert YouTube URLs to embed format
+const convertToEmbedUrl = (url: string) => {
+  if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+    return url; // Return non-YouTube URLs as-is
+  }
+  
+  try {
+    const urlObj = new URL(url);
+    
+    // Handle youtu.be format
+    if (urlObj.hostname === 'youtu.be') {
+      const videoId = urlObj.pathname.slice(1);
+      return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`;
+    }
+    
+    // Handle youtube.com/watch format
+    if (urlObj.hostname.includes('youtube.com')) {
+      const videoId = urlObj.searchParams.get('v');
+      if (videoId) {
+        return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`;
+      }
+    }
+    
+    return url; // Return original if we can't parse it
+  } catch {
+    return url; // Return original if URL parsing fails
+  }
+};
+
 type Comment = { 
   id: string; 
   week: number; 
@@ -69,27 +98,51 @@ export default function WeekDetail() {
         <section className="rounded-2xl border p-4 mb-6">
           <h2 className="text-lg font-medium">Listening</h2>
           <ul className="mt-2 space-y-3">
-            {wk.tracks.map((t, i) => (
-              <li key={i} className="rounded-xl border p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <div className="font-medium">{t.title}</div>
-                    <div className="text-xs text-muted-foreground">{t.source}</div>
+            {wk.tracks.map((t, i) => {
+              const isYouTube = t.url.includes('youtube.com') || t.url.includes('youtu.be');
+              const embedUrl = convertToEmbedUrl(t.url);
+              
+              return (
+                <li key={i} className="rounded-xl border p-3">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div>
+                      <div className="font-medium">{t.title}</div>
+                      <div className="text-xs text-muted-foreground">{t.source}</div>
+                    </div>
+                    <a 
+                      href={t.url} 
+                      target="_blank" 
+                      rel="noopener" 
+                      className="px-3 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    >
+                      Open on {t.source}
+                    </a>
                   </div>
-                  <a 
-                    href={t.url} 
-                    target="_blank" 
-                    rel="noopener" 
-                    className="px-3 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                  >
-                    Open
-                  </a>
-                </div>
 
-                <TrackCommentBox onPost={(a, c) => post(i, a, c)} />
-                <CommentList items={comments.filter(c => c.track_index === i)} label={`Track ${i + 1}`} />
-              </li>
-            ))}
+                  {/* Embedded player for YouTube videos */}
+                  {isYouTube && (
+                    <div className="mb-3">
+                      <div className="w-full aspect-video rounded-lg overflow-hidden border bg-gray-100">
+                        <iframe
+                          src={embedUrl}
+                          title={t.title}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                          referrerPolicy="strict-origin-when-cross-origin"
+                          className="w-full h-full"
+                        />
+                      </div>
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        If playback is restricted, <a href={t.url} target="_blank" rel="noreferrer" className="underline text-primary">open directly on YouTube</a>
+                      </div>
+                    </div>
+                  )}
+
+                  <TrackCommentBox onPost={(a, c) => post(i, a, c)} />
+                  <CommentList items={comments.filter(c => c.track_index === i)} label={`Track ${i + 1}`} />
+                </li>
+              );
+            })}
           </ul>
         </section>
 
