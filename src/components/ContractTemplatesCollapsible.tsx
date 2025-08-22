@@ -13,6 +13,17 @@ interface ContractTemplatesCollapsibleProps {
 }
 
 export const ContractTemplatesCollapsible = ({ onUseTemplate, onContractCreated }: ContractTemplatesCollapsibleProps) => {
+  console.log('🔧 ContractTemplatesCollapsible: onUseTemplate callback provided?', !!onUseTemplate);
+  
+  const handleUseTemplateWrapper = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
+    console.log('🔧 ContractTemplatesCollapsible: handleUseTemplateWrapper called with:', { templateName, templateContent: templateContent.substring(0, 50) + '...', contractType });
+    if (onUseTemplate) {
+      console.log('🔧 ContractTemplatesCollapsible: Calling parent onUseTemplate');
+      onUseTemplate(templateContent, templateName, headerImageUrl, contractType);
+    } else {
+      console.log('🔧 ContractTemplatesCollapsible: No parent onUseTemplate callback available');
+    }
+  };
   const [isOpen, setIsOpen] = useState(false);
   const { templates, loading } = useContractTemplates();
 
@@ -105,7 +116,7 @@ export const ContractTemplatesCollapsible = ({ onUseTemplate, onContractCreated 
               onViewOpenChange={setIsViewOpen}
               onCreateTemplate={mockCreateTemplate}
               onUpdateTemplate={mockUpdateTemplate}
-              onUseTemplate={onUseTemplate}
+              onUseTemplate={handleUseTemplateWrapper}
             />
           </CardContent>
         </CollapsibleContent>
