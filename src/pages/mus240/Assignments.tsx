@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ type SubmissionStatus = {
 export default function Assignments() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [assignments, setAssignments] = useState<WeekAssignments[]>(ASSIGNMENTS);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -334,17 +336,31 @@ export default function Assignments() {
 
                           {!submitted && (
                             <div className="pt-2">
-                              <Button 
-                                size="sm" 
-                                className="w-full"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSubmitAssignment(assignment);
-                                }}
-                              >
-                                <Upload className="h-4 w-4 mr-2" />
-                                Submit Assignment
-                              </Button>
+                              {assignment.type === 'listening_journal' ? (
+                                <Button 
+                                  size="sm" 
+                                  className="w-full"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/classes/mus240/assignments/${assignment.id}`);
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Open Journal
+                                </Button>
+                              ) : (
+                                <Button 
+                                  size="sm" 
+                                  className="w-full"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSubmitAssignment(assignment);
+                                  }}
+                                >
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  Submit Assignment
+                                </Button>
+                              )}
                             </div>
                           )}
                         </CardContent>

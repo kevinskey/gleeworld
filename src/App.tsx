@@ -145,6 +145,7 @@ import Syllabus from "./pages/mus240/Syllabus";
 import Assignments from "./pages/mus240/Assignments";
 import ListeningHub from "./pages/mus240/ListeningHub";
 import WeekDetail from "./pages/mus240/WeekDetail";
+import AssignmentJournal from "./pages/mus240/AssignmentJournal";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -1216,38 +1217,38 @@ const App = () => {
                                  </ProtectedRoute>
                                } 
                              />
-                             <Route 
-                               path="/classes/mus240/assignments" 
-                               element={
-                                 <ProtectedRoute>
-                                   <Assignments />
-                                 </ProtectedRoute>
-                               } 
-                             />
-                             <Route 
-                               path="/classes/mus240/listening" 
-                               element={
-                                 <ProtectedRoute>
-                                   <ListeningHub />
-                                 </ProtectedRoute>
-                               } 
-                             />
-                             <Route 
-                               path="/classes/mus240/listening/:week" 
-                               element={
-                                 <ProtectedRoute>
-                                   <WeekDetail />
-                                 </ProtectedRoute>
-                               } 
-                             />
-                             <Route 
-                               path="/classes/mus240/assignments" 
-                               element={
-                                 <ProtectedRoute>
-                                   <div>MUS 240 Assignments - Coming Soon</div>
-                                 </ProtectedRoute>
-                               } 
-                             />
+                              <Route 
+                                path="/classes/mus240/assignments" 
+                                element={
+                                  <ProtectedRoute>
+                                    <Assignments />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/classes/mus240/assignments/:assignmentId" 
+                                element={
+                                  <ProtectedRoute>
+                                    <AssignmentJournal />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/classes/mus240/listening" 
+                                element={
+                                  <ProtectedRoute>
+                                    <ListeningHub />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/classes/mus240/listening/:week" 
+                                element={
+                                  <ProtectedRoute>
+                                    <WeekDetail />
+                                  </ProtectedRoute>
+                                } 
+                              />
                              <Route 
                                path="/classes/mus240/resources" 
                                element={
