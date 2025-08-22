@@ -95,12 +95,6 @@ export const MessageGroupsList: React.FC<MessageGroupsListProps> = ({
               </div>
               
               <div className="flex items-center gap-1 mt-1">
-                <Badge 
-                  variant="outline" 
-                  className={cn("text-xs px-2 py-0", getGroupTypeColor(group.group_type))}
-                >
-                  {group.group_type.replace('_', ' ')}
-                </Badge>
               </div>
             </div>
           </button>
