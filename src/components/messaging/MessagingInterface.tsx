@@ -110,9 +110,6 @@ export const MessagingInterface: React.FC = () => {
                   </div>
                   <div>
                     <h2 className="font-semibold text-lg">{selectedGroup.name}</h2>
-                    {selectedGroup.description && (
-                      <p className="text-sm text-muted-foreground">{selectedGroup.description}</p>
-                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

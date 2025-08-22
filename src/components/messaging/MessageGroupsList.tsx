@@ -94,12 +94,6 @@ export const MessageGroupsList: React.FC<MessageGroupsListProps> = ({
                 )}
               </div>
               
-              {group.description && (
-                <p className="text-xs text-muted-foreground truncate">
-                  {group.description}
-                </p>
-              )}
-              
               <div className="flex items-center gap-1 mt-1">
                 <Badge 
                   variant="outline" 
