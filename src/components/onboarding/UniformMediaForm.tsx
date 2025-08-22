@@ -27,20 +27,36 @@ export const UniformMediaForm = ({ profile, onUpdate, saving }: UniformMediaForm
             These measurements help us provide properly fitting concert attire.
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="height_cm">Height (cm)</Label>
+              <Label htmlFor="height_feet">Height (feet)</Label>
               <Input
-                id="height_cm"
+                id="height_feet"
                 type="number"
-                min="120"
-                max="220"
-                value={profile.measurements?.height_cm || ''}
+                min="4"
+                max="7"
+                value={profile.measurements?.height_feet || ''}
                 onChange={(e) => onUpdate('measurements', {
                   ...profile.measurements,
-                  height_cm: parseInt(e.target.value) || undefined
+                  height_feet: parseInt(e.target.value) || undefined
                 })}
-                placeholder="165"
+                placeholder="5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="height_inches">Height (inches)</Label>
+              <Input
+                id="height_inches"
+                type="number"
+                min="0"
+                max="11"
+                value={profile.measurements?.height_inches || ''}
+                onChange={(e) => onUpdate('measurements', {
+                  ...profile.measurements,
+                  height_inches: parseInt(e.target.value) || undefined
+                })}
+                placeholder="6"
               />
             </div>
 
@@ -64,50 +80,53 @@ export const UniformMediaForm = ({ profile, onUpdate, saving }: UniformMediaForm
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="chest">Chest/Bust (cm)</Label>
+              <Label htmlFor="chest">Chest/Bust (inches)</Label>
               <Input
                 id="chest"
                 type="number"
-                min="60"
-                max="150"
+                min="24"
+                max="60"
+                step="0.5"
                 value={profile.measurements?.chest || ''}
                 onChange={(e) => onUpdate('measurements', {
                   ...profile.measurements,
                   chest: parseFloat(e.target.value) || undefined
                 })}
-                placeholder="90"
+                placeholder="36"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="waist">Waist (cm)</Label>
+              <Label htmlFor="waist">Waist (inches)</Label>
               <Input
                 id="waist"
                 type="number"
-                min="50"
-                max="150"
+                min="20"
+                max="60"
+                step="0.5"
                 value={profile.measurements?.waist || ''}
                 onChange={(e) => onUpdate('measurements', {
                   ...profile.measurements,
                   waist: parseFloat(e.target.value) || undefined
                 })}
-                placeholder="75"
+                placeholder="30"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="hips">Hips (cm)</Label>
+              <Label htmlFor="hips">Hips (inches)</Label>
               <Input
                 id="hips"
                 type="number"
-                min="60"
-                max="150"
+                min="24"
+                max="60"
+                step="0.5"
                 value={profile.measurements?.hips || ''}
                 onChange={(e) => onUpdate('measurements', {
                   ...profile.measurements,
                   hips: parseFloat(e.target.value) || undefined
                 })}
-                placeholder="95"
+                placeholder="38"
               />
             </div>
           </div>
@@ -119,7 +138,8 @@ export const UniformMediaForm = ({ profile, onUpdate, saving }: UniformMediaForm
             <li>• Measure chest/bust at the fullest part</li>
             <li>• Waist measurement at the narrowest part</li>
             <li>• Hip measurement at the fullest part</li>
-            <li>• All measurements in centimeters for accuracy</li>
+            <li>• All measurements in inches for accuracy</li>
+            <li>• Height should be entered as separate feet and inches (e.g., 5 feet 6 inches)</li>
           </ul>
         </div>
       </CardContent>

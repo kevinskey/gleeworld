@@ -23,7 +23,8 @@ export interface OnboardingProfile {
   academic_major?: string;
   // Measurements (stored as JSON in existing measurements field)
   measurements?: {
-    height_cm?: number;
+    height_feet?: number;
+    height_inches?: number;
     chest?: number;
     waist?: number;
     hips?: number;
@@ -171,7 +172,7 @@ export const useOnboardingProfile = () => {
   const getStepCompletion = useCallback(() => {
     return {
       profile: !!(profile.first_name && profile.last_name && profile.email),
-      uniform: !!(profile.measurements?.height_cm && profile.measurements?.chest && profile.measurements?.waist && profile.measurements?.hips),
+      uniform: !!(profile.measurements?.height_feet && profile.measurements?.height_inches && profile.measurements?.chest && profile.measurements?.waist && profile.measurements?.hips && profile.measurements?.shoe_size),
       agreements: !!(profile.photo_consent && profile.media_release_signed_at),
     };
   }, [profile]);
