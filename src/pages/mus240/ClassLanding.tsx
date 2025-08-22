@@ -3,7 +3,7 @@ import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function ClassLanding() {
   const cards = [
-    { title: 'Syllabus', to: '/files/mus240-syllabus.pdf', ext: true, desc: 'Policies, grading, schedule' },
+    { title: 'Syllabus', to: '/classes/mus240/syllabus', desc: 'Policies, grading, schedule' },
     { title: 'Listening Hub', to: '/classes/mus240/listening', desc: 'Weekly listening + comments' },
     { title: 'Assignments', to: '/classes/mus240/assignments', desc: 'Prompts, rubrics, due dates' },
     { title: 'Resources', to: '/classes/mus240/resources', desc: 'Readings, citations, media' },
@@ -18,13 +18,7 @@ export default function ClassLanding() {
         </header>
 
         <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {cards.map((c) => c.ext ? (
-            <a key={c.title} href={c.to} target="_blank" rel="noopener"
-               className="block rounded-2xl border p-4 hover:shadow-md transition-shadow">
-              <h2 className="text-xl font-medium">{c.title}</h2>
-              <p className="text-sm text-muted-foreground">{c.desc}</p>
-            </a>
-          ) : (
+          {cards.map((c) => (
             <Link key={c.title} to={c.to} className="block rounded-2xl border p-4 hover:shadow-md transition-shadow">
               <h2 className="text-xl font-medium">{c.title}</h2>
               <p className="text-sm text-muted-foreground">{c.desc}</p>

@@ -141,6 +141,7 @@ import SetupCrewPage from "./pages/SetupCrewPage";
 import { Onboarding } from "./pages/Onboarding";
 import StudentRegistration from "./pages/StudentRegistration";
 import ClassLanding from "./pages/mus240/ClassLanding";
+import Syllabus from "./pages/mus240/Syllabus";
 import ListeningHub from "./pages/mus240/ListeningHub";
 import WeekDetail from "./pages/mus240/WeekDetail";
 // Preview triggers disabled to prevent accidental email sends during development
@@ -1203,6 +1204,14 @@ const App = () => {
                                element={
                                  <ProtectedRoute>
                                    <ClassLanding />
+                                 </ProtectedRoute>
+                               } 
+                             />
+                             <Route 
+                               path="/classes/mus240/syllabus" 
+                               element={
+                                 <ProtectedRoute>
+                                   <Syllabus />
                                  </ProtectedRoute>
                                } 
                              />
