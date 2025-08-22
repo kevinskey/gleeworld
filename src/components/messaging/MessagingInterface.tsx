@@ -21,14 +21,14 @@ export const MessagingInterface: React.FC = () => {
   
   const { data: groups, isLoading, error } = useMessageGroups();
 
+  const selectedGroup = groups?.find(group => group.id === selectedGroupId);
+
   console.log('MessagingInterface: Hook executed successfully:', { 
     groups: groups?.length || 0, 
     isLoading, 
     error: error?.message || 'none',
     groupsData: groups 
   });
-
-  const selectedGroup = groups?.find(g => g.id === selectedGroupId);
 
   if (error) {
     console.error('MessagingInterface: Error loading groups:', error);

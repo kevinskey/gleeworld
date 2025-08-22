@@ -162,3 +162,9 @@ verify_jwt = false
 
 [functions.reset-member-passwords]
 verify_jwt = true
+
+[functions.send-sms-notification]
+verify_jwt = true
+
+[functions.receive-sms]
+verify_jwt = false

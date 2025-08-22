@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSendSMSNotification } from './useSMSIntegration';
 
 export interface MessageGroup {
   id: string;
@@ -277,6 +278,8 @@ export const useRealtimeMessaging = (groupId?: string) => {
 // Send message mutation
 export const useSendMessage = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const sendSMSNotification = useSendSMSNotification();
 
   return useMutation({
     mutationFn: async ({
@@ -296,14 +299,14 @@ export const useSendMessage = () => {
       fileSize?: number;
       replyToId?: string;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
         .from('gw_group_messages')
         .insert({
           group_id: groupId,
-          user_id: user.id,
+          user_id: currentUser.id,
           content,
           message_type: messageType,
           file_url: fileUrl,
@@ -315,6 +318,30 @@ export const useSendMessage = () => {
         .single();
 
       if (error) throw error;
+
+      // Send SMS notifications for text messages
+      if (messageType === 'text' && content && user?.user_metadata?.full_name) {
+        try {
+          // Get group name for SMS formatting
+          const { data: group } = await supabase
+            .from('gw_message_groups')
+            .select('name')
+            .eq('id', groupId)
+            .single();
+
+          if (group) {
+            await sendSMSNotification.mutateAsync({
+              groupId,
+              message: content,
+              senderName: user.user_metadata.full_name,
+            });
+          }
+        } catch (smsError) {
+          console.error('SMS notification failed:', smsError);
+          // Don't throw - message was sent successfully, SMS is just a bonus
+        }
+      }
+
       return data;
     },
     onSuccess: (_, variables) => {
