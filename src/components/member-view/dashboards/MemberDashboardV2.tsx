@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Heart, HeartPulse, Megaphone, Bell, Mail, Users2, Link as LinkIcon, ExternalLink } from "lucide-react";
+import { Heart, HeartPulse, Megaphone, Bell, Mail, Users2, Link as LinkIcon, ExternalLink, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -16,6 +16,7 @@ import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { AuditionStatsWidget } from "@/components/member-view/AuditionStatsWidget";
 import { getModulesByCategory } from "@/config/unified-modules";
 import { MemberSightReadingModule } from "@/components/modules/MemberSightReadingModule";
+import { QuickActions } from "@/components/community/QuickActions";
 
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
@@ -132,6 +133,22 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
   return (
     <div className="min-h-screen bg-muted/30 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Community Hub Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <Sparkles className="h-8 w-8 text-primary" />
+              Community Hub
+            </h1>
+            <p className="text-muted-foreground">
+              Your central space for messages, wellness, love notes, and staying connected
+            </p>
+          </div>
+        </div>
+
+        {/* Quick Actions Bar */}
+        <QuickActions />
+
         {/* Hero Welcome + Community Hub */}
         <section aria-label="Member welcome" className="animate-fade-in">
           <Card className="relative overflow-hidden border bg-background/40">
