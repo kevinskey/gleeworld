@@ -13839,6 +13839,33 @@ export type Database = {
           },
         ]
       }
+      smaam_comments: {
+        Row: {
+          author: string | null
+          content: string
+          created_at: string
+          id: string
+          track_index: number | null
+          week: number
+        }
+        Insert: {
+          author?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          track_index?: number | null
+          week: number
+        }
+        Update: {
+          author?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          track_index?: number | null
+          week?: number
+        }
+        Relationships: []
+      }
       square_integrations: {
         Row: {
           access_token: string

@@ -140,6 +140,9 @@ import FirstYearConsolePage from "./pages/console/FirstYearConsolePage";
 import SetupCrewPage from "./pages/SetupCrewPage";
 import { Onboarding } from "./pages/Onboarding";
 import StudentRegistration from "./pages/StudentRegistration";
+import ClassLanding from "./pages/mus240/ClassLanding";
+import ListeningHub from "./pages/mus240/ListeningHub";
+import WeekDetail from "./pages/mus240/WeekDetail";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -1193,8 +1196,49 @@ const App = () => {
                                   </UniversalLayout>
                                 </ProtectedRoute>
                               } 
-                            />
-                        </Routes>
+                             />
+                             {/* MUS 240 Class Pages */}
+                             <Route 
+                               path="/classes/mus240" 
+                               element={
+                                 <ProtectedRoute>
+                                   <ClassLanding />
+                                 </ProtectedRoute>
+                               } 
+                             />
+                             <Route 
+                               path="/classes/mus240/listening" 
+                               element={
+                                 <ProtectedRoute>
+                                   <ListeningHub />
+                                 </ProtectedRoute>
+                               } 
+                             />
+                             <Route 
+                               path="/classes/mus240/listening/:week" 
+                               element={
+                                 <ProtectedRoute>
+                                   <WeekDetail />
+                                 </ProtectedRoute>
+                               } 
+                             />
+                             <Route 
+                               path="/classes/mus240/assignments" 
+                               element={
+                                 <ProtectedRoute>
+                                   <div>MUS 240 Assignments - Coming Soon</div>
+                                 </ProtectedRoute>
+                               } 
+                             />
+                             <Route 
+                               path="/classes/mus240/resources" 
+                               element={
+                                 <ProtectedRoute>
+                                   <div>MUS 240 Resources - Coming Soon</div>
+                                 </ProtectedRoute>
+                               } 
+                             />
+                         </Routes>
                     </Suspense>
                    <GlobalMusicPlayer />
                 </div>
