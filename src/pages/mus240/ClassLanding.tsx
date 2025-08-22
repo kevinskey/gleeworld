@@ -1,46 +1,108 @@
 import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { Music, Calendar, BookOpen, Users } from 'lucide-react';
 import backgroundImage from '@/assets/mus240-background.jpg';
 
 export default function ClassLanding() {
   const cards = [
-    { title: 'Syllabus', to: '/classes/mus240/syllabus', desc: 'Policies, grading, schedule' },
-    { title: 'Listening Hub', to: '/classes/mus240/listening', desc: 'Weekly listening + comments' },
-    { title: 'Assignments', to: '/classes/mus240/assignments', desc: 'Prompts, rubrics, due dates' },
-    { title: 'Resources', to: '/classes/mus240/resources', desc: 'Readings, citations, media' },
+    { 
+      title: 'Syllabus', 
+      to: '/classes/mus240/syllabus', 
+      desc: 'Policies, grading, schedule',
+      icon: BookOpen
+    },
+    { 
+      title: 'Listening Hub', 
+      to: '/classes/mus240/listening', 
+      desc: 'Weekly listening + comments',
+      icon: Music
+    },
+    { 
+      title: 'Assignments', 
+      to: '/classes/mus240/assignments', 
+      desc: 'Prompts, rubrics, due dates',
+      icon: Calendar
+    },
+    { 
+      title: 'Resources', 
+      to: '/classes/mus240/resources', 
+      desc: 'Readings, citations, media',
+      icon: Users
+    },
   ];
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
       <div 
-        className="min-h-screen bg-cover bg-center bg-no-repeat relative"
+        className="min-h-screen bg-cover bg-center bg-no-repeat relative bg-gradient-to-br from-orange-800 to-amber-600"
         style={{
           backgroundImage: `url(${backgroundImage})`,
-          backgroundColor: '#8B4513' // Fallback warm brown color
         }}
       >
-        {/* Very light overlay for text readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+        {/* Gradient overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10"></div>
         
-        <main className="relative z-10 max-w-5xl mx-auto p-4">
-          <header className="mb-6 text-center">
-            <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">MUS 240 — Survey of African American Music</h1>
-            <p className="text-lg text-white/90 drop-shadow-md">Fall 2025 · Spelman College</p>
-            <div className="mt-4 text-white/70 text-sm">Updated: {new Date().toLocaleString()}</div>
-          </header>
+        <main className="relative z-10 max-w-6xl mx-auto px-4 py-12">
+          {/* Hero Section with Redesigned Title */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+              <Music className="h-6 w-6 text-amber-300" />
+              <span className="text-white/90 font-medium">Spelman College</span>
+            </div>
+            
+            <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+              MUS 240
+            </h1>
+            
+            <h2 className="text-2xl md:text-3xl font-light text-white/95 mb-6 max-w-4xl mx-auto leading-relaxed">
+              Survey of African American Music
+            </h2>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-white/80">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>Fall 2025</span>
+              </div>
+              <div className="hidden sm:block w-1 h-1 bg-white/60 rounded-full"></div>
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>Dr. Kevin Johnson</span>
+              </div>
+            </div>
+          </div>
 
-          <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cards.map((c) => (
-              <Link 
-                key={c.title} 
-                to={c.to} 
-                className="block rounded-2xl bg-white/90 backdrop-blur-sm border border-white/20 p-6 hover:bg-white/95 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              >
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">{c.title}</h2>
-                <p className="text-sm text-gray-700">{c.desc}</p>
-              </Link>
-            ))}
+          {/* Navigation Cards */}
+          <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            {cards.map((card) => {
+              const IconComponent = card.icon;
+              return (
+                <Link 
+                  key={card.title} 
+                  to={card.to} 
+                  className="group block"
+                >
+                  <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
+                        <IconComponent className="h-5 w-5 text-white" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900">{card.title}</h3>
+                    </div>
+                    <p className="text-gray-600 leading-relaxed">{card.desc}</p>
+                  </div>
+                </Link>
+              );
+            })}
           </section>
+          
+          {/* Course Description */}
+          <div className="mt-16 text-center max-w-3xl mx-auto">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
+              <p className="text-white/90 text-lg leading-relaxed">
+                Explore the rich tapestry of African American musical traditions, from spirituals and blues to jazz, gospel, R&B, and hip-hop. Discover how music has been a vehicle for cultural expression, social change, and artistic innovation.
+              </p>
+            </div>
+          </div>
         </main>
       </div>
     </UniversalLayout>
