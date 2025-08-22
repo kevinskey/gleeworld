@@ -250,7 +250,14 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
     console.log('generateQRImage called with token:', token?.substring(0, 10) + '...');
     
     try {
-      const qrDataURL = await QRCode.toDataURL(token, {
+      // Create a proper URL for the QR code instead of just the token
+      // This allows phones to scan and open the attendance page directly
+      const baseUrl = window.location.origin;
+      const attendanceUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(token)}`;
+      
+      console.log('Generated QR URL:', attendanceUrl);
+      
+      const qrDataURL = await QRCode.toDataURL(attendanceUrl, {
         width: 300,
         margin: 2,
         color: {

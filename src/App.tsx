@@ -61,6 +61,7 @@ import CreateAnnouncement from "./pages/admin/CreateAnnouncement";
 import EditAnnouncement from "./pages/admin/EditAnnouncement";
 import About from "./pages/About";
 import AttendanceTestPage from "./pages/AttendanceTestPage";
+import AttendanceScanPage from "./pages/AttendanceScanPage";
 // Existing AttendancePage (legacy)
 import AttendancePageLegacy from "./pages/AttendancePage";
 // Existing MusicLibraryPage (legacy)
@@ -553,7 +554,15 @@ const App = () => {
                         <AttendancePageLegacy />
                       </ProtectedRoute>
                     } 
-                  />
+                   />
+                   <Route 
+                     path="/attendance/scan" 
+                     element={
+                       <ProtectedRoute>
+                         <AttendanceScanPage />
+                       </ProtectedRoute>
+                     } 
+                   />
                    <Route 
                      path="/music-library" 
                      element={
