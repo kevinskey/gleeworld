@@ -50,7 +50,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
 
   const filteredUsers = allUsers?.filter(user =>
     user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const memberUserIds = new Set(groupMembers?.map(member => member.user_id) || []);
