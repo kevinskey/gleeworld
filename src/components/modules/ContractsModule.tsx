@@ -27,7 +27,11 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
 
   const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
     console.log("Using template:", { templateName, contractType });
-    // TODO: Implement template usage logic
+    
+    // Navigate to tour manager with the template
+    const targetUrl = `/tour-manager?tab=contracts&template=${encodeURIComponent(templateName)}`;
+    console.log('🚀 ContractsModule: Navigating to:', targetUrl);
+    window.location.href = targetUrl;
   };
 
   const totalValue = contracts.length;
