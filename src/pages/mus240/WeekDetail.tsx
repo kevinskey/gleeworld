@@ -46,6 +46,7 @@ type Comment = {
 };
 
 export default function WeekDetail() {
+  console.log('WeekDetail component loading...');
   const { week } = useParams();
   const num = Number(week);
   const wk = WEEKS.find(w => w.number === num);
@@ -83,6 +84,7 @@ export default function WeekDetail() {
   };
 
   if (!wk) {
+    console.log('Week not found for number:', num);
     return (
       <UniversalLayout showHeader={true} showFooter={false}>
         <main className="max-w-5xl mx-auto p-4">
@@ -92,6 +94,9 @@ export default function WeekDetail() {
       </UniversalLayout>
     );
   }
+
+  console.log('Week found:', wk);
+  console.log('Week tracks:', wk.tracks);
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
@@ -112,6 +117,15 @@ export default function WeekDetail() {
               const embedUrl = videoId ? createEmbedUrl(videoId) : null;
               const embedFailed = failedEmbeds.has(i);
               
+              console.log(`Track ${i}:`, { 
+                title: t.title, 
+                url: t.url, 
+                isYouTube, 
+                videoId, 
+                embedUrl, 
+                embedFailed 
+              });
+              
               return (
                 <li key={i} className="rounded-xl border p-3">
                   <div className="flex items-center justify-between gap-2 mb-3">
@@ -130,69 +144,44 @@ export default function WeekDetail() {
                     </a>
                   </div>
 
-                  {/* YouTube embed with fallback */}
-                  {isYouTube && videoId && embedUrl && !embedFailed && (
+                  {/* YouTube embed - Always show for YouTube videos */}
+                  {isYouTube && videoId && (
                     <div className="mb-3">
-                      <div className="w-full aspect-video rounded-lg overflow-hidden border bg-gray-100 relative">
-                        <iframe
-                          src={embedUrl}
-                          title={t.title}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowFullScreen
-                          referrerPolicy="strict-origin-when-cross-origin"
-                          className="w-full h-full"
-                          onError={() => handleEmbedError(i)}
-                          style={{ border: 'none' }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Fallback for failed embeds or non-YouTube content */}
-                  {(isYouTube && embedFailed) && (
-                    <div className="mb-3">
-                      <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          This video cannot be embedded due to the creator's settings. 
-                          <a 
-                            href={t.url} 
-                            target="_blank" 
-                            rel="noreferrer" 
-                            className="inline-flex items-center gap-1 ml-2 text-primary hover:underline font-medium"
-                          >
-                            <Play className="h-3 w-3" />
-                            Watch on YouTube
-                          </a>
-                        </AlertDescription>
-                      </Alert>
-                      {videoId && (
-                        <div className="mt-3 relative group">
-                          <a 
-                            href={t.url} 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="block relative"
-                          >
-                            <img 
-                              src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
-                              alt={t.title}
-                              className="w-full aspect-video object-cover rounded-lg"
-                              onError={(e) => {
-                                // Fallback to default thumbnail if maxres doesn't exist
-                                e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                              }}
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors rounded-lg">
-                              <div className="bg-red-600 text-white p-3 rounded-full group-hover:scale-110 transition-transform">
-                                <Play className="h-6 w-6 ml-0.5" />
-                              </div>
-                            </div>
-                          </a>
+                      {!embedFailed ? (
+                        <div className="w-full aspect-video rounded-lg overflow-hidden border bg-gray-100 relative">
+                          <iframe
+                            src={embedUrl}
+                            title={t.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                            referrerPolicy="strict-origin-when-cross-origin"
+                            className="w-full h-full"
+                            onError={() => handleEmbedError(i)}
+                            style={{ border: 'none' }}
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <Alert>
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>
+                              This video cannot be embedded. 
+                              <a 
+                                href={t.url} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="inline-flex items-center gap-1 ml-2 text-primary hover:underline font-medium"
+                              >
+                                <Play className="h-3 w-3" />
+                                Watch on YouTube
+                              </a>
+                            </AlertDescription>
+                          </Alert>
                         </div>
                       )}
                     </div>
                   )}
+
 
                   <TrackCommentBox onPost={(a, c) => post(i, a, c)} />
                   <CommentList items={comments.filter(c => c.track_index === i)} label={`Track ${i + 1}`} />
