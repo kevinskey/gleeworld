@@ -274,8 +274,11 @@ export const DocumentUpload = ({
         setHeaderImageUrl(templateHeaderImageUrl);
       }
       
+      // Check if template has stipend placeholder and set field visibility
       if (templateContent.includes('{{stipend}}')) {
         setHasStipendField(true);
+      } else {
+        setHasStipendField(false);
       }
       
       // Set default signature fields
