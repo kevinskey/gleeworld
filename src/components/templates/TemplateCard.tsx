@@ -23,8 +23,16 @@ export const TemplateCard = ({
   onUseTemplate
 }: TemplateCardProps) => {
   const handleUseTemplate = () => {
-    console.log('Using template:', template.name);
+    console.log('🔧 TemplateCard: Use Template clicked for:', template.name);
+    console.log('🔧 TemplateCard: onUseTemplate callback available:', !!onUseTemplate);
+    
     if (onUseTemplate) {
+      console.log('🔧 TemplateCard: Calling onUseTemplate with:', {
+        name: template.name,
+        content: template.template_content ? 'present' : 'missing',
+        headerImage: template.header_image_url,
+        contractType: template.contract_type || 'other'
+      });
       onUseTemplate(
         template.template_content,
         template.name,
@@ -32,7 +40,7 @@ export const TemplateCard = ({
         template.contract_type || 'other'
       );
     } else {
-      console.warn('onUseTemplate callback not provided');
+      console.warn('🚨 TemplateCard: onUseTemplate callback not provided - button should be disabled');
     }
   };
 
