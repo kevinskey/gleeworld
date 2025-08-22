@@ -46,21 +46,25 @@ export const ContractTemplates = ({ onUseTemplate, onContractCreated }: Contract
       onUseTemplate(templateContent, templateName, headerImageUrl, contractType);
     } else {
       // No parent callback - we're in a standalone context (like dashboard)
-      // Navigate to a contract creation flow or show helpful guidance
-      console.log('🔄 No parent callback - showing guidance');
+      // Navigate directly to the appropriate contract creation flow
+      console.log('🔄 No parent callback - navigating directly');
       
-      // Provide user feedback based on contract type
-      let instructions = '';
+      // Route to appropriate module based on contract type and name
+      let targetUrl = '';
       
       if (contractType === 'performance' || contractType === 'service') {
-        instructions = `Template "${templateName}" is ready to use!\n\nTo create a contract with this template:\n1. Go to Tour Manager → Contracts\n2. Click "Create New Contract"\n3. Select this template\n\nOr use this template directly in any contract creation workflow.`;
+        // Performance and service contracts go to tour manager
+        targetUrl = `/tour-manager?tab=contracts&template=${encodeURIComponent(templateName)}`;
       } else if (templateName.toLowerCase().includes('wardrobe') || templateName.toLowerCase().includes('wordrobe')) {
-        instructions = `Template "${templateName}" is ready to use!\n\nTo create a contract with this template:\n1. Go to Dashboard → Contracts\n2. Navigate to Wardrobe Contracts\n3. Click "Create New Contract"\n4. Select this template\n\nOr use this template directly in any contract creation workflow.`;
+        // Wardrobe contracts go to contracts page with wardrobe context
+        targetUrl = `/contracts?tab=wardrobe&template=${encodeURIComponent(templateName)}`;
       } else {
-        instructions = `Template "${templateName}" is ready to use!\n\nTo create a contract with this template:\n1. Go to Dashboard → Contracts\n2. Click "Create New Contract"\n3. Select this template\n\nOr use this template directly in any contract creation workflow.`;
+        // General other contracts
+        targetUrl = `/contracts?template=${encodeURIComponent(templateName)}`;
       }
       
-      alert(instructions);
+      console.log('🚀 ContractTemplates: Navigating to:', targetUrl);
+      window.location.href = targetUrl;
     }
   };
 
