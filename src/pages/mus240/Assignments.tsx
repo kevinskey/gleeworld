@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,12 +10,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Edit, Calendar, Award, Upload, CheckCircle2, Clock, FileText } from 'lucide-react';
+import { Edit, Calendar, Award, Upload, CheckCircle2, Clock, FileText, ArrowLeft, Music } from 'lucide-react';
 import { ASSIGNMENTS, Assignment, WeekAssignments } from '@/data/mus240Assignments';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import backgroundImage from '@/assets/mus240-background.jpg';
 
 type SubmissionStatus = {
   [assignmentId: string]: {
@@ -211,25 +213,54 @@ export default function Assignments() {
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
-      <main className="max-w-6xl mx-auto p-6">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">MUS 240 Assignments</h1>
-          <p className="text-muted-foreground">Week-by-week assignment schedule with detailed instructions</p>
-        </header>
+      <div 
+        className="min-h-screen bg-cover bg-center bg-no-repeat relative"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+        }}
+      >
+        {/* Gradient overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20"></div>
+        
+        <main className="relative z-10 max-w-6xl mx-auto p-6">
+          {/* Header with back navigation */}
+          <div className="mb-8">
+            <Link 
+              to="/classes/mus240" 
+              className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-4 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 hover:bg-white/20"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to MUS 240
+            </Link>
+            
+            <div className="text-center">
+              <div className="inline-flex items-center gap-3 mb-4 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+                <Calendar className="h-6 w-6 text-amber-300" />
+                <span className="text-white/90 font-medium">Assignments</span>
+              </div>
+              
+              <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+                MUS 240 Assignments
+              </h1>
+              <p className="text-white/80 text-lg">Week-by-week assignment schedule with detailed instructions</p>
+            </div>
+          </div>
 
         <div className="space-y-8">
           {assignments.map((week) => (
             <section key={week.number} className="space-y-4">
-              <div className="border-l-4 border-primary pl-4">
-                <h2 className="text-2xl font-semibold">Week {week.number}</h2>
-                <p className="text-sm text-muted-foreground">
-                  {format(new Date(week.date), 'MMMM d, yyyy')} • {week.title}
-                </p>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                <div className="border-l-4 border-amber-400 pl-4">
+                  <h2 className="text-2xl font-semibold text-white">Week {week.number}</h2>
+                  <p className="text-sm text-white/70">
+                    {format(new Date(week.date), 'MMMM d, yyyy')} • {week.title}
+                  </p>
+                </div>
               </div>
 
               {week.assignments.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="py-8 text-center text-muted-foreground">
+                <Card className="border-dashed bg-white/5 backdrop-blur-sm border-white/30">
+                  <CardContent className="py-8 text-center text-white/60">
                     No assignments scheduled for this week
                   </CardContent>
                 </Card>
@@ -242,8 +273,8 @@ export default function Assignments() {
                     return (
                       <Card 
                         key={assignment.id} 
-                        className={`relative group hover:shadow-md transition-all cursor-pointer ${
-                          submitted ? 'border-green-200 bg-green-50' : 'hover:border-primary/50'
+                        className={`relative group hover:shadow-xl transition-all cursor-pointer bg-white/95 backdrop-blur-sm border border-white/30 hover:bg-white hover:shadow-2xl hover:-translate-y-1 ${
+                          submitted ? 'border-green-300 bg-green-50/95' : 'hover:border-white/50'
                         }`}
                         onClick={() => !submitted && handleSubmitAssignment(assignment)}
                       >
@@ -372,6 +403,9 @@ export default function Assignments() {
             </section>
           ))}
         </div>
+        
+        </main>
+      </div>
 
         {/* Assignment Submission Dialog */}
         <Dialog open={submissionDialogOpen} onOpenChange={setSubmissionDialogOpen}>
@@ -517,7 +551,6 @@ export default function Assignments() {
             )}
           </DialogContent>
         </Dialog>
-      </main>
     </UniversalLayout>
   );
 }
