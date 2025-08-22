@@ -10,16 +10,16 @@ const Appointments = () => {
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
 
-  // Show public booking interface for non-logged in users or non-admin users
-  if (!user || !isAdmin()) {
+  // Show public booking interface for non-logged in users
+  if (!user) {
     return <PublicAppointmentBooking />;
   }
 
-  // Show admin dashboard for admin users
+  // Show full dashboard for logged-in users (with admin features for admins)
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
       <div className="container mx-auto px-4 py-6 space-y-6">
-        <AppointmentApprovalHandler />
+        {isAdmin() && <AppointmentApprovalHandler />}
         <AppointmentDashboard />
       </div>
     </UniversalLayout>
