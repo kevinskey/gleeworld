@@ -146,6 +146,7 @@ import Assignments from "./pages/mus240/Assignments";
 import ListeningHub from "./pages/mus240/ListeningHub";
 import WeekDetail from "./pages/mus240/WeekDetail";
 import AssignmentJournal from "./pages/mus240/AssignmentJournal";
+import Resources from "./pages/mus240/Resources";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -1249,14 +1250,14 @@ const App = () => {
                                   </ProtectedRoute>
                                 } 
                               />
-                             <Route 
-                               path="/classes/mus240/resources" 
-                               element={
-                                 <ProtectedRoute>
-                                   <div>MUS 240 Resources - Coming Soon</div>
-                                 </ProtectedRoute>
-                               } 
-                             />
+                              <Route 
+                                path="/classes/mus240/resources" 
+                                element={
+                                  <ProtectedRoute>
+                                    <Resources />
+                                  </ProtectedRoute>
+                                } 
+                              />
                          </Routes>
                     </Suspense>
                    <GlobalMusicPlayer />
