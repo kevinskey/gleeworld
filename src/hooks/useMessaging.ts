@@ -61,6 +61,7 @@ export interface GroupMember {
   user_profile?: {
     full_name?: string;
     avatar_url?: string;
+    email?: string;
   };
 }
 
@@ -179,7 +180,8 @@ export const useGroupMembers = (groupId?: string) => {
           *,
           gw_profiles!fk_gw_group_members_user_profile(
             full_name,
-            avatar_url
+            avatar_url,
+            email
           )
         `)
         .eq('group_id', groupId)
@@ -405,4 +407,195 @@ export const useTypingIndicator = (groupId?: string) => {
   };
 
   return { startTyping, stopTyping };
+};
+
+// Group management mutations
+export const useCreateGroup = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (groupData: {
+      name: string;
+      description?: string;
+      group_type: string;
+      is_private: boolean;
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('gw_message_groups')
+        .insert({
+          ...groupData,
+          created_by: user.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Add creator as admin member
+      await supabase
+        .from('gw_group_members')
+        .insert({
+          group_id: data.id,
+          user_id: user.id,
+          role: 'admin'
+        });
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['message-groups'] });
+    }
+  });
+};
+
+export const useUpdateGroup = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ groupId, ...updateData }: {
+      groupId: string;
+      name?: string;
+      description?: string;
+      group_type?: string;
+      is_private?: boolean;
+    }) => {
+      const { data, error } = await supabase
+        .from('gw_message_groups')
+        .update(updateData)
+        .eq('id', groupId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['message-groups'] });
+    }
+  });
+};
+
+export const useDeleteGroup = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (groupId: string) => {
+      const { error } = await supabase
+        .from('gw_message_groups')
+        .delete()
+        .eq('id', groupId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['message-groups'] });
+    }
+  });
+};
+
+// Member management mutations
+export const useAddGroupMember = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ groupId, userId }: { groupId: string; userId: string }) => {
+      const { data, error } = await supabase
+        .from('gw_group_members')
+        .insert({
+          group_id: groupId,
+          user_id: userId,
+          role: 'member'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['group-members', variables.groupId] });
+    }
+  });
+};
+
+export const useRemoveGroupMember = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ groupId, userId }: { groupId: string; userId: string }) => {
+      const { error } = await supabase
+        .from('gw_group_members')
+        .delete()
+        .eq('group_id', groupId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['group-members', variables.groupId] });
+    }
+  });
+};
+
+// Direct messaging
+export const useCreateDirectMessage = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (recipientUserId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Check if direct message group already exists
+      const { data: existingGroup } = await supabase
+        .from('gw_message_groups')
+        .select(`
+          *,
+          gw_group_members!inner(user_id)
+        `)
+        .eq('group_type', 'direct')
+        .eq('gw_group_members.user_id', user.id);
+
+      // Filter for groups that contain both users
+      const directGroup = existingGroup?.find(group => 
+        group.gw_group_members.some((member: any) => member.user_id === recipientUserId)
+      );
+
+      if (directGroup) {
+        return directGroup;
+      }
+
+      // Create new direct message group
+      const { data: newGroup, error: groupError } = await supabase
+        .from('gw_message_groups')
+        .insert({
+          name: 'Direct Message',
+          group_type: 'direct',
+          is_private: true,
+          created_by: user.id
+        })
+        .select()
+        .single();
+
+      if (groupError) throw groupError;
+
+      // Add both users as members
+      const { error: membersError } = await supabase
+        .from('gw_group_members')
+        .insert([
+          { group_id: newGroup.id, user_id: user.id, role: 'member' },
+          { group_id: newGroup.id, user_id: recipientUserId, role: 'member' }
+        ]);
+
+      if (membersError) throw membersError;
+
+      return newGroup;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['message-groups'] });
+    }
+  });
 };

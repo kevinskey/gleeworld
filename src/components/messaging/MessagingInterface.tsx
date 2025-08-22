@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { MessageGroupsList } from './MessageGroupsList';
 import { ChatWindow } from './ChatWindow';
 import { GroupMembersList } from './GroupMembersList';
+import { CreateGroupDialog, EditGroupDialog, DeleteGroupDialog, ManageMembersDialog } from './GroupManagement';
+import { UserSelector } from './UserSelector';
 import { useMessageGroups } from '@/hooks/useMessaging';
-import { MessageSquare, Users } from 'lucide-react';
+import { MessageSquare, Users, Plus, Settings, UserPlus } from 'lucide-react';
 
 export const MessagingInterface: React.FC = () => {
   console.log('MessagingInterface: Component starting to render...');
   
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showMembers, setShowMembers] = useState(false);
+  const [showDirectMessages, setShowDirectMessages] = useState(false);
   
   console.log('MessagingInterface: State initialized, calling useMessageGroups...');
   
@@ -53,9 +58,36 @@ export const MessagingInterface: React.FC = () => {
       {/* Groups Sidebar */}
       <div className="w-80 border-r border-border flex flex-col">
         <div className="p-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">Messages</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-6 w-6 text-primary" />
+              <h1 className="text-xl font-bold">Messages</h1>
+            </div>
+            <div className="flex gap-2">
+              <CreateGroupDialog onSuccess={() => setSelectedGroupId(null)} />
+              <Dialog open={showDirectMessages} onOpenChange={setShowDirectMessages}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <UserPlus className="h-4 w-4" />
+                    DM
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+                  <DialogHeader>
+                    <DialogTitle>Send Direct Message</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex-1 overflow-hidden">
+                    <UserSelector 
+                      onSelectUser={(groupId) => {
+                        setSelectedGroupId(groupId);
+                        setShowDirectMessages(false);
+                      }}
+                      showDirectMessage={true}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
         <MessageGroupsList
@@ -83,13 +115,21 @@ export const MessagingInterface: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={() => setShowMembers(!showMembers)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
-                >
-                  <Users className="h-4 w-4" />
-                  <span className="text-sm">Members</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <ManageMembersDialog group={selectedGroup} />
+                  <EditGroupDialog group={selectedGroup} />
+                  <DeleteGroupDialog 
+                    group={selectedGroup} 
+                    onClose={() => setSelectedGroupId(null)}
+                  />
+                  <button
+                    onClick={() => setShowMembers(!showMembers)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+                  >
+                    <Users className="h-4 w-4" />
+                    <span className="text-sm">Members</span>
+                  </button>
+                </div>
               </div>
             </div>
 
