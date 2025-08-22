@@ -144,7 +144,7 @@ export default function WeekDetail() {
                     </a>
                   </div>
 
-                  {/* YouTube embed - Always show for YouTube videos */}
+                  {/* YouTube embed with automatic fallback */}
                   {isYouTube && videoId && (
                     <div className="mb-3">
                       {!embedFailed ? (
@@ -157,26 +157,59 @@ export default function WeekDetail() {
                             referrerPolicy="strict-origin-when-cross-origin"
                             className="w-full h-full"
                             onError={() => handleEmbedError(i)}
+                            onLoad={(e) => {
+                              // Check if iframe loaded successfully
+                              try {
+                                const iframe = e.target as HTMLIFrameElement;
+                                setTimeout(() => {
+                                  try {
+                                    // Try to access iframe content to detect if it's blocked
+                                    if (iframe.contentDocument === null) {
+                                      console.log(`Video ${i} may be blocked, showing fallback`);
+                                      handleEmbedError(i);
+                                    }
+                                  } catch (error) {
+                                    // Cross-origin restriction is normal, but embedding blocked videos 
+                                    // often fail to load the iframe content properly
+                                    console.log(`Video ${i} cross-origin check completed`);
+                                  }
+                                }, 1000);
+                              } catch (error) {
+                                console.log('Iframe access check failed:', error);
+                                handleEmbedError(i);
+                              }
+                            }}
                             style={{ border: 'none' }}
                           />
                         </div>
                       ) : (
-                        <div>
-                          <Alert>
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>
-                              This video cannot be embedded. 
-                              <a 
-                                href={t.url} 
-                                target="_blank" 
-                                rel="noreferrer" 
-                                className="inline-flex items-center gap-1 ml-2 text-primary hover:underline font-medium"
-                              >
-                                <Play className="h-3 w-3" />
-                                Watch on YouTube
-                              </a>
-                            </AlertDescription>
-                          </Alert>
+                        // Fallback: YouTube thumbnail with play button
+                        <div className="relative group cursor-pointer">
+                          <a 
+                            href={t.url} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="block relative"
+                          >
+                            <img 
+                              src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                              alt={t.title}
+                              className="w-full aspect-video object-cover rounded-lg"
+                              onError={(e) => {
+                                // Fallback to default thumbnail if maxres doesn't exist
+                                e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                              }}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors rounded-lg">
+                              <div className="bg-red-600 text-white p-4 rounded-full group-hover:scale-110 transition-transform shadow-lg">
+                                <Play className="h-8 w-8 ml-1" />
+                              </div>
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 rounded-b-lg">
+                              <p className="text-white font-medium">Video not embeddable - Click to watch on YouTube</p>
+                              <p className="text-white/80 text-sm">{t.title}</p>
+                            </div>
+                          </a>
                         </div>
                       )}
                     </div>
