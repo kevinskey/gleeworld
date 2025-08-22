@@ -81,17 +81,21 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
   };
 
   const renderResourceCard = (resource: any) => (
-    <Card key={resource.id} className="hover:shadow-md transition-shadow">
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row items-start justify-between space-y-2 sm:space-y-0">
+    <Card key={resource.id} className="hover:shadow-md transition-shadow relative z-10">
+      <CardHeader className="pb-3 sm:pb-4">
+        <div className="flex flex-col sm:flex-row items-start justify-between space-y-2 sm:space-y-0 sm:space-x-2">
           <div className="space-y-1 flex-1 min-w-0">
             <div className="flex items-center space-x-2">
               {getResourceIcon(resource.resourceType)}
-              <CardTitle className="text-base sm:text-lg truncate">{resource.title}</CardTitle>
+              <CardTitle className="text-sm sm:text-base lg:text-lg truncate leading-tight">
+                {resource.title}
+              </CardTitle>
             </div>
-            <CardDescription className="text-sm">{resource.description}</CardDescription>
+            <CardDescription className="text-xs sm:text-sm leading-relaxed">
+              {resource.description}
+            </CardDescription>
           </div>
-          <Badge variant="outline" className="self-start flex-shrink-0">
+          <Badge variant="outline" className="self-start flex-shrink-0 text-xs">
             {resource.resourceType.toUpperCase()}
           </Badge>
         </div>
@@ -163,16 +167,16 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-1">
       {/* Search and Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Resource Library</CardTitle>
-          <CardDescription>
+      <Card className="relative z-10">
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">Resource Library</CardTitle>
+          <CardDescription className="text-sm sm:text-base">
             Access section notes, audio resources, and PDF materials from your instructors.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -188,105 +192,121 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
       </Card>
 
       {/* Resource Tabs */}
-      <Tabs defaultValue="all" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">
-          <TabsTrigger value="all" className="text-xs md:text-sm p-2 md:p-3">
-            <span className="hidden sm:inline">All Resources</span>
-            <span className="sm:hidden">All</span>
-            <span className="ml-1">({allResources.length})</span>
-          </TabsTrigger>
-          <TabsTrigger value="notes" className="text-xs md:text-sm p-2 md:p-3">
-            <span className="hidden sm:inline">Section Notes</span>
-            <span className="sm:hidden">Notes</span>
-            <span className="ml-1">({sectionNotes.length})</span>
-          </TabsTrigger>
-          <TabsTrigger value="pdfs" className="text-xs md:text-sm p-2 md:p-3">
-            <span className="hidden sm:inline">PDFs</span>
-            <span className="sm:hidden">PDF</span>
-            <span className="ml-1">({pdfResources.length})</span>
-          </TabsTrigger>
-          <TabsTrigger value="audio" className="text-xs md:text-sm p-2 md:p-3">
-            <span className="hidden sm:inline">Audio</span>
-            <span className="sm:hidden">Audio</span>
-            <span className="ml-1">({audioResources.length})</span>
-          </TabsTrigger>
-        </TabsList>
+      <div className="relative z-20">
+        <Tabs defaultValue="all" className="space-y-4">
+          <div className="sticky top-0 bg-background z-30 pb-2">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 h-auto p-1">
+              <TabsTrigger 
+                value="all" 
+                className="text-xs md:text-sm p-2 md:p-3 h-auto min-h-[44px] flex flex-col items-center justify-center"
+              >
+                <span className="hidden sm:inline text-center">All Resources</span>
+                <span className="sm:hidden text-center">All</span>
+                <span className="text-xs opacity-75">({allResources.length})</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="notes" 
+                className="text-xs md:text-sm p-2 md:p-3 h-auto min-h-[44px] flex flex-col items-center justify-center"
+              >
+                <span className="hidden sm:inline text-center">Section Notes</span>
+                <span className="sm:hidden text-center">Notes</span>
+                <span className="text-xs opacity-75">({sectionNotes.length})</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="pdfs" 
+                className="text-xs md:text-sm p-2 md:p-3 h-auto min-h-[44px] flex flex-col items-center justify-center"
+              >
+                <span className="hidden sm:inline text-center">PDFs</span>
+                <span className="sm:hidden text-center">PDF</span>
+                <span className="text-xs opacity-75">({pdfResources.length})</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="audio" 
+                className="text-xs md:text-sm p-2 md:p-3 h-auto min-h-[44px] flex flex-col items-center justify-center"
+              >
+                <span className="hidden sm:inline text-center">Audio</span>
+                <span className="sm:hidden text-center">Audio</span>
+                <span className="text-xs opacity-75">({audioResources.length})</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        <TabsContent value="all" className="space-y-4">
-          {filteredResources.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <FileText className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">No Resources Found</h3>
-                <p className="text-muted-foreground text-center">
-                  {searchTerm 
-                    ? 'No resources match your search criteria.' 
-                    : 'Your instructors haven\'t shared any resources yet.'
-                  }
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {filteredResources.map(renderResourceCard)}
-            </div>
-          )}
-        </TabsContent>
+          <TabsContent value="all" className="space-y-4">
+            {filteredResources.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <FileText className="h-16 w-16 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium">No Resources Found</h3>
+                  <p className="text-muted-foreground text-center">
+                    {searchTerm 
+                      ? 'No resources match your search criteria.' 
+                      : 'Your instructors haven\'t shared any resources yet.'
+                    }
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {filteredResources.map(renderResourceCard)}
+              </div>
+            )}
+          </TabsContent>
 
-        <TabsContent value="notes" className="space-y-4">
-          {sectionNotes.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Music className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">No Section Notes</h3>
-                <p className="text-muted-foreground text-center">
-                  Your section leader hasn't shared any notes yet.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {sectionNotes.map(resource => renderResourceCard({ ...resource, resourceType: 'notes' }))}
-            </div>
-          )}
-        </TabsContent>
+          <TabsContent value="notes" className="space-y-4">
+            {sectionNotes.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Music className="h-16 w-16 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium">No Section Notes</h3>
+                  <p className="text-muted-foreground text-center">
+                    Your section leader hasn't shared any notes yet.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {sectionNotes.map(resource => renderResourceCard({ ...resource, resourceType: 'notes' }))}
+              </div>
+            )}
+          </TabsContent>
 
-        <TabsContent value="pdfs" className="space-y-4">
-          {pdfResources.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <FileText className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">No PDF Resources</h3>
-                <p className="text-muted-foreground text-center">
-                  No PDF resources have been shared yet.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {pdfResources.map(resource => renderResourceCard({ ...resource, resourceType: 'pdf' }))}
-            </div>
-          )}
-        </TabsContent>
+          <TabsContent value="pdfs" className="space-y-4">
+            {pdfResources.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <FileText className="h-16 w-16 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium">No PDF Resources</h3>
+                  <p className="text-muted-foreground text-center">
+                    No PDF resources have been shared yet.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {pdfResources.map(resource => renderResourceCard({ ...resource, resourceType: 'pdf' }))}
+              </div>
+            )}
+          </TabsContent>
 
-        <TabsContent value="audio" className="space-y-4">
-          {audioResources.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Headphones className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">No Audio Resources</h3>
-                <p className="text-muted-foreground text-center">
-                  No audio resources have been shared yet.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {audioResources.map(resource => renderResourceCard({ ...resource, resourceType: 'audio' }))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="audio" className="space-y-4">
+            {audioResources.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Headphones className="h-16 w-16 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium">No Audio Resources</h3>
+                  <p className="text-muted-foreground text-center">
+                    No audio resources have been shared yet.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {audioResources.map(resource => renderResourceCard({ ...resource, resourceType: 'audio' }))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
