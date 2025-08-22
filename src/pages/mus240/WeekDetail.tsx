@@ -5,7 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { ExternalLink, Play, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useYouTubeVideos } from '@/hooks/useYouTubeVideos';
 
 // Helper function to extract video ID from YouTube URLs
 const getVideoId = (url: string) => {
@@ -21,6 +20,19 @@ const getVideoId = (url: string) => {
     return null;
   }
   return null;
+};
+
+// Create education-friendly embed URL
+const createEmbedUrl = (videoId: string) => {
+  const params = new URLSearchParams({
+    autoplay: '0',
+    rel: '0',
+    modestbranding: '1',
+    showinfo: '0',
+    fs: '1',
+    controls: '1'
+  });
+  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 };
 
 
@@ -41,7 +53,6 @@ export default function WeekDetail() {
   const [author, setAuthor] = useState('');
   const [content, setContent] = useState('');
   const [failedEmbeds, setFailedEmbeds] = useState<Set<number>>(new Set());
-  const { getVideoEmbedUrl } = useYouTubeVideos();
 
   useEffect(() => {
     (async () => {
@@ -98,7 +109,7 @@ export default function WeekDetail() {
             {wk.tracks.map((t, i) => {
               const isYouTube = t.url.includes('youtube.com') || t.url.includes('youtu.be');
               const videoId = getVideoId(t.url);
-              const embedUrl = videoId ? getVideoEmbedUrl(videoId, false, false) : t.url;
+              const embedUrl = videoId ? createEmbedUrl(videoId) : null;
               const embedFailed = failedEmbeds.has(i);
               
               return (
@@ -120,7 +131,7 @@ export default function WeekDetail() {
                   </div>
 
                   {/* YouTube embed with fallback */}
-                  {isYouTube && !embedFailed && (
+                  {isYouTube && videoId && embedUrl && !embedFailed && (
                     <div className="mb-3">
                       <div className="w-full aspect-video rounded-lg overflow-hidden border bg-gray-100 relative">
                         <iframe
