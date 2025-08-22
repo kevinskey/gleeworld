@@ -5,37 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { ExternalLink, Play, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useYouTubeVideos } from '@/hooks/useYouTubeVideos';
 
-// Helper function to convert YouTube URLs to embed format
-const convertToEmbedUrl = (url: string) => {
-  if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
-    return url; // Return non-YouTube URLs as-is
-  }
-  
-  try {
-    const urlObj = new URL(url);
-    
-    // Handle youtu.be format
-    if (urlObj.hostname === 'youtu.be') {
-      const videoId = urlObj.pathname.slice(1);
-      return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=0`;
-    }
-    
-    // Handle youtube.com/watch format
-    if (urlObj.hostname.includes('youtube.com')) {
-      const videoId = urlObj.searchParams.get('v');
-      if (videoId) {
-        return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=0`;
-      }
-    }
-    
-    return url; // Return original if we can't parse it
-  } catch {
-    return url; // Return original if URL parsing fails
-  }
-};
-
-// Extract video ID for thumbnail
+// Helper function to extract video ID from YouTube URLs
 const getVideoId = (url: string) => {
   try {
     const urlObj = new URL(url);
@@ -50,6 +22,7 @@ const getVideoId = (url: string) => {
   }
   return null;
 };
+
 
 type Comment = { 
   id: string; 
@@ -68,6 +41,7 @@ export default function WeekDetail() {
   const [author, setAuthor] = useState('');
   const [content, setContent] = useState('');
   const [failedEmbeds, setFailedEmbeds] = useState<Set<number>>(new Set());
+  const { getVideoEmbedUrl } = useYouTubeVideos();
 
   useEffect(() => {
     (async () => {
@@ -123,8 +97,8 @@ export default function WeekDetail() {
           <ul className="mt-2 space-y-3">
             {wk.tracks.map((t, i) => {
               const isYouTube = t.url.includes('youtube.com') || t.url.includes('youtu.be');
-              const embedUrl = convertToEmbedUrl(t.url);
               const videoId = getVideoId(t.url);
+              const embedUrl = videoId ? getVideoEmbedUrl(videoId, false, false) : t.url;
               const embedFailed = failedEmbeds.has(i);
               
               return (
