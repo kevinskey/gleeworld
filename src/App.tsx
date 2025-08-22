@@ -120,6 +120,7 @@ import SightReadingGeneratorPage from "./pages/SightReadingGenerator";
 import { MemberSightReadingStudioPage } from "./pages/MemberSightReadingStudioPage";
 import SchedulingPage from "./pages/SchedulingPage";
 import BookingPage from "./pages/BookingPage";
+import { MessagingInterface } from "./components/messaging/MessagingInterface";
 import UnifiedBookingPage from "./pages/UnifiedBookingPage";
 import ServiceSelection from "./pages/booking/ServiceSelection";
 import DateTimeSelection from "./pages/booking/DateTimeSelection";
@@ -417,14 +418,22 @@ const App = () => {
                      </ProtectedRoute>
                    } 
                  />
-                <Route
-                  path="/admin/announcements/new" 
-                  element={
-                    <ProtectedRoute>
-                      <CreateAnnouncement />
-                    </ProtectedRoute>
-                  } 
-                />
+                 <Route
+                   path="/messages" 
+                   element={
+                     <ProtectedRoute>
+                       <MessagingInterface />
+                     </ProtectedRoute>
+                   } 
+                 />
+                 <Route
+                   path="/admin/announcements/new" 
+                   element={
+                     <ProtectedRoute>
+                       <CreateAnnouncement />
+                     </ProtectedRoute>
+                   } 
+                 />
                 <Route
                   path="/admin/announcements/:id/edit" 
                   element={
