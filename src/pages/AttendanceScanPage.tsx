@@ -30,7 +30,15 @@ const AttendanceScanPage = () => {
   
   const token = searchParams.get('token');
 
+  // Debug logging
+  console.log('AttendanceScanPage mounted:', { 
+    token: token ? token.substring(0, 10) + '...' : 'none',
+    user: !!user,
+    userEmail: user?.email 
+  });
+
   useEffect(() => {
+    console.log('AttendanceScanPage useEffect triggered:', { token: !!token, user: !!user });
     if (token && user) {
       processAttendanceScan();
     }

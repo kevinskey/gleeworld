@@ -555,14 +555,10 @@ const App = () => {
                       </ProtectedRoute>
                     } 
                    />
-                   <Route 
-                     path="/attendance/scan" 
-                     element={
-                       <ProtectedRoute>
-                         <AttendanceScanPage />
-                       </ProtectedRoute>
-                     } 
-                   />
+                    <Route 
+                      path="/attendance/scan" 
+                      element={<AttendanceScanPage />} 
+                    />
                    <Route 
                      path="/music-library" 
                      element={
