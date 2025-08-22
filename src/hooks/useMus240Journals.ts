@@ -344,6 +344,39 @@ export const useMus240Journals = () => {
     }
   }, [user]);
 
+  // Delete journal entry (only if no comments exist)
+  const deleteJournal = useCallback(async (assignmentId: string) => {
+    if (!user) return false;
+
+    try {
+      // First check if there are any comments
+      const { data: existingComments, error: commentsError } = await supabase
+        .from('mus240_journal_comments')
+        .select('id')
+        .eq('journal_id', assignmentId);
+
+      if (commentsError) throw commentsError;
+
+      if (existingComments && existingComments.length > 0) {
+        throw new Error('Cannot delete journal with existing comments');
+      }
+
+      // Delete the journal entry
+      const { error } = await supabase
+        .from('mus240_journal_entries')
+        .delete()
+        .eq('assignment_id', assignmentId)
+        .eq('student_id', user.id);
+
+      if (error) throw error;
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting journal:', error);
+      throw error;
+    }
+  }, [user]);
+
   return {
     entries,
     comments,
@@ -356,6 +389,7 @@ export const useMus240Journals = () => {
     saveJournal,
     publishJournal,
     addComment,
-    markAsRead
+    markAsRead,
+    deleteJournal
   };
 };

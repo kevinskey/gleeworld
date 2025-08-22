@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
-import { Save, Send, AlertTriangle, Lock, Type } from 'lucide-react';
+import { Save, Send, AlertTriangle, Lock, Type, Trash2 } from 'lucide-react';
 import { useMus240Journals } from '@/hooks/useMus240Journals';
 import { Assignment } from '@/data/mus240Assignments';
 
@@ -18,12 +18,14 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
   const [wordCount, setWordCount] = useState(0);
   const [hasChanges, setHasChanges] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
+  const [userEntry, setUserEntry] = useState<any>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const { 
     fetchUserEntry, 
     saveJournal, 
     publishJournal, 
+    deleteJournal,
     loading 
   } = useMus240Journals();
 
@@ -34,6 +36,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
         setContent(entry.content);
         setWordCount(entry.word_count);
         setIsPublished(entry.is_published);
+        setUserEntry(entry);
       }
     };
     loadExistingEntry();
@@ -78,6 +81,27 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
       setIsPublished(true);
       setHasChanges(false);
       onPublished?.();
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await deleteJournal(assignment.id);
+      setContent('');
+      setWordCount(0);
+      setIsPublished(false);
+      setUserEntry(null);
+      setHasChanges(false);
+    } catch (error: any) {
+      if (error.message.includes('Cannot delete journal with existing comments')) {
+        alert('Cannot delete this journal because it has comments from other students.');
+      } else {
+        alert('Failed to delete journal entry. Please try again.');
+      }
     }
   };
 
@@ -150,23 +174,39 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
           </Alert>
         )}
 
-        <div className="flex gap-2 justify-end">
-          <Button
-            onClick={handleSave}
-            disabled={!hasChanges || isPublished || loading}
-            variant="outline"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save Draft
-          </Button>
+        <div className="flex gap-2 justify-between">
+          <div>
+            {userEntry && !isPublished && (
+              <Button
+                onClick={handleDelete}
+                disabled={loading}
+                variant="destructive"
+                size="sm"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            )}
+          </div>
           
-          <Button
-            onClick={handlePublish}
-            disabled={!isMinimumLength || !isMaximumLength || isPublished || loading}
-          >
-            <Send className="h-4 w-4 mr-2" />
-            Publish for Peer Review
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanges || isPublished || loading}
+              variant="outline"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save Draft
+            </Button>
+            
+            <Button
+              onClick={handlePublish}
+              disabled={!isMinimumLength || !isMaximumLength || isPublished || loading}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Publish for Peer Review
+            </Button>
+          </div>
         </div>
 
         <div className="text-sm text-muted-foreground">
