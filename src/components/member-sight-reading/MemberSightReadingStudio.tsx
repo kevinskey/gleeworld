@@ -30,24 +30,24 @@ export const MemberSightReadingStudio: React.FC<MemberSightReadingStudioProps> =
   const totalAssignments = assignments.length;
 
   return (
-    <div className="container max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <div className="container max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Sight Reading Studio</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Sight Reading Studio</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Practice sight reading, complete assignments, and track your progress through the semester.
         </p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Grade</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Current Grade</CardTitle>
+            <Target className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl sm:text-2xl font-bold">
               {semesterGrade?.letter_grade || 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -58,11 +58,11 @@ export const MemberSightReadingStudio: React.FC<MemberSightReadingStudioProps> =
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Assignments</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Assignments</CardTitle>
+            <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalAssignments}</div>
+            <div className="text-xl sm:text-2xl font-bold">{totalAssignments}</div>
             <p className="text-xs text-muted-foreground">
               This semester
             </p>
@@ -71,11 +71,11 @@ export const MemberSightReadingStudio: React.FC<MemberSightReadingStudioProps> =
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Upcoming</CardTitle>
+            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{upcomingCount}</div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">{upcomingCount}</div>
             <p className="text-xs text-muted-foreground">
               Due this week
             </p>
@@ -84,11 +84,11 @@ export const MemberSightReadingStudio: React.FC<MemberSightReadingStudioProps> =
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Overdue</CardTitle>
+            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{overdueCount}</div>
+            <div className="text-xl sm:text-2xl font-bold text-red-600">{overdueCount}</div>
             <p className="text-xs text-muted-foreground">
               Needs attention
             </p>
@@ -98,31 +98,36 @@ export const MemberSightReadingStudio: React.FC<MemberSightReadingStudioProps> =
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="assignments" className="space-x-2">
-            <FileText className="h-4 w-4" />
-            <span>Assignments</span>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1">
+          <TabsTrigger value="assignments" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+            <FileText className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline">Assignments</span>
+            <span className="xs:hidden">Assign</span>
             {overdueCount > 0 && (
-              <Badge variant="destructive" className="ml-1 text-xs">
+              <Badge variant="destructive" className="ml-1 text-xs h-4 w-4 p-0 flex items-center justify-center">
                 {overdueCount}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="practice" className="space-x-2">
-            <Music className="h-4 w-4" />
-            <span>Practice</span>
+          <TabsTrigger value="practice" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+            <Music className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline">Practice</span>
+            <span className="xs:hidden">Prac</span>
           </TabsTrigger>
-          <TabsTrigger value="resources" className="space-x-2">
-            <Headphones className="h-4 w-4" />
-            <span>Resources</span>
+          <TabsTrigger value="resources" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+            <Headphones className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline">Resources</span>
+            <span className="xs:hidden">Res</span>
           </TabsTrigger>
-          <TabsTrigger value="grades" className="space-x-2">
-            <Target className="h-4 w-4" />
-            <span>Grades</span>
+          <TabsTrigger value="grades" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+            <Target className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline">Grades</span>
+            <span className="xs:hidden">Grade</span>
           </TabsTrigger>
-          <TabsTrigger value="pitch-pipe" className="space-x-2">
-            <Music className="h-4 w-4" />
-            <span>Pitch Pipe</span>
+          <TabsTrigger value="pitch-pipe" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+            <Music className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline">Pitch Pipe</span>
+            <span className="xs:hidden">Pitch</span>
           </TabsTrigger>
         </TabsList>
 

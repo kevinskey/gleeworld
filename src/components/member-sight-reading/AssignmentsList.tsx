@@ -133,16 +133,16 @@ export const AssignmentsList: React.FC<AssignmentsListProps> = ({ user }) => {
         </CardHeader>
         
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>Due: {format(dueDate, 'MMM dd, yyyy')}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>{assignment.grading_period.replace('_', ' ').toUpperCase()}</span>
-            </div>
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+             <div className="flex items-center space-x-2">
+               <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+               <span className="truncate">Due: {format(dueDate, 'MMM dd, yyyy')}</span>
+             </div>
+             <div className="flex items-center space-x-2">
+               <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+               <span className="truncate">{assignment.grading_period.replace('_', ' ').toUpperCase()}</span>
+             </div>
+           </div>
 
           {assignment.notes && (
             <div className="p-3 bg-muted rounded-lg">
@@ -160,32 +160,32 @@ export const AssignmentsList: React.FC<AssignmentsListProps> = ({ user }) => {
             </div>
           )}
 
-          <div className="flex justify-between items-center pt-2">
-            <div className="text-sm text-muted-foreground">
-              Points: {assignment.points_possible || 100}
-            </div>
-            
-            {!submission || submission.status === 'assigned' ? (
-              <Button onClick={() => handleStartAssignment(assignment)}>
-                Start Assignment
-              </Button>
-            ) : submission.status === 'in_progress' ? (
-              <Button variant="outline" onClick={() => handleStartAssignment(assignment)}>
-                Continue
-              </Button>
-            ) : submission.status === 'submitted' ? (
-              <div className="flex items-center space-x-2 text-green-600">
-                <CheckCircle className="h-4 w-4" />
-                <span className="text-sm">Submitted</span>
-              </div>
-            ) : submission.status === 'graded' ? (
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="text-blue-600 border-blue-600">
-                  {submission.score_value ? `${submission.score_value}%` : 'Graded'}
-                </Badge>
-              </div>
-            ) : null}
-          </div>
+           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-2 space-y-2 sm:space-y-0">
+             <div className="text-xs sm:text-sm text-muted-foreground">
+               Points: {assignment.points_possible || 100}
+             </div>
+             
+             {!submission || submission.status === 'assigned' ? (
+               <Button onClick={() => handleStartAssignment(assignment)} size="sm" className="w-full sm:w-auto">
+                 Start Assignment
+               </Button>
+             ) : submission.status === 'in_progress' ? (
+               <Button variant="outline" onClick={() => handleStartAssignment(assignment)} size="sm" className="w-full sm:w-auto">
+                 Continue
+               </Button>
+             ) : submission.status === 'submitted' ? (
+               <div className="flex items-center space-x-2 text-green-600">
+                 <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                 <span className="text-xs sm:text-sm">Submitted</span>
+               </div>
+             ) : submission.status === 'graded' ? (
+               <div className="flex items-center space-x-2">
+                 <Badge variant="outline" className="text-blue-600 border-blue-600 text-xs">
+                   {submission.score_value ? `${submission.score_value}%` : 'Graded'}
+                 </Badge>
+               </div>
+             ) : null}
+           </div>
 
           {submission?.feedback && (
             <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -201,18 +201,26 @@ export const AssignmentsList: React.FC<AssignmentsListProps> = ({ user }) => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="all" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="all">All Assignments ({allAssignments.length})</TabsTrigger>
-          <TabsTrigger value="upcoming">
-            Upcoming ({upcomingAssignments.length})
-          </TabsTrigger>
-          <TabsTrigger value="overdue">
-            Overdue ({overdueAssignments.length})
-            {overdueAssignments.length > 0 && (
-              <AlertCircle className="h-4 w-4 ml-1 text-red-500" />
-            )}
-          </TabsTrigger>
-        </TabsList>
+         <TabsList className="grid w-full grid-cols-3">
+           <TabsTrigger value="all" className="text-xs sm:text-sm">
+             <span className="hidden sm:inline">All Assignments</span>
+             <span className="sm:hidden">All</span>
+             <span className="ml-1">({allAssignments.length})</span>
+           </TabsTrigger>
+           <TabsTrigger value="upcoming" className="text-xs sm:text-sm">
+             <span className="hidden sm:inline">Upcoming</span>
+             <span className="sm:hidden">Up</span>
+             <span className="ml-1">({upcomingAssignments.length})</span>
+           </TabsTrigger>
+           <TabsTrigger value="overdue" className="text-xs sm:text-sm">
+             <span className="hidden sm:inline">Overdue</span>
+             <span className="sm:hidden">Over</span>
+             <span className="ml-1">({overdueAssignments.length})</span>
+             {overdueAssignments.length > 0 && (
+               <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 ml-1 text-red-500" />
+             )}
+           </TabsTrigger>
+         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
           {allAssignments.length === 0 ? (

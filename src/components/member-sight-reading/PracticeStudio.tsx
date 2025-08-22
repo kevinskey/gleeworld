@@ -66,7 +66,7 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({ user }) => {
   return (
     <div className="space-y-6">
       {/* Practice Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average Score</CardTitle>
@@ -151,51 +151,53 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({ user }) => {
                   </p>
                 </div>
               ) : (
-                <div className="grid gap-3">
-                  {sheetMusic.map((score) => (
-                    <div
-                      key={score.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
+                  <div className="grid gap-3">
+                   {sheetMusic.map((score) => (
+                     <div
+                       key={score.id}
+                       className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-muted/50 transition-colors space-y-3 sm:space-y-0"
+                     >
                       <div className="flex items-center space-x-3">
                         <Music className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <h4 className="font-medium">{score.title}</h4>
-                          {score.composer && (
-                            <p className="text-sm text-muted-foreground">by {score.composer}</p>
-                          )}
-                          {score.voice_parts && score.voice_parts.length > 0 && (
-                            <Badge variant="outline" className="mt-1">
-                              {score.voice_parts.join(', ')}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-3">
-                        {/* Show user's best score for this piece */}
-                        {getBestScore(score.id) > 0 && (
-                          <div className="text-right">
-                            <div className="text-sm font-medium">
-                              Best: {getBestScore(score.id).toFixed(1)}%
-                            </div>
-                            <Badge 
-                              variant="outline" 
-                              className={`text-xs ${getGradeColor(getBestScore(score.id))}`}
-                            >
-                              {getLetterGrade(getBestScore(score.id))}
-                            </Badge>
-                          </div>
-                        )}
-                        
-                        <Button
-                          onClick={() => handlePracticeScore(score)}
-                          size="sm"
-                        >
-                          <Play className="h-4 w-4 mr-2" />
-                          Practice
-                        </Button>
-                      </div>
+                     <div className="min-w-0 flex-1">
+                           <h4 className="font-medium text-sm sm:text-base truncate">{score.title}</h4>
+                           {score.composer && (
+                             <p className="text-xs sm:text-sm text-muted-foreground truncate">by {score.composer}</p>
+                           )}
+                           {score.voice_parts && score.voice_parts.length > 0 && (
+                             <Badge variant="outline" className="mt-1 text-xs">
+                               {score.voice_parts.join(', ')}
+                             </Badge>
+                           )}
+                         </div>
+                       </div>
+                       
+                       <div className="flex flex-col sm:flex-row items-end sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                         {/* Show user's best score for this piece */}
+                         {getBestScore(score.id) > 0 && (
+                           <div className="text-right">
+                             <div className="text-xs sm:text-sm font-medium">
+                               Best: {getBestScore(score.id).toFixed(1)}%
+                             </div>
+                             <Badge 
+                               variant="outline" 
+                               className={`text-xs ${getGradeColor(getBestScore(score.id))}`}
+                             >
+                               {getLetterGrade(getBestScore(score.id))}
+                             </Badge>
+                           </div>
+                         )}
+                         
+                         <Button
+                           onClick={() => handlePracticeScore(score)}
+                           size="sm"
+                           className="w-full sm:w-auto"
+                         >
+                           <Play className="h-4 w-4 mr-2" />
+                           <span className="hidden xs:inline">Practice</span>
+                           <span className="xs:hidden">Play</span>
+                         </Button>
+                       </div>
                     </div>
                   ))}
                 </div>
