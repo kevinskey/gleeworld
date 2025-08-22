@@ -131,7 +131,7 @@ export const useGroupMessages = (groupId?: string) => {
         .from('gw_group_messages')
         .select(`
           *,
-          user_profile:gw_profiles!gw_group_messages_user_id_fkey(
+          user_profile:gw_profiles!fk_gw_group_messages_user_profile(
             full_name,
             avatar_url
           ),
@@ -141,7 +141,7 @@ export const useGroupMessages = (groupId?: string) => {
             user_id,
             message_id,
             created_at,
-            user_profile:gw_profiles!gw_message_reactions_user_id_fkey(
+            user_profile:gw_profiles!fk_gw_message_reactions_user_profile(
               full_name
             )
           ),
@@ -149,7 +149,7 @@ export const useGroupMessages = (groupId?: string) => {
             id,
             content,
             message_type,
-            user_profile:gw_profiles!gw_group_messages_user_id_fkey(
+            user_profile:gw_profiles!fk_gw_group_messages_user_profile(
               full_name
             )
           )
@@ -177,7 +177,7 @@ export const useGroupMembers = (groupId?: string) => {
         .from('gw_group_members')
         .select(`
           *,
-          gw_profiles!gw_group_members_user_id_fkey(
+          gw_profiles!fk_gw_group_members_user_profile(
             full_name,
             avatar_url
           )

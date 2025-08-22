@@ -5483,6 +5483,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_gw_group_members_user_profile"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_gw_group_members_user_profile"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "gw_group_members_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
