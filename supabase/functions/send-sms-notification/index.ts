@@ -105,8 +105,21 @@ const handler = async (req: Request): Promise<Response> => {
         });
 
         if (!response.ok) {
-          const error = await response.text();
-          throw new Error(`Twilio API error: ${error}`);
+          const errorText = await response.text();
+          let errorDetails;
+          try {
+            errorDetails = JSON.parse(errorText);
+          } catch {
+            errorDetails = { message: errorText };
+          }
+          
+          console.error(`Twilio API error for ${phoneNumber}:`, {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorDetails
+          });
+          
+          throw new Error(`Twilio API error: ${JSON.stringify(errorDetails)}`);
         }
 
         const result = await response.json();
