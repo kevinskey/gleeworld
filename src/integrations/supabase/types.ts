@@ -15524,6 +15524,10 @@ export type Database = {
           notes: string
         }[]
       }
+      grant_exec_board_all_modules: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       has_group_permission: {
         Args: {
           permission_id_param: string
