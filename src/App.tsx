@@ -843,7 +843,15 @@ const App = () => {
                                     <TourPlanner />
                                   </ProtectedRoute>
                                 } 
-                              />
+                               />
+                               <Route 
+                                 path="/tour-manager" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <TourPlanner />
+                                   </ProtectedRoute>
+                                 } 
+                               />
                               <Route 
                                 path="/appointments" 
                                 element={
