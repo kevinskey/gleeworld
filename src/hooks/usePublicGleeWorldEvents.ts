@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -34,12 +34,11 @@ export const usePublicGleeWorldEvents = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       console.log('usePublicGleeWorldEvents: Starting fetch...');
       setLoading(true);
       
-      // Temporarily remove date filter to debug - get all public events
       const { data, error } = await supabase
         .from('gw_events')
         .select(`
@@ -78,29 +77,29 @@ export const usePublicGleeWorldEvents = () => {
       console.log('usePublicGleeWorldEvents: Fetch complete, setting loading to false');
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const getEventsByDateRange = (startDate: Date, endDate: Date) => {
+  const getEventsByDateRange = useCallback((startDate: Date, endDate: Date) => {
     return events.filter(event => {
       const eventDate = new Date(event.start_date);
       return eventDate >= startDate && eventDate <= endDate;
     });
-  };
+  }, [events]);
 
-  const getUpcomingEvents = (limit: number = 6) => {
+  const getUpcomingEvents = useCallback((limit: number = 6) => {
     return events.slice(0, limit);
-  };
+  }, [events]);
 
-  const getEventsByMonth = (year: number, month: number) => {
+  const getEventsByMonth = useCallback((year: number, month: number) => {
     return events.filter(event => {
       const eventDate = new Date(event.start_date);
       return eventDate.getFullYear() === year && eventDate.getMonth() === month;
     });
-  };
+  }, [events]);
 
   useEffect(() => {
     fetchEvents();
-  }, []); // No dependency on user since we always show only public events
+  }, [fetchEvents]);
 
   return {
     events,

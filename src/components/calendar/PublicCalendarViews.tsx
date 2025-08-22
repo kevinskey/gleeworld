@@ -11,8 +11,8 @@ export const PublicCalendarViews = () => {
   const [activeView, setActiveView] = useState("month");
   const { events, loading, fetchEvents } = usePublicGleeWorldEvents();
 
-  // Debug logging
-  console.log('PublicCalendarViews render:', { events: events.length, loading });
+  // Remove debug logging to reduce console noise
+  // console.log('PublicCalendarViews render:', { events: events.length, loading });
 
   if (loading) {
     return (
