@@ -15943,6 +15943,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      user_has_librarian_role: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       user_has_module_assignment: {
         Args: { p_module_name: string; p_user_id: string }
         Returns: boolean
