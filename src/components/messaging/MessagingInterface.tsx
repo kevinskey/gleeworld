@@ -155,9 +155,15 @@ export const MessagingInterface: React.FC = () => {
                 <MessageSquare className="h-12 w-12 text-primary" />
               </div>
               <h2 className="text-2xl font-bold mb-2">Welcome to Glee Messages</h2>
-              <p className="text-muted-foreground max-w-md">
-                Select a group from the sidebar to start chatting with your fellow Glee Club members!
+              <p className="text-muted-foreground max-w-md mb-4">
+                {groups?.length === 0 
+                  ? "No message groups yet. Create a group to start chatting!"
+                  : "Select a group from the sidebar to view and send messages!"
+                }
               </p>
+              {groups?.length === 0 && (
+                <CreateGroupDialog onSuccess={() => window.location.reload()} />
+              )}
             </div>
           </div>
         )}
