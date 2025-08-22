@@ -12150,6 +12150,139 @@ export type Database = {
           },
         ]
       }
+      mus240_journal_comments: {
+        Row: {
+          commenter_id: string
+          content: string
+          created_at: string
+          id: string
+          journal_id: string
+          updated_at: string
+        }
+        Insert: {
+          commenter_id: string
+          content: string
+          created_at?: string
+          id?: string
+          journal_id: string
+          updated_at?: string
+        }
+        Update: {
+          commenter_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          journal_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_journal_comments_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mus240_journal_entries: {
+        Row: {
+          assignment_id: string
+          content: string
+          created_at: string
+          id: string
+          is_published: boolean
+          student_id: string
+          submitted_at: string | null
+          updated_at: string
+          word_count: number
+        }
+        Insert: {
+          assignment_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          student_id: string
+          submitted_at?: string | null
+          updated_at?: string
+          word_count?: number
+        }
+        Update: {
+          assignment_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          student_id?: string
+          submitted_at?: string | null
+          updated_at?: string
+          word_count?: number
+        }
+        Relationships: []
+      }
+      mus240_journal_reads: {
+        Row: {
+          id: string
+          journal_id: string
+          read_at: string
+          reader_id: string
+        }
+        Insert: {
+          id?: string
+          journal_id: string
+          read_at?: string
+          reader_id: string
+        }
+        Update: {
+          id?: string
+          journal_id?: string
+          read_at?: string
+          reader_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_journal_reads_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mus240_reading_requirements: {
+        Row: {
+          assignment_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          journals_read: number
+          required_reads: number
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          journals_read?: number
+          required_reads?: number
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          journals_read?: number
+          required_reads?: number
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       music_albums: {
         Row: {
           artist: string
