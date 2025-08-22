@@ -28,8 +28,30 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
   const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
     console.log("Using template:", { templateName, contractType });
     
-    // Navigate to tour manager with the template
-    const targetUrl = `/tour-manager?tab=contracts&template=${encodeURIComponent(templateName)}`;
+    // Route to appropriate module based on contract type and name
+    let targetUrl = '';
+    
+    switch (contractType) {
+      case 'performance':
+      case 'service':
+        // Performance and service contracts go to tour manager
+        targetUrl = `/tour-manager?tab=contracts&template=${encodeURIComponent(templateName)}`;
+        break;
+      case 'other':
+        // For 'other' contracts, check specific template names
+        if (templateName.toLowerCase().includes('wardrobe') || templateName.toLowerCase().includes('wordrobe')) {
+          // Wardrobe contracts should go to contracts page with wardrobe context
+          targetUrl = `/contracts?tab=wardrobe&template=${encodeURIComponent(templateName)}`;
+        } else {
+          // General other contracts
+          targetUrl = `/contracts?template=${encodeURIComponent(templateName)}`;
+        }
+        break;
+      default:
+        // Default to general contracts
+        targetUrl = `/contracts?template=${encodeURIComponent(templateName)}`;
+    }
+    
     console.log('🚀 ContractsModule: Navigating to:', targetUrl);
     window.location.href = targetUrl;
   };
