@@ -111,10 +111,18 @@ const Index = () => {
   };
 
   const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
-    console.log('Template selected for use:', templateName);
+    console.log('🚀 Dashboard: handleUseTemplate called with template:', templateName);
+    console.log('🚀 Dashboard: About to navigate to tour manager...');
     
-    // Navigate to tour manager contracts with the template pre-selected
-    window.location.href = `/tour-manager?tab=contracts&template=${encodeURIComponent(templateName)}`;
+    // Use React Router navigation instead of window.location
+    try {
+      // Navigate to tour manager contracts with the template pre-selected
+      const targetUrl = `/tour-manager?tab=contracts&template=${encodeURIComponent(templateName)}`;
+      console.log('🚀 Dashboard: Navigating to:', targetUrl);
+      window.location.href = targetUrl;
+    } catch (error) {
+      console.error('🚨 Navigation error:', error);
+    }
   };
 
   const handleNewContract = () => {
