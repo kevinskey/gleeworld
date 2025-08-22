@@ -408,15 +408,34 @@ export const useTypingIndicator = (groupId?: string) => {
   const { user } = useAuth();
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const channelRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!groupId || !user) return;
+
+    // Create and subscribe to the typing channel
+    const channel = supabase.channel(`typing-${groupId}`);
+    channelRef.current = channel;
+
+    channel.subscribe((status) => {
+      console.log('Typing channel status:', status);
+    });
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [groupId, user?.id]);
 
   const startTyping = useCallback(async () => {
-    if (!groupId || !user || isTyping) return;
+    if (!groupId || !user || isTyping || !channelRef.current) return;
 
     setIsTyping(true);
     
     try {
-      const channel = supabase.channel(`typing-${groupId}`);
-      await channel.track({
+      await channelRef.current.track({
         user_id: user.id,
         user_name: user.user_metadata?.full_name || user.email,
         typing: true
@@ -427,7 +446,7 @@ export const useTypingIndicator = (groupId?: string) => {
   }, [groupId, user, isTyping]);
 
   const stopTyping = useCallback(async () => {
-    if (!groupId || !user || !isTyping) return;
+    if (!groupId || !user || !isTyping || !channelRef.current) return;
 
     setIsTyping(false);
     
@@ -436,8 +455,7 @@ export const useTypingIndicator = (groupId?: string) => {
     }
 
     try {
-      const channel = supabase.channel(`typing-${groupId}`);
-      await channel.untrack();
+      await channelRef.current.untrack();
     } catch (error) {
       console.error('Error stopping typing indicator:', error);
     }
