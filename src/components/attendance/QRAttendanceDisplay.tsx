@@ -252,7 +252,10 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
     try {
       // Create a proper URL for the QR code instead of just the token
       // This allows phones to scan and open the attendance page directly
-      const baseUrl = window.location.origin;
+      // Use the production domain for GleeWorld
+      const baseUrl = window.location.hostname.includes('lovable') 
+        ? 'https://gleeworld.org' 
+        : window.location.origin;
       const attendanceUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(token)}`;
       
       console.log('Generated QR URL:', attendanceUrl);
