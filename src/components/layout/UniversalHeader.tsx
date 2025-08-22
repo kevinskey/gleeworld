@@ -207,14 +207,25 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       <GraduationCap className="mr-2 h-4 w-4" />
                       Alumnae
                     </DropdownMenuItem>
-                    
-                    {/* Public View */}
-                    <DropdownMenuItem asChild className="cursor-pointer">
-                      <Link to="/" className="flex items-center" onClick={() => { sessionStorage.setItem('force-public-view','1'); console.log('Public View clicked - force public view set'); }}>
-                        <Globe className="mr-2 h-4 w-4" />
-                        Public
-                      </Link>
-                    </DropdownMenuItem>
+                     
+                     {/* MUS240 Class View */}
+                     <DropdownMenuItem 
+                       onClick={() => {
+                         navigate('/classes/mus240');
+                       }}
+                       className="cursor-pointer"
+                     >
+                       <Music className="mr-2 h-4 w-4" />
+                       MUS 240 Class
+                     </DropdownMenuItem>
+                     
+                     {/* Public View */}
+                     <DropdownMenuItem asChild className="cursor-pointer">
+                       <Link to="/" className="flex items-center" onClick={() => { sessionStorage.setItem('force-public-view','1'); console.log('Public View clicked - force public view set'); }}>
+                         <Globe className="mr-2 h-4 w-4" />
+                         Public
+                       </Link>
+                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
