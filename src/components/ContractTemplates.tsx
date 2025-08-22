@@ -38,9 +38,15 @@ export const ContractTemplates = ({ onUseTemplate, onContractCreated }: Contract
   const handleUseTemplateWrapper = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
     console.log('Template use triggered:', { templateName, templateContent });
     if (onUseTemplate) {
+      // Parent component provided a callback (e.g., tour manager, contract creation)
       onUseTemplate(templateContent, templateName, headerImageUrl, contractType);
     } else {
-      console.warn('onUseTemplate callback not provided to ContractTemplates');
+      // No parent callback - we're in a standalone context (like dashboard)
+      // Navigate to a contract creation flow or show helpful guidance
+      console.log('🔄 No parent callback - redirecting to contract creation');
+      
+      // For now, provide user feedback about what to do
+      alert(`Template "${templateName}" is ready to use!\n\nTo create a contract with this template:\n1. Go to Tour Manager → Contracts\n2. Click "Create New Contract"\n3. Select this template\n\nOr use this template directly in any contract creation workflow.`);
     }
   };
 
