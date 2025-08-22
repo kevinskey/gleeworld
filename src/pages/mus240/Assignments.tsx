@@ -63,7 +63,7 @@ export default function Assignments() {
           submitted: true,
           submissionDate: submission.submitted_at,
           fileName: submission.file_name,
-          status: submission.status,
+          status: submission.status as "submitted" | "graded" | "returned",
           grade: submission.grade,
           feedback: submission.feedback,
         };
@@ -152,7 +152,7 @@ export default function Assignments() {
           submitted: true,
           submissionDate: submissionData.submitted_at,
           fileName: file.name,
-          status: submissionData.status,
+          status: submissionData.status as "submitted" | "graded" | "returned",
         }
       }));
 
