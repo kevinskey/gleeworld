@@ -74,7 +74,8 @@ export const TourContracts = () => {
     totalStipends: tourManagerContracts.reduce((sum, c) => sum + (c.stipend_amount || 0), 0)
   };
 
-  const handleUseTemplate = (content: string, name: string) => {
+  const handleUseTemplate = (content: string, name: string, headerImageUrl?: string, contractType?: string) => {
+    console.log('handleUseTemplate called with:', { content: content.substring(0, 50) + '...', name, headerImageUrl, contractType });
     setTemplateContent(content);
     setTemplateName(name);
     setShowCreateForm(true);
