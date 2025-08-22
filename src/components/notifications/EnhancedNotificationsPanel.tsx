@@ -20,25 +20,15 @@ import {
   Filter,
   Search
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { format, isToday, isYesterday, formatDistanceToNow } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'message' | 'event' | 'task';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  is_read: boolean;
-  created_at: string;
-  sender_name?: string;
-  sender_avatar?: string;
-  action_url?: string;
-  metadata?: any;
-}
+import { Database } from '@/integrations/supabase/types';
+
+type NotificationFromDB = Database['public']['Tables']['gw_notifications']['Row'];
 
 const getNotificationIcon = (type: string) => {
   const iconMap = {
@@ -82,85 +72,22 @@ const formatTimeAgo = (dateString: string) => {
 
 export const EnhancedNotificationsPanel = () => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { 
+    notifications, 
+    unreadCount, 
+    loading, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification: deleteNotificationFromHook,
+    loadNotifications 
+  } = useNotifications();
+  
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('all');
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [user]);
-
-  const fetchNotifications = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    try {
-      // Mock data for now - replace with actual Supabase query
-      const mockNotifications: Notification[] = [
-        {
-          id: '1',
-          title: 'New Rehearsal Scheduled',
-          message: 'Rehearsal for "Amazing Grace" scheduled for tomorrow at 3 PM in Sisters Chapel.',
-          type: 'event',
-          priority: 'high',
-          is_read: false,
-          created_at: new Date().toISOString(),
-          sender_name: 'Director Johnson',
-          action_url: '/calendar'
-        },
-        {
-          id: '2',
-          title: 'Sheet Music Updated',
-          message: 'New arrangement for "Lift Every Voice" has been uploaded to the music library.',
-          type: 'info',
-          priority: 'medium',
-          is_read: false,
-          created_at: new Date(Date.now() - 3600000).toISOString(),
-          sender_name: 'Music Coordinator'
-        },
-        {
-          id: '3',
-          title: 'Concert Uniform Reminder',
-          message: 'Please bring your concert dress for fitting this Friday.',
-          type: 'warning',
-          priority: 'medium',
-          is_read: true,
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-          sender_name: 'Wardrobe Team'
-        },
-        {
-          id: '4',
-          title: 'Great Performance!',
-          message: 'Congratulations on an amazing performance at the Founder\'s Day celebration!',
-          type: 'success',
-          priority: 'low',
-          is_read: true,
-          created_at: new Date(Date.now() - 172800000).toISOString(),
-          sender_name: 'President'
-        }
-      ];
-      setNotifications(mockNotifications);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const markAsRead = async (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
-    );
-  };
-
-  const markAllAsRead = async () => {
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-  };
-
   const deleteNotification = async (notificationId: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    await deleteNotificationFromHook(notificationId);
   };
 
   const filteredNotifications = notifications.filter(n => {
@@ -171,7 +98,7 @@ export const EnhancedNotificationsPanel = () => {
     if (activeTab === 'read') return n.is_read && matchesSearch;
     
     if (filter !== 'all') {
-      if (filter === 'urgent') return n.priority === 'urgent' && matchesSearch;
+      if (filter === 'urgent') return n.priority === 5 && matchesSearch; // Urgent is priority 5
       if (filter === 'messages') return n.type === 'message' && matchesSearch;
       if (filter === 'events') return n.type === 'event' && matchesSearch;
     }
@@ -179,15 +106,15 @@ export const EnhancedNotificationsPanel = () => {
     return matchesSearch;
   });
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCountLocal = notifications.filter(n => !n.is_read).length;
 
-  const NotificationCard = ({ notification }: { notification: Notification }) => {
+  const NotificationCard = ({ notification }: { notification: NotificationFromDB }) => {
     const Icon = getNotificationIcon(notification.type);
     
     return (
       <div 
         className={`border-l-4 rounded-lg p-4 transition-all hover:shadow-md ${
-          getNotificationColor(notification.type, notification.priority)
+          getNotificationColor(notification.type, notification.priority >= 4 ? 'high' : 'medium')
         } ${!notification.is_read ? 'ring-2 ring-primary/20' : 'opacity-75'}`}
       >
         <div className="flex items-start gap-3">
@@ -207,9 +134,9 @@ export const EnhancedNotificationsPanel = () => {
                   {!notification.is_read && (
                     <Badge variant="default" className="text-xs px-2 py-0">New</Badge>
                   )}
-                  {notification.priority === 'urgent' && (
-                    <Badge variant="destructive" className="text-xs px-2 py-0">Urgent</Badge>
-                  )}
+                   {notification.priority >= 5 && (
+                     <Badge variant="destructive" className="text-xs px-2 py-0">Urgent</Badge>
+                   )}
                 </div>
                 
                 <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
@@ -217,21 +144,9 @@ export const EnhancedNotificationsPanel = () => {
                 </p>
                 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {notification.sender_name && (
-                      <div className="flex items-center gap-1">
-                        <Avatar className="h-4 w-4">
-                          <AvatarImage src={notification.sender_avatar} />
-                          <AvatarFallback className="text-xs">
-                            {notification.sender_name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>{notification.sender_name}</span>
-                        <span>•</span>
-                      </div>
-                    )}
-                    <span>{formatTimeAgo(notification.created_at)}</span>
-                  </div>
+                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                     <span>{formatTimeAgo(notification.created_at)}</span>
+                   </div>
                   
                   <div className="flex items-center gap-1">
                     {!notification.is_read && (

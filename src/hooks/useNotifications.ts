@@ -179,6 +179,39 @@ export const useNotifications = () => {
     }
   };
 
+  // Delete notification
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_notifications')
+        .delete()
+        .eq('id', notificationId)
+        .eq('user_id', user?.id); // Ensure user can only delete their own notifications
+
+      if (error) {
+        console.error('Error deleting notification:', error);
+        toast.error('Failed to delete notification');
+        return false;
+      }
+
+      // Update local state
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      
+      // Update unread count if it was unread
+      const deletedNotification = notifications.find(n => n.id === notificationId);
+      if (deletedNotification && !deletedNotification.is_read) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+      
+      toast.success('Notification deleted');
+      return true;
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      toast.error('Failed to delete notification');
+      return false;
+    }
+  };
+
   // Set up realtime subscription
   useEffect(() => {
     if (!user) return;
@@ -252,6 +285,7 @@ export const useNotifications = () => {
     loadNotifications,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
     createNotification,
     sendNotification
   };
