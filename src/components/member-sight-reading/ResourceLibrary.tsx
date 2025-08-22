@@ -83,15 +83,15 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
   const renderResourceCard = (resource: any) => (
     <Card key={resource.id} className="hover:shadow-md transition-shadow">
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1 flex-1">
+        <div className="flex flex-col sm:flex-row items-start justify-between space-y-2 sm:space-y-0">
+          <div className="space-y-1 flex-1 min-w-0">
             <div className="flex items-center space-x-2">
               {getResourceIcon(resource.resourceType)}
-              <CardTitle className="text-lg">{resource.title}</CardTitle>
+              <CardTitle className="text-base sm:text-lg truncate">{resource.title}</CardTitle>
             </div>
-            <CardDescription>{resource.description}</CardDescription>
+            <CardDescription className="text-sm">{resource.description}</CardDescription>
           </div>
-          <Badge variant="outline">
+          <Badge variant="outline" className="self-start flex-shrink-0">
             {resource.resourceType.toUpperCase()}
           </Badge>
         </div>
@@ -112,32 +112,43 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
           <Button
             variant="outline"
             onClick={() => window.open(resource.pdf_url, '_blank')}
-            className="w-full"
+            className="w-full sm:w-auto"
+            size="sm"
           >
             <Download className="h-4 w-4 mr-2" />
-            Download PDF
+            <span className="hidden xs:inline">Download PDF</span>
+            <span className="xs:hidden">PDF</span>
           </Button>
         )}
 
         {resource.resourceType === 'audio' && resource.audio_url && (
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleAudioPlay(resource.id)}
+                className="w-full sm:w-auto"
               >
                 {playingAudio === resource.id ? (
-                  <Pause className="h-4 w-4" />
+                  <>
+                    <Pause className="h-4 w-4 mr-2" />
+                    <span className="hidden xs:inline">Pause Audio</span>
+                    <span className="xs:hidden">Pause</span>
+                  </>
                 ) : (
-                  <Play className="h-4 w-4" />
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    <span className="hidden xs:inline">Play Audio</span>
+                    <span className="xs:hidden">Play</span>
+                  </>
                 )}
               </Button>
-              <span className="text-sm text-muted-foreground">Audio Resource</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">Audio Resource</span>
             </div>
             <audio
               controls
-              className="w-full"
+              className="w-full max-w-full"
               onPlay={() => setPlayingAudio(resource.id)}
               onPause={() => setPlayingAudio(null)}
               onEnded={() => setPlayingAudio(null)}
@@ -162,7 +173,7 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -178,18 +189,26 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
 
       {/* Resource Tabs */}
       <Tabs defaultValue="all" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all">
-            All Resources ({allResources.length})
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">
+          <TabsTrigger value="all" className="text-xs md:text-sm p-2 md:p-3">
+            <span className="hidden sm:inline">All Resources</span>
+            <span className="sm:hidden">All</span>
+            <span className="ml-1">({allResources.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="notes">
-            Section Notes ({sectionNotes.length})
+          <TabsTrigger value="notes" className="text-xs md:text-sm p-2 md:p-3">
+            <span className="hidden sm:inline">Section Notes</span>
+            <span className="sm:hidden">Notes</span>
+            <span className="ml-1">({sectionNotes.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="pdfs">
-            PDFs ({pdfResources.length})
+          <TabsTrigger value="pdfs" className="text-xs md:text-sm p-2 md:p-3">
+            <span className="hidden sm:inline">PDFs</span>
+            <span className="sm:hidden">PDF</span>
+            <span className="ml-1">({pdfResources.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="audio">
-            Audio ({audioResources.length})
+          <TabsTrigger value="audio" className="text-xs md:text-sm p-2 md:p-3">
+            <span className="hidden sm:inline">Audio</span>
+            <span className="sm:hidden">Audio</span>
+            <span className="ml-1">({audioResources.length})</span>
           </TabsTrigger>
         </TabsList>
 
