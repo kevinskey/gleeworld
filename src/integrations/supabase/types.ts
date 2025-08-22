@@ -429,6 +429,60 @@ export type Database = {
           },
         ]
       }
+      assignment_submissions: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          feedback: string | null
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
+          grade: number | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          status: string
+          student_id: string
+          submission_date: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          feedback?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          status?: string
+          student_id: string
+          submission_date?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          feedback?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          status?: string
+          student_id?: string
+          submission_date?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       attendance: {
         Row: {
           event_id: string
