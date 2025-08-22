@@ -32,6 +32,12 @@ const handler = async (req: Request): Promise<Response> => {
     const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const twilioPhoneNumber = Deno.env.get('TWILIO_PHONE_NUMBER');
 
+    console.log('Twilio credentials check:', {
+      accountSid: twilioAccountSid ? 'CONFIGURED' : 'MISSING',
+      authToken: twilioAuthToken ? 'CONFIGURED' : 'MISSING', 
+      phoneNumber: twilioPhoneNumber ? 'CONFIGURED' : 'MISSING'
+    });
+
     if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) {
       throw new Error('Twilio credentials not configured');
     }
