@@ -8,7 +8,7 @@ export const WEEKS: Week[] = [
     date: "2025-08-27",
     title: "West African Foundations: Rhythm, Call-and-Response, Timeline Patterns",
     tracks: [
-      { title: "Djembe Rhythms: Learn the Gahu – African Drumming Online", source: "YouTube", url: "https://www.youtube.com/watch?v=0ue2O8wKSSk" },
+      { title: "CK Ladzekpo - Drum Rhythm Principles from Ghana, West Africa", source: "YouTube", url: "https://www.youtube.com/watch?v=yK42w0H8rSU" },
       { title: "Kinka | Ewe local drumming", source: "YouTube", url: "https://www.youtube.com/watch?v=4b2-JHIsjUI" },
       { title: "Work songs – Library of Congress overview", source: "LOC", url: "https://www.loc.gov/collections/songs-of-america/articles-and-essays/musical-styles/traditional-and-ethnic/traditional-work-songs/" }
     ]
