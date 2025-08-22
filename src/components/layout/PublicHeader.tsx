@@ -120,6 +120,12 @@ export const PublicHeader = () => {
                       </Link>
                     </Button>
                   )}
+                  <Button asChild variant="ghost" size="sm" className="mb-2 text-sm justify-start">
+                    <Link to="/mus240" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
+                      <Music className="h-4 w-4" />
+                      MUS 240
+                    </Link>
+                  </Button>
                   <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
                 </nav>
               </DropdownMenuContent>
