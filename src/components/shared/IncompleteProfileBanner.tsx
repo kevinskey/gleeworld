@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -9,50 +9,47 @@ interface IncompleteProfileBannerProps {
 }
 
 export const IncompleteProfileBanner = ({ userProfile }: IncompleteProfileBannerProps) => {
-  const [isDismissed, setIsDismissed] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(() => {
+    return localStorage.getItem('profile-banner-dismissed') === 'true';
+  });
   const navigate = useNavigate();
 
-  // Debug: Log the profile data to see what's missing
-  console.log('🔍 IncompleteProfileBanner - Full userProfile:', JSON.stringify(userProfile, null, 2));
-  console.log('🔍 IncompleteProfileBanner - measurements:', userProfile?.measurements);
-  
-  // Check if profile is incomplete based on onboarding requirements
-  const profileChecks = {
-    first_name: !!userProfile?.first_name,
-    last_name: !!userProfile?.last_name,
-    email: !!userProfile?.email,
-    height_feet: !!userProfile?.measurements?.height_feet,
-    height_inches: !!userProfile?.measurements?.height_inches,
-    chest: !!userProfile?.measurements?.chest,
-    waist: !!userProfile?.measurements?.waist,
-    hips: !!userProfile?.measurements?.hips,
-    shoe_size: !!userProfile?.measurements?.shoe_size,
-    photo_consent: !!userProfile?.photo_consent,
-    media_release_signed_at: !!userProfile?.media_release_signed_at,
-  };
-  
-  console.log('🔍 IncompleteProfileBanner - profile checks:', profileChecks);
-  
-  // List missing fields
-  const missingFields = Object.entries(profileChecks)
-    .filter(([key, value]) => !value)
-    .map(([key]) => key);
-  
-  console.log('🔍 IncompleteProfileBanner - Missing fields:', missingFields);
-  
-  const isProfileIncomplete = !userProfile?.first_name || 
-                             !userProfile?.last_name || 
-                             !userProfile?.email ||
-                             !userProfile?.measurements?.height_feet ||
-                             !userProfile?.measurements?.height_inches ||
-                             !userProfile?.measurements?.chest ||
-                             !userProfile?.measurements?.waist ||
-                             !userProfile?.measurements?.hips ||
-                             !userProfile?.measurements?.shoe_size ||
-                             !userProfile?.photo_consent ||
-                             !userProfile?.media_release_signed_at;
+  // Don't show banner if profile is still loading
+  if (!userProfile) {
+    return null;
+  }
 
-  console.log('🔍 IncompleteProfileBanner - isProfileIncomplete:', isProfileIncomplete);
+  // Don't show banner for admins, super-admins, or executive board members
+  if (userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.is_exec_board) {
+    return null;
+  }
+
+  // Role-specific profile requirements
+  const isNameComplete = !!(userProfile?.first_name && userProfile?.last_name) || !!userProfile?.full_name;
+  const hasBasicInfo = isNameComplete && !!userProfile?.email;
+
+  // Only require measurements for members and auditioners
+  const requiresMeasurements = userProfile?.role === 'member' || userProfile?.role === 'auditioner';
+  
+  let isProfileIncomplete = false;
+
+  if (!hasBasicInfo) {
+    isProfileIncomplete = true;
+  } else if (requiresMeasurements) {
+    // Check measurements only for roles that need them
+    const hasMeasurements = !!(
+      userProfile?.measurements?.height_feet &&
+      userProfile?.measurements?.height_inches &&
+      userProfile?.measurements?.chest &&
+      userProfile?.measurements?.waist &&
+      userProfile?.measurements?.hips &&
+      userProfile?.measurements?.shoe_size
+    );
+    
+    const hasConsents = !!(userProfile?.photo_consent && userProfile?.media_release_signed_at);
+    
+    isProfileIncomplete = !hasMeasurements || !hasConsents;
+  }
 
   // Don't show if profile is complete or banner is dismissed
   if (!isProfileIncomplete || isDismissed) {
@@ -82,7 +79,10 @@ export const IncompleteProfileBanner = ({ userProfile }: IncompleteProfileBanner
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsDismissed(true)}
+            onClick={() => {
+              setIsDismissed(true);
+              localStorage.setItem('profile-banner-dismissed', 'true');
+            }}
             className="text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground"
           >
             <X className="h-4 w-4" />
