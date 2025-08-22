@@ -3,6 +3,8 @@ import { WEEKS } from '../../data/mus240Weeks';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { ExternalLink, Play, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Helper function to convert YouTube URLs to embed format
 const convertToEmbedUrl = (url: string) => {
@@ -16,14 +18,14 @@ const convertToEmbedUrl = (url: string) => {
     // Handle youtu.be format
     if (urlObj.hostname === 'youtu.be') {
       const videoId = urlObj.pathname.slice(1);
-      return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`;
+      return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=0`;
     }
     
     // Handle youtube.com/watch format
     if (urlObj.hostname.includes('youtube.com')) {
       const videoId = urlObj.searchParams.get('v');
       if (videoId) {
-        return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`;
+        return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=0`;
       }
     }
     
@@ -31,6 +33,22 @@ const convertToEmbedUrl = (url: string) => {
   } catch {
     return url; // Return original if URL parsing fails
   }
+};
+
+// Extract video ID for thumbnail
+const getVideoId = (url: string) => {
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.hostname === 'youtu.be') {
+      return urlObj.pathname.slice(1);
+    }
+    if (urlObj.hostname.includes('youtube.com')) {
+      return urlObj.searchParams.get('v');
+    }
+  } catch {
+    return null;
+  }
+  return null;
 };
 
 type Comment = { 
@@ -49,6 +67,7 @@ export default function WeekDetail() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [author, setAuthor] = useState('');
   const [content, setContent] = useState('');
+  const [failedEmbeds, setFailedEmbeds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     (async () => {
@@ -72,6 +91,10 @@ export default function WeekDetail() {
       setAuthor('');
       setContent('');
     }
+  };
+
+  const handleEmbedError = (trackIndex: number) => {
+    setFailedEmbeds(prev => new Set([...prev, trackIndex]));
   };
 
   if (!wk) {
@@ -101,6 +124,8 @@ export default function WeekDetail() {
             {wk.tracks.map((t, i) => {
               const isYouTube = t.url.includes('youtube.com') || t.url.includes('youtu.be');
               const embedUrl = convertToEmbedUrl(t.url);
+              const videoId = getVideoId(t.url);
+              const embedFailed = failedEmbeds.has(i);
               
               return (
                 <li key={i} className="rounded-xl border p-3">
@@ -113,16 +138,17 @@ export default function WeekDetail() {
                       href={t.url} 
                       target="_blank" 
                       rel="noopener" 
-                      className="px-3 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                     >
+                      <ExternalLink className="h-4 w-4" />
                       Open on {t.source}
                     </a>
                   </div>
 
-                  {/* Embedded player for YouTube videos */}
-                  {isYouTube && (
+                  {/* YouTube embed with fallback */}
+                  {isYouTube && !embedFailed && (
                     <div className="mb-3">
-                      <div className="w-full aspect-video rounded-lg overflow-hidden border bg-gray-100">
+                      <div className="w-full aspect-video rounded-lg overflow-hidden border bg-gray-100 relative">
                         <iframe
                           src={embedUrl}
                           title={t.title}
@@ -130,11 +156,56 @@ export default function WeekDetail() {
                           allowFullScreen
                           referrerPolicy="strict-origin-when-cross-origin"
                           className="w-full h-full"
+                          onError={() => handleEmbedError(i)}
+                          style={{ border: 'none' }}
                         />
                       </div>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        If playback is restricted, <a href={t.url} target="_blank" rel="noreferrer" className="underline text-primary">open directly on YouTube</a>
-                      </div>
+                    </div>
+                  )}
+
+                  {/* Fallback for failed embeds or non-YouTube content */}
+                  {(isYouTube && embedFailed) && (
+                    <div className="mb-3">
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          This video cannot be embedded due to the creator's settings. 
+                          <a 
+                            href={t.url} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="inline-flex items-center gap-1 ml-2 text-primary hover:underline font-medium"
+                          >
+                            <Play className="h-3 w-3" />
+                            Watch on YouTube
+                          </a>
+                        </AlertDescription>
+                      </Alert>
+                      {videoId && (
+                        <div className="mt-3 relative group">
+                          <a 
+                            href={t.url} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="block relative"
+                          >
+                            <img 
+                              src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                              alt={t.title}
+                              className="w-full aspect-video object-cover rounded-lg"
+                              onError={(e) => {
+                                // Fallback to default thumbnail if maxres doesn't exist
+                                e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                              }}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors rounded-lg">
+                              <div className="bg-red-600 text-white p-3 rounded-full group-hover:scale-110 transition-transform">
+                                <Play className="h-6 w-6 ml-0.5" />
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                      )}
                     </div>
                   )}
 
