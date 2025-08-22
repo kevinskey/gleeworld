@@ -15703,6 +15703,14 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      user_is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      user_is_group_member: {
+        Args: { group_id: string }
+        Returns: boolean
+      }
       validate_password_strength: {
         Args: { password_text: string }
         Returns: Json
