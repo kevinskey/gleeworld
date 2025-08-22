@@ -12,11 +12,18 @@ export const IncompleteProfileBanner = ({ userProfile }: IncompleteProfileBanner
   const [isDismissed, setIsDismissed] = useState(false);
   const navigate = useNavigate();
 
-  // Check if profile is incomplete
+  // Check if profile is incomplete based on onboarding requirements
   const isProfileIncomplete = !userProfile?.first_name || 
                              !userProfile?.last_name || 
-                             !userProfile?.phone || 
-                             !userProfile?.address;
+                             !userProfile?.email ||
+                             !userProfile?.measurements?.height_feet ||
+                             !userProfile?.measurements?.height_inches ||
+                             !userProfile?.measurements?.chest ||
+                             !userProfile?.measurements?.waist ||
+                             !userProfile?.measurements?.hips ||
+                             !userProfile?.measurements?.shoe_size ||
+                             !userProfile?.photo_consent ||
+                             !userProfile?.media_release_signed_at;
 
   // Don't show if profile is complete or banner is dismissed
   if (!isProfileIncomplete || isDismissed) {
