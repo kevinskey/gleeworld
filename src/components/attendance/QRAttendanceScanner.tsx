@@ -93,7 +93,14 @@ export const QRAttendanceScanner = () => {
   };
 
   const handleScan = async (qrData: string) => {
-    if (processing || !user) return;
+    console.log('QR handleScan called with:', qrData);
+    console.log('User object:', user);
+    console.log('Processing state:', processing);
+    
+    if (processing || !user) {
+      console.log('Scan blocked - processing:', processing, 'user:', !!user);
+      return;
+    }
 
     setProcessing(true);
     stopScanner(); // Stop scanning while processing
@@ -101,10 +108,19 @@ export const QRAttendanceScanner = () => {
     try {
       // Parse QR code data - expecting a token string
       const qrToken = qrData.trim();
+      console.log('Parsed QR token:', qrToken);
       
       if (!qrToken) {
         throw new Error('Invalid QR code format');
       }
+
+      console.log('Calling process_qr_attendance_scan with params:', {
+        qr_token_param: qrToken,
+        user_id_param: user.id,
+        scan_location_param: null,
+        user_agent_param: navigator.userAgent,
+        ip_address_param: null
+      });
 
       // Call secure scanning function with rate limiting (will use _secure after types refresh)
       const { data, error } = await supabase.rpc('process_qr_attendance_scan', {
@@ -114,6 +130,8 @@ export const QRAttendanceScanner = () => {
         user_agent_param: navigator.userAgent,
         ip_address_param: null // Would need server-side to get real IP
       });
+
+      console.log('RPC response:', { data, error });
 
       if (error) throw error;
 
