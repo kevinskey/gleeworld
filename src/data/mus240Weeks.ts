@@ -8,7 +8,7 @@ export const WEEKS: Week[] = [
     date: "2025-08-27",
     title: "West African Foundations: Rhythm, Call-and-Response, Timeline Patterns",
     tracks: [
-      { title: "Agbadza (Ewe) – Keta traditional ensemble", source: "YouTube", url: "https://youtu.be/oe8AgLwuNAY?si=kB-PgQx1lBAs9ivo" },
+      { title: "Agbadza (Ewe) – Keta traditional ensemble", source: "YouTube", url: "https://www.youtube.com/watch?v=oe8AgLwuNAY" },
       { title: "Kinka | Ewe local drumming", source: "YouTube", url: "https://www.youtube.com/watch?v=4b2-JHIsjUI" },
       { title: "Work songs – Library of Congress overview", source: "LOC", url: "https://www.loc.gov/collections/songs-of-america/articles-and-essays/musical-styles/traditional-and-ethnic/traditional-work-songs/" }
     ]
