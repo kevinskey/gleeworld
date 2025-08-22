@@ -16,7 +16,13 @@ interface Resource {
 
 export default function Resources() {
   const [resources] = useState<Resource[]>([
-    // Placeholder resources - user will add real ones
+    {
+      id: '1',
+      title: 'African Origins and Adaptations in African American Music',
+      url: 'https://timeline.carnegiehall.org/stories/african-origins-and-adaptations-in-african-american-music',
+      description: 'Explore the African musical traditions that form the foundation of African American music, including rhythmic patterns, call-and-response techniques, and instrumental traditions that crossed the Atlantic and evolved in America.',
+      category: 'website'
+    }
   ]);
 
   const getCategoryIcon = (category: Resource['category']) => {
