@@ -1,21 +1,21 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Music } from 'lucide-react';
+import { Camera } from 'lucide-react';
 
-export const SightReadingGeneratorModule = () => {
+export const HeroManagerModule = () => {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Music className="h-5 w-5" />
-          Sight Reading Generator
+          <Camera className="h-5 w-5" />
+          Hero Manager
         </CardTitle>
         <CardDescription>
-          Generate AI-powered sight-reading exercises
+          Manage hero images and carousel content
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-muted-foreground">AI-powered sight reading exercise generator coming soon.</p>
+        <p className="text-muted-foreground">Hero image and carousel management system coming soon.</p>
       </CardContent>
     </Card>
   );

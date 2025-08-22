@@ -78,6 +78,13 @@ import MediaLibrary from '@/pages/admin/MediaLibrary';
 import { KaraokeModule } from '@/components/modules/KaraokeModule';
 import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
 import { MemberSightReadingModule } from '@/components/modules/MemberSightReadingModule';
+import { SightReadingGeneratorModule } from '@/components/modules/SightReadingGeneratorModule';
+import { AIToolsModule } from '@/components/modules/AIToolsModule';
+import { HeroManagerModule } from '@/components/modules/HeroManagerModule';
+import { PressKitsModule } from '@/components/modules/PressKitsModule';
+import { PRManagerModule } from '@/components/modules/PRManagerModule';
+import { FirstYearConsoleModule } from '@/components/modules/FirstYearConsoleModule';
+import { SettingsModule } from '@/components/modules/SettingsModule';
 import MemberSightReadingStudioPage from '@/pages/MemberSightReadingStudio';
 import { LibrarianModule } from '@/components/modules/LibrarianModule';
 
@@ -620,6 +627,78 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: LibrarianModule,
     dbFunctionName: "librarian"
+  },
+  {
+    id: "ai-tools",
+    name: "ai-tools",
+    title: "AI Tools",
+    description: "Artificial intelligence powered tools and assistance",
+    icon: Brain,
+    iconColor: "purple",
+    category: "system",
+    isActive: true,
+    component: AIToolsModule,
+    dbFunctionName: "ai-tools"
+  },
+  {
+    id: "hero-manager",
+    name: "hero-manager",
+    title: "Hero Manager",
+    description: "Manage hero images and carousel content",
+    icon: Camera,
+    iconColor: "blue",
+    category: "communications",
+    isActive: true,
+    component: HeroManagerModule,
+    dbFunctionName: "hero-manager"
+  },
+  {
+    id: "press-kits",
+    name: "press-kits",
+    title: "Press Kits",
+    description: "Manage press kits and media materials",
+    icon: FileText,
+    iconColor: "green",
+    category: "communications",
+    isActive: true,
+    component: PressKitsModule,
+    dbFunctionName: "press-kits"
+  },
+  {
+    id: "pr-manager",
+    name: "pr-manager",
+    title: "PR Manager",
+    description: "Public relations and marketing management",
+    icon: Megaphone,
+    iconColor: "orange",
+    category: "communications",
+    isActive: true,
+    component: PRManagerModule,
+    dbFunctionName: "pr-manager"
+  },
+  {
+    id: "first-year-console",
+    name: "first-year-console",
+    title: "First Year Console",
+    description: "Tools and resources for first-year management",
+    icon: GraduationCap,
+    iconColor: "cyan",
+    category: "member-management",
+    isActive: true,
+    component: FirstYearConsoleModule,
+    dbFunctionName: "first-year-console"
+  },
+  {
+    id: "settings",
+    name: "settings",
+    title: "System Settings",
+    description: "Platform configuration and settings",
+    icon: Settings,
+    iconColor: "gray",
+    category: "system",
+    isActive: true,
+    component: SettingsModule,
+    dbFunctionName: "settings"
   }
 ];
 
