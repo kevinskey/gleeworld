@@ -62,8 +62,6 @@ export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWit
   // Initialize the default layout plugin
 const scrollModePluginInstance = scrollModePlugin();
   
-  console.log('PDFViewerWithAnnotations: Props received:', { pdfUrl, musicTitle });
-  console.log('PDFViewerWithAnnotations: URL processing result:', { signedUrl, urlLoading, urlError });
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -78,6 +76,10 @@ const scrollModePluginInstance = scrollModePlugin();
   const [currentPath, setCurrentPath] = useState<any>(null);
   const [hasAnnotations, setHasAnnotations] = useState(false);
   const [annotationMode, setAnnotationMode] = useState(false);
+
+  console.log('PDFViewerWithAnnotations: Props received:', { pdfUrl, musicTitle });
+  console.log('PDFViewerWithAnnotations: URL processing result:', { signedUrl, urlLoading, urlError });
+  console.log('PDFViewerWithAnnotations: Component state:', { isLoading, error, annotationMode, hasAnnotations });
   const [currentMarkedScoreId, setCurrentMarkedScoreId] = useState<string | null>(null);
   
   // Save prompt state and imperative handle

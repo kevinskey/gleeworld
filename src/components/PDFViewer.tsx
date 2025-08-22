@@ -24,6 +24,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
 
   console.log('PDFViewer: Props received:', { pdfUrl });
   console.log('PDFViewer: URL Hook result:', { signedUrl, urlLoading, urlError });
+  console.log('PDFViewer: Component state:', { isLoading, error, useGoogle, googleProvider });
 
   useEffect(() => {
     // Reset on URL change
