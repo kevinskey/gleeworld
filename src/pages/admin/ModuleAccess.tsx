@@ -41,8 +41,11 @@ const ModuleAccess: React.FC = () => {
     const loadData = async () => {
       try {
         setLoading(true);
+        console.log('ModuleAccess: Starting data load...');
+        
         // Load users via secure RPC
         const { data: userData, error: userErr } = await supabase.rpc('get_all_user_profiles');
+        console.log('ModuleAccess: User data result:', { userData, userErr });
         if (userErr) throw userErr;
 
         // Load active modules
@@ -51,6 +54,7 @@ const ModuleAccess: React.FC = () => {
           .select('id, name, is_active')
           .eq('is_active', true)
           .order('name');
+        console.log('ModuleAccess: Module data result:', { moduleData, modErr, count: moduleData?.length });
         if (modErr) throw modErr;
 
         // Load permissions in bulk (active only)
@@ -58,6 +62,7 @@ const ModuleAccess: React.FC = () => {
           .from('gw_module_permissions')
           .select('user_id, module_id, permission_type, is_active')
           .eq('permission_type', PERMISSION_TYPE);
+        console.log('ModuleAccess: Permission data result:', { permData, permErr, count: permData?.length });
         if (permErr) throw permErr;
 
         // Filter out users with null user_id to prevent database constraint violations
@@ -68,15 +73,17 @@ const ModuleAccess: React.FC = () => {
           }
           return isValid;
         });
-        console.log(`Loaded ${(userData as UserRecord[]).length} total users, ${validUsers.length} with valid user_id`);
+        console.log(`ModuleAccess: Loaded ${(userData as UserRecord[]).length} total users, ${validUsers.length} with valid user_id`);
+        console.log(`ModuleAccess: Final data - Users: ${validUsers.length}, Modules: ${moduleData?.length || 0}, Permissions: ${permData?.length || 0}`);
         
         setUsers(validUsers);
         setModules((moduleData || []) as ModuleRecord[]);
         setPermissions((permData || []) as PermissionRecord[]);
       } catch (e) {
-        console.error('Failed to load module access data:', e);
+        console.error('ModuleAccess: Failed to load module access data:', e);
       } finally {
         setLoading(false);
+        console.log('ModuleAccess: Data loading complete');
       }
     };
 
