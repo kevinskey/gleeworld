@@ -82,9 +82,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-end gap-2">
-      <div className="flex-1">
-        <div className="relative flex items-end bg-background border border-border rounded-lg">
+    <form onSubmit={handleSubmit}>
+      <div className="flex items-end gap-2 bg-background rounded-full border border-border p-1">
+        <div className="flex-1">
           <Textarea
             ref={textareaRef}
             value={message}
@@ -93,35 +93,36 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             onBlur={handleStopTyping}
             placeholder={placeholder}
             disabled={disabled}
-            className={cn(
-              "min-h-[44px] max-h-32 resize-none border-0 focus-visible:ring-0 bg-transparent",
-              "placeholder:text-muted-foreground"
-            )}
+            className="min-h-[40px] max-h-32 resize-none text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 rounded-full px-4 py-2 placeholder:text-muted-foreground"
             rows={1}
           />
+        </div>
+        
+        <div className="flex gap-1 pr-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+            disabled={disabled}
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
           
-          <div className="flex items-center gap-1 p-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-              disabled={disabled}
-            >
-              <Paperclip className="h-4 w-4" />
-            </Button>
-          </div>
+          <Button 
+            type="submit" 
+            disabled={disabled || !message.trim()}
+            size="icon"
+            className="h-8 w-8 rounded-full"
+          >
+            {disabled ? (
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary-foreground"></div>
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
-      
-      <Button
-        type="submit"
-        size="sm"
-        disabled={!message.trim() || disabled}
-        className="h-11 w-11 rounded-lg p-0"
-      >
-        <Send className="h-4 w-4" />
-      </Button>
     </form>
   );
 };

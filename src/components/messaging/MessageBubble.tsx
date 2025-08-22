@@ -16,12 +16,14 @@ import {
 interface MessageBubbleProps {
   message: GroupMessage;
   isFirstInGroup: boolean;
+  isLastInGroup?: boolean;
   onReply: () => void;
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   isFirstInGroup,
+  isLastInGroup = true,
   onReply,
 }) => {
   const { user } = useAuth();
@@ -63,31 +65,32 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   }, {} as Record<string, typeof message.reactions>);
 
   return (
-    <div
+    <div 
       className={cn(
-        "group flex gap-3 hover:bg-accent/30 -mx-2 px-2 py-1 rounded-lg transition-colors",
+        "group flex gap-2 mb-1 hover:bg-accent/20 -mx-2 px-2 py-1 rounded-lg transition-colors",
         isOwnMessage && "flex-row-reverse"
       )}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      {/* Avatar (only show for first message in group) */}
-      <div className={cn("flex-shrink-0", !isFirstInGroup && "w-8")}>
-        {isFirstInGroup && (
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={message.user_profile?.avatar_url} />
-            <AvatarFallback className="text-xs bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-              {userInitials}
-            </AvatarFallback>
-          </Avatar>
-        )}
-      </div>
+      {/* Avatar - only show for first message in group and not own messages */}
+      {isFirstInGroup && !isOwnMessage && (
+        <Avatar className="w-8 h-8 flex-shrink-0 mt-1">
+          <AvatarImage src={message.user_profile?.avatar_url} />
+          <AvatarFallback className="text-xs bg-primary/10 text-primary">
+            {userInitials}
+          </AvatarFallback>
+        </Avatar>
+      )}
+      
+      {/* Spacer for grouped messages */}
+      {!isFirstInGroup && !isOwnMessage && <div className="w-8" />}
 
       {/* Message Content */}
-      <div className={cn("flex-1 min-w-0", isOwnMessage && "flex flex-col items-end")}>
-        {/* User name and timestamp (only for first message in group) */}
-        {isFirstInGroup && (
-          <div className={cn("flex items-center gap-2 mb-1", isOwnMessage && "flex-row-reverse")}>
+      <div className={cn("flex-1", isOwnMessage ? "flex flex-col items-end" : "flex flex-col items-start")}>
+        {/* User name and timestamp - only for first message in group */}
+        {isFirstInGroup && !isOwnMessage && (
+          <div className="flex items-center gap-2 mb-1">
             <span className="text-sm font-medium text-foreground">
               {userName}
             </span>
@@ -100,118 +103,103 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {/* Reply indicator */}
         {message.reply_to && (
           <div className={cn(
-            "flex items-center gap-2 mb-2 p-2 rounded bg-muted/50 border-l-2 border-primary text-sm",
-            isOwnMessage && "bg-primary/10"
+            "mb-2 text-xs p-2 rounded-lg bg-muted/50 max-w-xs border-l-2 border-primary",
+            isOwnMessage && "text-right border-r-2 border-l-0"
           )}>
-            <Reply className="h-3 w-3 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">
-              {message.reply_to.user_profile?.full_name}
-            </span>
-            <span className="text-xs text-muted-foreground truncate">
+            <div className="font-medium text-primary">
+              {message.reply_to.user_profile?.full_name || 'Unknown User'}
+            </div>
+            <div className="text-muted-foreground truncate">
               {message.reply_to.content}
-            </span>
+            </div>
           </div>
         )}
 
         {/* Message bubble */}
         <div className="relative flex items-center gap-2">
-          <div
+          <div 
             className={cn(
-              "max-w-lg rounded-2xl px-4 py-2 break-words",
-              isOwnMessage
-                ? "bg-primary text-primary-foreground rounded-br-md"
-                : "bg-muted text-foreground rounded-bl-md"
+              "relative inline-block max-w-xs lg:max-w-md px-3 py-2 text-sm break-words",
+              isOwnMessage 
+                ? cn(
+                    "bg-primary text-primary-foreground",
+                    isFirstInGroup ? "rounded-2xl" : 
+                    isLastInGroup ? "rounded-t-2xl rounded-bl-2xl rounded-br-md" : 
+                    "rounded-l-2xl rounded-r-md"
+                  )
+                : cn(
+                    "bg-muted text-foreground",
+                    isFirstInGroup ? "rounded-2xl" : 
+                    isLastInGroup ? "rounded-t-2xl rounded-br-2xl rounded-bl-md" : 
+                    "rounded-r-2xl rounded-l-md"
+                  )
             )}
           >
-            {/* System messages */}
-            {message.message_type === 'system' ? (
-              <div className="text-xs text-muted-foreground italic text-center">
-                {message.content}
-              </div>
-            ) : (
-              /* Regular text messages */
-              <div className="text-sm whitespace-pre-wrap">
-                {message.content}
-              </div>
-            )}
-
-            {/* Edited indicator */}
-            {message.is_edited && (
-              <div className="text-xs opacity-70 mt-1">
-                (edited)
+            {message.content}
+            
+            {/* Timestamp for own messages */}
+            {isOwnMessage && isLastInGroup && (
+              <div className="text-xs text-primary-foreground/70 mt-1 text-right">
+                {formatMessageTime(message.created_at)}
               </div>
             )}
           </div>
 
           {/* Message actions */}
           {showActions && message.message_type !== 'system' && (
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 w-7 p-0"
-                onClick={() => handleReaction('👍')}
-              >
-                <Smile className="h-3 w-3" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 w-7 p-0"
+            <div className={cn(
+              "flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/95 backdrop-blur rounded-lg border border-border p-1 shadow-lg z-10",
+              isOwnMessage ? "order-first" : "order-last"
+            )}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <Smile className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-auto">
+                  <div className="flex gap-1 p-1">
+                    {['👍', '❤️', '😂', '😮', '😢', '😡'].map(emoji => (
+                      <button
+                        key={emoji}
+                        onClick={() => handleReaction(emoji)}
+                        className="p-1 hover:bg-muted rounded text-base transition-colors"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
                 onClick={onReply}
+                className="h-7 w-7 p-0"
               >
                 <Reply className="h-3 w-3" />
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0">
-                    <MoreHorizontal className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleReaction('😀')}>
-                    React with 😀
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleReaction('❤️')}>
-                    React with ❤️
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleReaction('🎵')}>
-                    React with 🎵
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onReply}>
-                    Reply
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           )}
         </div>
 
         {/* Reactions */}
         {groupedReactions && Object.keys(groupedReactions).length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
+          <div className={cn("flex flex-wrap gap-1 mt-1", isOwnMessage ? "justify-end" : "justify-start")}>
             {Object.entries(groupedReactions).map(([emoji, reactions]) => (
               <button
                 key={emoji}
                 onClick={() => handleReaction(emoji)}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-colors",
-                  reactions.some(r => r.user_id === user?.id)
-                    ? "bg-primary/20 border-primary/30 text-primary"
-                    : "bg-muted border-border hover:bg-muted/80"
+                  "flex items-center gap-1 px-2 py-1 text-xs bg-background border border-border rounded-full hover:bg-muted transition-colors",
+                  reactions.some(r => r.user_id === user?.id) && "bg-primary/20 border-primary text-primary"
                 )}
               >
                 <span>{emoji}</span>
-                <span>{reactions.length}</span>
+                <span className="text-muted-foreground">{reactions.length}</span>
               </button>
             ))}
-          </div>
-        )}
-
-        {/* Timestamp for non-first messages */}
-        {!isFirstInGroup && showActions && (
-          <div className={cn("text-xs text-muted-foreground mt-1", isOwnMessage && "text-right")}>
-            {formatMessageTime(message.created_at)}
           </div>
         )}
       </div>

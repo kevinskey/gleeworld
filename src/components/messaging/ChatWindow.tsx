@@ -91,30 +91,62 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
   const replyingToMessage = messages?.find(msg => msg.id === replyingTo);
 
   return (
-    <div className="flex-1 flex flex-col h-full">
+    <div className="flex-1 flex flex-col h-full bg-background">
+      {/* Group Header */}
+      <div className="border-b border-border p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <span className="text-primary font-medium text-sm">
+                {messages?.[0]?.user_profile?.full_name?.charAt(0) || 'G'}
+              </span>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">Group Chat</h3>
+              <p className="text-sm text-muted-foreground">
+                {typingUsers.length > 0 
+                  ? `${typingUsers.map(u => u.user_name || 'Someone').join(', ')} typing...`
+                  : `${messages?.length || 0} messages`
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 px-4 py-2">
+        <div className="space-y-1">
           {messages && messages.length > 0 ? (
             messages.map((message, index) => {
               const prevMessage = index > 0 ? messages[index - 1] : null;
+              const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
+              
               const isFirstInGroup = !prevMessage || 
                 prevMessage.user_id !== message.user_id ||
                 new Date(message.created_at).getTime() - new Date(prevMessage.created_at).getTime() > 300000; // 5 minutes
+              
+              const isLastInGroup = !nextMessage || 
+                nextMessage.user_id !== message.user_id ||
+                new Date(nextMessage.created_at).getTime() - new Date(message.created_at).getTime() > 300000;
 
               return (
                 <MessageBubble
                   key={message.id}
                   message={message}
                   isFirstInGroup={isFirstInGroup}
+                  isLastInGroup={isLastInGroup}
                   onReply={() => setReplyingTo(message.id)}
                 />
               );
             })
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <div className="text-lg mb-2">No messages yet</div>
-              <div className="text-sm">Be the first to send a message in this group!</div>
+            <div className="text-center py-12 text-muted-foreground">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                <span className="text-2xl">💬</span>
+              </div>
+              <div className="text-lg mb-2 font-medium">No messages yet</div>
+              <div className="text-sm">Start the conversation!</div>
             </div>
           )}
           
@@ -128,20 +160,22 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
 
       {/* Reply Preview */}
       {replyingToMessage && (
-        <div className="px-4 py-2 bg-muted/50 border-t border-border">
+        <div className="mx-4 mb-2 p-3 bg-muted/30 border-l-4 border-primary rounded-r-lg">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Replying to</span>
-              <span className="font-medium">
-                {replyingToMessage.user_profile?.full_name || 'Unknown User'}
-              </span>
-              <span className="text-muted-foreground truncate max-w-xs">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 text-sm mb-1">
+                <span className="text-muted-foreground">Replying to</span>
+                <span className="font-medium text-primary">
+                  {replyingToMessage.user_profile?.full_name || 'Unknown User'}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground truncate">
                 {replyingToMessage.content}
-              </span>
+              </p>
             </div>
             <button
               onClick={() => setReplyingTo(null)}
-              className="text-muted-foreground hover:text-foreground"
+              className="ml-2 p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
               ✕
             </button>
@@ -150,7 +184,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
       )}
 
       {/* Message Input */}
-      <div className="p-4 border-t border-border">
+      <div className="p-4 bg-background border-t border-border">
         <MessageInput
           onSendMessage={handleSendMessage}
           onTyping={handleTyping}
