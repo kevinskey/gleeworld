@@ -112,6 +112,9 @@ const Index = () => {
 
   const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
     console.log('Template selected for use:', templateName);
+    
+    // Navigate to tour manager contracts with the template pre-selected
+    window.location.href = `/tour-manager?tab=contracts&template=${encodeURIComponent(templateName)}`;
   };
 
   const handleNewContract = () => {
