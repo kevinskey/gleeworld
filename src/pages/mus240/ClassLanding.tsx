@@ -14,11 +14,12 @@ export default function ClassLanding() {
       <div 
         className="min-h-screen bg-cover bg-center bg-no-repeat relative"
         style={{
-          backgroundImage: "url('/lovable-uploads/59969fd2-0b8e-4be2-ada9-5cd9573aac66.png')"
+          backgroundImage: "url('/lovable-uploads/59969fd2-0b8e-4be2-ada9-5cd9573aac66.png')",
+          backgroundColor: '#8B4513' // Fallback warm brown color
         }}
       >
-        {/* Dark overlay for better text readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+        {/* Very light overlay for text readability */}
+        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
         
         <main className="relative z-10 max-w-5xl mx-auto p-4">
           <header className="mb-6 text-center">
