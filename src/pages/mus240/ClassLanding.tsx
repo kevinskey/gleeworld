@@ -14,7 +14,7 @@ export default function ClassLanding() {
       <div 
         className="min-h-screen bg-cover bg-center bg-no-repeat relative"
         style={{
-          backgroundImage: "url('/lovable-uploads/59969fd2-0b8e-4be2-ada9-5cd9573aac66.png')",
+          backgroundImage: "url('/images/mus240-background.png')",
           backgroundColor: '#8B4513' // Fallback warm brown color
         }}
       >
