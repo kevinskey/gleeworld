@@ -32,7 +32,7 @@ max_header_length = 4096
 enabled = true
 port = 54324
 api_url = "http://127.0.0.1:54321"
-openai_api_key = "env(OPENAI_API_KEY)"
+openai_api_key = "env(AC7775d41319b3ac5dd0d403cde5356579)"
 
 [inbucket]
 enabled = true
