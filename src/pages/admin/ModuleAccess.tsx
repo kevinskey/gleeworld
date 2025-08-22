@@ -232,6 +232,20 @@ const ModuleAccess: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {loading && (
+                <div className="text-sm text-muted-foreground">Loading users and modules...</div>
+              )}
+              {!loading && users.length === 0 && (
+                <div className="text-sm text-destructive">No users loaded</div>
+              )}
+              {!loading && modules.length === 0 && (
+                <div className="text-sm text-destructive">No modules loaded</div>
+              )}
+              {!loading && users.length > 0 && modules.length > 0 && (
+                <div className="text-sm text-muted-foreground mb-4">
+                  Showing {filteredUsers.length} users with {modules.length} modules
+                </div>
+              )}
               {filteredUsers.filter(user => user.id && user.id !== 'null').map((user) => (
                 <div key={user.id} className="p-4 rounded-lg border border-border/60 bg-background/40">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -240,48 +254,52 @@ const ModuleAccess: React.FC = () => {
                       <div className="text-xs text-muted-foreground">{user.email} {user.role ? `• ${user.role}` : ''}</div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {modules.map((m) => {
-                        const active = hasAccess(user.id, m.id);
-                        const isSaving = savingKey === `${user.id}:${m.id}`;
-                        return (
-                          <button
-                            key={m.id}
-                            type="button"
-                            className={`flex items-center gap-1 px-3 py-1 text-xs rounded-md border transition-colors ${
-                              active 
-                                ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' 
-                                : 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200'
-                            } ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log('Button clicked!', { userId: user.id, moduleId: m.id, active });
-                              
-                              // Additional validation before calling setAccess
-                              if (!user.id || user.id === 'null' || user.id === null) {
-                                console.error('Invalid user ID detected in button click:', user);
-                                alert('Error: Invalid user detected. Please refresh the page.');
-                                return;
-                              }
-                              
-                              if (!isSaving) {
-                                setAccess(user.id, m.id, !active);
-                              }
-                            }}
-                            disabled={isSaving}
-                            aria-label={`${active ? 'Revoke' : 'Grant'} ${m.name} for ${user.full_name || user.email}`}
-                          >
-                            {isSaving ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : active ? (
-                              <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                            ) : (
-                              <XCircle className="h-3.5 w-3.5 text-destructive" />
-                            )}
-                            <span className="text-xs">{m.name}</span>
-                          </button>
-                        );
-                      })}
+                      {modules.length === 0 ? (
+                        <div className="text-xs text-destructive">No modules available</div>
+                      ) : (
+                         modules.map((m) => {
+                         const active = hasAccess(user.id, m.id);
+                         const isSaving = savingKey === `${user.id}:${m.id}`;
+                         return (
+                           <button
+                             key={m.id}
+                             type="button"
+                             className={`flex items-center gap-1 px-3 py-1 text-xs rounded-md border transition-colors ${
+                               active 
+                                 ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' 
+                                 : 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200'
+                             } ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                             onClick={(e) => {
+                               e.preventDefault();
+                               e.stopPropagation();
+                               console.log('Button clicked!', { userId: user.id, moduleId: m.id, active });
+                               
+                               // Additional validation before calling setAccess
+                               if (!user.id || user.id === 'null' || user.id === null) {
+                                 console.error('Invalid user ID detected in button click:', user);
+                                 alert('Error: Invalid user detected. Please refresh the page.');
+                                 return;
+                               }
+                               
+                               if (!isSaving) {
+                                 setAccess(user.id, m.id, !active);
+                               }
+                             }}
+                             disabled={isSaving}
+                             aria-label={`${active ? 'Revoke' : 'Grant'} ${m.name} for ${user.full_name || user.email}`}
+                           >
+                             {isSaving ? (
+                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                             ) : active ? (
+                               <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                             ) : (
+                               <XCircle className="h-3.5 w-3.5 text-destructive" />
+                             )}
+                             <span className="text-xs">{m.name}</span>
+                           </button>
+                         );
+                        })
+                       )}
                     </div>
                   </div>
                 </div>

@@ -31,7 +31,10 @@ export function useUserModuleGrants(userId?: string) {
             setError(error.message);
             setGrants([]);
           } else {
-            setGrants(data as ModuleGrant[] || []);
+            setGrants((data as any[])?.map(item => ({
+              ...item,
+              category: item.category || 'general'
+            })) || []);
           }
           setLoading(false);
         }
