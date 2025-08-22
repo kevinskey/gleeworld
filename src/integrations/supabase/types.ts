@@ -15496,9 +15496,9 @@ export type Database = {
         Returns: {
           can_manage: boolean
           can_view: boolean
-          category: string
           module_key: string
           module_name: string
+          source: string
         }[]
       }
       get_user_modules_combined: {
