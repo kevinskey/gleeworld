@@ -23,7 +23,7 @@ export const useExecutiveBoardMembers = () => {
           .select(`
             user_id,
             position,
-            gw_profiles:user_id (
+            gw_profiles!inner(
               full_name,
               email
             )
@@ -32,40 +32,7 @@ export const useExecutiveBoardMembers = () => {
 
         if (error) {
           console.error('Error fetching exec board members:', error);
-          // Fall back to mock data if database fetch fails
-          const mockMembers: ExecutiveBoardMember[] = [
-            {
-              user_id: 'mock-president-id',
-              position: 'President',
-              full_name: 'Sarah Johnson',
-              email: 'president@example.com'
-            },
-            {
-              user_id: 'mock-vp-id', 
-              position: 'Vice President',
-              full_name: 'Maria Rodriguez',
-              email: 'vp@example.com'
-            },
-            {
-              user_id: 'mock-secretary-id',
-              position: 'Secretary',
-              full_name: 'Ashley Davis',
-              email: 'secretary@example.com'
-            },
-            {
-              user_id: 'mock-treasurer-id',
-              position: 'Treasurer', 
-              full_name: 'Jennifer Williams',
-              email: 'treasurer@example.com'
-            },
-            {
-              user_id: '',
-              position: 'Public Relations',
-              full_name: '',
-              email: ''
-            }
-          ];
-          setMembers(mockMembers);
+          setMembers([]);
           return;
         }
 
