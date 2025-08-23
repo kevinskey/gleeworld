@@ -119,8 +119,7 @@ export const PostItGrid: React.FC = () => {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Tap a blank to add — tap any bucket to delete it.</p>
+      <div className="flex items-center justify-end">
         {/* Fallback add button when grid is full */}
         {items.placeholders === 0 && (
           <SendBucketOfLove
