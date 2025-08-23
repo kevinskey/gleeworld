@@ -36,7 +36,7 @@ export const useUserModulePermissions = () => {
     
     try {
       const { data, error } = await supabase
-        .from('user_module_permissions')
+        .from('gw_user_module_permissions')
         .select('*')
         .eq('is_active', true)
         .order('granted_at', { ascending: false });
@@ -55,7 +55,7 @@ export const useUserModulePermissions = () => {
   const getUserPermissions = async (userId: string): Promise<string[]> => {
     try {
       const { data, error } = await supabase
-        .from('user_module_permissions')
+        .from('gw_user_module_permissions')
         .select('module_id')
         .eq('user_id', userId)
         .eq('is_active', true);
@@ -74,7 +74,7 @@ export const useUserModulePermissions = () => {
     try {
       // First, check if permission already exists (active or inactive)
       const { data: existing } = await supabase
-        .from('user_module_permissions')
+        .from('gw_user_module_permissions')
         .select('id, is_active')
         .eq('user_id', userId)
         .eq('module_id', moduleId)
@@ -87,7 +87,7 @@ export const useUserModulePermissions = () => {
         } else {
           // Reactivate existing permission
           const { error } = await supabase
-            .from('user_module_permissions')
+            .from('gw_user_module_permissions')
             .update({
               is_active: true,
               revoked_at: null,
@@ -102,7 +102,7 @@ export const useUserModulePermissions = () => {
       } else {
         // Create new permission
         const { error } = await supabase
-          .from('user_module_permissions')
+          .from('gw_user_module_permissions')
           .insert({
             user_id: userId,
             module_id: moduleId,
@@ -127,7 +127,7 @@ export const useUserModulePermissions = () => {
     
     try {
       const { error } = await supabase
-        .from('user_module_permissions')
+        .from('gw_user_module_permissions')
         .update({
           is_active: false,
           revoked_at: new Date().toISOString()
@@ -159,7 +159,7 @@ export const useUserModulePermissions = () => {
       
       // Get all active permissions
       const { data: perms, error: permsError } = await supabase
-        .from('user_module_permissions')
+        .from('gw_user_module_permissions')
         .select('user_id, module_id')
         .eq('is_active', true);
       
