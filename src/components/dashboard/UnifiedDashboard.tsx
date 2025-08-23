@@ -3,7 +3,6 @@ import { MessagesPanel } from './MessagesPanel';
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { CommunityHubModule } from './modules/CommunityHubModule';
-import { CleanupDuplicatesCard } from '@/components/CleanupDuplicatesCard';
 import DashboardHeroCarousel from '@/components/hero/DashboardHeroCarousel';
 import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
 import { Button } from '@/components/ui/button';
@@ -69,9 +68,6 @@ export const UnifiedDashboard = () => {
             <h1 className="text-2xl font-bold text-primary mb-2">Welcome to Your Member Dashboard</h1>
             <p className="text-muted-foreground">Stay connected with the Spelman College Glee Club community.</p>
           </div>
-
-          {/* Cleanup Duplicates Card - Prominent placement */}
-          <CleanupDuplicatesCard />
 
           {/* Row 1: Hero + Features side-by-side */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">

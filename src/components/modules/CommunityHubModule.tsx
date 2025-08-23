@@ -4,7 +4,6 @@ import { CommunityLayout } from '@/components/community/CommunityLayout';
 import { ActivityFeed } from '@/components/community/ActivityFeed';
 import { QuickActions } from '@/components/community/QuickActions';
 import { BucketsOfLoveWidget } from '@/components/shared/BucketsOfLoveWidget';
-import { CleanupDuplicatesCard } from '@/components/CleanupDuplicatesCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, Sparkles, Activity, Heart } from 'lucide-react';
@@ -60,9 +59,6 @@ export const CommunityHubModule = ({ user, isFullPage = false }: ModuleProps) =>
         
         {/* Quick Widgets */}
         <div className="space-y-4">
-          {/* Cleanup Duplicates Card */}
-          <CleanupDuplicatesCard />
-          
           {/* Buckets of Love Widget */}
           <BucketsOfLoveWidget />
           
