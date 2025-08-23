@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Crown, Settings, Users, Calendar, MessageSquare } from 'lucide-react';
+import { Crown, Settings, Users, Calendar, MessageSquare } from 'lucide-react';
 
 interface ExecBoardMemberModulesProps {
   user: {
@@ -20,68 +20,45 @@ interface ExecBoardMemberModulesProps {
 export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
-  // Mock modules for demonstration based on executive role
-  const getMockModulesForRole = (role?: string) => {
-    const baseModules = [
-      {
-        id: 'member-management',
-        title: 'Member Management',
-        description: 'Manage member information and communications',
-        category: 'management',
-        icon: Users,
-        canAccess: true,
-        canManage: true
-      },
-      {
-        id: 'calendar-management',
-        title: 'Calendar Management', 
-        description: 'Schedule and manage events',
-        category: 'scheduling',
-        icon: Calendar,
-        canAccess: true,
-        canManage: true
-      },
-      {
-        id: 'communications',
-        title: 'Communications',
-        description: 'Send announcements and messages',
-        category: 'communications',
-        icon: MessageSquare,
-        canAccess: true,
-        canManage: false
-      }
-    ];
+  // Mock modules based on executive position for demonstration
+  const getModulesForPosition = (position?: string) => {
+    const moduleConfig = {
+      'President': [
+        { id: 'user-management', title: 'User Management', description: 'Manage member accounts and roles', category: 'management', icon: Users, canAccess: true, canManage: true },
+        { id: 'calendar-management', title: 'Calendar Management', description: 'Schedule and manage events', category: 'scheduling', icon: Calendar, canAccess: true, canManage: true },
+        { id: 'notifications', title: 'Notifications', description: 'Send announcements to members', category: 'communications', icon: MessageSquare, canAccess: true, canManage: true },
+        { id: 'attendance-management', title: 'Attendance Management', description: 'View attendance reports', category: 'scheduling', icon: Calendar, canAccess: true, canManage: false },
+        { id: 'budgets', title: 'Budget Management', description: 'View budget information', category: 'finances', icon: Settings, canAccess: true, canManage: false }
+      ],
+      'Vice President': [
+        { id: 'calendar-management', title: 'Calendar Management', description: 'Schedule and manage events', category: 'scheduling', icon: Calendar, canAccess: true, canManage: true },
+        { id: 'notifications', title: 'Notifications', description: 'View announcements', category: 'communications', icon: MessageSquare, canAccess: true, canManage: false },
+        { id: 'attendance-management', title: 'Attendance Management', description: 'View attendance reports', category: 'scheduling', icon: Calendar, canAccess: true, canManage: false }
+      ],
+      'Secretary': [
+        { id: 'notifications', title: 'Notifications', description: 'Send announcements to members', category: 'communications', icon: MessageSquare, canAccess: true, canManage: true },
+        { id: 'email-management', title: 'Email Management', description: 'Configure and send emails', category: 'communications', icon: MessageSquare, canAccess: true, canManage: true },
+        { id: 'attendance-management', title: 'Attendance Management', description: 'Manage attendance records', category: 'scheduling', icon: Calendar, canAccess: true, canManage: true }
+      ],
+      'Treasurer': [
+        { id: 'budgets', title: 'Budget Management', description: 'Manage budgets and expenses', category: 'finances', icon: Settings, canAccess: true, canManage: true },
+        { id: 'dues-collection', title: 'Dues Collection', description: 'Collect and track member dues', category: 'finances', icon: Settings, canAccess: true, canManage: true },
+        { id: 'calendar-management', title: 'Calendar Management', description: 'View scheduled events', category: 'scheduling', icon: Calendar, canAccess: true, canManage: false }
+      ],
+      'Public Relations': [
+        { id: 'pr-coordinator', title: 'PR Hub', description: 'Manage public relations and media', category: 'communications', icon: MessageSquare, canAccess: true, canManage: true },
+        { id: 'fan-engagement', title: 'Fan Engagement', description: 'Manage fan community content', category: 'communications', icon: MessageSquare, canAccess: true, canManage: true },
+        { id: 'notifications', title: 'Notifications', description: 'View announcements', category: 'communications', icon: MessageSquare, canAccess: true, canManage: false }
+      ]
+    };
 
-    // Filter based on role
-    switch (role?.toLowerCase()) {
-      case 'president':
-        return baseModules;
-      case 'vice-president':
-        return baseModules.filter(m => m.id !== 'member-management');
-      case 'secretary':
-        return baseModules.filter(m => m.category === 'communications');
-      case 'treasurer':
-        return [
-          ...baseModules.filter(m => m.id === 'calendar-management'),
-          {
-            id: 'financial-management',
-            title: 'Financial Management',
-            description: 'Manage budgets and expenses',
-            category: 'finances',
-            icon: Settings,
-            canAccess: true,
-            canManage: true
-          }
-        ];
-      default:
-        return baseModules.slice(0, 2); // Basic access
-    }
+    return moduleConfig[position as keyof typeof moduleConfig] || [];
   };
 
-  const accessibleModules = getMockModulesForRole(user.exec_board_role);
+  const modules = getModulesForPosition(user.exec_board_role);
 
   const handleModuleClick = (moduleId: string) => {
-    const module = accessibleModules.find(m => m.id === moduleId);
+    const module = modules.find(m => m.id === moduleId);
     if (module && module.canAccess) {
       setSelectedModule(moduleId);
     }
@@ -90,7 +67,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
   const renderModuleComponent = () => {
     if (!selectedModule) return null;
     
-    const module = accessibleModules.find(m => m.id === selectedModule);
+    const module = modules.find(m => m.id === selectedModule);
     if (!module) return null;
 
     return (
@@ -120,14 +97,14 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
   };
 
   // Group modules by category
-  const modulesByCategory = accessibleModules.reduce((acc, module) => {
+  const modulesByCategory = modules.reduce((acc, module) => {
     const category = module.category || 'Other';
     if (!acc[category]) {
       acc[category] = [];
     }
     acc[category].push(module);
     return acc;
-  }, {} as Record<string, typeof accessibleModules>);
+  }, {} as Record<string, typeof modules>);
 
   const getCategoryIcon = (category: string) => {
     const icons = {
@@ -143,7 +120,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     return null;
   }
 
-  if (accessibleModules.length === 0) {
+  if (modules.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -168,7 +145,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
             <div>
               <CardTitle>Executive Board Modules</CardTitle>
               <CardDescription>
-                Role: {user.exec_board_role} • {accessibleModules.length} modules available
+                Role: {user.exec_board_role} • {modules.length} modules available
               </CardDescription>
             </div>
           </div>
