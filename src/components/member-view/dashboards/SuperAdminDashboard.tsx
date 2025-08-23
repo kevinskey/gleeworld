@@ -228,7 +228,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
 
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [showAllModules, setShowAllModules] = useState(false);
-  const [overviewCollapsed, setOverviewCollapsed] = useState(false);
+  const [overviewCollapsed, setOverviewCollapsed] = useState(true);
 
   // Initialize collapsed sections - default all categories to collapsed
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
