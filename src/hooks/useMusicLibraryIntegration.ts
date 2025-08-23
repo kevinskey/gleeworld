@@ -33,7 +33,7 @@ export const useMusicLibraryIntegration = () => {
       // Get setlists containing this piece
       const setlistsWithPiece = await getSetlistsContainingPiece(piece.id);
       
-      // Get study scores for this piece
+      // Get study scores for this piece - get fresh data instead of relying on state
       const relatedStudyScores = studyScores.filter(score => 
         score.title.toLowerCase().includes(piece.title.toLowerCase()) ||
         piece.title.toLowerCase().includes(score.title.toLowerCase().replace(' (Study Score)', ''))
@@ -60,7 +60,7 @@ export const useMusicLibraryIntegration = () => {
         studyScores: []
       };
     }
-  }, [getSetlistsContainingPiece, studyScores]);
+  }, [getSetlistsContainingPiece]); // Removed studyScores from dependencies
 
   const addPieceToSetlist = useCallback(async (pieceId: string, setlistId: string) => {
     setLoading(true);
