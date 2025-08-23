@@ -315,7 +315,7 @@ const App = () => {
                  } 
                />
                <Route 
-                 path="/admin" 
+                 path="/dashboard/member" 
                  element={
                    <ProtectedRoute>
                      <UniversalLayout>
@@ -324,6 +324,56 @@ const App = () => {
                    </ProtectedRoute>
                   } 
                 />
+                <Route 
+                 path="/dashboard/fan" 
+                 element={
+                   <ProtectedRoute>
+                     <UniversalLayout>
+                       <UnifiedDashboard />
+                     </UniversalLayout>
+                   </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                 path="/dashboard/alumnae" 
+                 element={
+                   <ProtectedRoute>
+                     <UniversalLayout>
+                       <UnifiedDashboard />
+                     </UniversalLayout>
+                   </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                 path="/dashboard/mus240" 
+                 element={
+                   <ProtectedRoute>
+                     <UniversalLayout>
+                       <UnifiedDashboard />
+                     </UniversalLayout>
+                   </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                 path="/dashboard/public" 
+                 element={
+                   <ProtectedRoute>
+                     <UniversalLayout>
+                       <UnifiedDashboard />
+                     </UniversalLayout>
+                   </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout>
+                        <UnifiedDashboard />
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                   } 
+                 />
                <Route 
                  path="/fan" 
                  element={
