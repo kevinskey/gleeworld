@@ -113,14 +113,17 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   const goToPage = useCallback((page: number) => {
     const total = totalPages || (pdf?.numPages ?? 0) || 1;
     const clamped = Math.max(1, Math.min(page, total));
+    console.log('PDFViewer: goToPage called', { page, clamped, currentPage, totalPages });
     if (clamped !== currentPage) setCurrentPage(clamped);
   }, [currentPage, totalPages, pdf]);
 
   const nextPage = useCallback(() => {
+    console.log('PDFViewer: nextPage called', { currentPage, totalPages });
     goToPage(currentPage + 1);
   }, [currentPage, goToPage]);
 
   const prevPage = useCallback(() => {
+    console.log('PDFViewer: prevPage called', { currentPage, totalPages });
     goToPage(currentPage - 1);
   }, [currentPage, goToPage]);
 
