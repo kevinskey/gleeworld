@@ -104,9 +104,6 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
             
             {/* Integration Status Badges */}
             <div className="flex items-center gap-2 mb-3">
-              <Badge variant="outline" className="text-xs">
-                {piece.difficulty_level || 'Not Specified'}
-              </Badge>
               
               {integratedPiece.setlists.length > 0 && (
                 <Badge variant="secondary" className="text-xs flex items-center gap-1">
