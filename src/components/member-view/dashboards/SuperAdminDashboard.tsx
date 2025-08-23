@@ -303,6 +303,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
   });
 
   const [calendarCollapsed, setCalendarCollapsed] = useState(true);
+  const [quickAccessCollapsed, setQuickAccessCollapsed] = useState(true);
 
   const handleDragEnd = (event: DragEndEvent, category: string) => {
     const { active, over } = event;
@@ -576,30 +577,47 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                     Most frequently used administrative modules
                   </CardDescription>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setQuickAccessCollapsed(!quickAccessCollapsed)}
+                  className="flex items-center gap-2"
+                >
+                  {quickAccessCollapsed ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronUp className="h-4 w-4" />
+                  )}
+                  {quickAccessCollapsed ? 'Expand' : 'Collapse'}
+                </Button>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {allModules
-                  .filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id))
-                  .slice(0, 6)
-                  .map((module) => (
-                     <Button
-                       key={module.id}
-                       variant="outline"
-                       className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent"
-                       onClick={() => setSelectedModule(module.id)}
-                     >
-                       <div className="w-full">
-                         <h3 className="font-semibold text-base lg:text-lg">{module.title}</h3>
-                         <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
-                           {module.description}
-                         </p>
-                       </div>
-                     </Button>
-                  ))}
-              </div>
-            </CardContent>
+            <Collapsible open={!quickAccessCollapsed}>
+              <CollapsibleContent>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {allModules
+                      .filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id))
+                      .slice(0, 6)
+                      .map((module) => (
+                         <Button
+                           key={module.id}
+                           variant="outline"
+                           className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent"
+                           onClick={() => setSelectedModule(module.id)}
+                         >
+                           <div className="w-full">
+                             <h3 className="font-semibold text-base lg:text-lg">{module.title}</h3>
+                             <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
+                               {module.description}
+                             </p>
+                           </div>
+                         </Button>
+                      ))}
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
 
           {/* Overview Cards Section - moved to bottom */}
