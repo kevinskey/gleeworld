@@ -7498,6 +7498,7 @@ export type Database = {
           updated_at: string
           url: string
           visibility: string
+          voice_part: string | null
         }
         Insert: {
           created_at?: string
@@ -7510,6 +7511,7 @@ export type Database = {
           updated_at?: string
           url: string
           visibility?: string
+          voice_part?: string | null
         }
         Update: {
           created_at?: string
@@ -7522,6 +7524,7 @@ export type Database = {
           updated_at?: string
           url?: string
           visibility?: string
+          voice_part?: string | null
         }
         Relationships: [
           {

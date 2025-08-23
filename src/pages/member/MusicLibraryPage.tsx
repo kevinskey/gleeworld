@@ -1,47 +1,36 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Music, BookOpen, Download, Play, Loader2, List, Users } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { 
+  Download, 
+  Play, 
+  List, 
+  Users, 
+  BookOpen,
+  Grid,
+  Layers
+} from 'lucide-react';
 import { useSheetMusic } from '@/hooks/useSheetMusic';
-import { useAuth } from '@/contexts/AuthContext';
-import { useUserProfile } from '@/hooks/useUserProfile';
 import { useSetlists } from '@/hooks/useSetlists';
-import { BackNavigation } from '@/components/shared/BackNavigation';
-import { MusicLibraryCard } from '@/components/music-library/MusicLibraryCard';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useAuth } from '@/contexts/AuthContext';
+import { MusicLibrary } from '@/components/music-library/MusicLibrary';
+import { PracticeRecordingsPanel } from '@/components/music-library/PracticeRecordingsPanel';
 
-const MusicLibraryPage = () => {
+export const MusicLibraryPage: React.FC = () => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
-  const { sheetMusic, loading, error } = useSheetMusic();
-  const { setlists, loading: setlistsLoading } = useSetlists();
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Filter sheet music based on search query
-  const filteredSheetMusic = sheetMusic.filter(piece =>
-    piece.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (piece.composer && piece.composer.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  if (loading || setlistsLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
+  const { sheetMusic } = useSheetMusic();
+  const { setlists } = useSetlists();
+  const [activeView, setActiveView] = useState<'library' | 'practice-recordings'>('library');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Back Navigation */}
-        <BackNavigation />
-        
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <div className="rounded-lg p-3 bg-purple-100 text-purple-600">
-            <Music className="h-6 w-6" />
+            <Grid className="h-6 w-6" />
           </div>
           <div>
             <h1 className="text-3xl font-bold">Music Library</h1>
@@ -49,7 +38,7 @@ const MusicLibraryPage = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Stats */}
         <div className="grid gap-4 md:grid-cols-5">
           <Card className="p-4 text-center bg-purple-50 border-purple-200">
             <BookOpen className="h-8 w-8 mx-auto mb-2 text-purple-600" />
@@ -82,58 +71,43 @@ const MusicLibraryPage = () => {
         <div className="grid gap-6 lg:grid-cols-4">
           {/* Current Repertoire */}
           <div className="lg:col-span-3">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Current Repertoire</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      placeholder="Search music..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-64"
-                    />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {error && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Error loading sheet music: {error}
-                  </div>
-                )}
-                {!error && filteredSheetMusic.length === 0 && !searchQuery && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No sheet music available yet.
-                  </div>
-                )}
-                {!error && filteredSheetMusic.length === 0 && searchQuery && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No music found matching "{searchQuery}".
-                  </div>
-                )}
-                <div className="space-y-2">
-                  {filteredSheetMusic.map((piece) => (
-                    <MusicLibraryCard key={piece.id} piece={piece} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {activeView === 'library' ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Grid className="h-5 w-5" />
+                    Music Library
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MusicLibrary />
+                </CardContent>
+              </Card>
+            ) : (
+              <PracticeRecordingsPanel />
+            )}
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Links */}
+          {/* Quick Actions Sidebar */}
+          <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Quick Access</CardTitle>
+                <CardTitle className="text-base">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant={activeView === 'library' ? 'default' : 'outline'} 
+                  className="w-full justify-start"
+                  onClick={() => setActiveView('library')}
+                >
                   <BookOpen className="h-4 w-4 mr-2" />
                   My Voice Part Files
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant={activeView === 'practice-recordings' ? 'default' : 'outline'} 
+                  className="w-full justify-start"
+                  onClick={() => setActiveView('practice-recordings')}
+                >
                   <Play className="h-4 w-4 mr-2" />
                   Practice Recordings
                 </Button>
@@ -142,64 +116,43 @@ const MusicLibraryPage = () => {
                   Download All Current
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
-                  <List className="h-4 w-4 mr-2" />
-                  View All Setlists
+                  <Layers className="h-4 w-4 mr-2" />
+                  My Study Scores
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Active Setlists */}
+            {/* Voice Part Info */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Active Setlists</CardTitle>
+                <CardTitle className="text-base">Your Section</CardTitle>
               </CardHeader>
               <CardContent>
-                {setlists.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No active setlists</p>
-                ) : (
-                  <div className="space-y-2">
-                    {setlists.slice(0, 5).map((setlist) => (
-                      <div key={setlist.id} className="flex items-center justify-between p-2 bg-muted/30 rounded">
-                        <div>
-                          <p className="text-sm font-medium">{setlist.title}</p>
-                          {setlist.concert_name && (
-                            <p className="text-xs text-muted-foreground">{setlist.concert_name}</p>
-                          )}
-                        </div>
-                        <Badge variant="outline" className="text-xs">
-                          {setlist.event_date ? new Date(setlist.event_date).toLocaleDateString() : 'TBA'}
-                        </Badge>
-                      </div>
-                    ))}
-                    {setlists.length > 5 && (
-                      <p className="text-xs text-muted-foreground text-center">
-                        +{setlists.length - 5} more setlists
-                      </p>
-                    )}
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-medium">Voice Part</p>
+                    <p className="text-sm text-muted-foreground">
+                      {userProfile?.voice_part || 'Not Set'}
+                    </p>
                   </div>
-                )}
+                  <div>
+                    <p className="text-sm font-medium">Available Files</p>
+                    <p className="text-sm text-muted-foreground">
+                      {sheetMusic.filter(s => s.pdf_url).length} sheet music files
+                    </p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
             {/* Recent Activity */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Recent Activity</CardTitle>
+                <CardTitle className="text-base">Recent Activity</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Downloaded "Amazing Grace"</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>Listened to practice track</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span>New piece added to repertoire</span>
-                  </div>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>No recent activity</p>
                 </div>
               </CardContent>
             </Card>
