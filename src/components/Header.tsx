@@ -30,7 +30,8 @@ import {
   Library, 
   Calculator, 
   User, 
-  Settings, 
+  Users,
+  Settings,
   LogOut, 
   Shield,
   Activity,
@@ -248,11 +249,13 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   // Dashboard views for super-admin dropdown
   const dashboardViews = [
     { id: 'personal', label: 'My Dashboard', icon: User, route: '/dashboard' },
+    { id: 'members', label: 'Members Dashboard', icon: Users, route: '/members' },
     { id: 'member', label: 'Member Dashboard', icon: Home, route: `/dashboard/member-view/${userProfile?.user_id}` },
     ...(isSuperAdmin ? [{ id: 'alumnae', label: 'Alumnae Portal Admin', icon: GraduationCap, route: '/admin/alumnae' }] : [])
   ];
 
   const getCurrentDashboardView = () => {
+    if (location.pathname === '/members') return 'Members Dashboard';
     if (location.pathname.startsWith('/dashboard/member-view/')) {
       if (userProfile?.is_exec_board) return 'Executive Board Dashboard';
       if (userProfile?.role === 'alumnae') return 'Alumnae Dashboard'; 
