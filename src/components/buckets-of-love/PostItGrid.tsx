@@ -6,29 +6,33 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { getNoteClasses } from './notePalette';
-// Responsive slots by breakpoint: sm=12, md=16, lg=24, xl+=32
+// Responsive slots limited to 3 rows max
 const useGridSlots = () => {
-  const [slots, setSlots] = useState(12);
+  const [slots, setSlots] = useState(12); // 4 cols x 3 rows = 12 slots
 
   useEffect(() => {
+    const mqSm = window.matchMedia('(min-width: 640px)');
     const mqMd = window.matchMedia('(min-width: 768px)');
     const mqLg = window.matchMedia('(min-width: 1024px)');
     const mqXl = window.matchMedia('(min-width: 1280px)');
 
     const compute = () => {
-      if (mqXl.matches) return 32;
-      if (mqLg.matches) return 24;
-      if (mqMd.matches) return 16;
-      return 12;
+      if (mqXl.matches) return 36; // 12 cols x 3 rows
+      if (mqLg.matches) return 30; // 10 cols x 3 rows
+      if (mqMd.matches) return 24; // 8 cols x 3 rows
+      if (mqSm.matches) return 18; // 6 cols x 3 rows
+      return 12; // 4 cols x 3 rows
     };
 
     const update = () => setSlots(compute());
 
     update();
+    mqSm.addEventListener('change', update);
     mqMd.addEventListener('change', update);
     mqLg.addEventListener('change', update);
     mqXl.addEventListener('change', update);
     return () => {
+      mqSm.removeEventListener('change', update);
       mqMd.removeEventListener('change', update);
       mqLg.removeEventListener('change', update);
       mqXl.removeEventListener('change', update);
