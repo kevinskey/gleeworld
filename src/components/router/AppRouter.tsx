@@ -141,32 +141,16 @@ export const router = createBrowserRouter([
   {
     path: "/admin/exec-board-monitor",
     element: (
-      <div className="min-h-screen bg-gray-50 p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white p-8 rounded-lg shadow-sm border">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Executive Board Monitor</h1>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <p className="text-green-800 font-semibold">✅ Route is working correctly!</p>
-              <p className="text-green-700 mt-1">The page is now loading successfully.</p>
-            </div>
-            <div className="space-y-4">
-              <p className="text-lg text-gray-700">This is the Executive Board Monitor page.</p>
-              <p className="text-gray-600">
-                This page allows administrators to monitor executive board member dashboards and access levels.
-              </p>
-              <div className="flex gap-4 mt-6">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 flex-1">
-                  <h3 className="font-semibold text-blue-900">Status</h3>
-                  <p className="text-blue-700">Active and functioning</p>
-                </div>
-                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200 flex-1">
-                  <h3 className="font-semibold text-purple-900">Route</h3>
-                  <p className="text-purple-700">/admin/exec-board-monitor</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div style={{padding: '20px', backgroundColor: 'red', color: 'white', fontSize: '24px'}}>
+        EXECUTIVE BOARD MONITOR IS WORKING!
+      </div>
+    ),
+  },
+  {
+    path: "/test-route-working",
+    element: (
+      <div style={{padding: '20px', backgroundColor: 'green', color: 'white', fontSize: '24px'}}>
+        TEST ROUTE IS WORKING!
       </div>
     ),
   },

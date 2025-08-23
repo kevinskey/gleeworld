@@ -630,8 +630,18 @@ const App = () => {
                               <AlumnaeAdmin />
                             </ProtectedRoute>
                           } 
-                        />
-                          <Route 
+                         />
+                         <Route 
+                           path="/admin/exec-board-monitor" 
+                           element={
+                             <ProtectedRoute>
+                               <div style={{padding: '40px', backgroundColor: '#dc2626', color: 'white', fontSize: '32px', textAlign: 'center'}}>
+                                 🎉 EXECUTIVE BOARD MONITOR IS NOW WORKING! 🎉
+                               </div>
+                             </ProtectedRoute>
+                           } 
+                         />
+                           <Route
                             path="/auditions" 
                             element={
                               <PublicRoute>
