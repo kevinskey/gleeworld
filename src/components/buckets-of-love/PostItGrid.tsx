@@ -60,7 +60,7 @@ const NoteCard: React.FC<{
       {/* tape strip */}
       <div className={`absolute -top-1 left-1/2 -translate-x-1/2 h-2.5 w-8 rounded-sm shadow ${getNoteClasses(noteColor || 'pink').tape}`} />
 
-      <div className="p-1.5 h-full flex flex-col">
+      <div className="p-0.5 h-full flex flex-col">
         {isPlaceholder ? (
           <div className="flex-1 grid place-content-center text-center text-xs text-muted-foreground">
             <div className="flex flex-col items-center gap-1">
