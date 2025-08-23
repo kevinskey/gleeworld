@@ -91,19 +91,19 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
 
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-3">
+      <CardContent className="p-2">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-0.5">
               <Music className="h-4 w-4 text-muted-foreground" />
               <h4 className="font-semibold">{integratedPiece.title}</h4>
             </div>
-            <p className="text-sm text-muted-foreground mb-2">
+            <p className="text-sm text-muted-foreground mb-1">
               by {integratedPiece.composer || 'Unknown'}
             </p>
             
             {/* Integration Status Badges */}
-            <div className="flex items-center gap-2 mb-2">{integratedPiece.setlists.length > 0 && (
+            <div className="flex items-center gap-2 mb-1">{integratedPiece.setlists.length > 0 && (
                 <Badge variant="secondary" className="text-xs flex items-center gap-1">
                   <List className="h-3 w-3" />
                   {integratedPiece.setlists.length} setlist{integratedPiece.setlists.length > 1 ? 's' : ''}
@@ -126,7 +126,7 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
 
             {/* Setlist Membership */}
             {integratedPiece.setlists.length > 0 && (
-              <div className="mb-3">
+              <div className="mb-1">
                 <p className="text-xs text-muted-foreground mb-1">In setlists:</p>
                 <div className="flex flex-wrap gap-1">
                   {integratedPiece.setlists.slice(0, 2).map((setlist) => (
