@@ -83,7 +83,7 @@ import AdminScholarships from "./pages/AdminScholarships";
 import AdminProducts from "./pages/AdminProducts";
 import { SectionLeaderDashboard } from "./pages/SectionLeaderDashboard";
 import { SectionalManagement } from "./pages/SectionalManagement";
-import { ExecutiveBoardMonitor } from "./pages/admin/ExecutiveBoardMonitor";
+import ExecutiveBoardMonitor from "./pages/admin/ExecutiveBoardMonitor";
 import { SRFManagement } from "./pages/SRFManagement";
 
 // Admin module pages

@@ -262,3 +262,5 @@ export function ExecutiveBoardMonitor() {
     </div>
   );
 }
+
+export default ExecutiveBoardMonitor;
