@@ -795,44 +795,6 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                   </CardContent>
                 </Card>
 
-                {/* System Administration Tools Card */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">System Admin Tools</CardTitle>
-                    <Lock className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full justify-start" 
-                        onClick={() => navigate('/admin/alumnae')}
-                      >
-                        <GraduationCap className="mr-2 h-4 w-4" />
-                        Alumnae Portal Admin
-                      </Button>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <span>User Role Management</span>
-                          <Badge variant="outline">Full Control</Badge>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span>System Configuration</span>
-                          <Badge variant="outline">Admin</Badge>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span>Database Access</span>
-                          <Badge variant="outline">Super Admin</Badge>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span>Security Settings</span>
-                          <Badge variant="outline">Full Access</Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
 
                 {/* Community Hub & Announcements Section */}
                 <div className="md:col-span-2 lg:col-span-3">
@@ -871,6 +833,163 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                       </Suspense>
                     )}
                   </div>
+                </div>
+
+                {/* System Administration Section - At Bottom */}
+                <div className="md:col-span-2 lg:col-span-3 mt-8">
+                  <Card className="border-2 border-red-100 dark:border-red-900/30">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                        <Lock className="h-5 w-5" />
+                        System Administration
+                      </CardTitle>
+                      <CardDescription>
+                        Platform settings, logs, and administrative tools
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Platform Settings */}
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center gap-2">
+                              <Settings className="h-4 w-4 text-blue-600" />
+                              <CardTitle className="text-sm">Platform Settings</CardTitle>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-xs text-muted-foreground mb-3">Configure system-wide settings and parameters</p>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-xs">
+                                <span>Environment</span>
+                                <Badge variant="outline">Production</Badge>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span>Maintenance Mode</span>
+                                <Badge variant="outline">Off</Badge>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* System Logs */}
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-green-600" />
+                              <CardTitle className="text-sm">System Logs</CardTitle>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-xs text-muted-foreground mb-3">View application and system logs</p>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-xs">
+                                <span>Error Logs</span>
+                                <Badge variant="destructive">2</Badge>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span>Access Logs</span>
+                                <Badge variant="outline">Live</Badge>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Database Admin */}
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center gap-2">
+                              <Database className="h-4 w-4 text-purple-600" />
+                              <CardTitle className="text-sm">Database Admin</CardTitle>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-xs text-muted-foreground mb-3">Direct database management and queries</p>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-xs">
+                                <span>Connection Status</span>
+                                <Badge variant="outline" className="text-green-600">Connected</Badge>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span>Total Tables</span>
+                                <span>47</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Security Audit */}
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-red-600" />
+                              <CardTitle className="text-sm">Security Audit</CardTitle>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-xs text-muted-foreground mb-3">Security scanning and vulnerability assessment</p>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-xs">
+                                <span>Last Scan</span>
+                                <span>2h ago</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span>Security Score</span>
+                                <Badge variant="outline" className="text-green-600">98/100</Badge>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Performance Monitor */}
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center gap-2">
+                              <Activity className="h-4 w-4 text-orange-600" />
+                              <CardTitle className="text-sm">Performance Monitor</CardTitle>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-xs text-muted-foreground mb-3">System performance metrics and monitoring</p>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-xs">
+                                <span>CPU Usage</span>
+                                <span>23%</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span>Memory Usage</span>
+                                <span>45%</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* System Actions */}
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center gap-2">
+                              <Crown className="h-4 w-4 text-purple-600" />
+                              <CardTitle className="text-sm">Admin Actions</CardTitle>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-xs text-muted-foreground mb-3">Critical system administration actions</p>
+                            <div className="space-y-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="w-full justify-start text-xs" 
+                                onClick={() => navigate('/admin/alumnae')}
+                              >
+                                <GraduationCap className="mr-2 h-3 w-3" />
+                                Alumnae Portal
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             )}
