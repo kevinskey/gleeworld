@@ -133,7 +133,7 @@ export const PostItGrid: React.FC = () => {
       </div>
 
       <div className={cn(
-        'grid gap-2 md:gap-5',
+        'grid gap-1 md:gap-2',
         'grid-cols-3',
         'md:grid-cols-4',
         'lg:grid-cols-6',
