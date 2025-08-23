@@ -76,6 +76,10 @@ const scrollModePluginInstance = scrollModePlugin();
   const [currentPath, setCurrentPath] = useState<any>(null);
   const [hasAnnotations, setHasAnnotations] = useState(false);
   const [annotationMode, setAnnotationMode] = useState(false);
+  
+  // Touch navigation state
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number; time: number } | null>(null);
+  const [touchEnd, setTouchEnd] = useState<{ x: number; y: number; time: number } | null>(null);
 
   console.log('PDFViewerWithAnnotations: Props received:', { pdfUrl, musicTitle });
   console.log('PDFViewerWithAnnotations: URL processing result:', { signedUrl, urlLoading, urlError });
@@ -126,6 +130,99 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     console.log('PDFViewer: prevPage called', { currentPage, totalPages });
     goToPage(currentPage - 1);
   }, [currentPage, goToPage]);
+
+  // Touch navigation functions
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (annotationMode && activeTool !== "select") return; // Don't interfere with drawing
+    
+    const touch = e.touches[0];
+    setTouchStart({
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now()
+    });
+    setTouchEnd(null);
+  }, [annotationMode, activeTool]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStart) return;
+    
+    const touch = e.touches[0];
+    setTouchEnd({
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now()
+    });
+  }, [touchStart]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStart) return;
+    if (annotationMode && activeTool !== "select") return;
+    
+    const touch = e.changedTouches[0];
+    const touchEndPos = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now()
+    };
+    
+    const deltaX = touchEndPos.x - touchStart.x;
+    const deltaY = touchEndPos.y - touchStart.y;
+    const deltaTime = touchEndPos.time - touchStart.time;
+    
+    // Check for swipe (minimum distance and maximum time)
+    const minSwipeDistance = 50;
+    const maxSwipeTime = 300;
+    
+    if (Math.abs(deltaX) > minSwipeDistance && deltaTime < maxSwipeTime && Math.abs(deltaY) < Math.abs(deltaX)) {
+      e.preventDefault();
+      if (deltaX > 0) {
+        // Swipe right - previous page
+        prevPage();
+      } else {
+        // Swipe left - next page
+        nextPage();
+      }
+    } else if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
+      // Tap (no significant movement)
+      const containerRect = containerRef.current?.getBoundingClientRect();
+      if (containerRect) {
+        const tapX = touchStart.x - containerRect.left;
+        const tapZoneWidth = containerRect.width / 3;
+        
+        if (tapX < tapZoneWidth) {
+          // Left tap zone - previous page
+          prevPage();
+        } else if (tapX > containerRect.width - tapZoneWidth) {
+          // Right tap zone - next page
+          nextPage();
+        }
+        // Middle zone does nothing to avoid accidental navigation
+      }
+    }
+    
+    setTouchStart(null);
+    setTouchEnd(null);
+  }, [touchStart, annotationMode, activeTool, prevPage, nextPage]);
+
+  // Mouse click navigation for desktop
+  const handleMouseClick = useCallback((e: React.MouseEvent) => {
+    if (annotationMode && activeTool !== "select") return;
+    
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    if (containerRect) {
+      const clickX = e.clientX - containerRect.left;
+      const tapZoneWidth = containerRect.width / 3;
+      
+      if (clickX < tapZoneWidth) {
+        // Left click zone - previous page
+        prevPage();
+      } else if (clickX > containerRect.width - tapZoneWidth) {
+        // Right click zone - next page
+        nextPage();
+      }
+    }
+  }, [annotationMode, activeTool, prevPage, nextPage]);
 
   useEffect(() => {
     if (startInAnnotationMode && !annotationMode) {
@@ -711,7 +808,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
       {/* PDF Content */}
       <CardContent className="p-0">
-        <div className="relative w-full h-[calc(100dvh-10rem)] min-h-[70vh] md:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-8rem)]">
+        <div 
+          className="relative w-full h-[calc(100dvh-10rem)] min-h-[70vh] md:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-8rem)]"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onClick={handleMouseClick}
+        >
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
               <div className="flex flex-col items-center space-y-2">
@@ -769,8 +872,26 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                     onTouchCancel={() => setIsDrawing(false)}
                   />
                 </div>
-              </div>
+            </div>
           )}
+
+          {/* Touch/Click zones visual hint - only show when not in drawing mode */}
+          {!annotationMode || activeTool === "select" ? (
+            <>
+              {/* Left tap zone */}
+              <div className="absolute left-0 top-0 w-1/3 h-full z-10 flex items-center justify-start pl-4 opacity-0 hover:opacity-20 transition-opacity pointer-events-none">
+                <div className="bg-primary/30 rounded-full p-2">
+                  <ChevronLeft className="h-6 w-6 text-primary" />
+                </div>
+              </div>
+              {/* Right tap zone */}
+              <div className="absolute right-0 top-0 w-1/3 h-full z-10 flex items-center justify-end pr-4 opacity-0 hover:opacity-20 transition-opacity pointer-events-none">
+                <div className="bg-primary/30 rounded-full p-2">
+                  <ChevronRight className="h-6 w-6 text-primary" />
+                </div>
+              </div>
+            </>
+          ) : null}
 
           {signedUrl && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30">
