@@ -11,36 +11,113 @@ export function useUserModuleGrants(userId?: string) {
     let cancelled = false;
 
     async function fetchGrants() {
-      if (!userId) {
-        setGrants([]);
-        setLoading(false);
-        return;
-      }
-
       try {
         setLoading(true);
         setError(null);
+        
+        console.log('🔧 useUserModuleGrants: fetchGrants called with userId:', userId);
 
+        // If no userId, try to get current user
+        let targetUserId = userId;
+        if (!targetUserId) {
+          const { data: { user } } = await supabase.auth.getUser();
+          targetUserId = user?.id;
+          console.log('🔧 useUserModuleGrants: Got current user ID:', targetUserId);
+        }
+
+        if (!targetUserId) {
+          console.log('🔧 useUserModuleGrants: No user ID available, returning empty grants');
+          setGrants([]);
+          setLoading(false);
+          return;
+        }
+
+        // First check if user is admin/super-admin
+        const { data: profileData } = await supabase
+          .from('gw_profiles')
+          .select('is_admin, is_super_admin, role')
+          .eq('user_id', targetUserId)
+          .single();
+
+        console.log('🔧 useUserModuleGrants: User profile:', profileData);
+
+        // If super admin, grant access to all modules
+        if (profileData?.is_super_admin || profileData?.role === 'super-admin') {
+          console.log('🔧 useUserModuleGrants: User is super admin, granting all modules');
+          const { data: allModules } = await supabase
+            .from('gw_modules')
+            .select('key, name, category')
+            .eq('is_active', true);
+
+          const allGrants: ModuleGrant[] = (allModules || []).map(module => ({
+            module_key: module.key || module.name,
+            module_name: module.name,
+            can_view: true,
+            can_manage: true,
+            category: module.category || 'general'
+          }));
+
+          setGrants(allGrants);
+          setLoading(false);
+          return;
+        }
+
+        // Try the RPC function
         const { data, error } = await supabase.rpc('get_user_modules', { 
-          p_user: userId 
+          p_user: targetUserId 
         });
 
         if (!cancelled) {
           if (error) {
-            console.error('Error fetching user module grants:', error);
+            console.error('🔧 useUserModuleGrants: RPC error:', error);
             setError(error.message);
             setGrants([]);
           } else {
-            setGrants((data as any[])?.map(item => ({
-              ...item,
-              category: item.category || 'general'
-            })) || []);
+            console.log('🔧 useUserModuleGrants: RPC data:', data);
+            // The RPC returns array of tuples, need to parse them
+            const parsedGrants: ModuleGrant[] = (data || []).map((item: any) => {
+              try {
+                // If it's a string in tuple format, parse it
+                if (typeof item === 'string') {
+                  const match = item.match(/\(([^,]+),([^,]+),([^,]+),([^,]+),([^)]+)\)/);
+                  if (match) {
+                    return {
+                      module_key: match[1],
+                      module_name: match[2],
+                      can_view: match[3] === 't',
+                      can_manage: match[4] === 't',
+                      category: 'general'
+                    };
+                  }
+                }
+                // Otherwise assume it's an object
+                return {
+                  module_key: item.module_key || item.module_name || 'unknown',
+                  module_name: item.module_name || item.module_key || 'unknown',
+                  can_view: item.can_view ?? item.has_access ?? true,
+                  can_manage: item.can_manage ?? false,
+                  category: item.category || 'general'
+                };
+              } catch (err) {
+                console.error('🔧 useUserModuleGrants: Error parsing item:', item, err);
+                return {
+                  module_key: 'error',
+                  module_name: 'error',
+                  can_view: false,
+                  can_manage: false,
+                  category: 'general'
+                };
+              }
+            }).filter(grant => grant.module_key !== 'error' && grant.module_key !== 'unknown');
+            
+            console.log('🔧 useUserModuleGrants: Parsed grants:', parsedGrants);
+            setGrants(parsedGrants);
           }
           setLoading(false);
         }
       } catch (err) {
         if (!cancelled) {
-          console.error('Unexpected error fetching user module grants:', err);
+          console.error('🔧 useUserModuleGrants: Unexpected error:', err);
           setError(err instanceof Error ? err.message : 'Unknown error');
           setGrants([]);
           setLoading(false);

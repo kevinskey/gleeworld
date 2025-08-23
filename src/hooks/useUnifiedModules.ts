@@ -115,9 +115,11 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
   const modules = allModules.map(module => {
     const grant = moduleGrants.find(g => g.module_key === module.id || g.module_key === module.name);
     
+    console.log(`🔍 Processing module ${module.id}: grant =`, grant);
+    
     // Find the corresponding frontend module definition
     const frontendModule = UNIFIED_MODULES.find(fm => 
-      fm.id === module.id || 
+      fm.id === module.id ||
       fm.name === module.name || 
       fm.dbFunctionName === module.id ||
       fm.dbFunctionName === module.name
