@@ -170,23 +170,6 @@ export const MODULAR_PLUGINS: ModularPlugin[] = [
     lockFromChanges: false,
     dbFunctionName: 'analytics_reporting'
   },
-  {
-    id: 'communications-hub',
-    name: 'Communications Hub',
-    title: 'Internal Communications',
-    description: 'Announcements, messages, and internal communication',
-    icon: MessageSquare,
-    iconColor: 'text-cyan-600',
-    category: 'communication',
-    isActive: true,
-    component: (() => null) as any, // Will be loaded dynamically
-    componentPath: '@/components/modules/CommunicationsModule',
-    adminConfigurable: true,
-    lockFromChanges: false,
-    sendEmails: true,
-    sendNotifications: true,
-    dbFunctionName: 'communications_hub'
-  }
 ];
 
 // Plugin categories for organization

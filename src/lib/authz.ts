@@ -31,7 +31,7 @@ export type ModuleKey =
   | 'merch-store'
   | 'hero-manager'
   | 'student-conductor'
-  | 'internal-communications'
+  
   | 'email'
   | 'public-relations'
   | 'glee-writing'

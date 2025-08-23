@@ -128,7 +128,7 @@ const getModuleComponent = (moduleName: string) => {
     'media-library': MediaLibrary,
     'executive-board': ExecutiveBoardNavigationHub,
     'executive-functions': ExecutiveBoardNavigationHub,
-    'internal-communications': EmailManagementModule,
+    
     'merch-store': PRHubModule, // Placeholder - needs actual component
     'tour-management': EventPlannerModule, // Placeholder
     'ai-tools': AIFinancialPlanningModule, // Reuse for now

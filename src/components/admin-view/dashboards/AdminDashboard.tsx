@@ -119,7 +119,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         { id: "email-management", title: "Email Management", icon: Mail, color: "blue" },
         { id: "buckets-of-love", title: "Buckets of Love", icon: Heart, color: "pink" },
         { id: "glee-writing", title: "Glee Writing Widget", icon: Edit3, color: "indigo", isNew: true },
-        { id: "internal-communications", title: "Internal Communications", icon: MessageSquare, color: "green" },
+        
         { id: "scheduling-module", title: "Scheduling Module", icon: Clock, color: "cyan" },
         { id: "calendar-management", title: "Calendar Management", icon: Calendar, color: "purple" }
       ]

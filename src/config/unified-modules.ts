@@ -206,18 +206,6 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "glee-writing"
   },
   {
-    id: "internal-communications",
-    name: "internal-communications", 
-    title: "Internal Communications",
-    description: "Internal messaging and announcements",
-    icon: MessageSquare,
-    iconColor: "green",
-    category: "communications",
-    isActive: true,
-    component: UserManagementModule, // TODO: Replace with actual component
-    dbFunctionName: "internal-communications"
-  },
-  {
     id: "pr-coordinator",
     name: "pr-coordinator",
     title: "PR & Media Hub",

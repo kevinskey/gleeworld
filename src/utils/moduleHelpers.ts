@@ -34,7 +34,7 @@ export const STANDARD_MODULE_NAMES = {
   // Communications
   'notifications': 'Notifications',
   'email-management': 'Email Management',
-  'internal-communications': 'Internal Communications',
+  
   
   // Other modules
   'alumnae-portal': 'Alumnae Portal',
