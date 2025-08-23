@@ -172,7 +172,8 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <CommunityHubWidget />
               <AuditionStatsWidget />
             </div>
           </CardContent>
