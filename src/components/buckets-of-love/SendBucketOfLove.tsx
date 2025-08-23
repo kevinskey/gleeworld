@@ -93,6 +93,9 @@ const SendBucketOfLove: React.FC<SendBucketOfLoveProps> = ({ trigger }) => {
   };
 
   const handleSend = async () => {
+    // Prevent multiple submissions
+    if (loading) return;
+    
     if (!message.trim()) {
       toast({
         title: "Error",
@@ -142,7 +145,7 @@ const SendBucketOfLove: React.FC<SendBucketOfLoveProps> = ({ trigger }) => {
         if (error) throw error;
       } else {
         // Send to group - call edge function to handle group sending
-        const { error } = await supabase.functions.invoke('send-bucket-of-love-to-group', {
+        const { data, error } = await supabase.functions.invoke('send-bucket-of-love-to-group', {
           body: {
             message: message.trim(),
             note_color: noteColor,
@@ -153,6 +156,8 @@ const SendBucketOfLove: React.FC<SendBucketOfLoveProps> = ({ trigger }) => {
         });
 
         if (error) throw error;
+        
+        console.log('Group send response:', data);
       }
 
       toast({
@@ -160,13 +165,8 @@ const SendBucketOfLove: React.FC<SendBucketOfLoveProps> = ({ trigger }) => {
         description: `Bucket of love sent to ${sendType === 'individual' ? 'recipient' : 'group'}! 💙`,
       });
 
-      // Reset form
-      setMessage('');
-      setNoteColor('yellow');
-      setIsAnonymous(false);
-      setDecorations('');
-      setSelectedUser('');
-      setSelectedGroup('');
+      // Reset form and close dialog
+      resetForm();
       setIsOpen(false);
 
     } catch (error) {
