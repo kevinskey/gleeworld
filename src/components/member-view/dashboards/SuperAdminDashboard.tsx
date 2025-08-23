@@ -836,10 +836,9 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                 </Card>
 
 
-                {/* Community Hub & Announcements Section */}
+                {/* Announcements Section */}
                 <div className="md:col-span-2 lg:col-span-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <CommunityHubWidget />
+                  <div className="grid grid-cols-1 gap-6">
                     <AnnouncementsEventsSection upcomingEvents={formattedUpcomingEvents} />
                   </div>
                   {/* Unified Calendar for Super Admins (collapsed by default) */}

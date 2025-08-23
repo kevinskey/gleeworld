@@ -75,10 +75,6 @@ export const UnifiedDashboard = () => {
             <div className="self-center w-full"><DashboardFeaturesCarousel /></div>
           </div>
 
-          {/* Community Hub for Members */}
-          <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
-            <CommunityHubModule />
-          </div>
 
           {/* Calendar Section */}
           <div className="bg-card rounded-lg border shadow-sm">
@@ -242,30 +238,6 @@ export const UnifiedDashboard = () => {
         </div>
       </div>
 
-      {/* Row 2: Community Hub full width (collapsible when a module is active) */}
-      <div className="px-6 pb-2">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Users className="w-4 h-4" /> Community Hub
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-controls="community-hub"
-            aria-expanded={!activeModuleId}
-            onClick={() => setActiveModuleId((prev) => (prev ? null : 'collapsed-toggle'))}
-          >
-            {activeModuleId ? 'Expand' : 'Collapse'}
-          </Button>
-        </div>
-        <div
-          id="community-hub"
-          className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden transition-[max-height,opacity] duration-300"
-          style={{ maxHeight: activeModuleId ? 0 : 'calc(45vh + 400px)', opacity: activeModuleId ? 0 : 1 }}
-        >
-          <CommunityHubModule />
-        </div>
-      </div>
       {/* Row 3: Unified Calendar visible to all logged-in users */}
       <div className="px-6 pb-6">
         <div className="mb-2">

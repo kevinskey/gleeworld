@@ -322,19 +322,7 @@ const UserDashboard = React.memo(() => {
 
         {/* Community Hub */}
         <div className="w-full">
-          {/* Mobile Layout */}
-          <div className="flex flex-col md:hidden gap-4">
-            <div>
-              <CommunityHubWidget />
-            </div>
-          </div>
-
-          {/* Desktop Layout */}
-          <div className="hidden md:flex gap-4">
-            <div className="w-full">
-              <CommunityHubWidget />
-            </div>
-          </div>
+          {/* Content removed - Community Hub section deleted */}
         </div>
 
         {/* Executive Board Dashboard Section */}

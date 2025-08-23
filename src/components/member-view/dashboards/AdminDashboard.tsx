@@ -665,8 +665,6 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       {/* Communication Center Module */}
       <CommunicationCenterModule />
 
-      {/* Community Hub */}
-      <CommunityHubWidget />
 
       {/* Unified Calendar (collapsed by default) */}
       <div className="mt-4">
