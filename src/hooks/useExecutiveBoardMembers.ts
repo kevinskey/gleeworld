@@ -17,33 +17,37 @@ export const useExecutiveBoardMembers = () => {
       try {
         setLoading(true);
         
-        // Fetch from the actual database table
-        const { data: execMembers, error } = await supabase
+        // Get executive board members
+        const { data: boardMembers, error: boardError } = await supabase
           .from('gw_executive_board_members')
-          .select(`
-            user_id,
-            position,
-            gw_profiles (
-              full_name,
-              email
-            )
-          `)
+          .select('*')
           .eq('is_active', true);
-
-        if (error) {
-          console.error('Error fetching exec board members:', error);
+        
+        if (boardError) {
+          console.error('Error fetching board members:', boardError);
           setMembers([]);
           return;
         }
 
-        const formattedMembers = execMembers?.map(member => ({
-          user_id: member.user_id || '',
-          position: member.position,
-          full_name: (member.gw_profiles as any)?.full_name || '',
-          email: (member.gw_profiles as any)?.email || ''
-        })) || [];
+        // Get profile data for each member
+        const memberProfiles = await Promise.all(
+          (boardMembers || []).map(async (member) => {
+            const { data: profile } = await supabase
+              .from('gw_profiles')
+              .select('full_name, email')
+              .eq('user_id', member.user_id)
+              .maybeSingle();
+            
+            return {
+              user_id: member.user_id,
+              position: member.position,
+              full_name: profile?.full_name || '',
+              email: profile?.email || ''
+            };
+          })
+        );
 
-        setMembers(formattedMembers);
+        setMembers(memberProfiles);
       } catch (error) {
         console.error('Error fetching executive board members:', error);
         setMembers([]);
