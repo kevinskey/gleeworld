@@ -15399,6 +15399,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      cleanup_user_duplicate_buckets: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       convert_auditioner_images_to_avatars: {
         Args: Record<PropertyKey, never>
         Returns: number
