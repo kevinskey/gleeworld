@@ -38,7 +38,10 @@ import {
   FileText,
   UserCog,
   ChevronDown,
-  GraduationCap
+  GraduationCap,
+  Heart,
+  BookOpen,
+  Globe
 } from "lucide-react";
 
 interface HeaderProps {
@@ -249,21 +252,19 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   // Dashboard views for super-admin dropdown
   const dashboardViews = [
     { id: 'personal', label: 'My Dashboard', icon: User, route: '/dashboard' },
-    { id: 'members', label: 'Members Dashboard', icon: Users, route: '/members' },
-    ...(isSuperAdmin ? [{ id: 'alumnae', label: 'Alumnae Portal Admin', icon: GraduationCap, route: '/admin/alumnae' }] : [])
+    { id: 'fan', label: 'Fan', icon: Heart, route: '/dashboard/fan' },
+    { id: 'alumnae', label: 'Alumnae', icon: GraduationCap, route: '/dashboard/alumnae' },
+    { id: 'mus240', label: 'MUS 240 Class', icon: BookOpen, route: '/dashboard/mus240' },
+    { id: 'public', label: 'Public', icon: Globe, route: '/dashboard/public' }
   ];
 
   const getCurrentDashboardView = () => {
-    if (location.pathname === '/members') return 'Members Dashboard';
-    if (location.pathname.startsWith('/dashboard/member-view/')) {
-      if (userProfile?.is_exec_board) return 'Executive Board Dashboard';
-      if (userProfile?.role === 'alumnae') return 'Alumnae Dashboard'; 
-      if (userProfile?.role === 'auditioner') return 'Auditioner Dashboard';
-      return 'Member Dashboard';
-    }
-    if (location.pathname === '/admin/alumnae') return 'Alumnae Portal Admin';
+    if (location.pathname === '/dashboard/fan') return 'Fan';
+    if (location.pathname === '/dashboard/alumnae') return 'Alumnae';
+    if (location.pathname === '/dashboard/mus240') return 'MUS 240 Class';
+    if (location.pathname === '/dashboard/public') return 'Public';
     if (location.pathname === '/dashboard') return 'My Dashboard';
-    return 'Dashboard';
+    return 'Super Admin Dashboard';
   };
 
   const handleMobileNavClick = (itemId: string, route?: string) => {
