@@ -281,18 +281,6 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "user-management"
   },
   {
-    id: "executive-board-management",
-    name: "executive-board-management",
-    title: "Executive Board Management",
-    description: "Manage executive board positions, assignments, and responsibilities",
-    icon: Users,
-    iconColor: "indigo",
-    category: "member-management",
-    isActive: true,
-    component: UserManagementModule, // TODO: Replace with actual ExecBoardModule
-    dbFunctionName: "executive-board-management"
-  },
-  {
     id: "alumnae-portal",
     name: "alumnae-portal",
     title: "Alumnae Portal",
@@ -304,18 +292,6 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: AlumnaePortalModule,
     dbFunctionName: "alumnae-portal",
     requiredRoles: ["alumni", "admin"]
-  },
-  {
-    id: "executive-functions",
-    name: "executive-functions",
-    title: "Executive Functions",
-    description: "Role-specific executive board functions and responsibilities",
-    icon: Shield,
-    iconColor: "purple",
-    category: "member-management",
-    isActive: true,
-    component: UserManagementModule, // TODO: Replace with actual ExecFunctionsModule
-    dbFunctionName: "executive-functions"
   },
   {
     id: "auditions",
