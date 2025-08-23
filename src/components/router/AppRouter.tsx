@@ -139,22 +139,6 @@ export const router = createBrowserRouter([
     element: <AlumnaeAdmin />,
   },
   {
-    path: "/admin/exec-board-monitor",
-    element: (
-      <div style={{padding: '20px', backgroundColor: 'red', color: 'white', fontSize: '24px'}}>
-        EXECUTIVE BOARD MONITOR IS WORKING!
-      </div>
-    ),
-  },
-  {
-    path: "/test-route-working",
-    element: (
-      <div style={{padding: '20px', backgroundColor: 'green', color: 'white', fontSize: '24px'}}>
-        TEST ROUTE IS WORKING!
-      </div>
-    ),
-  },
-  {
     path: "/setup-admin",
     element: <SetupAdmin />,
   },

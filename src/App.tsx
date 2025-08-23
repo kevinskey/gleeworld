@@ -83,6 +83,7 @@ import AdminScholarships from "./pages/AdminScholarships";
 import AdminProducts from "./pages/AdminProducts";
 import { SectionLeaderDashboard } from "./pages/SectionLeaderDashboard";
 import { SectionalManagement } from "./pages/SectionalManagement";
+import { ExecutiveBoardMonitor } from "./pages/admin/ExecutiveBoardMonitor";
 import { SRFManagement } from "./pages/SRFManagement";
 
 // Admin module pages
@@ -630,14 +631,12 @@ const App = () => {
                               <AlumnaeAdmin />
                             </ProtectedRoute>
                           } 
-                         />
+                        />
                          <Route 
                            path="/admin/exec-board-monitor" 
                            element={
                              <ProtectedRoute>
-                               <div style={{padding: '40px', backgroundColor: '#dc2626', color: 'white', fontSize: '32px', textAlign: 'center'}}>
-                                 🎉 EXECUTIVE BOARD MONITOR IS NOW WORKING! 🎉
-                               </div>
+                               <ExecutiveBoardMonitor />
                              </ProtectedRoute>
                            } 
                          />
