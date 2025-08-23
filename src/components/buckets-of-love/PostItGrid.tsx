@@ -133,11 +133,8 @@ export const PostItGrid: React.FC = () => {
       </div>
 
       <div className={cn(
-        'grid gap-1 md:gap-2',
-        'grid-cols-3',
-        'md:grid-cols-4',
-        'lg:grid-cols-6',
-        'xl:grid-cols-8'
+        'grid gap-1',
+        'grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12'
       )} aria-label="Buckets of love post-it grid">
         {loading ? (
           Array.from({ length: slots }).map((_, i) => (
