@@ -91,19 +91,19 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
 
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-1">
               <Music className="h-4 w-4 text-muted-foreground" />
               <h4 className="font-semibold">{integratedPiece.title}</h4>
             </div>
-            <p className="text-sm text-muted-foreground mb-3">
+            <p className="text-sm text-muted-foreground mb-2">
               by {integratedPiece.composer || 'Unknown'}
             </p>
             
             {/* Integration Status Badges */}
-            <div className="flex items-center gap-2 mb-3">{integratedPiece.setlists.length > 0 && (
+            <div className="flex items-center gap-2 mb-2">{integratedPiece.setlists.length > 0 && (
                 <Badge variant="secondary" className="text-xs flex items-center gap-1">
                   <List className="h-3 w-3" />
                   {integratedPiece.setlists.length} setlist{integratedPiece.setlists.length > 1 ? 's' : ''}
