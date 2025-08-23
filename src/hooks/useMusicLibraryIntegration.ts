@@ -89,40 +89,55 @@ export const useMusicLibraryIntegration = () => {
 
     setLoading(true);
     try {
-      // We need to use the useStudyScores hook with the specific piece
-      // For now, let's create the study score manually since we can't pass parameters to createFromCurrent
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { useAuth } = await import('@/contexts/AuthContext');
+      // Use the createFromCurrent function which handles the full study score creation flow
+      const studyScore = await createFromCurrent();
       
-      // This is a simplified implementation - in a full app you'd want to extract this logic
-      // into a utility function or modify the useStudyScores hook to accept parameters
-      
-      // For now, just open the PDF in a new tab with a note about study scores
-      window.open(piece.pdf_url, '_blank');
-      
-      toast({
-        title: "Study Score",
-        description: "PDF opened in new tab. Full study score integration coming soon!",
-      });
-      
-      return true;
+      if (studyScore) {
+        toast({
+          title: "Study Score Created",
+          description: "Your personal study score has been created and will open for annotation.",
+        });
+        
+        // Open the newly created study score in the in-app viewer with annotation mode
+        const pdfViewerEvent = new CustomEvent('openPDFViewer', {
+          detail: {
+            url: studyScore.pdf_url,
+            title: studyScore.title,
+            id: studyScore.id,
+            enableAnnotations: true
+          }
+        });
+        window.dispatchEvent(pdfViewerEvent);
+        
+        return true;
+      } else {
+        return false;
+      }
     } catch (error) {
       console.error('Error creating study score:', error);
       toast({
         title: "Error",
-        description: "Failed to open study score.",
+        description: "Failed to create study score.",
         variant: "destructive",
       });
       return false;
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, createFromCurrent]);
 
   const openStudyScore = useCallback((studyScore: any) => {
     if (studyScore.pdf_url) {
-      // Open in study mode or new tab
-      window.open(studyScore.pdf_url, '_blank');
+      // Open in the in-app PDF viewer with annotation capabilities
+      const pdfViewerEvent = new CustomEvent('openPDFViewer', {
+        detail: {
+          url: studyScore.pdf_url,
+          title: studyScore.title,
+          id: studyScore.id,
+          enableAnnotations: true
+        }
+      });
+      window.dispatchEvent(pdfViewerEvent);
     }
   }, []);
 
