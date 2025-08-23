@@ -29,9 +29,18 @@ export const useExecutiveBoardMembers = () => {
           return;
         }
 
-        // Get profile data for each member
+        // Remove duplicates by keeping the most recent entry for each position
+        const uniqueMembers = boardMembers?.reduce((acc, member) => {
+          const existing = acc.find(m => m.position === member.position);
+          if (!existing || new Date(member.created_at) > new Date(existing.created_at)) {
+            return [...acc.filter(m => m.position !== member.position), member];
+          }
+          return acc;
+        }, [] as typeof boardMembers) || [];
+
+        // Get profile data for each unique member
         const memberProfiles = await Promise.all(
-          (boardMembers || []).map(async (member) => {
+          uniqueMembers.map(async (member) => {
             const { data: profile } = await supabase
               .from('gw_profiles')
               .select('full_name, email')

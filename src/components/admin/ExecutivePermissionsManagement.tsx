@@ -27,49 +27,48 @@ export const ExecutivePermissionsManagement = () => {
           .select('*')
           .eq('is_active', true);
 
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('gw_profiles')
-          .select('user_id, full_name, email');
-
-        if (membersError || profilesError) {
-          console.error('Error fetching data:', { membersError, profilesError });
+        if (membersError) {
+          console.error('Error fetching board members:', membersError);
+          setExecutiveMembers([]);
           return;
         }
 
-        // Create entries for ALL executive positions
-        const allPositions = EXECUTIVE_POSITIONS.map(position => {
-          // Find if there's a member assigned to this position
-          const assignedMember = membersData?.find(member => member.position === position.value);
-          
-          if (assignedMember) {
-            // If member found, get their profile
-            const profile = profilesData?.find(p => p.user_id === assignedMember.user_id);
+        // Get unique members (in case of duplicates) and get their profiles
+        const uniqueMembers = membersData?.reduce((acc, member) => {
+          // Keep the most recent entry for each position
+          const existing = acc.find(m => m.position === member.position);
+          if (!existing || new Date(member.created_at) > new Date(existing.created_at)) {
+            return [...acc.filter(m => m.position !== member.position), member];
+          }
+          return acc;
+        }, [] as typeof membersData) || [];
+
+        const memberProfiles = await Promise.all(
+          uniqueMembers.map(async (member) => {
+            const { data: profile } = await supabase
+              .from('gw_profiles')
+              .select('full_name, email')
+              .eq('user_id', member.user_id)
+              .maybeSingle();
+            
             return {
-              id: assignedMember.id,
-              user_id: assignedMember.user_id,
-              position: position.value,
+              id: member.id,
+              user_id: member.user_id,
+              position: member.position,
               full_name: profile?.full_name || profile?.email || 'Unknown Member',
               email: profile?.email || ''
             };
-          } else {
-            // If no member assigned, create placeholder
-            return {
-              id: `empty_${position.value}`,
-              user_id: '',
-              position: position.value,
-              full_name: `${position.label} (No member assigned)`,
-              email: ''
-            };
-          }
-        });
+          })
+        );
 
-        setExecutiveMembers(allPositions);
+        setExecutiveMembers(memberProfiles);
         
         // Set "none" as default selection
         setSelectedMember("none");
         setActivePosition(EXECUTIVE_POSITIONS[0]);
       } catch (error) {
         console.error('Error fetching executive members:', error);
+        setExecutiveMembers([]);
       } finally {
         setLoading(false);
       }
