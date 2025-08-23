@@ -23,6 +23,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { useMusicLibraryIntegration, MusicPieceIntegration } from '@/hooks/useMusicLibraryIntegration';
 
 interface MusicLibraryCardProps {
@@ -152,32 +153,37 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
           <div className="flex gap-2">
             {/* Primary Actions */}
             {piece.pdf_url && (
-              <Button size="sm" variant="outline" asChild>
-                <a href={piece.pdf_url} target="_blank" rel="noopener noreferrer">
-                  <Download className="h-4 w-4 mr-1" />
-                  PDF
-                </a>
-              </Button>
+              <EnhancedTooltip content="Download sheet music PDF">
+                <Button size="sm" variant="outline" asChild>
+                  <a href={piece.pdf_url} target="_blank" rel="noopener noreferrer">
+                    <Download className="h-4 w-4 mr-1" />
+                    PDF
+                  </a>
+                </Button>
+              </EnhancedTooltip>
             )}
             
             {piece.audio_preview_url && (
-              <Button size="sm" variant="outline" asChild>
-                <a href={piece.audio_preview_url} target="_blank" rel="noopener noreferrer">
-                  <Play className="h-4 w-4 mr-1" />
-                  Audio
-                </a>
-              </Button>
+              <EnhancedTooltip content="Listen to audio preview">
+                <Button size="sm" variant="outline" asChild>
+                  <a href={piece.audio_preview_url} target="_blank" rel="noopener noreferrer">
+                    <Play className="h-4 w-4 mr-1" />
+                    Audio
+                  </a>
+                </Button>
+              </EnhancedTooltip>
             )}
 
             {/* Study Score Actions */}
             {integratedPiece.hasStudyScore ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="default">
-                    <BookOpen className="h-4 w-4 mr-1" />
-                    Study
-                  </Button>
-                </DropdownMenuTrigger>
+              <EnhancedTooltip content="View or create study scores">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="default">
+                      <BookOpen className="h-4 w-4 mr-1" />
+                      Study
+                    </Button>
+                  </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuLabel>Study Scores</DropdownMenuLabel>
                   <DropdownMenuSeparator />
@@ -196,26 +202,30 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
                     Create New Study Score
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>
+                </DropdownMenu>
+              </EnhancedTooltip>
             ) : (
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={handleCreateStudyScore}
-                disabled={loading || !piece.pdf_url}
-              >
-                <BookOpen className="h-4 w-4 mr-1" />
-                Study
-              </Button>
+              <EnhancedTooltip content="Create study score for practice">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={handleCreateStudyScore}
+                  disabled={loading || !piece.pdf_url}
+                >
+                  <BookOpen className="h-4 w-4 mr-1" />
+                  Study
+                </Button>
+              </EnhancedTooltip>
             )}
 
             {/* More Actions Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="ghost">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
+            <EnhancedTooltip content="More actions and setlist options">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="ghost">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuLabel>Add to Setlist</DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -237,7 +247,8 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
-            </DropdownMenu>
+              </DropdownMenu>
+            </EnhancedTooltip>
           </div>
         </div>
       </CardContent>
