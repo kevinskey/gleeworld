@@ -65,7 +65,8 @@ import {
   GripVertical,
   Globe,
   Zap,
-  Heart
+  Heart,
+  Eye
 } from "lucide-react";
 
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(module => ({ default: module.CalendarViews })));
@@ -596,9 +597,27 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
               <CollapsibleContent>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Executive Board Monitor - Only for Super Admin */}
+                    <Button
+                      variant="outline"
+                      className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-purple-200 hover:border-purple-300"
+                      onClick={() => navigate('/admin/exec-board-monitor')}
+                    >
+                      <div className="w-full">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Eye className="h-5 w-5 text-purple-600" />
+                          <Badge variant="secondary" className="text-xs">Super Admin Only</Badge>
+                        </div>
+                        <h3 className="font-semibold text-base lg:text-lg text-purple-700">Executive Board Monitor</h3>
+                        <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
+                          Monitor and oversee executive board member dashboards and activities
+                        </p>
+                      </div>
+                    </Button>
+                    
                     {allModules
                       .filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id))
-                      .slice(0, 6)
+                      .slice(0, 5)
                       .map((module) => (
                          <Button
                            key={module.id}
