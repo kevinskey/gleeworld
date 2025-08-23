@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import Index from "@/pages/Index";
 import Profile from "@/pages/Profile";
@@ -41,7 +40,21 @@ import LibrarianDashboardPage from "@/pages/LibrarianDashboardPage";
 import { Onboarding } from "@/pages/Onboarding";
 import { MessagingInterface } from '@/components/messaging/MessagingInterface';
 import StudentRegistration from "@/pages/StudentRegistration";
-import { ExecutiveBoardMonitorSimple } from "@/pages/admin/ExecutiveBoardMonitorSimple";
+
+// Simple test component for exec board monitor
+function ExecutiveBoardMonitorTest() {
+  return (
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-4">Executive Board Monitor</h1>
+        <p className="text-lg">This page is now loading correctly!</p>
+        <div className="mt-4 p-4 bg-green-100 rounded">
+          Route is working properly
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export const router = createBrowserRouter([
   {
@@ -142,7 +155,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin/exec-board-monitor",
-    element: <ExecutiveBoardMonitorSimple />,
+    element: <ExecutiveBoardMonitorTest />,
   },
   {
     path: "/setup-admin",
