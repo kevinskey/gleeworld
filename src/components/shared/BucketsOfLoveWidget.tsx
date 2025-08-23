@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import SendBucketOfLove from "@/components/buckets-of-love/SendBucketOfLove";
 import { Heart, Trash2 } from "lucide-react";
 import { cleanupDuplicateBuckets } from "@/utils/cleanupDuplicateBuckets";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export const BucketsOfLoveWidget = () => {
   const { toast } = useToast();
