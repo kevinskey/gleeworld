@@ -54,7 +54,7 @@ const NoteCard: React.FC<{
         'hover:shadow-md hover:scale-[1.01]',
         isPlaceholder && 'border-dashed bg-secondary/40'
       )}
-      title={isOwner && !isPlaceholder ? 'Tap to delete your note' : undefined}
+      title={!isPlaceholder ? 'Tap to delete this bucket of love' : undefined}
     >
       {/* tape strip */}
       <div className={`absolute -top-1 left-1/2 -translate-x-1/2 h-2.5 w-8 rounded-sm shadow ${getNoteClasses(noteColor || 'pink').tape}`} />
@@ -96,7 +96,7 @@ const NoteCard: React.FC<{
 
   if (isOwner && onDelete) {
     return (
-      <button type="button" onClick={onDelete} className="w-full" aria-label="Delete your note">
+      <button type="button" onClick={onDelete} className="w-full" aria-label="Delete this bucket of love">
         {card}
       </button>
     );
@@ -119,7 +119,7 @@ export const PostItGrid: React.FC = () => {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Tap a blank to add — tap yours to delete it.</p>
+        <p className="text-sm text-muted-foreground">Tap a blank to add — tap any bucket to delete it.</p>
         {/* Fallback add button when grid is full */}
         {items.placeholders === 0 && (
           <SendBucketOfLove
@@ -151,15 +151,27 @@ export const PostItGrid: React.FC = () => {
                 message={b.message}
                 sender={b.is_anonymous ? 'Anonymous' : b.sender_name || null}
                 noteColor={b.note_color}
-                isOwner={b.user_id === user?.id}
+                isOwner={true} // Allow deletion of any bucket
                 onDelete={async () => {
-                  const ok = window.confirm('Delete this note?');
+                  const isOwner = b.user_id === user?.id;
+                  const confirmMessage = isOwner 
+                    ? 'Delete your bucket of love?' 
+                    : `Delete this bucket of love from ${b.sender_name || 'Anonymous'}?`;
+                  
+                  const ok = window.confirm(confirmMessage);
                   if (!ok) return;
+                  
                   const res = await deleteBucket(b.id);
                   if (res.success) {
-                    toast({ title: 'Deleted', description: 'Your bucket of love was removed.' });
+                    toast({ 
+                      title: 'Deleted', 
+                      description: isOwner ? 'Your bucket of love was removed.' : 'Bucket of love was removed.'
+                    });
                   } else {
-                    toast({ title: 'Error', description: res.error || 'Could not delete note.' });
+                    toast({ 
+                      title: 'Error', 
+                      description: res.error || 'Could not delete note.' 
+                    });
                   }
                 }}
               />
