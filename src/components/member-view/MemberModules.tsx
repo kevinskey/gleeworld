@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Users } from 'lucide-react';
-import { useUnifiedModules } from "@/hooks/useUnifiedModules";
+import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
 import { UNIFIED_MODULE_CATEGORIES } from "@/config/unified-modules";
 
 // Import all available module components for mapping
@@ -153,19 +153,13 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
   // Use unified modules with role-based filtering and executive position
-  const { modules: availableModules, loading, getAccessibleModules } = useUnifiedModules({
-    userId: user.id, // Pass the user ID so permissions can be fetched
-    userRole: user.role,
-    execPosition: user.exec_board_role,
-    isAdmin: user.is_admin || user.is_super_admin,
-  });
-
+  const { getAccessibleModules, loading } = useSimplifiedModuleAccess(user.id);
   const accessibleModules = getAccessibleModules();
 
   const handleModuleClick = (moduleId: string) => {
-    const module = availableModules.find(m => m.id === moduleId);
+    const module = accessibleModules.find(m => m.id === moduleId);
     
-    if (module && module.hasPermission && module.hasPermission('view')) {
+    if (module) {
       // Toggle behavior: if same module is clicked, close it
       if (selectedModule === moduleId) {
         setSelectedModule(null);
@@ -178,7 +172,7 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
   const renderModuleComponent = () => {
     if (!selectedModule) return null;
     
-    const module = availableModules.find(m => m.id === selectedModule);
+    const module = accessibleModules.find(m => m.id === selectedModule);
     if (!module) return null;
     
     // Get the component using the module name mapping
@@ -271,7 +265,7 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
                 </div>
 
                 <div className="grid gap-2">
-                  {modules.map((module) => (
+                  {(modules as any[]).map((module) => (
                      <Card
                        key={module.id}
                        className="cursor-pointer bg-blue-50/30 hover:bg-blue-100/50 border border-blue-200/40 transition-colors"
@@ -283,16 +277,7 @@ export const MemberModules: React.FC<MemberModulesProps> = ({ user }) => {
                             <div className="flex items-center gap-2 mb-1">
                               <h5 className="font-medium text-sm md:text-base lg:text-lg">{module.title}</h5>
                               <div className="flex gap-1">
-                                {module.canAccess && (
-                                  <Badge variant="outline" className="text-xs px-1 py-0">
-                                    View
-                                  </Badge>
-                                )}
-                                {module.canManage && (
-                                  <Badge variant="outline" className="text-xs px-1 py-0 bg-brand-50 border-brand-200">
-                                    Manage
-                                  </Badge>
-                                )}
+                               {/* Access indicators can be added later if needed */}
                               </div>
                             </div>
                              <p className="text-xs md:text-sm lg:text-base text-muted-foreground line-clamp-2">

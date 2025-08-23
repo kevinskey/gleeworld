@@ -1,272 +1,220 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Crown, 
-  Users, 
-  Calendar, 
-  FileText, 
-  MessageSquare, 
-  BarChart3, 
-  Bus, 
-  Music, 
-  Settings,
-  ChevronRight,
-  Clock,
-  Bell
-} from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { Crown, Settings, Users, Calendar, MessageSquare, ChevronRight } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useAuth } from '@/contexts/AuthContext';
+import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
+import { UNIFIED_MODULES } from '@/config/unified-modules';
 
-interface ModuleItem {
-  id: string;
-  name: string;
-  description: string;
-  icon: any;
-  route?: string;
-  count?: number;
-  priority?: 'high' | 'medium' | 'low';
-  lastActivity?: string;
-  category: 'logistics' | 'management' | 'communication' | 'analytics' | 'planning';
-}
-
-interface ExecBoardModulePanelProps {
-  userEmail?: string;
-  className?: string;
-}
-
-export const ExecBoardModulePanel = ({ userEmail, className }: ExecBoardModulePanelProps) => {
+export const ExecBoardModulePanel = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [userModules, setUserModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [quickAccessCollapsed, setQuickAccessCollapsed] = useState(false);
 
-  // Executive Board Modules Configuration
-  const execModules: ModuleItem[] = [
-    {
-      id: 'tours-logistics',
-      name: 'Tours & Logistics',
-      description: 'Coordinate tours, travel, and concert logistics',
-      icon: Bus,
-      route: '/executive-dashboard',
-      category: 'logistics',
-      priority: 'high'
-    },
-    {
-      id: 'concert-management',
-      name: 'Concert Management',
-      description: 'Manage concert planning and coordination',
-      icon: Music,
-      route: '/executive-dashboard',
-      category: 'planning',
-      priority: 'high'
-    },
-    {
-      id: 'task-manager',
-      name: 'Task Management',
-      description: 'Assign and track executive board tasks',
-      icon: FileText,
-      route: '/executive-dashboard',
-      category: 'management',
-      priority: 'medium'
-    },
-    {
-      id: 'communications',
-      name: 'Communications',
-      description: 'Internal exec board communications',
-      icon: MessageSquare,
-      route: '/executive-dashboard',
-      category: 'communication',
-      priority: 'medium'
-    },
-    {
-      id: 'executive-calendar',
-      name: 'Executive Calendar',
-      description: 'Shared calendar for executive board',
-      icon: Calendar,
-      route: '/executive-dashboard',
-      category: 'planning',
-      priority: 'medium'
-    },
-    {
-      id: 'reports-analytics',
-      name: 'Reports & Analytics',
-      description: 'Executive board reports and analytics',
-      icon: BarChart3,
-      route: '/executive-dashboard',
-      category: 'analytics',
-      priority: 'low'
-    }
-  ];
+  const { getAccessibleModules, loading: accessLoading } = useSimplifiedModuleAccess();
 
-  // Load user's enabled modules
   useEffect(() => {
-    const loadUserModules = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('gw_executive_board_members')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .single();
+    if (!user) return;
+    
+    const accessibleModules = getAccessibleModules();
+    const moduleIds = accessibleModules.map(module => module.id);
+    setUserModules(moduleIds);
+    setLoading(false);
+  }, [user, getAccessibleModules]);
 
-        if (error) {
-          console.error('Error loading executive board info:', error);
-          return;
-        }
-
-        if (data) {
-          // Executive board members get access to all executive modules by default
-          const execModuleIds = execModules.map(module => module.id);
-          setUserModules(execModuleIds);
-        }
-      } catch (error) {
-        console.error('Error in loadUserModules:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserModules();
-  }, [user]);
-
-  const handleModuleClick = (module: ModuleItem) => {
-    if (module.route) {
-      navigate(module.route);
-    } else {
-      toast({
-        title: "Module Access",
-        description: `Opening ${module.name}...`,
-      });
+  const handleModuleClick = (moduleId: string) => {
+    if (userModules.includes(moduleId)) {
+      setSelectedModule(moduleId);
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'logistics': return 'text-blue-600 bg-blue-100';
-      case 'management': return 'text-green-600 bg-green-100';
-      case 'communication': return 'text-purple-600 bg-purple-100';
-      case 'analytics': return 'text-orange-600 bg-orange-100';
-      case 'planning': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
+  const renderModuleComponent = () => {
+    if (!selectedModule) return null;
+    
+    const module = UNIFIED_MODULES.find(m => m.id === selectedModule);
+    if (!module) return null;
 
-  const getPriorityIcon = (priority?: string) => {
-    switch (priority) {
-      case 'high': return <Bell className="h-3 w-3 text-red-500" />;
-      case 'medium': return <Clock className="h-3 w-3 text-yellow-500" />;
-      default: return null;
-    }
-  };
-
-  if (loading) {
+    const IconComponent = module.icon;
+    
     return (
-      <Card className={`w-full ${className}`}>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Crown className="h-5 w-5 text-yellow-600" />
-            Executive Board
-          </CardTitle>
+      <Card className="mt-6">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <IconComponent className="h-6 w-6" />
+            <div>
+              <CardTitle>{module.title}</CardTitle>
+              <CardDescription>{module.description}</CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="text-center text-muted-foreground py-8">
+            <p>Module details coming soon...</p>
           </div>
         </CardContent>
       </Card>
     );
+  };
+
+  if (loading || accessLoading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="text-muted-foreground">Loading executive modules...</div>
+      </div>
+    );
   }
 
-  // Filter modules based on user's access
-  const availableModules = execModules.filter(module => 
-    userModules.includes(module.id)
+  // Get user's assigned modules with their details
+  const assignedModules = UNIFIED_MODULES.filter(module => 
+    module.isActive && userModules.includes(module.id)
   );
 
-  const groupedModules = availableModules.reduce((acc, module) => {
+  // Group modules by category for better organization
+  const modulesByCategory = assignedModules.reduce((acc, module) => {
     if (!acc[module.category]) {
       acc[module.category] = [];
     }
     acc[module.category].push(module);
     return acc;
-  }, {} as Record<string, ModuleItem[]>);
+  }, {} as Record<string, typeof assignedModules>);
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Executive': return Crown;
+      case 'Administrative': return Settings;
+      case 'Member Management': return Users;
+      case 'Event Planning': return Calendar;
+      case 'Communication': return MessageSquare;
+      default: return Settings;
+    }
+  };
 
   return (
-    <Card className={`w-full ${className}`}>
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Crown className="h-5 w-5 text-yellow-600" />
-          Executive Board
-        </CardTitle>
-        <div className="text-xs text-muted-foreground">
-          {userEmail || user?.email}
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="h-96">
-          <div className="p-4 space-y-4">
-            {Object.entries(groupedModules).map(([category, modules]) => (
-              <div key={category} className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Badge 
-                    variant="secondary" 
-                    className={`text-xs capitalize ${getCategoryColor(category)}`}
-                  >
-                    {category}
-                  </Badge>
+    <div className="space-y-6">
+      {/* Quick Access Section */}
+      <Card>
+        <Collapsible open={!quickAccessCollapsed} onOpenChange={setQuickAccessCollapsed}>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="hover:bg-accent/50 cursor-pointer">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Crown className="h-5 w-5 text-primary" />
+                    Quick Access
+                  </CardTitle>
+                  <CardDescription>
+                    Your most important executive modules
+                  </CardDescription>
                 </div>
-                
-                <div className="space-y-1">
-                  {modules.map((module) => (
-                    <Button
-                      key={module.id}
-                      variant="ghost"
-                      className="w-full justify-between h-auto p-2 hover:bg-accent/80"
-                      onClick={() => handleModuleClick(module)}
-                    >
-                      <div className="flex items-start gap-2 text-left">
-                        <module.icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate">
-                            {module.name}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {module.description}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        {getPriorityIcon(module.priority)}
-                        <ChevronRight className="h-3 w-3" />
-                      </div>
-                    </Button>
+                <ChevronRight className={`h-4 w-4 transition-transform ${!quickAccessCollapsed ? 'rotate-90' : ''}`} />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {assignedModules
+                  .filter(m => ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id))
+                  .slice(0, 5)
+                  .map((module) => (
+                     <Button
+                       key={module.id}
+                       variant="outline"
+                       className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent"
+                       onClick={() => setSelectedModule(module.id)}
+                     >
+                       <div className="w-full">
+                         <h3 className="font-semibold text-base lg:text-lg">{module.title}</h3>
+                         <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
+                           {module.description}
+                         </p>
+                       </div>
+                     </Button>
                   ))}
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
+
+      {/* Module Categories */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl lg:text-2xl font-semibold">
+            Module Access
+          </h2>
+          <Badge variant="secondary">
+            {assignedModules.length} modules available
+          </Badge>
+        </div>
+
+        {Object.entries(modulesByCategory).map(([category, modules]) => {
+          const CategoryIcon = getCategoryIcon(category);
+          
+          return (
+            <Card key={category}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CategoryIcon className="h-5 w-5" />
+                  {category}
+                </CardTitle>
+                <CardDescription>
+                  {modules.length} module{modules.length !== 1 ? 's' : ''} in this category
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {modules.map((module) => {
+                    const IconComponent = module.icon;
+                    const isSelected = selectedModule === module.id;
+                    
+                    return (
+                      <Button
+                        key={module.id}
+                        variant={isSelected ? "default" : "outline"}
+                        className="h-[120px] p-4 flex flex-col items-start gap-2 text-left hover:bg-accent"
+                        onClick={() => handleModuleClick(module.id)}
+                      >
+                        <div className="flex items-start justify-between w-full">
+                          <IconComponent className="h-5 w-5 flex-shrink-0" />
+                          {module.isNew && (
+                            <Badge variant="secondary" className="text-xs">New</Badge>
+                          )}
+                        </div>
+                        <div className="w-full">
+                          <h3 className="font-medium text-sm">{module.title}</h3>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {module.description}
+                          </p>
+                        </div>
+                      </Button>
+                    );
+                  })}
                 </div>
-                
-                {Object.keys(groupedModules).indexOf(category) < Object.keys(groupedModules).length - 1 && (
-                  <Separator className="my-2" />
-                )}
-              </div>
-            ))}
-            
-            {availableModules.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Crown className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No executive modules available</p>
-                <p className="text-xs">Contact admin for access</p>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Render selected module */}
+      {renderModuleComponent()}
+
+      {assignedModules.length === 0 && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Crown className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">No Modules Assigned</h3>
+            <p className="text-muted-foreground mb-4">
+              Contact an administrator to get access to executive modules.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };

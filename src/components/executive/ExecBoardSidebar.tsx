@@ -54,7 +54,7 @@ export const ExecBoardSidebar = ({ className }: ExecBoardSidebarProps) => {
             </Card>
 
             {/* Module Panel */}
-            <ExecBoardModulePanel userEmail={user?.email} />
+            <ExecBoardModulePanel />
           </div>
         )}
       </div>

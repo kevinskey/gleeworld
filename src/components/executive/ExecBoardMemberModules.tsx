@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Crown, Settings, Users, Calendar, MessageSquare } from 'lucide-react';
-import { useUserModulePermissions } from '@/hooks/useUserModulePermissions';
+import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
-import { supabase } from '@/integrations/supabase/client';
 
 interface ExecBoardMemberModulesProps {
   user: {
@@ -22,47 +21,10 @@ interface ExecBoardMemberModulesProps {
 
 export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
-  const [userModules, setUserModules] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { getUserPermissions } = useUserModulePermissions();
-
-  useEffect(() => {
-    const loadUserModules = async () => {
-      setLoading(true);
-      try {
-        // Check if user is an executive board member
-        const { data: execBoardData } = await supabase
-          .from('gw_executive_board_members')
-          .select('position')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (execBoardData) {
-          // Executive board members get access to all executive modules by default
-          const execModules = UNIFIED_MODULES.filter(m => 
-            m.category === 'Executive' && m.isActive
-          );
-          const execModuleIds = execModules.map(module => module.id);
-          setUserModules(execModuleIds);
-        } else {
-          // For non-executive board members, check permissions table
-          const modules = await getUserPermissions(user.id);
-          setUserModules(modules);
-        }
-      } catch (error) {
-        console.error('Error loading user modules:', error);
-        setUserModules([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserModules();
-  }, [user.id, getUserPermissions]);
+  const { getAccessibleModules, loading, hasAccess } = useSimplifiedModuleAccess(user.id);
 
   const handleModuleClick = (moduleId: string) => {
-    if (userModules.includes(moduleId)) {
+    if (hasAccess(moduleId)) {
       setSelectedModule(moduleId);
     }
   };
@@ -99,10 +61,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     );
   };
 
-  // Get user's assigned modules with their details
-  const assignedModules = UNIFIED_MODULES.filter(module => 
-    module.isActive && userModules.includes(module.id)
-  );
+  const assignedModules = getAccessibleModules();
 
   // Group modules by category
   const modulesByCategory = assignedModules.reduce((acc, module) => {
