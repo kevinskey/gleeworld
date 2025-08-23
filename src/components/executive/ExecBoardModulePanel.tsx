@@ -124,9 +124,9 @@ export const ExecBoardModulePanel = ({ userEmail, className }: ExecBoardModulePa
         }
 
         if (data) {
-          // All modules disabled for now
-          const defaultModules: string[] = [];
-          setUserModules(defaultModules);
+          // Executive board members get access to all executive modules by default
+          const execModuleIds = execModules.map(module => module.id);
+          setUserModules(execModuleIds);
         }
       } catch (error) {
         console.error('Error in loadUserModules:', error);
