@@ -9,7 +9,7 @@ import { useExecutiveBoardMembers } from '@/hooks/useExecutiveBoardMembers';
 import { ExecBoardMemberModules } from '@/components/executive/ExecBoardMemberModules';
 import { useAuth } from '@/contexts/AuthContext';
 
-export default function ExecutiveBoardMonitor() {
+export function ExecutiveBoardMonitor() {
   const { user, loading: authLoading } = useAuth();
   const { members, loading } = useExecutiveBoardMembers();
   const [selectedMemberId, setSelectedMemberId] = useState<string>('');

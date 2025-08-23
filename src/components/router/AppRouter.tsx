@@ -41,7 +41,7 @@ import LibrarianDashboardPage from "@/pages/LibrarianDashboardPage";
 import { Onboarding } from "@/pages/Onboarding";
 import { MessagingInterface } from '@/components/messaging/MessagingInterface';
 import StudentRegistration from "@/pages/StudentRegistration";
-import ExecutiveBoardMonitor from "@/pages/admin/ExecutiveBoardMonitor";
+import { ExecutiveBoardMonitor } from "@/pages/admin/ExecutiveBoardMonitor";
 
 export const router = createBrowserRouter([
   {
