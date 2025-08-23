@@ -161,13 +161,17 @@ export const PostItGrid: React.FC = () => {
                   const ok = window.confirm(confirmMessage);
                   if (!ok) return;
                   
+                  console.log('Deleting bucket:', b.id);
                   const res = await deleteBucket(b.id);
+                  console.log('Delete result:', res);
+                  
                   if (res.success) {
                     toast({ 
                       title: 'Deleted', 
                       description: isOwner ? 'Your bucket of love was removed.' : 'Bucket of love was removed.'
                     });
                   } else {
+                    console.error('Delete failed:', res.error);
                     toast({ 
                       title: 'Error', 
                       description: res.error || 'Could not delete note.' 
