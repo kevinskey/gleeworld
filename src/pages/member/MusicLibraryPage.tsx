@@ -112,7 +112,7 @@ const MusicLibraryPage = () => {
                     No music found matching "{searchQuery}".
                   </div>
                 )}
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {filteredSheetMusic.map((piece) => (
                     <MusicLibraryCard key={piece.id} piece={piece} />
                   ))}
