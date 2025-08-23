@@ -12196,6 +12196,42 @@ export type Database = {
           },
         ]
       }
+      member_check_ins: {
+        Row: {
+          check_in_time: string
+          check_out_time: string | null
+          created_at: string
+          event_type: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          check_in_time?: string
+          check_out_time?: string | null
+          created_at?: string
+          event_type?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          check_in_time?: string
+          check_out_time?: string | null
+          created_at?: string
+          event_type?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mus240_journal_comments: {
         Row: {
           commenter_id: string

@@ -58,13 +58,6 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
 
         const explicitModuleIds = explicitPermissions?.map(p => p.module_id) || [];
 
-        console.log('🔍 useSimplifiedModuleAccess debug:', {
-          targetUserId,
-          profile,
-          explicitModuleIds,
-          standardModules: STANDARD_MEMBER_MODULES
-        });
-
         // Build access list
         const accessList: ModuleAccess[] = UNIFIED_MODULES
           .filter(module => module.isActive)
