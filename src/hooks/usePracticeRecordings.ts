@@ -36,8 +36,8 @@ export const usePracticeRecordings = () => {
         .from('gw_practice_links')
         .select(`
           *,
-          owner_profile:gw_profiles(full_name),
-          sheet_music:gw_sheet_music(title)
+          gw_profiles!gw_practice_links_owner_id_fkey(full_name),
+          gw_sheet_music!gw_practice_links_music_id_fkey(title)
         `)
         .or(`voice_part.is.null,voice_part.eq.${userProfile.voice_part || 'none'}`)
         .order('created_at', { ascending: false });
@@ -56,8 +56,8 @@ export const usePracticeRecordings = () => {
         updated_at: recording.updated_at,
         owner_id: recording.owner_id,
         music_id: recording.music_id,
-        owner_name: (recording.owner_profile as any)?.full_name || 'Unknown',
-        sheet_music_title: (recording.sheet_music as any)?.title || 'Unknown'
+        owner_name: (recording.gw_profiles as any)?.full_name || 'Unknown',
+        sheet_music_title: (recording.gw_sheet_music as any)?.title || 'Unknown'
       }));
 
       setRecordings(formattedRecordings);
