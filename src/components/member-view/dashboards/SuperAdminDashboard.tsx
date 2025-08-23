@@ -601,7 +601,10 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                     <Button
                       variant="outline"
                       className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-blue-200 hover:border-blue-300"
-                      onClick={() => setSelectedModule('user-module-assignment')}
+                      onClick={() => {
+                        console.log('Module Assignment button clicked, setting selectedModule to user-module-assignment');
+                        setSelectedModule('user-module-assignment');
+                      }}
                     >
                       <div className="w-full">
                         <div className="flex items-center gap-2 mb-2">
