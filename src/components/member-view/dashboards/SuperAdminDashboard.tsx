@@ -597,6 +597,24 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
               <CollapsibleContent>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Module Assignment - Only for Super Admin */}
+                    <Button
+                      variant="outline"
+                      className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-blue-200 hover:border-blue-300"
+                      onClick={() => setSelectedModule('user-module-assignment')}
+                    >
+                      <div className="w-full">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Settings className="h-5 w-5 text-blue-600" />
+                          <Badge variant="secondary" className="text-xs">Super Admin Only</Badge>
+                        </div>
+                        <h3 className="font-semibold text-base lg:text-lg text-blue-700">Module Assignment</h3>
+                        <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
+                          Assign specific modules to individual users
+                        </p>
+                      </div>
+                    </Button>
+
                     {/* Executive Board Monitor - Only for Super Admin */}
                     <Button
                       variant="outline"

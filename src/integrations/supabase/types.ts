@@ -14500,6 +14500,45 @@ export type Database = {
           },
         ]
       }
+      user_module_permissions: {
+        Row: {
+          created_at: string
+          granted_at: string
+          granted_by: string
+          id: string
+          is_active: boolean
+          module_id: string
+          notes: string | null
+          revoked_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_at?: string
+          granted_by: string
+          id?: string
+          is_active?: boolean
+          module_id: string
+          notes?: string | null
+          revoked_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          is_active?: boolean
+          module_id?: string
+          notes?: string | null
+          revoked_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_notifications: {
         Row: {
           created_at: string

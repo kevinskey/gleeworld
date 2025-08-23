@@ -5,6 +5,8 @@ import {
   getUnifiedModuleById,
   getUnifiedCategoryById 
 } from '@/config/unified-modules';
+import { UserModuleAssignment } from '@/components/admin/UserModuleAssignment';
+import { Settings } from 'lucide-react';
 
 // Legacy interface mappings for backward compatibility
 interface LegacyModuleConfig {
@@ -132,3 +134,15 @@ export class ModuleRegistry {
 
 // Initialize on import
 ModuleRegistry.initialize();
+
+// Register the UserModuleAssignment component as a special module
+ModuleRegistry.registerModule({
+  id: 'user-module-assignment',
+  title: 'User Module Assignment',
+  description: 'Assign specific modules to individual users',
+  icon: Settings,
+  iconColor: 'blue',
+  category: 'administration',
+  component: UserModuleAssignment,
+  requiredPermissions: ['super-admin']
+});
