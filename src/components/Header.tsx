@@ -252,6 +252,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   // Dashboard views for super-admin dropdown
   const dashboardViews = [
     { id: 'personal', label: 'My Dashboard', icon: User, route: '/dashboard' },
+    { id: 'member', label: 'Member Dashboard', icon: Users, route: '/dashboard/member' },
     { id: 'fan', label: 'Fan', icon: Heart, route: '/dashboard/fan' },
     { id: 'alumnae', label: 'Alumnae', icon: GraduationCap, route: '/dashboard/alumnae' },
     { id: 'mus240', label: 'MUS 240 Class', icon: BookOpen, route: '/dashboard/mus240' },
@@ -259,6 +260,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   ];
 
   const getCurrentDashboardView = () => {
+    if (location.pathname === '/dashboard/member') return 'Member Dashboard';
     if (location.pathname === '/dashboard/fan') return 'Fan';
     if (location.pathname === '/dashboard/alumnae') return 'Alumnae';
     if (location.pathname === '/dashboard/mus240') return 'MUS 240 Class';
