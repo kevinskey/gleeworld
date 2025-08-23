@@ -27,6 +27,7 @@ import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { useMusicLibraryIntegration, MusicPieceIntegration } from '@/hooks/useMusicLibraryIntegration';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
+import { InAppPDFViewerDialog } from './InAppPDFViewerDialog';
 
 interface MusicLibraryCardProps {
   piece: any; // Original sheet music data
@@ -35,6 +36,7 @@ interface MusicLibraryCardProps {
 export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => {
   const [integratedPiece, setIntegratedPiece] = useState<MusicPieceIntegration | null>(null);
   const [loadingIntegration, setLoadingIntegration] = useState(true);
+  const [showPDFDialog, setShowPDFDialog] = useState(false);
   
   const { canDownloadPDF } = useUserRole();
   const { toast } = useToast();
@@ -102,8 +104,8 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
       return;
     }
 
-    // Open PDF in new tab
-    window.open(piece.pdf_url, '_blank', 'noopener,noreferrer');
+    // Open PDF in in-app viewer
+    setShowPDFDialog(true);
   };
 
   if (loadingIntegration || !integratedPiece) {
@@ -284,6 +286,14 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
           </div>
         </div>
       </CardContent>
+
+      <InAppPDFViewerDialog
+        open={showPDFDialog}
+        onOpenChange={setShowPDFDialog}
+        pdfUrl={piece.pdf_url}
+        title={piece.title}
+        musicId={piece.id}
+      />
     </Card>
   );
 };
