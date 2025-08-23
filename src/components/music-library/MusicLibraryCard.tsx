@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { useMusicLibraryIntegration, MusicPieceIntegration } from '@/hooks/useMusicLibraryIntegration';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface MusicLibraryCardProps {
   piece: any; // Original sheet music data
@@ -34,6 +35,7 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
   const [integratedPiece, setIntegratedPiece] = useState<MusicPieceIntegration | null>(null);
   const [loadingIntegration, setLoadingIntegration] = useState(true);
   
+  const { canDownloadPDF } = useUserRole();
   const {
     loading,
     getIntegratedMusicPiece,
@@ -147,7 +149,7 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
           {/* Action Buttons */}
           <div className="flex gap-2">
             {/* Primary Actions */}
-            {piece.pdf_url && (
+            {piece.pdf_url && canDownloadPDF() && (
               <EnhancedTooltip content="Download sheet music PDF">
                 <Button size="sm" variant="outline" asChild>
                   <a href={piece.pdf_url} target="_blank" rel="noopener noreferrer">
