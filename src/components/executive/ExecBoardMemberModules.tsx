@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Crown, Settings, Users, Calendar, MessageSquare } from 'lucide-react';
 import { useUserModulePermissions } from '@/hooks/useUserModulePermissions';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ExecBoardMemberModulesProps {
   user: {
@@ -29,8 +30,26 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     const loadUserModules = async () => {
       setLoading(true);
       try {
-        const modules = await getUserPermissions(user.id);
-        setUserModules(modules);
+        // Check if user is an executive board member
+        const { data: execBoardData } = await supabase
+          .from('gw_executive_board_members')
+          .select('position')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        if (execBoardData) {
+          // Executive board members get access to all executive modules by default
+          const execModules = UNIFIED_MODULES.filter(m => 
+            m.category === 'Executive' && m.isActive
+          );
+          const execModuleIds = execModules.map(module => module.id);
+          setUserModules(execModuleIds);
+        } else {
+          // For non-executive board members, check permissions table
+          const modules = await getUserPermissions(user.id);
+          setUserModules(modules);
+        }
       } catch (error) {
         console.error('Error loading user modules:', error);
         setUserModules([]);
