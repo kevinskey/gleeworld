@@ -250,7 +250,6 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   const dashboardViews = [
     { id: 'personal', label: 'My Dashboard', icon: User, route: '/dashboard' },
     { id: 'members', label: 'Members Dashboard', icon: Users, route: '/members' },
-    { id: 'member', label: 'Member Dashboard', icon: Home, route: `/dashboard/member-view/${userProfile?.user_id}` },
     ...(isSuperAdmin ? [{ id: 'alumnae', label: 'Alumnae Portal Admin', icon: GraduationCap, route: '/admin/alumnae' }] : [])
   ];
 
