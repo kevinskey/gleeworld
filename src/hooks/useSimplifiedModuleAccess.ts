@@ -58,6 +58,13 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
 
         const explicitModuleIds = explicitPermissions?.map(p => p.module_id) || [];
 
+        console.log('🔍 useSimplifiedModuleAccess debug:', {
+          targetUserId,
+          profile,
+          explicitModuleIds,
+          standardModules: STANDARD_MEMBER_MODULES
+        });
+
         // Build access list
         const accessList: ModuleAccess[] = UNIFIED_MODULES
           .filter(module => module.isActive)
@@ -71,7 +78,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
               };
             }
 
-            // Members get standard modules
+            // Members (including exec board members) get standard modules
             if (profile?.role === 'member' && STANDARD_MEMBER_MODULES.includes(module.id)) {
               return {
                 moduleId: module.id,
@@ -80,7 +87,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
               };
             }
 
-            // Explicitly assigned modules
+            // Explicitly assigned modules (for exec board and special permissions)
             if (explicitModuleIds.includes(module.id)) {
               return {
                 moduleId: module.id,

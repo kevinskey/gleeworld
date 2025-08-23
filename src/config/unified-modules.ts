@@ -39,6 +39,9 @@ import {
 
 // Import all module components
 import { MusicLibraryInlineModule } from '@/components/modules/MusicLibraryInlineModule';
+import { CommunityHubModule } from '@/components/modules/CommunityHubModule';
+import { CheckInCheckOutModule } from '@/components/modules/CheckInCheckOutModule';
+import { CalendarModule } from '@/components/modules/CalendarModule';
 
 // Import all module components
 import { UserManagementModule } from '@/components/modules/UserManagementModule';
@@ -90,6 +93,68 @@ import { LibrarianModule } from '@/components/modules/LibrarianModule';
 
 // Single source of truth for all modules
 export const UNIFIED_MODULES: UnifiedModule[] = [
+  // Standard Member modules - accessible by all members
+  {
+    id: "community-hub",
+    name: "community-hub",
+    title: "Community Hub",
+    description: "Central space for community discussions and interactions",
+    icon: Users,
+    iconColor: "emerald",
+    category: "member-management",
+    isActive: true,
+    component: CommunityHubModule,
+    dbFunctionName: "community-hub"
+  },
+  {
+    id: "music-library",
+    name: "music-library", 
+    title: "Music Library",
+    description: "Manage sheet music, recordings, and musical resources",
+    icon: Music,
+    iconColor: "pink",
+    category: "musical-leadership",
+    isActive: true,
+    component: MusicLibraryInlineModule,
+    dbFunctionName: "music-library"
+  },
+  {
+    id: "calendar",
+    name: "calendar",
+    title: "Calendar",
+    description: "View upcoming events, rehearsals, and important dates",
+    icon: Calendar,
+    iconColor: "purple",
+    category: "member-management",
+    isActive: true,
+    component: CalendarModule,
+    dbFunctionName: "calendar"
+  },
+  {
+    id: "attendance",
+    name: "attendance",
+    title: "Attendance",
+    description: "View your attendance records and status",
+    icon: ClipboardCheck,
+    iconColor: "green",
+    category: "member-management",
+    isActive: true,
+    component: AttendanceModule,
+    dbFunctionName: "attendance"
+  },
+  {
+    id: "check-in-check-out",
+    name: "check-in-check-out",
+    title: "Check In/Check Out",
+    description: "Track arrival and departure times for events and rehearsals",
+    icon: Clock,
+    iconColor: "cyan",
+    category: "member-management",
+    isActive: true,
+    component: CheckInCheckOutModule,
+    dbFunctionName: "check-in-check-out"
+  },
+
   // Communications modules
   {
     id: "notifications",
@@ -542,19 +607,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "merch-store"
   },
 
-  // Libraries modules
-  {
-    id: "music-library",
-    name: "music-library", 
-    title: "Music Library",
-    description: "Manage sheet music, recordings, and musical resources",
-    icon: Music,
-    iconColor: "pink",
-    category: "musical-leadership",
-    isActive: true,
-    component: MusicLibraryInlineModule,
-    dbFunctionName: "music-library"
-  },
+  // Libraries modules - (music-library moved to top for member access)
   {
     id: "radio-management",
     name: "radio-management",
