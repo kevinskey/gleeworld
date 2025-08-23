@@ -140,25 +140,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     <DropdownMenuLabel>Dashboard Views</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     
-                    {/* Admin View removed - unified dashboard only */}
-                    
-                    {/* Executive Board Dashboard - only for executive board members */}
-                    {false && (
-                      <DropdownMenuItem 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          navigate('/executive-board-dashboard');
-                          onViewModeChange?.('admin');
-                        }}
-                        className={`cursor-pointer ${viewMode === 'admin' ? 'bg-accent' : ''}`}
-                      >
-                        <Crown className="mr-2 h-4 w-4" />
-                        Executive Board
-                      </DropdownMenuItem>
-                    )}
-                    
-                    {/* Member View */}
+                    {/* My Dashboard */}
                     <DropdownMenuItem 
                       onClick={() => {
                         navigate('/dashboard');
@@ -170,10 +152,21 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         My Dashboard
                     </DropdownMenuItem>
                     
+                    {/* Member Dashboard */}
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        navigate('/dashboard/member');
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      Member Dashboard
+                    </DropdownMenuItem>
+                    
                     {/* Fan View */}
                     <DropdownMenuItem 
                       onClick={() => {
-                        navigate('/fan');
+                        navigate('/dashboard/fan');
                       }}
                       className="cursor-pointer"
                     >
@@ -181,26 +174,10 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       Fan
                     </DropdownMenuItem>
                     
-                    {/* Auditioner View */}
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        if (user?.id) {
-                          navigate('/auditioner');
-                          onViewModeChange?.('member');
-                        } else {
-                          navigate('/auditions');
-                        }
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <Music className="mr-2 h-4 w-4" />
-                      Auditioner
-                    </DropdownMenuItem>
-                    
                     {/* Alumnae View */}
                     <DropdownMenuItem 
                       onClick={() => {
-                        navigate('/alumnae');
+                        navigate('/dashboard/alumnae');
                       }}
                       className="cursor-pointer"
                     >
@@ -211,7 +188,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                      {/* MUS240 Class View */}
                      <DropdownMenuItem 
                        onClick={() => {
-                         navigate('/classes/mus240');
+                         navigate('/dashboard/mus240');
                        }}
                        className="cursor-pointer"
                      >
@@ -220,11 +197,14 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                      </DropdownMenuItem>
                      
                      {/* Public View */}
-                     <DropdownMenuItem asChild className="cursor-pointer">
-                       <Link to="/" className="flex items-center" onClick={() => { sessionStorage.setItem('force-public-view','1'); console.log('Public View clicked - force public view set'); }}>
-                         <Globe className="mr-2 h-4 w-4" />
-                         Public
-                       </Link>
+                     <DropdownMenuItem 
+                       onClick={() => {
+                         navigate('/dashboard/public');
+                       }}
+                       className="cursor-pointer"
+                     >
+                       <Globe className="mr-2 h-4 w-4" />
+                       Public
                      </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
