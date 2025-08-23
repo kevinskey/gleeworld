@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useSetlists } from './useSetlists';
 import { useStudyScores } from './useStudyScores';
 import { useToast } from '@/hooks/use-toast';
@@ -27,14 +27,19 @@ export const useMusicLibraryIntegration = () => {
   const { getSetlistsContainingPiece, addToSetlist, setlists } = useSetlists();
   const { scores: studyScores, createFromCurrent } = useStudyScores();
   const { toast } = useToast();
+  
+  // Use ref to get current study scores without dependency issues
+  const studyScoresRef = useRef(studyScores);
+  studyScoresRef.current = studyScores;
 
   const getIntegratedMusicPiece = useCallback(async (piece: any): Promise<MusicPieceIntegration> => {
     try {
       // Get setlists containing this piece
       const setlistsWithPiece = await getSetlistsContainingPiece(piece.id);
       
-      // Get study scores for this piece - get fresh data instead of relying on state
-      const relatedStudyScores = studyScores.filter(score => 
+      // Get study scores for this piece using current ref value
+      const currentStudyScores = studyScoresRef.current;
+      const relatedStudyScores = currentStudyScores.filter(score => 
         score.title.toLowerCase().includes(piece.title.toLowerCase()) ||
         piece.title.toLowerCase().includes(score.title.toLowerCase().replace(' (Study Score)', ''))
       );
@@ -60,7 +65,7 @@ export const useMusicLibraryIntegration = () => {
         studyScores: []
       };
     }
-  }, [getSetlistsContainingPiece]); // Removed studyScores from dependencies
+  }, [getSetlistsContainingPiece]); // Only depend on stable functions
 
   const addPieceToSetlist = useCallback(async (pieceId: string, setlistId: string) => {
     setLoading(true);

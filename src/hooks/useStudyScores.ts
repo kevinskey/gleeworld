@@ -60,7 +60,13 @@ export const useStudyScores = (currentSelected?: { url: string; title: string; i
       setScores(merged);
     } catch (e) {
       console.error('Failed to load study scores', e);
-      toast.error('Failed to load Study Scores');
+      // Only show toast error once every 10 seconds to prevent spam
+      const now = Date.now();
+      const lastErrorTime = localStorage.getItem('studyScoresLastError');
+      if (!lastErrorTime || now - parseInt(lastErrorTime) > 10000) {
+        localStorage.setItem('studyScoresLastError', now.toString());
+        toast.error('Failed to load Study Scores');
+      }
     } finally {
       setLoading(false);
     }
