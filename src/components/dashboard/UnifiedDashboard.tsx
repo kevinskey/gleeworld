@@ -60,13 +60,77 @@ export const UnifiedDashboard = () => {
         <div className="px-6 pt-4">
           <IncompleteProfileBanner userProfile={profile} />
         </div>
-        <div className="px-6 py-4">
-          <div className="text-center py-8">
-            <h1 className="text-3xl font-bold text-primary mb-4">Member Dashboard View</h1>
-            <p className="text-muted-foreground">This is how the dashboard appears to regular members</p>
+        
+        {/* Member Dashboard Content */}
+        <div className="px-6 py-4 space-y-6">
+          {/* Welcome Section */}
+          <div className="bg-card rounded-lg p-6 border shadow-sm">
+            <h1 className="text-2xl font-bold text-primary mb-2">Welcome to Your Member Dashboard</h1>
+            <p className="text-muted-foreground">Stay connected with the Spelman College Glee Club community.</p>
           </div>
-          {/* Member-specific content would go here */}
+
+          {/* Row 1: Hero + Features side-by-side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <DashboardHeroCarousel />
+            <div className="self-center w-full"><DashboardFeaturesCarousel /></div>
+          </div>
+
+          {/* Community Hub for Members */}
+          <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
+            <CommunityHubModule />
+          </div>
+
+          {/* Calendar Section */}
+          <div className="bg-card rounded-lg border shadow-sm">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-semibold">Upcoming Events</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCalendarCollapsed(!calendarCollapsed)}
+              >
+                {calendarCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </Button>
+            </div>
+            <div className={`transition-all duration-300 ${calendarCollapsed ? 'h-0 overflow-hidden' : 'h-auto'}`}>
+              <div className="p-4">
+                <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded" />}>
+                  <CalendarViewsLazy />
+                </Suspense>
+              </div>
+            </div>
+          </div>
+
+          {/* Member Navigation */}
+          {profile && (
+            <div className="bg-card rounded-lg border shadow-sm p-4">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                Member Resources
+              </h2>
+              <MemberNavigation user={{
+                id: profile.user_id,
+                email: profile.email,
+                full_name: profile.full_name,
+                role: profile.role,
+                exec_board_role: profile.exec_board_role,
+                is_exec_board: profile.is_exec_board,
+                is_admin: profile.is_admin,
+                is_super_admin: profile.is_super_admin
+              }} />
+            </div>
+          )}
         </div>
+
+        {/* Messages Panel Overlay */}
+        {showMessages && (
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50">
+            <MessagesPanel onClose={() => setShowMessages(false)} />
+          </div>
+        )}
       </div>
     );
   }
