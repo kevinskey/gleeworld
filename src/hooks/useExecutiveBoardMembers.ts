@@ -23,7 +23,7 @@ export const useExecutiveBoardMembers = () => {
           .select(`
             user_id,
             position,
-            gw_profiles!inner(
+            gw_profiles (
               full_name,
               email
             )
