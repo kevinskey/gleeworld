@@ -92,7 +92,7 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-2">
-        <div className="flex items-start justify-between">
+        <div className="flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-0.5">
               <Music className="h-4 w-4 text-muted-foreground" />
