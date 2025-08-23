@@ -3,15 +3,87 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Users, Shield, Settings } from 'lucide-react';
+import { Eye, Users, Shield, Settings, AlertCircle } from 'lucide-react';
 import { useExecutiveBoardMembers } from '@/hooks/useExecutiveBoardMembers';
 import { ExecBoardMemberModules } from '@/components/executive/ExecBoardMemberModules';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ExecutiveBoardMonitor() {
+  const { user, loading: authLoading } = useAuth();
   const { members, loading } = useExecutiveBoardMembers();
   const [selectedMemberId, setSelectedMemberId] = useState<string>('');
+  const [demoMode, setDemoMode] = useState(false);
 
   const selectedMember = members.find(m => m.user_id === selectedMemberId);
+
+  // Show loading while auth is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 mb-6">
+            <Eye className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Executive Board Monitor</h1>
+              <p className="text-muted-foreground">Monitor executive board member dashboards and access</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading authentication...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show authentication required or demo mode option if not authenticated
+  if (!user && !demoMode) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 mb-6">
+            <Eye className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Executive Board Monitor</h1>
+              <p className="text-muted-foreground">Monitor executive board member dashboards and access</p>
+            </div>
+          </div>
+          
+          <Card className="max-w-md mx-auto">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-orange-500" />
+                <CardTitle>Authentication Required</CardTitle>
+              </div>
+              <CardDescription>
+                This feature requires super admin access to monitor executive board member dashboards.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                To access the Executive Board Monitor, you need to be logged in as a super admin.
+              </p>
+              <div className="flex flex-col gap-2">
+                <Button onClick={() => window.location.href = '/'}>
+                  Go to Login
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setDemoMode(true)}
+                  className="text-sm"
+                >
+                  View Demo Mode
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -41,10 +113,15 @@ export default function ExecutiveBoardMonitor() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <Eye className="h-8 w-8 text-primary" />
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold">Executive Board Monitor</h1>
             <p className="text-muted-foreground">Monitor executive board member dashboards and access</p>
           </div>
+          {demoMode && (
+            <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+              Demo Mode
+            </Badge>
+          )}
         </div>
 
         {/* Stats Cards */}
