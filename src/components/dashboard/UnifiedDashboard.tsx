@@ -29,17 +29,118 @@ export const UnifiedDashboard = () => {
     setActiveModuleId(moduleId ? moduleId : null);
   }, [location.search]);
 
+  // Determine view mode based on current route
+  const getViewMode = () => {
+    if (location.pathname === '/dashboard/member') return 'member';
+    if (location.pathname === '/dashboard/fan') return 'fan';
+    if (location.pathname === '/dashboard/alumnae') return 'alumnae';
+    if (location.pathname === '/dashboard/mus240') return 'mus240';
+    if (location.pathname === '/dashboard/public') return 'public';
+    return 'default'; // /dashboard route
+  };
+
+  const viewMode = getViewMode();
+
   // Debug logging
   console.log('🎯 UnifiedDashboard rendering:', {
     user: !!user,
     userEmail: user?.email,
     profile: !!profile,
     profileData: profile,
+    viewMode: viewMode,
+    pathname: location.pathname,
     timestamp: new Date().toISOString()
   });
 
-  // If user is super admin, show the SuperAdminDashboard instead
-  if (profile?.is_super_admin) {
+  // Show different dashboard content based on view mode
+  if (viewMode === 'member') {
+    // Show member perspective regardless of actual user role
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+        <div className="px-6 pt-4">
+          <IncompleteProfileBanner userProfile={profile} />
+        </div>
+        <div className="px-6 py-4">
+          <div className="text-center py-8">
+            <h1 className="text-3xl font-bold text-primary mb-4">Member Dashboard View</h1>
+            <p className="text-muted-foreground">This is how the dashboard appears to regular members</p>
+          </div>
+          {/* Member-specific content would go here */}
+        </div>
+      </div>
+    );
+  }
+
+  if (viewMode === 'fan') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+        <div className="px-6 pt-4">
+          <IncompleteProfileBanner userProfile={profile} />
+        </div>
+        <div className="px-6 py-4">
+          <div className="text-center py-8">
+            <h1 className="text-3xl font-bold text-primary mb-4">Fan Dashboard View</h1>
+            <p className="text-muted-foreground">This is how the dashboard appears to fans</p>
+          </div>
+          {/* Fan-specific content would go here */}
+        </div>
+      </div>
+    );
+  }
+
+  if (viewMode === 'alumnae') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+        <div className="px-6 pt-4">
+          <IncompleteProfileBanner userProfile={profile} />
+        </div>
+        <div className="px-6 py-4">
+          <div className="text-center py-8">
+            <h1 className="text-3xl font-bold text-primary mb-4">Alumnae Dashboard View</h1>
+            <p className="text-muted-foreground">This is how the dashboard appears to alumnae</p>
+          </div>
+          {/* Alumnae-specific content would go here */}
+        </div>
+      </div>
+    );
+  }
+
+  if (viewMode === 'mus240') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+        <div className="px-6 pt-4">
+          <IncompleteProfileBanner userProfile={profile} />
+        </div>
+        <div className="px-6 py-4">
+          <div className="text-center py-8">
+            <h1 className="text-3xl font-bold text-primary mb-4">MUS 240 Class Dashboard</h1>
+            <p className="text-muted-foreground">This is the class dashboard for MUS 240 students</p>
+          </div>
+          {/* MUS 240 class content would go here */}
+        </div>
+      </div>
+    );
+  }
+
+  if (viewMode === 'public') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+        <div className="px-6 pt-4">
+          <IncompleteProfileBanner userProfile={profile} />
+        </div>
+        <div className="px-6 py-4">
+          <div className="text-center py-8">
+            <h1 className="text-3xl font-bold text-primary mb-4">Public Dashboard View</h1>
+            <p className="text-muted-foreground">This is how the dashboard appears to the public</p>
+          </div>
+          {/* Public content would go here */}
+        </div>
+      </div>
+    );
+  }
+
+  // Default view: If user is super admin and on default /dashboard route, show the SuperAdminDashboard
+  if (profile?.is_super_admin && viewMode === 'default') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         <div className="px-6 pt-4">
