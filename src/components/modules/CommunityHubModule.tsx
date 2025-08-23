@@ -60,17 +60,7 @@ export const CommunityHubModule = ({ user, isFullPage = false }: ModuleProps) =>
         {/* Quick Widgets */}
         <div className="space-y-4">
           {/* Buckets of Love Widget */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Heart className="h-4 w-4" />
-                Quick Love Note
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BucketsOfLoveWidget />
-            </CardContent>
-          </Card>
+          <BucketsOfLoveWidget />
           
           {/* Community Stats */}
           <Card>
