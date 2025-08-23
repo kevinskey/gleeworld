@@ -93,6 +93,7 @@ export const SheetMusicCard = ({
               pdfUrl={item.pdf_url}
               title={item.title}
               alt={`PDF thumbnail for ${item.title}`}
+              musicId={item.id}
               className="w-full h-full object-cover rounded"
             />
             </div>
@@ -178,6 +179,7 @@ export const SheetMusicCard = ({
             pdfUrl={item.pdf_url}
             title={item.title}
             alt={`PDF thumbnail for ${item.title}`}
+            musicId={item.id}
             className="w-full h-full object-cover rounded"
           />
         </div>

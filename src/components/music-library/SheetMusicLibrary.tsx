@@ -302,6 +302,7 @@ export const SheetMusicLibrary = ({
                       pdfUrl={item.pdf_url}
                       alt={`${item.title} thumbnail`}
                       title={item.title}
+                      musicId={item.id}
                       className="w-full h-full"
                     />
                   ) : (
@@ -409,6 +410,7 @@ export const SheetMusicLibrary = ({
                         pdfUrl={item.pdf_url}
                         alt={`${item.title} thumbnail`}
                         title={item.title}
+                        musicId={item.id}
                         className="w-full h-full"
                       />
                     ) : (

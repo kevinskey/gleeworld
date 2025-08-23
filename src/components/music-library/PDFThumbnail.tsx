@@ -3,25 +3,29 @@ import { FileText, Download, Eye, Loader2, Lock } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
 import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
+import { InAppPDFViewerDialog } from './InAppPDFViewerDialog';
 
 interface PDFThumbnailProps {
   pdfUrl: string;
   alt: string;
   className?: string;
   title?: string;
+  musicId?: string;
 }
 
 export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({ 
   pdfUrl, 
   alt, 
   className = "w-full h-full",
-  title 
+  title,
+  musicId 
 }) => {
   const [isInView, setIsInView] = useState(false);
   const [previewLoaded, setPreviewLoaded] = useState(false);
   const [previewError, setPreviewError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [useViewerNg, setUseViewerNg] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
   const { canDownloadPDF, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
@@ -57,7 +61,7 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
       return;
     }
     
-    window.open(signedUrl || pdfUrl, '_blank');
+    setShowDialog(true);
   };
 
   const handlePreviewLoad = () => {
@@ -163,6 +167,14 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
           </>
         )}
       </div>
+
+      <InAppPDFViewerDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        pdfUrl={pdfUrl}
+        title={title}
+        musicId={musicId}
+      />
     </div>
   );
 };
