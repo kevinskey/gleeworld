@@ -26,6 +26,7 @@ import {
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { useMusicLibraryIntegration, MusicPieceIntegration } from '@/hooks/useMusicLibraryIntegration';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useToast } from '@/hooks/use-toast';
 
 interface MusicLibraryCardProps {
   piece: any; // Original sheet music data
@@ -36,6 +37,7 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
   const [loadingIntegration, setLoadingIntegration] = useState(true);
   
   const { canDownloadPDF } = useUserRole();
+  const { toast } = useToast();
   const {
     loading,
     getIntegratedMusicPiece,
@@ -76,6 +78,34 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
     openStudyScore(studyScore);
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger if clicking on buttons or interactive elements
+    if ((e.target as HTMLElement).closest('button, a, [role="button"]')) {
+      return;
+    }
+
+    if (!piece.pdf_url) {
+      toast({
+        title: "No PDF Available",
+        description: "This piece doesn't have a PDF available.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!canDownloadPDF()) {
+      toast({
+        title: "Access Denied",
+        description: "Only admins and librarians can view PDFs.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Open PDF in new tab
+    window.open(piece.pdf_url, '_blank', 'noopener,noreferrer');
+  };
+
   if (loadingIntegration || !integratedPiece) {
     return (
       <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg animate-pulse">
@@ -92,7 +122,12 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card 
+      className={`hover:shadow-md transition-all cursor-pointer ${
+        piece.pdf_url && canDownloadPDF() ? 'hover:bg-accent/50' : 'hover:bg-muted/50'
+      }`}
+      onClick={handleCardClick}
+    >
       <CardContent className="p-2">
         <div className="flex items-center justify-between">
           <div className="flex-1">
