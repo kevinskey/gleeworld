@@ -494,14 +494,22 @@ const App = () => {
                      </ProtectedRoute>
                    } 
                   />
-                 <Route
-                   path="/admin/announcements/new" 
-                   element={
-                     <ProtectedRoute>
-                       <CreateAnnouncement />
-                     </ProtectedRoute>
-                   } 
-                 />
+                  <Route
+                    path="/admin/announcements/new" 
+                    element={
+                      <ProtectedRoute>
+                        <CreateAnnouncement />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route
+                    path="/admin/announcements/edit/:id" 
+                    element={
+                      <ProtectedRoute>
+                        <EditAnnouncement />
+                      </ProtectedRoute>
+                    } 
+                  />
                 <Route
                   path="/admin/announcements/:id/edit" 
                   element={

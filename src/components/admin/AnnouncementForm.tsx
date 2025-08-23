@@ -100,12 +100,16 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ mode }) => {
 
       if (result.error) throw result.error;
 
-      // Send notifications if publishing
+      // Send notifications if publishing or updating existing announcement
       if (action === 'publish') {
-        await sendNotificationsToUsers(result.data);
+        await sendNotificationsToUsers(result.data, mode === 'edit');
       }
 
-      toast.success(`Announcement ${action === 'publish' ? 'published' : 'saved'} successfully`);
+      const actionText = mode === 'edit' 
+        ? (action === 'publish' ? 'updated and republished' : 'updated')
+        : (action === 'publish' ? 'published' : 'saved');
+      
+      toast.success(`Announcement ${actionText} successfully`);
       navigate('/announcements');
     } catch (error) {
       console.error('Error saving announcement:', error);
@@ -115,7 +119,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ mode }) => {
     }
   };
 
-  const sendNotificationsToUsers = async (announcementData: Announcement) => {
+  const sendNotificationsToUsers = async (announcementData: Announcement, isUpdate: boolean = false) => {
     try {
       // Get all users to notify based on target audience
       const { data: profiles } = await supabase
@@ -124,12 +128,16 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ mode }) => {
 
       if (!profiles) return;
 
+      const notificationTitle = isUpdate 
+        ? `Updated Announcement: ${announcementData.title}`
+        : `New Announcement: ${announcementData.title}`;
+
       // Send notifications to all users
       for (const profile of profiles) {
         if (profile.user_id) {
           await sendNotification(
             profile.user_id,
-            `New Announcement: ${announcementData.title}`,
+            notificationTitle,
             announcementData.content.substring(0, 200) + (announcementData.content.length > 200 ? '...' : ''),
             {
               type: announcementData.announcement_type || 'general',
@@ -144,10 +152,10 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ mode }) => {
         }
       }
 
-      toast.success('Notifications sent to all users');
+      toast.success(`Notifications sent to all users about ${isUpdate ? 'updated' : 'new'} announcement`);
     } catch (error) {
       console.error('Error sending notifications:', error);
-      toast.error('Announcement saved but failed to send notifications');
+      toast.error(`Announcement saved but failed to send notifications`);
     }
   };
 
@@ -304,7 +312,10 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ mode }) => {
                 disabled={loading}
               >
                 <Send className="h-4 w-4 mr-2" />
-                {loading ? 'Publishing...' : 'Publish & Notify'}
+                {loading 
+                  ? (mode === 'edit' ? 'Updating...' : 'Publishing...')
+                  : (mode === 'edit' ? 'Update & Notify' : 'Publish & Notify')
+                }
               </Button>
             </div>
           </CardContent>
