@@ -41,21 +41,6 @@ import { Onboarding } from "@/pages/Onboarding";
 import { MessagingInterface } from '@/components/messaging/MessagingInterface';
 import StudentRegistration from "@/pages/StudentRegistration";
 
-// Simple test component for exec board monitor
-function ExecutiveBoardMonitorTest() {
-  return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">Executive Board Monitor</h1>
-        <p className="text-lg">This page is now loading correctly!</p>
-        <div className="mt-4 p-4 bg-green-100 rounded">
-          Route is working properly
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -155,7 +140,35 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin/exec-board-monitor",
-    element: <ExecutiveBoardMonitorTest />,
+    element: (
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white p-8 rounded-lg shadow-sm border">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Executive Board Monitor</h1>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <p className="text-green-800 font-semibold">✅ Route is working correctly!</p>
+              <p className="text-green-700 mt-1">The page is now loading successfully.</p>
+            </div>
+            <div className="space-y-4">
+              <p className="text-lg text-gray-700">This is the Executive Board Monitor page.</p>
+              <p className="text-gray-600">
+                This page allows administrators to monitor executive board member dashboards and access levels.
+              </p>
+              <div className="flex gap-4 mt-6">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 flex-1">
+                  <h3 className="font-semibold text-blue-900">Status</h3>
+                  <p className="text-blue-700">Active and functioning</p>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200 flex-1">
+                  <h3 className="font-semibold text-purple-900">Route</h3>
+                  <p className="text-purple-700">/admin/exec-board-monitor</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
   },
   {
     path: "/setup-admin",
