@@ -16,9 +16,11 @@ export const CleanupDuplicatesCard = () => {
       
       if (error) throw error;
       
+      const result = data as { success: boolean; message: string; deleted: number };
+      
       toast({
         title: "Success!",
-        description: `${data.message}. Deleted ${data.deleted} duplicate entries.`,
+        description: `${result.message}. Deleted ${result.deleted} duplicate entries.`,
       });
     } catch (error) {
       console.error('Error cleaning up duplicates:', error);
