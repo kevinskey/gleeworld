@@ -50,6 +50,7 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
   }, [isInView]);
 
   const handleClick = () => {
+    console.log('PDFThumbnail clicked!', { roleLoading, canDownload: canDownloadPDF() });
     if (roleLoading) return;
     
     if (!canDownloadPDF()) {
@@ -61,6 +62,7 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
       return;
     }
     
+    console.log('Opening in-app PDF viewer dialog');
     setShowDialog(true);
   };
 
