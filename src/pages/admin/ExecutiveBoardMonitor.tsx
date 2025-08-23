@@ -187,8 +187,10 @@ export function ExecutiveBoardMonitor() {
                   <SelectValue placeholder="Select an executive board member..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {members.map((member) => (
-                    <SelectItem key={member.user_id || member.position} value={member.user_id || ''}>
+                  {members
+                    .filter(member => member.user_id) // Only show members with user_id
+                    .map((member) => (
+                    <SelectItem key={member.user_id} value={member.user_id}>
                       <div className="flex items-center gap-2">
                         <span>{member.full_name || 'No user assigned'}</span>
                         <Badge variant="outline">{member.position}</Badge>
@@ -198,6 +200,11 @@ export function ExecutiveBoardMonitor() {
                       </div>
                     </SelectItem>
                   ))}
+                  {members.filter(member => !member.user_id).length > 0 && (
+                    <div className="px-2 py-1 text-sm text-muted-foreground border-t">
+                      {members.filter(member => !member.user_id).length} position(s) without assigned users
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
 
