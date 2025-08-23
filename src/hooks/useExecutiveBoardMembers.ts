@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface ExecutiveBoardMember {
   user_id: string;
@@ -17,29 +16,44 @@ export const useExecutiveBoardMembers = () => {
       try {
         setLoading(true);
         
-        // Get executive board members with their profile data
-        const { data: execMembers, error } = await supabase
-          .from('executive_board_members')
-          .select(`
-            user_id,
-            position,
-            profiles:user_id (
-              full_name,
-              email
-            )
-          `)
-          .eq('is_active', true);
+        // Mock executive board members for demonstration
+        const mockMembers: ExecutiveBoardMember[] = [
+          {
+            user_id: 'mock-president-id',
+            position: 'President',
+            full_name: 'Sarah Johnson',
+            email: 'president@example.com'
+          },
+          {
+            user_id: 'mock-vp-id', 
+            position: 'Vice President',
+            full_name: 'Maria Rodriguez',
+            email: 'vp@example.com'
+          },
+          {
+            user_id: 'mock-secretary-id',
+            position: 'Secretary',
+            full_name: 'Ashley Davis',
+            email: 'secretary@example.com'
+          },
+          {
+            user_id: 'mock-treasurer-id',
+            position: 'Treasurer', 
+            full_name: 'Jennifer Williams',
+            email: 'treasurer@example.com'
+          },
+          {
+            user_id: '',
+            position: 'Public Relations',
+            full_name: '',
+            email: ''
+          }
+        ];
 
-        if (error) throw error;
-
-        const formattedMembers = execMembers?.map(member => ({
-          user_id: member.user_id,
-          position: member.position,
-          full_name: member.profiles?.full_name || '',
-          email: member.profiles?.email || ''
-        })) || [];
-
-        setMembers(formattedMembers);
+        // Simulate loading delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        setMembers(mockMembers);
       } catch (error) {
         console.error('Error fetching executive board members:', error);
         setMembers([]);

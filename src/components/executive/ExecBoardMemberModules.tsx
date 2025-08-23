@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Crown, Settings } from 'lucide-react';
-import { useUnifiedModules } from "@/hooks/useUnifiedModules";
-import { UNIFIED_MODULE_CATEGORIES } from "@/config/unified-modules";
+import { Loader2, Crown, Settings, Users, Calendar, MessageSquare } from 'lucide-react';
 
 interface ExecBoardMemberModulesProps {
   user: {
@@ -22,49 +20,79 @@ interface ExecBoardMemberModulesProps {
 export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
-  console.log('ExecBoardMemberModules - User:', user);
-  console.log('ExecBoardMemberModules - user.exec_board_role:', user.exec_board_role);
-  console.log('ExecBoardMemberModules - user.is_exec_board:', user.is_exec_board);
+  // Mock modules for demonstration based on executive role
+  const getMockModulesForRole = (role?: string) => {
+    const baseModules = [
+      {
+        id: 'member-management',
+        title: 'Member Management',
+        description: 'Manage member information and communications',
+        category: 'management',
+        icon: Users,
+        canAccess: true,
+        canManage: true
+      },
+      {
+        id: 'calendar-management',
+        title: 'Calendar Management', 
+        description: 'Schedule and manage events',
+        category: 'scheduling',
+        icon: Calendar,
+        canAccess: true,
+        canManage: true
+      },
+      {
+        id: 'communications',
+        title: 'Communications',
+        description: 'Send announcements and messages',
+        category: 'communications',
+        icon: MessageSquare,
+        canAccess: true,
+        canManage: false
+      }
+    ];
 
-  // Use unified modules with executive position filtering
-  const { 
-    modules: availableModules, 
-    loading, 
-    error,
-    getAccessibleModules 
-  } = useUnifiedModules({
-    userId: user.id, // Pass the user ID so permissions can be fetched
-    execPosition: user.exec_board_role,
-    userRole: user.role,
-    isAdmin: user.is_admin || user.is_super_admin
-  });
+    // Filter based on role
+    switch (role?.toLowerCase()) {
+      case 'president':
+        return baseModules;
+      case 'vice-president':
+        return baseModules.filter(m => m.id !== 'member-management');
+      case 'secretary':
+        return baseModules.filter(m => m.category === 'communications');
+      case 'treasurer':
+        return [
+          ...baseModules.filter(m => m.id === 'calendar-management'),
+          {
+            id: 'financial-management',
+            title: 'Financial Management',
+            description: 'Manage budgets and expenses',
+            category: 'finances',
+            icon: Settings,
+            canAccess: true,
+            canManage: true
+          }
+        ];
+      default:
+        return baseModules.slice(0, 2); // Basic access
+    }
+  };
 
-  const accessibleModules = getAccessibleModules();
+  const accessibleModules = getMockModulesForRole(user.exec_board_role);
 
   const handleModuleClick = (moduleId: string) => {
-    console.log('ExecBoardMemberModules - Attempting to access module:', moduleId);
-    
-    const module = availableModules.find(m => m.id === moduleId);
-    console.log('ExecBoardMemberModules - Module found:', !!module, module?.title);
-    
-    if (module && module.hasPermission) {
+    const module = accessibleModules.find(m => m.id === moduleId);
+    if (module && module.canAccess) {
       setSelectedModule(moduleId);
-      console.log('ExecBoardMemberModules - Successfully loaded module:', moduleId);
-    } else {
-      console.log('ExecBoardMemberModules - Module not accessible:', moduleId);
     }
   };
 
   const renderModuleComponent = () => {
-    console.log('ExecBoardMemberModules - renderModuleComponent called, selectedModule:', selectedModule);
     if (!selectedModule) return null;
     
-    const module = availableModules.find(m => m.id === selectedModule);
-    console.log('ExecBoardMemberModules - Module config for selectedModule:', module?.title);
+    const module = accessibleModules.find(m => m.id === selectedModule);
     if (!module) return null;
 
-    const Component = module.component;
-    console.log('ExecBoardMemberModules - About to render component:', Component?.name);
     return (
       <div className="mt-4">
         <div className="flex items-center justify-between mb-4">
@@ -72,15 +100,21 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => {
-              console.log('ExecBoardMemberModules - Close button clicked');
-              setSelectedModule(null);
-            }}
+            onClick={() => setSelectedModule(null)}
           >
             Close
           </Button>
         </div>
-        <Component user={user} />
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-muted-foreground">
+              <module.icon className="w-16 h-16 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">{module.title}</h3>
+              <p>{module.description}</p>
+              <p className="text-sm mt-2">Module functionality coming soon...</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   };
@@ -95,47 +129,26 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     return acc;
   }, {} as Record<string, typeof accessibleModules>);
 
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      'communications': 'blue',
-      'finances': 'green',
-      'tours': 'purple',
-      'attendance': 'orange',
-      'musical-leadership': 'indigo',
-      'member-management': 'cyan',
-      'libraries': 'emerald',
-      'system': 'gray'
-    };
-    return colors[category as keyof typeof colors] || 'gray';
-  };
-
   const getCategoryIcon = (category: string) => {
-    const categoryConfig = UNIFIED_MODULE_CATEGORIES.find(c => c.id === category);
-    return categoryConfig?.icon;
+    const icons = {
+      'management': Users,
+      'scheduling': Calendar,
+      'communications': MessageSquare,
+      'finances': Settings
+    };
+    return icons[category as keyof typeof icons] || Settings;
   };
 
   if (!user.is_exec_board) {
     return null;
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-6 w-6 animate-spin mr-2" />
-        <span>Loading executive modules...</span>
-      </div>
-    );
-  }
-
-  console.log('ExecBoardMemberModules - Rendering with modules:', accessibleModules.length);
-
   if (accessibleModules.length === 0) {
-    console.log('ExecBoardMemberModules - No modules found');
     return (
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Crown className="h-5 w-5 text-brand-600" />
+            <Crown className="h-5 w-5 text-primary" />
             <CardTitle>Executive Board Modules</CardTitle>
           </div>
           <CardDescription>
@@ -151,7 +164,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Crown className="h-5 w-5 text-brand-600" />
+            <Crown className="h-5 w-5 text-primary" />
             <div>
               <CardTitle>Executive Board Modules</CardTitle>
               <CardDescription>
@@ -159,7 +172,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
               </CardDescription>
             </div>
           </div>
-          <Badge variant="secondary" className="bg-brand-50 text-brand-700 border-brand-200">
+          <Badge variant="secondary">
             Executive Access
           </Badge>
         </div>
@@ -174,7 +187,7 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
                 <div className="flex items-center gap-2 mb-3">
                   {IconComponent && <IconComponent className="h-4 w-4" />}
                   <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                    {UNIFIED_MODULE_CATEGORIES.find(c => c.id === category)?.title || category}
+                    {category}
                   </h4>
                   <div className="flex-1 h-px bg-border" />
                 </div>
@@ -200,11 +213,11 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
                                     View
                                   </Badge>
                                 )}
-                                {module.canManage && (
-                                  <Badge variant="outline" className="text-xs px-1 py-0 bg-brand-50 border-brand-200">
-                                    Manage
-                                  </Badge>
-                                )}
+                                 {module.canManage && (
+                                   <Badge variant="outline" className="text-xs px-1 py-0">
+                                     Manage
+                                   </Badge>
+                                 )}
                               </div>
                             </div>
                             <p className="text-xs text-muted-foreground line-clamp-2">
