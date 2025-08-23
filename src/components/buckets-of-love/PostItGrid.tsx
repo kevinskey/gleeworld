@@ -49,9 +49,10 @@ const NoteCard: React.FC<{
   const card = (
     <div
       className={cn(
-        'relative aspect-square rounded-md shadow-sm transition-all',
+        'relative aspect-square rounded-md shadow-sm transition-all duration-300 ease-out',
+        'scale-75 hover:scale-100 hover:z-10',
         getNoteClasses(noteColor || 'pink').container,
-        'hover:shadow-md hover:scale-[1.01]',
+        'hover:shadow-lg',
         isPlaceholder && 'border-dashed bg-secondary/40'
       )}
       title={!isPlaceholder ? 'Tap to delete this bucket of love' : undefined}
