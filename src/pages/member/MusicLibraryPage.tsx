@@ -22,7 +22,7 @@ export const MusicLibraryPage: React.FC = () => {
   const { userProfile } = useUserProfile(user);
   const { sheetMusic } = useSheetMusic();
   const { setlists } = useSetlists();
-  const [activeView, setActiveView] = useState<'library' | 'practice-recordings' | 'study-scores'>('library');
+  const [activeView, setActiveView] = useState<'library' | 'practice-recordings' | 'study-scores' | 'setlists'>('library');
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -63,7 +63,7 @@ export const MusicLibraryPage: React.FC = () => {
               <p className="text-xs sm:text-sm text-muted-foreground">{sheetMusic.filter(s => s.audio_preview_url).length} available</p>
             </Card>
             
-            <Card className="p-3 sm:p-4 lg:p-5 text-center bg-gradient-to-br from-orange-50 to-orange-100/50 border-orange-200 hover-scale">
+            <Card className="p-3 sm:p-4 lg:p-5 text-center bg-gradient-to-br from-orange-50 to-orange-100/50 border-orange-200 hover-scale cursor-pointer" onClick={() => setActiveView('setlists')}>
               <List className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 mx-auto mb-2 text-orange-600" />
               <h3 className="font-semibold text-xs sm:text-sm lg:text-base">Setlists</h3>
               <p className="text-xs sm:text-sm text-muted-foreground">{setlists.length} active</p>
@@ -113,6 +113,66 @@ export const MusicLibraryPage: React.FC = () => {
                       Access your saved study scores and annotated sheet music here.
                     </p>
                   </div>
+                </CardContent>
+              </Card>
+            ) : activeView === 'setlists' ? (
+              <Card className="animate-fade-in bg-card/95 backdrop-blur-sm border-border/50 shadow-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-lg sm:text-xl">
+                    <div className="rounded-lg p-2 bg-orange-500/10 text-orange-600">
+                      <List className="h-5 w-5" />
+                    </div>
+                    Your Setlists
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {setlists.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <List className="h-12 w-12 mx-auto mb-4 text-orange-600" />
+                      <h3 className="text-lg font-semibold mb-2">No Setlists Found</h3>
+                      <p className="text-muted-foreground">
+                        You don't have any setlists yet. Create one in the Music Library or wait for your section leader to share one with you.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4">
+                      {setlists.map((setlist) => (
+                        <div key={setlist.id} className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-lg mb-1">{setlist.title}</h4>
+                              <p className="text-sm text-muted-foreground mb-2">{setlist.description || 'No description'}</p>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span>Created by: {setlist.created_by === user?.id ? 'You' : 'Section Leader'}</span>
+                                {setlist.concert_name && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{setlist.concert_name}</span>
+                                  </>
+                                )}
+                                {setlist.event_date && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{new Date(setlist.event_date).toLocaleDateString()}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setActiveView('library');
+                                // This would trigger opening the setlist in the main library view
+                              }}
+                            >
+                              Open
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ) : (
