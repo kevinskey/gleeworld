@@ -133,10 +133,10 @@ export const MusicLibrary = () => {
   if (isMobile) {
     return (
       <>
-        <div className="fixed inset-0 bg-background z-50 flex flex-col">
+        <div className="fixed inset-0 bg-background z-40 flex flex-col">
           <MusicLibraryHeader />
           {/* Fullscreen Content */}
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-hidden mt-14">
             {mobileView === 'library' ? (
               <MobileMusicLibrary
                 onPdfSelect={handlePdfSelect}
@@ -158,7 +158,7 @@ export const MusicLibrary = () => {
             variant="secondary"
             size="icon"
             onClick={() => navigate((userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard')}
-            className="fixed top-[calc(env(safe-area-inset-top)+0.5rem)] left-2 z-50 h-8 w-8 p-0 touch-target"
+            className="fixed top-4 left-4 z-50 h-8 w-8 p-0 touch-target"
             aria-label="Back"
             title="Back"
           >
@@ -171,7 +171,7 @@ export const MusicLibrary = () => {
               variant="secondary"
               size="icon"
               onClick={scrollToTop}
-              className="fixed bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] right-3 z-50 h-8 w-8 p-0 touch-target"
+              className="fixed bottom-4 right-4 z-50 h-8 w-8 p-0 touch-target"
               aria-label="Back to top"
               title="Back to top"
             >
