@@ -65,13 +65,26 @@ function isDiatonicToKey(step:string, alter:number, key:any){
 
 function canonicalizeEvent(ev:any, key:any, allowAccidentals:boolean){
   if (ev.kind!=="note") return ev;
-  // Prefer degree→pitch
+  
+  // Ensure pitch object exists
+  if (!ev.pitch) {
+    ev.pitch = { step: "C", alter: 0, oct: 4 };
+    return ev;
+  }
+  
+  // Prefer degree→pitch conversion
   if (ev.pitch?.degree){
     const {degree, oct, acc=0} = ev.pitch;
     const accUse = allowAccidentals ? acc : 0;
     ev.pitch = degreeToPitch(key, degree, oct, accUse);
     return ev;
   }
+  
+  // Ensure step property exists  
+  if (!ev.pitch.step) {
+    ev.pitch.step = "C";
+  }
+  
   // If you only have step/alter, snap to key when not allowing accidentals
   if (!allowAccidentals){
     const map = defaultAlterMap(key.tonic, key.mode);
@@ -88,7 +101,7 @@ const TICKS: Record<DurBase, number> = { "16th":4, eighth:8, quarter:16, half:32
 const dotMul = (d:number)=> d===0?1 : d===1?1.5 : 1.75;
 const barTicks = (num:number, den:1|2|4|8|16)=> num * (64/den);
 
-function esc(s:string){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function esc(s:string|undefined){ return (s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
 
 function noteXml(ev:any, beamInfo?: {number: number, type: string}){
   const base = ev.dur.base as DurBase;
@@ -106,7 +119,7 @@ function noteXml(ev:any, beamInfo?: {number: number, type: string}){
   if (ev.kind==="rest") {
     return `<note><rest/><duration>${dur}</duration><type>${typeMap[base]}</type>${dotsXml}</note>`;
   }
-  const { step, alter=0, oct } = ev.pitch;
+  const { step = "C", alter = 0, oct = 4 } = ev.pitch || {};
   const alterXml = alter ? `<alter>${alter}</alter>` : "";
   return `<note>${tieStart}<pitch><step>${esc(step)}</step>${alterXml}<octave>${oct}</octave></pitch><duration>${dur}</duration><type>${typeMap[base]}</type>${dotsXml}${beamXml}${tieStop}</note>`;
 }
