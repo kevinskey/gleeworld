@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,8 +39,7 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Fetch user's own marked scores so they also appear here
-  useEffect(() => {
-  const fetchMarked = async () => {
+  const fetchMarked = useCallback(async () => {
     if (!user?.id) {
       console.log('StudyScores: No user ID, skipping marked scores fetch');
       return;
@@ -64,9 +63,11 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
     } finally {
       setLoadingMarked(false);
     }
-  };
-    fetchMarked();
   }, [user?.id]);
+
+  useEffect(() => {
+    fetchMarked();
+  }, [fetchMarked]);
 
   // Live-sync marked scores when they change elsewhere
   useEffect(() => {
@@ -183,25 +184,44 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
     if (!window.confirm('Delete this Marked Score? This will also remove any shares.')) return;
     setDeletingId(id);
     try {
+      console.log('Starting marked score deletion for:', id);
+      
+      // Delete related records first
       await supabase.from('gw_annotation_shares').delete().eq('marked_score_id', id);
       await supabase.from('gw_annotation_public_shares').delete().eq('marked_score_id', id);
-      await supabase.from('gw_marked_scores').delete().eq('id', id);
-      // Try to remove file
+      
+      // Delete the main record
+      const { error: deleteError } = await supabase.from('gw_marked_scores').delete().eq('id', id);
+      if (deleteError) {
+        console.error('Error deleting marked score:', deleteError);
+        throw deleteError;
+      }
+      
+      // Try to remove file from storage
       try {
         const url = new URL(fileUrl);
         const idx = url.pathname.indexOf('/object/public/marked-scores/');
         if (idx !== -1) {
-          const path = url.pathname.substring(idx + '/object/public/'.length); // 'marked-scores/...'
+          const path = url.pathname.substring(idx + '/object/public/'.length);
           const filePath = path.replace('marked-scores/', '');
-          if (filePath) await supabase.storage.from('marked-scores').remove([filePath]);
+          if (filePath) {
+            console.log('Deleting storage file:', filePath);
+            await supabase.storage.from('marked-scores').remove([filePath]);
+          }
         }
       } catch (e) {
         console.warn('Marked score storage delete skipped:', e);
       }
-      // Optimistic update
+      
+      // Force UI update by removing from local state and refetching
       setMarkedScores((prev) => prev.filter((m) => m.id !== id));
-    } catch (e) {
-      console.error('Failed to delete marked score', e);
+      // Also refetch to ensure consistency
+      await fetchMarked();
+      console.log('Marked score deleted successfully');
+      toast.success('Marked score deleted successfully');
+    } catch (e: any) {
+      console.error('Failed to delete marked score:', e);
+      toast.error(e?.message || 'Failed to delete marked score. Please try again.');
     } finally {
       setDeletingId(null);
     }
