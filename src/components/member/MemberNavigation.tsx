@@ -70,17 +70,6 @@ export const MemberNavigation: React.FC<MemberNavigationProps> = ({ user }) => {
       }
     ];
 
-    // Add role-specific items
-    if (user.is_exec_board || user.is_admin) {
-      baseItems.push({
-        id: 'member-management',
-        title: 'Member Management',
-        description: 'Manage member profiles and information',
-        icon: Users,
-        path: '/member/member-management',
-        color: 'bg-indigo-50 text-indigo-600 border-indigo-200'
-      });
-    }
 
     // Add admin-specific items
     if (user.is_admin || user.is_super_admin) {
