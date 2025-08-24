@@ -34,7 +34,9 @@ export const ROUTES = {
   PERMISSIONS: '/admin/permissions',
   WELLNESS: '/wellness',
   LIBRARIAN_DASHBOARD: '/librarian-dashboard',
-  STUDENT_REGISTRATION: '/student-registration'
+  STUDENT_REGISTRATION: '/student-registration',
+  FULL_ATTENDANCE_RECORD: '/member/attendance/full-record',
+  ATTENDANCE_POLICY: '/handbook/attendance-policy'
 } as const;
 
 export const PROTECTED_ROUTES = [
@@ -59,7 +61,9 @@ export const PROTECTED_ROUTES = [
   ROUTES.SIGHT_READING_GENERATOR,
   ROUTES.PERMISSIONS,
   ROUTES.WELLNESS,
-  ROUTES.LIBRARIAN_DASHBOARD
+  ROUTES.LIBRARIAN_DASHBOARD,
+  ROUTES.FULL_ATTENDANCE_RECORD,
+  ROUTES.ATTENDANCE_POLICY
 ] as const;
 
 export const PUBLIC_ROUTES = [

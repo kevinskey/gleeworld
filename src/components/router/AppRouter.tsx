@@ -9,6 +9,8 @@ import SMSTest from "@/pages/SMSTest";
 import NotificationPreferences from "@/components/notifications/NotificationPreferences";
 import Calendar from "@/pages/Calendar";
 import AttendancePage from "@/pages/AttendancePage";
+import FullAttendanceRecordPage from "@/pages/member/FullAttendanceRecordPage";
+import AttendancePolicyPage from "@/pages/handbook/AttendancePolicyPage";
 import EventPlanner from "@/pages/EventPlanner";
 import Payments from "@/pages/Payments";
 import Announcements from "@/pages/Announcements";
@@ -89,6 +91,14 @@ export const router = createBrowserRouter([
   {
     path: "/attendance",
     element: <AttendancePage />,
+  },
+  {
+    path: "/member/attendance/full-record",
+    element: <FullAttendanceRecordPage />,
+  },
+  {
+    path: "/handbook/attendance-policy",
+    element: <AttendancePolicyPage />,
   },
   {
     path: "/events",

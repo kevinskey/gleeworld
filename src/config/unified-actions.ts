@@ -22,7 +22,8 @@ import {
   Building,
   CreditCard,
   School,
-  UserCheck
+  UserCheck,
+  BookOpen
 } from 'lucide-react';
 import { UnifiedAction, UnifiedActionCategory } from '@/types/unified-actions';
 import { BudgetCreator } from '@/components/budget/BudgetCreator';
@@ -205,9 +206,22 @@ export const UNIFIED_ACTIONS: UnifiedAction[] = [
     icon: FileText,
     iconColor: 'text-blue-600',
     category: 'members',
-    type: 'modal',
+    type: 'navigation',
+    route: '/member/attendance/full-record',
     isActive: true,
     dbFunctionName: 'attendance_management'
+  },
+  {
+    id: 'attendance-policy',
+    title: 'Attendance Policy',
+    description: 'Read the official attendance policy and guidelines',
+    icon: BookOpen,
+    iconColor: 'text-purple-600',
+    category: 'members',
+    type: 'navigation',
+    route: '/handbook/attendance-policy',
+    isActive: true,
+    dbFunctionName: 'handbook'
   },
   {
     id: 'user-management',
