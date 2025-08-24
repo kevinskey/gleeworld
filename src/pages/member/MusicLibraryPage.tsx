@@ -150,55 +150,6 @@ export const MusicLibraryPage: React.FC = () => {
                 </Button>
               </CardContent>
             </Card>
-
-            {/* User Section Info */}
-            <Card className="bg-card/95 backdrop-blur-sm border-border/50 shadow-lg">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                  <div className="rounded-lg p-1.5 bg-accent/10 text-accent-foreground">
-                    <Users className="h-4 w-4" />
-                  </div>
-                  Your Section
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
-                    <p className="text-sm font-medium text-foreground mb-1">Voice Part</p>
-                    <p className="text-sm text-muted-foreground">
-                      {userProfile?.voice_part || 'Not Set'}
-                    </p>
-                  </div>
-                  
-                  <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
-                    <p className="text-sm font-medium text-foreground mb-1">Available Files</p>
-                    <p className="text-sm text-muted-foreground">
-                      {sheetMusic.filter(s => s.pdf_url).length} sheet music files
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card className="bg-card/95 backdrop-blur-sm border-border/50 shadow-lg">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                  <div className="rounded-lg p-1.5 bg-accent/10 text-accent-foreground">
-                    <List className="h-4 w-4" />
-                  </div>
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-6">
-                  <div className="rounded-full p-3 bg-muted/30 w-fit mx-auto mb-3">
-                    <List className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">No recent activity</p>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
