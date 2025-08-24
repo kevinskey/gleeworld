@@ -31,6 +31,13 @@ const AttendancePage = () => {
 
   const stats = getAttendanceStats();
 
+  // Check if user has permission to view attendance stats
+  const canViewStats = userProfile?.is_super_admin || 
+                      userProfile?.is_admin || 
+                      userProfile?.role === 'super-admin' || 
+                      userProfile?.role === 'admin' || 
+                      userProfile?.exec_board_role === 'secretary';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -48,29 +55,31 @@ const AttendancePage = () => {
           </div>
         </div>
 
-        {/* Attendance Overview */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="p-4 text-center bg-green-50 border-green-200">
-            <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-600" />
-            <h3 className="font-semibold">Attendance Rate</h3>
-            <p className="text-2xl font-bold text-green-600">{stats.attendanceRate}%</p>
-          </Card>
-          <Card className="p-4 text-center bg-blue-50 border-blue-200">
-            <Calendar className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-            <h3 className="font-semibold">Present</h3>
-            <p className="text-sm text-muted-foreground">{stats.present} events</p>
-          </Card>
-          <Card className="p-4 text-center bg-yellow-50 border-yellow-200">
-            <AlertCircle className="h-8 w-8 mx-auto mb-2 text-yellow-600" />
-            <h3 className="font-semibold text-white">Excused</h3>
-            <p className="text-sm text-white">{stats.excused} events</p>
-          </Card>
-          <Card className="p-4 text-center bg-red-50 border-red-200">
-            <XCircle className="h-8 w-8 mx-auto mb-2 text-red-600" />
-            <h3 className="font-semibold">Unexcused</h3>
-            <p className="text-sm text-muted-foreground">{stats.unexcused} events</p>
-          </Card>
-        </div>
+        {/* Attendance Overview - Only for admins and secretary */}
+        {canViewStats && (
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card className="p-4 text-center bg-green-50 border-green-200">
+              <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-600" />
+              <h3 className="font-semibold">Attendance Rate</h3>
+              <p className="text-2xl font-bold text-green-600">{stats.attendanceRate}%</p>
+            </Card>
+            <Card className="p-4 text-center bg-blue-50 border-blue-200">
+              <Calendar className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+              <h3 className="font-semibold">Present</h3>
+              <p className="text-sm text-muted-foreground">{stats.present} events</p>
+            </Card>
+            <Card className="p-4 text-center bg-yellow-50 border-yellow-200">
+              <AlertCircle className="h-8 w-8 mx-auto mb-2 text-yellow-600" />
+              <h3 className="font-semibold text-white">Excused</h3>
+              <p className="text-sm text-white">{stats.excused} events</p>
+            </Card>
+            <Card className="p-4 text-center bg-red-50 border-red-200">
+              <XCircle className="h-8 w-8 mx-auto mb-2 text-red-600" />
+              <h3 className="font-semibold">Unexcused</h3>
+              <p className="text-sm text-muted-foreground">{stats.unexcused} events</p>
+            </Card>
+          </div>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Recent Attendance */}
