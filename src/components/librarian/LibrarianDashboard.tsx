@@ -13,8 +13,11 @@ import {
   FileText,
   MapPin,
   Clock,
-  AlertCircle 
+  AlertCircle,
+  ArrowLeft,
+  Home
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { PDFImportManager } from './PDFImportManager';
 import { PhysicalInventoryManager } from './PhysicalInventoryManager';
 import { LibrarianStats } from './LibrarianStats';
@@ -22,9 +25,35 @@ import { CSVImportExport } from './CSVImportExport';
 
 export const LibrarianDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const navigate = useNavigate();
 
   return (
     <div className="container mx-auto p-4 space-y-6">
+      {/* Navigation Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <div className="h-6 w-px bg-border" />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Home
+          </Button>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col gap-4">
         <div>
