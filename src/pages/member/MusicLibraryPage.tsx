@@ -126,11 +126,15 @@ export const MusicLibraryPage: React.FC = () => {
                 
                 <Button 
                   variant={activeView === 'practice-recordings' ? 'default' : 'outline'} 
-                  className="w-full justify-start gap-3 h-10 sm:h-11 text-sm transition-all duration-200"
+                  className={`w-full justify-start gap-3 h-10 sm:h-11 text-sm transition-all duration-200 ${
+                    activeView === 'practice-recordings' 
+                      ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' 
+                      : 'border-green-600 text-green-600 hover:bg-green-50'
+                  }`}
                   onClick={() => setActiveView('practice-recordings')}
                 >
                   <Play className="h-4 w-4" />
-                  Practice Recordings
+                  Part Tracks
                 </Button>
                 
                 <Button 

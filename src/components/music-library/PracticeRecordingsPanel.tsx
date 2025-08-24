@@ -91,15 +91,15 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Music className="h-5 w-5" />
-            Practice Recordings
+            Part Tracks
           </CardTitle>
           <CardDescription>
-            Recordings posted by section leaders for {userProfile?.voice_part || 'your voice part'}
+            Part tracks posted by section leaders for {userProfile?.voice_part || 'your voice part'}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span className="ml-2">Loading recordings...</span>
+          <span className="ml-2">Loading part tracks...</span>
         </CardContent>
       </Card>
     );
@@ -116,19 +116,19 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
           <div>
             <CardTitle className="flex items-center gap-2">
               <Music className="h-5 w-5" />
-              Practice Recordings
+              Part Tracks
             </CardTitle>
             <CardDescription>
               {userProfile?.voice_part ? 
-                `Recordings for ${userProfile.voice_part} section` : 
-                'Set your voice part to see targeted recordings'
+                `Part tracks for ${userProfile.voice_part} section` : 
+                'Set your voice part to see your section\'s part tracks'
               }
             </CardDescription>
           </div>
           {canCreateRecordings && (
             <Button onClick={() => setShowCreateDialog(true)} size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              Add Recording
+              Add Part Track
             </Button>
           )}
         </CardHeader>
@@ -136,11 +136,11 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
           {userVoicePartRecordings.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Music className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium">No practice recordings available</p>
+              <p className="text-lg font-medium">No part tracks available</p>
               <p className="text-sm">
                 {userProfile?.voice_part ? 
-                  `No recordings have been posted for ${userProfile.voice_part} yet.` :
-                  'Set your voice part in your profile to see targeted recordings.'
+                  `No part tracks have been posted for ${userProfile.voice_part} yet.` :
+                  'Set your voice part in your profile to see your section\'s part tracks.'
                 }
               </p>
             </div>
