@@ -83,15 +83,7 @@ export const MusicLibraryPage: React.FC = () => {
           <div className="lg:col-span-3 space-y-6">
             {activeView === 'library' ? (
               <Card className="animate-fade-in bg-card/95 backdrop-blur-sm border-border/50 shadow-lg">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-3 text-lg sm:text-xl">
-                    <div className="rounded-lg p-2 bg-primary/10 text-primary">
-                      <Grid className="h-5 w-5" />
-                    </div>
-                    Music Library
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pt-6">
                   <MusicLibrary />
                 </CardContent>
               </Card>
