@@ -57,16 +57,16 @@ export const MusicNodeCard = memo(({ id, data }: MusicNodeCardProps) => {
         className="w-3 h-3 bg-blue-500 border-2 border-white" 
       />
       
-      <Card className={`w-64 transition-all duration-300 ${
+      <Card className={`w-full min-w-0 max-w-64 transition-all duration-300 ${
         isCurrentlyPlaying 
           ? 'ring-2 ring-blue-500 shadow-lg scale-105' 
           : 'hover:shadow-md hover:scale-102'
       }`}>
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
+        <CardContent className="card-compact">
+          <div className="flex items-start gap-2">
             {/* Album Art */}
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-md overflow-hidden flex items-center justify-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-md overflow-hidden flex items-center justify-center">
                 {track.music_albums?.cover_image_url ? (
                   <img
                     src={track.music_albums.cover_image_url}
@@ -74,19 +74,19 @@ export const MusicNodeCard = memo(({ id, data }: MusicNodeCardProps) => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <Music className="w-6 h-6 text-blue-500" />
+                  <Music className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
                 )}
               </div>
             </div>
 
             {/* Track Info */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-sm truncate">{track.title}</h3>
+              <h3 className="font-medium mobile-text-lg truncate">{track.title}</h3>
               <p className="text-xs text-muted-foreground truncate">
                 {track.artist || 'Unknown Artist'}
               </p>
               
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-1 flex-wrap mt-1">
                 {track.genre && (
                   <Badge variant="secondary" className="text-xs">
                     {track.genre}
@@ -104,7 +104,7 @@ export const MusicNodeCard = memo(({ id, data }: MusicNodeCardProps) => {
               size="sm"
               variant={isCurrentlyPlaying ? "default" : "outline"}
               onClick={handlePlay}
-              className="flex-shrink-0"
+              className="flex-shrink-0 touch-target"
             >
               {isCurrentlyPlaying ? (
                 <Pause className="w-3 h-3" />
