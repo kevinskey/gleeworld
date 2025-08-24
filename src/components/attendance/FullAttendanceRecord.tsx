@@ -113,7 +113,8 @@ export const FullAttendanceRecord = () => {
       const { data, error } = await supabase
         .from('attendance')
         .select(`
-          *
+          *,
+          gw_events:event_id(title, start_date, event_type, location)
         `)
         .eq('user_id', user.id)
         .gte('recorded_at', startDate.toISOString())
@@ -131,10 +132,10 @@ export const FullAttendanceRecord = () => {
         notes: record.notes,
         created_at: record.recorded_at,
         gw_events: {
-          title: 'Event', // Placeholder since events table relation not set up
-          event_type: 'Unknown',
-          start_date: record.recorded_at,
-          location: undefined
+          title: record.gw_events?.title || 'Unknown Event',
+          event_type: record.gw_events?.event_type || 'unknown',
+          start_date: record.gw_events?.start_date || record.recorded_at,
+          location: record.gw_events?.location
         }
       }));
 
