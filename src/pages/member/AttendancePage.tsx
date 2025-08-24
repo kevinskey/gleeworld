@@ -5,12 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAttendance } from '@/hooks/useAttendance';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { BackNavigation } from '@/components/shared/BackNavigation';
 import { UpcomingEventsWidget } from '@/components/attendance/UpcomingEventsWidget';
 import { ActionGrid } from '@/components/actions/ActionGrid';
 
 const AttendancePage = () => {
   const { attendance, loading, getAttendanceStats } = useAttendance();
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
   
   if (loading) {
     return (
@@ -198,7 +202,9 @@ const AttendancePage = () => {
               <CardContent>
                 <ActionGrid 
                   filterOptions={{
-                    userRole: 'member'
+                    userRole: userProfile?.role || 'member',
+                    execPosition: userProfile?.exec_board_role,
+                    isAdmin: userProfile?.role === 'admin' || userProfile?.role === 'super-admin'
                   }}
                   category="members"
                   gridCols={1}
