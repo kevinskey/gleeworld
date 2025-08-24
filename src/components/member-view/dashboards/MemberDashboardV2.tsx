@@ -131,16 +131,16 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
   const firstName = user.full_name?.split(" ")[0] || "Member";
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="page-container">
+      <div className="w-full section-spacing">
         {/* Community Hub Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Sparkles className="h-8 w-8 text-primary" />
+            <h1 className="page-title-large flex items-center gap-2 md:gap-3">
+              <Sparkles className="touch-target h-6 w-6 md:h-8 md:w-8 text-primary" />
               Community Hub
             </h1>
-            <p className="text-muted-foreground">
+            <p className="mobile-text-lg text-muted-foreground">
               Your central space for messages, wellness, love notes, and staying connected
             </p>
           </div>
@@ -160,19 +160,19 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
               />
               <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background/70" />
             </div>
-          <CardContent className="relative z-10 p-4 sm:p-6 md:p-8 h-[320px] md:h-[500px] flex flex-col justify-between">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
+          <CardContent className="card-compact relative z-10 h-[280px] sm:h-[320px] md:h-[400px] flex flex-col justify-between">
+            <div className="flex items-center gap-2 md:gap-4">
+              <Avatar className="touch-target h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14">
                 <AvatarImage src={avatarUrl || undefined} alt={`${firstName} avatar`} />
                 <AvatarFallback>{getInitials(user.full_name)}</AvatarFallback>
               </Avatar>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Welcome, {firstName}</h1>
-                <p className="text-sm text-muted-foreground">To Amaze and Inspire.</p>
+                <h1 className="mobile-text-2xl font-bold tracking-tight">Welcome, {firstName}</h1>
+                <p className="mobile-text-lg text-muted-foreground">To Amaze and Inspire.</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="responsive-grid-2">
               <CommunityHubWidget />
               <AuditionStatsWidget />
             </div>
@@ -218,7 +218,7 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
         </section>
 
         {/* Top grid with key modules */}
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <section className="responsive-grid-3">
           {/* Buckets of Love */}
           <Card className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -254,7 +254,7 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
               </CardTitle>
               <Badge variant="outline">All members</Badge>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <CardContent className="responsive-grid-2 gap-1 md:gap-2">
               {quickLinks.map((q) => (
                 <a key={q.label} href={q.href} target={q.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
                   <Button variant="outline" className="w-full justify-start">
@@ -384,7 +384,7 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
                     ) : filteredMembers.length === 0 ? (
                       <div className="text-sm text-muted-foreground">No members found.</div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div className="responsive-grid-3 gap-1 md:gap-3">
                         {filteredMembers.map((m) => (
                           <div key={m.id} className="p-3 rounded-md border hover:bg-accent/50 transition-colors flex items-center gap-3">
                             <Avatar className="h-9 w-9">

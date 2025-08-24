@@ -58,54 +58,54 @@ export const DashboardTemplate = ({
   }
 
   return (
-    <UniversalLayout>
-      <div className="min-h-screen bg-background">
+    <UniversalLayout containerized={true} maxWidth="full">
+      <div className="page-container">
         {/* Header Card */}
-        <Card className="mb-6 relative overflow-hidden border-0 bg-gradient-to-r from-primary/10 to-secondary/10">
+        <Card className="mb-1 md:mb-2 relative overflow-hidden border-0 bg-gradient-to-r from-primary/10 to-secondary/10">
           {backgroundImage && (
             <div 
               className="absolute inset-0 bg-cover bg-center opacity-20"
               style={{ backgroundImage: `url(${backgroundImage})` }}
             />
           )}
-          <CardHeader className="relative">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0">
-                <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.full_name}`} />
-                <AvatarFallback className="text-sm sm:text-lg font-semibold">
-                  {getInitials(user.full_name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1">
-                <CardTitle className="text-lg sm:text-2xl line-clamp-1">{title}</CardTitle>
-                <CardDescription className="text-sm sm:text-base mt-1 line-clamp-1">
-                  {subtitle}
-                </CardDescription>
-                <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <Badge className={`${getRoleBadgeColor(user.role)} text-xs px-2 py-1`}>
-                    <span className="sm:hidden">{user.role.split('-')[0].toUpperCase()}</span>
-                    <span className="hidden sm:inline">{user.role.replace('-', ' ').toUpperCase()}</span>
-                  </Badge>
-                  {user.is_exec_board && user.exec_board_role && (
-                    <Badge variant="outline" className="border-primary/20 text-xs px-2 py-1 max-w-[120px] sm:max-w-none">
-                      <span className="truncate">{user.exec_board_role}</span>
+          <CardHeader className="card-header-compact relative">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between card-spacing">
+              <div className="flex items-center gap-2 md:gap-4">
+                <Avatar className="touch-target h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 flex-shrink-0">
+                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.full_name}`} />
+                  <AvatarFallback className="mobile-text-lg font-semibold">
+                    {getInitials(user.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="page-title-large line-clamp-1">{title}</CardTitle>
+                  <CardDescription className="mobile-text-lg mt-0.5 line-clamp-1">
+                    {subtitle}
+                  </CardDescription>
+                  <div className="flex items-center gap-1 md:gap-2 mt-1 flex-wrap">
+                    <Badge className={`${getRoleBadgeColor(user.role)} text-xs px-1.5 py-0.5`}>
+                      <span className="sm:hidden">{user.role.split('-')[0].toUpperCase()}</span>
+                      <span className="hidden sm:inline">{user.role.replace('-', ' ').toUpperCase()}</span>
                     </Badge>
-                  )}
+                    {user.is_exec_board && user.exec_board_role && (
+                      <Badge variant="outline" className="border-primary/20 text-xs px-1.5 py-0.5 max-w-[100px] sm:max-w-none">
+                        <span className="truncate">{user.exec_board_role}</span>
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
+              {headerActions && (
+                <div className="flex items-center gap-1 md:gap-2 flex-shrink-0 mt-2 sm:mt-0">
+                  {headerActions}
+                </div>
+              )}
             </div>
-            {headerActions && (
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {headerActions}
-              </div>
-            )}
-          </div>
           </CardHeader>
         </Card>
 
         {/* Dashboard Content */}
-        <div className="space-y-6">
+        <div className="section-spacing">
           {children}
         </div>
       </div>
