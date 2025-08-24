@@ -45,7 +45,7 @@ export const MusicLibraryPage: React.FC = () => {
 
           {/* Quick Stats Grid - Responsive */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
-            <Card className="p-3 sm:p-4 lg:p-5 text-center bg-gradient-to-br from-purple-50 to-purple-100/50 border-purple-200 hover-scale">
+            <Card className="p-3 sm:p-4 lg:p-5 text-center bg-gradient-to-br from-purple-50 to-purple-100/50 border-purple-200 hover-scale cursor-pointer" onClick={() => setActiveView('library')}>
               <BookOpen className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 mx-auto mb-2 text-purple-600" />
               <h3 className="font-semibold text-xs sm:text-sm lg:text-base">Repertoire</h3>
               <p className="text-xs sm:text-sm text-muted-foreground">{sheetMusic.length} pieces</p>
