@@ -625,15 +625,23 @@ const App = () => {
                          <MusicLibraryPageLegacy />
                        </ProtectedRoute>
                      } 
-                   />
-                     <Route 
-                       path="/budgets" 
-                       element={
-                         <ProtectedRoute>
-                           <Budgets />
-                         </ProtectedRoute>
-                       } 
-                     />
+                    />
+                      <Route 
+                        path="/librarian-dashboard" 
+                        element={
+                          <ProtectedRoute>
+                            <LibrarianDashboardPage />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/budgets" 
+                        element={
+                          <ProtectedRoute>
+                            <Budgets />
+                          </ProtectedRoute>
+                        } 
+                      />
                      <Route 
                        path="/treasurer" 
                        element={
