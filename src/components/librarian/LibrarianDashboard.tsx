@@ -27,6 +27,8 @@ export const LibrarianDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
 
+  console.log('🔍 LibrarianDashboard component rendering');
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       {/* Navigation Header */}
