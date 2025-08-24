@@ -135,56 +135,53 @@ export const MusicLibrary = () => {
   if (isMobile) {
     console.log('MusicLibrary: Rendering mobile view:', { mobileView, selectedPdf });
     return (
-      <>
-        <div className="fixed inset-0 bg-background z-40 flex flex-col">
-          <MusicLibraryHeader />
-          {/* Fullscreen Content */}
-          <div className="flex-1 overflow-hidden">
-            {mobileView === 'library' ? (
-              <MobileMusicLibrary
-                onPdfSelect={handlePdfSelect}
-                onOpenSetlistPlayer={handleOpenSetlistPlayer}
-                selectedPdf={selectedPdf}
-                scrollContainerRef={scrollRef}
-              />
-            ) : (
-              <MobilePDFViewer
-                selectedPdf={selectedPdf}
-                onBack={() => {
-                  console.log('MobilePDFViewer: Back button clicked, switching to library');
-                  setMobileView('library');
-                }}
-                onStudyMode={openStudyMode}
-              />
-            )}
-          </div>
+      <div className="fixed inset-0 bg-background flex flex-col">
+        {/* Floating Back Button */}
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={() => navigate((userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard')}
+          className="fixed top-4 left-4 z-50 h-8 w-8 p-0 touch-target"
+          aria-label="Back"
+          title="Back"
+        >
+          <ArrowLeft className="h-3 w-3" />
+        </Button>
 
-          {/* Floating Back Button */}
+        {/* Main Content */}
+        <div className="flex-1 pt-16 overflow-hidden">
+          {mobileView === 'library' ? (
+            <MobileMusicLibrary
+              onPdfSelect={handlePdfSelect}
+              onOpenSetlistPlayer={handleOpenSetlistPlayer}
+              selectedPdf={selectedPdf}
+              scrollContainerRef={scrollRef}
+            />
+          ) : (
+            <MobilePDFViewer
+              selectedPdf={selectedPdf}
+              onBack={() => {
+                console.log('MobilePDFViewer: Back button clicked, switching to library');
+                setMobileView('library');
+              }}
+              onStudyMode={openStudyMode}
+            />
+          )}
+        </div>
+
+        {/* Scroll To Top Button */}
+        {showScrollTop && (
           <Button
             variant="secondary"
             size="icon"
-            onClick={() => navigate((userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard')}
-            className="fixed top-4 left-4 z-50 h-8 w-8 p-0 touch-target"
-            aria-label="Back"
-            title="Back"
+            onClick={scrollToTop}
+            className="fixed bottom-4 right-4 z-50 h-8 w-8 p-0 touch-target"
+            aria-label="Back to top"
+            title="Back to top"
           >
-            <ArrowLeft className="h-3 w-3" />
+            <ArrowUp className="h-3 w-3" />
           </Button>
-
-          {/* Scroll To Top Button */}
-          {showScrollTop && (
-            <Button
-              variant="secondary"
-              size="icon"
-              onClick={scrollToTop}
-              className="fixed bottom-4 right-4 z-50 h-8 w-8 p-0 touch-target"
-              aria-label="Back to top"
-              title="Back to top"
-            >
-              <ArrowUp className="h-3 w-3" />
-            </Button>
-          )}
-        </div>
+        )}
 
         {/* Study Mode Dialog for mobile */}
         <SheetMusicViewDialog
@@ -192,7 +189,7 @@ export const MusicLibrary = () => {
           onOpenChange={setStudyDialogOpen}
           item={studyItem}
         />
-      </>
+      </div>
     );
   }
 
