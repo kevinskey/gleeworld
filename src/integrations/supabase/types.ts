@@ -4418,6 +4418,191 @@ export type Database = {
           },
         ]
       }
+      gw_communication_delivery: {
+        Row: {
+          communication_id: string | null
+          created_at: string | null
+          delivered_at: string | null
+          delivery_method: string
+          error_message: string | null
+          external_id: string | null
+          id: string
+          metadata: Json | null
+          read_at: string | null
+          recipient_id: string | null
+          status: string
+        }
+        Insert: {
+          communication_id?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          delivery_method: string
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          read_at?: string | null
+          recipient_id?: string | null
+          status?: string
+        }
+        Update: {
+          communication_id?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          delivery_method?: string
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          read_at?: string | null
+          recipient_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_communication_delivery_communication_id_fkey"
+            columns: ["communication_id"]
+            isOneToOne: false
+            referencedRelation: "gw_communication_system"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_communication_delivery_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "gw_communication_recipients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_communication_recipients: {
+        Row: {
+          communication_id: string | null
+          created_at: string | null
+          id: string
+          recipient_email: string | null
+          recipient_identifier: string | null
+          recipient_name: string | null
+          recipient_phone: string | null
+          recipient_type: string
+        }
+        Insert: {
+          communication_id?: string | null
+          created_at?: string | null
+          id?: string
+          recipient_email?: string | null
+          recipient_identifier?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          recipient_type: string
+        }
+        Update: {
+          communication_id?: string | null
+          created_at?: string | null
+          id?: string
+          recipient_email?: string | null
+          recipient_identifier?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          recipient_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_communication_recipients_communication_id_fkey"
+            columns: ["communication_id"]
+            isOneToOne: false
+            referencedRelation: "gw_communication_system"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_communication_system: {
+        Row: {
+          content: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          priority: string
+          scheduled_for: string | null
+          sender_id: string | null
+          sender_name: string
+          status: string
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          scheduled_for?: string | null
+          sender_id?: string | null
+          sender_name: string
+          status?: string
+          title: string
+          type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          scheduled_for?: string | null
+          sender_id?: string | null
+          sender_name?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      gw_communication_templates: {
+        Row: {
+          category: string
+          content: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          subject: string
+          updated_at: string | null
+          variables: Json | null
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          subject: string
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          subject?: string
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Relationships: []
+      }
       gw_communications: {
         Row: {
           channels: string[]
@@ -6292,9 +6477,12 @@ export type Database = {
           description: string | null
           group_type: string
           id: string
+          is_active: boolean | null
           is_archived: boolean
           is_private: boolean
           name: string
+          query_criteria: Json | null
+          type: string
           updated_at: string
         }
         Insert: {
@@ -6304,9 +6492,12 @@ export type Database = {
           description?: string | null
           group_type?: string
           id?: string
+          is_active?: boolean | null
           is_archived?: boolean
           is_private?: boolean
           name: string
+          query_criteria?: Json | null
+          type?: string
           updated_at?: string
         }
         Update: {
@@ -6316,9 +6507,12 @@ export type Database = {
           description?: string | null
           group_type?: string
           id?: string
+          is_active?: boolean | null
           is_archived?: boolean
           is_private?: boolean
           name?: string
+          query_criteria?: Json | null
+          type?: string
           updated_at?: string
         }
         Relationships: []
