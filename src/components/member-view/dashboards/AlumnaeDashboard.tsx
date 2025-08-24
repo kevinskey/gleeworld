@@ -266,24 +266,24 @@ export const AlumnaeDashboard = ({ user }: AlumnaeDashboardProps) => {
       </Card>
 
       {/* Alumnae Resources Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Alumnae Resources</CardTitle>
-          <BookOpen className="h-4 w-4 text-muted-foreground" />
+      <Card className="w-full overflow-hidden">
+        <CardHeader className="card-header-compact flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="mobile-text-xl font-medium">Alumnae Resources</CardTitle>
+          <BookOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
+        <CardContent className="card-compact">
+          <div className="section-spacing">
+            <div className="flex items-center justify-between mobile-text-lg">
               <span>Directory Access</span>
-              <Badge variant="outline">Available</Badge>
+              <Badge variant="outline" className="text-xs">Available</Badge>
             </div>
-            <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between mobile-text-lg">
               <span>Event Archives</span>
-              <Badge variant="outline">View Only</Badge>
+              <Badge variant="outline" className="text-xs">View Only</Badge>
             </div>
-            <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between mobile-text-lg">
               <span>Photo Library</span>
-              <Badge variant="outline">Access</Badge>
+              <Badge variant="outline" className="text-xs">Access</Badge>
             </div>
           </div>
         </CardContent>

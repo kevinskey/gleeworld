@@ -128,48 +128,48 @@ export const MemberNavigation: React.FC<MemberNavigationProps> = ({ user }) => {
   const menuItems = getMenuItems();
 
   return (
-    <Card className="bg-blue-50/50 border-blue-200/50">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-blue-600" />
+    <Card className="w-full overflow-hidden bg-blue-50/50 border-blue-200/50">
+      <CardHeader className="card-header-compact">
+        <div className="flex items-center gap-1 md:gap-2">
+          <BookOpen className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
           <div>
-            <CardTitle className="text-base md:text-lg lg:text-xl">
+            <CardTitle className="page-header">
               Member Tools
             </CardTitle>
-            <CardDescription className="text-sm md:text-base">
+            <CardDescription className="mobile-text-lg">
               Access your Glee Club resources and tools
             </CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <CardContent className="card-compact">
+        <div className="responsive-grid-2 lg:grid-cols-3">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
               <Card
                 key={item.id}
-                className="group cursor-pointer hover:shadow-md transition-all duration-200 border-2 hover:border-primary/20"
+                className="group cursor-pointer hover:shadow-md transition-all duration-200 border-2 hover:border-primary/20 w-full overflow-hidden"
               >
-                <CardContent className="p-4">
+                <CardContent className="card-compact">
                   <Button
                     asChild
                     variant="ghost"
-                    className="w-full h-auto p-0 justify-start text-left"
+                    className="w-full h-auto p-0 justify-start text-left touch-target"
                   >
                     <Link to={item.path}>
-                      <div className="flex items-start gap-3 w-full">
-                        <div className={`rounded-lg p-2 ${item.color} group-hover:scale-110 transition-transform`}>
-                          <Icon className="h-5 w-5" />
+                      <div className="flex items-start gap-2 md:gap-3 w-full">
+                        <div className={`rounded-lg p-1.5 md:p-2 ${item.color} group-hover:scale-110 transition-transform flex-shrink-0`}>
+                          <Icon className="h-4 w-4 md:h-5 md:w-5" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <h4 className="font-semibold text-sm md:text-base text-foreground group-hover:text-primary transition-colors">
+                            <h4 className="font-semibold mobile-text-xl text-foreground group-hover:text-primary transition-colors line-clamp-1">
                               {item.title}
                             </h4>
-                            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
                           </div>
-                          <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">
+                          <p className="mobile-text-lg text-muted-foreground mt-0.5 line-clamp-2">
                             {item.description}
                           </p>
                         </div>

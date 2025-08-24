@@ -107,9 +107,9 @@ export const UnifiedDashboard = () => {
 
           {/* Member Navigation */}
           {profile && (
-            <div className="bg-card rounded-lg border shadow-sm p-4">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
+            <div className="w-full overflow-hidden bg-card rounded-lg border shadow-sm card-compact">
+              <h2 className="page-header mb-1 md:mb-4 flex items-center gap-1 md:gap-2">
+                <Users className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                 Member Resources
               </h2>
               <MemberNavigation user={{

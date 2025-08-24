@@ -81,17 +81,17 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
   };
 
   const renderResourceCard = (resource: any) => (
-    <Card key={resource.id} className="hover:shadow-md transition-shadow relative z-10">
-      <CardHeader className="pb-3 sm:pb-4">
-        <div className="flex flex-col sm:flex-row items-start justify-between space-y-2 sm:space-y-0 sm:space-x-2">
-          <div className="space-y-1 flex-1 min-w-0">
-            <div className="flex items-center space-x-2">
+    <Card key={resource.id} className="w-full overflow-hidden hover:shadow-md transition-shadow">
+      <CardHeader className="card-header-compact">
+        <div className="flex flex-col sm:flex-row items-start justify-between card-spacing">
+          <div className="section-spacing flex-1 min-w-0">
+            <div className="flex items-center gap-1 md:gap-2">
               {getResourceIcon(resource.resourceType)}
-              <CardTitle className="text-sm sm:text-base lg:text-lg truncate leading-tight">
+              <CardTitle className="mobile-text-xl truncate leading-tight">
                 {resource.title}
               </CardTitle>
             </div>
-            <CardDescription className="text-xs sm:text-sm leading-relaxed">
+            <CardDescription className="mobile-text-lg leading-relaxed line-clamp-2">
               {resource.description}
             </CardDescription>
           </div>
@@ -101,14 +101,14 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        <div className="text-sm text-muted-foreground">
+      <CardContent className="card-compact section-spacing">
+        <div className="mobile-text-lg text-muted-foreground">
           Added: {formatDate(resource.created_at)}
         </div>
 
         {resource.notes && resource.resourceType === 'notes' && (
-          <div className="p-3 bg-muted rounded-lg">
-            <p className="text-sm">{resource.notes}</p>
+          <div className="p-2 md:p-3 bg-muted rounded-lg">
+            <p className="mobile-text-lg">{resource.notes}</p>
           </div>
         )}
 
@@ -116,7 +116,7 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
           <Button
             variant="outline"
             onClick={() => window.open(resource.pdf_url, '_blank')}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto touch-target"
             size="sm"
           >
             <Download className="h-4 w-4 mr-2" />
@@ -126,13 +126,13 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
         )}
 
         {resource.resourceType === 'audio' && resource.audio_url && (
-          <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+          <div className="section-spacing">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center card-spacing">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleAudioPlay(resource.id)}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto touch-target"
               >
                 {playingAudio === resource.id ? (
                   <>
@@ -148,7 +148,7 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
                   </>
                 )}
               </Button>
-              <span className="text-xs sm:text-sm text-muted-foreground">Audio Resource</span>
+              <span className="mobile-text-lg text-muted-foreground">Audio Resource</span>
             </div>
             <audio
               controls
@@ -167,17 +167,17 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
   );
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-1">
+    <div className="w-full overflow-hidden section-spacing p-0.5 md:p-1">
       {/* Search and Filter */}
-      <Card className="relative z-10">
-        <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-lg sm:text-xl">Resource Library</CardTitle>
-          <CardDescription className="text-sm sm:text-base">
+      <Card className="w-full overflow-hidden">
+        <CardHeader className="card-header-compact">
+          <CardTitle className="page-header">Resource Library</CardTitle>
+          <CardDescription className="mobile-text-lg">
             Access section notes, audio resources, and PDF materials from your instructors.
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+        <CardContent className="card-compact pt-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center card-spacing">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -192,13 +192,13 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
       </Card>
 
       {/* Resource Tabs */}
-      <div className="relative z-20">
-        <Tabs defaultValue="all" className="space-y-4">
-          <div className="sticky top-0 bg-background z-30 pb-2">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 h-auto p-1">
+      <div className="w-full overflow-hidden">
+        <Tabs defaultValue="all" className="section-spacing">
+          <div className="sticky top-0 bg-background z-30 pb-1 md:pb-2">
+            <TabsList className="responsive-grid-2 md:grid-cols-4 gap-0.5 h-auto p-0.5 md:p-1">
               <TabsTrigger 
                 value="all" 
-                className="text-xs md:text-sm p-2 md:p-3 h-auto min-h-[44px] flex flex-col items-center justify-center"
+                className="dropdown-item-compact h-auto touch-target flex flex-col items-center justify-center"
               >
                 <span className="hidden sm:inline text-center">All Resources</span>
                 <span className="sm:hidden text-center">All</span>
@@ -206,7 +206,7 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
               </TabsTrigger>
               <TabsTrigger 
                 value="notes" 
-                className="text-xs md:text-sm p-2 md:p-3 h-auto min-h-[44px] flex flex-col items-center justify-center"
+                className="dropdown-item-compact h-auto touch-target flex flex-col items-center justify-center"
               >
                 <span className="hidden sm:inline text-center">Section Notes</span>
                 <span className="sm:hidden text-center">Notes</span>
@@ -214,7 +214,7 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
               </TabsTrigger>
               <TabsTrigger 
                 value="pdfs" 
-                className="text-xs md:text-sm p-2 md:p-3 h-auto min-h-[44px] flex flex-col items-center justify-center"
+                className="dropdown-item-compact h-auto touch-target flex flex-col items-center justify-center"
               >
                 <span className="hidden sm:inline text-center">PDFs</span>
                 <span className="sm:hidden text-center">PDF</span>
@@ -222,7 +222,7 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
               </TabsTrigger>
               <TabsTrigger 
                 value="audio" 
-                className="text-xs md:text-sm p-2 md:p-3 h-auto min-h-[44px] flex flex-col items-center justify-center"
+                className="dropdown-item-compact h-auto touch-target flex flex-col items-center justify-center"
               >
                 <span className="hidden sm:inline text-center">Audio</span>
                 <span className="sm:hidden text-center">Audio</span>
@@ -231,13 +231,13 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
             </TabsList>
           </div>
 
-          <TabsContent value="all" className="space-y-4">
+          <TabsContent value="all" className="section-spacing">
             {filteredResources.length === 0 ? (
               <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <FileText className="h-16 w-16 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium">No Resources Found</h3>
-                  <p className="text-muted-foreground text-center">
+                <CardContent className="card-compact flex flex-col items-center justify-center py-8 md:py-12">
+                  <FileText className="h-12 w-12 md:h-16 md:w-16 text-muted-foreground mb-2 md:mb-4" />
+                  <h3 className="page-header">No Resources Found</h3>
+                  <p className="text-muted-foreground text-center mobile-text-lg">
                     {searchTerm 
                       ? 'No resources match your search criteria.' 
                       : 'Your instructors haven\'t shared any resources yet.'
@@ -246,7 +246,7 @@ export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
+              <div className="section-spacing">
                 {filteredResources.map(renderResourceCard)}
               </div>
             )}
