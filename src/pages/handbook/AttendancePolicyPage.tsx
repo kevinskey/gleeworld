@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Clock, AlertTriangle, BookOpen, Users, Calendar } from 'lucide-react';
 
 const AttendancePolicyPage = () => {
+  console.log('AttendancePolicyPage: Component rendering');
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
