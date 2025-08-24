@@ -197,7 +197,7 @@ export const MusicLibrary = () => {
         {/* Desktop responsive layout - 40/60 split when PDF is open */}
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-6 min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">
           {/* Left column - Library sections */}
-          <div className={`${selectedPdf ? 'lg:col-span-4' : 'lg:col-span-5'} space-y-4 lg:h-full lg:overflow-y-auto lg:pr-1 order-2 lg:order-1`}>
+          <div className={`${selectedPdf ? 'lg:col-span-3' : 'lg:col-span-5'} space-y-4 lg:h-full lg:overflow-y-auto lg:pr-1 order-2 lg:order-1`}>
             {/* Study Scores */}
             <div className="border rounded">
               <div className="flex items-center justify-between p-2">
@@ -272,7 +272,7 @@ export const MusicLibrary = () => {
           </div>
 
           {/* Right column - PDF viewer */}
-          <div className={`${selectedPdf ? 'lg:col-span-8' : 'lg:col-span-7'} flex flex-col min-h-[60vh] lg:h-full overflow-hidden lg:pl-1 order-1 lg:order-2`}>
+          <div className={`${selectedPdf ? 'lg:col-span-9' : 'lg:col-span-7'} flex flex-col min-h-[60vh] lg:h-full overflow-hidden lg:pl-1 order-1 lg:order-2`}>
             <div className="flex items-center justify-between mb-2 lg:mb-4 px-2 lg:px-0">
               <h2 className="text-base lg:text-lg font-semibold">PDF Viewer</h2>
               <Button size="sm" variant="outline" className="gap-2 h-8 lg:h-9 px-2 lg:px-3" aria-label="Study Mode" title="Study Mode" onClick={openStudyMode}>
@@ -283,7 +283,6 @@ export const MusicLibrary = () => {
             </div>
             {selectedPdf ? (
               <div className="flex-1 overflow-hidden rounded-lg lg:rounded-xl">
-                <p className="text-xs text-muted-foreground mb-1 lg:mb-2 px-2 lg:px-0">Loading: {selectedPdf.title}</p>
                 <PDFViewerWithAnnotations 
                   key={selectedPdf.url}
                   pdfUrl={selectedPdf.url}
