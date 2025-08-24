@@ -86,7 +86,7 @@ export const UnifiedDashboard = () => {
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-2">
                 <CalendarIcon className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-semibold">Upcoming Events</h2>
+                <h2 className="text-lg font-semibold">My Calendar</h2>
               </div>
               <Button
                 variant="ghost"
