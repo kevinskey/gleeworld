@@ -211,7 +211,7 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Study Scores</CardTitle>
+          <CardTitle className="text-base">Study Scores & Marked Scores</CardTitle>
           <Button
             size="sm"
             variant="secondary"
@@ -235,18 +235,18 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
         {loading || loadingMarked ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : unified.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No Study Scores yet.</p>
+          <p className="text-sm text-muted-foreground">No Study Scores or Marked Scores yet.</p>
         ) : (
           <div className="space-y-2">
             {unified.map((item) => (
               <div key={`${item.type}-${item.id}`} className="border rounded p-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 overflow-hidden">
-                    {item.type === 'marked' ? (
-                      <FileImage className="h-4 w-4 shrink-0" />
-                    ) : (
-                      <FileText className="h-4 w-4 shrink-0" />
-                    )}
+                     {item.type === 'marked' ? (
+                       <FileImage className="h-4 w-4 shrink-0 text-orange-500" />
+                     ) : (
+                       <FileText className="h-4 w-4 shrink-0 text-blue-500" />
+                     )}
                     {item.type === 'marked' ? (
                       <button
                         className="text-sm font-medium hover:underline truncate text-left"
