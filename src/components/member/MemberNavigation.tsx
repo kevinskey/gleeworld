@@ -81,14 +81,6 @@ export const MemberNavigation: React.FC<MemberNavigationProps> = ({ user }) => {
           icon: Bell,
           path: '/member/notifications',
           color: 'bg-yellow-50 text-yellow-600 border-yellow-200'
-        },
-        {
-          id: 'settings',
-          title: 'System Settings',
-          description: 'Configure system settings and preferences',
-          icon: Settings,
-          path: '/member/settings',
-          color: 'bg-gray-50 text-gray-600 border-gray-200'
         }
       );
     }
