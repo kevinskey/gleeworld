@@ -2,9 +2,7 @@ import { Button } from '@/components/ui/button';
 import { 
   Music, 
   Home, 
-  ArrowLeft,
-  Settings,
-  HelpCircle
+  ArrowLeft
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -60,23 +58,7 @@ export const MusicLibraryHeader = () => {
 
           {/* Right section - Actions */}
           <div className="flex items-center gap-1 sm:gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3"
-            >
-              <HelpCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Help</span>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3"
-            >
-              <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Settings</span>
-            </Button>
+            {/* Help and Settings buttons removed */}
           </div>
         </div>
       </div>
