@@ -192,7 +192,7 @@ export const MusicLibrary = () => {
   return (
     <>
       <MusicLibraryHeader />
-      <div className="container mx-auto px-2 sm:px-4 lg:px-6 pt-4 md:pt-6 pb-6">
+      <div className="px-2 sm:px-4 lg:px-6 pt-4 md:pt-6 pb-6" style={{ width: '90vw', maxWidth: '90vw', margin: '0 auto' }}>
 
         {/* Desktop responsive layout - 40/60 split when PDF is open */}
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-6 min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">

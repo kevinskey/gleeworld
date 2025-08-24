@@ -26,7 +26,7 @@ export const MusicLibraryPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8" style={{ width: '90vw', maxWidth: '90vw' }}>
         {/* Header Section */}
         <div className="mb-8 sm:mb-10 lg:mb-12">
           <div className="flex items-center gap-4 mb-6">
