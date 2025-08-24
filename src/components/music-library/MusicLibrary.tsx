@@ -8,7 +8,8 @@ import { SetlistPlayer } from './SetlistPlayer';
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
 import { MobileMusicLibrary } from './MobileMusicLibrary';
 import { MobilePDFViewer } from './MobilePDFViewer';
-import { Home, Users, Calendar, FileText, Activity, ArrowLeft, ArrowUp, Music, Eye, ChevronDown, ChevronRight, Smartphone, Monitor } from 'lucide-react';
+import { Home, Users, Calendar, FileText, Activity, ArrowLeft, ArrowUp, Music, Eye, ChevronDown, ChevronRight, Smartphone, Monitor, Search } from 'lucide-react';
+import { Input } from "@/components/ui/input";
 import { StudyScoresPanel } from './StudyScoresPanel';
 import { MyCollectionsPanel } from './MyCollectionsPanel';
 import { SheetMusicViewDialog } from './SheetMusicViewDialog';
@@ -52,6 +53,7 @@ export const MusicLibrary = () => {
   const [studyOpen, setStudyOpen] = useState(false);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(true);
+  const [librarySearchQuery, setLibrarySearchQuery] = useState('');
   const [studyDialogOpen, setStudyDialogOpen] = useState(false);
   const [studyItem, setStudyItem] = useState<any>(null);
   const { toast } = useToast();
@@ -263,15 +265,31 @@ export const MusicLibrary = () => {
                 </button>
               </div>
               {libraryOpen && (
-                <div className="p-2">
-                  <SheetMusicLibrary 
-                    searchQuery=""
-                    selectedCategory="all"
-                    sortBy="title"
-                    sortOrder="asc"
-                    viewMode="list"
-                    onPdfSelect={(url: string, title: string, id?: string) => handlePdfSelect(url, title, id)}
-                  />
+                <div className="space-y-3">
+                  {/* Search field for Music Library */}
+                  <div className="px-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Search music library..."
+                        value={librarySearchQuery}
+                        onChange={(e) => setLibrarySearchQuery(e.target.value)}
+                        className="pl-10 h-9 text-sm"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Sheet Music Library */}
+                  <div className="px-2">
+                    <SheetMusicLibrary 
+                      searchQuery={librarySearchQuery}
+                      selectedCategory="all"
+                      sortBy="title"
+                      sortOrder="asc"
+                      viewMode="list"
+                      onPdfSelect={(url: string, title: string, id?: string) => handlePdfSelect(url, title, id)}
+                    />
+                  </div>
                 </div>
               )}
             </div>
