@@ -20,7 +20,11 @@ export const useStudyScores = (currentSelected?: { url: string; title: string; i
   const [creating, setCreating] = useState(false);
 
   const fetchScores = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('useStudyScores: No user ID, skipping fetch');
+      return;
+    }
+    console.log('useStudyScores: Fetching study scores for user:', user.id);
     setLoading(true);
     try {
       // Owned study scores
@@ -29,7 +33,11 @@ export const useStudyScores = (currentSelected?: { url: string; title: string; i
         .select('id,title,pdf_url,derived_sheet_music_id,owner_id,created_at')
         .eq('owner_id', user.id)
         .order('updated_at', { ascending: false });
-      if (ownedErr) throw ownedErr;
+      if (ownedErr) {
+        console.error('useStudyScores: Error fetching owned scores:', ownedErr);
+        throw ownedErr;
+      }
+      console.log('useStudyScores: Owned scores:', owned);
 
       // Collaborator study scores via collaborators table
       const { data: collabRows, error: collabErr } = await supabase
@@ -57,9 +65,10 @@ export const useStudyScores = (currentSelected?: { url: string; title: string; i
         }, [])
         .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
 
+      console.log('useStudyScores: Final merged scores:', merged);
       setScores(merged);
     } catch (e) {
-      console.error('Failed to load study scores', e);
+      console.error('useStudyScores: Failed to load study scores', e);
       // Only show toast error once every 10 seconds to prevent spam
       const now = Date.now();
       const lastErrorTime = localStorage.getItem('studyScoresLastError');

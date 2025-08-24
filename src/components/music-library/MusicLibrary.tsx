@@ -201,7 +201,13 @@ export const MusicLibrary = () => {
             {/* Study Scores */}
             <div className="border rounded">
               <div className="flex items-center justify-between p-2">
-                <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setStudyOpen((o) => !o)}>
+                <button 
+                  className="flex items-center gap-2 text-sm font-medium" 
+                  onClick={() => {
+                    console.log('Study Scores button clicked, current state:', studyOpen);
+                    setStudyOpen((o) => !o);
+                  }}
+                >
                   {studyOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Study Scores
                 </button>
               </div>

@@ -40,23 +40,31 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
 
   // Fetch user's own marked scores so they also appear here
   useEffect(() => {
-    const fetchMarked = async () => {
-      if (!user?.id) return;
-      setLoadingMarked(true);
-      try {
-        const { data, error } = await supabase
-          .from('gw_marked_scores')
-          .select('id, music_id, voice_part, description, file_url, uploader_id, created_at')
-          .eq('uploader_id', user.id)
-          .order('created_at', { ascending: false });
-        if (error) throw error;
-        setMarkedScores((data || []) as MarkedScore[]);
-      } catch (e) {
-        console.error('Failed to load marked scores for Study Scores panel', e);
-      } finally {
-        setLoadingMarked(false);
+  const fetchMarked = async () => {
+    if (!user?.id) {
+      console.log('StudyScores: No user ID, skipping marked scores fetch');
+      return;
+    }
+    console.log('StudyScores: Fetching marked scores for user:', user.id);
+    setLoadingMarked(true);
+    try {
+      const { data, error } = await supabase
+        .from('gw_marked_scores')
+        .select('id, music_id, voice_part, description, file_url, uploader_id, created_at')
+        .eq('uploader_id', user.id)
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('StudyScores: Error fetching marked scores:', error);
+        throw error;
       }
-    };
+      console.log('StudyScores: Fetched marked scores:', data);
+      setMarkedScores((data || []) as MarkedScore[]);
+    } catch (e) {
+      console.error('Failed to load marked scores for Study Scores panel', e);
+    } finally {
+      setLoadingMarked(false);
+    }
+  };
     fetchMarked();
   }, [user?.id]);
 
