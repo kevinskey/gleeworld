@@ -553,33 +553,34 @@ serve(async (req) => {
     // 1) Ask OpenAI for JSON score structure using scale degrees
     let aiJson = null;
     try {
-      const systemPrompt = `You are a music theory expert. Generate a JSON sight-singing exercise using scale degrees (1-7) that follows proper tonal harmony rules.
+      const systemPrompt = `You are a professional music composition AI specializing in pedagogical sight-singing exercises. Create ONLY valid JSON responses.
 
-HARMONIC RULES TO FOLLOW:
-- Use proper voice leading with smooth melodic lines
-- Avoid tritones and augmented intervals unless specifically allowed
-- Use authentic cadences (7-1, 2-1) at phrase endings
-- Employ stepwise motion for at least ${params.stepwiseMotionPercentage || 60}% of intervals
-- Keep melodic leaps within reasonable bounds (max ${params.maxInterval || 7} semitones)
-- Use chord tones (1, 3, 5) on strong beats when possible
+CRITICAL: Your response must be ONLY a valid JSON object with no additional text, explanations, or markdown formatting.
 
-JSON schema for pitches:
-{
-  "pitch": {
-    "degree": 1-7,    // Scale degree in the current key (1=tonic, 2=supertonic, etc.)
-    "oct": 3-6,       // Octave number
-    "acc": 0          // Chromatic offset: -1=flat, 0=natural, 1=sharp ${allowAccidentals ? '' : '(ALWAYS use 0 - no accidentals allowed)'}
-  }
-}
+COMPOSITIONAL REQUIREMENTS:
+1. PHRASE STRUCTURE: Create balanced 4-measure phrases with proper antecedent/consequent relationships
+2. MELODIC CONTOUR: Use arch-shaped melodies with clear high points and resolution
+3. CADENCES: 
+   - Authentic cadences (7-1 or 2-1) at phrase endings
+   - Half cadences (ending on 5) for mid-phrase breathing points
+   - Deceptive cadences (7-6) for variety
+4. VOICE LEADING:
+   - Predominantly stepwise motion (70% step, 20% skip, 10% leap)
+   - Resolve tendency tones properly (7→1, 4→3)
+   - Balance ascending and descending motion
+5. RHYTHM: Use rhythmic variety but maintain clear beat patterns
+6. RANGE: Stay within singable range (C4-A5 for soprano)
 
-Create varied melodies using ONLY these durations: ${allowed.join(", ")}.
-Focus on diatonic motion, proper phrase structure, and musical cadences.
-${allowAccidentals ? '' : 'NEVER use acc values other than 0.'}
+FORBIDDEN:
+- Augmented or diminished intervals
+- Large leaps (>P5) without stepwise resolution
+- Tritones unless resolved properly
+- Accidentals when allowAccidentals=false
 
-CADENCE REQUIREMENTS:
-- End phrases with authentic cadences (scale degrees 7-1 or 2-1)
-- Use half cadences (ending on 5) for internal phrase endings
-- Create balanced phrase structures (4 or 8 measure phrases)`;
+DURATIONS ALLOWED: ${allowed.join(", ")}
+${allowAccidentals ? '' : 'ACCIDENTALS: NEVER use acc values other than 0'}
+
+Return ONLY this exact JSON structure:`;
 
       const apiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -594,19 +595,25 @@ CADENCE REQUIREMENTS:
               role: "system",
               content: systemPrompt
             },
-            {
-              role: "user", 
-              content: `Create a ${numMeasures}-measure sight-singing exercise in ${params.key?.tonic || 'C'} ${params.key?.mode || 'major'} with ${time.num}/${time.den} time signature. 
-              
-SPECIFIC REQUIREMENTS:
-- Use scale degrees and durations: ${allowed.join(", ")}
-- Apply ${params.stepwiseMotionPercentage || 60}% stepwise motion
-- Include proper cadences every ${params.cadenceEvery || 4} measures
-- Maximum interval size: ${params.maxInterval || 7} semitones
-- Cadence types to use: ${(params.cadenceTypes || ['authentic']).join(', ')}
-- Melodic range: degrees ${params.melodicRange?.min || 1} to ${params.melodicRange?.max || 8}
-- Phrase structure: ${params.phraseStructure || 'balanced phrases'}`
-            }
+             {
+               role: "user", 
+               content: `Create a ${numMeasures}-measure sight-singing melody in ${params.key?.tonic || 'C'} ${params.key?.mode || 'major'}, ${time.num}/${time.den} time.
+
+Return this exact JSON structure with your composition:
+{
+  "key": {"tonic": "${params.key?.tonic || 'C'}", "mode": "${params.key?.mode || 'major'}"},
+  "time": {"num": ${time.num}, "den": ${time.den}},
+  "numMeasures": ${numMeasures},
+  "parts": [{
+    "role": "S",
+    "range": {"min": "${partsReq[0].range.min}", "max": "${partsReq[0].range.max}"},
+    "measures": [
+      // Create ${numMeasures} measures here with proper voice leading and cadences
+    ]
+  }],
+  "cadencePlan": [{"bar": ${numMeasures}, "cadence": "PAC"}]
+}`
+             }
           ],
           max_completion_tokens: 1000
         })
