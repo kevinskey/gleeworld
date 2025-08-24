@@ -57,9 +57,9 @@ export const MusicLibraryPage: React.FC = () => {
               <p className="text-xs sm:text-sm text-muted-foreground">{sheetMusic.filter(s => s.pdf_url).length} PDFs</p>
             </Card>
             
-            <Card className="p-3 sm:p-4 lg:p-5 text-center bg-gradient-to-br from-green-50 to-green-100/50 border-green-200 hover-scale">
+            <Card className="p-3 sm:p-4 lg:p-5 text-center bg-gradient-to-br from-green-50 to-green-100/50 border-green-200 hover-scale cursor-pointer" onClick={() => setActiveView('practice-recordings')}>
               <Play className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 mx-auto mb-2 text-green-600" />
-              <h3 className="font-semibold text-xs sm:text-sm lg:text-base">Recordings</h3>
+              <h3 className="font-semibold text-xs sm:text-sm lg:text-base">Part Tracks</h3>
               <p className="text-xs sm:text-sm text-muted-foreground">{sheetMusic.filter(s => s.audio_preview_url).length} available</p>
             </Card>
             
@@ -126,11 +126,7 @@ export const MusicLibraryPage: React.FC = () => {
                 
                 <Button 
                   variant={activeView === 'practice-recordings' ? 'default' : 'outline'} 
-                  className={`w-full justify-start gap-3 h-10 sm:h-11 text-sm transition-all duration-200 ${
-                    activeView === 'practice-recordings' 
-                      ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' 
-                      : 'border-green-600 text-green-600 hover:bg-green-50'
-                  }`}
+                  className="w-full justify-start gap-3 h-10 sm:h-11 text-sm transition-all duration-200"
                   onClick={() => setActiveView('practice-recordings')}
                 >
                   <Play className="h-4 w-4" />
