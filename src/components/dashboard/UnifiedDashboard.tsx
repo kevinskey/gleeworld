@@ -6,13 +6,13 @@ import { CommunityHubModule } from './modules/CommunityHubModule';
 import DashboardHeroCarousel from '@/components/hero/DashboardHeroCarousel';
 import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Users } from 'lucide-react';
+import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { MemberNavigation } from '@/components/member/MemberNavigation';
 import { useUserRole } from '@/hooks/useUserRole';
 import { IncompleteProfileBanner } from '@/components/shared/IncompleteProfileBanner';
 import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
-
+const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
 export const UnifiedDashboard = () => {
   const { user } = useAuth();
@@ -20,7 +20,7 @@ export const UnifiedDashboard = () => {
   
   const [showMessages, setShowMessages] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
-  
+  const [calendarCollapsed, setCalendarCollapsed] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
@@ -81,6 +81,29 @@ export const UnifiedDashboard = () => {
             <CommunityHubModule />
           </div>
 
+          {/* Calendar Section */}
+          <div className="bg-card rounded-lg border shadow-sm">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-semibold">Upcoming Events</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCalendarCollapsed(!calendarCollapsed)}
+              >
+                {calendarCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </Button>
+            </div>
+            <div className={`transition-all duration-300 ${calendarCollapsed ? 'h-0 overflow-hidden' : 'h-auto'}`}>
+              <div className="p-4">
+                <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded" />}>
+                  <CalendarViewsLazy />
+                </Suspense>
+              </div>
+            </div>
+          </div>
 
           {/* Member Navigation */}
           {profile && (
@@ -243,6 +266,39 @@ export const UnifiedDashboard = () => {
         >
           <CommunityHubModule />
         </div>
+      </div>
+      {/* Row 3: Unified Calendar visible to all logged-in users */}
+      <div className="px-6 pb-6">
+        <div className="mb-2">
+          <div className="border-l-4 border-primary pl-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="h-5 w-5 text-primary" />
+                <h2 className="font-sans font-semibold tracking-tight text-base sm:text-lg md:text-xl">Glee Calendar</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-controls="glee-calendar"
+                aria-expanded={!calendarCollapsed}
+                onClick={() => setCalendarCollapsed((v) => !v)}
+              >
+                {calendarCollapsed ? 'Expand' : 'Collapse'}
+              </Button>
+            </div>
+          </div>
+        </div>
+        {!calendarCollapsed && (
+          <Suspense fallback={
+            <div className="border border-border rounded-xl bg-background/60 p-4">
+              Loading calendar…
+            </div>
+          }>
+            <div id="glee-calendar">
+              <CalendarViewsLazy />
+            </div>
+          </Suspense>
+        )}
       </div>
 
       {/* Row 4: Simple Member Navigation */}
