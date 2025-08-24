@@ -182,13 +182,6 @@ export const UpcomingEventsWidget = ({
                       <Clock className="w-3 h-3" />
                       {formatEventDate(event.start_date, event.start_time)}
                     </div>
-                    
-                    {event.location && (
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        <span className="truncate">{event.location}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
 
