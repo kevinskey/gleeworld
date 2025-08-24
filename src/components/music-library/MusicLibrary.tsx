@@ -131,25 +131,27 @@ export const MusicLibrary = () => {
     { id: 'activity', label: 'Activity', icon: Activity, route: '/activity-logs' },
   ];
 
-  // Mobile layout - fullscreen takeover with back button
+  // Mobile layout - simple fullscreen
   if (isMobile) {
-    console.log('MusicLibrary: Rendering mobile view:', { mobileView, selectedPdf });
     return (
-      <div className="fixed inset-0 bg-background flex flex-col">
-        {/* Floating Back Button */}
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={() => navigate((userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard')}
-          className="fixed top-4 left-4 z-50 h-8 w-8 p-0 touch-target"
-          aria-label="Back"
-          title="Back"
-        >
-          <ArrowLeft className="h-3 w-3" />
-        </Button>
+      <div className="min-h-screen bg-background">
+        {/* Simple Header with Back Button */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate((userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-lg font-semibold">Music Library</h1>
+          <div></div> {/* Spacer for centering */}
+        </div>
 
-        {/* Main Content */}
-        <div className="flex-1 pt-16 overflow-hidden">
+        {/* Content */}
+        <div className="flex-1">
           {mobileView === 'library' ? (
             <MobileMusicLibrary
               onPdfSelect={handlePdfSelect}
@@ -160,30 +162,13 @@ export const MusicLibrary = () => {
           ) : (
             <MobilePDFViewer
               selectedPdf={selectedPdf}
-              onBack={() => {
-                console.log('MobilePDFViewer: Back button clicked, switching to library');
-                setMobileView('library');
-              }}
+              onBack={() => setMobileView('library')}
               onStudyMode={openStudyMode}
             />
           )}
         </div>
 
-        {/* Scroll To Top Button */}
-        {showScrollTop && (
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={scrollToTop}
-            className="fixed bottom-4 right-4 z-50 h-8 w-8 p-0 touch-target"
-            aria-label="Back to top"
-            title="Back to top"
-          >
-            <ArrowUp className="h-3 w-3" />
-          </Button>
-        )}
-
-        {/* Study Mode Dialog for mobile */}
+        {/* Study Mode Dialog */}
         <SheetMusicViewDialog
           open={studyDialogOpen}
           onOpenChange={setStudyDialogOpen}
