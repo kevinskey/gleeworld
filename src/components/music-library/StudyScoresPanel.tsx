@@ -227,7 +227,10 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
                     {item.type === 'marked' ? (
                       <button
                         className="text-sm font-medium hover:underline truncate text-left"
-                        onClick={() => window.open(item.file_url, '_blank')}
+                        onClick={() => {
+                          console.log('Opening marked score in new tab:', item.computedTitle, item.file_url);
+                          window.open(item.file_url, '_blank');
+                        }}
                         title="Open marked score"
                       >
                         {item.computedTitle}
@@ -235,7 +238,10 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
                     ) : (
                       <button
                         className="text-sm font-medium hover:underline truncate text-left"
-                        onClick={() => onOpenScore(item.pdf_url, item.title, item.derived_sheet_music_id)}
+                        onClick={() => {
+                          console.log('Opening study score:', item.title, item.pdf_url);
+                          onOpenScore(item.pdf_url, item.title, item.derived_sheet_music_id);
+                        }}
                       >
                         {item.title}
                       </button>
