@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { usePublicGleeWorldEvents } from '@/hooks/usePublicGleeWorldEvents';
 import { BackNavigation } from '@/components/shared/BackNavigation';
+import { UpcomingEventsWidget } from '@/components/attendance/UpcomingEventsWidget';
 
 const MemberCalendarPage = () => {
   const { events, loading, getUpcomingEvents } = usePublicGleeWorldEvents();
@@ -191,28 +192,12 @@ const MemberCalendarPage = () => {
               </CardContent>
             </Card>
 
-            {/* Reminders */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Active Reminders</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>Rehearsal tonight at 6 PM</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Sectional tomorrow at 4 PM</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span>Spring Concert in 10 days</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Active Reminders */}
+            <UpcomingEventsWidget 
+              limit={3} 
+              showHeader={true} 
+              compact={true} 
+            />
           </div>
         </div>
       </div>

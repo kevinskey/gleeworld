@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Settings, MessageSquare, Move, Calendar, Plus, Search, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ModuleProps } from '@/types/unified-modules';
+import { UpcomingEventsWidget } from '@/components/attendance/UpcomingEventsWidget';
 
 export const SetupCrewManagerModule: React.FC<ModuleProps> = ({ user, isFullPage }) => {
   const [activeTab, setActiveTab] = useState('crews');
@@ -168,31 +169,7 @@ export const SetupCrewManagerModule: React.FC<ModuleProps> = ({ user, isFullPage
             </Button>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Upcoming Events</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium">Concert Setup</p>
-                    <p className="text-sm text-muted-foreground">March 15, 2024 - 8:00 AM</p>
-                    <p className="text-xs text-primary">All crews required</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium">Equipment Training</p>
-                    <p className="text-sm text-muted-foreground">March 12, 2024 - 3:00 PM</p>
-                    <p className="text-xs text-primary">First-year orientation</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <UpcomingEventsWidget limit={4} showHeader={true} />
         </TabsContent>
       </Tabs>
     </div>

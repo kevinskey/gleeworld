@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAttendance } from '@/hooks/useAttendance';
 import { BackNavigation } from '@/components/shared/BackNavigation';
+import { UpcomingEventsWidget } from '@/components/attendance/UpcomingEventsWidget';
 
 const AttendancePage = () => {
   const { attendance, loading, getAttendanceStats } = useAttendance();
@@ -210,27 +211,7 @@ const AttendancePage = () => {
             </Card>
 
             {/* Upcoming Events */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Upcoming Events</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>Rehearsal - Tonight 6 PM</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Sectional - Tomorrow 4 PM</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span>Spring Concert - March 15</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <UpcomingEventsWidget limit={3} compact={true} />
           </div>
         </div>
       </div>
