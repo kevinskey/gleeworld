@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardCheck, Calendar, Clock, AlertCircle, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAttendance } from '@/hooks/useAttendance';
@@ -15,6 +16,7 @@ const AttendancePage = () => {
   const { attendance, loading, getAttendanceStats } = useAttendance();
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
+  const navigate = useNavigate();
   
   if (loading) {
     return (
@@ -200,17 +202,34 @@ const AttendancePage = () => {
                 <CardTitle className="text-lg">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent>
-                <ActionGrid 
-                  filterOptions={{
-                    userRole: userProfile?.role || 'member',
-                    execPosition: userProfile?.exec_board_role,
-                    isAdmin: userProfile?.role === 'admin' || userProfile?.role === 'super-admin'
-                  }}
-                  category="members"
-                  gridCols={1}
-                  showCategoryHeaders={false}
-                  className="space-y-2"
-                />
+                {/* Only show attendance-related quick actions */}
+                <div className="space-y-2">
+                  {[
+                    { id: 'submit-excuse', title: 'Submit Excuse', icon: 'AlertCircle' },
+                    { id: 'view-full-record', title: 'View Full Record', icon: 'Calendar' },
+                    { id: 'attendance-policy', title: 'Attendance Policy', icon: 'ClipboardCheck' }
+                  ].map((action) => (
+                    <Button 
+                      key={action.id}
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        if (action.id === 'submit-excuse') {
+                          // Open excuse modal
+                        } else if (action.id === 'view-full-record') {
+                          navigate('/member/attendance/full-record');
+                        } else if (action.id === 'attendance-policy') {
+                          navigate('/handbook/attendance-policy');
+                        }
+                      }}
+                    >
+                      {action.icon === 'AlertCircle' && <AlertCircle className="h-4 w-4 mr-2" />}
+                      {action.icon === 'Calendar' && <Calendar className="h-4 w-4 mr-2" />}
+                      {action.icon === 'ClipboardCheck' && <ClipboardCheck className="h-4 w-4 mr-2" />}
+                      {action.title}
+                    </Button>
+                  ))}
+                </div>
               </CardContent>
             </Card>
 
