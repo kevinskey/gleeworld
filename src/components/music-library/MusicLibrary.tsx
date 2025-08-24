@@ -58,9 +58,11 @@ export const MusicLibrary = () => {
   const [studyItem, setStudyItem] = useState<any>(null);
   const { toast } = useToast();
   const handlePdfSelect = (pdfUrl: string, title: string, id?: string) => {
+    console.log('MusicLibrary: PDF selected:', { pdfUrl, title, id, isMobile });
     setSelectedPdf({ url: pdfUrl, title, id });
     // On mobile, switch to viewer when PDF is selected
     if (isMobile) {
+      console.log('MusicLibrary: Switching to viewer mode');
       setMobileView('viewer');
     }
   };
@@ -131,6 +133,7 @@ export const MusicLibrary = () => {
 
   // Mobile layout - fullscreen takeover with back button
   if (isMobile) {
+    console.log('MusicLibrary: Rendering mobile view:', { mobileView, selectedPdf });
     return (
       <>
         <div className="fixed inset-0 bg-background z-40 flex flex-col">
@@ -147,7 +150,10 @@ export const MusicLibrary = () => {
             ) : (
               <MobilePDFViewer
                 selectedPdf={selectedPdf}
-                onBack={() => setMobileView('library')}
+                onBack={() => {
+                  console.log('MobilePDFViewer: Back button clicked, switching to library');
+                  setMobileView('library');
+                }}
                 onStudyMode={openStudyMode}
               />
             )}

@@ -11,7 +11,10 @@ interface MobilePDFViewerProps {
 }
 
 export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFViewerProps) => {
+  console.log('MobilePDFViewer: Rendering with selectedPdf:', selectedPdf);
+  
   if (!selectedPdf) {
+    console.log('MobilePDFViewer: No PDF selected, showing placeholder');
     return (
       <div className="h-full flex flex-col items-center justify-center p-4 text-center">
         <div className="w-24 h-24 sm:w-32 sm:h-32 bg-muted rounded-lg flex items-center justify-center mb-4">
@@ -28,6 +31,8 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
       </div>
     );
   }
+
+  console.log('MobilePDFViewer: Rendering PDF viewer with URL:', selectedPdf.url);
 
   return (
     <div className="h-full flex flex-col">
