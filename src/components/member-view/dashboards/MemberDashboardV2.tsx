@@ -131,7 +131,7 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
   const firstName = user.full_name?.split(" ")[0] || "Member";
 
   return (
-    <div className="page-container">
+    <div className="w-full overflow-x-hidden page-container">
       <div className="w-full section-spacing">
         {/* Community Hub Header */}
         <div className="flex items-center justify-between">
@@ -150,8 +150,8 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
         <QuickActions />
 
         {/* Hero Welcome + Community Hub */}
-        <section aria-label="Member welcome" className="animate-fade-in">
-          <Card className="relative overflow-hidden border bg-background/40">
+        <section aria-label="Member welcome" className="animate-fade-in w-full overflow-hidden">
+          <Card className="relative overflow-hidden border bg-background/40 w-full">
             <div className="absolute inset-0">
               <img
                 src="/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png"
@@ -172,9 +172,9 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
               </div>
             </div>
 
-            <div className="responsive-grid-2">
-              <CommunityHubWidget />
-              <AuditionStatsWidget />
+            <div className="w-full responsive-grid-2 gap-2 md:gap-4">
+              <div className="w-full overflow-hidden"><CommunityHubWidget /></div>
+              <div className="w-full overflow-hidden"><AuditionStatsWidget /></div>
             </div>
           </CardContent>
           </Card>

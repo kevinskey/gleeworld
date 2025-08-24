@@ -1097,34 +1097,34 @@ export const CommunityHubWidget = () => {
   );
 
   return (
-    <Card className="col-span-1 md:col-span-2 lg:col-span-3 overflow-visible relative -mt-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-slate-50 border-blue-200" data-section="community-hub">
+    <Card className="w-full overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-slate-50 border-blue-200" data-section="community-hub">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-blue-50/50 transition-colors pb-4 relative z-20 bg-gradient-to-r from-blue-100 to-indigo-100 border-b border-blue-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Heart className="h-6 w-6 text-red-500" />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full shadow-sm"></div>
+          <CardHeader className="cursor-pointer hover:bg-blue-50/50 transition-colors card-header-compact bg-gradient-to-r from-blue-100 to-indigo-100 border-b border-blue-200">
+            <div className="flex items-center justify-between card-spacing">
+              <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                <div className="relative flex-shrink-0">
+                  <Heart className="h-5 w-5 md:h-6 md:w-6 text-red-500" />
+                  <div className="absolute -top-1 -right-1 w-2 h-2 md:w-3 md:h-3 bg-red-600 rounded-full shadow-sm"></div>
                 </div>
-                <div>
-                  <CardTitle className="text-lg text-amber-900">Community Cork Board</CardTitle>
-                  <p className="text-xs text-amber-700">A place for love, support, and connection</p>
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="page-header text-amber-900">Community Cork Board</CardTitle>
+                  <p className="text-xs text-amber-700 line-clamp-1">A place for love, support, and connection</p>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 flex-shrink-0">
                   {unreadNotificationsCount > 0 && (
-                    <Badge variant="destructive" className="text-xs h-5 px-2 bg-red-500">
+                    <Badge variant="destructive" className="text-xs h-4 md:h-5 px-1 md:px-2 bg-red-500">
                       {unreadNotificationsCount}
                     </Badge>
                   )}
                   {sharedReflections.length > 0 && (
-                    <Badge variant="outline" className="text-xs h-5 px-2 bg-green-100 text-green-700 border-green-300">
+                    <Badge variant="outline" className="text-xs h-4 md:h-5 px-1 md:px-2 bg-green-100 text-green-700 border-green-300">
                       New
                     </Badge>
                   )}
                 </div>
               </div>
-              <div className="flex items-center">
+              <div className="flex items-center flex-shrink-0">
                 {isExpanded ? <ChevronUp className="h-4 w-4 text-amber-700" /> : <ChevronDown className="h-4 w-4 text-amber-700" />}
               </div>
             </div>
@@ -1132,26 +1132,28 @@ export const CommunityHubWidget = () => {
         </CollapsibleTrigger>
         
         <CollapsibleContent className="transition-all duration-300 ease-out data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-          <CardContent className="pt-0">
-            {/* Responsive Layout */}
-            {isMobile ? (
-              <div className="space-y-4">
-                <LeftColumnContent />
-                <RightColumnContent />
-              </div>
-            ) : (
-              <ResizablePanelGroup direction="horizontal" className="min-h-[500px]">
-                <ResizablePanel defaultSize={50} minSize={30}>
+          <CardContent className="card-compact pt-0">
+            {/* Always use mobile-first responsive layout */}
+            <div className="w-full overflow-hidden">
+              {isMobile ? (
+                <div className="section-spacing">
                   <LeftColumnContent />
-                </ResizablePanel>
-                <ResizableHandle withHandle />
-                <ResizablePanel defaultSize={50} minSize={30}>
-                  <div className="pl-4">
-                    <RightColumnContent />
-                  </div>
-                </ResizablePanel>
-              </ResizablePanelGroup>
-            )}
+                  <RightColumnContent />
+                </div>
+              ) : (
+                <ResizablePanelGroup direction="horizontal" className="min-h-[400px] md:min-h-[500px]">
+                  <ResizablePanel defaultSize={50} minSize={30}>
+                    <LeftColumnContent />
+                  </ResizablePanel>
+                  <ResizableHandle withHandle />
+                  <ResizablePanel defaultSize={50} minSize={30}>
+                    <div className="pl-2 md:pl-4">
+                      <RightColumnContent />
+                    </div>
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              )}
+            </div>
           </CardContent>
         </CollapsibleContent>
       </Collapsible>

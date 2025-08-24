@@ -62,21 +62,21 @@ export const QuickActions: React.FC = () => {
   ];
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <Card className="w-full overflow-hidden">
+      <CardContent className="card-compact">
+        <div className="responsive-grid-3 lg:grid-cols-6 gap-1 md:gap-3">
           {actions.map((action, index) => (
             <Button
               key={index}
               variant={action.variant}
               size="sm"
               onClick={action.action}
-              className="h-auto flex-col gap-2 p-3 text-center"
+              className="touch-target h-auto flex-col gap-1 md:gap-2 p-2 md:p-3 text-center"
             >
               {action.icon}
               <div>
-                <div className="font-medium text-xs">{action.label}</div>
-                <div className="text-xs text-muted-foreground opacity-75">
+                <div className="font-medium text-xs line-clamp-1">{action.label}</div>
+                <div className="text-xs text-muted-foreground opacity-75 line-clamp-1">
                   {action.description}
                 </div>
               </div>
