@@ -13,15 +13,15 @@ interface MobilePDFViewerProps {
 export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFViewerProps) => {
   if (!selectedPdf) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-8 text-center">
-        <div className="w-32 h-32 bg-muted rounded-lg flex items-center justify-center mb-4">
-          <Eye className="h-16 w-16 text-muted-foreground" />
+      <div className="h-[100dvh] flex flex-col items-center justify-center p-4 text-center pt-[calc(env(safe-area-inset-top)+3.5rem)] pb-[env(safe-area-inset-bottom)]">
+        <div className="w-24 h-24 sm:w-32 sm:h-32 bg-muted rounded-lg flex items-center justify-center mb-4">
+          <Eye className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-medium mb-2">No Sheet Music Selected</h3>
-        <p className="text-muted-foreground mb-4">
+        <h3 className="mobile-text-lg font-medium mb-2">No Sheet Music Selected</h3>
+        <p className="text-xs sm:text-sm text-muted-foreground mb-4">
           Choose a piece from the library to view it here
         </p>
-        <Button onClick={onBack} variant="outline">
+        <Button onClick={onBack} variant="outline" className="touch-target">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Library
         </Button>
@@ -30,19 +30,19 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-[100dvh] flex flex-col pt-[calc(env(safe-area-inset-top)+3.5rem)] pb-[env(safe-area-inset-bottom)]">
       {/* Mobile PDF Header */}
-      <div className="sticky top-0 z-10 bg-background border-b p-3">
+      <div className="sticky top-0 z-10 bg-background border-b card-compact">
         <div className="flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={onBack} className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
+          <Button variant="ghost" size="sm" onClick={onBack} className="touch-target h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Library
           </Button>
-          <div className="flex-1 min-w-0 mx-3">
-            <h2 className="text-sm font-medium truncate">{selectedPdf.title}</h2>
+          <div className="flex-1 min-w-0 mx-2">
+            <h2 className="text-xs sm:text-sm font-medium truncate">{selectedPdf.title}</h2>
           </div>
-          <div className="flex gap-2">
-            <Button size="sm" onClick={onStudyMode} className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
+          <div className="flex gap-1">
+            <Button size="sm" onClick={onStudyMode} className="touch-target h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
               <Maximize className="h-4 w-4 mr-1" />
               Study
             </Button>
@@ -51,7 +51,7 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
       </div>
 
       {/* PDF Viewer */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <PDFViewerWithAnnotations 
           key={selectedPdf.url}
           pdfUrl={selectedPdf.url}

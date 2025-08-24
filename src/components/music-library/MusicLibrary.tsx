@@ -133,7 +133,7 @@ export const MusicLibrary = () => {
   if (isMobile) {
     return (
       <>
-        <div className="fixed inset-0 bg-background z-50 flex flex-col relative">
+        <div className="fixed inset-0 bg-background z-50 flex flex-col">
           <MusicLibraryHeader />
           {/* Fullscreen Content */}
           <div className="flex-1 min-h-0 overflow-hidden">
@@ -158,7 +158,7 @@ export const MusicLibrary = () => {
             variant="secondary"
             size="icon"
             onClick={() => navigate((userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard')}
-            className="fixed top-2 left-2 z-50 h-9 w-9 p-0"
+            className="fixed top-[calc(env(safe-area-inset-top)+0.5rem)] left-2 z-50 h-8 w-8 p-0 touch-target"
             aria-label="Back"
             title="Back"
           >
@@ -171,7 +171,7 @@ export const MusicLibrary = () => {
               variant="secondary"
               size="icon"
               onClick={scrollToTop}
-              className="fixed bottom-3 right-3 z-50 h-9 w-9 p-0"
+              className="fixed bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] right-3 z-50 h-8 w-8 p-0 touch-target"
               aria-label="Back to top"
               title="Back to top"
             >
