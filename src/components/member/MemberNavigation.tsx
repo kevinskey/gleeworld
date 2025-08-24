@@ -53,14 +53,6 @@ export const MemberNavigation: React.FC<MemberNavigationProps> = ({ user }) => {
         color: 'bg-blue-50 text-blue-600 border-blue-200'
       },
       {
-        id: 'calendar',
-        title: 'My Calendar',
-        description: 'View rehearsals, performances, and events',
-        icon: Calendar,
-        path: '/member/calendar',
-        color: 'bg-green-50 text-green-600 border-green-200'
-      },
-      {
         id: 'attendance',
         title: 'Attendance',
         description: 'Check your attendance record and submit excuses',
