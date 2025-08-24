@@ -52,8 +52,8 @@ const AttendancePage = () => {
           </Card>
           <Card className="p-4 text-center bg-yellow-50 border-yellow-200">
             <AlertCircle className="h-8 w-8 mx-auto mb-2 text-yellow-600" />
-            <h3 className="font-semibold">Excused</h3>
-            <p className="text-sm text-muted-foreground">{stats.excused} events</p>
+            <h3 className="font-semibold text-white">Excused</h3>
+            <p className="text-sm text-white">{stats.excused} events</p>
           </Card>
           <Card className="p-4 text-center bg-red-50 border-red-200">
             <XCircle className="h-8 w-8 mx-auto mb-2 text-red-600" />
