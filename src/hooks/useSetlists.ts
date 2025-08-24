@@ -199,6 +199,120 @@ export const useSetlists = () => {
     }
   }, []);
 
+  const createSetlist = useCallback(async (setlistData: {
+    title: string;
+    description?: string;
+    concert_name?: string;
+    event_date?: string;
+  }) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('gw_setlists')
+        .insert({
+          title: setlistData.title,
+          description: setlistData.description || null,
+          concert_name: setlistData.concert_name || null,
+          event_date: setlistData.event_date || null,
+          created_by: user.id,
+          is_published: false
+        });
+
+      if (error) throw error;
+
+      await fetchSetlists(); // Refresh the list
+      toast({
+        title: "Setlist Created",
+        description: "Your setlist has been created successfully.",
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Error creating setlist:', err);
+      toast({
+        title: "Error",
+        description: "Failed to create setlist.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [user, fetchSetlists, toast]);
+
+  const updateSetlist = useCallback(async (setlistId: string, setlistData: {
+    title: string;
+    description?: string;
+    concert_name?: string;
+    event_date?: string;
+  }) => {
+    try {
+      const { error } = await supabase
+        .from('gw_setlists')
+        .update({
+          title: setlistData.title,
+          description: setlistData.description || null,
+          concert_name: setlistData.concert_name || null,
+          event_date: setlistData.event_date || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', setlistId);
+
+      if (error) throw error;
+
+      await fetchSetlists(); // Refresh the list
+      toast({
+        title: "Setlist Updated",
+        description: "Your setlist has been updated successfully.",
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Error updating setlist:', err);
+      toast({
+        title: "Error",
+        description: "Failed to update setlist.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [fetchSetlists, toast]);
+
+  const deleteSetlist = useCallback(async (setlistId: string) => {
+    try {
+      // First delete all setlist items
+      const { error: itemsError } = await supabase
+        .from('gw_setlist_items')
+        .delete()
+        .eq('setlist_id', setlistId);
+
+      if (itemsError) throw itemsError;
+
+      // Then delete the setlist itself
+      const { error } = await supabase
+        .from('gw_setlists')
+        .delete()
+        .eq('id', setlistId);
+
+      if (error) throw error;
+
+      await fetchSetlists(); // Refresh the list
+      toast({
+        title: "Setlist Deleted",
+        description: "Your setlist has been deleted successfully.",
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Error deleting setlist:', err);
+      toast({
+        title: "Error",
+        description: "Failed to delete setlist.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [fetchSetlists, toast]);
+
   useEffect(() => {
     if (user) {
       fetchSetlists();
@@ -213,6 +327,9 @@ export const useSetlists = () => {
     fetchSetlistItems,
     addToSetlist,
     removeFromSetlist,
-    getSetlistsContainingPiece
+    getSetlistsContainingPiece,
+    createSetlist,
+    updateSetlist,
+    deleteSetlist
   };
 };

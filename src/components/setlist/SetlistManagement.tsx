@@ -26,7 +26,7 @@ interface SetlistFormData {
 
 export const SetlistManagement: React.FC = () => {
   const { user } = useAuth();
-  const { setlists, loading, error } = useSetlists();
+  const { setlists, loading, error, createSetlist, updateSetlist, deleteSetlist } = useSetlists();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingSetlist, setEditingSetlist] = useState<any>(null);
   const [deletingSetlist, setDeletingSetlist] = useState<any>(null);
@@ -52,13 +52,16 @@ export const SetlistManagement: React.FC = () => {
       return;
     }
 
-    try {
-      // TODO: Implement createSetlist function in useSetlists hook
-      toast.success('Setlist created successfully');
+    const success = await createSetlist({
+      title: formData.title,
+      description: formData.description,
+      concert_name: formData.concert_name,
+      event_date: formData.event_date
+    });
+
+    if (success) {
       setShowCreateDialog(false);
       resetForm();
-    } catch (error) {
-      toast.error('Failed to create setlist');
     }
   };
 
@@ -68,25 +71,28 @@ export const SetlistManagement: React.FC = () => {
       return;
     }
 
-    try {
-      // TODO: Implement updateSetlist function in useSetlists hook
-      toast.success('Setlist updated successfully');
+    if (!editingSetlist) return;
+
+    const success = await updateSetlist(editingSetlist.id, {
+      title: formData.title,
+      description: formData.description,
+      concert_name: formData.concert_name,
+      event_date: formData.event_date
+    });
+
+    if (success) {
       setEditingSetlist(null);
       resetForm();
-    } catch (error) {
-      toast.error('Failed to update setlist');
     }
   };
 
   const handleDelete = async () => {
     if (!deletingSetlist) return;
 
-    try {
-      // TODO: Implement deleteSetlist function in useSetlists hook
-      toast.success('Setlist deleted successfully');
+    const success = await deleteSetlist(deletingSetlist.id);
+    
+    if (success) {
       setDeletingSetlist(null);
-    } catch (error) {
-      toast.error('Failed to delete setlist');
     }
   };
 
