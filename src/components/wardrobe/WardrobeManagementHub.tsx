@@ -29,13 +29,13 @@ export const WardrobeManagementHub = () => {
   const [activeTab, setActiveTab] = useState("inventory");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Mock data for dashboard stats
+  // TODO: Implement actual stats fetching from Supabase
   const stats = {
-    totalItems: 342,
-    checkedOut: 28,
-    overdue: 3,
-    lowStock: 5,
-    notifications: 12
+    totalItems: 0,
+    checkedOut: 0,
+    overdue: 0,
+    lowStock: 0,
+    notifications: 0
   };
 
   return (

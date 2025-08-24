@@ -30,46 +30,13 @@ export const WardrobeNotifications = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
 
-  // Mock notifications data
-  const mockNotifications: NotificationItem[] = [
-    {
-      id: "1",
-      notification_type: "overdue_return",
-      title: "Overdue Return",
-      message: "Black dress (Size M) is overdue for return by Sarah Johnson",
-      user_id: "user1",
-      is_read: false,
-      priority: "high",
-      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: "2",
-      notification_type: "inventory_low",
-      title: "Low Stock Alert",
-      message: "Polo shirts are running low (only 2 remaining)",
-      user_id: null,
-      is_read: false,
-      priority: "normal",
-      created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: "3",
-      notification_type: "damage_reported",
-      title: "Item Damage Report",
-      message: "Pearls returned with minor damage - requires inspection",
-      user_id: null,
-      is_read: true,
-      priority: "high",
-      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-    }
-  ];
-
   useEffect(() => {
-    // Simulate loading
+    // TODO: Implement actual notifications fetching from Supabase
+    setLoading(true);
     setTimeout(() => {
-      setNotifications(mockNotifications);
+      setNotifications([]);
       setLoading(false);
-    }, 1000);
+    }, 500);
   }, []);
 
   const getNotificationIcon = (type: string) => {

@@ -83,27 +83,8 @@ export const WardrobeCheckInOut = ({ searchTerm }: WardrobeCheckInOutProps) => {
   const fetchCheckouts = async () => {
     try {
       setLoading(true);
-      // Since we don't have the checkout table yet, we'll show mock data
-      const mockData: CheckoutRecord[] = [
-        {
-          id: "1",
-          inventory_item_id: "item1",
-          user_id: "user1",
-          checked_out_by: "staff1",
-          checked_out_at: new Date().toISOString(),
-          expected_return_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          checked_in_at: null,
-          checked_in_by: null,
-          condition_at_checkout: "good",
-          condition_at_checkin: null,
-          damage_notes: null,
-          replacement_fee: null,
-          status: "checked_out",
-          purpose: "performance",
-          notes: "For Friday concert"
-        }
-      ];
-      setCheckouts(mockData);
+      // TODO: Implement actual checkout data fetching from Supabase
+      setCheckouts([]);
     } catch (error) {
       console.error('Error fetching checkouts:', error);
       toast({
