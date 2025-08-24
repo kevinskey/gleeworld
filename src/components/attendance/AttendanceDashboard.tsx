@@ -91,17 +91,73 @@ export const AttendanceDashboard = () => {
     try {
       setStatsLoading(true);
       
-      // For now, use mock data until we can access the correct tables
-      // You can update these with real queries once the schema is confirmed
-      setStats(prev => ({
-        ...prev,
-        totalEvents: 25,
-        averageAttendance: 87,
-        totalMembers: 42,
-        perfectAttendees: 8
-      }));
+      // Get real attendance data from the database
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from('attendance')
+        .select('status, user_id, event_id')
+        .eq('user_id', user.id);
+
+      if (attendanceError) throw attendanceError;
+
+      // Calculate stats from real data
+      const myAttendanceCount = attendanceData?.filter(a => a.status === 'present').length || 0;
+      const totalUserEvents = attendanceData?.length || 0;
+      const myAttendanceRate = totalUserEvents > 0 ? Math.round((myAttendanceCount / totalUserEvents) * 100) : 0;
+
+      // Get overall statistics for admins
+      if (isAdmin) {
+        const { data: allAttendance, error: allAttendanceError } = await supabase
+          .from('attendance')
+          .select('status, user_id, event_id');
+
+        if (!allAttendanceError && allAttendance) {
+          const totalEvents = [...new Set(allAttendance.map(a => a.event_id))].length;
+          const totalMembers = [...new Set(allAttendance.map(a => a.user_id))].length;
+          const presentRecords = allAttendance.filter(a => a.status === 'present').length;
+          const averageAttendance = allAttendance.length > 0 ? Math.round((presentRecords / allAttendance.length) * 100) : 0;
+
+          setStats({
+            myAttendance: myAttendanceRate,
+            eventsThisWeek: 0, // TODO: Calculate based on current week
+            pendingExcuses: 0, // TODO: Get from excuse requests
+            sectionAverage: averageAttendance,
+            totalEvents,
+            averageAttendance,
+            totalMembers,
+            perfectAttendees: 0 // TODO: Calculate perfect attendance
+          });
+        } else {
+          setStats(prev => ({
+            ...prev,
+            myAttendance: myAttendanceRate,
+            eventsThisWeek: 0,
+            pendingExcuses: 0,
+            sectionAverage: 0
+          }));
+        }
+      } else {
+        setStats(prev => ({
+          ...prev,
+          myAttendance: myAttendanceRate,
+          eventsThisWeek: 0,
+          pendingExcuses: 0,
+          sectionAverage: 0
+        }));
+      }
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
+      // Set default values on error
+      setStats(prev => ({
+        ...prev,
+        myAttendance: 0,
+        eventsThisWeek: 0,
+        pendingExcuses: 0,
+        sectionAverage: 0,
+        totalEvents: 0,
+        averageAttendance: 0,
+        totalMembers: 0,
+        perfectAttendees: 0
+      }));
     } finally {
       setStatsLoading(false);
     }

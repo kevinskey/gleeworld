@@ -114,9 +114,31 @@ export const SchedulingModule = ({ user, isFullPage, onNavigate }: ModuleProps) 
     .sort((a, b) => new Date(a.audition_time_slot).getTime() - new Date(b.audition_time_slot).getTime())
     .slice(0, 2);
 
-  // Mock attendance rate - in real implementation, get from attendance data
-  const attendanceRate = 94;
-  const managedRooms = 8;
+  // Calculate attendance rate from real data
+  const [attendanceStats, setAttendanceStats] = useState({ attendanceRate: 0, managedRooms: 0 });
+  
+  useEffect(() => {
+    const loadAttendanceStats = async () => {
+      try {
+        // Get attendance data to calculate real attendance rate
+        const { data: attendanceData, error } = await supabase
+          .from('attendance')
+          .select('status');
+          
+        if (!error && attendanceData) {
+          const presentCount = attendanceData.filter(a => a.status === 'present').length;
+          const rate = attendanceData.length > 0 ? Math.round((presentCount / attendanceData.length) * 100) : 0;
+          setAttendanceStats(prev => ({ ...prev, attendanceRate: rate }));
+        }
+      } catch (error) {
+        console.error('Error loading attendance stats:', error);
+      }
+    };
+    
+    loadAttendanceStats();
+  }, []);
+
+  const { attendanceRate, managedRooms } = attendanceStats;
 
   const handleCreateEvent = async () => {
     if (!newEvent.title.trim()) {
