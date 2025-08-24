@@ -188,6 +188,28 @@ export const UNIFIED_ACTIONS: UnifiedAction[] = [
     dbFunctionName: 'attendance_management'
   },
   {
+    id: 'submit-excuse',
+    title: 'Submit Excuse',
+    description: 'Submit excuse requests for missed rehearsals or events',
+    icon: Clock,
+    iconColor: 'text-amber-600',
+    category: 'members',
+    type: 'modal',
+    isActive: true,
+    dbFunctionName: 'attendance_management'
+  },
+  {
+    id: 'view-full-record',
+    title: 'View Full Record',
+    description: 'View complete attendance history and statistics',
+    icon: FileText,
+    iconColor: 'text-blue-600',
+    category: 'members',
+    type: 'modal',
+    isActive: true,
+    dbFunctionName: 'attendance_management'
+  },
+  {
     id: 'user-management',
     title: 'User Management',
     description: 'Manage user accounts, roles, and member information',

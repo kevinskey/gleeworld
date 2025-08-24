@@ -6,6 +6,8 @@ import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { useNavigate } from "react-router-dom";
 import { useUnifiedActions } from "@/hooks/useUnifiedActions";
 import { ActionWithPermissions, ActionFilterOptions } from "@/types/unified-actions";
+import { ExcuseGenerator } from "@/components/attendance/ExcuseGenerator";
+import { FullAttendanceRecord } from "@/components/attendance/FullAttendanceRecord";
 
 interface ActionGridProps {
   filterOptions?: ActionFilterOptions;
@@ -137,7 +139,7 @@ export const ActionGrid = ({
 
       {/* Modal for modal-type actions */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {selectedAction?.icon && (
@@ -147,12 +149,25 @@ export const ActionGrid = ({
             </DialogTitle>
           </DialogHeader>
           
-          {selectedAction?.modalComponent && (
-            <selectedAction.modalComponent 
-              onClose={closeModal}
-              onSuccess={closeModal}
-            />
-          )}
+          {selectedAction && (() => {
+            // Handle specific action modals
+            switch (selectedAction.id) {
+              case 'submit-excuse':
+                return <ExcuseGenerator onRequestEdited={closeModal} />;
+              case 'view-full-record':
+                return <FullAttendanceRecord />;
+              default:
+                if (selectedAction.modalComponent) {
+                  const ModalComponent = selectedAction.modalComponent;
+                  return <ModalComponent onClose={closeModal} onSuccess={closeModal} />;
+                }
+                return (
+                  <div className="py-8 text-center">
+                    <p className="text-muted-foreground">Modal content for {selectedAction.title} coming soon.</p>
+                  </div>
+                );
+            }
+          })()}
         </DialogContent>
       </Dialog>
     </div>

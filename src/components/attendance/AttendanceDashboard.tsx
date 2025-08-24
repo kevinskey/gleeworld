@@ -30,6 +30,7 @@ import ScheduleAnalytics from './ScheduleAnalytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
+import { QuickActionsSection } from '@/components/user-dashboard/sections/QuickActionsSection';
 
 export const AttendanceDashboard = () => {
   const { user } = useAuth();
@@ -186,6 +187,14 @@ export const AttendanceDashboard = () => {
 
   return (
     <div className="space-y-4 px-2 sm:px-4 lg:px-6">
+      {/* Quick Actions Section */}
+      <QuickActionsSection 
+        actionFilter="members"
+        isAdmin={isAdmin}
+        userRole={profile?.role}
+        execPosition={undefined}
+      />
+
       {/* User Sections with Admin Collapse Toggle */}
       <div className="bg-white/50 backdrop-blur-sm rounded-xl border">
         {/* Collapsible Header - Only for Admins */}
