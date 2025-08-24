@@ -169,7 +169,7 @@ if (error) {
 }
 
   return (
-    <Card className={cn("w-full max-w-6xl mx-auto", className)}>
+    <Card className={cn("w-full max-w-7xl mx-auto", className)}>
       {/* PDF Content */}
       <CardContent className="p-0">
         <div className="relative w-full h-[calc(100dvh-10rem)] min-h-[70vh] md:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-8rem)]">
