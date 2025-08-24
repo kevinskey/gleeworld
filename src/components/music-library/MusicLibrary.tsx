@@ -194,17 +194,17 @@ export const MusicLibrary = () => {
   return (
     <>
       <MusicLibraryHeader />
-      <div className="px-2 sm:px-4 lg:px-6 pt-4 md:pt-6 pb-6" style={{ width: '90vw', maxWidth: '90vw', margin: '0 auto' }}>
+      <div className="w-full overflow-hidden page-container">
 
         {/* Desktop responsive layout - 40/60 split when PDF is open */}
-        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-6 min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">
+        <div className="flex flex-col lg:grid lg:grid-cols-12 card-spacing min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">
           {/* Left column - Library sections */}
-          <div className={`${selectedPdf ? 'lg:col-span-3' : 'lg:col-span-5'} space-y-4 lg:h-full lg:overflow-y-auto lg:pr-1 order-2 lg:order-1`}>
+          <div className={`${selectedPdf ? 'lg:col-span-3' : 'lg:col-span-5'} section-spacing lg:h-full lg:overflow-y-auto lg:pr-1 order-2 lg:order-1 w-full overflow-hidden`}>
             {/* Study Scores */}
-            <div className="border rounded">
-              <div className="flex items-center justify-between p-2">
+            <div className="w-full overflow-hidden border rounded">
+              <div className="flex items-center justify-between card-compact">
                 <button 
-                  className="flex items-center gap-2 text-sm font-medium" 
+                  className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" 
                   onClick={() => {
                     console.log('Study Scores button clicked, current state:', studyOpen);
                     setStudyOpen((o) => !o);
@@ -214,7 +214,7 @@ export const MusicLibrary = () => {
                 </button>
               </div>
               {studyOpen && (
-                <div className="p-2">
+                <div className="card-compact">
                   <StudyScoresPanel 
                     currentSelected={selectedPdf}
                     onOpenScore={handlePdfSelect}
@@ -224,14 +224,14 @@ export const MusicLibrary = () => {
             </div>
 
             {/* My Collections */}
-            <div className="border rounded">
-              <div className="flex items-center justify-between p-2">
-                <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setCollectionsOpen((o) => !o)}>
+            <div className="w-full overflow-hidden border rounded">
+              <div className="flex items-center justify-between card-compact">
+                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setCollectionsOpen((o) => !o)}>
                   {collectionsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} My Collections
                 </button>
               </div>
               {collectionsOpen && (
-                <div className="p-2">
+                <div className="card-compact">
                   <MyCollectionsPanel
                     currentSelected={selectedPdf}
                     onOpenScore={handlePdfSelect}
@@ -241,14 +241,14 @@ export const MusicLibrary = () => {
             </div>
 
             {/* Setlists */}
-            <div className="border rounded">
-              <div className="flex items-center justify-between p-2">
-                <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setSetlistOpen((o) => !o)}>
+            <div className="w-full overflow-hidden border rounded">
+              <div className="flex items-center justify-between card-compact">
+                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setSetlistOpen((o) => !o)}>
                   {setlistOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Setlists
                 </button>
               </div>
               {setlistOpen && (
-                <div className="p-2">
+                <div className="card-compact">
                   <SetlistBuilder 
                     onPdfSelect={handlePdfSelect} 
                     onOpenPlayer={handleOpenSetlistPlayer}
@@ -258,29 +258,29 @@ export const MusicLibrary = () => {
             </div>
 
             {/* Music Library list */}
-            <div className="border rounded">
-              <div className="flex items-center justify-between p-2">
-                <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setLibraryOpen((o) => !o)}>
+            <div className="w-full overflow-hidden border rounded">
+              <div className="flex items-center justify-between card-compact">
+                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setLibraryOpen((o) => !o)}>
                   {libraryOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Music Library
                 </button>
               </div>
               {libraryOpen && (
-                <div className="space-y-3">
+                <div className="section-spacing">
                   {/* Search field for Music Library */}
-                  <div className="px-2">
+                  <div className="card-compact">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                       <Input
                         placeholder="Search music library..."
                         value={librarySearchQuery}
                         onChange={(e) => setLibrarySearchQuery(e.target.value)}
-                        className="pl-10 h-9 text-sm"
+                        className="pl-10 h-8 mobile-text-lg"
                       />
                     </div>
                   </div>
                   
                   {/* Sheet Music Library */}
-                  <div className="px-2">
+                  <div className="card-compact">
                     <SheetMusicLibrary 
                       searchQuery={librarySearchQuery}
                       selectedCategory="all"
@@ -296,12 +296,12 @@ export const MusicLibrary = () => {
           </div>
 
           {/* Right column - PDF viewer */}
-          <div className={`${selectedPdf ? 'lg:col-span-9' : 'lg:col-span-7'} flex flex-col min-h-[60vh] lg:h-full overflow-hidden lg:pl-1 order-1 lg:order-2`}>
-            <div className="flex items-center justify-between mb-2 lg:mb-4 px-2 lg:px-0">
-              <h2 className="text-base lg:text-lg font-semibold">PDF Viewer</h2>
-              <Button size="sm" variant="outline" className="gap-2 h-8 lg:h-9 px-2 lg:px-3" aria-label="Study Mode" title="Study Mode" onClick={openStudyMode}>
+          <div className={`${selectedPdf ? 'lg:col-span-9' : 'lg:col-span-7'} flex flex-col min-h-[60vh] lg:h-full overflow-hidden lg:pl-1 order-1 lg:order-2 w-full`}>
+            <div className="flex items-center justify-between mb-1 md:mb-4 px-1 lg:px-0">
+              <h2 className="page-header">PDF Viewer</h2>
+              <Button size="sm" variant="outline" className="gap-1 md:gap-2 touch-target px-2 lg:px-3" aria-label="Study Mode" title="Study Mode" onClick={openStudyMode}>
                 <Eye className="h-3 w-3 lg:h-4 lg:w-4" />
-                <span className="hidden sm:inline text-xs lg:text-sm">Study Mode</span>
+                <span className="hidden sm:inline mobile-text-lg">Study Mode</span>
                 <span className="sm:hidden text-xs">Study</span>
               </Button>
             </div>
@@ -316,11 +316,11 @@ export const MusicLibrary = () => {
                 />
               </div>
             ) : (
-              <div className="flex-1 relative rounded-lg lg:rounded-xl overflow-hidden bg-background shadow-lg lg:shadow-xl ring-1 ring-border mx-2 lg:mx-0">
+              <div className="flex-1 relative rounded-lg lg:rounded-xl overflow-hidden bg-background shadow-lg lg:shadow-xl ring-1 ring-border mx-1 lg:mx-0">
                 <img
                   src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png"
                   alt="Glee World Music Library landing image"
-                  className="absolute inset-0 w-full h-full object-contain p-4 lg:p-6"
+                  className="absolute inset-0 w-full h-full object-contain p-2 md:p-4 lg:p-6"
                   loading="lazy"
                 />
               </div>

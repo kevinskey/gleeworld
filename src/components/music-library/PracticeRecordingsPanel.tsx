@@ -87,19 +87,19 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
 
   if (loading) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Music className="h-5 w-5" />
+      <Card className={`w-full overflow-hidden ${className}`}>
+        <CardHeader className="card-header-compact">
+          <CardTitle className="flex items-center gap-1 md:gap-2">
+            <Music className="h-4 w-4 md:h-5 md:w-5" />
             Part Tracks
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="mobile-text-lg">
             Part tracks posted by section leaders for {userProfile?.voice_part || 'your voice part'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span className="ml-2">Loading part tracks...</span>
+        <CardContent className="card-compact flex items-center justify-center py-6 md:py-8">
+          <Loader2 className="h-5 w-5 md:h-6 md:w-6 animate-spin" />
+          <span className="ml-2 mobile-text-lg">Loading part tracks...</span>
         </CardContent>
       </Card>
     );
@@ -111,14 +111,14 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
 
   return (
     <>
-      <Card className={className}>
-        <CardHeader className="flex flex-row items-center justify-between">
+      <Card className={`w-full overflow-hidden ${className}`}>
+        <CardHeader className="card-header-compact flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <Music className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-1 md:gap-2">
+              <Music className="h-4 w-4 md:h-5 md:w-5" />
               Part Tracks
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="mobile-text-lg">
               {userProfile?.voice_part ? 
                 `Part tracks for ${userProfile.voice_part} section` : 
                 'Set your voice part to see your section\'s part tracks'
@@ -126,18 +126,19 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
             </CardDescription>
           </div>
           {canCreateRecordings && (
-            <Button onClick={() => setShowCreateDialog(true)} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Part Track
+            <Button onClick={() => setShowCreateDialog(true)} size="sm" className="touch-target">
+              <Plus className="h-4 w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Add Part Track</span>
+              <span className="sm:hidden">Add</span>
             </Button>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="card-compact">
           {userVoicePartRecordings.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Music className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium">No part tracks available</p>
-              <p className="text-sm">
+            <div className="text-center py-6 md:py-8 text-muted-foreground">
+              <Music className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-2 md:mb-4 opacity-50" />
+              <p className="page-header">No part tracks available</p>
+              <p className="mobile-text-lg">
                 {userProfile?.voice_part ? 
                   `No part tracks have been posted for ${userProfile.voice_part} yet.` :
                   'Set your voice part in your profile to see your section\'s part tracks.'
@@ -145,10 +146,10 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="section-spacing">
               {userVoicePartRecordings.map((recording, index) => (
                 <div key={recording.id}>
-                  <div className="flex items-start gap-4 p-4 rounded-lg border bg-card">
+                  <div className="flex items-start gap-2 md:gap-4 card-compact rounded-lg border bg-card">
                     <audio
                       id={`audio-${recording.id}`}
                       onEnded={() => handleAudioEnded(recording.id)}
@@ -163,7 +164,7 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
                       variant="outline"
                       size="sm"
                       onClick={() => handlePlayPause(recording.id, recording.url)}
-                      className="flex-shrink-0"
+                      className="flex-shrink-0 touch-target"
                     >
                       {playingId === recording.id ? (
                         <Pause className="h-4 w-4" />
@@ -173,14 +174,14 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
                     </Button>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-sm line-clamp-1">{recording.title}</h4>
+                      <div className="flex items-start justify-between card-spacing">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium mobile-text-lg line-clamp-1">{recording.title}</h4>
                           <p className="text-xs text-muted-foreground line-clamp-1">
                             {recording.sheet_music_title}
                           </p>
                         </div>
-                        <div className="flex flex-col items-end gap-1">
+                        <div className="flex flex-col items-end gap-0.5 md:gap-1 flex-shrink-0">
                           {recording.voice_part && (
                             <Badge variant="outline" className={`text-xs ${getVoicePartColor(recording.voice_part)}`}>
                               {recording.voice_part}
@@ -189,10 +190,10 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 md:gap-4 mt-1 md:mt-2 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {recording.owner_name}
+                          <span className="truncate">{recording.owner_name}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
@@ -201,18 +202,18 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
                       </div>
 
                       {recording.notes && (
-                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                        <p className="text-xs text-muted-foreground mt-1 md:mt-2 line-clamp-2">
                           {recording.notes}
                         </p>
                       )}
                     </div>
 
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5 md:gap-1 flex-shrink-0">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDownload(recording.url, recording.title)}
-                        className="h-8 w-8 p-0"
+                        className="touch-target p-1"
                       >
                         <Download className="h-3 w-3" />
                       </Button>
@@ -222,14 +223,14 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
                           variant="ghost"
                           size="sm"
                           onClick={() => deletePracticeRecording(recording.id)}
-                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          className="touch-target p-1 text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       )}
                     </div>
                   </div>
-                  {index < userVoicePartRecordings.length - 1 && <Separator className="my-2" />}
+                  {index < userVoicePartRecordings.length - 1 && <Separator className="my-1 md:my-2" />}
                 </div>
               ))}
             </div>
