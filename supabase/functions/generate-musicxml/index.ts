@@ -495,33 +495,98 @@ serve(async (req) => {
       
       const finalRhythms = validRhythms.length > 0 ? validRhythms : [Array(time.num).fill("quarter")];
       
-      // Generate varied measures using seeded randomization
-      const measures = Array(numMeasures).fill(null).map((_, measureIndex) => {
-        const melodicPattern = rng.choice(melodicPatterns);
-        const rhythmicPattern = rng.choice(finalRhythms);
-        
-        return rhythmicPattern.map((dur, noteIndex) => ({
-          kind: "note",
-          dur: { base: dur, dots: 0 },
-          pitch: { 
-            degree: melodicPattern[noteIndex % melodicPattern.length], 
-            oct: 4, 
-            acc: 0 
-          }
-        }));
-      });
+      // Enhanced fallback generator that respects key signatures
+      console.log(`Generating fallback melody in ${key.tonic} ${key.mode}`);
       
-      const jsonScore = {
-        key,
-        time,
-        numMeasures,
-        parts: [{
-          role: "S",
-          range: { min: "C4", max: "C5" },
-          measures
-        }],
-        cadencePlan: [{ bar: numMeasures, cadence: "PAC" }]
-      };
+      // Define melodic patterns that follow voice leading principles
+      const musicalMelodicPatterns = [
+        // Stepwise ascending patterns
+        [1, 2, 3, 2, 1],
+        [1, 2, 3, 4, 3, 2, 1],
+        [5, 4, 3, 2, 1],
+        
+        // Arpeggiated patterns (chord tones)
+        [1, 3, 5, 3, 1],
+        [1, 5, 3, 1],
+        [3, 1, 5, 3],
+        
+        // Cadential patterns
+        [5, 6, 7, 1], // Authentic cadence approach
+        [2, 7, 1], // Strong cadential motion
+        [4, 3, 2, 1], // Descending resolution
+        
+        // Melodic sequences
+        [1, 2, 3, 2, 3, 4, 3, 4, 5],
+        [5, 4, 3, 4, 3, 2, 3, 2, 1],
+        
+        // Balanced arch phrases
+        [1, 2, 4, 6, 5, 3, 2, 1],
+        [1, 3, 5, 6, 5, 4, 2, 1]
+      ];
+      
+      // Ensure final measure has proper cadence
+      const cadentialEndings = [
+        [7, 1], // Leading tone resolution
+        [2, 1], // Supertonic resolution  
+        [5, 1], // Dominant to tonic
+        [4, 3, 2, 1] // Stepwise descent to tonic
+      ];
+      
+      // Add partsReq definition for fallback
+      const partsReq = [{ role: "S", range: { min: "C4", max: "A5" } }];
+     
+     // Generate measures with proper voice leading
+     const measures = Array(numMeasures).fill(null).map((_, measureIndex) => {
+       let melodicPattern;
+       
+       // Use cadential ending for final measure
+       if (measureIndex === numMeasures - 1) {
+         melodicPattern = cadentialEndings[measureIndex % cadentialEndings.length];
+       } else {
+         melodicPattern = musicalMelodicPatterns[measureIndex % musicalMelodicPatterns.length];
+       }
+       
+       const rhythmicPattern = finalRhythms[measureIndex % finalRhythms.length];
+       
+       // Adjust octave based on melodic contour to stay in range  
+       const baseOctave = 4;
+       let currentOctave = baseOctave;
+       
+       return rhythmicPattern.map((dur, noteIndex) => {
+         const scaleDegree = melodicPattern[noteIndex % melodicPattern.length];
+         
+         // Smart octave management to keep melody in singable range
+         if (scaleDegree <= 2 && currentOctave > 4) currentOctave = 4;
+         if (scaleDegree >= 6 && currentOctave < 5) currentOctave = 5;
+         if (scaleDegree === 8) currentOctave = 5;
+         
+         return {
+           kind: "note",
+           dur: { base: dur, dots: 0 },
+           pitch: { 
+             degree: scaleDegree, 
+             oct: currentOctave, 
+             acc: 0 
+           }
+         };
+       });
+     });
+     
+     // Build proper JSON score with the specified key
+     const jsonScore = {
+       key: { tonic: key.tonic, mode: key.mode },
+       time,
+       numMeasures,
+       parts: [{
+         role: "S",
+         range: { min: partsReq[0].range.min, max: partsReq[0].range.max },
+         measures
+       }],
+       cadencePlan: [
+         { bar: Math.min(4, numMeasures), cadence: "HC" },
+         { bar: numMeasures, cadence: "PAC" }
+       ]
+     };
       
       // Generate MusicXML using the existing helper
       const musicXML = toMusicXML(jsonScore, params.allowAccidentals || false);
@@ -622,17 +687,34 @@ Return this exact JSON structure with your composition:
       if (apiResponse.ok) {
         const aiResult = await apiResponse.json();
         console.log("OpenAI response received successfully");
-        try {
-          // Try to parse JSON from AI response
-          const content = aiResult.choices[0].message.content;
-          const jsonMatch = content.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            aiJson = JSON.parse(jsonMatch[0]);
-            console.log("Successfully parsed AI JSON response");
-          }
-        } catch (parseError) {
-          console.log("Could not parse AI JSON, using fallback");
-        }
+         // Try to parse JSON from AI response
+         const content = aiResult.choices[0].message.content;
+         console.log("Raw AI response:", content.substring(0, 200));
+         
+         // Clean up common formatting issues in AI responses
+         let cleanContent = content
+           .replace(/```json/g, '')
+           .replace(/```/g, '')
+           .replace(/^[^{]*({.*})[^}]*$/s, '$1')
+           .trim();
+         
+         try {
+           aiJson = JSON.parse(cleanContent);
+           console.log("Successfully parsed AI JSON response");
+         } catch (parseError) {
+           console.log("JSON parse failed, trying to extract JSON object...");
+           const jsonMatch = content.match(/\{[\s\S]*\}/);
+           if (jsonMatch) {
+             try {
+               aiJson = JSON.parse(jsonMatch[0]);
+               console.log("Successfully extracted and parsed JSON from AI response");
+             } catch (e) {
+               console.log("Could not parse extracted JSON, using fallback");
+             }
+           } else {
+             console.log("No JSON object found in AI response, using fallback");
+           }
+         }
       } else {
         console.log("OpenAI API call failed, using fallback generation");
       }
