@@ -52,29 +52,27 @@ export const ModuleWrapper = ({
 
   const content = (
     <div className={`${containerClass} ${className}`}>
-      {/* Mobile Header Spacer/Bumper */}
-
       {/* Standardized Header */}
-      <div className={`${headerClass} border-l-4 border-primary pl-4`} style={stickyHeader ? { top: 'var(--app-header-offset)' } : undefined}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div className={`${headerClass} border-l-4 border-primary pl-2 md:pl-4`} style={stickyHeader ? { top: 'var(--app-header-offset)' } : undefined}>
+        <div className="flex items-center justify-between card-spacing">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
             {showBack && (
-              <Button variant="ghost" size="icon" onClick={onBack} aria-label="Go back">
+              <Button variant="ghost" size="sm" onClick={onBack} aria-label="Go back" className="touch-target">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            {Icon && <Icon className={`h-5 w-5 text-${iconColor}-600`} />}
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-sans font-semibold tracking-tight text-base sm:text-lg md:text-xl">{title}</h2>
+            {Icon && <Icon className={`h-4 w-4 md:h-5 md:w-5 text-${iconColor}-600 flex-shrink-0`} />}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1 md:gap-2">
+                <h2 className="page-header truncate">{title}</h2>
                 {isNew && <Badge variant="secondary" className="text-xs">New</Badge>}
               </div>
               {description && (
-                <p className="text-xs text-muted-foreground mt-1">{description}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{description}</p>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
             {headerActions}
             {collapsible && (
               <Button
@@ -84,8 +82,10 @@ export const ModuleWrapper = ({
                 aria-expanded={!collapsed}
                 onClick={() => setCollapsed((v) => !v)}
                 title={collapsed ? 'Expand module' : 'Collapse module'}
+                className="touch-target"
               >
-                {collapsed ? 'Expand' : 'Collapse'}
+                <span className="hidden sm:inline">{collapsed ? 'Expand' : 'Collapse'}</span>
+                {collapsed ? <ChevronDown className="h-4 w-4 sm:hidden" /> : <ChevronUp className="h-4 w-4 sm:hidden" />}
               </Button>
             )}
           </div>
@@ -94,12 +94,12 @@ export const ModuleWrapper = ({
 
       {/* Module Content */}
       {!collapsed && (
-        <div id={`${id}-content`} className="space-y-4 pt-4 sm:pt-0">
+        <div id={`${id}-content`} className="section-spacing pt-2 md:pt-4">
           {isLoading ? (
             <Card>
-              <CardContent className="p-8">
+              <CardContent className="card-compact">
                 <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <div className="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-b-2 border-primary"></div>
                 </div>
               </CardContent>
             </Card>
@@ -112,7 +112,7 @@ export const ModuleWrapper = ({
     </div>
   );
 
-  return fullPage ? content : <div className="space-y-4">{content}</div>;
+  return fullPage ? content : <div className="section-spacing">{content}</div>;
 };
 
 // Standardized module card component for sub-features
@@ -141,25 +141,25 @@ export const ModuleCard = ({
 }: ModuleCardProps) => {
   return (
     <Card className={`hover:shadow-md transition-all ${onClick ? 'cursor-pointer hover:border-primary/20' : ''} ${className}`} onClick={onClick}>
-      <CardHeader className="pb-2">
+      <CardHeader className="card-header-compact">
         <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {Icon && <Icon className={`h-4 w-4 text-${iconColor}-600`} />}
-            <span className="text-sm">{title}</span>
+          <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
+            {Icon && <Icon className={`h-3 w-3 md:h-4 md:w-4 text-${iconColor}-600 flex-shrink-0`} />}
+            <span className="mobile-text-lg truncate">{title}</span>
             {isNew && <Badge variant="secondary" className="text-xs">New</Badge>}
           </div>
           {actions && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-shrink-0">
               {actions}
             </div>
           )}
         </CardTitle>
         {description && (
-          <p className="text-xs text-muted-foreground">{description}</p>
+          <p className="text-xs text-muted-foreground line-clamp-2">{description}</p>
         )}
       </CardHeader>
       {children && (
-        <CardContent className="pt-0">
+        <CardContent className="card-compact pt-0">
           {children}
         </CardContent>
       )}
@@ -190,21 +190,21 @@ export const ModuleStatsCard = ({
 }: ModuleStatsCardProps) => {
   return (
     <Card>
-      <CardContent className="p-4">
+      <CardContent className="card-compact">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="text-xs text-muted-foreground">{title}</p>
-            <p className="text-xl font-semibold">{value}</p>
+            <p className="mobile-text-xl font-semibold">{value}</p>
             {description && (
-              <p className="text-xs text-muted-foreground mt-1">{description}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{description}</p>
             )}
           </div>
           {Icon && (
-            <Icon className={`h-6 w-6 text-${iconColor}-600`} />
+            <Icon className={`h-5 w-5 md:h-6 md:w-6 text-${iconColor}-600 flex-shrink-0`} />
           )}
         </div>
         {trend && (
-          <div className="mt-2 flex items-center gap-1">
+          <div className="mt-1 md:mt-2 flex items-center gap-1">
             <span className={`text-xs ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
               {trend.isPositive ? '+' : '-'}{Math.abs(trend.value)}%
             </span>

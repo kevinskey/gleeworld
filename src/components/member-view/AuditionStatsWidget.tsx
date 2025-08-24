@@ -188,55 +188,55 @@ export const AuditionStatsWidget = () => {
 
   return (
     <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-      <CardContent className="p-4 space-y-4">
+      <CardContent className="card-compact section-spacing">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Music className="h-4 w-4 text-white" />
-            <span className="text-white font-medium text-sm">Audition Insights</span>
+          <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
+            <Music className="h-3 w-3 md:h-4 md:w-4 text-white flex-shrink-0" />
+            <span className="text-white font-medium mobile-text-lg">Audition Insights</span>
           </div>
-          <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+          <Badge variant="secondary" className="bg-white/20 text-white border-white/30 text-xs">
             {stats.activeSession}
           </Badge>
         </div>
 
         {/* Key Stats Grid */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="responsive-grid-2 gap-2 md:gap-3">
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 mb-1">
+            <div className="flex items-center justify-center gap-1 mb-0.5 md:mb-1">
               <Users className="h-3 w-3 text-white/80" />
-              <span className="text-white text-lg font-bold">{stats.totalApplications}</span>
+              <span className="text-white mobile-text-xl font-bold">{stats.totalApplications}</span>
             </div>
             <p className="text-white/70 text-xs">Auditioners</p>
           </div>
 
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 mb-1">
+            <div className="flex items-center justify-center gap-1 mb-0.5 md:mb-1">
               <Timer className="h-3 w-3 text-white/80" />
-              <span className="text-white text-lg font-bold">{stats.pendingCount}</span>
+              <span className="text-white mobile-text-xl font-bold">{stats.pendingCount}</span>
             </div>
             <p className="text-white/70 text-xs">Pending</p>
           </div>
 
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 mb-1">
+            <div className="flex items-center justify-center gap-1 mb-0.5 md:mb-1">
               <TrendingUp className="h-3 w-3 text-white/80" />
-              <span className="text-white text-lg font-bold">{fillPercentage}%</span>
+              <span className="text-white mobile-text-xl font-bold">{fillPercentage}%</span>
             </div>
             <p className="text-white/70 text-xs">Slots Filled</p>
           </div>
 
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 mb-1">
+            <div className="flex items-center justify-center gap-1 mb-0.5 md:mb-1">
               <Star className="h-3 w-3 text-white/80" />
-              <span className="text-white text-lg font-bold">{stats.averageScore.toFixed(1)}</span>
+              <span className="text-white mobile-text-xl font-bold">{stats.averageScore.toFixed(1)}</span>
             </div>
             <p className="text-white/70 text-xs">Avg Score</p>
           </div>
         </div>
 
         {/* Slots Progress */}
-        <div className="space-y-2">
+        <div className="section-spacing">
           <div className="flex justify-between text-xs text-white/80">
             <span>{remainingSlots} slots available</span>
             <span>{stats.slotsFilled}/{stats.slotsAvailable}</span>

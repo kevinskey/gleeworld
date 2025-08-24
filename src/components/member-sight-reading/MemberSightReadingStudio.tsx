@@ -30,24 +30,24 @@ export const MemberSightReadingStudio: React.FC<MemberSightReadingStudioProps> =
   const totalAssignments = assignments.length;
 
   return (
-    <div className="container max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <div className="w-full page-container">
       {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Sight Reading Studio</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
+      <div className="section-spacing">
+        <h1 className="page-title-large">Sight Reading Studio</h1>
+        <p className="mobile-text-lg text-muted-foreground">
           Practice sight reading, complete assignments, and track your progress through the semester.
         </p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="responsive-grid-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium">Current Grade</CardTitle>
-            <Target className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+          <CardHeader className="card-header-compact flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="mobile-text-lg font-medium">Current Grade</CardTitle>
+            <Target className="touch-target h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">
+          <CardContent className="card-compact">
+            <div className="mobile-text-2xl font-bold">
               {semesterGrade?.letter_grade || 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -57,105 +57,99 @@ export const MemberSightReadingStudio: React.FC<MemberSightReadingStudioProps> =
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium">Total Assignments</CardTitle>
-            <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+          <CardHeader className="card-header-compact flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="mobile-text-lg font-medium">Total Assignments</CardTitle>
+            <FileText className="touch-target h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{totalAssignments}</div>
-            <p className="text-xs text-muted-foreground">
-              This semester
-            </p>
+          <CardContent className="card-compact">
+            <div className="mobile-text-2xl font-bold">{totalAssignments}</div>
+            <p className="text-xs text-muted-foreground">This semester</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium">Upcoming</CardTitle>
-            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+          <CardHeader className="card-header-compact flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="mobile-text-lg font-medium">Upcoming</CardTitle>
+            <Calendar className="touch-target h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl sm:text-2xl font-bold text-blue-600">{upcomingCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Due this week
-            </p>
+          <CardContent className="card-compact">
+            <div className="mobile-text-2xl font-bold text-blue-600">{upcomingCount}</div>
+            <p className="text-xs text-muted-foreground">Due this week</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium">Overdue</CardTitle>
-            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+          <CardHeader className="card-header-compact flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="mobile-text-lg font-medium">Overdue</CardTitle>
+            <Calendar className="touch-target h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-xl sm:text-2xl font-bold text-red-600">{overdueCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Needs attention
-            </p>
+          <CardContent className="card-compact">
+            <div className="mobile-text-2xl font-bold text-red-600">{overdueCount}</div>
+            <p className="text-xs text-muted-foreground">Needs attention</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1">
-          <TabsTrigger value="assignments" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="section-spacing">
+        <TabsList className="responsive-grid-2 md:grid-cols-5 gap-0.5 md:gap-1 h-auto p-1">
+          <TabsTrigger value="assignments" className="dropdown-item-compact flex items-center gap-1 md:gap-2">
             <FileText className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
             <span className="hidden xs:inline">Assignments</span>
             <span className="xs:hidden">Assign</span>
             {overdueCount > 0 && (
-              <Badge variant="destructive" className="ml-1 text-xs h-4 w-4 p-0 flex items-center justify-center">
+              <Badge variant="destructive" className="ml-1 text-xs touch-target">
                 {overdueCount}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="practice" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+          <TabsTrigger value="practice" className="dropdown-item-compact flex items-center gap-1 md:gap-2">
             <Music className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
             <span className="hidden xs:inline">Practice</span>
             <span className="xs:hidden">Prac</span>
           </TabsTrigger>
-          <TabsTrigger value="resources" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+          <TabsTrigger value="resources" className="dropdown-item-compact flex items-center gap-1 md:gap-2">
             <Headphones className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
             <span className="hidden xs:inline">Resources</span>
             <span className="xs:hidden">Res</span>
           </TabsTrigger>
-          <TabsTrigger value="grades" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+          <TabsTrigger value="grades" className="dropdown-item-compact flex items-center gap-1 md:gap-2">
             <Target className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
             <span className="hidden xs:inline">Grades</span>
             <span className="xs:hidden">Grade</span>
           </TabsTrigger>
-          <TabsTrigger value="pitch-pipe" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+          <TabsTrigger value="pitch-pipe" className="dropdown-item-compact flex items-center gap-1 md:gap-2">
             <Music className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
             <span className="hidden xs:inline">Pitch Pipe</span>
             <span className="xs:hidden">Pitch</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="assignments" className="space-y-6">
+        <TabsContent value="assignments" className="section-spacing">
           <AssignmentsList user={user} />
         </TabsContent>
 
-        <TabsContent value="practice" className="space-y-6">
+        <TabsContent value="practice" className="section-spacing">
           <PracticeStudio user={user} />
         </TabsContent>
 
-        <TabsContent value="resources" className="space-y-6">
+        <TabsContent value="resources" className="section-spacing">
           <ResourceLibrary user={user} />
         </TabsContent>
 
-        <TabsContent value="grades" className="space-y-6">
+        <TabsContent value="grades" className="section-spacing">
           <GradeTracker user={user} />
         </TabsContent>
 
-        <TabsContent value="pitch-pipe" className="space-y-6">
+        <TabsContent value="pitch-pipe" className="section-spacing">
           <Card>
-            <CardHeader>
-              <CardTitle>Pitch Pipe</CardTitle>
-              <CardDescription>
+            <CardHeader className="card-header-compact">
+              <CardTitle className="page-header">Pitch Pipe</CardTitle>
+              <CardDescription className="mobile-text-lg">
                 Use this virtual pitch pipe to find your starting pitch for sight reading exercises.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="card-compact">
               <PitchPipe />
             </CardContent>
           </Card>
