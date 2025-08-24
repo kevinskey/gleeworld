@@ -134,20 +134,20 @@ export const MusicLibrary = () => {
   // Mobile layout - simple fullscreen
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background w-full max-w-full overflow-hidden">
         {/* Simple Header with Back Button */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-3 border-b w-full">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate((userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 flex-shrink-0"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            <span className="text-sm">Back</span>
           </Button>
-          <h1 className="text-lg font-semibold">Music Library</h1>
-          <div></div> {/* Spacer for centering */}
+          <h1 className="text-base font-semibold truncate mx-2">Music Library</h1>
+          <div className="w-16 flex-shrink-0"></div> {/* Spacer for centering */}
         </div>
 
         {/* Content */}
