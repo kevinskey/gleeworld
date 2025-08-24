@@ -137,14 +137,6 @@ export const MusicLibraryPage: React.FC = () => {
                   variant="outline" 
                   className="w-full justify-start gap-3 h-10 sm:h-11 text-sm transition-all duration-200 hover-scale"
                 >
-                  <Download className="h-4 w-4" />
-                  Download All
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start gap-3 h-10 sm:h-11 text-sm transition-all duration-200 hover-scale"
-                >
                   <Layers className="h-4 w-4" />
                   Study Scores
                 </Button>
