@@ -11,6 +11,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { BackNavigation } from '@/components/shared/BackNavigation';
 import { UpcomingEventsWidget } from '@/components/attendance/UpcomingEventsWidget';
 import { ActionGrid } from '@/components/actions/ActionGrid';
+import { ExcuseGenerator } from '@/components/attendance/ExcuseGenerator';
 
 const AttendancePage = () => {
   const { attendance, loading, getAttendanceStats } = useAttendance();
@@ -138,6 +139,19 @@ const AttendancePage = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Submit Excuse Module */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-amber-600" />
+                  Submit Excuse Request
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ExcuseGenerator />
+              </CardContent>
+            </Card>
           </div>
 
           {/* Sidebar */}
@@ -205,7 +219,6 @@ const AttendancePage = () => {
                 {/* Only show attendance-related quick actions */}
                 <div className="space-y-2">
                   {[
-                    { id: 'submit-excuse', title: 'Submit Excuse', icon: 'AlertCircle' },
                     { id: 'view-full-record', title: 'View Full Record', icon: 'Calendar' },
                     { id: 'attendance-policy', title: 'Attendance Policy', icon: 'ClipboardCheck' }
                   ].map((action) => (
@@ -214,16 +227,13 @@ const AttendancePage = () => {
                       variant="outline" 
                       className="w-full justify-start"
                       onClick={() => {
-                        if (action.id === 'submit-excuse') {
-                          // Open excuse modal
-                        } else if (action.id === 'view-full-record') {
+                        if (action.id === 'view-full-record') {
                           navigate('/member/attendance/full-record');
                         } else if (action.id === 'attendance-policy') {
                           navigate('/handbook/attendance-policy');
                         }
                       }}
                     >
-                      {action.icon === 'AlertCircle' && <AlertCircle className="h-4 w-4 mr-2" />}
                       {action.icon === 'Calendar' && <Calendar className="h-4 w-4 mr-2" />}
                       {action.icon === 'ClipboardCheck' && <ClipboardCheck className="h-4 w-4 mr-2" />}
                       {action.title}
