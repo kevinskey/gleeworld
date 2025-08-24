@@ -22,7 +22,7 @@ export const MusicLibraryPage: React.FC = () => {
   const { userProfile } = useUserProfile(user);
   const { sheetMusic } = useSheetMusic();
   const { setlists } = useSetlists();
-  const [activeView, setActiveView] = useState<'library' | 'practice-recordings'>('library');
+  const [activeView, setActiveView] = useState<'library' | 'practice-recordings' | 'study-scores'>('library');
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -51,10 +51,10 @@ export const MusicLibraryPage: React.FC = () => {
               <p className="text-xs sm:text-sm text-muted-foreground">{sheetMusic.length} pieces</p>
             </Card>
             
-            <Card className="p-3 sm:p-4 lg:p-5 text-center bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200 hover-scale">
+            <Card className="p-3 sm:p-4 lg:p-5 text-center bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200 hover-scale cursor-pointer" onClick={() => setActiveView('study-scores')}>
               <Download className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 mx-auto mb-2 text-blue-600" />
-              <h3 className="font-semibold text-xs sm:text-sm lg:text-base">Sheet Music</h3>
-              <p className="text-xs sm:text-sm text-muted-foreground">{sheetMusic.filter(s => s.pdf_url).length} PDFs</p>
+              <h3 className="font-semibold text-xs sm:text-sm lg:text-base">Study Scores</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">Saved annotations</p>
             </Card>
             
             <Card className="p-3 sm:p-4 lg:p-5 text-center bg-gradient-to-br from-green-50 to-green-100/50 border-green-200 hover-scale cursor-pointer" onClick={() => setActiveView('practice-recordings')}>
@@ -93,6 +93,26 @@ export const MusicLibraryPage: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <MusicLibrary />
+                </CardContent>
+              </Card>
+            ) : activeView === 'study-scores' ? (
+              <Card className="animate-fade-in bg-card/95 backdrop-blur-sm border-border/50 shadow-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-lg sm:text-xl">
+                    <div className="rounded-lg p-2 bg-blue-500/10 text-blue-600">
+                      <Download className="h-5 w-5" />
+                    </div>
+                    Study Scores Directory
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-8 text-center">
+                    <Download className="h-12 w-12 mx-auto mb-4 text-blue-600" />
+                    <h3 className="text-lg font-semibold mb-2">Your Study Scores</h3>
+                    <p className="text-muted-foreground">
+                      Access your saved study scores and annotated sheet music here.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
@@ -134,10 +154,11 @@ export const MusicLibraryPage: React.FC = () => {
                 </Button>
                 
                 <Button 
-                  variant="outline" 
-                  className="w-full justify-start gap-3 h-10 sm:h-11 text-sm transition-all duration-200 hover-scale"
+                  variant={activeView === 'study-scores' ? 'default' : 'outline'} 
+                  className="w-full justify-start gap-3 h-10 sm:h-11 text-sm transition-all duration-200"
+                  onClick={() => setActiveView('study-scores')}
                 >
-                  <Layers className="h-4 w-4" />
+                  <Download className="h-4 w-4" />
                   Study Scores
                 </Button>
               </CardContent>
