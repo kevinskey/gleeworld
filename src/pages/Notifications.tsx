@@ -1,11 +1,11 @@
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
-import { EnhancedNotificationsPanel } from "@/components/notifications/EnhancedNotificationsPanel";
+import ComprehensiveNotificationSystem from "@/components/communication/ComprehensiveNotificationSystem";
 
 export default function Notifications() {
   return (
     <UniversalLayout>
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <EnhancedNotificationsPanel />
+      <div className="container mx-auto px-4 py-6">
+        <ComprehensiveNotificationSystem />
       </div>
     </UniversalLayout>
   );
