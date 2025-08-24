@@ -71,19 +71,6 @@ export const MemberNavigation: React.FC<MemberNavigationProps> = ({ user }) => {
     ];
 
 
-    // Add admin-specific items
-    if (user.is_admin || user.is_super_admin) {
-      baseItems.push(
-        {
-          id: 'notifications',
-          title: 'Notifications',
-          description: 'Send announcements and notifications',
-          icon: Bell,
-          path: '/member/notifications',
-          color: 'bg-yellow-50 text-yellow-600 border-yellow-200'
-        }
-      );
-    }
 
     // Always add personal settings last
     baseItems.push({
