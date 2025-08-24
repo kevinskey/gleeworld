@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardCheck, Calendar, Clock, AlertCircle, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,12 +12,14 @@ import { BackNavigation } from '@/components/shared/BackNavigation';
 import { UpcomingEventsWidget } from '@/components/attendance/UpcomingEventsWidget';
 import { ActionGrid } from '@/components/actions/ActionGrid';
 import { ExcuseGenerator } from '@/components/attendance/ExcuseGenerator';
+import { AttendancePolicyModal } from '@/components/attendance/AttendancePolicyModal';
 
 const AttendancePage = () => {
   const { attendance, loading, getAttendanceStats } = useAttendance();
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
   const navigate = useNavigate();
+  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   
   if (loading) {
     return (
@@ -230,7 +232,7 @@ const AttendancePage = () => {
                         if (action.id === 'view-full-record') {
                           navigate('/member/attendance/full-record');
                         } else if (action.id === 'attendance-policy') {
-                          navigate('/handbook/attendance-policy');
+                          setIsPolicyModalOpen(true);
                         }
                       }}
                     >
@@ -248,6 +250,12 @@ const AttendancePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Attendance Policy Modal */}
+      <AttendancePolicyModal 
+        isOpen={isPolicyModalOpen} 
+        onClose={() => setIsPolicyModalOpen(false)} 
+      />
     </div>
   );
 };
