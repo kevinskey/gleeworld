@@ -184,45 +184,6 @@ export const MusicLibraryPage: React.FC = () => {
 
           {/* Sidebar */}
           <div className="space-y-4 lg:space-y-6">
-            {/* Quick Actions */}
-            <Card className="bg-card/95 backdrop-blur-sm border-border/50 shadow-lg">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                  <div className="rounded-lg p-1.5 bg-accent/10 text-accent-foreground">
-                    <Layers className="h-4 w-4" />
-                  </div>
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  variant={activeView === 'library' ? 'default' : 'outline'} 
-                  className="w-full justify-start gap-3 h-10 sm:h-11 text-sm transition-all duration-200"
-                  onClick={() => setActiveView('library')}
-                >
-                  <BookOpen className="h-4 w-4" />
-                  Music Library
-                </Button>
-                
-                <Button 
-                  variant={activeView === 'practice-recordings' ? 'default' : 'outline'} 
-                  className="w-full justify-start gap-3 h-10 sm:h-11 text-sm transition-all duration-200"
-                  onClick={() => setActiveView('practice-recordings')}
-                >
-                  <Play className="h-4 w-4" />
-                  Part Tracks
-                </Button>
-                
-                <Button 
-                  variant={activeView === 'study-scores' ? 'default' : 'outline'} 
-                  className="w-full justify-start gap-3 h-10 sm:h-11 text-sm transition-all duration-200"
-                  onClick={() => setActiveView('study-scores')}
-                >
-                  <Download className="h-4 w-4" />
-                  Study Scores
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
