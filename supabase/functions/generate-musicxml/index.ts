@@ -443,7 +443,7 @@ serve(async (req) => {
     console.log("OpenAI API Key available:", !!OPENAI_API_KEY);
     
     if (!OPENAI_API_KEY) {
-      console.log("No OpenAI API key found, using seeded fallback generator");
+      console.log("❌ No OpenAI API key found, using seeded fallback generator");
       
       // Create seeded random generator for varied but reproducible results
       const seedString = `${requestId || 'default'}-${randomSeed || Date.now()}`;
@@ -588,7 +588,7 @@ CADENCE REQUIREMENTS:
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
+          model: "gpt-4.1-2025-04-14",
           messages: [
             {
               role: "system",
@@ -608,8 +608,7 @@ SPECIFIC REQUIREMENTS:
 - Phrase structure: ${params.phraseStructure || 'balanced phrases'}`
             }
           ],
-          max_tokens: 1000,
-          temperature: 0.7
+          max_completion_tokens: 1000
         })
       });
       
