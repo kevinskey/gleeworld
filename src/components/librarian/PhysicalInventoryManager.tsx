@@ -5,11 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Edit, Package, MapPin, Calendar, AlertTriangle } from 'lucide-react';
+import { Search, Edit, Package, MapPin, Calendar, AlertTriangle, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface PhysicalScore {
   id: string;
@@ -31,10 +32,22 @@ export const PhysicalInventoryManager = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [editingScore, setEditingScore] = useState<PhysicalScore | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [editForm, setEditForm] = useState({
     physical_copies_count: 0,
     physical_location: '',
     condition_notes: '',
+  });
+  const [newScoreForm, setNewScoreForm] = useState({
+    title: '',
+    composer: '',
+    voicing: '',
+    publisher: '',
+    physical_copies_count: 1,
+    physical_location: '',
+    condition_notes: '',
+    purchase_price: '',
+    donor_name: '',
   });
 
   useEffect(() => {
@@ -116,6 +129,63 @@ export const PhysicalInventoryManager = () => {
     }
   };
 
+  const handleAddNewScore = async () => {
+    if (!newScoreForm.title.trim()) {
+      toast({
+        title: "Error",
+        description: "Title is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('gw_sheet_music')
+        .insert({
+          title: newScoreForm.title.trim(),
+          composer: newScoreForm.composer.trim() || null,
+          voicing: newScoreForm.voicing.trim() || null,
+          publisher: newScoreForm.publisher.trim() || null,
+          physical_copies_count: newScoreForm.physical_copies_count,
+          physical_location: newScoreForm.physical_location.trim() || null,
+          condition_notes: newScoreForm.condition_notes.trim() || null,
+          purchase_price: newScoreForm.purchase_price ? parseFloat(newScoreForm.purchase_price) : null,
+          donor_name: newScoreForm.donor_name.trim() || null,
+          last_inventory_date: new Date().toISOString().split('T')[0],
+          is_public: false,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Physical score added successfully",
+      });
+
+      setShowAddForm(false);
+      setNewScoreForm({
+        title: '',
+        composer: '',
+        voicing: '',
+        publisher: '',
+        physical_copies_count: 1,
+        physical_location: '',
+        condition_notes: '',
+        purchase_price: '',
+        donor_name: '',
+      });
+      fetchPhysicalScores();
+    } catch (error) {
+      console.error('Error adding new score:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add new score",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getInventoryStatus = (lastInventoryDate: string | null) => {
     if (!lastInventoryDate) {
       return { label: 'Never', variant: 'destructive' as const };
@@ -147,14 +217,169 @@ export const PhysicalInventoryManager = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by title, composer, or location..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-md"
-            />
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by title, composer, or location..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="max-w-md"
+              />
+            </div>
+            <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Physical Score
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add New Physical Score</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Title *</Label>
+                      <Input
+                        value={newScoreForm.title}
+                        onChange={(e) => setNewScoreForm(prev => ({
+                          ...prev,
+                          title: e.target.value
+                        }))}
+                        placeholder="Song or piece title"
+                      />
+                    </div>
+                    <div>
+                      <Label>Composer</Label>
+                      <Input
+                        value={newScoreForm.composer}
+                        onChange={(e) => setNewScoreForm(prev => ({
+                          ...prev,
+                          composer: e.target.value
+                        }))}
+                        placeholder="Composer name"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Voicing</Label>
+                      <Select 
+                        value={newScoreForm.voicing} 
+                        onValueChange={(value) => setNewScoreForm(prev => ({
+                          ...prev,
+                          voicing: value
+                        }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select voicing" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="SATB">SATB</SelectItem>
+                          <SelectItem value="SSA">SSA</SelectItem>
+                          <SelectItem value="SSAA">SSAA</SelectItem>
+                          <SelectItem value="SA">SA</SelectItem>
+                          <SelectItem value="Unison">Unison</SelectItem>
+                          <SelectItem value="Solo">Solo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Publisher</Label>
+                      <Input
+                        value={newScoreForm.publisher}
+                        onChange={(e) => setNewScoreForm(prev => ({
+                          ...prev,
+                          publisher: e.target.value
+                        }))}
+                        placeholder="Publishing company"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label>Number of Copies</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={newScoreForm.physical_copies_count}
+                        onChange={(e) => setNewScoreForm(prev => ({
+                          ...prev,
+                          physical_copies_count: parseInt(e.target.value) || 1
+                        }))}
+                      />
+                    </div>
+                    <div>
+                      <Label>Purchase Price ($)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={newScoreForm.purchase_price}
+                        onChange={(e) => setNewScoreForm(prev => ({
+                          ...prev,
+                          purchase_price: e.target.value
+                        }))}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label>Donor Name</Label>
+                      <Input
+                        value={newScoreForm.donor_name}
+                        onChange={(e) => setNewScoreForm(prev => ({
+                          ...prev,
+                          donor_name: e.target.value
+                        }))}
+                        placeholder="If donated"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Physical Location</Label>
+                    <Input
+                      value={newScoreForm.physical_location}
+                      onChange={(e) => setNewScoreForm(prev => ({
+                        ...prev,
+                        physical_location: e.target.value
+                      }))}
+                      placeholder="e.g., Shelf A-3, Box 12, Music Room Cabinet"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Condition Notes</Label>
+                    <Textarea
+                      value={newScoreForm.condition_notes}
+                      onChange={(e) => setNewScoreForm(prev => ({
+                        ...prev,
+                        condition_notes: e.target.value
+                      }))}
+                      placeholder="Describe the condition of the physical copies"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-4">
+                    <Button onClick={handleAddNewScore} className="flex-1">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add to Inventory
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowAddForm(false)}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
