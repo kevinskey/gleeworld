@@ -34,48 +34,8 @@ export const useSRFAssignments = () => {
 
       const totalMembers = members?.length || 15;
 
-      // Create assignments based on typical SRF patterns
-      // In the future, these would come from an srf_assignments table
-      const mockAssignments: SRFAssignment[] = [
-        {
-          id: 'srf-1',
-          title: 'Bach Chorale #47',
-          assigned: `${totalMembers} students`,
-          completed: `${Math.floor(totalMembers * 0.8)} students`,
-          dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          difficulty: 'Intermediate',
-          assignedCount: totalMembers,
-          completedCount: Math.floor(totalMembers * 0.8),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: 'srf-2',
-          title: 'Sight-reading Test #3',
-          assigned: `${totalMembers} students`,
-          completed: `${Math.floor(totalMembers * 0.53)} students`,
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          difficulty: 'Advanced',
-          assignedCount: totalMembers,
-          completedCount: Math.floor(totalMembers * 0.53),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: 'srf-3',
-          title: 'Major Scale Practice',
-          assigned: `${totalMembers} students`,
-          completed: `${totalMembers} students`,
-          dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          difficulty: 'Beginner',
-          assignedCount: totalMembers,
-          completedCount: totalMembers,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
-
-      setAssignments(mockAssignments);
+      // No assignments - return empty array since we've cleaned up mock data
+      setAssignments([]);
     } catch (error) {
       console.error('Error fetching SRF assignments:', error);
       toast({
@@ -90,25 +50,11 @@ export const useSRFAssignments = () => {
 
   const createAssignment = async (assignmentData: Partial<SRFAssignment>) => {
     try {
-      // In the future, this would create a new assignment in the database
-      const newAssignment: SRFAssignment = {
-        id: `srf-${Date.now()}`,
-        title: assignmentData.title || 'New Assignment',
-        assigned: '15 students',
-        completed: '0 students',
-        dueDate: assignmentData.dueDate || new Date().toISOString().split('T')[0],
-        difficulty: assignmentData.difficulty || 'Intermediate',
-        assignedCount: 15,
-        completedCount: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      setAssignments(prev => [newAssignment, ...prev]);
-      
+      // This feature is not implemented yet - assignments should be created through proper admin interface
       toast({
-        title: "Assignment Created",
-        description: "New SRF assignment has been created",
+        title: "Feature Not Available",
+        description: "Assignment creation will be available when the SRF assignments system is fully implemented",
+        variant: "destructive",
       });
     } catch (error) {
       console.error('Error creating assignment:', error);
