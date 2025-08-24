@@ -168,14 +168,9 @@ export const UpcomingEventsWidget = ({
                 <div className={`w-2 h-2 rounded-full ${getEventTypeColor(event.event_type)}`}></div>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className={`font-medium truncate ${compact ? 'text-sm' : ''}`}>
-                      {event.title}
-                    </p>
-                    <Badge variant="outline" className="text-xs">
-                      {event.event_type}
-                    </Badge>
-                  </div>
+                  <p className={`font-medium truncate ${compact ? 'text-sm' : ''}`}>
+                    {event.title}
+                  </p>
                   
                   <div className={`flex items-center gap-3 text-muted-foreground ${compact ? 'text-xs' : 'text-sm'}`}>
                     <div className="flex items-center gap-1">
