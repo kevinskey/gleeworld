@@ -1153,18 +1153,55 @@ export const SightSingingStudio: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="library" className="mt-6">
-            <ScoreLibraryManager 
-              onScoreSelect={(score) => {
-                setSelectedScore(score);
-                if (score.xml_content) {
-                  setCurrentMusicXML(score.xml_content);
-                  setCurrentScore(null); // Clear generated score when uploading
-                  setCurrentBpm(120); // Reset to default BPM for uploaded files
-                  setActiveTab('practice');
-                }
-              }}
-              selectedScoreId={selectedScore?.id}
-            />
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">📚 Import Your XML Files for AI Grading</h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Upload your MusicXML files here. Once loaded, students can practice them and receive AI-powered grading on their pitch accuracy, rhythm, and musicality.
+                </p>
+              </div>
+              
+              <ScoreLibraryManager 
+                onScoreSelect={(score) => {
+                  console.log('📚 Loading imported score for practice:', score);
+                  setSelectedScore(score);
+                  if (score.xml_content) {
+                    setCurrentMusicXML(score.xml_content);
+                    setCurrentExerciseId(`library-${score.id}`); // Set exercise ID for grading
+                    setCurrentScore(null); // Clear generated score when loading library score
+                    setCurrentBpm(120); // Default BPM for imported scores
+                    setActiveTab('practice');
+                    
+                    toast({
+                      title: "Score Loaded",
+                      description: `"${score.title}" is ready for practice and AI grading!`,
+                    });
+                  } else {
+                    toast({
+                      title: "No XML Content",
+                      description: "This score needs XML content to be practiced. Please upload an XML file for this score.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                selectedScoreId={selectedScore?.id}
+              />
+              
+              {selectedScore && currentMusicXML && (
+                <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <h4 className="font-medium text-green-900 dark:text-green-100">Ready for Practice & Grading</h4>
+                  </div>
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    <strong>"{selectedScore.title}"</strong> by {selectedScore.composer || 'Unknown'} is loaded.
+                  </p>
+                  <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                    Switch to the <strong>Practice</strong> tab to record and get AI feedback on pitch accuracy, rhythm, and musicality.
+                  </p>
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
