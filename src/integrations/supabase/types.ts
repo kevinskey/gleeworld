@@ -16114,6 +16114,10 @@ export type Database = {
         Args: { group_id: string }
         Returns: boolean
       }
+      user_owns_study_score: {
+        Args: { study_score_id: string }
+        Returns: boolean
+      }
       validate_password_strength: {
         Args: { password_text: string }
         Returns: Json
