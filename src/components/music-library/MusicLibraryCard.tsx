@@ -130,8 +130,8 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
       }`}
       onClick={handleCardClick}
     >
-      <CardContent className="card-compact w-full min-w-0">
-        <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-4">
+      <CardContent className="card-compact w-full min-w-0 overflow-hidden">
+        <div className="flex flex-col gap-3">
           <div className="flex-1 min-w-0 w-full">
             <div className="flex items-center gap-1 mb-0.5">
               <Music className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -185,14 +185,14 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-1 flex-wrap sm:flex-col md:flex-row w-full sm:w-auto justify-end">
+          <div className="flex gap-2 flex-wrap w-full">
             {/* Primary Actions */}
             {piece.pdf_url && canDownloadPDF() && (
               <EnhancedTooltip content="Download sheet music PDF">
-                <Button size="sm" variant="outline" asChild className="touch-target">
+                <Button size="sm" variant="outline" asChild className="touch-target flex-1 min-w-0">
                   <a href={piece.pdf_url} target="_blank" rel="noopener noreferrer">
-                    <Download className="h-4 w-4 sm:mr-1" />
-                    <span className="hidden sm:inline">PDF</span>
+                    <Download className="h-4 w-4 mr-1" />
+                    <span className="truncate">PDF</span>
                   </a>
                 </Button>
               </EnhancedTooltip>
@@ -200,10 +200,10 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
             
             {piece.audio_preview_url && (
               <EnhancedTooltip content="Listen to audio preview">
-                <Button size="sm" variant="outline" asChild className="touch-target">
+                <Button size="sm" variant="outline" asChild className="touch-target flex-1 min-w-0">
                   <a href={piece.audio_preview_url} target="_blank" rel="noopener noreferrer">
-                    <Play className="h-4 w-4 sm:mr-1" />
-                    <span className="hidden sm:inline">Audio</span>
+                    <Play className="h-4 w-4 mr-1" />
+                    <span className="truncate">Audio</span>
                   </a>
                 </Button>
               </EnhancedTooltip>
@@ -214,9 +214,9 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
               <EnhancedTooltip content="View or create study scores">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="default" className="touch-target">
-                      <BookOpen className="h-4 w-4 sm:mr-1" />
-                      <span className="hidden sm:inline">Study</span>
+                    <Button size="sm" variant="default" className="touch-target flex-1 min-w-0">
+                      <BookOpen className="h-4 w-4 mr-1" />
+                      <span className="truncate">Study</span>
                     </Button>
                   </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -246,10 +246,10 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
                   variant="outline" 
                   onClick={handleCreateStudyScore}
                   disabled={loading || !piece.pdf_url}
-                  className="touch-target"
+                  className="touch-target flex-1 min-w-0"
                 >
-                  <BookOpen className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Study</span>
+                  <BookOpen className="h-4 w-4 mr-1" />
+                  <span className="truncate">Study</span>
                 </Button>
               </EnhancedTooltip>
             )}
@@ -258,7 +258,7 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
             <EnhancedTooltip content="More actions and setlist options">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="ghost" className="touch-target">
+                  <Button size="sm" variant="ghost" className="touch-target flex-shrink-0">
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
