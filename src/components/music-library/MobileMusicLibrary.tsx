@@ -88,9 +88,9 @@ export const MobileMusicLibrary = ({
   };
 
   return (
-    <div className="h-full flex flex-col w-full">
+    <div className="w-full max-w-full flex flex-col overflow-hidden">
       {/* Mobile Header */}
-      <div className="flex-shrink-0 bg-background border-b p-4 space-y-3">
+      <div className="flex-shrink-0 bg-background border-b p-3 space-y-3">
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -103,9 +103,9 @@ export const MobileMusicLibrary = ({
         </div>
 
         {/* Filters Row */}
-        <div className="flex gap-1 overflow-x-auto pb-1">
+        <div className="flex gap-2 overflow-x-auto pb-1">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-28 h-8 sm:h-10 text-xs">
+            <SelectTrigger className="w-24 h-8 text-xs flex-shrink-0">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -117,7 +117,7 @@ export const MobileMusicLibrary = ({
           </Select>
 
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-28 h-8 sm:h-10 text-xs">
+            <SelectTrigger className="w-24 h-8 text-xs flex-shrink-0">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -131,7 +131,7 @@ export const MobileMusicLibrary = ({
             variant="outline"
             size="icon"
             onClick={() => setViewMode(viewMode === "list" ? "grid" : "list")}
-            className="h-8 w-8 sm:h-9 sm:w-9"
+            className="h-8 w-8 flex-shrink-0"
           >
             {viewMode === "list" ? <Grid3X3 className="h-4 w-4" /> : <LayoutList className="h-4 w-4" />}
           </Button>
@@ -155,8 +155,8 @@ export const MobileMusicLibrary = ({
       </div>
 
       {/* Tab Navigation */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <TabsList className="flex-shrink-0 grid w-full grid-cols-4 mx-4 my-2 gap-1">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 w-full">
+        <TabsList className="flex-shrink-0 grid w-full grid-cols-4 mx-3 my-2 gap-1">
           <TabsTrigger value="library" className="text-[11px] px-1 py-1">
             <Music className="h-4 w-4 mr-1" />
             Library
@@ -176,8 +176,8 @@ export const MobileMusicLibrary = ({
         </TabsList>
 
         {/* Tab Content */}
-        <div ref={scrollContainerRef as any} className="flex-1 overflow-y-auto min-h-0">
-          <TabsContent value="library" className="h-full px-4 py-2 space-y-3 mt-0">
+        <div ref={scrollContainerRef as any} className="flex-1 overflow-y-auto min-h-0 w-full">
+          <TabsContent value="library" className="h-full px-3 py-2 space-y-3 mt-0 w-full">
             <SheetMusicLibrary 
               searchQuery={searchQuery}
               selectedCategory={selectedCategory}
@@ -188,21 +188,21 @@ export const MobileMusicLibrary = ({
             />
           </TabsContent>
 
-          <TabsContent value="study" className="h-full px-4 py-2 mt-0">
+          <TabsContent value="study" className="h-full px-3 py-2 mt-0 w-full">
             <StudyScoresPanel 
               currentSelected={selectedPdf}
               onOpenScore={onPdfSelect}
             />
           </TabsContent>
 
-          <TabsContent value="collections" className="h-full px-4 py-2 mt-0">
+          <TabsContent value="collections" className="h-full px-3 py-2 mt-0 w-full">
             <MyCollectionsPanel
               currentSelected={selectedPdf}
               onOpenScore={onPdfSelect}
             />
           </TabsContent>
 
-          <TabsContent value="setlists" className="h-full px-4 py-2 mt-0">
+          <TabsContent value="setlists" className="h-full px-3 py-2 mt-0 w-full">
             <SetlistBuilder 
               onPdfSelect={onPdfSelect} 
               onOpenPlayer={onOpenSetlistPlayer}
