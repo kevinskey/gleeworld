@@ -73,15 +73,19 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({ user }) => {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{averageScore.toFixed(1)}%</div>
-            <div className="flex items-center space-x-2 mt-1">
-              <Badge 
-                variant="outline" 
-                className={getGradeColor(averageScore)}
-              >
-                {getLetterGrade(averageScore)}
-              </Badge>
+            <div className="text-2xl font-bold">
+              {totalAttempts > 0 ? averageScore.toFixed(1) : '--'}%
             </div>
+            {totalAttempts > 0 && (
+              <div className="flex items-center space-x-2 mt-1">
+                <Badge 
+                  variant="outline" 
+                  className={getGradeColor(averageScore)}
+                >
+                  {getLetterGrade(averageScore)}
+                </Badge>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -91,15 +95,19 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({ user }) => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{bestScore.toFixed(1)}%</div>
-            <div className="flex items-center space-x-2 mt-1">
-              <Badge 
-                variant="outline" 
-                className={getGradeColor(bestScore)}
-              >
-                {getLetterGrade(bestScore)}
-              </Badge>
+            <div className="text-2xl font-bold">
+              {totalAttempts > 0 ? bestScore.toFixed(1) : '--'}%
             </div>
+            {totalAttempts > 0 && (
+              <div className="flex items-center space-x-2 mt-1">
+                <Badge 
+                  variant="outline" 
+                  className={getGradeColor(bestScore)}
+                >
+                  {getLetterGrade(bestScore)}
+                </Badge>
+              </div>
+            )}
           </CardContent>
         </Card>
 
