@@ -315,7 +315,7 @@ const Profile = () => {
       const { error } = await supabase
         .from("gw_profiles")
         .update(updatePayload)
-        .eq("id", user.id);
+        .eq("user_id", user.id);
 
       if (error) {
         console.error("Supabase error:", error);
