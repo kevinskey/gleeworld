@@ -136,12 +136,22 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
     if (!window.confirm('Delete this Study Score? This will remove shares and the stored copy.')) return;
     setDeletingId(id);
     try {
-      // Remove collaborators
+      console.log('Starting study score deletion for:', id);
+      
+      // Remove collaborators first
       const { error: collabErr } = await supabase.from('gw_study_score_collaborators').delete().eq('study_score_id', id);
-      if (collabErr) throw collabErr;
+      if (collabErr) {
+        console.error('Error deleting collaborators:', collabErr);
+        throw collabErr;
+      }
+      
       // Delete study score row
       const { error: delErr } = await supabase.from('gw_study_scores').delete().eq('id', id);
-      if (delErr) throw delErr;
+      if (delErr) {
+        console.error('Error deleting study score:', delErr);
+        throw delErr;
+      }
+      
       // Best-effort: delete storage object
       try {
         const url = new URL(pdfUrl);
@@ -149,16 +159,21 @@ export const StudyScoresPanel: React.FC<StudyScoresPanelProps> = ({ currentSelec
         if (idx !== -1) {
           const path = url.pathname.substring(idx + '/object/public/'.length); // 'study-scores/...'
           const filePath = path.replace('study-scores/', '');
-          if (filePath) await supabase.storage.from('study-scores').remove([filePath]);
+          if (filePath) {
+            console.log('Deleting storage file:', filePath);
+            await supabase.storage.from('study-scores').remove([filePath]);
+          }
         }
       } catch (e) {
         console.warn('Study score storage delete skipped:', e);
       }
+      
+      console.log('Study score deleted successfully, refreshing scores');
       await fetchScores();
-      toast.success('Study score deleted');
+      toast.success('Study score deleted successfully');
     } catch (e: any) {
-      console.error('Failed to delete study score', e);
-      toast.error(e?.message || 'Failed to delete study score');
+      console.error('Failed to delete study score:', e);
+      toast.error(e?.message || 'Failed to delete study score. Please try again.');
     } finally {
       setDeletingId(null);
     }
