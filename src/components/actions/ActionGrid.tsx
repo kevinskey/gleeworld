@@ -40,25 +40,31 @@ export const ActionGrid = ({
   });
 
   const handleActionClick = (action: ActionWithPermissions) => {
+    console.log('🔍 Action clicked:', action.id, action.type, action);
+    
     if (!action.hasPermission) {
+      console.log('❌ No permission for action:', action.id);
       return;
     }
 
     switch (action.type) {
       case 'navigation':
+        console.log('🧭 Navigating to:', action.route);
         if (action.route) {
           navigate(action.route);
         }
         break;
       case 'modal':
+        console.log('📱 Opening modal for:', action.id);
         setSelectedAction(action);
         setIsModalOpen(true);
         break;
       case 'function':
+        console.log('⚡ Executing function for:', action.id);
         executeAction(action.id);
         break;
       default:
-        console.log(`Execute action: ${action.title}`);
+        console.log(`❓ Unknown action type: ${action.type} for ${action.title}`);
     }
   };
 
@@ -70,6 +76,8 @@ export const ActionGrid = ({
   if (loading) {
     return <div className="text-center p-4">Loading actions...</div>;
   }
+
+  console.log('🔍 ActionGrid actions:', actions.map(a => ({ id: a.id, title: a.title, hasPermission: a.hasPermission })));
 
   const renderActionGrid = (actionsToRender: ActionWithPermissions[]) => (
     <div className={`grid gap-3 lg:gap-4 ${
@@ -153,9 +161,17 @@ export const ActionGrid = ({
             // Handle specific action modals
             switch (selectedAction.id) {
               case 'submit-excuse':
-                return <ExcuseGenerator onRequestEdited={closeModal} />;
+                return (
+                  <div className="p-4">
+                    <ExcuseGenerator onRequestEdited={closeModal} />
+                  </div>
+                );
               case 'view-full-record':
-                return <FullAttendanceRecord />;
+                return (
+                  <div className="p-4">
+                    <FullAttendanceRecord />
+                  </div>
+                );
               default:
                 if (selectedAction.modalComponent) {
                   const ModalComponent = selectedAction.modalComponent;
