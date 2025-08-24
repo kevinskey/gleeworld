@@ -57,7 +57,9 @@ interface ExcuseRequest {
 }
 
 export const FullAttendanceRecord = () => {
+  console.log('🔍 FullAttendanceRecord: Component rendering');
   const { user } = useAuth();
+  console.log('🔍 FullAttendanceRecord: User:', user);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [excuseRequests, setExcuseRequests] = useState<ExcuseRequest[]>([]);
   const [stats, setStats] = useState<AttendanceStats>({
@@ -83,6 +85,7 @@ export const FullAttendanceRecord = () => {
     if (!user) return;
 
     try {
+      console.log('🔍 FullAttendanceRecord: Starting data load for user:', user?.id);
       setLoading(true);
       
       let startDate: Date;
@@ -110,6 +113,8 @@ export const FullAttendanceRecord = () => {
           break;
       }
 
+      console.log('🔍 FullAttendanceRecord: Date range:', { startDate: startDate.toISOString(), endDate: endDate.toISOString() });
+
       const { data, error } = await supabase
         .from('attendance')
         .select(`
@@ -120,6 +125,8 @@ export const FullAttendanceRecord = () => {
         .gte('recorded_at', startDate.toISOString())
         .lte('recorded_at', endDate.toISOString())
         .order('recorded_at', { ascending: false });
+
+      console.log('🔍 FullAttendanceRecord: Query result:', { data, error });
 
       if (error) throw error;
 
@@ -139,10 +146,11 @@ export const FullAttendanceRecord = () => {
         }
       }));
 
+      console.log('🔍 FullAttendanceRecord: Transformed data:', transformedData);
       setRecords(transformedData);
       calculateStats(transformedData);
     } catch (error) {
-      console.error('Error loading attendance data:', error);
+      console.error('❌ FullAttendanceRecord: Error loading attendance data:', error);
     } finally {
       setLoading(false);
     }
