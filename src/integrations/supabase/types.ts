@@ -10237,6 +10237,41 @@ export type Database = {
           },
         ]
       }
+      gw_sms_conversations: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          is_active: boolean
+          twilio_phone_number: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          is_active?: boolean
+          twilio_phone_number: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          is_active?: boolean
+          twilio_phone_number?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_sms_conversations_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "gw_message_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_sms_logs: {
         Row: {
           created_at: string
@@ -10269,6 +10304,50 @@ export type Database = {
           to_number?: string
         }
         Relationships: []
+      }
+      gw_sms_messages: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          direction: string
+          id: string
+          message_body: string
+          sender_phone: string
+          sender_user_id: string | null
+          status: string
+          twilio_message_sid: string | null
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          direction: string
+          id?: string
+          message_body: string
+          sender_phone: string
+          sender_user_id?: string | null
+          status?: string
+          twilio_message_sid?: string | null
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          message_body?: string
+          sender_phone?: string
+          sender_user_id?: string | null
+          status?: string
+          twilio_message_sid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_sms_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sms_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_sms_notifications: {
         Row: {

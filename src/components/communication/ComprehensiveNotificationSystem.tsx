@@ -22,11 +22,13 @@ import {
   AlertCircle,
   XCircle,
   Loader2,
-  FileText
+  FileText,
+  Phone
 } from "lucide-react";
 import { toast } from 'sonner';
 import { useCommunicationSystem } from '@/hooks/useCommunicationSystem';
 import { useAuth } from '@/contexts/AuthContext';
+import { GroupSMSInterface } from '@/components/messaging/GroupSMSInterface';
 
 interface NotificationFormData {
   title: string;
@@ -64,6 +66,7 @@ const ComprehensiveNotificationSystem = () => {
 
   const [sending, setSending] = useState(false);
   const [activeTab, setActiveTab] = useState('compose');
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
 
   const communicationTypes = [
     { value: 'announcement', label: 'Announcement', icon: Bell, color: 'bg-blue-500' },
@@ -233,10 +236,14 @@ const ComprehensiveNotificationSystem = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="compose" className="flex items-center gap-2">
             <Send className="h-4 w-4" />
             Compose
+          </TabsTrigger>
+          <TabsTrigger value="group-sms" className="flex items-center gap-2">
+            <Phone className="h-4 w-4" />
+            Group SMS
           </TabsTrigger>
           <TabsTrigger value="templates" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -449,6 +456,61 @@ const ComprehensiveNotificationSystem = () => {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        </TabsContent>
+
+        {/* Group SMS Tab */}
+        <TabsContent value="group-sms" className="space-y-4">
+          <div className="space-y-4">
+            {messageGroups.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Phone className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No message groups available</p>
+                <p className="text-sm">Create a message group first to enable SMS</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Phone className="h-5 w-5 mr-2" />
+                      Group SMS Conversations
+                    </CardTitle>
+                    <CardDescription>
+                      Enable GroupMe-style SMS messaging for your groups. Members can send and receive messages via text.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Select Group</Label>
+                    <Select 
+                      value={selectedGroupId} 
+                      onValueChange={setSelectedGroupId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a group for SMS" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {messageGroups.map((group) => (
+                          <SelectItem key={group.id} value={group.id}>
+                            {group.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedGroupId && (
+                    <GroupSMSInterface
+                      groupId={selectedGroupId}
+                      groupName={messageGroups.find(g => g.id === selectedGroupId)?.name || 'Group'}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
 
