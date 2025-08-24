@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAttendance } from '@/hooks/useAttendance';
 import { BackNavigation } from '@/components/shared/BackNavigation';
 import { UpcomingEventsWidget } from '@/components/attendance/UpcomingEventsWidget';
+import { ActionGrid } from '@/components/actions/ActionGrid';
 
 const AttendancePage = () => {
   const { attendance, loading, getAttendanceStats } = useAttendance();
@@ -194,19 +195,16 @@ const AttendancePage = () => {
               <CardHeader>
                 <CardTitle className="text-lg">Quick Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  Submit Excuse
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  View Full Record
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <ClipboardCheck className="h-4 w-4 mr-2" />
-                  Attendance Policy
-                </Button>
+              <CardContent>
+                <ActionGrid 
+                  filterOptions={{
+                    userRole: 'member'
+                  }}
+                  category="members"
+                  gridCols={1}
+                  showCategoryHeaders={false}
+                  className="space-y-2"
+                />
               </CardContent>
             </Card>
 
