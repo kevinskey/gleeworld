@@ -136,7 +136,7 @@ export const MusicLibrary = () => {
         <div className="fixed inset-0 bg-background z-40 flex flex-col">
           <MusicLibraryHeader />
           {/* Fullscreen Content */}
-          <div className="flex-1 overflow-hidden mt-14">
+          <div className="flex-1 overflow-hidden">
             {mobileView === 'library' ? (
               <MobileMusicLibrary
                 onPdfSelect={handlePdfSelect}
