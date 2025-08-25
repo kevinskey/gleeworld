@@ -97,6 +97,7 @@ export default function WeekDetail() {
 
   console.log('Week found:', wk);
   console.log('Week tracks:', wk.tracks);
+  console.log('Total tracks found for week', num, ':', wk.tracks.length);
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
