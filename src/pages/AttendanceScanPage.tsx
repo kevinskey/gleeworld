@@ -64,6 +64,10 @@ const AttendanceScanPage = () => {
 
       if (error) throw error;
 
+      if (!data) {
+        throw new Error('No response from server');
+      }
+
       const result = typeof data === 'object' && data !== null && !Array.isArray(data) 
         ? data as any 
         : { success: false, message: 'Invalid response format' };

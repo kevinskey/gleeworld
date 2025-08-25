@@ -122,7 +122,7 @@ export const QRAttendanceScanner = () => {
         ip_address_param: null
       });
 
-      // Call secure scanning function with rate limiting (will use _secure after types refresh)
+      // Call the QR attendance processing function
       const { data, error } = await supabase.rpc('process_qr_attendance_scan', {
         qr_token_param: qrToken,
         user_id_param: user.id,
@@ -134,6 +134,10 @@ export const QRAttendanceScanner = () => {
       console.log('RPC response:', { data, error });
 
       if (error) throw error;
+
+      if (!data) {
+        throw new Error('No response from server');
+      }
 
       const result = typeof data === 'object' && data !== null && !Array.isArray(data) 
         ? data as unknown as ScanResult 
