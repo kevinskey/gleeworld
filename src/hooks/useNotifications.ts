@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useGlobalSubscriptions } from './useGlobalSubscriptions';
 import { Database } from '@/integrations/supabase/types';
 
 type Notification = Database['public']['Tables']['gw_notifications']['Row'];
@@ -9,6 +10,7 @@ type NotificationInsert = Database['public']['Tables']['gw_notifications']['Inse
 
 export const useNotifications = () => {
   const { user } = useAuth();
+  const { subscribeToNotifications, unsubscribeFromNotifications } = useGlobalSubscriptions();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -212,64 +214,46 @@ export const useNotifications = () => {
     }
   };
 
-  // Set up realtime subscription
+  // Set up realtime subscription using global subscription manager
   useEffect(() => {
     if (!user) return;
 
-    const channelName = `notifications-${user.id}-${Date.now()}`;
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'gw_notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          const newNotification = payload.new as Notification;
-          setNotifications(prev => [newNotification, ...prev]);
-          setUnreadCount(prev => prev + 1);
-          
-          // Show toast for new notification
-          toast(newNotification.title, {
-            description: newNotification.message,
-            action: newNotification.action_url ? {
-              label: newNotification.action_label || 'View',
-              onClick: () => window.location.href = newNotification.action_url!
-            } : undefined
-          });
+    const handleNotificationChange = (payload: any) => {
+      if (payload.eventType === 'INSERT') {
+        const newNotification = payload.new as Notification;
+        setNotifications(prev => [newNotification, ...prev]);
+        setUnreadCount(prev => prev + 1);
+        
+        // Show toast for new notification
+        toast(newNotification.title, {
+          description: newNotification.message,
+          action: newNotification.action_url ? {
+            label: newNotification.action_label || 'View',
+            onClick: () => window.location.href = newNotification.action_url!
+          } : undefined
+        });
+      } else if (payload.eventType === 'UPDATE') {
+        const updatedNotification = payload.new as Notification;
+        setNotifications(prev => 
+          prev.map(n => 
+            n.id === updatedNotification.id ? updatedNotification : n
+          )
+        );
+        
+        // Update unread count
+        if (updatedNotification.is_read) {
+          setUnreadCount(prev => Math.max(0, prev - 1));
         }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'gw_notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          const updatedNotification = payload.new as Notification;
-          setNotifications(prev => 
-            prev.map(n => 
-              n.id === updatedNotification.id ? updatedNotification : n
-            )
-          );
-          
-          // Update unread count
-          if (updatedNotification.is_read) {
-            setUnreadCount(prev => Math.max(0, prev - 1));
-          }
-        }
-      )
-      .subscribe();
+      }
+    };
+
+    // Use global subscription manager
+    subscribeToNotifications(user.id, handleNotificationChange);
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribeFromNotifications(user.id);
     };
-  }, [user]);
+  }, [user, subscribeToNotifications, unsubscribeFromNotifications]);
 
   // Load notifications on mount
   useEffect(() => {

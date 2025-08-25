@@ -137,15 +137,18 @@ export const useGleeWorldEvents = () => {
   };
 
   const setupRealtime = async () => {
-    // Prevent multiple subscriptions
-    if (isSubscribedRef.current) {
+    // Prevent multiple subscriptions - check if we already have an active subscription
+    if (isSubscribedRef.current && channelRef.current) {
+      console.log('useGleeWorldEvents: Subscription already active, skipping...');
       return;
     }
 
     // Clean up existing channel completely
     if (channelRef.current) {
+      console.log('useGleeWorldEvents: Cleaning up existing channel...');
       await supabase.removeChannel(channelRef.current);
       channelRef.current = null;
+      isSubscribedRef.current = false;
     }
 
     // Create a new channel with unique identifier
