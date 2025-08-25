@@ -1293,57 +1293,57 @@ const App = () => {
                               <Route 
                                 path="/classes/mus240" 
                                 element={
-                                  <ProtectedRoute>
+                                  <PublicRoute>
                                     <ClassLanding />
-                                  </ProtectedRoute>
+                                  </PublicRoute>
                                 } 
                               />
                              <Route 
                                path="/classes/mus240/syllabus" 
                                element={
-                                   <ProtectedRoute>
+                                   <PublicRoute>
                                     <SyllabusPage />
-                                  </ProtectedRoute>
+                                  </PublicRoute>
                                } 
                              />
                               <Route 
                                 path="/classes/mus240/assignments" 
                                 element={
-                                   <ProtectedRoute>
+                                   <PublicRoute>
                                      <AssignmentWeek />
-                                   </ProtectedRoute>
+                                   </PublicRoute>
                                 } 
                               />
                               <Route 
                                 path="/classes/mus240/assignments/:assignmentId" 
                                 element={
-                                  <ProtectedRoute>
+                                  <PublicRoute>
                                     <AssignmentJournal />
-                                  </ProtectedRoute>
+                                  </PublicRoute>
                                 } 
                               />
                               <Route 
                                 path="/classes/mus240/listening" 
                                 element={
-                                  <ProtectedRoute>
+                                  <PublicRoute>
                                     <ListeningHub />
-                                  </ProtectedRoute>
+                                  </PublicRoute>
                                 } 
                               />
                               <Route 
                                 path="/classes/mus240/listening/:week" 
                                 element={
-                                  <ProtectedRoute>
+                                  <PublicRoute>
                                     <WeekDetail />
-                                  </ProtectedRoute>
+                                  </PublicRoute>
                                 } 
                               />
                               <Route 
                                 path="/classes/mus240/resources" 
                                 element={
-                                  <ProtectedRoute>
+                                  <PublicRoute>
                                     <Resources />
-                                  </ProtectedRoute>
+                                  </PublicRoute>
                                 } 
                               />
                          </Routes>
