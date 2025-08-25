@@ -136,7 +136,7 @@ export const ExecutiveBoardDropdown = () => {
   };
 
   const handleMemberClick = (userId: string) => {
-    navigate(`/member-view/${userId}`);
+    navigate(`/profile/${userId}`);
   };
 
   const groupedMembers = groupMembersByPosition(members);
