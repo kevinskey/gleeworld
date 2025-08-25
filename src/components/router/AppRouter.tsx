@@ -43,6 +43,15 @@ import { Onboarding } from "@/pages/Onboarding";
 import { MessagingInterface } from '@/components/messaging/MessagingInterface';
 import StudentRegistration from "@/pages/StudentRegistration";
 
+// MUS240 Pages
+import ClassLanding from "@/pages/mus240/ClassLanding";
+import AssignmentJournal from "@/pages/mus240/AssignmentJournal";
+import Resources from "@/pages/mus240/Resources";
+import ListeningHub from "@/pages/mus240/ListeningHub";
+import AssignmentWeek from "@/pages/mus240/AssignmentWeek";
+import WeekDetail from "@/pages/mus240/WeekDetail";
+import SyllabusPage from "@/pages/mus240/SyllabusPage";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -195,6 +204,35 @@ export const router = createBrowserRouter([
   {
     path: "/student-registration",
     element: <StudentRegistration />,
+  },
+  // MUS240 Routes
+  {
+    path: "/classes/mus240",
+    element: <ClassLanding />,
+  },
+  {
+    path: "/classes/mus240/syllabus",
+    element: <SyllabusPage />,
+  },
+  {
+    path: "/classes/mus240/listening",
+    element: <ListeningHub />,
+  },
+  {
+    path: "/classes/mus240/listening/:weekNumber",
+    element: <WeekDetail />,
+  },
+  {
+    path: "/classes/mus240/assignments",
+    element: <AssignmentWeek />,
+  },
+  {
+    path: "/classes/mus240/assignments/:assignmentId",
+    element: <AssignmentJournal />,
+  },
+  {
+    path: "/classes/mus240/resources",
+    element: <Resources />,
   },
   {
     path: "*",

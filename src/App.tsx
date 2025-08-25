@@ -143,8 +143,8 @@ import SetupCrewPage from "./pages/SetupCrewPage";
 import { Onboarding } from "./pages/Onboarding";
 import StudentRegistration from "./pages/StudentRegistration";
 import ClassLanding from "./pages/mus240/ClassLanding";
-import Syllabus from "./pages/mus240/Syllabus";
-import Assignments from "./pages/mus240/Assignments";
+import SyllabusPage from "./pages/mus240/SyllabusPage";
+import AssignmentWeek from "./pages/mus240/AssignmentWeek";
 import ListeningHub from "./pages/mus240/ListeningHub";
 import WeekDetail from "./pages/mus240/WeekDetail";
 import AssignmentJournal from "./pages/mus240/AssignmentJournal";
@@ -1301,17 +1301,17 @@ const App = () => {
                              <Route 
                                path="/classes/mus240/syllabus" 
                                element={
-                                 <ProtectedRoute>
-                                   <Syllabus />
-                                 </ProtectedRoute>
+                                   <ProtectedRoute>
+                                    <SyllabusPage />
+                                  </ProtectedRoute>
                                } 
                              />
                               <Route 
                                 path="/classes/mus240/assignments" 
                                 element={
-                                  <ProtectedRoute>
-                                    <Assignments />
-                                  </ProtectedRoute>
+                                   <ProtectedRoute>
+                                     <AssignmentWeek />
+                                   </ProtectedRoute>
                                 } 
                               />
                               <Route 

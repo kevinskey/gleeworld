@@ -34,7 +34,14 @@ export const PAGE_NAMES: Record<string, string> = {
   '/budgets': 'Budget Management',
   '/tour-manager': 'Tour Manager Dashboard',
   '/treasurer': 'Treasurer Dashboard',
-  '/tour-planner': 'Tour Planner'
+  '/tour-planner': 'Tour Planner',
+  
+  // MUS240 Routes
+  '/classes/mus240': 'MUS 240',
+  '/classes/mus240/syllabus': 'MUS 240 Syllabus',
+  '/classes/mus240/listening': 'MUS 240 Listening Hub',
+  '/classes/mus240/assignments': 'MUS 240 Assignments',
+  '/classes/mus240/resources': 'MUS 240 Resources'
 };
 
 export const getPageName = (pathname: string): string => {
@@ -47,6 +54,12 @@ export const getPageName = (pathname: string): string => {
   }
   if (pathname.startsWith('/contract-signing/')) {
     return 'Contract Signing';
+  }
+  if (pathname.startsWith('/classes/mus240/listening/')) {
+    return 'MUS 240 Week Detail';
+  }
+  if (pathname.startsWith('/classes/mus240/assignments/')) {
+    return 'MUS 240 Assignment';
   }
   
   // Check exact matches
