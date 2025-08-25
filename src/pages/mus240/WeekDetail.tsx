@@ -145,116 +145,37 @@ export default function WeekDetail() {
                     </a>
                   </div>
 
-                  {/* YouTube embed with automatic fallback */}
+                  {/* YouTube embed with automatic fallback - Always show fallback for now due to blocking */}
                   {isYouTube && videoId && (
                     <div className="mb-3">
-                      {!embedFailed ? (
-                        <div className="w-full aspect-video rounded-lg overflow-hidden border bg-gray-100 relative">
-                          <iframe
-                            src={embedUrl}
-                            title={t.title}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowFullScreen
-                            referrerPolicy="strict-origin-when-cross-origin"
-                            className="w-full h-full"
-                            onError={() => {
-                              console.log(`Video ${i} iframe error - showing fallback`);
-                              handleEmbedError(i);
+                      {/* Always show fallback since YouTube is blocking embeds */}
+                      <div className="relative group cursor-pointer">
+                        <a 
+                          href={t.url} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="block relative"
+                        >
+                          <img 
+                            src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                            alt={t.title}
+                            className="w-full aspect-video object-cover rounded-lg"
+                            onError={(e) => {
+                              // Fallback to default thumbnail if maxres doesn't exist
+                              e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
                             }}
-                            onLoad={(e) => {
-                              // Enhanced error detection for YouTube embedding blocks
-                              try {
-                                const iframe = e.target as HTMLIFrameElement;
-                                
-                                // Check immediately for basic loading issues
-                                if (!iframe.src || iframe.src === 'about:blank') {
-                                  console.log(`Video ${i} failed to load source - showing fallback`);
-                                  handleEmbedError(i);
-                                  return;
-                                }
-                                
-                                // Delayed check for YouTube embedding restrictions
-                                setTimeout(() => {
-                                  try {
-                                    // Multiple checks for embedding blocks
-                                    const doc = iframe.contentDocument;
-                                    const win = iframe.contentWindow;
-                                    
-                                    // Check if iframe is blocked
-                                    if (doc === null && win === null) {
-                                      console.log(`Video ${i} completely blocked - showing fallback`);
-                                      handleEmbedError(i);
-                                      return;
-                                    }
-                                    
-                                    // Check iframe dimensions (blocked videos often have 0 dimensions)
-                                    if (iframe.offsetHeight === 0 || iframe.offsetWidth === 0) {
-                                      console.log(`Video ${i} has no dimensions - showing fallback`);
-                                      handleEmbedError(i);
-                                      return;
-                                    }
-                                    
-                                  } catch (error) {
-                                    // Cross-origin is expected, but certain errors indicate blocking
-                                    const errorMessage = error instanceof Error ? error.message : String(error);
-                                    if (errorMessage.includes('blocked') || errorMessage.includes('refused')) {
-                                      console.log(`Video ${i} blocked by response - showing fallback`);
-                                      handleEmbedError(i);
-                                    }
-                                  }
-                                }, 2000);
-                                
-                                // Additional check after longer delay for slow-loading restrictions
-                                setTimeout(() => {
-                                  try {
-                                    // Final check - if still no proper content, assume blocked
-                                    if (iframe.contentDocument === null) {
-                                      console.log(`Video ${i} final check failed - showing fallback`);
-                                      handleEmbedError(i);
-                                    }
-                                  } catch (error) {
-                                    // Silent fail for cross-origin - this is normal
-                                  }
-                                }, 5000);
-                                
-                              } catch (error) {
-                                console.log(`Video ${i} load check failed:`, error);
-                                handleEmbedError(i);
-                              }
-                            }}
-                            style={{ border: 'none' }}
                           />
-                        </div>
-                      ) : (
-                        // Fallback: YouTube thumbnail with play button
-                        <div className="relative group cursor-pointer">
-                          <a 
-                            href={t.url} 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="block relative"
-                          >
-                            <img 
-                              src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
-                              alt={t.title}
-                              className="w-full aspect-video object-cover rounded-lg"
-                              onError={(e) => {
-                                // Fallback to default thumbnail if maxres doesn't exist
-                                e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                              }}
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors rounded-lg">
-                              <div className="bg-red-600 text-white p-4 rounded-full group-hover:scale-110 transition-transform shadow-lg">
-                                <Play className="h-8 w-8 ml-1" />
-                              </div>
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors rounded-lg">
+                            <div className="bg-red-600 text-white p-4 rounded-full group-hover:scale-110 transition-transform shadow-lg">
+                              <Play className="h-8 w-8 ml-1" />
                             </div>
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 rounded-b-lg">
-                              <p className="text-white font-medium">Video not embeddable - Click to watch on YouTube</p>
-                              <p className="text-white/80 text-sm">{t.title}</p>
-                            </div>
-                          </a>
-                        </div>
-                      )}
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 rounded-b-lg">
+                            <p className="text-white font-medium">Click to watch on YouTube</p>
+                            <p className="text-white/80 text-sm">{t.title}</p>
+                          </div>
+                        </a>
+                      </div>
                     </div>
                   )}
 
