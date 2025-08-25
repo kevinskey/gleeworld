@@ -179,7 +179,13 @@ export const UnifiedDashboard = () => {
         <div className="px-6 py-4">
           <div className="text-center py-8">
             <h1 className="text-3xl font-bold text-primary mb-4">MUS 240 Class Dashboard</h1>
-            <p className="text-muted-foreground">This is the class dashboard for MUS 240 students</p>
+            <p className="text-muted-foreground mb-6">This is the class dashboard for MUS 240 students</p>
+            <Button 
+              onClick={() => window.location.href = '/classes/mus240'}
+              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white px-8 py-3 text-lg"
+            >
+              Go to MUS 240 Website
+            </Button>
           </div>
           {/* MUS 240 class content would go here */}
         </div>
