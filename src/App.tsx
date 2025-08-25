@@ -1281,15 +1281,23 @@ const App = () => {
                                 </ProtectedRoute>
                               } 
                              />
-                             {/* MUS 240 Class Pages */}
-                             <Route 
-                               path="/classes/mus240" 
-                               element={
-                                 <ProtectedRoute>
-                                   <ClassLanding />
-                                 </ProtectedRoute>
-                               } 
-                             />
+                              {/* MUS 240 Class Pages */}
+                              <Route 
+                                path="/mus240" 
+                                element={
+                                  <PublicRoute>
+                                    <ClassLanding />
+                                  </PublicRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/classes/mus240" 
+                                element={
+                                  <ProtectedRoute>
+                                    <ClassLanding />
+                                  </ProtectedRoute>
+                                } 
+                              />
                              <Route 
                                path="/classes/mus240/syllabus" 
                                element={
