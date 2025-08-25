@@ -255,7 +255,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
     { id: 'member', label: 'Member Dashboard', icon: Users, route: '/dashboard/member' },
     { id: 'fan', label: 'Fan', icon: Heart, route: '/dashboard/fan' },
     { id: 'alumnae', label: 'Alumnae', icon: GraduationCap, route: '/dashboard/alumnae' },
-    { id: 'mus240', label: 'MUS 240 Class', icon: BookOpen, route: '/dashboard/mus240' },
+    { id: 'mus240', label: 'MUS 240 Class', icon: BookOpen, route: '/classes/mus240' },
     { id: 'public', label: 'Public', icon: Globe, route: '/dashboard/public' }
   ];
 

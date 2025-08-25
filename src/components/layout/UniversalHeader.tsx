@@ -189,7 +189,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                      {/* MUS240 Class View */}
                      <DropdownMenuItem 
                        onClick={() => {
-                         navigate('/dashboard/mus240');
+                         navigate('/classes/mus240');
                        }}
                        className="cursor-pointer"
                      >

@@ -121,7 +121,7 @@ export const PublicHeader = () => {
                     </Button>
                   )}
                   <Button asChild variant="ghost" size="sm" className="mb-2 text-sm justify-start">
-                    <Link to="/mus240" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
+                    <Link to="/classes/mus240" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
                       <Music className="h-4 w-4" />
                       MUS 240
                     </Link>
