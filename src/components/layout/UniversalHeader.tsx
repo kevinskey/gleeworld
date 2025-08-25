@@ -18,6 +18,7 @@ import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
 import { HeaderRadioControls } from "@/components/radio/HeaderRadioControls";
 import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
+
 // import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
 
 
@@ -205,6 +206,19 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                      >
                        <Globe className="mr-2 h-4 w-4" />
                        Public
+                     </DropdownMenuItem>
+                     
+                     <DropdownMenuSeparator />
+                     
+                     {/* Executive Board View */}
+                     <DropdownMenuItem 
+                       onClick={() => {
+                         navigate('/admin/executive-board');
+                       }}
+                       className="cursor-pointer"
+                     >
+                       <Crown className="mr-2 h-4 w-4" />
+                       Executive Board
                      </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
