@@ -38,25 +38,54 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           return;
         }
 
-        // Get user profile
+        // Get user profile  
         const { data: profile, error: profileError } = await supabase
           .from('gw_profiles')
-          .select('role, is_super_admin')
+          .select('role, is_super_admin, is_exec_board')
           .eq('user_id', targetUserId)
           .maybeSingle();
 
         if (profileError) throw profileError;
 
-        // Get explicitly assigned modules
-        const { data: explicitPermissions, error: permError } = await supabase
-          .from('gw_user_module_permissions')
-          .select('module_id')
-          .eq('user_id', targetUserId)
-          .eq('is_active', true);
+        // Use the get_user_modules RPC for comprehensive permission checking
+        const { data: userModules, error: moduleError } = await supabase
+          .rpc('get_user_modules', { p_user: targetUserId });
 
-        if (permError) throw permError;
+        if (moduleError) throw moduleError;
 
-        const explicitModuleIds = explicitPermissions?.map(p => p.module_id) || [];
+        console.log('🔍 useSimplifiedModuleAccess: user modules from RPC =', userModules);
+
+        // Create a mapping from database module names to frontend module IDs
+        const moduleMapping: Record<string, string> = {
+          'email-management': 'email',
+          'internal-communications': 'community-hub', 
+          'music-library': 'music-library',
+          'scheduling-module': 'calendar',
+          'attendance-management': 'attendance',
+          'wardrobe-module': 'wardrobe',
+          'finances': 'finances',
+          'radio-management': 'radio',
+          'handbook': 'handbook',
+          'directory': 'directory',
+          'media-library': 'media',
+          'executive-board': 'executive',
+          'settings': 'settings',
+          'auditions-management': 'auditions-management',
+          'librarian': 'librarian'
+        };
+
+        // Get module permissions from RPC
+        const grantedModuleIds = new Set();
+        if (userModules && Array.isArray(userModules)) {
+          userModules.forEach((module: any) => {
+            if (module.can_view) {
+              const frontendModuleId = moduleMapping[module.module_key] || module.module_key;
+              grantedModuleIds.add(frontendModuleId);
+            }
+          });
+        }
+
+        console.log('🔍 useSimplifiedModuleAccess: granted module IDs =', Array.from(grantedModuleIds));
 
         // Build access list
         const accessList: ModuleAccess[] = UNIFIED_MODULES
@@ -71,7 +100,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
               };
             }
 
-            // Members (including exec board members) get standard modules
+            // Members get standard modules
             if (profile?.role === 'member' && STANDARD_MEMBER_MODULES.includes(module.id)) {
               return {
                 moduleId: module.id,
@@ -80,8 +109,8 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
               };
             }
 
-            // Explicitly assigned modules (for exec board and special permissions)
-            if (explicitModuleIds.includes(module.id)) {
+            // Executive board and explicit permissions
+            if (grantedModuleIds.has(module.id)) {
               return {
                 moduleId: module.id,
                 hasAccess: true,
