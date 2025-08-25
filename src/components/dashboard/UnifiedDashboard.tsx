@@ -176,12 +176,52 @@ export const UnifiedDashboard = () => {
         <div className="px-6 pt-4">
           <IncompleteProfileBanner userProfile={profile} />
         </div>
-        <div className="px-6 py-4">
-          <div className="text-center py-8">
-            <h1 className="text-3xl font-bold text-primary mb-4">MUS 240 Class Dashboard</h1>
-            <p className="text-muted-foreground">This is the class dashboard for MUS 240 students</p>
+        <div className="px-6 py-4 space-y-6">
+          {/* Header */}
+          <div className="bg-card rounded-lg p-6 border shadow-sm">
+            <h1 className="text-3xl font-bold text-primary mb-2">MUS 240: Survey of African American Music</h1>
+            <p className="text-muted-foreground">Your class dashboard for assignments, listening materials, and resources</p>
           </div>
-          {/* MUS 240 class content would go here */}
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-card rounded-lg p-4 border shadow-sm">
+              <h3 className="font-semibold mb-2">Current Assignment</h3>
+              <p className="text-sm text-muted-foreground mb-3">Listening Journal #3 - Blues and Jazz Origins</p>
+              <Button size="sm" className="w-full">View Assignment</Button>
+            </div>
+            <div className="bg-card rounded-lg p-4 border shadow-sm">
+              <h3 className="font-semibold mb-2">Listening Hub</h3>
+              <p className="text-sm text-muted-foreground mb-3">Access curated music examples and recordings</p>
+              <Button size="sm" className="w-full" variant="outline">Browse Music</Button>
+            </div>
+            <div className="bg-card rounded-lg p-4 border shadow-sm">
+              <h3 className="font-semibold mb-2">Class Resources</h3>
+              <p className="text-sm text-muted-foreground mb-3">Syllabus, readings, and supplemental materials</p>
+              <Button size="sm" className="w-full" variant="outline">View Resources</Button>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-card rounded-lg p-6 border shadow-sm">
+            <h2 className="text-xl font-semibold mb-4">Recent Class Activity</h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
+                <div>
+                  <p className="font-medium">New listening assignment posted</p>
+                  <p className="text-sm text-muted-foreground">Due next Tuesday</p>
+                </div>
+                <span className="text-xs text-muted-foreground">2 days ago</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
+                <div>
+                  <p className="font-medium">Quiz 2 grades released</p>
+                  <p className="text-sm text-muted-foreground">Check your performance</p>
+                </div>
+                <span className="text-xs text-muted-foreground">1 week ago</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
