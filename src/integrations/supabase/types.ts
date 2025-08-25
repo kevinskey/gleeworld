@@ -13562,6 +13562,48 @@ export type Database = {
           },
         ]
       }
+      qr_scan_logs: {
+        Row: {
+          created_at: string | null
+          event_id: string | null
+          id: string
+          ip_address: unknown | null
+          qr_token: string
+          scan_location: string | null
+          scan_result: Json | null
+          scan_status: string | null
+          scanned_at: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          ip_address?: unknown | null
+          qr_token: string
+          scan_location?: string | null
+          scan_result?: Json | null
+          scan_status?: string | null
+          scanned_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          ip_address?: unknown | null
+          qr_token?: string
+          scan_location?: string | null
+          scan_result?: Json | null
+          scan_status?: string | null
+          scanned_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       radio_playlist_tracks: {
         Row: {
           added_at: string | null
@@ -16175,13 +16217,21 @@ export type Database = {
         Returns: boolean
       }
       process_qr_attendance_scan: {
-        Args: {
-          ip_address_param?: unknown
-          qr_token_param: string
-          scan_location_param?: Json
-          user_agent_param?: string
-          user_id_param: string
-        }
+        Args:
+          | {
+              ip_address_param?: unknown
+              qr_token_param: string
+              scan_location_param?: Json
+              user_agent_param?: string
+              user_id_param: string
+            }
+          | {
+              ip_address_param?: unknown
+              qr_token_param: string
+              scan_location_param?: string
+              user_agent_param?: string
+              user_id_param: string
+            }
         Returns: Json
       }
       promote_auditioner_to_member: {

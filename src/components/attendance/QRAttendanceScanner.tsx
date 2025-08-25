@@ -122,7 +122,7 @@ export const QRAttendanceScanner = () => {
         ip_address_param: null
       });
 
-      // Call the QR attendance processing function
+      // Call the QR attendance processing function with enhanced logging
       const { data, error } = await supabase.rpc('process_qr_attendance_scan', {
         qr_token_param: qrToken,
         user_id_param: user.id,

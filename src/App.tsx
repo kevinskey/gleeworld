@@ -134,6 +134,7 @@ import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
 import LibrarianDashboardPage from "./pages/LibrarianDashboardPage";
 import QRGeneratorPage from "./pages/QRGenerator";
+import QRAnalytics from "./pages/QRAnalytics";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
 import SearchPage from "./pages/SearchPage";
@@ -550,14 +551,22 @@ const App = () => {
                     </PublicRoute>
                   } 
                 />
-               <Route 
-                 path="/calendar" 
-                 element={
-                   <PublicRoute>
-                     <PublicCalendar />
-                   </PublicRoute>
-                 } 
-               />
+                <Route 
+                  path="/qr-analytics" 
+                  element={
+                    <ProtectedRoute>
+                      <QRAnalytics />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/calendar" 
+                  element={
+                    <PublicRoute>
+                      <PublicCalendar />
+                    </PublicRoute>
+                  } 
+                />
                <Route 
                  path="/events" 
                  element={
