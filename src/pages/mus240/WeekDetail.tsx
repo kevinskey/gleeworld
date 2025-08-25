@@ -156,26 +156,68 @@ export default function WeekDetail() {
                             allowFullScreen
                             referrerPolicy="strict-origin-when-cross-origin"
                             className="w-full h-full"
-                            onError={() => handleEmbedError(i)}
+                            onError={() => {
+                              console.log(`Video ${i} iframe error - showing fallback`);
+                              handleEmbedError(i);
+                            }}
                             onLoad={(e) => {
-                              // Check if iframe loaded successfully
+                              // Enhanced error detection for YouTube embedding blocks
                               try {
                                 const iframe = e.target as HTMLIFrameElement;
+                                
+                                // Check immediately for basic loading issues
+                                if (!iframe.src || iframe.src === 'about:blank') {
+                                  console.log(`Video ${i} failed to load source - showing fallback`);
+                                  handleEmbedError(i);
+                                  return;
+                                }
+                                
+                                // Delayed check for YouTube embedding restrictions
                                 setTimeout(() => {
                                   try {
-                                    // Try to access iframe content to detect if it's blocked
+                                    // Multiple checks for embedding blocks
+                                    const doc = iframe.contentDocument;
+                                    const win = iframe.contentWindow;
+                                    
+                                    // Check if iframe is blocked
+                                    if (doc === null && win === null) {
+                                      console.log(`Video ${i} completely blocked - showing fallback`);
+                                      handleEmbedError(i);
+                                      return;
+                                    }
+                                    
+                                    // Check iframe dimensions (blocked videos often have 0 dimensions)
+                                    if (iframe.offsetHeight === 0 || iframe.offsetWidth === 0) {
+                                      console.log(`Video ${i} has no dimensions - showing fallback`);
+                                      handleEmbedError(i);
+                                      return;
+                                    }
+                                    
+                                  } catch (error) {
+                                    // Cross-origin is expected, but certain errors indicate blocking
+                                    const errorMessage = error instanceof Error ? error.message : String(error);
+                                    if (errorMessage.includes('blocked') || errorMessage.includes('refused')) {
+                                      console.log(`Video ${i} blocked by response - showing fallback`);
+                                      handleEmbedError(i);
+                                    }
+                                  }
+                                }, 2000);
+                                
+                                // Additional check after longer delay for slow-loading restrictions
+                                setTimeout(() => {
+                                  try {
+                                    // Final check - if still no proper content, assume blocked
                                     if (iframe.contentDocument === null) {
-                                      console.log(`Video ${i} may be blocked, showing fallback`);
+                                      console.log(`Video ${i} final check failed - showing fallback`);
                                       handleEmbedError(i);
                                     }
                                   } catch (error) {
-                                    // Cross-origin restriction is normal, but embedding blocked videos 
-                                    // often fail to load the iframe content properly
-                                    console.log(`Video ${i} cross-origin check completed`);
+                                    // Silent fail for cross-origin - this is normal
                                   }
-                                }, 1000);
+                                }, 5000);
+                                
                               } catch (error) {
-                                console.log('Iframe access check failed:', error);
+                                console.log(`Video ${i} load check failed:`, error);
                                 handleEmbedError(i);
                               }
                             }}
