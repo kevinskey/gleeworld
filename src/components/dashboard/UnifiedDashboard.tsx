@@ -12,6 +12,7 @@ import { MemberNavigation } from '@/components/member/MemberNavigation';
 import { useUserRole } from '@/hooks/useUserRole';
 import { IncompleteProfileBanner } from '@/components/shared/IncompleteProfileBanner';
 import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
+import { PublicDashboardMonitor } from '@/components/admin/PublicDashboardMonitor';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
 export const UnifiedDashboard = () => {
@@ -194,20 +195,35 @@ export const UnifiedDashboard = () => {
   }
 
   if (viewMode === 'public') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-        <div className="px-6 pt-4">
-          <IncompleteProfileBanner userProfile={profile} />
-        </div>
-        <div className="px-6 py-4">
-          <div className="text-center py-8">
-            <h1 className="text-3xl font-bold text-primary mb-4">Public Dashboard View</h1>
-            <p className="text-muted-foreground">This is how the dashboard appears to the public</p>
+    // Show monitoring interface for admins
+    if (profile?.role === 'super-admin' || profile?.role === 'admin') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+          <div className="px-6 pt-4">
+            <IncompleteProfileBanner userProfile={profile} />
           </div>
-          {/* Public content would go here */}
+          <div className="px-6 py-4">
+            <PublicDashboardMonitor />
+          </div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      // Basic public view for non-admins
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+          <div className="px-6 pt-4">
+            <IncompleteProfileBanner userProfile={profile} />
+          </div>
+          <div className="px-6 py-4">
+            <div className="text-center py-8">
+              <h1 className="text-3xl font-bold text-primary mb-4">Public Dashboard View</h1>
+              <p className="text-muted-foreground">This is how the dashboard appears to the public</p>
+            </div>
+            {/* Public content would go here */}
+          </div>
+        </div>
+      );
+    }
   }
 
   // Default view: If user is super admin and on default /dashboard route, show the SuperAdminDashboard
