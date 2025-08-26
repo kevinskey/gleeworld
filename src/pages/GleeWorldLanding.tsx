@@ -272,6 +272,26 @@ export const GleeWorldLanding = () => {
   //   if (!user) return null;
   //   return null; // Disabled to remove badge from public landing page
   // };
+  
+  console.log('🏠 GleeWorldLanding: Rendering with state:', {
+    loading,
+    authLoading,
+    hasUser: !!user,
+    heroSlidesCount: heroSlides.length,
+    eventsCount: events.length,
+    timestamp: new Date().toISOString()
+  });
+
+  if (loading || authLoading) {
+    console.log('🔄 GleeWorldLanding: Currently loading...', { loading, authLoading });
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Loading GleeWorld..." />
+      </div>
+    );
+  }
+
+  console.log('✅ GleeWorldLanding: Finished loading, rendering main content');
 
   return (
     <div 

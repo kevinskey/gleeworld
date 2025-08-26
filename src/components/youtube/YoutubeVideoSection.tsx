@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Youtube, Play, ExternalLink, Sync } from "lucide-react";
+import { Youtube, Play, ExternalLink, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface YouTubeVideo {
@@ -175,7 +175,7 @@ export const YoutubeVideoSection = () => {
             >
               {syncLoading ? (
                 <>
-                  <Sync className="h-4 w-4 mr-2 animate-spin" />
+                  <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
                   Syncing...
                 </>
               ) : (
