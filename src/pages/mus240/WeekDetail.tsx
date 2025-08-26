@@ -14,7 +14,17 @@ const getVideoId = (url: string) => {
       return urlObj.pathname.slice(1);
     }
     if (urlObj.hostname.includes('youtube.com')) {
-      return urlObj.searchParams.get('v');
+      const videoId = urlObj.searchParams.get('v');
+      if (videoId) return videoId;
+    }
+    // Handle shortened URLs and other formats
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /youtube\.com\/v\/([^&\n?#]+)/
+    ];
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
     }
   } catch {
     return null;
@@ -22,7 +32,7 @@ const getVideoId = (url: string) => {
   return null;
 };
 
-// Create education-friendly embed URL
+// Create education-friendly embed URL with privacy-enhanced mode
 const createEmbedUrl = (videoId: string) => {
   const params = new URLSearchParams({
     autoplay: '0',
@@ -30,9 +40,25 @@ const createEmbedUrl = (videoId: string) => {
     modestbranding: '1',
     showinfo: '0',
     fs: '1',
-    controls: '1'
+    controls: '1',
+    cc_load_policy: '1', // Show captions if available
+    iv_load_policy: '3', // Hide video annotations
+    playsinline: '1', // Better mobile experience
+    origin: window.location.origin // Required for some embedded videos
   });
-  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+  // Use privacy-enhanced mode for better compatibility
+  return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
+};
+
+// Check if video exists and is embeddable
+const checkVideoAvailability = async (videoId: string): Promise<boolean> => {
+  try {
+    // Use oEmbed API to check if video is available and embeddable
+    const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+    return response.ok;
+  } catch {
+    return false;
+  }
 };
 
 
@@ -54,6 +80,7 @@ export default function WeekDetail() {
   const [author, setAuthor] = useState('');
   const [content, setContent] = useState('');
   const [failedEmbeds, setFailedEmbeds] = useState<Set<number>>(new Set());
+  const [videoAvailability, setVideoAvailability] = useState<Map<number, boolean>>(new Map());
 
   useEffect(() => {
     (async () => {
@@ -64,7 +91,27 @@ export default function WeekDetail() {
         .order('created_at', { ascending: false });
       if (!error && data) setComments(data as Comment[]);
     })();
-  }, [num]);
+
+    // Check video availability for all YouTube tracks
+    if (wk) {
+      const checkVideos = async () => {
+        const availabilityMap = new Map<number, boolean>();
+        for (let i = 0; i < wk.tracks.length; i++) {
+          const track = wk.tracks[i];
+          const isYouTube = track.url.includes('youtube.com') || track.url.includes('youtu.be');
+          if (isYouTube) {
+            const videoId = getVideoId(track.url);
+            if (videoId) {
+              const isAvailable = await checkVideoAvailability(videoId);
+              availabilityMap.set(i, isAvailable);
+            }
+          }
+        }
+        setVideoAvailability(availabilityMap);
+      };
+      checkVideos();
+    }
+  }, [num, wk]);
 
   const post = async (track_index: number | null, a: string, c: string) => {
     if (!c.trim()) return;
@@ -117,6 +164,7 @@ export default function WeekDetail() {
               const videoId = getVideoId(t.url);
               const embedUrl = videoId ? createEmbedUrl(videoId) : null;
               const embedFailed = failedEmbeds.has(i);
+              const videoIsAvailable = videoAvailability.get(i) !== false; // Default to true if not checked yet
               
               console.log(`Track ${i}:`, { 
                 title: t.title, 
@@ -124,7 +172,8 @@ export default function WeekDetail() {
                 isYouTube, 
                 videoId, 
                 embedUrl, 
-                embedFailed 
+                embedFailed,
+                videoIsAvailable
               });
               
               return (
@@ -145,8 +194,8 @@ export default function WeekDetail() {
                     </a>
                   </div>
 
-                  {/* YouTube embed with better handling */}
-                  {isYouTube && videoId && (
+                  {/* YouTube embed with enhanced handling */}
+                  {isYouTube && videoId && videoIsAvailable && (
                     <div className="mb-3">
                       {!embedFailed ? (
                         <div className="relative">
@@ -223,6 +272,16 @@ export default function WeekDetail() {
                         </div>
                       )}
                     </div>
+                  )}
+
+                  {/* Show notice for unavailable videos */}
+                  {isYouTube && videoId && !videoIsAvailable && (
+                    <Alert className="mb-3">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        This video is not available for embedding, but you can still watch it on YouTube by clicking the "Open on YouTube" button above.
+                      </AlertDescription>
+                    </Alert>
                   )}
 
 
