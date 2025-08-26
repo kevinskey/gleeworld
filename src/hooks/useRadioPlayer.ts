@@ -155,6 +155,9 @@ export const useRadioPlayer = () => {
   // Subscribe to real-time radio station updates
   useEffect(() => {
     console.log('Setting up real-time radio station subscription...');
+    
+    let channel: any = null;
+    let isSubscribed = false;
 
     // Initial fetch of station state
     const fetchInitialState = async () => {
@@ -193,51 +196,73 @@ export const useRadioPlayer = () => {
       }
     };
 
-    fetchInitialState();
+    const setupRealtimeSubscription = async () => {
+      try {
+        await fetchInitialState();
+        
+        // Create unique channel name to prevent conflicts
+        const channelName = `radio-station-updates-${Date.now()}-${Math.random()}`;
+        console.log('Creating radio channel:', channelName);
+        
+        // Set up real-time subscription
+        channel = supabase
+          .channel(channelName)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'gw_radio_station_state',
+              filter: 'station_id=eq.glee_world_radio'
+            },
+            (payload) => {
+              console.log('Real-time radio update received:', payload);
+              
+              if (payload.new) {
+                const data = payload.new as RadioStationState;
+                console.log('Updating radio state with real-time data:', data);
+                setState(prev => ({
+                  ...prev,
+                  listenerCount: data.listener_count || 0,
+                  isLive: data.is_live || false,
+                  isOnline: data.is_online || false,
+                  streamerName: data.streamer_name || undefined,
+                    currentTrack: data.current_song_title ? {
+                      title: data.current_song_title,
+                      artist: sanitizeArtist(data.current_song_artist),
+                      album: data.current_song_album || undefined,
+                      art: data.current_song_art || undefined,
+                    } : null,
+                }));
+              }
+            }
+          );
 
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('radio-station-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'gw_radio_station_state',
-          filter: 'station_id=eq.glee_world_radio'
-        },
-        (payload) => {
-          console.log('Real-time radio update received:', payload);
-          
-          if (payload.new) {
-            const data = payload.new as RadioStationState;
-            console.log('Updating radio state with real-time data:', data);
-            setState(prev => ({
-              ...prev,
-              listenerCount: data.listener_count || 0,
-              isLive: data.is_live || false,
-              isOnline: data.is_online || false,
-              streamerName: data.streamer_name || undefined,
-                currentTrack: data.current_song_title ? {
-                  title: data.current_song_title,
-                  artist: sanitizeArtist(data.current_song_artist),
-                  album: data.current_song_album || undefined,
-                  art: data.current_song_art || undefined,
-                } : null,
-            }));
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('Radio subscription status:', status);
-        if (status === 'SUBSCRIBED') {
+        // Subscribe only once
+        const subscriptionResult = await channel.subscribe();
+        console.log('Radio subscription status:', subscriptionResult);
+        isSubscribed = true;
+        
+        if (subscriptionResult === 'SUBSCRIBED') {
           console.log('Successfully subscribed to radio updates');
         }
-      });
+      } catch (error) {
+        console.error('Error setting up radio subscription:', error);
+      }
+    };
+
+    setupRealtimeSubscription();
 
     return () => {
       console.log('Cleaning up radio subscription...');
-      supabase.removeChannel(channel);
+      if (channel && isSubscribed) {
+        try {
+          supabase.removeChannel(channel);
+          isSubscribed = false;
+        } catch (error) {
+          console.error('Error cleaning up radio channel:', error);
+        }
+      }
     };
   }, []); // Empty dependency array - only run once
 

@@ -138,82 +138,77 @@ export const useGleeWorldEvents = () => {
 
   const setupRealtime = async () => {
     // Prevent multiple subscriptions
-    if (isSubscribedRef.current) {
-      console.log('Already subscribed, skipping...');
+    if (isSubscribedRef.current || channelRef.current) {
+      console.log('Already subscribed or channel exists, skipping...');
       return;
     }
 
-    // Clean up existing channel completely
-    if (channelRef.current) {
-      console.log('Cleaning up existing channel...');
-      try {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      } catch (error) {
-        console.error('Error removing channel:', error);
-      }
-    }
-
-    // Create a new channel with unique identifier
-    const channelId = `events-changes-${Date.now()}-${Math.random()}`;
-    console.log('Creating new channel:', channelId);
-    const channel = supabase.channel(channelId);
-
-    // Add event listeners
-    channel
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'gw_events'
-        },
-        (payload) => {
-          console.log('Real-time event change:', payload);
-          fetchEvents();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'events'
-        },
-        (payload) => {
-          console.log('Real-time events table change:', payload);
-          fetchEvents();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'gw_appointments'
-        },
-        (payload) => {
-          console.log('Real-time appointment change:', payload);
-          fetchEvents();
-        }
-      );
-
-    // Subscribe and track state
     try {
+      // Create a new channel with unique identifier
+      const channelId = `events-changes-${Date.now()}-${Math.random()}`;
+      console.log('Creating new channel:', channelId);
+      const channel = supabase.channel(channelId);
+
+      // Add event listeners
+      channel
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'gw_events'
+          },
+          (payload) => {
+            console.log('Real-time event change:', payload);
+            fetchEvents();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'events'
+          },
+          (payload) => {
+            console.log('Real-time events table change:', payload);
+            fetchEvents();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'gw_appointments'
+          },
+          (payload) => {
+            console.log('Real-time appointment change:', payload);
+            fetchEvents();
+          }
+        );
+
+      // Store the channel reference before subscribing
+      channelRef.current = channel;
+      
+      // Subscribe and track state
       console.log('Subscribing to channel:', channelId);
       const subscriptionResult = await channel.subscribe();
       console.log('Subscription result:', subscriptionResult);
       
-      // Store the channel reference regardless of status
-      channelRef.current = channel;
       isSubscribedRef.current = true;
       console.log('Successfully subscribed to channel');
     } catch (error) {
       console.error('Failed to subscribe to realtime channel:', error);
       isSubscribedRef.current = false;
       // Clean up the failed channel
-      if (channel) {
-        supabase.removeChannel(channel);
+      if (channelRef.current) {
+        try {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        } catch (cleanupError) {
+          console.error('Error cleaning up failed channel:', cleanupError);
+        }
       }
     }
   };
