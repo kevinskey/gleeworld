@@ -145,37 +145,83 @@ export default function WeekDetail() {
                     </a>
                   </div>
 
-                  {/* YouTube embed with automatic fallback - Always show fallback for now due to blocking */}
+                  {/* YouTube embed with better handling */}
                   {isYouTube && videoId && (
                     <div className="mb-3">
-                      {/* Always show fallback since YouTube is blocking embeds */}
-                      <div className="relative group cursor-pointer">
-                        <a 
-                          href={t.url} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="block relative"
-                        >
-                          <img 
-                            src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
-                            alt={t.title}
-                            className="w-full aspect-video object-cover rounded-lg"
-                            onError={(e) => {
-                              // Fallback to default thumbnail if maxres doesn't exist
-                              e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                      {!embedFailed ? (
+                        <div className="relative">
+                          <iframe
+                            src={embedUrl}
+                            title={t.title}
+                            className="w-full aspect-video rounded-lg"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                            onError={() => handleEmbedError(i)}
+                            onLoad={(e) => {
+                              // Check if iframe loaded successfully
+                              const iframe = e.currentTarget;
+                              try {
+                                // If we can't access contentDocument, it likely means blocked
+                                if (!iframe.contentDocument && !iframe.contentWindow) {
+                                  handleEmbedError(i);
+                                }
+                              } catch {
+                                // Cross-origin restrictions, but video might still work
+                              }
                             }}
                           />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors rounded-lg">
-                            <div className="bg-red-600 text-white p-4 rounded-full group-hover:scale-110 transition-transform shadow-lg">
-                              <Play className="h-8 w-8 ml-1" />
+                          {/* Fallback detection overlay */}
+                          <div 
+                            className="absolute inset-0 pointer-events-none"
+                            onError={() => handleEmbedError(i)}
+                          />
+                        </div>
+                      ) : (
+                        /* Fallback to thumbnail with modal player */
+                        <div className="relative group">
+                          <div 
+                            className="cursor-pointer relative"
+                            onClick={() => {
+                              // Try to open in a modal or new window optimized for playback
+                              const newWindow = window.open(
+                                `https://www.youtube.com/embed/${videoId}?autoplay=1&origin=${window.location.origin}`,
+                                'youtube-player',
+                                'width=800,height=450,scrollbars=yes,resizable=yes'
+                              );
+                              if (!newWindow) {
+                                // Fallback to direct YouTube link
+                                window.open(t.url, '_blank');
+                              }
+                            }}
+                          >
+                            <img 
+                              src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                              alt={t.title}
+                              className="w-full aspect-video object-cover rounded-lg"
+                              onError={(e) => {
+                                e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                              }}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors rounded-lg">
+                              <div className="bg-red-600 text-white p-4 rounded-full group-hover:scale-110 transition-transform shadow-lg">
+                                <Play className="h-8 w-8 ml-1" />
+                              </div>
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 rounded-b-lg">
+                              <p className="text-white font-medium">Click to play video</p>
+                              <p className="text-white/80 text-sm">{t.title}</p>
                             </div>
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 rounded-b-lg">
-                            <p className="text-white font-medium">Click to watch on YouTube</p>
-                            <p className="text-white/80 text-sm">{t.title}</p>
-                          </div>
-                        </a>
-                      </div>
+                          
+                          <Alert className="mt-2">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>
+                              This video cannot be embedded due to YouTube restrictions. Click the thumbnail to open in a popup player.
+                            </AlertDescription>
+                          </Alert>
+                        </div>
+                      )}
                     </div>
                   )}
 
