@@ -342,7 +342,10 @@ const NotationBasics = () => {
                   Continue your music theory journey with time signatures and meter
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button size="lg">
+                  <Button 
+                    size="lg"
+                    onClick={() => window.location.href = '/music-theory/time-signatures-meter'}
+                  >
                     Next: Time Signatures & Meter
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
