@@ -84,6 +84,7 @@ import AdminProducts from "./pages/AdminProducts";
 import { SectionLeaderDashboard } from "./pages/SectionLeaderDashboard";
 import { SectionalManagement } from "./pages/SectionalManagement";
 import ExecutiveBoardMonitor from "./pages/admin/ExecutiveBoardMonitor";
+import { ExecutiveBoardPermissionPanel } from '@/components/admin/ExecutiveBoardPermissionPanel';
 import { SRFManagement } from "./pages/SRFManagement";
 
 // Admin module pages
@@ -712,6 +713,14 @@ const App = () => {
                            element={
                              <ProtectedRoute>
                                <ExecutiveBoardMonitor />
+                             </ProtectedRoute>
+                           } 
+                          />
+                         <Route 
+                           path="/admin/executive-board" 
+                           element={
+                             <ProtectedRoute>
+                               <ExecutiveBoardPermissionPanel />
                              </ProtectedRoute>
                            } 
                          />
