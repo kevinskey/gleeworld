@@ -189,11 +189,43 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
             {/* Primary Actions */}
             {piece.pdf_url && canDownloadPDF() && (
               <EnhancedTooltip content="Download sheet music PDF">
-                <Button size="sm" variant="outline" asChild className="touch-target flex-1 min-w-0">
-                  <a href={piece.pdf_url} target="_blank" rel="noopener noreferrer">
-                    <Download className="h-4 w-4 mr-1" />
-                    <span className="truncate">PDF</span>
-                  </a>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="touch-target flex-1 min-w-0"
+                  onClick={async () => {
+                    try {
+                      // Try direct link first
+                      const response = await fetch(piece.pdf_url, { method: 'HEAD' });
+                      if (response.ok) {
+                        window.open(piece.pdf_url, '_blank');
+                      } else {
+                        // If direct link fails, try to get a fresh signed URL
+                        const { getSignedUrl } = await import('@/utils/storage');
+                        const pathMatch = piece.pdf_url.match(/sheet-music\/(.+?)(?:\?|$)/);
+                        if (pathMatch) {
+                          const freshUrl = await getSignedUrl('sheet-music', pathMatch[1]);
+                          if (freshUrl) {
+                            window.open(freshUrl, '_blank');
+                          } else {
+                            throw new Error('Unable to generate download link');
+                          }
+                        } else {
+                          throw new Error('Invalid file path');
+                        }
+                      }
+                    } catch (error) {
+                      console.error('Download error:', error);
+                      toast({
+                        title: "Download Failed", 
+                        description: "Unable to download the PDF. Please try again.",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  <span className="truncate">PDF</span>
                 </Button>
               </EnhancedTooltip>
             )}
