@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -88,6 +89,7 @@ export const MediaLibrary = ({
   const [editingFile, setEditingFile] = useState<MediaFile | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -368,6 +370,117 @@ export const MediaLibrary = ({
       });
     }
   };
+
+  const uploadFiles = async (files: File[]) => {
+    if (!isAdmin) {
+      toast({
+        title: "Permission Denied",
+        description: "Only admins can upload files",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploading(true);
+    const uploadPromises = files.map(async (file) => {
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `media/${fileName}`;
+
+        // Upload to storage
+        const { error: uploadError } = await supabase.storage
+          .from('media-library')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data } = supabase.storage
+          .from('media-library')
+          .getPublicUrl(filePath);
+
+        // Add to database
+        const { error: dbError } = await supabase
+          .from('gw_media_library')
+          .insert({
+            filename: fileName,
+            original_filename: file.name,
+            file_path: filePath,
+            file_url: data.publicUrl,
+            file_type: getFileTypeFromName(file.name),
+            file_size: file.size,
+            mime_type: file.type,
+            title: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
+            bucket_id: 'media-library',
+            category: 'uploads'
+          });
+
+        if (dbError) throw dbError;
+
+        return { success: true, fileName: file.name };
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error);
+        return { success: false, fileName: file.name, error };
+      }
+    });
+
+    const results = await Promise.all(uploadPromises);
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+
+    if (successful > 0) {
+      toast({
+        title: "Upload Complete",
+        description: `${successful} file(s) uploaded successfully${failed > 0 ? `, ${failed} failed` : ''}`
+      });
+      fetchMediaData(); // Refresh the media list
+    } else {
+      toast({
+        title: "Upload Failed",
+        description: "All uploads failed",
+        variant: "destructive"
+      });
+    }
+
+    setUploading(false);
+  };
+
+  const getFileTypeFromName = (fileName: string): string => {
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+    
+    if (['mp3', 'wav', 'aac', 'm4a', 'ogg', 'flac'].includes(extension)) {
+      return 'audio';
+    }
+    if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'].includes(extension)) {
+      return 'video';
+    }
+    if (extension === 'pdf') {
+      return 'document';
+    }
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension)) {
+      return 'image';
+    }
+    return 'other';
+  };
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      uploadFiles(acceptedFiles);
+    }
+  }, [isAdmin]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    disabled: !isAdmin || uploading,
+    multiple: true,
+    accept: {
+      'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'],
+      'audio/*': ['.mp3', '.wav', '.aac', '.m4a', '.ogg', '.flac'],
+      'video/*': ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv'],
+      'application/pdf': ['.pdf']
+    }
+  });
   const renderMediaCard = (file: MediaFile) => {
     const fileType = getFileTypeFromUrl(file.file_url);
     const isCurrentlyPlaying = currentTrack === file.id && isPlaying;
@@ -598,6 +711,42 @@ export const MediaLibrary = ({
           Browse and manage all types of media files
         </p>
       </div>
+
+      {/* Upload Drop Zone */}
+      {isAdmin && (
+        <div
+          {...getRootProps()}
+          className={`
+            border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
+            ${isDragActive 
+              ? 'border-primary bg-primary/5' 
+              : 'border-muted-foreground/30 hover:border-primary/50'
+            }
+            ${uploading ? 'pointer-events-none opacity-50' : ''}
+          `}
+        >
+          <input {...getInputProps()} />
+          <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          {uploading ? (
+            <div>
+              <p className="text-lg font-medium">Uploading files...</p>
+              <p className="text-sm text-muted-foreground">Please wait</p>
+            </div>
+          ) : isDragActive ? (
+            <div>
+              <p className="text-lg font-medium">Drop files here</p>
+              <p className="text-sm text-muted-foreground">Release to upload</p>
+            </div>
+          ) : (
+            <div>
+              <p className="text-lg font-medium">Drag & drop files here</p>
+              <p className="text-sm text-muted-foreground">
+                Or click to select files • Images, Audio, Video, PDF supported
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Search and Sort */}
       <Card className="bg-card/50 backdrop-blur-sm border-border/50">
