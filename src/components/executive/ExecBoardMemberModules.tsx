@@ -97,7 +97,8 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     );
   }
 
-  if (!user.is_exec_board) {
+  // Super admins can always see executive board modules, regular users need exec board status
+  if (!user.is_exec_board && !user.is_super_admin && !user.is_admin) {
     return null;
   }
 
