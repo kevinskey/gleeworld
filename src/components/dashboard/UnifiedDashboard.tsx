@@ -28,6 +28,7 @@ export const UnifiedDashboard = () => {
   const [calendarCollapsed, setCalendarCollapsed] = useState(true);
   const [alumnaeViewMode, setAlumnaeViewMode] = useState<'monitor' | 'experience'>('monitor');
   const [fanViewMode, setFanViewMode] = useState<'monitor' | 'experience'>('monitor');
+  const [publicViewMode, setPublicViewMode] = useState<'monitor' | 'experience'>('monitor');
   const location = useLocation();
 
   useEffect(() => {
@@ -274,7 +275,42 @@ export const UnifiedDashboard = () => {
             <IncompleteProfileBanner userProfile={profile} />
           </div>
           <div className="px-6 py-4">
-            <PublicDashboardMonitor />
+            <div className="mb-6">
+              <div className="flex items-center gap-4 mb-4">
+                <h1 className="text-2xl font-bold">Public Dashboard</h1>
+                <div className="flex bg-muted rounded-lg p-1">
+                  <button
+                    onClick={() => setPublicViewMode('monitor')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      publicViewMode === 'monitor' 
+                        ? 'bg-background text-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Admin Monitor
+                  </button>
+                  <button
+                    onClick={() => setPublicViewMode('experience')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      publicViewMode === 'experience' 
+                        ? 'bg-background text-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Public Experience
+                  </button>
+                </div>
+              </div>
+            </div>
+            {publicViewMode === 'monitor' ? (
+              <PublicDashboardMonitor />
+            ) : (
+              <div className="text-center py-8">
+                <h1 className="text-3xl font-bold text-primary mb-4">Public Dashboard View</h1>
+                <p className="text-muted-foreground">This is how the dashboard appears to the public</p>
+                {/* Public content would go here */}
+              </div>
+            )}
           </div>
         </div>
       );
