@@ -13,6 +13,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { IncompleteProfileBanner } from '@/components/shared/IncompleteProfileBanner';
 import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
 import { PublicDashboardMonitor } from '@/components/admin/PublicDashboardMonitor';
+import { FanDashboardMonitor } from '@/components/admin/FanDashboardMonitor';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
 export const UnifiedDashboard = () => {
@@ -138,20 +139,35 @@ export const UnifiedDashboard = () => {
   }
 
   if (viewMode === 'fan') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-        <div className="px-6 pt-4">
-          <IncompleteProfileBanner userProfile={profile} />
-        </div>
-        <div className="px-6 py-4">
-          <div className="text-center py-8">
-            <h1 className="text-3xl font-bold text-primary mb-4">Fan Dashboard View</h1>
-            <p className="text-muted-foreground">This is how the dashboard appears to fans</p>
+    // Show monitoring interface for admins
+    if (profile?.role === 'super-admin' || profile?.role === 'admin') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+          <div className="px-6 pt-4">
+            <IncompleteProfileBanner userProfile={profile} />
           </div>
-          {/* Fan-specific content would go here */}
+          <div className="px-6 py-4">
+            <FanDashboardMonitor />
+          </div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      // Basic fan view for non-admins
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+          <div className="px-6 pt-4">
+            <IncompleteProfileBanner userProfile={profile} />
+          </div>
+          <div className="px-6 py-4">
+            <div className="text-center py-8">
+              <h1 className="text-3xl font-bold text-primary mb-4">Fan Dashboard View</h1>
+              <p className="text-muted-foreground">This is how the dashboard appears to fans</p>
+            </div>
+            {/* Fan-specific content would go here */}
+          </div>
+        </div>
+      );
+    }
   }
 
   if (viewMode === 'alumnae') {
