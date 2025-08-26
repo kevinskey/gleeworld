@@ -111,12 +111,12 @@ const MusicTheoryFundamentals = () => {
                 <CardHeader className="pb-2">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-primary" />
-                    <CardTitle className="text-lg">Components</CardTitle>
+                    <CardTitle className="text-lg">Location</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p>3 Integrated Parts</p>
-                  <p className="text-sm text-muted-foreground">Theory, Keyboard, History</p>
+                  <p>Rockefeller Fine Arts</p>
+                  <p className="text-sm text-muted-foreground">Room #109</p>
                 </CardContent>
               </Card>
 
