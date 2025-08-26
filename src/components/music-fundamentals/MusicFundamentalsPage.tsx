@@ -72,7 +72,24 @@ export const MusicFundamentalsPage: React.FC = () => {
 
           {/* Week 2 Tab - Time Signatures & Meter */}
           <TabsContent value="week2" className="section-spacing">
-            <WeekTwoContent />
+            <div className="p-4 bg-primary/5 rounded-lg">
+              <h2 className="text-xl font-bold mb-4">Week 2: Time Signatures & Meter</h2>
+              <p>This is the Week 2 content - Time signatures, meter, and rhythm dictation exercises.</p>
+              <div className="mt-4 space-y-2">
+                <div className="p-3 bg-background rounded border">
+                  <h3 className="font-medium">📚 Theory</h3>
+                  <p className="text-sm text-muted-foreground">Learn about time signatures and their meanings</p>
+                </div>
+                <div className="p-3 bg-background rounded border">
+                  <h3 className="font-medium">🎼 Meter Practice</h3>
+                  <p className="text-sm text-muted-foreground">Practice conducting patterns for different meters</p>
+                </div>
+                <div className="p-3 bg-background rounded border">
+                  <h3 className="font-medium">🎵 Rhythm Dictation</h3>
+                  <p className="text-sm text-muted-foreground">Listen and notate rhythmic patterns</p>
+                </div>
+              </div>
+            </div>
           </TabsContent>
 
           {/* Practice Tab - Sight Singing Generator */}
