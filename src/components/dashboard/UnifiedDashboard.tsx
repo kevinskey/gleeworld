@@ -16,6 +16,7 @@ import { PublicDashboardMonitor } from '@/components/admin/PublicDashboardMonito
 import { FanDashboardMonitor } from '@/components/admin/FanDashboardMonitor';
 import { AlumnaeDashboardMonitor } from '@/components/admin/AlumnaeDashboardMonitor';
 import FanDashboard from '@/pages/FanDashboard';
+import AlumnaeLanding from '@/pages/AlumnaeLanding';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
 export const UnifiedDashboard = () => {
@@ -160,7 +161,7 @@ export const UnifiedDashboard = () => {
   }
 
   if (viewMode === 'alumnae') {
-    // Show monitoring interface for admins
+    // Show monitoring interface for admins viewing alumnae dashboard
     if (profile?.role === 'super-admin' || profile?.role === 'admin') {
       return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
@@ -173,21 +174,8 @@ export const UnifiedDashboard = () => {
         </div>
       );
     } else {
-      // Basic alumnae view for non-admins
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-          <div className="px-6 pt-4">
-            <IncompleteProfileBanner userProfile={profile} />
-          </div>
-          <div className="px-6 py-4">
-            <div className="text-center py-8">
-              <h1 className="text-3xl font-bold text-primary mb-4">Alumnae Dashboard View</h1>
-              <p className="text-muted-foreground">This is how the dashboard appears to alumnae</p>
-            </div>
-            {/* Alumnae-specific content would go here */}
-          </div>
-        </div>
-      );
+      // Show the actual alumnae landing page for alumnae
+      return <AlumnaeLanding />;
     }
   }
 
