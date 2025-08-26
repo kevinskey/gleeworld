@@ -45,6 +45,7 @@ let sharedAudio: HTMLAudioElement | null = null;
 
 export const useRadioPlayer = () => {
   console.log('useRadioPlayer: Hook starting...');
+  console.log('useRadioPlayer: Current timestamp:', new Date().toISOString());
   
   const [state, setState] = useState<RadioPlayerState>({
     isPlaying: false,
@@ -56,6 +57,8 @@ export const useRadioPlayer = () => {
     volume: 0.7,
     streamerName: undefined,
   });
+
+  console.log('useRadioPlayer: Initial state set:', state);
 
   // Helper to sanitize unknown artists
   const sanitizeArtist = (name?: string | null): string => {
