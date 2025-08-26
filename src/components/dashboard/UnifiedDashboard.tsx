@@ -26,6 +26,7 @@ export const UnifiedDashboard = () => {
   const [showMessages, setShowMessages] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [calendarCollapsed, setCalendarCollapsed] = useState(true);
+  const [alumnaeViewMode, setAlumnaeViewMode] = useState<'monitor' | 'experience'>('monitor');
   const location = useLocation();
 
   useEffect(() => {
@@ -163,7 +164,6 @@ export const UnifiedDashboard = () => {
   if (viewMode === 'alumnae') {
     // Show monitoring interface for admins viewing alumnae dashboard
     if (profile?.role === 'super-admin' || profile?.role === 'admin') {
-      const [alumnaeViewMode, setAlumnaeViewMode] = useState<'monitor' | 'experience'>('monitor');
       
       return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
