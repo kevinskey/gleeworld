@@ -174,12 +174,17 @@ export const PermissionsGrid = ({ selectedPosition }: PermissionsGridProps) => {
                             onClick={() =>
                               handlePermissionChange(func.id, 'can_access', !permissions.can_access)
                             }
-                            className={`w-3 h-3 rounded-full border transition-all duration-200 ${
+                            className={`group relative w-8 h-5 rounded-full border-2 transition-all duration-200 ${
                               permissions.can_access 
                                 ? 'bg-green-500 border-green-600' 
-                                : 'bg-red-500 border-red-600'
-                            }`}
-                          />
+                                : 'bg-gray-300 border-gray-400'
+                            } hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                            title={permissions.can_access ? 'Click to revoke access' : 'Click to grant access'}
+                          >
+                            <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                              permissions.can_access ? 'translate-x-3' : 'translate-x-0'
+                            }`} />
+                          </button>
                         </div>
                         
                         <div className="col-span-2 flex items-center justify-center">
@@ -187,12 +192,17 @@ export const PermissionsGrid = ({ selectedPosition }: PermissionsGridProps) => {
                             onClick={() =>
                               handlePermissionChange(func.id, 'can_manage', !permissions.can_manage)
                             }
-                            className={`w-3 h-3 rounded-full border transition-all duration-200 ${
+                            className={`group relative w-8 h-5 rounded-full border-2 transition-all duration-200 ${
                               permissions.can_manage 
                                 ? 'bg-green-500 border-green-600' 
-                                : 'bg-red-500 border-red-600'
-                            }`}
-                          />
+                                : 'bg-gray-300 border-gray-400'
+                            } hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                            title={permissions.can_manage ? 'Click to revoke management' : 'Click to grant management'}
+                          >
+                            <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                              permissions.can_manage ? 'translate-x-3' : 'translate-x-0'
+                            }`} />
+                          </button>
                         </div>
                       </div>
                     );
