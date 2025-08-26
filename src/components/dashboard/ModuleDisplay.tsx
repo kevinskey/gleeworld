@@ -14,6 +14,7 @@ import { SettingsModule } from './modules/SettingsModule';
 import { CommunityHubModule } from './modules/CommunityHubModule';
 import { AuditionsModule } from '../modules/AuditionsModule';
 import { LibrarianModule } from '../modules/LibrarianModule';
+import { SimpleModuleHub } from '../executive/SimpleModuleHub';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -45,13 +46,15 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
       case 'media':
         return <MediaModule />;
       case 'executive':
-        return <ExecutiveModule />;
+        return <SimpleModuleHub />;
       case 'settings':
         return <SettingsModule />;
       case 'auditions-management':
         return <AuditionsModule />;
       case 'librarian':
         return <LibrarianModule />;
+      case 'simple-executive-hub':
+        return <SimpleModuleHub />;
       default:
         return <EmailModule />;
     }

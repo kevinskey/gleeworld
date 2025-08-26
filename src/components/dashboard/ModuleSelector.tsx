@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Music, Calendar, Shirt, DollarSign, UserCheck, Settings, BookOpen, Users, Camera, Radio, Briefcase, ScanLine } from 'lucide-react';
+import { Mail, Music, Calendar, Shirt, DollarSign, UserCheck, Settings, BookOpen, Users, Camera, Radio, Briefcase, ScanLine, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -115,6 +115,14 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
       description: 'Manage audition sessions and applications',
       notifications: 0,
       category: 'Administration'
+    },
+    {
+      id: 'simple-executive-hub',
+      name: 'Executive Hub (Simple)',
+      icon: Crown,
+      description: 'Simplified executive board module hub - works immediately',
+      notifications: 0,
+      category: 'Executive'
     }
   ];
 
