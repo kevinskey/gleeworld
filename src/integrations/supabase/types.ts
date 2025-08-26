@@ -15761,6 +15761,14 @@ export type Database = {
         }
         Returns: string
       }
+      current_user_can_access_admin_modules: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      current_user_has_executive_function_access: {
+        Args: { function_name_param: string; permission_type_param?: string }
+        Returns: boolean
+      }
       current_user_is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -16395,6 +16403,14 @@ export type Database = {
       }
       user_has_budget_permission: {
         Args: { budget_id_param: string; permission_type_param: string }
+        Returns: boolean
+      }
+      user_has_executive_function_access: {
+        Args: {
+          function_name_param: string
+          permission_type_param?: string
+          user_id_param: string
+        }
         Returns: boolean
       }
       user_has_function_permission: {
