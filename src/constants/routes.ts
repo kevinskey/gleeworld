@@ -36,6 +36,7 @@ export const ROUTES = {
   LIBRARIAN_DASHBOARD: '/librarian-dashboard',
   STUDENT_REGISTRATION: '/student-registration',
   MUSIC_THEORY_FUNDAMENTALS: '/music-theory-fundamentals',
+  NOTATION_BASICS: '/music-theory/notation-basics',
   FULL_ATTENDANCE_RECORD: '/member/attendance/full-record',
   ATTENDANCE_POLICY: '/handbook/attendance-policy'
 } as const;
@@ -77,5 +78,6 @@ export const PUBLIC_ROUTES = [
   ROUTES.CHECKOUT,
   ROUTES.SHOP_SUCCESS,
   ROUTES.STUDENT_REGISTRATION,
-  ROUTES.MUSIC_THEORY_FUNDAMENTALS
+  ROUTES.MUSIC_THEORY_FUNDAMENTALS,
+  ROUTES.NOTATION_BASICS
 ] as const;

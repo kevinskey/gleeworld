@@ -271,7 +271,18 @@ const MusicTheoryFundamentals = () => {
                                 </Badge>
                               )}
                             </div>
-                            <span className="text-muted-foreground">{week.topic}</span>
+                            <div className="flex items-center justify-between flex-1">
+                              <span className="text-muted-foreground">{week.topic}</span>
+                              {week.week === 1 && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => window.location.href = '/music-theory/notation-basics'}
+                                >
+                                  Start Learning
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}

@@ -15,6 +15,7 @@ import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import MusicTheoryFundamentals from "./pages/MusicTheoryFundamentals";
+import NotationBasics from "./pages/music-theory/NotationBasics";
 
 import Index from "./pages/Index";
 import DirectoryPage from "./pages/DirectoryPage";
@@ -279,6 +280,15 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <MusicTheoryFundamentals />
+                  </PublicRoute>
+                } 
+              />
+              {/* Notation Basics page */}
+              <Route 
+                path="/music-theory/notation-basics" 
+                element={
+                  <PublicRoute>
+                    <NotationBasics />
                   </PublicRoute>
                 } 
               />
