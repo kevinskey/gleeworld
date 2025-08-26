@@ -14,6 +14,7 @@ import { IncompleteProfileBanner } from '@/components/shared/IncompleteProfileBa
 import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
 import { PublicDashboardMonitor } from '@/components/admin/PublicDashboardMonitor';
 import { FanDashboardMonitor } from '@/components/admin/FanDashboardMonitor';
+import { AlumnaeDashboardMonitor } from '@/components/admin/AlumnaeDashboardMonitor';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
 export const UnifiedDashboard = () => {
@@ -171,20 +172,35 @@ export const UnifiedDashboard = () => {
   }
 
   if (viewMode === 'alumnae') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-        <div className="px-6 pt-4">
-          <IncompleteProfileBanner userProfile={profile} />
-        </div>
-        <div className="px-6 py-4">
-          <div className="text-center py-8">
-            <h1 className="text-3xl font-bold text-primary mb-4">Alumnae Dashboard View</h1>
-            <p className="text-muted-foreground">This is how the dashboard appears to alumnae</p>
+    // Show monitoring interface for admins
+    if (profile?.role === 'super-admin' || profile?.role === 'admin') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+          <div className="px-6 pt-4">
+            <IncompleteProfileBanner userProfile={profile} />
           </div>
-          {/* Alumnae-specific content would go here */}
+          <div className="px-6 py-4">
+            <AlumnaeDashboardMonitor />
+          </div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      // Basic alumnae view for non-admins
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+          <div className="px-6 pt-4">
+            <IncompleteProfileBanner userProfile={profile} />
+          </div>
+          <div className="px-6 py-4">
+            <div className="text-center py-8">
+              <h1 className="text-3xl font-bold text-primary mb-4">Alumnae Dashboard View</h1>
+              <p className="text-muted-foreground">This is how the dashboard appears to alumnae</p>
+            </div>
+            {/* Alumnae-specific content would go here */}
+          </div>
+        </div>
+      );
+    }
   }
 
   if (viewMode === 'mus240') {
