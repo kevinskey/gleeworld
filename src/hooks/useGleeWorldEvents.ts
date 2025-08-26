@@ -139,17 +139,24 @@ export const useGleeWorldEvents = () => {
   const setupRealtime = async () => {
     // Prevent multiple subscriptions
     if (isSubscribedRef.current) {
+      console.log('Already subscribed, skipping...');
       return;
     }
 
     // Clean up existing channel completely
     if (channelRef.current) {
-      await supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
+      console.log('Cleaning up existing channel...');
+      try {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      } catch (error) {
+        console.error('Error removing channel:', error);
+      }
     }
 
     // Create a new channel with unique identifier
     const channelId = `events-changes-${Date.now()}-${Math.random()}`;
+    console.log('Creating new channel:', channelId);
     const channel = supabase.channel(channelId);
 
     // Add event listeners
@@ -193,12 +200,21 @@ export const useGleeWorldEvents = () => {
 
     // Subscribe and track state
     try {
-      await channel.subscribe();
+      console.log('Subscribing to channel:', channelId);
+      const subscriptionResult = await channel.subscribe();
+      console.log('Subscription result:', subscriptionResult);
+      
+      // Store the channel reference regardless of status
       channelRef.current = channel;
       isSubscribedRef.current = true;
+      console.log('Successfully subscribed to channel');
     } catch (error) {
       console.error('Failed to subscribe to realtime channel:', error);
       isSubscribedRef.current = false;
+      // Clean up the failed channel
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     }
   };
 
@@ -221,15 +237,33 @@ export const useGleeWorldEvents = () => {
   };
 
   useEffect(() => {
-    fetchEvents();
-    setupRealtime();
+    let isMounted = true;
+    
+    const initializeHook = async () => {
+      if (!isMounted) return;
+      
+      await fetchEvents();
+      
+      if (!isMounted) return;
+      
+      await setupRealtime();
+    };
+    
+    initializeHook();
 
     // Cleanup function
     return () => {
+      console.log('useGleeWorldEvents cleanup');
+      isMounted = false;
       isSubscribedRef.current = false;
+      
       if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
+        try {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        } catch (error) {
+          console.error('Error during cleanup:', error);
+        }
       }
     };
   }, [user?.id]); // Only depend on user.id to reduce re-runs
