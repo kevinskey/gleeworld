@@ -35,6 +35,7 @@ export const ROUTES = {
   WELLNESS: '/wellness',
   LIBRARIAN_DASHBOARD: '/librarian-dashboard',
   STUDENT_REGISTRATION: '/student-registration',
+  MUSIC_THEORY_FUNDAMENTALS: '/music-theory-fundamentals',
   FULL_ATTENDANCE_RECORD: '/member/attendance/full-record',
   ATTENDANCE_POLICY: '/handbook/attendance-policy'
 } as const;
@@ -75,5 +76,6 @@ export const PUBLIC_ROUTES = [
   ROUTES.SHOP,
   ROUTES.CHECKOUT,
   ROUTES.SHOP_SUCCESS,
-  ROUTES.STUDENT_REGISTRATION
+  ROUTES.STUDENT_REGISTRATION,
+  ROUTES.MUSIC_THEORY_FUNDAMENTALS
 ] as const;

@@ -18,6 +18,7 @@ const bookingDropdown = [
 
 const infoDropdown = [
   { href: "/about", label: "About" },
+  { href: "/music-theory-fundamentals", label: "Music Theory" },
   { href: "/press-kit", label: "Press Kit" },
 ];
 
