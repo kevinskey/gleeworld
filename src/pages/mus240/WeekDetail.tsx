@@ -50,16 +50,7 @@ const createEmbedUrl = (videoId: string) => {
   return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
 };
 
-// Check if video exists and is embeddable
-const checkVideoAvailability = async (videoId: string): Promise<boolean> => {
-  try {
-    // Use oEmbed API to check if video is available and embeddable
-    const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
-    return response.ok;
-  } catch {
-    return false;
-  }
-};
+// Removed problematic video availability checking
 
 
 type Comment = { 
@@ -80,7 +71,6 @@ export default function WeekDetail() {
   const [author, setAuthor] = useState('');
   const [content, setContent] = useState('');
   const [failedEmbeds, setFailedEmbeds] = useState<Set<number>>(new Set());
-  const [videoAvailability, setVideoAvailability] = useState<Map<number, boolean>>(new Map());
 
   useEffect(() => {
     (async () => {
@@ -92,25 +82,7 @@ export default function WeekDetail() {
       if (!error && data) setComments(data as Comment[]);
     })();
 
-    // Check video availability for all YouTube tracks
-    if (wk) {
-      const checkVideos = async () => {
-        const availabilityMap = new Map<number, boolean>();
-        for (let i = 0; i < wk.tracks.length; i++) {
-          const track = wk.tracks[i];
-          const isYouTube = track.url.includes('youtube.com') || track.url.includes('youtu.be');
-          if (isYouTube) {
-            const videoId = getVideoId(track.url);
-            if (videoId) {
-              const isAvailable = await checkVideoAvailability(videoId);
-              availabilityMap.set(i, isAvailable);
-            }
-          }
-        }
-        setVideoAvailability(availabilityMap);
-      };
-      checkVideos();
-    }
+    // Removed video availability checking
   }, [num, wk]);
 
   const post = async (track_index: number | null, a: string, c: string) => {
@@ -164,7 +136,6 @@ export default function WeekDetail() {
               const videoId = getVideoId(t.url);
               const embedUrl = videoId ? createEmbedUrl(videoId) : null;
               const embedFailed = failedEmbeds.has(i);
-              const videoIsAvailable = videoAvailability.get(i) !== false; // Default to true if not checked yet
               
               console.log(`Track ${i}:`, { 
                 title: t.title, 
@@ -172,8 +143,7 @@ export default function WeekDetail() {
                 isYouTube, 
                 videoId, 
                 embedUrl, 
-                embedFailed,
-                videoIsAvailable
+                embedFailed
               });
               
               return (
@@ -195,7 +165,7 @@ export default function WeekDetail() {
                   </div>
 
                   {/* YouTube embed with enhanced handling */}
-                  {isYouTube && videoId && videoIsAvailable && (
+                  {isYouTube && videoId && (
                     <div className="mb-3">
                       {!embedFailed ? (
                         <div className="relative">
@@ -274,15 +244,7 @@ export default function WeekDetail() {
                     </div>
                   )}
 
-                  {/* Show notice for unavailable videos */}
-                  {isYouTube && videoId && !videoIsAvailable && (
-                    <Alert className="mb-3">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        This video is not available for embedding, but you can still watch it on YouTube by clicking the "Open on YouTube" button above.
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                  {/* Show notice for failed embeds only */}
 
 
                   <TrackCommentBox onPost={(a, c) => post(i, a, c)} />
