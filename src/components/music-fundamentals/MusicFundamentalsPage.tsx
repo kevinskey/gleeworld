@@ -21,58 +21,59 @@ export const MusicFundamentalsPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <UniversalHeader />
       
-      <div className="container mx-auto px-4 py-8">
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="p-3 rounded-full bg-primary/10 mr-4">
-              <Music className="h-8 w-8 text-primary" />
+      <div className="page-container">
+        <div className="container mx-auto px-1 sm:px-2 lg:px-4">
+          {/* Header Section */}
+          <div className="text-center mb-2 md:mb-4">
+            <div className="flex items-center justify-center mb-1 md:mb-2">
+              <div className="p-1.5 md:p-3 rounded-full bg-primary/10 mr-2 md:mr-4">
+                <Music className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+              </div>
+              <h1 className="mobile-text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                Music Fundamentals
+              </h1>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Music Fundamentals
-            </h1>
+            <p className="mobile-text-lg text-muted-foreground max-w-2xl mx-auto px-2">
+              Practice sight singing, complete assignments, and master the fundamentals of music theory and performance.
+            </p>
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Practice sight singing, complete assignments, and master the fundamentals of music theory and performance.
-          </p>
-        </div>
 
-        {/* Main Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
-            <TabsTrigger value="practice" className="flex items-center gap-2">
-              <Music className="h-4 w-4" />
-              Practice
+          {/* Main Content */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-2 md:mb-4 gap-0.5 md:gap-1">
+            <TabsTrigger value="practice" className="flex items-center gap-1 md:gap-2 touch-target">
+              <Music className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-xs md:text-sm">Practice</span>
             </TabsTrigger>
-            <TabsTrigger value="assignments" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              Assignments
+            <TabsTrigger value="assignments" className="flex items-center gap-1 md:gap-2 touch-target">
+              <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-xs md:text-sm">Assignments</span>
             </TabsTrigger>
-            <TabsTrigger value="upload" className="flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              Upload
+            <TabsTrigger value="upload" className="flex items-center gap-1 md:gap-2 touch-target">
+              <Upload className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-xs md:text-sm">Upload</span>
             </TabsTrigger>
-            <TabsTrigger value="progress" className="flex items-center gap-2">
-              <Trophy className="h-4 w-4" />
-              Progress
+            <TabsTrigger value="progress" className="flex items-center gap-1 md:gap-2 touch-target">
+              <Trophy className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-xs md:text-sm">Progress</span>
             </TabsTrigger>
             {isAdmin && (
-              <TabsTrigger value="admin" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Admin
+              <TabsTrigger value="admin" className="flex items-center gap-1 md:gap-2 touch-target">
+                <Settings className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="text-xs md:text-sm">Admin</span>
               </TabsTrigger>
             )}
           </TabsList>
 
           {/* Practice Tab - Sight Singing Generator */}
-          <TabsContent value="practice" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Music className="h-5 w-5 text-primary" />
+          <TabsContent value="practice" className="section-spacing">
+            <Card className="card-compact">
+              <CardHeader className="card-header-compact">
+                <CardTitle className="flex items-center gap-1 md:gap-2 page-header">
+                  <Music className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                   Sight Singing Practice
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs md:text-sm">
                   Generate custom sight singing exercises and record your performance for evaluation
                 </CardDescription>
               </CardHeader>
@@ -83,14 +84,14 @@ export const MusicFundamentalsPage: React.FC = () => {
           </TabsContent>
 
           {/* Assignments Tab */}
-          <TabsContent value="assignments" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-primary" />
+          <TabsContent value="assignments" className="section-spacing">
+            <Card className="card-compact">
+              <CardHeader className="card-header-compact">
+                <CardTitle className="flex items-center gap-1 md:gap-2 page-header">
+                  <BookOpen className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                   Current Assignments
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs md:text-sm">
                   View and complete your music fundamentals assignments
                 </CardDescription>
               </CardHeader>
@@ -101,14 +102,14 @@ export const MusicFundamentalsPage: React.FC = () => {
           </TabsContent>
 
           {/* Upload Tab */}
-          <TabsContent value="upload" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5 text-primary" />
+          <TabsContent value="upload" className="section-spacing">
+            <Card className="card-compact">
+              <CardHeader className="card-header-compact">
+                <CardTitle className="flex items-center gap-1 md:gap-2 page-header">
+                  <Upload className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                   File Uploads
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs md:text-sm">
                   Upload MusicXML files, PDFs, and audio recordings for your assignments
                 </CardDescription>
               </CardHeader>
@@ -119,14 +120,14 @@ export const MusicFundamentalsPage: React.FC = () => {
           </TabsContent>
 
           {/* Progress Tab */}
-          <TabsContent value="progress" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-primary" />
+          <TabsContent value="progress" className="section-spacing">
+            <Card className="card-compact">
+              <CardHeader className="card-header-compact">
+                <CardTitle className="flex items-center gap-1 md:gap-2 page-header">
+                  <Trophy className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                   Your Progress
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs md:text-sm">
                   Track your improvement in sight singing and music theory
                 </CardDescription>
               </CardHeader>
@@ -138,14 +139,14 @@ export const MusicFundamentalsPage: React.FC = () => {
 
           {/* Admin Tab - Only visible to instructors/admins */}
           {isAdmin && (
-            <TabsContent value="admin" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-primary" />
+            <TabsContent value="admin" className="section-spacing">
+              <Card className="card-compact">
+                <CardHeader className="card-header-compact">
+                  <CardTitle className="flex items-center gap-1 md:gap-2 page-header">
+                    <Settings className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                     Grading & Administration
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-xs md:text-sm">
                     Review student submissions and provide feedback
                   </CardDescription>
                 </CardHeader>
@@ -156,6 +157,7 @@ export const MusicFundamentalsPage: React.FC = () => {
             </TabsContent>
           )}
         </Tabs>
+        </div>
       </div>
     </div>
   );
