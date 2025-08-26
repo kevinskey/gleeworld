@@ -268,53 +268,19 @@ export const UnifiedDashboard = () => {
   }
 
   if (viewMode === 'public') {
-    // Show monitoring interface for admins
-    if (profile?.role === 'super-admin' || profile?.role === 'admin') {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-          <div className="px-6 pt-4">
-            <IncompleteProfileBanner userProfile={profile} />
-          </div>
-          <div className="px-6 py-4">
-            <div className="mb-6">
-              <div className="flex items-center gap-4 mb-4">
-                <h1 className="text-2xl font-bold">Public Dashboard</h1>
-                <div className="flex bg-muted rounded-lg p-1">
-                  <button
-                    onClick={() => setPublicViewMode('monitor')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      publicViewMode === 'monitor' 
-                        ? 'bg-background text-foreground shadow-sm' 
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Admin Monitor
-                  </button>
-                  <button
-                    onClick={() => setPublicViewMode('experience')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      publicViewMode === 'experience' 
-                        ? 'bg-background text-foreground shadow-sm' 
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Public Experience
-                  </button>
-                </div>
-              </div>
-            </div>
-            {publicViewMode === 'monitor' ? (
-              <PublicDashboardMonitor />
-            ) : (
-              <PublicLanding />
-            )}
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+        <div className="px-6 pt-4">
+          <IncompleteProfileBanner userProfile={profile} />
+        </div>
+        <div className="px-6 py-4">
+          <div className="text-center py-8">
+            <h1 className="text-3xl font-bold text-primary mb-4">Public Dashboard View</h1>
+            <p className="text-muted-foreground">This is how the dashboard appears to the public.</p>
           </div>
         </div>
-      );
-    } else {
-      // Show the actual public landing page for non-admins
-      return <PublicLanding />;
-    }
+      </div>
+    );
   }
 
   // Default view: If user is super admin and on default /dashboard route, show the SuperAdminDashboard
