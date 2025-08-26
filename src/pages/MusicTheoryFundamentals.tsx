@@ -354,13 +354,13 @@ const MusicTheoryFundamentals = () => {
                   </div>
                 </div>
 
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-amber-800 mb-2">Example Scenario:</h4>
-                  <div className="text-sm text-amber-700 space-y-1">
+                <div className="bg-muted/30 border border-border rounded-lg p-4">
+                  <h4 className="font-semibold text-foreground mb-2">Example Scenario:</h4>
+                  <div className="text-sm text-muted-foreground space-y-1">
                     <p>• Keyboard Skills = 82% (B)</p>
                     <p>• Theory = 76% (C)</p>
                     <p>• History/Terminology = 64% (D)</p>
-                    <p className="font-semibold">→ Student does NOT pass the course, even though the overall average is 74%.</p>
+                    <p className="font-semibold text-foreground">→ Student does NOT pass the course, even though the overall average is 74%.</p>
                   </div>
                 </div>
               </CardContent>
