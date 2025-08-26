@@ -9,6 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Users, UserPlus, Shield, Settings, Search, Filter, Mail, Calendar, Crown, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { EXECUTIVE_POSITIONS } from "@/hooks/useExecutivePermissions";
+import type { Database } from "@/integrations/supabase/types";
+
+type ExecutivePositionType = Database['public']['Enums']['executive_position'];
 
 interface UserProfile {
   id: string;
@@ -24,26 +28,6 @@ interface UserProfile {
   created_at: string;
 }
 
-const EXECUTIVE_POSITIONS = [
-  'president',
-  'secretary', 
-  'treasurer',
-  'tour_manager',
-  'wardrobe_manager',
-  'librarian',
-  'historian',
-  'pr_coordinator',
-  'chaplain',
-  'data_analyst',
-  'assistant_chaplain',
-  'student_conductor',
-  'section_leader_s1',
-  'section_leader_s2', 
-  'section_leader_a1',
-  'section_leader_a2',
-  'set_up_crew_manager',
-  'pr_manager'
-] as const;
 
 const UserManagement = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -80,7 +64,7 @@ const UserManagement = () => {
     }
   };
 
-  const assignExecutivePosition = async (userId: string, position: typeof EXECUTIVE_POSITIONS[number]) => {
+  const assignExecutivePosition = async (userId: string, position: ExecutivePositionType) => {
     try {
       const currentYear = new Date().getFullYear().toString();
 
@@ -547,13 +531,13 @@ const UserManagement = () => {
               <div className="grid grid-cols-2 gap-2 mt-2">
                 {EXECUTIVE_POSITIONS.map((position) => (
                   <Button
-                    key={position}
+                    key={position.value}
                     variant="outline"
                     className="justify-start"
-                    onClick={() => selectedUser && assignExecutivePosition(selectedUser.user_id, position)}
+                    onClick={() => selectedUser && assignExecutivePosition(selectedUser.user_id, position.value)}
                   >
                     <Crown className="h-4 w-4 mr-2" />
-                    {position.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    {position.label}
                   </Button>
                 ))}
               </div>
