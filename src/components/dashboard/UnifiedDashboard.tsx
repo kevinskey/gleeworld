@@ -17,6 +17,7 @@ import { FanDashboardMonitor } from '@/components/admin/FanDashboardMonitor';
 import { AlumnaeDashboardMonitor } from '@/components/admin/AlumnaeDashboardMonitor';
 import FanDashboard from '@/pages/FanDashboard';
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
+import PublicLanding from '@/pages/PublicLanding';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
 export const UnifiedDashboard = () => {
@@ -305,31 +306,14 @@ export const UnifiedDashboard = () => {
             {publicViewMode === 'monitor' ? (
               <PublicDashboardMonitor />
             ) : (
-              <div className="text-center py-8">
-                <h1 className="text-3xl font-bold text-primary mb-4">Public Dashboard View</h1>
-                <p className="text-muted-foreground">This is how the dashboard appears to the public</p>
-                {/* Public content would go here */}
-              </div>
+              <PublicLanding />
             )}
           </div>
         </div>
       );
     } else {
       // Basic public view for non-admins
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-          <div className="px-6 pt-4">
-            <IncompleteProfileBanner userProfile={profile} />
-          </div>
-          <div className="px-6 py-4">
-            <div className="text-center py-8">
-              <h1 className="text-3xl font-bold text-primary mb-4">Public Dashboard View</h1>
-              <p className="text-muted-foreground">This is how the dashboard appears to the public</p>
-            </div>
-            {/* Public content would go here */}
-          </div>
-        </div>
-      );
+      return <PublicLanding />;
     }
   }
 
