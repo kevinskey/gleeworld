@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Youtube, Play, ExternalLink } from "lucide-react";
+import { Youtube, Play, ExternalLink, Sync } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface YouTubeVideo {
   id: string;
@@ -27,6 +29,9 @@ export const YoutubeVideoSection = () => {
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [channel, setChannel] = useState<YouTubeChannel | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [channelInput, setChannelInput] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     loadYouTubeData();
@@ -65,6 +70,44 @@ export const YoutubeVideoSection = () => {
     }
   };
 
+  const syncYouTubeVideos = async () => {
+    if (!channelInput.trim()) {
+      toast({
+        title: "Channel Input Required",
+        description: "Please enter a YouTube channel URL or @handle",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setSyncLoading(true);
+      const { data, error } = await supabase.functions.invoke('sync-youtube-videos', {
+        body: { channelInput: channelInput.trim(), maxResults: 10 }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sync Successful",
+        description: `Synced ${data?.videosCount || 0} videos from the channel`,
+      });
+
+      // Refresh the data
+      await loadYouTubeData();
+      setChannelInput("");
+    } catch (error) {
+      console.error('Error syncing YouTube videos:', error);
+      toast({
+        title: "Sync Failed",
+        description: error instanceof Error ? error.message : "Failed to sync YouTube videos",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
   const formatViewCount = (count: number) => {
     if (count >= 1000000) {
       return (count / 1000000).toFixed(1) + 'M';
@@ -100,15 +143,51 @@ export const YoutubeVideoSection = () => {
 
   if (!videos.length) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 space-y-6">
         <Youtube className="h-12 w-12 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">No videos available</h3>
         <p className="text-gray-600 mb-4">
           {channel ? 
             "No featured videos have been set up yet." :
-            "YouTube channel hasn't been configured yet."
+            "YouTube channel hasn't been configured yet. Sync your channel to get started!"
           }
         </p>
+        
+        {/* YouTube Sync Interface */}
+        <Card className="max-w-md mx-auto p-6 bg-white/30 backdrop-blur-md border border-white/40">
+          <h4 className="text-lg font-semibold mb-4">Sync YouTube Channel</h4>
+          <div className="space-y-4">
+            <div>
+              <Input
+                placeholder="Enter channel URL or @handle"
+                value={channelInput}
+                onChange={(e) => setChannelInput(e.target.value)}
+                className="mb-3"
+              />
+              <p className="text-sm text-gray-600 mb-3">
+                Examples: https://youtube.com/@spelmangleeclub or @spelmangleeclub
+              </p>
+            </div>
+            <Button 
+              onClick={syncYouTubeVideos}
+              disabled={syncLoading}
+              className="w-full bg-red-500 hover:bg-red-600 text-white"
+            >
+              {syncLoading ? (
+                <>
+                  <Sync className="h-4 w-4 mr-2 animate-spin" />
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <Youtube className="h-4 w-4 mr-2" />
+                  Sync Channel
+                </>
+              )}
+            </Button>
+          </div>
+        </Card>
+        
         {channel && (
           <Button asChild className="bg-red-500 hover:bg-red-600 text-white">
             <a href={channel.channel_url} target="_blank" rel="noopener noreferrer">
