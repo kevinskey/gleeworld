@@ -312,7 +312,7 @@ export const UnifiedDashboard = () => {
         </div>
       );
     } else {
-      // Basic public view for non-admins
+      // Show the actual public landing page for non-admins
       return <PublicLanding />;
     }
   }
