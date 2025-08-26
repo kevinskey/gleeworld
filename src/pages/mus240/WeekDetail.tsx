@@ -146,6 +146,19 @@ export default function WeekDetail() {
                 embedFailed
               });
               
+              // Extra debugging for Fisk track
+              if (t.title.includes('Fisk')) {
+                console.log('🎵 FISK TRACK DEBUG:', {
+                  title: t.title,
+                  url: t.url,
+                  isYouTube,
+                  videoId,
+                  embedUrl,
+                  embedFailed,
+                  shouldShowEmbed: isYouTube && videoId && !embedFailed
+                });
+              }
+              
               return (
                 <li key={i} className="rounded-xl border p-3">
                   <div className="flex items-center justify-between gap-2 mb-3">
@@ -176,24 +189,33 @@ export default function WeekDetail() {
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             allowFullScreen
-                            onError={() => handleEmbedError(i)}
+                            onError={(e) => {
+                              console.log('❌ Iframe error for:', t.title, e);
+                              handleEmbedError(i);
+                            }}
                             onLoad={(e) => {
+                              console.log('✅ Iframe loaded for:', t.title);
                               // Check if iframe loaded successfully
                               const iframe = e.currentTarget;
                               try {
                                 // If we can't access contentDocument, it likely means blocked
                                 if (!iframe.contentDocument && !iframe.contentWindow) {
+                                  console.log('🚫 Iframe blocked for:', t.title);
                                   handleEmbedError(i);
                                 }
                               } catch {
                                 // Cross-origin restrictions, but video might still work
+                                console.log('🔒 Cross-origin restrictions for:', t.title, 'but video might work');
                               }
                             }}
                           />
                           {/* Fallback detection overlay */}
                           <div 
                             className="absolute inset-0 pointer-events-none"
-                            onError={() => handleEmbedError(i)}
+                            onError={() => {
+                              console.log('❌ Overlay error for:', t.title);
+                              handleEmbedError(i);
+                            }}
                           />
                         </div>
                       ) : (
