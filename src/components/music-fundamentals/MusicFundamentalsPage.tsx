@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Music, Upload, BookOpen, Trophy, Settings } from 'lucide-react';
+import { Music, Upload, BookOpen, Trophy, Settings, Clock } from 'lucide-react';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
 import { SightSingingGenerator } from '@/components/music-fundamentals/SightSingingGenerator';
 import { FileUploadSection } from '@/components/music-fundamentals/FileUploadSection';
 import { AssignmentsList } from '@/components/music-fundamentals/AssignmentsList';
 import { AdminGradingPanel } from '@/components/music-fundamentals/AdminGradingPanel';
 import { StudentProgress } from '@/components/music-fundamentals/StudentProgress';
+import { WeekTwoContent } from '@/components/music-fundamentals/week-two/WeekTwoContent';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const MusicFundamentalsPage: React.FC = () => {
@@ -40,10 +41,14 @@ export const MusicFundamentalsPage: React.FC = () => {
 
           {/* Main Content */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-2 md:mb-4 gap-0.5 md:gap-1">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 mb-2 md:mb-4 gap-0.5 md:gap-1">
             <TabsTrigger value="practice" className="flex items-center gap-1 md:gap-2 touch-target">
               <Music className="h-3 w-3 md:h-4 md:w-4" />
               <span className="text-xs md:text-sm">Practice</span>
+            </TabsTrigger>
+            <TabsTrigger value="week2" className="flex items-center gap-1 md:gap-2 touch-target">
+              <Clock className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-xs md:text-sm">Week 2</span>
             </TabsTrigger>
             <TabsTrigger value="assignments" className="flex items-center gap-1 md:gap-2 touch-target">
               <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
@@ -64,6 +69,11 @@ export const MusicFundamentalsPage: React.FC = () => {
               </TabsTrigger>
             )}
           </TabsList>
+
+          {/* Week 2 Tab - Time Signatures & Meter */}
+          <TabsContent value="week2" className="section-spacing">
+            <WeekTwoContent />
+          </TabsContent>
 
           {/* Practice Tab - Sight Singing Generator */}
           <TabsContent value="practice" className="section-spacing">
