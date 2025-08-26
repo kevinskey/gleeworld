@@ -27,6 +27,7 @@ export const UnifiedDashboard = () => {
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [calendarCollapsed, setCalendarCollapsed] = useState(true);
   const [alumnaeViewMode, setAlumnaeViewMode] = useState<'monitor' | 'experience'>('monitor');
+  const [fanViewMode, setFanViewMode] = useState<'monitor' | 'experience'>('monitor');
   const location = useLocation();
 
   useEffect(() => {
@@ -149,7 +150,38 @@ export const UnifiedDashboard = () => {
             <IncompleteProfileBanner userProfile={profile} />
           </div>
           <div className="px-6 py-4">
-            <FanDashboardMonitor />
+            <div className="mb-6">
+              <div className="flex items-center gap-4 mb-4">
+                <h1 className="text-2xl font-bold">Fan Dashboard</h1>
+                <div className="flex bg-muted rounded-lg p-1">
+                  <button
+                    onClick={() => setFanViewMode('monitor')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      fanViewMode === 'monitor' 
+                        ? 'bg-background text-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Admin Monitor
+                  </button>
+                  <button
+                    onClick={() => setFanViewMode('experience')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      fanViewMode === 'experience' 
+                        ? 'bg-background text-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Fan Experience
+                  </button>
+                </div>
+              </div>
+            </div>
+            {fanViewMode === 'monitor' ? (
+              <FanDashboardMonitor />
+            ) : (
+              <FanDashboard />
+            )}
           </div>
         </div>
       );
