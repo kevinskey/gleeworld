@@ -30,7 +30,10 @@ import {
   Users,
   X,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  Edit2,
+  Trash2,
+  Upload
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,6 +85,9 @@ export const MediaLibrary = ({
   const [pdfPageNumber, setPdfPageNumber] = useState<number>(1);
   const [pdfScale, setPdfScale] = useState<number>(1.0);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [editingFile, setEditingFile] = useState<MediaFile | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -287,6 +293,81 @@ export const MediaLibrary = ({
       window.open(url, '_blank');
     }
   };
+
+  const handleEditFile = (file: MediaFile) => {
+    setEditingFile(file);
+    setEditTitle(file.title);
+    setEditDescription(file.description || '');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingFile) return;
+
+    try {
+      const { error } = await supabase
+        .from('gw_media_library')
+        .update({
+          title: editTitle,
+          description: editDescription
+        })
+        .eq('id', editingFile.id);
+
+      if (error) throw error;
+
+      setMediaFiles(prev => prev.map(file => 
+        file.id === editingFile.id 
+          ? { ...file, title: editTitle, description: editDescription }
+          : file
+      ));
+
+      setEditingFile(null);
+      toast({
+        title: "Success",
+        description: "Media file updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating file:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update media file",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteFile = async (file: MediaFile) => {
+    if (!confirm(`Are you sure you want to delete "${file.title}"?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('gw_media_library')
+        .delete()
+        .eq('id', file.id);
+
+      if (error) throw error;
+
+      // Also try to delete from storage if it has bucket info
+      if (file.bucket_id && file.file_path) {
+        await supabase.storage
+          .from(file.bucket_id)
+          .remove([file.file_path]);
+      }
+
+      setMediaFiles(prev => prev.filter(f => f.id !== file.id));
+      
+      toast({
+        title: "Success",
+        description: "Media file deleted successfully"
+      });
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete media file",
+        variant: "destructive"
+      });
+    }
+  };
   const renderMediaCard = (file: MediaFile) => {
     const fileType = getFileTypeFromUrl(file.file_url);
     const isCurrentlyPlaying = currentTrack === file.id && isPlaying;
@@ -344,15 +425,35 @@ export const MediaLibrary = ({
             {/* Actions */}
             <div className="flex-shrink-0 flex gap-2">
               {isAdmin && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDownload(file)}
-                  className="text-xs h-8 px-3"
-                >
-                  <Download className="h-3 w-3 mr-1" />
-                  Download
-                </Button>
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEditFile(file)}
+                    className="text-xs h-8 px-3"
+                  >
+                    <Edit2 className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDeleteFile(file)}
+                    className="text-xs h-8 px-3 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Delete
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDownload(file)}
+                    className="text-xs h-8 px-3"
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    Download
+                  </Button>
+                </>
               )}
               
               {canPlay && (
@@ -423,15 +524,35 @@ export const MediaLibrary = ({
               </Button>
               
               {isAdmin && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => window.open(file.file_url, '_blank')}
-                  className="text-xs h-8 px-3"
-                >
-                  <Download className="h-3 w-3 mr-1" />
-                  Download
-                </Button>
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEditFile(file)}
+                    className="text-xs h-8 px-3"
+                  >
+                    <Edit2 className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDeleteFile(file)}
+                    className="text-xs h-8 px-3 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Delete
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open(file.file_url, '_blank')}
+                    className="text-xs h-8 px-3"
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    Download
+                  </Button>
+                </>
               )}
             </div>
           </div>
@@ -723,6 +844,43 @@ export const MediaLibrary = ({
           </ScrollArea>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Dialog */}
+      {editingFile && (
+        <Dialog open={!!editingFile} onOpenChange={() => setEditingFile(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Media File</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Title</label>
+                <Input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Enter title"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Description</label>
+                <Input
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="Enter description (optional)"
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setEditingFile(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveEdit}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* PDF Viewer Dialog */}
       {selectedPdf && (
