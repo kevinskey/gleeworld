@@ -413,8 +413,15 @@ export const useTypingIndicator = (groupId?: string) => {
   useEffect(() => {
     if (!groupId || !user) return;
 
+    // Cleanup existing channel first
+    if (channelRef.current) {
+      console.log('Cleaning up existing typing channel');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
     // Create and subscribe to the typing channel
-    const channel = supabase.channel(`typing-${groupId}`);
+    const channel = supabase.channel(`typing-${groupId}-${Date.now()}`);
     channelRef.current = channel;
 
     channel.subscribe((status) => {
@@ -422,6 +429,7 @@ export const useTypingIndicator = (groupId?: string) => {
     });
 
     return () => {
+      console.log('useMessaging typing cleanup');
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
