@@ -171,6 +171,7 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
     try {
       const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
       
+      
       // Update gw_profiles if exists
       const { error: gwProfileError } = await supabase
         .from('gw_profiles')
@@ -182,24 +183,74 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
           phone: phone.trim() || null,
           voice_part: voicePart || null,
           exec_board_role: execBoardRole || null,
-          is_exec_board: !!execBoardRole
+          is_exec_board: !!execBoardRole,
+          role: role
         })
         .eq('user_id', user.id);
 
-      // Update gw_profiles table role
-      const { error: roleError } = await supabase
-        .from('gw_profiles')
-        .update({ 
-          role: role,
-          first_name: firstName.trim(),
-          middle_name: middleName.trim() || null,
-          last_name: lastName.trim(),
-          full_name: fullName
-        })
-        .eq('user_id', user.id);
+      if (gwProfileError) {
+        throw new Error(`Failed to update profile: ${gwProfileError.message}`);
+      }
 
-      if (roleError) {
-        throw new Error(`Failed to update user: ${roleError.message}`);
+      // Handle executive board membership
+      if (execBoardRole) {
+        // User is being assigned to executive board
+        // First check if they're already in the executive board table
+        const { data: existingExecMember } = await supabase
+          .from('gw_executive_board_members')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (existingExecMember) {
+          // Update existing entry
+          const { error: updateExecError } = await supabase
+            .from('gw_executive_board_members')
+            .update({
+              position: execBoardRole,
+              is_active: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id);
+
+          if (updateExecError) {
+            throw new Error(`Failed to update executive board member: ${updateExecError.message}`);
+          }
+        } else {
+          // Create new executive board entry
+          const { error: insertExecError } = await supabase
+            .from('gw_executive_board_members')
+            .insert({
+              user_id: user.id,
+              position: execBoardRole,
+              is_active: true,
+              academic_year: '2024-2025',
+              appointed_date: new Date().toISOString()
+            });
+
+          if (insertExecError) {
+            throw new Error(`Failed to create executive board member: ${insertExecError.message}`);
+          }
+        }
+      } else {
+        // User is being removed from executive board (no execBoardRole)
+        // Deactivate their executive board membership
+        const { error: deactivateExecError } = await supabase
+          .from('gw_executive_board_members')
+          .update({
+            is_active: false,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+
+        // Don't throw error if deactivation fails - they might not have been in exec board
+        if (deactivateExecError) {
+          console.warn('Could not deactivate executive board membership:', deactivateExecError);
+        }
+      }
+
+      if (gwProfileError) {
+        throw new Error(`Failed to update user: ${gwProfileError.message}`);
       }
 
       toast({
