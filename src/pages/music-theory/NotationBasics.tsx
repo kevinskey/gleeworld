@@ -346,7 +346,11 @@ const NotationBasics = () => {
                     Next: Time Signatures & Meter
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
-                  <Button variant="outline" size="lg">
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    onClick={() => window.location.href = '/music-theory-fundamentals'}
+                  >
                     Back to Course Overview
                   </Button>
                 </div>
