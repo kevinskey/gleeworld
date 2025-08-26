@@ -394,7 +394,15 @@ const MusicTheoryFundamentals = () => {
                               )}
                             </div>
                             <div className="flex items-center justify-between flex-1">
-                              <span className="text-muted-foreground">{week.topic}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-muted-foreground">{week.topic}</span>
+                                {week.week === 1 && (
+                                  <div className="flex items-center gap-1">
+                                    <Music className="w-8 h-8 text-primary" />
+                                    <span className="text-3xl">♪ ♫ 𝄞</span>
+                                  </div>
+                                )}
+                              </div>
                               {week.week === 1 && (
                                 <Button 
                                   variant="outline" 
