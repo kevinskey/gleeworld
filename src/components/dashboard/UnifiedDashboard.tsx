@@ -163,13 +163,46 @@ export const UnifiedDashboard = () => {
   if (viewMode === 'alumnae') {
     // Show monitoring interface for admins viewing alumnae dashboard
     if (profile?.role === 'super-admin' || profile?.role === 'admin') {
+      const [alumnaeViewMode, setAlumnaeViewMode] = useState<'monitor' | 'experience'>('monitor');
+      
       return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
           <div className="px-6 pt-4">
             <IncompleteProfileBanner userProfile={profile} />
           </div>
           <div className="px-6 py-4">
-            <AlumnaeDashboardMonitor />
+            <div className="mb-6">
+              <div className="flex items-center gap-4 mb-4">
+                <h1 className="text-2xl font-bold">Alumnae Dashboard</h1>
+                <div className="flex bg-muted rounded-lg p-1">
+                  <button
+                    onClick={() => setAlumnaeViewMode('monitor')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      alumnaeViewMode === 'monitor' 
+                        ? 'bg-background text-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Admin Monitor
+                  </button>
+                  <button
+                    onClick={() => setAlumnaeViewMode('experience')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      alumnaeViewMode === 'experience' 
+                        ? 'bg-background text-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Alumnae Experience
+                  </button>
+                </div>
+              </div>
+            </div>
+            {alumnaeViewMode === 'monitor' ? (
+              <AlumnaeDashboardMonitor />
+            ) : (
+              <AlumnaeLanding />
+            )}
           </div>
         </div>
       );
