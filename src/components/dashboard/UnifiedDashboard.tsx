@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense, useMemo } from 'react';
 import { MessagesPanel } from './MessagesPanel';
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,17 +35,15 @@ export const UnifiedDashboard = () => {
     setActiveModuleId(moduleId ? moduleId : null);
   }, [location.search]);
 
-  // Determine view mode based on current route
-  const getViewMode = () => {
+  // Determine view mode based on current route - memoized to prevent infinite renders
+  const viewMode = useMemo(() => {
     if (location.pathname === '/dashboard/member') return 'member';
     if (location.pathname === '/dashboard/fan') return 'fan';
     if (location.pathname === '/dashboard/alumnae') return 'alumnae';
     if (location.pathname === '/dashboard/mus240') return 'mus240';
     if (location.pathname === '/dashboard/public') return 'public';
     return 'default'; // /dashboard route
-  };
-
-  const viewMode = getViewMode();
+  }, [location.pathname]);
 
   // Debug logging
   console.log('🎯 UnifiedDashboard rendering:', {
