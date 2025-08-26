@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Crown, Users, Shield, CheckCircle } from 'lucide-react';
 import { PermissionsGrid } from './PermissionsGrid';
 import { EXECUTIVE_POSITIONS } from '@/hooks/useExecutivePermissions';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export const ExecutiveBoardPermissionPanel = () => {
   const [selectedPosition, setSelectedPosition] = useState<string>('tour_manager');
@@ -11,8 +12,13 @@ export const ExecutiveBoardPermissionPanel = () => {
   
   const selectedPositionData = EXECUTIVE_POSITIONS.find(pos => pos.value === selectedPosition);
   
+  if (!selectedPositionData) {
+    return <div>Error: Position not found</div>;
+  }
+  
   return (
-    <div className="space-y-6">
+    <UniversalLayout>
+      <div className="space-y-6">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -111,6 +117,7 @@ export const ExecutiveBoardPermissionPanel = () => {
       {selectedPositionData && (
         <PermissionsGrid selectedPosition={selectedPositionData} />
       )}
-    </div>
+      </div>
+    </UniversalLayout>
   );
 };
