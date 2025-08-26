@@ -93,8 +93,117 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                 <HeaderClock className="text-sm ml-3 md:mr-8" />
               </div>
             </EnhancedTooltip>
+            
+            {/* Main Navigation - Show views directly in header */}
+            {user && !isMobile && (
+              <nav className="flex items-center gap-1 ml-4">
+                <Button 
+                  variant={location.pathname === '/dashboard' ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => navigate('/dashboard')}
+                  className="text-xs px-3"
+                >
+                  <User className="mr-1 h-3 w-3" />
+                  My Dashboard
+                </Button>
+                <Button 
+                  variant={location.pathname === '/dashboard/member' ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => navigate('/dashboard/member')}
+                  className="text-xs px-3"
+                >
+                  <User className="mr-1 h-3 w-3" />
+                  Member
+                </Button>
+                <Button 
+                  variant={location.pathname === '/dashboard/fan' ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => navigate('/dashboard/fan')}
+                  className="text-xs px-3"
+                >
+                  <Heart className="mr-1 h-3 w-3" />
+                  Fan
+                </Button>
+                <Button 
+                  variant={location.pathname === '/dashboard/alumnae' ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => navigate('/dashboard/alumnae')}
+                  className="text-xs px-3"
+                >
+                  <GraduationCap className="mr-1 h-3 w-3" />
+                  Alumnae
+                </Button>
+                {hasExecBoardPerms && (
+                  <Button 
+                    variant={location.pathname.startsWith('/admin') ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => navigate('/admin')}
+                    className="text-xs px-3"
+                  >
+                    <Crown className="mr-1 h-3 w-3" />
+                    Admin
+                  </Button>
+                )}
+              </nav>
+            )}
           </div>
 
+          {/* Mobile Navigation Menu */}
+          {user && isMobile && (
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-64">
+                <nav className="flex flex-col gap-2 mt-8">
+                  <Button 
+                    variant={location.pathname === '/dashboard' ? "default" : "ghost"}
+                    onClick={() => navigate('/dashboard')}
+                    className="justify-start"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    My Dashboard
+                  </Button>
+                  <Button 
+                    variant={location.pathname === '/dashboard/member' ? "default" : "ghost"}
+                    onClick={() => navigate('/dashboard/member')}
+                    className="justify-start"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Member Dashboard
+                  </Button>
+                  <Button 
+                    variant={location.pathname === '/dashboard/fan' ? "default" : "ghost"}
+                    onClick={() => navigate('/dashboard/fan')}
+                    className="justify-start"
+                  >
+                    <Heart className="mr-2 h-4 w-4" />
+                    Fan View
+                  </Button>
+                  <Button 
+                    variant={location.pathname === '/dashboard/alumnae' ? "default" : "ghost"}
+                    onClick={() => navigate('/dashboard/alumnae')}
+                    className="justify-start"
+                  >
+                    <GraduationCap className="mr-2 h-4 w-4" />
+                    Alumnae View
+                  </Button>
+                  {hasExecBoardPerms && (
+                    <Button 
+                      variant={location.pathname.startsWith('/admin') ? "default" : "ghost"}
+                      onClick={() => navigate('/admin')}
+                      className="justify-start"
+                    >
+                      <Crown className="mr-2 h-4 w-4" />
+                      Admin Panel
+                    </Button>
+                  )}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          )}
 
           {/* Mobile spacer */}
           <div className="flex-1 md:hidden"></div>
@@ -126,6 +235,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             
             {user && (
               <>
+                {/* Keep dashboard switcher as secondary navigation */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button 
@@ -138,88 +248,37 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-48 bg-background border border-border shadow-lg z-[200]" align="end">
-                    <DropdownMenuLabel>Dashboard Views</DropdownMenuLabel>
+                    <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     
-                    {/* My Dashboard */}
+                    {/* MUS240 Class View */}
                     <DropdownMenuItem 
-                      onClick={() => {
-                        navigate('/dashboard');
-                        onViewModeChange?.('member');
-                      }}
-                      className={`cursor-pointer ${viewMode === 'member' ? 'bg-accent' : ''}`}
-                    >
-                      <User className="mr-2 h-4 w-4" />
-                        My Dashboard
-                    </DropdownMenuItem>
-                    
-                    {/* Member Dashboard */}
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        navigate('/dashboard/member');
-                      }}
+                      onClick={() => navigate('/classes/mus240')}
                       className="cursor-pointer"
                     >
-                      <User className="mr-2 h-4 w-4" />
-                      Member Dashboard
+                      <Music className="mr-2 h-4 w-4" />
+                      MUS 240 Class
                     </DropdownMenuItem>
                     
-                    {/* Fan View */}
+                    {/* Public View */}
                     <DropdownMenuItem 
-                      onClick={() => {
-                        navigate('/dashboard/fan');
-                      }}
+                      onClick={() => navigate('/dashboard/public')}
                       className="cursor-pointer"
                     >
-                      <Heart className="mr-2 h-4 w-4" />
-                      Fan
+                      <Globe className="mr-2 h-4 w-4" />
+                      Public View
                     </DropdownMenuItem>
                     
-                    {/* Alumnae View */}
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        navigate('/dashboard/alumnae');
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <GraduationCap className="mr-2 h-4 w-4" />
-                      Alumnae
-                    </DropdownMenuItem>
-                     
-                     {/* MUS240 Class View */}
-                     <DropdownMenuItem 
-                       onClick={() => {
-                         navigate('/classes/mus240');
-                       }}
-                       className="cursor-pointer"
-                     >
-                       <Music className="mr-2 h-4 w-4" />
-                       MUS 240 Class
-                     </DropdownMenuItem>
-                     
-                     {/* Public View */}
-                     <DropdownMenuItem 
-                       onClick={() => {
-                         navigate('/dashboard/public');
-                       }}
-                       className="cursor-pointer"
-                     >
-                       <Globe className="mr-2 h-4 w-4" />
-                       Public
-                     </DropdownMenuItem>
-                     
-                     <DropdownMenuSeparator />
-                     
-                     {/* Executive Board View */}
-                     <DropdownMenuItem 
-                       onClick={() => {
-                         navigate('/admin/executive-board');
-                       }}
-                       className="cursor-pointer"
-                     >
-                       <Crown className="mr-2 h-4 w-4" />
-                       Executive Board
-                     </DropdownMenuItem>
+                    {/* Executive Board View */}
+                    {hasExecBoardPerms && (
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/admin/executive-board')}
+                        className="cursor-pointer"
+                      >
+                        <Crown className="mr-2 h-4 w-4" />
+                        Executive Board
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
