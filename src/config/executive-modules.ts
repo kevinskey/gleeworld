@@ -6,13 +6,22 @@ export const EXECUTIVE_MODULE_IDS = [
   'attendance-management',
   'tour-management',
   'booking-forms',
+  'auditions',
+  'permissions',
+  'wardrobe',
+  'wellness',
   
   // Communications
   'email-management',
   'notifications',
   'pr-coordinator',
+  'pr-hub',
   'scheduling-module',
   'calendar-management',
+  'service-management',
+  'buckets-of-love',
+  'glee-writing',
+  'fan-engagement',
   
   // Finances
   'budgets',
@@ -20,16 +29,31 @@ export const EXECUTIVE_MODULE_IDS = [
   'approval-system',
   'glee-ledger',
   'receipts-records',
+  'dues-collection',
+  'monthly-statements',
+  'check-requests',
+  'merch-store',
+  'ai-financial',
   
   // Musical Leadership
   'student-conductor',
   'section-leader',
   'sight-singing-management',
+  'sight-reading-generator',
+  'member-sight-reading-studio',
+  'librarian',
+  'radio-management',
+  'karaoke',
   
-  // Tools
+  // Member Management
+  'alumnae-portal',
+  'first-year-console',
+  
+  // Tools & Administration
   'ai-tools',
   'hero-manager',
-  'settings'
+  'settings',
+  'press-kits'
 ];
 
 // Standard modules that ALL members get automatically
