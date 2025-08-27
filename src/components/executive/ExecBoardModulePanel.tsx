@@ -49,13 +49,13 @@ export const ExecBoardModulePanel = () => {
     const module = UNIFIED_MODULES.find(m => m.id === selectedModule);
     if (!module) return null;
 
-    const IconComponent = module.icon;
+    const ModuleComponent = module.component;
     
     return (
       <Card className="mt-6">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <IconComponent className="h-6 w-6" />
+            <module.icon className="h-6 w-6" />
             <div>
               <CardTitle>{module.title}</CardTitle>
               <CardDescription>{module.description}</CardDescription>
@@ -63,9 +63,7 @@ export const ExecBoardModulePanel = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-muted-foreground py-8">
-            <p>Module details coming soon...</p>
-          </div>
+          <ModuleComponent user={user} isFullPage={false} />
         </CardContent>
       </Card>
     );
