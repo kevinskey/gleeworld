@@ -207,7 +207,7 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
           const { error: updateExecError } = await supabase
             .from('gw_executive_board_members')
             .update({
-              position: execBoardRole,
+              position: execBoardRole as any, // Type assertion to handle enum mismatch
               is_active: true,
               updated_at: new Date().toISOString()
             })
@@ -222,7 +222,7 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
             .from('gw_executive_board_members')
             .insert({
               user_id: user.id,
-              position: execBoardRole,
+              position: execBoardRole as any, // Type assertion to handle enum mismatch
               is_active: true,
               academic_year: '2024-2025',
               appointed_date: new Date().toISOString()

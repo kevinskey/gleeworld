@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Crown, Settings, Users, Calendar, MessageSquare, ChevronRight } from 'lucide-react';
+import { Crown, Settings, Users, Calendar, MessageSquare, ChevronRight, Music, DollarSign, Heart } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuth } from '@/contexts/AuthContext';
 import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
@@ -73,22 +73,51 @@ export const ExecBoardModulePanel = () => {
     module.isActive && userModules.includes(module.id)
   );
 
-  // Group modules by category for better organization
+  // Group modules by executive-specific categories instead of general categories
   const modulesByCategory = assignedModules.reduce((acc, module) => {
-    if (!acc[module.category]) {
-      acc[module.category] = [];
+    // Create executive-specific category groupings
+    let execCategory = 'General Tools';
+    
+    // Executive Leadership modules
+    if (['attendance-management', 'user-management', 'auditions', 'permissions', 'wardrobe'].includes(module.id)) {
+      execCategory = 'Executive Leadership';
     }
-    acc[module.category].push(module);
+    // Communications & Events
+    else if (['email-management', 'notifications', 'pr-coordinator', 'scheduling-module', 'service-management', 'calendar-management', 'tour-management', 'booking-forms'].includes(module.id)) {
+      execCategory = 'Communications & Events';
+    }
+    // Musical Direction
+    else if (['music-library', 'student-conductor', 'section-leader', 'sight-singing-management', 'librarian', 'radio-management'].includes(module.id)) {
+      execCategory = 'Musical Direction';
+    }
+    // Financial Management
+    else if (['contracts', 'budgets', 'receipts-records', 'approval-system', 'glee-ledger', 'monthly-statements', 'check-requests'].includes(module.id)) {
+      execCategory = 'Financial Management';
+    }
+    // Member Engagement
+    else if (['buckets-of-love', 'wellness', 'alumnae-portal', 'fan-engagement', 'glee-writing'].includes(module.id)) {
+      execCategory = 'Member Engagement';
+    }
+    // Tools & Administration
+    else if (['ai-tools', 'hero-manager', 'press-kits', 'first-year-console', 'settings'].includes(module.id)) {
+      execCategory = 'Tools & Administration';
+    }
+    
+    if (!acc[execCategory]) {
+      acc[execCategory] = [];
+    }
+    acc[execCategory].push(module);
     return acc;
   }, {} as Record<string, typeof assignedModules>);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'Executive': return Crown;
-      case 'Administrative': return Settings;
-      case 'Member Management': return Users;
-      case 'Event Planning': return Calendar;
-      case 'Communication': return MessageSquare;
+      case 'Executive Leadership': return Users;
+      case 'Communications & Events': return MessageSquare;
+      case 'Musical Direction': return Music;
+      case 'Financial Management': return DollarSign;
+      case 'Member Engagement': return Heart;
+      case 'Tools & Administration': return Settings;
       default: return Settings;
     }
   };
