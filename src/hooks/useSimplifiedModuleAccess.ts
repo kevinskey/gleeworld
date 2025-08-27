@@ -17,6 +17,10 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('🚨 useSimplifiedModuleAccess: HOOK CALLED!');
+    console.log('🚨 useSimplifiedModuleAccess: userId param:', userId);
+    console.log('🚨 useSimplifiedModuleAccess: user from auth:', user);
+    
     const fetchModuleAccess = async () => {
       setLoading(true);
       setError(null);

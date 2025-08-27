@@ -15,6 +15,7 @@ import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAd
 import { PublicDashboardMonitor } from '@/components/admin/PublicDashboardMonitor';
 import { FanDashboardMonitor } from '@/components/admin/FanDashboardMonitor';
 import { AlumnaeDashboardMonitor } from '@/components/admin/AlumnaeDashboardMonitor';
+import { ExecBoardModulePanel } from '@/components/executive/ExecBoardModulePanel';
 import FanDashboard from '@/pages/FanDashboard';
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
 import PublicLanding from '@/pages/PublicLanding';
@@ -334,6 +335,21 @@ export const UnifiedDashboard = () => {
             is_exec_board: profile.is_exec_board || false,
             created_at: new Date().toISOString()
           }} />
+        </div>
+      </div>
+    );
+  }
+
+  // Executive board members get their own dashboard
+  if (profile?.is_exec_board && viewMode === 'default') {
+    console.log('🎯 UnifiedDashboard: Showing executive board dashboard for user:', profile.user_id);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+        <div className="px-6 pt-4">
+          <IncompleteProfileBanner userProfile={profile} />
+        </div>
+        <div className="px-6 py-4">
+          <ExecBoardModulePanel />
         </div>
       </div>
     );
