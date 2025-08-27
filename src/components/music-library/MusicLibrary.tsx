@@ -134,9 +134,9 @@ export const MusicLibrary = () => {
   // Mobile layout - simple fullscreen
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background w-full max-w-full overflow-hidden">
+      <div className="min-h-screen bg-background w-full overflow-hidden">{/* Removed max-w-full as it's redundant */}
         {/* Simple Header with Back Button */}
-        <div className="flex items-center justify-between p-3 border-b w-full">
+        <div className="flex items-center justify-between p-2 border-b w-full">{/* Reduced padding from p-3 to p-2 */}
           <Button
             variant="ghost"
             size="sm"
@@ -146,8 +146,8 @@ export const MusicLibrary = () => {
             <ArrowLeft className="h-4 w-4" />
             <span className="text-sm">Back</span>
           </Button>
-          <h1 className="text-base font-semibold truncate mx-2">Music Library</h1>
-          <div className="w-16 flex-shrink-0"></div> {/* Spacer for centering */}
+          <h1 className="text-base font-semibold truncate mx-1">Music Library</h1>{/* Reduced margin from mx-2 to mx-1 */}
+          <div className="w-12 flex-shrink-0"></div> {/* Reduced spacer width from w-16 to w-12 */}
         </div>
 
         {/* Content */}

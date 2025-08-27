@@ -88,9 +88,9 @@ export const MobileMusicLibrary = ({
   };
 
   return (
-    <div className="w-full max-w-full flex flex-col overflow-hidden">
+    <div className="w-full flex flex-col overflow-hidden">
       {/* Mobile Header */}
-      <div className="flex-shrink-0 bg-background border-b p-3 space-y-3">
+      <div className="flex-shrink-0 bg-background border-b p-2 space-y-2">{/* Reduced padding from p-3 to p-2 and space-y-3 to space-y-2 */}
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -139,14 +139,14 @@ export const MobileMusicLibrary = ({
 
         {/* Selected PDF Info */}
         {selectedPdf && (
-          <div className="bg-primary/10 rounded-lg p-2 sm:p-3 flex items-center justify-between">
+          <div className="bg-primary/10 rounded-lg p-2 flex items-center justify-between">{/* Removed sm:p-3 to keep consistent p-2 */}
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-primary truncate">
                 {selectedPdf.title}
               </p>
               <p className="text-[10px] text-muted-foreground">Currently selected</p>
             </div>
-            <Button size="sm" onClick={openStudyMode} className="ml-2 h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
+            <Button size="sm" onClick={openStudyMode} className="ml-2 h-8 px-2 text-xs">{/* Removed sm responsive sizing */}
               <Eye className="h-4 w-4 mr-1" />
               Study
             </Button>
@@ -156,7 +156,7 @@ export const MobileMusicLibrary = ({
 
       {/* Tab Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 w-full">
-        <TabsList className="flex-shrink-0 grid w-full grid-cols-4 mx-3 my-2 gap-1">
+        <TabsList className="flex-shrink-0 grid w-full grid-cols-4 mx-2 my-1 gap-1">{/* Reduced margins from mx-3 my-2 to mx-2 my-1 */}
           <TabsTrigger value="library" className="text-[11px] px-1 py-1">
             <Music className="h-4 w-4 mr-1" />
             Library
@@ -177,7 +177,7 @@ export const MobileMusicLibrary = ({
 
         {/* Tab Content */}
         <div ref={scrollContainerRef as any} className="flex-1 overflow-y-auto min-h-0 w-full">
-          <TabsContent value="library" className="h-full px-3 py-2 space-y-3 mt-0 w-full">
+          <TabsContent value="library" className="h-full px-2 py-1 space-y-2 mt-0 w-full">{/* Reduced padding from px-3 py-2 to px-2 py-1, space-y-3 to space-y-2 */}
             <SheetMusicLibrary 
               searchQuery={searchQuery}
               selectedCategory={selectedCategory}
@@ -188,21 +188,21 @@ export const MobileMusicLibrary = ({
             />
           </TabsContent>
 
-          <TabsContent value="study" className="h-full px-3 py-2 mt-0 w-full">
+          <TabsContent value="study" className="h-full px-2 py-1 mt-0 w-full">{/* Reduced padding */}
             <StudyScoresPanel 
               currentSelected={selectedPdf}
               onOpenScore={onPdfSelect}
             />
           </TabsContent>
 
-          <TabsContent value="collections" className="h-full px-3 py-2 mt-0 w-full">
+          <TabsContent value="collections" className="h-full px-2 py-1 mt-0 w-full">{/* Reduced padding */}
             <MyCollectionsPanel
               currentSelected={selectedPdf}
               onOpenScore={onPdfSelect}
             />
           </TabsContent>
 
-          <TabsContent value="setlists" className="h-full px-3 py-2 mt-0 w-full">
+          <TabsContent value="setlists" className="h-full px-2 py-1 mt-0 w-full">{/* Reduced padding */}
             <SetlistBuilder 
               onPdfSelect={onPdfSelect} 
               onOpenPlayer={onOpenSetlistPlayer}
