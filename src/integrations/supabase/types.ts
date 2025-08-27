@@ -15814,6 +15814,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_accessible_sheet_music: {
+        Args: { user_id_param: string }
+        Returns: {
+          can_access: boolean
+          composer: string
+          id: string
+          is_public: boolean
+          pdf_url: string
+          title: string
+        }[]
+      }
       get_all_user_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
