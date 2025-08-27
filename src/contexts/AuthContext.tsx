@@ -65,6 +65,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (error) {
           console.error('AuthContext: Error getting session:', error);
+          // If we get a JWT error, clean up auth state and continue
+          if (error.message?.includes('JWT') || error.message?.includes('exp')) {
+            console.log('AuthContext: JWT expired, cleaning up auth state');
+            cleanupAuthState();
+          }
         }
         
         const session = data?.session || null;
@@ -90,12 +95,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             
             if (!mountedRef.current) return;
             
+            // Handle JWT errors specifically
+            if (event === 'TOKEN_REFRESHED' && !session) {
+              console.log('AuthContext: Token refresh failed, cleaning up auth state');
+              cleanupAuthState();
+              setSession(null);
+              setUser(null);
+              return;
+            }
+            
             // Update state immediately for all events
             setSession(session);
             setUser(session?.user ?? null);
             
             if (event === 'SIGNED_OUT') {
               console.log('AuthContext: User signed out, clearing state');
+              cleanupAuthState();
             } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
               console.log('AuthContext: User signed in/token refreshed');
             }
