@@ -48,10 +48,16 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         if (profileError) throw profileError;
 
         // Use the get_user_modules RPC for comprehensive permission checking
+        console.log('🔍 useSimplifiedModuleAccess: calling get_user_modules RPC for user:', targetUserId);
         const { data: userModules, error: moduleError } = await supabase
           .rpc('get_user_modules', { p_user: targetUserId });
 
-        if (moduleError) throw moduleError;
+        console.log('🔍 useSimplifiedModuleAccess: RPC response:', { userModules, moduleError });
+
+        if (moduleError) {
+          console.error('🚨 useSimplifiedModuleAccess: RPC error:', moduleError);
+          throw moduleError;
+        }
 
         console.log('🔍 useSimplifiedModuleAccess: user modules from RPC =', userModules);
         console.log('🔍 useSimplifiedModuleAccess: user profile =', profile);
