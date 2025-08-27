@@ -50,15 +50,102 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         console.log('🔍 Role:', profile?.role);
         console.log('🔍 Is Super Admin?', profile?.is_super_admin);
 
-        // Build access list based on simple role-based logic
+        // Get explicit permissions from database via RPC
+        console.log('🔍 useSimplifiedModuleAccess: calling get_user_modules RPC for user:', targetUserId);
+        const { data: userModules, error: moduleError } = await supabase
+          .rpc('get_user_modules', { p_user: targetUserId });
+
+        console.log('🔍 useSimplifiedModuleAccess: RPC response:', { userModules, moduleError });
+
+        if (moduleError) {
+          console.error('🚨 useSimplifiedModuleAccess: RPC error:', moduleError);
+          throw moduleError;
+        }
+
+        // Create a mapping from database module names to frontend module IDs
+        const moduleMapping: Record<string, string> = {
+          // Communications
+          'email-management': 'email-management',
+          'internal-communications': 'community-hub', 
+          'notifications': 'notifications',
+          'pr-coordinator': 'pr-coordinator',
+          'pr-manager': 'pr-hub',
+          'scheduling-module': 'scheduling-module',
+          'service-management': 'service-management',
+          'calendar-management': 'calendar-management',
+          'buckets-of-love': 'buckets-of-love',
+          'glee-writing': 'glee-writing',
+          'fan-engagement': 'fan-engagement',
+          
+          // Member Management
+          'user-management': 'user-management',
+          'attendance-management': 'attendance-management',
+          'tour-management': 'tour-management',
+          'booking-forms': 'booking-forms',
+          'alumnae-portal': 'alumnae-portal',
+          'auditions': 'auditions',
+          'permissions': 'permissions',
+          'wellness': 'wellness',
+          'wardrobe': 'wardrobe',
+          
+          // Musical Leadership
+          'music-library': 'music-library',
+          'media-library': 'music-library',
+          'student-conductor': 'student-conductor',
+          'section-leader': 'section-leader',
+          'sight-singing-management': 'sight-singing-management',
+          'sight-reading-preview': 'sight-reading-preview',
+          'sight-reading-generator': 'sight-reading-generator',
+          'member-sight-reading-studio': 'member-sight-reading-studio',
+          'librarian': 'librarian',
+          'radio-management': 'radio-management',
+          'karaoke': 'karaoke',
+          
+          // Finances
+          'contracts': 'contracts',
+          'budgets': 'budgets',
+          'receipts-records': 'receipts-records',
+          'approval-system': 'approval-system',
+          'glee-ledger': 'glee-ledger',
+          'dues-collection': 'dues-collection',
+          'monthly-statements': 'monthly-statements',
+          'check-requests': 'check-requests',
+          'merch-store': 'merch-store',
+          'ai-financial': 'ai-financial',
+          
+          // Tools & Utilities
+          'ai-tools': 'ai-tools',
+          'hero-manager': 'hero-manager',
+          'press-kits': 'press-kits',
+          'first-year-console': 'first-year-console',
+          'settings': 'settings',
+          
+          // Executive Board - Map database modules to frontend modules
+          'executive-board': 'executive',
+          'executive-board-management': 'executive',
+          'executive-functions': 'executive'
+        };
+
+        // Get module permissions from RPC
+        const grantedModuleIds = new Set();
+        if (userModules && Array.isArray(userModules)) {
+          userModules.forEach((module: any) => {
+            console.log('🔍 Processing module:', module);
+            if (module.can_view) {
+              const frontendModuleId = moduleMapping[module.module_key] || module.module_key;
+              console.log(`🔍 Mapping ${module.module_key} -> ${frontendModuleId}`);
+              grantedModuleIds.add(frontendModuleId);
+            }
+          });
+        }
+
+        console.log('🔍 useSimplifiedModuleAccess: granted module IDs =', Array.from(grantedModuleIds));
+        // Build access list based on permissions
         const accessList: ModuleAccess[] = UNIFIED_MODULES
           .filter(module => module.isActive)
           .map(module => {
-            console.log(`🔍 Processing module: ${module.id}`);
-            
             // Super admin gets everything
             if (profile?.is_super_admin) {
-              console.log(`✅ ${module.id}: Super admin access granted`);
               return {
                 moduleId: module.id,
                 hasAccess: true,
@@ -66,22 +153,17 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
               };
             }
 
-            // Executive board members get executive modules
-            if ((profile?.is_exec_board || profile?.role === 'executive') && EXECUTIVE_MODULE_IDS.includes(module.id)) {
-              console.log(`✅ ${module.id}: Executive board access granted`);
-              console.log(`🔍 Is exec board?`, profile?.is_exec_board);
-              console.log(`🔍 Role is executive?`, profile?.role === 'executive');
-              console.log(`🔍 Module in executive list?`, EXECUTIVE_MODULE_IDS.includes(module.id));
+            // Check if user has explicit permission for this module
+            if (grantedModuleIds.has(module.id)) {
               return {
                 moduleId: module.id,
                 hasAccess: true,
-                source: 'executive_board' as const
+                source: 'explicit_permission' as const
               };
             }
 
             // Members get standard modules
             if (profile?.role === 'member' && STANDARD_MEMBER_MODULE_IDS.includes(module.id)) {
-              console.log(`✅ ${module.id}: Member access granted`);
               return {
                 moduleId: module.id,
                 hasAccess: true,
@@ -90,7 +172,6 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             }
 
             // No access by default
-            console.log(`❌ ${module.id}: No access granted`);
             return {
               moduleId: module.id,
               hasAccess: false,
@@ -98,10 +179,9 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             };
           });
 
-        console.log('🔍 EXECUTIVE_MODULE_IDS:', EXECUTIVE_MODULE_IDS);
-        console.log('🔍 STANDARD_MEMBER_MODULE_IDS:', STANDARD_MEMBER_MODULE_IDS);
         console.log('🔍 Final access list count:', accessList.filter(a => a.hasAccess).length);
         console.log('🔍 Final accessible modules:', accessList.filter(a => a.hasAccess).map(a => a.moduleId));
+        
         setModuleAccess(accessList);
       } catch (err) {
         console.error('Error fetching module access:', err);
