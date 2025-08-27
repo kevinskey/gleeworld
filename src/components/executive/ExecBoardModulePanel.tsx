@@ -35,7 +35,7 @@ export const ExecBoardModulePanel = () => {
     console.log('🎯 ExecBoardModulePanel: Module IDs:', moduleIds);
     setUserModules(moduleIds);
     setLoading(false);
-  }, [user, accessLoading, getAccessibleModules]);
+  }, [user?.id, accessLoading]); // Removed getAccessibleModules from dependencies to prevent infinite loop
 
   const handleModuleClick = (moduleId: string) => {
     if (userModules.includes(moduleId)) {
