@@ -38,9 +38,12 @@ const AssignModulesDialog = ({
 
   useEffect(() => {
     if (user) {
-      setSelectedModules(user.modules);
+      // Only show modules that are currently active
+      const activeModuleIds = activeModules.map(m => m.id);
+      const validModules = user.modules.filter(moduleId => activeModuleIds.includes(moduleId));
+      setSelectedModules(validModules);
     }
-  }, [user]);
+  }, [user, activeModules]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -120,7 +123,7 @@ const AssignModulesDialog = ({
             </ScrollArea>
           </div>
           <div className="flex justify-between items-center text-sm text-muted-foreground">
-            <span>{selectedModules.length} of {activeModules.length} modules selected</span>
+            <span>{selectedModules.length} of {activeModules.length} active modules selected</span>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -248,7 +251,9 @@ export const UserModuleAssignment = () => {
               <CardContent>
                 <div className="space-y-2">
                   <div className="text-sm font-medium">
-                    Assigned Modules ({user.modules.length})
+                    Active Modules ({user.modules.filter(moduleId => 
+                      getActiveModules().some(m => m.id === moduleId)
+                    ).length} of {user.modules.length} total assigned)
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {user.modules.length === 0 ? (
@@ -266,15 +271,20 @@ export const UserModuleAssignment = () => {
                             {module.title}
                           </Badge>
                         ) : (
-                          <Badge key={moduleId} variant="destructive">
-                            {moduleId} (not found)
+                          <Badge key={moduleId} variant="outline" className="opacity-50">
+                            {moduleId} (inactive)
                           </Badge>
                         );
                       })
                     )}
                   </div>
-                </div>
-              </CardContent>
+                   {user.modules.length > getActiveModules().filter(m => user.modules.includes(m.id)).length && (
+                     <div className="text-xs text-muted-foreground">
+                       Some assigned modules are no longer active and will be cleaned up when you save changes.
+                     </div>
+                   )}
+                 </div>
+               </CardContent>
             </Card>
           ))
         )}
