@@ -3,11 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Users, Settings, Shield, UserCheck, Boxes } from 'lucide-react';
-import { PermissionGroupManager } from './PermissionGroupManager';
-import { UserGroupAssignment } from './UserGroupAssignment';
+import { UserPermissionManagement } from './UserPermissionManagement';
 import { UserModuleAssignment } from './UserModuleAssignment';
-import { AdvancedPermissionPanels } from './AdvancedPermissionPanels';
-import { ExecutiveBoardPermissionPanel } from './ExecutiveBoardPermissionPanel';
+import { UsernamePermissionsManager } from './UsernamePermissionsManager';
 import { PermissionErrorBoundary } from './PermissionErrorBoundary';
 import { usePermissionGroups } from '@/hooks/usePermissionGroups';
 
@@ -139,45 +137,35 @@ export const PermissionManagement = () => {
       <div>
         <h1 className="text-3xl font-bold">Permission Management</h1>
         <p className="text-muted-foreground">
-          Manage permission groups and user assignments for the Glee Club platform
+          Manage user roles, permissions, and access controls for the Glee Club platform
         </p>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="groups">Groups</TabsTrigger>
-          <TabsTrigger value="assignments">Group Assignments</TabsTrigger>
-          <TabsTrigger value="modules">Module Assignments</TabsTrigger>
-          <TabsTrigger value="executive">Executive Board</TabsTrigger>
-          <TabsTrigger value="advanced">Advanced Panels</TabsTrigger>
+          <TabsTrigger value="users">User Management</TabsTrigger>
+          <TabsTrigger value="modules">Module Access</TabsTrigger>
+          <TabsTrigger value="username">Username Permissions</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
           <PermissionOverview />
         </TabsContent>
         
-        <TabsContent value="groups" className="space-y-4">
-          <PermissionGroupManager />
-        </TabsContent>
-        
-        <TabsContent value="assignments" className="space-y-4">
-          <UserGroupAssignment />
+        <TabsContent value="users" className="space-y-4">
+          <UserPermissionManagement />
         </TabsContent>
         
         <TabsContent value="modules" className="space-y-4">
-          <UserModuleAssignment />
-        </TabsContent>
-        
-        <TabsContent value="executive" className="space-y-4">
           <PermissionErrorBoundary>
-            <ExecutiveBoardPermissionPanel />
+            <UserModuleAssignment />
           </PermissionErrorBoundary>
         </TabsContent>
         
-        <TabsContent value="advanced" className="space-y-4">
+        <TabsContent value="username" className="space-y-4">
           <PermissionErrorBoundary>
-            <AdvancedPermissionPanels />
+            <UsernamePermissionsManager />
           </PermissionErrorBoundary>
         </TabsContent>
       </Tabs>
