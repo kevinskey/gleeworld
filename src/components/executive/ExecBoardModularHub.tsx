@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useUnifiedModules } from "@/hooks/useUnifiedModules";
+import { useSimplifiedModuleAccess } from "@/hooks/useSimplifiedModuleAccess";
 import { UNIFIED_MODULE_CATEGORIES } from "@/config/unified-modules";
 
 interface ExecBoardModularHubProps {
@@ -30,22 +30,15 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
   const isExecBoard = profile?.is_exec_board && profile?.verified;
   const execRole = profile?.exec_board_role;
 
-  // Use unified modules with executive position filtering
+  // Use simplified module access which respects the permissions system
   const { 
-    modules: availableModules, 
-    loading,
-    getAccessibleModules 
-  } = useUnifiedModules({
-    userId: profile?.user_id, // Pass the user ID so permissions can be fetched
-    execPosition: execRole,
-    userRole: profile?.role,
-    isAdmin: profile?.is_admin || profile?.is_super_admin
-  });
+    getAccessibleModules,
+    loading
+  } = useSimplifiedModuleAccess(profile?.user_id);
 
   const accessibleModules = getAccessibleModules();
   
   console.log('🎭 ExecBoardModularHub: User profile =', { profile, execRole, isExecBoard });
-  console.log('🎭 ExecBoardModularHub: Available modules =', { availableModules, count: availableModules?.length });
   console.log('🎭 ExecBoardModularHub: Accessible modules =', { accessibleModules, count: accessibleModules?.length });
   console.log('🎭 ExecBoardModularHub: Loading =', loading);
 

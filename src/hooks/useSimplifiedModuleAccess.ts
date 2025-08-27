@@ -141,6 +141,8 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         }
 
         console.log('🔍 useSimplifiedModuleAccess: granted module IDs =', Array.from(grantedModuleIds));
+        console.log('🔍 useSimplifiedModuleAccess: profile is_exec_board =', profile?.is_exec_board);
+        console.log('🔍 useSimplifiedModuleAccess: profile role =', profile?.role);
         // Build access list based on permissions
         const accessList: ModuleAccess[] = UNIFIED_MODULES
           .filter(module => module.isActive)
@@ -181,7 +183,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           });
 
         console.log('🔍 Final access list count:', accessList.filter(a => a.hasAccess).length);
-        console.log('🔍 Final accessible modules:', accessList.filter(a => a.hasAccess).map(a => a.moduleId));
+        console.log('🔍 Final accessible modules:', accessList.filter(a => a.hasAccess).map(a => `${a.moduleId} (${a.source})`));
         
         setModuleAccess(accessList);
       } catch (err) {
