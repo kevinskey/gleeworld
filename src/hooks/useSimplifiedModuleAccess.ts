@@ -39,15 +39,22 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
 
         if (profileError) throw profileError;
 
-        console.log('🔍 useSimplifiedModuleAccess: user profile =', profile);
-        console.log('🔍 useSimplifiedModuleAccess: target user ID =', targetUserId);
+        console.log('🔍 useSimplifiedModuleAccess: DEBUGGING EXECUTIVE ACCESS');
+        console.log('🔍 Target User ID:', targetUserId);
+        console.log('🔍 User Profile Data:', profile);
+        console.log('🔍 Is Exec Board?', profile?.is_exec_board);
+        console.log('🔍 Role:', profile?.role);
+        console.log('🔍 Is Super Admin?', profile?.is_super_admin);
 
         // Build access list based on simple role-based logic
         const accessList: ModuleAccess[] = UNIFIED_MODULES
           .filter(module => module.isActive)
           .map(module => {
+            console.log(`🔍 Processing module: ${module.id}`);
+            
             // Super admin gets everything
             if (profile?.is_super_admin) {
+              console.log(`✅ ${module.id}: Super admin access granted`);
               return {
                 moduleId: module.id,
                 hasAccess: true,
@@ -56,7 +63,11 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             }
 
             // Executive board members get executive modules
-            if (profile?.is_exec_board && EXECUTIVE_MODULE_IDS.includes(module.id)) {
+            if ((profile?.is_exec_board || profile?.role === 'executive') && EXECUTIVE_MODULE_IDS.includes(module.id)) {
+              console.log(`✅ ${module.id}: Executive board access granted`);
+              console.log(`🔍 Is exec board?`, profile?.is_exec_board);
+              console.log(`🔍 Role is executive?`, profile?.role === 'executive');
+              console.log(`🔍 Module in executive list?`, EXECUTIVE_MODULE_IDS.includes(module.id));
               return {
                 moduleId: module.id,
                 hasAccess: true,
@@ -66,6 +77,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
 
             // Members get standard modules
             if (profile?.role === 'member' && STANDARD_MEMBER_MODULE_IDS.includes(module.id)) {
+              console.log(`✅ ${module.id}: Member access granted`);
               return {
                 moduleId: module.id,
                 hasAccess: true,
@@ -74,6 +86,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             }
 
             // No access by default
+            console.log(`❌ ${module.id}: No access granted`);
             return {
               moduleId: module.id,
               hasAccess: false,
@@ -81,7 +94,10 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             };
           });
 
-        console.log('🔍 useSimplifiedModuleAccess: final access list =', accessList);
+        console.log('🔍 EXECUTIVE_MODULE_IDS:', EXECUTIVE_MODULE_IDS);
+        console.log('🔍 STANDARD_MEMBER_MODULE_IDS:', STANDARD_MEMBER_MODULE_IDS);
+        console.log('🔍 Final access list count:', accessList.filter(a => a.hasAccess).length);
+        console.log('🔍 Final accessible modules:', accessList.filter(a => a.hasAccess).map(a => a.moduleId));
         setModuleAccess(accessList);
       } catch (err) {
         console.error('Error fetching module access:', err);

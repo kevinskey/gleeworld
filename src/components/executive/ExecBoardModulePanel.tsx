@@ -18,7 +18,15 @@ export const ExecBoardModulePanel = () => {
   const { getAccessibleModules, loading: accessLoading, hasAccess } = useSimplifiedModuleAccess();
 
   useEffect(() => {
-    if (!user || accessLoading) return;
+    console.log('🔍 ExecBoardModulePanel: useEffect triggered');
+    console.log('🔍 User:', user);
+    console.log('🔍 Access Loading state:', accessLoading);
+    console.log('🔍 Has access function:', typeof hasAccess);
+    
+    if (!user || accessLoading) {
+      console.log('🔍 ExecBoardModulePanel: Waiting for user or access loading...');
+      return;
+    }
     
     console.log('🎯 ExecBoardModulePanel: Fetching accessible modules for user:', user.id);
     const accessibleModules = getAccessibleModules();
