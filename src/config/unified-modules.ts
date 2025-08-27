@@ -1,20 +1,43 @@
 import { UnifiedModule, UnifiedModuleCategory } from '@/types/unified-modules';
 import {
   Users, 
+  Shirt, 
+  ScanLine, 
   Shield, 
+  UserPlus,
+  MessageSquare,
   Bell,
   Mail,
   Heart,
+  Edit3,
   Clock,
   Calendar,
+  DollarSign,
+  FileCheck,
   Calculator,
+  Database,
+  CreditCard,
+  Wallet,
+  Receipt,
+  Brain,
+  CheckCircle,
+  FileText,
+  Printer,
+  ShoppingCart,
+  BookOpen,
+  Settings,
   ClipboardCheck,
+  Route,
   Music,
   Eye,
-  Settings
+  Megaphone,
+  Camera,
+  GraduationCap,
+  Radio,
+  Mic2
 } from 'lucide-react';
 
-// Import core module components only
+// Import core module components
 import { MusicLibraryInlineModule } from '@/components/modules/MusicLibraryInlineModule';
 import { CommunityHubModule } from '@/components/modules/CommunityHubModule';
 import { CheckInCheckOutModule } from '@/components/modules/CheckInCheckOutModule';
@@ -26,8 +49,34 @@ import { SightSingingModule } from '@/components/modules/SightSingingModule';
 import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { BudgetsModule } from '@/components/modules/BudgetsModule';
 import { SettingsModule } from '@/components/modules/SettingsModule';
+import { UserManagementModule } from '@/components/modules/UserManagementModule';
+import { AuditionsModule } from '@/components/modules/AuditionsModule';
+import { PermissionsModule } from '@/components/modules/PermissionsModule';
+import { WardrobeModule } from '@/components/modules/WardrobeModule';
+import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
+import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
+import { SchedulingModule } from '@/components/modules/SchedulingModule';
+import { CalendarManagementModule } from '@/components/modules/CalendarManagementModule';
+import { TourManagerModule } from '@/components/modules/TourManagerModule';
+import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
+import { AlumnaePortalModule } from '@/components/modules/AlumnaePortalModule';
+import { ContractsModule } from '@/components/modules/ContractsModule';
+import { DuesCollectionModule } from '@/components/modules/DuesCollectionModule';
+import { WellnessModule } from '@/components/modules/WellnessModule';
+import { GleeWritingWidget } from '@/components/writing/GleeWritingWidget';
+import { ExecutiveModule } from '@/components/dashboard/modules/ExecutiveModule';
+import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
+import { KaraokeModule } from '@/components/modules/KaraokeModule';
+import { HeroManagerModule } from '@/components/modules/HeroManagerModule';
+import { PressKitsModule } from '@/components/modules/PressKitsModule';
+import { FirstYearConsoleModule } from '@/components/modules/FirstYearConsoleModule';
+import { AIToolsModule } from '@/components/modules/AIToolsModule';
+import { LibrarianModule } from '@/components/modules/LibrarianModule';
+import ServiceManagement from '@/components/admin/ServiceManagement';
+import MediaLibrary from '@/pages/admin/MediaLibrary';
+import { RadioManagement } from '@/components/admin/RadioManagement';
 
-// Simplified core modules only
+// Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
   // Core Member modules
   {
@@ -90,6 +139,8 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: CheckInCheckOutModule,
     dbFunctionName: "check-in-check-out"
   },
+
+  // Communications modules
   {
     id: "notifications",
     name: "notifications",
@@ -102,6 +153,204 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: NotificationsModule,
     dbFunctionName: "notifications"
   },
+  {
+    id: "email-management",
+    name: "email-management",
+    title: "Email Management",
+    description: "Configure and send emails to members",
+    icon: Mail,
+    iconColor: "blue",
+    category: "communications",
+    isActive: true,
+    component: EmailManagementModule,
+    dbFunctionName: "email-management"
+  },
+  {
+    id: "buckets-of-love",
+    name: "buckets-of-love",
+    title: "Buckets of Love",
+    description: "Manage community support and encouragement",
+    icon: Heart,
+    iconColor: "pink",
+    category: "communications",
+    isActive: true,
+    component: BucketsOfLoveModule,
+    dbFunctionName: "buckets-of-love"
+  },
+  {
+    id: "glee-writing",
+    name: "glee-writing",
+    title: "Glee Writing Widget",
+    description: "Content creation and writing tools",
+    icon: Edit3,
+    iconColor: "indigo",
+    category: "communications",
+    isActive: true,
+    component: GleeWritingWidget,
+    dbFunctionName: "glee-writing"
+  },
+  {
+    id: "fan-engagement",
+    name: "fan-engagement",
+    title: "Fan Engagement",
+    description: "Manage fan community, bulletin posts, and exclusive content",
+    icon: Heart,
+    iconColor: "pink",
+    category: "communications",
+    isActive: true,
+    component: FanEngagementModule,
+    dbFunctionName: "fan-engagement"
+  },
+  {
+    id: "scheduling-module",
+    name: "scheduling-module",
+    title: "Scheduling Module",
+    description: "Schedule and manage rehearsals and events",
+    icon: Clock,
+    iconColor: "cyan",
+    category: "communications",
+    isActive: true,
+    component: SchedulingModule,
+    dbFunctionName: "scheduling-module"
+  },
+  {
+    id: "service-management",
+    name: "service-management",
+    title: "Service Management",
+    description: "Manage scheduler services, badges, and booking settings",
+    icon: Settings,
+    iconColor: "blue",
+    category: "communications",
+    isActive: true,
+    component: ServiceManagement,
+    dbFunctionName: "service-management"
+  },
+  {
+    id: "calendar-management",
+    name: "calendar-management",
+    title: "Master Calendar",
+    description: "Schedule events, block dates, and manage appointments",
+    icon: Calendar,
+    iconColor: "purple",
+    category: "communications",
+    isActive: true,
+    component: CalendarManagementModule,
+    dbFunctionName: "calendar-management"
+  },
+
+  // Attendance & Member Management modules
+  {
+    id: "attendance-management",
+    name: "attendance-management",
+    title: "Attendance Management",
+    description: "Track attendance, manage QR codes, process excuses, and generate reports",
+    icon: ClipboardCheck,
+    iconColor: "green",
+    category: "member-management",
+    isActive: true,
+    component: AttendanceModule,
+    dbFunctionName: "attendance-management"
+  },
+  {
+    id: "user-management",
+    name: "user-management",
+    title: "User Management",
+    description: "Manage user accounts, roles, and permissions",
+    icon: Users,
+    iconColor: "blue",
+    category: "member-management",
+    isActive: true,
+    component: UserManagementModule,
+    dbFunctionName: "user-management"
+  },
+  {
+    id: "alumnae-portal",
+    name: "alumnae-portal",
+    title: "Alumnae Portal",
+    description: "Alumni engagement, mentorship, memories, and reunion management",
+    icon: GraduationCap,
+    iconColor: "purple",
+    category: "member-management",
+    isActive: true,
+    component: AlumnaePortalModule,
+    dbFunctionName: "alumnae-portal"
+  },
+  {
+    id: "auditions",
+    name: "auditions",
+    title: "Auditions",
+    description: "Manage audition sessions, applications, and evaluations",
+    icon: ScanLine,
+    iconColor: "purple",
+    category: "member-management",
+    isActive: true,
+    component: AuditionsModule,
+    dbFunctionName: "auditions"
+  },
+  {
+    id: "permissions",
+    name: "permissions",
+    title: "Permissions",
+    description: "Configure user roles, permissions, and access controls",
+    icon: Shield,
+    iconColor: "red",
+    category: "member-management",
+    isActive: true,
+    component: PermissionsModule,
+    dbFunctionName: "permissions"
+  },
+  {
+    id: "wellness",
+    name: "wellness",
+    title: "Wellness",
+    description: "Wellness & mental health tools for members",
+    icon: Heart,
+    iconColor: "rose",
+    category: "member-management",
+    isActive: true,
+    component: WellnessModule,
+    dbFunctionName: "wellness"
+  },
+  {
+    id: "wardrobe",
+    name: "wardrobe",
+    title: "Wardrobe",
+    description: "Manage costumes, fittings, and inventory",
+    icon: Shirt,
+    iconColor: "purple",
+    category: "member-management",
+    isActive: true,
+    component: WardrobeModule,
+    dbFunctionName: "wardrobe"
+  },
+
+  // Tours modules
+  {
+    id: "tour-management",
+    name: "tour-management",
+    title: "Tour Manager",
+    description: "Comprehensive tour planning, logistics, and management system",
+    icon: Route,
+    iconColor: "blue",
+    category: "communications",
+    isActive: true,
+    component: TourManagerModule,
+    dbFunctionName: "tour-management"
+  },
+  {
+    id: "booking-forms",
+    name: "booking-forms",
+    title: "Booking Forms",
+    description: "Manage performance requests and booking inquiries from external organizations",
+    icon: FileText,
+    iconColor: "cyan",
+    category: "communications",
+    isActive: true,
+    component: BookingFormsModule,
+    dbFunctionName: "booking-forms"
+  },
+
+  // Musical Leadership modules
   {
     id: "student-conductor",
     name: "student-conductor",
@@ -139,6 +388,68 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "sight-singing-management"
   },
   {
+    id: "radio-management",
+    name: "radio-management",
+    title: "Radio Management",
+    description: "Manage Glee World Radio station, commercials, and broadcasting",
+    icon: Radio,
+    iconColor: "blue",
+    category: "musical-leadership",
+    isActive: true,
+    component: RadioManagement,
+    dbFunctionName: "radio-management"
+  },
+  {
+    id: "media-library",
+    name: "media-library",
+    title: "Media Library",
+    description: "Manage images, audio, videos, and documents",
+    icon: Camera,
+    iconColor: "pink",
+    category: "musical-leadership",
+    isActive: true,
+    component: MediaLibrary,
+    dbFunctionName: "media-library"
+  },
+  {
+    id: "karaoke",
+    name: "karaoke",
+    title: "Karaoke Studio",
+    description: "Record over backing tracks and save mixes",
+    icon: Mic2,
+    iconColor: "pink",
+    category: "musical-leadership",
+    isActive: true,
+    component: KaraokeModule,
+    dbFunctionName: "karaoke"
+  },
+  {
+    id: "librarian",
+    name: "librarian",
+    title: "Music Librarian",
+    description: "Manage sheet music collection, PDFs, and hard copy scores",
+    icon: BookOpen,
+    iconColor: "purple",
+    category: "musical-leadership",
+    isActive: true,
+    component: LibrarianModule,
+    dbFunctionName: "librarian"
+  },
+
+  // Finance modules
+  {
+    id: "contracts",
+    name: "contracts",
+    title: "Contracts Management",
+    description: "Create and manage contracts",
+    icon: FileCheck,
+    iconColor: "blue",
+    category: "finances",
+    isActive: true,
+    component: ContractsModule,
+    dbFunctionName: "contracts"
+  },
+  {
     id: "budgets",
     name: "budgets",
     title: "Budgets & Planning",
@@ -151,6 +462,92 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "budgets"
   },
   {
+    id: "dues-collection",
+    name: "dues-collection",
+    title: "Dues Collection",
+    description: "Collect and track member dues",
+    icon: CreditCard,
+    iconColor: "purple",
+    category: "finances",
+    isActive: true,
+    component: DuesCollectionModule,
+    dbFunctionName: "dues-collection"
+  },
+  {
+    id: "check-requests",
+    name: "check-requests",
+    title: "Check Requests",
+    description: "Process and track check requests",
+    icon: Printer,
+    iconColor: "red",
+    category: "finances",
+    isActive: true,
+    component: UserManagementModule, // Placeholder
+    dbFunctionName: "check-requests"
+  },
+  {
+    id: "merch-store",
+    name: "merch-store",
+    title: "Glee Merch Store",
+    description: "Manage merchandise sales and inventory",
+    icon: ShoppingCart,
+    iconColor: "yellow",
+    category: "finances",
+    isActive: true,
+    component: UserManagementModule, // Placeholder
+    dbFunctionName: "merch-store"
+  },
+
+  // Tools & Administration
+  {
+    id: "ai-tools",
+    name: "ai-tools",
+    title: "AI Tools",
+    description: "Artificial intelligence powered tools and assistance",
+    icon: Brain,
+    iconColor: "purple",
+    category: "system",
+    isActive: true,
+    component: AIToolsModule,
+    dbFunctionName: "ai-tools"
+  },
+  {
+    id: "hero-manager",
+    name: "hero-manager",
+    title: "Hero Manager",
+    description: "Manage hero images and carousel content",
+    icon: Camera,
+    iconColor: "blue",
+    category: "communications",
+    isActive: true,
+    component: HeroManagerModule,
+    dbFunctionName: "hero-manager"
+  },
+  {
+    id: "press-kits",
+    name: "press-kits",
+    title: "Press Kits",
+    description: "Manage press kits and media materials",
+    icon: FileText,
+    iconColor: "green",
+    category: "communications",
+    isActive: true,
+    component: PressKitsModule,
+    dbFunctionName: "press-kits"
+  },
+  {
+    id: "first-year-console",
+    name: "first-year-console",
+    title: "First Year Console",
+    description: "Tools and resources for first-year management",
+    icon: GraduationCap,
+    iconColor: "cyan",
+    category: "member-management",
+    isActive: true,
+    component: FirstYearConsoleModule,
+    dbFunctionName: "first-year-console"
+  },
+  {
     id: "settings",
     name: "settings",
     title: "System Settings",
@@ -161,47 +558,59 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: SettingsModule,
     dbFunctionName: "settings"
+  },
+  {
+    id: "executive",
+    name: "executive",
+    title: "Executive Board",
+    description: "Executive board functions and leadership tools",
+    icon: Users,
+    iconColor: "gold",
+    category: "member-management",
+    isActive: true,
+    component: ExecutiveModule,
+    dbFunctionName: "executive-board-management"
   }
 ];
 
-// Simplified categories
+// Categories with modules grouped
 export const UNIFIED_MODULE_CATEGORIES: UnifiedModuleCategory[] = [
+  {
+    id: "communications",
+    title: "Communications & Events",
+    description: "Notifications, emails, messaging, scheduling, tours, and event management",
+    icon: MessageSquare,
+    color: "blue",
+    modules: UNIFIED_MODULES.filter(m => m.category === "communications")
+  },
   {
     id: "member-management", 
     title: "Member Management",
-    description: "User management, attendance, and member tools",
+    description: "User management, attendance, executive board, auditions, permissions, and wellness",
     icon: Users,
     color: "cyan",
     modules: UNIFIED_MODULES.filter(m => m.category === "member-management")
   },
   {
     id: "musical-leadership",
-    title: "Musical Leadership",
-    description: "Student conductor, section leaders, sight singing, and music library",
+    title: "Musical Leadership & Resources",
+    description: "Student conductor, section leaders, sight singing, music library, and media resources",
     icon: Music,
     color: "purple",
     modules: UNIFIED_MODULES.filter(m => m.category === "musical-leadership")
   },
   {
-    id: "communications",
-    title: "Communications",
-    description: "Notifications and messaging",
-    icon: Mail,
-    color: "blue",
-    modules: UNIFIED_MODULES.filter(m => m.category === "communications")
-  },
-  {
     id: "finances",
     title: "Financial Management",
-    description: "Budget management",
-    icon: Calculator,
+    description: "Budgets, dues collection, contracts, and merchandise store",
+    icon: DollarSign,
     color: "green",
     modules: UNIFIED_MODULES.filter(m => m.category === "finances")
   },
   {
     id: "system",
     title: "System Administration",
-    description: "Platform settings and administrative tools",
+    description: "Platform settings, AI tools, and administrative tools",
     icon: Settings,
     color: "gray",
     modules: UNIFIED_MODULES.filter(m => m.category === "system")
