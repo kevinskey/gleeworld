@@ -121,18 +121,22 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'first-year-console': 'first-year-console',
           'settings': 'settings',
           
-          // Executive Board
+          // Executive Board - Map database modules to frontend modules
           'executive-board': 'executive',
           'executive-board-management': 'executive',
           'executive-functions': 'executive'
         };
 
+        console.log('🔍 useSimplifiedModuleAccess: moduleMapping =', moduleMapping);
+
         // Get module permissions from RPC
         const grantedModuleIds = new Set();
         if (userModules && Array.isArray(userModules)) {
           userModules.forEach((module: any) => {
+            console.log('🔍 Processing module:', module);
             if (module.can_view) {
               const frontendModuleId = moduleMapping[module.module_key] || module.module_key;
+              console.log(`🔍 Mapping ${module.module_key} -> ${frontendModuleId}`);
               grantedModuleIds.add(frontendModuleId);
             }
           });

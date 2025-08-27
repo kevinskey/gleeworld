@@ -90,6 +90,7 @@ import { FirstYearConsoleModule } from '@/components/modules/FirstYearConsoleMod
 import { SettingsModule } from '@/components/modules/SettingsModule';
 import MemberSightReadingStudioPage from '@/pages/MemberSightReadingStudio';
 import { LibrarianModule } from '@/components/modules/LibrarianModule';
+import { ExecutiveModule } from '@/components/dashboard/modules/ExecutiveModule';
 
 // Single source of truth for all modules
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -716,6 +717,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: SettingsModule,
     dbFunctionName: "settings"
+  },
+  {
+    id: "executive",
+    name: "executive",
+    title: "Executive Board",
+    description: "Executive board functions and leadership tools",
+    icon: Users,
+    iconColor: "gold",
+    category: "member-management",
+    isActive: true,
+    component: ExecutiveModule,
+    dbFunctionName: "executive-board-management",
+    requiredRoles: ["executive", "admin"]
   }
 ];
 
