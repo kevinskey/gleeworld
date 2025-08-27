@@ -37,7 +37,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         // Get user profile  
         const { data: profile, error: profileError } = await supabase
           .from('gw_profiles')
-          .select('role, is_super_admin, is_exec_board')
+          .select('role, is_super_admin, is_exec_board, is_admin')
           .eq('user_id', targetUserId)
           .maybeSingle();
 
@@ -49,6 +49,14 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         console.log('🔍 Is Exec Board?', profile?.is_exec_board);
         console.log('🔍 Role:', profile?.role);
         console.log('🔍 Is Super Admin?', profile?.is_super_admin);
+        console.log('🔍 Is Admin?', profile?.is_admin);
+
+        // Check if get_user_modules function exists
+        const { data: functionExists } = await supabase
+          .rpc('get_user_modules', { p_user: targetUserId })
+          .limit(1);
+        
+        console.log('🔍 useSimplifiedModuleAccess: RPC function test result:', functionExists);
 
         // Get explicit permissions from database via RPC
         console.log('🔍 useSimplifiedModuleAccess: calling get_user_modules RPC for user:', targetUserId);
