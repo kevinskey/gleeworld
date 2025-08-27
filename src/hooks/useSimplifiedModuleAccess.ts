@@ -51,13 +51,6 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         console.log('🔍 Is Super Admin?', profile?.is_super_admin);
         console.log('🔍 Is Admin?', profile?.is_admin);
 
-        // Check if get_user_modules function exists
-        const { data: functionExists } = await supabase
-          .rpc('get_user_modules', { p_user: targetUserId })
-          .limit(1);
-        
-        console.log('🔍 useSimplifiedModuleAccess: RPC function test result:', functionExists);
-
         // Get explicit permissions from database via RPC
         console.log('🔍 useSimplifiedModuleAccess: calling get_user_modules RPC for user:', targetUserId);
         const { data: userModules, error: moduleError } = await supabase

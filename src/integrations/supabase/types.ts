@@ -15952,11 +15952,11 @@ export type Database = {
       get_user_modules: {
         Args: { p_user: string }
         Returns: {
+          can_edit: boolean
           can_manage: boolean
           can_view: boolean
           module_key: string
           module_name: string
-          source: string
         }[]
       }
       get_user_modules_combined: {
