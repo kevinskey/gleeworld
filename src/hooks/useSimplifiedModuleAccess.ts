@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { UNIFIED_MODULES } from '@/config/unified-modules';
+import { UNIFIED_MODULES, getActiveModules } from '@/config/unified-modules';
 import { EXECUTIVE_MODULE_IDS, STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
 
 export interface ModuleAccess {
@@ -143,38 +143,45 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         console.log('🔍 useSimplifiedModuleAccess: granted module IDs =', Array.from(grantedModuleIds));
         console.log('🔍 useSimplifiedModuleAccess: profile is_exec_board =', profile?.is_exec_board);
         console.log('🔍 useSimplifiedModuleAccess: profile role =', profile?.role);
-        // Build access list based on permissions
-        const accessList: ModuleAccess[] = UNIFIED_MODULES
-          .filter(module => module.isActive)
-          .map(module => {
-            // Super admin gets everything
-            if (profile?.is_super_admin) {
-              return {
-                moduleId: module.id,
-                hasAccess: true,
-                source: 'super_admin' as const
-              };
-            }
+        console.log('🔍 useSimplifiedModuleAccess: profile is_super_admin =', profile?.is_super_admin);
+        console.log('🔍 useSimplifiedModuleAccess: profile is_admin =', profile?.is_admin);
+        console.log('🔍 useSimplifiedModuleAccess: available active modules =', getActiveModules().map(m => m.id));
+        
+        // Build access list based on permissions using only active modules
+        const activeModules = getActiveModules();
+        const accessList: ModuleAccess[] = activeModules.map(module => {
+          // Super admin gets everything (check multiple fields for safety)
+          if (profile?.is_super_admin || profile?.role === 'super-admin' || profile?.role === 'admin') {
+            console.log('🔥 Super admin access granted for module:', module.id);
+            return {
+              moduleId: module.id,
+              hasAccess: true,
+              source: 'super_admin' as const
+            };
+          }
 
-            // Check if user has explicit permission for this module
-            if (grantedModuleIds.has(module.id)) {
-              return {
-                moduleId: module.id,
-                hasAccess: true,
-                source: 'explicit_permission' as const
-              };
-            }
+          // Check if user has explicit permission for this module
+          if (grantedModuleIds.has(module.id)) {
+            console.log('✅ Explicit permission found for module:', module.id);
+            return {
+              moduleId: module.id,
+              hasAccess: true,
+              source: 'explicit_permission' as const
+            };
+          }
 
-            // ONLY standard members (not exec board) get default member modules
-            if (profile?.role === 'member' && !profile?.is_exec_board && STANDARD_MEMBER_MODULE_IDS.includes(module.id)) {
-              return {
-                moduleId: module.id,
-                hasAccess: true,
-                source: 'member_default' as const
-              };
-            }
+          // ONLY standard members (not exec board) get default member modules
+          if (profile?.role === 'member' && !profile?.is_exec_board && STANDARD_MEMBER_MODULE_IDS.includes(module.id)) {
+            console.log('👤 Member default access for module:', module.id);
+            return {
+              moduleId: module.id,
+              hasAccess: true,
+              source: 'member_default' as const
+            };
+          }
 
-            // No access by default (executive board members only get explicitly granted modules)
+          // No access by default (executive board members only get explicitly granted modules)
+          console.log('❌ No access for module:', module.id);
             return {
               moduleId: module.id,
               hasAccess: false,
@@ -208,9 +215,12 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
       .filter(m => m.hasAccess)
       .map(m => m.moduleId);
     
-    return UNIFIED_MODULES.filter(module => 
-      accessibleModuleIds.includes(module.id) && module.isActive
+    const result = getActiveModules().filter(module => 
+      accessibleModuleIds.includes(module.id)
     );
+    
+    console.log('🎯 useSimplifiedModuleAccess: final accessible modules =', result.map(m => m.id));
+    return result;
   };
 
   const getAccessSource = (moduleId: string) => {
