@@ -15,7 +15,7 @@ export const ExecBoardModulePanel = () => {
   const [loading, setLoading] = useState(true);
   const [quickAccessCollapsed, setQuickAccessCollapsed] = useState(false);
 
-  const { getAccessibleModules, loading: accessLoading, hasAccess } = useSimplifiedModuleAccess();
+  const { getAccessibleModules, loading: accessLoading, hasAccess } = useSimplifiedModuleAccess(user?.id);
 
   useEffect(() => {
     console.log('🔍 ExecBoardModulePanel: useEffect triggered');
