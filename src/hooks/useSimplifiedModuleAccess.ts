@@ -54,6 +54,8 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         if (moduleError) throw moduleError;
 
         console.log('🔍 useSimplifiedModuleAccess: user modules from RPC =', userModules);
+        console.log('🔍 useSimplifiedModuleAccess: user profile =', profile);
+        console.log('🔍 useSimplifiedModuleAccess: target user ID =', targetUserId);
 
         // Create a mapping from database module names to frontend module IDs
         const moduleMapping: Record<string, string> = {
