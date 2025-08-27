@@ -6,10 +6,12 @@ import { cn } from '@/lib/utils';
 import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
 import { usePDFPageCache } from '@/hooks/usePDFPageCache';
 import * as pdfjsLib from 'pdfjs-dist';
-import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 
 // Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerPort = new PdfJsWorker();
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).toString();
 
 interface FastPDFViewerProps {
   pdfUrl: string | null;
