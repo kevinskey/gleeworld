@@ -195,8 +195,11 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
         isExecBoard: userPermissions.isExecBoard
       });
 
-      // Admin has access to everything
-      if (userPermissions.isAdmin) return true;
+      // Super Admin or Admin has access to everything
+      if (userPermissions.isAdmin) {
+        console.log(`✅ Super admin access granted for module ${module.name}`);
+        return true;
+      }
 
       // Check if user has specific module permission
       if (userPermissions.modulePermissions.includes(module.name)) return true;
