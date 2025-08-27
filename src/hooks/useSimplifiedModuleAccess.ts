@@ -57,45 +57,66 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
 
         // Create a mapping from database module names to frontend module IDs
         const moduleMapping: Record<string, string> = {
+          // Communications
           'email-management': 'email-management',
           'internal-communications': 'community-hub', 
-          'music-library': 'music-library',
-          'scheduling-module': 'calendar-management',
+          'notifications': 'notifications',
+          'pr-coordinator': 'pr-coordinator',
+          'pr-manager': 'pr-hub',
+          'scheduling-module': 'scheduling-module',
+          'service-management': 'service-management',
+          'calendar-management': 'calendar-management',
+          'buckets-of-love': 'buckets-of-love',
+          'glee-writing': 'glee-writing',
+          'fan-engagement': 'fan-engagement',
+          
+          // Member Management
+          'user-management': 'user-management',
           'attendance-management': 'attendance-management',
-          'wardrobe-module': 'wardrobe',
-          'finances': 'budgets',
-          'radio-management': 'radio-management',
-          'handbook': 'handbook',
-          'directory': 'user-management',
-          'media-library': 'music-library',
-          'executive-board': 'executive',
-          'settings': 'settings',
-          'auditions-management': 'auditions',
-          'librarian': 'librarian',
           'tour-management': 'tour-management',
           'booking-forms': 'booking-forms',
           'alumnae-portal': 'alumnae-portal',
-          'notifications': 'notifications',
-          'pr-coordinator': 'pr-coordinator',
-          'service-management': 'service-management',
-          'buckets-of-love': 'buckets-of-love',
+          'auditions': 'auditions',
+          'permissions': 'permissions',
           'wellness': 'wellness',
+          'wardrobe': 'wardrobe',
+          
+          // Musical Leadership
+          'music-library': 'music-library',
+          'media-library': 'music-library',
           'student-conductor': 'student-conductor',
           'section-leader': 'section-leader',
           'sight-singing-management': 'sight-singing-management',
+          'sight-reading-preview': 'sight-reading-preview',
+          'sight-reading-generator': 'sight-reading-generator',
+          'member-sight-reading-studio': 'member-sight-reading-studio',
+          'librarian': 'librarian',
+          'radio-management': 'radio-management',
+          'karaoke': 'karaoke',
+          
+          // Finances
           'contracts': 'contracts',
-          'glee-ledger': 'glee-ledger',
-          'calendar-management': 'calendar-management',
+          'budgets': 'budgets',
           'receipts-records': 'receipts-records',
+          'approval-system': 'approval-system',
+          'glee-ledger': 'glee-ledger',
+          'dues-collection': 'dues-collection',
           'monthly-statements': 'monthly-statements',
           'check-requests': 'check-requests',
+          'merch-store': 'merch-store',
+          'ai-financial': 'ai-financial',
+          
+          // Tools & Utilities
           'ai-tools': 'ai-tools',
-          'press-kits': 'press-kits',
           'hero-manager': 'hero-manager',
-          'fan-engagement': 'fan-engagement',
-          'glee-writing': 'glee-writing',
+          'press-kits': 'press-kits',
           'first-year-console': 'first-year-console',
-          'karaoke': 'karaoke'
+          'settings': 'settings',
+          
+          // Executive Board
+          'executive-board': 'executive',
+          'executive-board-management': 'executive',
+          'executive-functions': 'executive'
         };
 
         // Get module permissions from RPC
