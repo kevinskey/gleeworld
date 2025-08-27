@@ -9,6 +9,8 @@ import { RouteDebugger } from '@/components/debug/RouteDebugger';
 
 export const HomeRoute = () => {
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { userProfile } = useUserProfile(user);
   
   // Debug logging for auth state
   console.log('🏠 HomeRoute render:', {
@@ -19,8 +21,24 @@ export const HomeRoute = () => {
     timestamp: new Date().toISOString()
   });
   
+  // Clear any session storage that might be blocking redirects
+  useEffect(() => {
+    sessionStorage.removeItem('force-public-view');
+    sessionStorage.removeItem('redirectAfterAuth');
+  }, []);
+  
   // Use the role-based redirect hook to handle automatic redirection
   useRoleBasedRedirect();
+  
+  // Force redirect for authenticated super-admin users
+  useEffect(() => {
+    if (!authLoading && user && userProfile) {
+      if (userProfile.is_super_admin || userProfile.role === 'super-admin') {
+        console.log('🚀 HomeRoute: Force redirecting super-admin to dashboard');
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [authLoading, user, userProfile, navigate]);
 
   // Show loading while determining auth status
   if (authLoading) {
