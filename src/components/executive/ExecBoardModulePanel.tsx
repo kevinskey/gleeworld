@@ -15,16 +15,19 @@ export const ExecBoardModulePanel = () => {
   const [loading, setLoading] = useState(true);
   const [quickAccessCollapsed, setQuickAccessCollapsed] = useState(false);
 
-  const { getAccessibleModules, loading: accessLoading } = useSimplifiedModuleAccess();
+  const { getAccessibleModules, loading: accessLoading, hasAccess } = useSimplifiedModuleAccess();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || accessLoading) return;
     
+    console.log('🎯 ExecBoardModulePanel: Fetching accessible modules for user:', user.id);
     const accessibleModules = getAccessibleModules();
+    console.log('🎯 ExecBoardModulePanel: Accessible modules:', accessibleModules);
     const moduleIds = accessibleModules.map(module => module.id);
+    console.log('🎯 ExecBoardModulePanel: Module IDs:', moduleIds);
     setUserModules(moduleIds);
     setLoading(false);
-  }, [user, getAccessibleModules]);
+  }, [user, accessLoading, getAccessibleModules]);
 
   const handleModuleClick = (moduleId: string) => {
     if (userModules.includes(moduleId)) {
