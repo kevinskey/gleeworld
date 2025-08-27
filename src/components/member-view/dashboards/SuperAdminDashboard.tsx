@@ -636,9 +636,27 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                       </div>
                     </Button>
                     
+                    {/* Music Library Quick Access */}
+                    <Button
+                      variant="outline"
+                      className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-green-200 hover:border-green-300"
+                      onClick={() => navigate('/music-library')}
+                    >
+                      <div className="w-full">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Music className="h-5 w-5 text-green-600" />
+                          <Badge variant="secondary" className="text-xs">Quick Access</Badge>
+                        </div>
+                        <h3 className="font-semibold text-base lg:text-lg text-green-700">Music Library</h3>
+                        <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
+                          Access sheet music, create setlists, and manage study scores
+                        </p>
+                      </div>
+                    </Button>
+                    
                     {allModules
                       .filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id))
-                      .slice(0, 5)
+                      .slice(0, 4) // Reduced from 5 to 4 to accommodate Music Library
                       .map((module) => (
                          <Button
                            key={module.id}
