@@ -162,8 +162,8 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
               };
             }
 
-            // Members get standard modules
-            if (profile?.role === 'member' && STANDARD_MEMBER_MODULE_IDS.includes(module.id)) {
+            // ONLY standard members (not exec board) get default member modules
+            if (profile?.role === 'member' && !profile?.is_exec_board && STANDARD_MEMBER_MODULE_IDS.includes(module.id)) {
               return {
                 moduleId: module.id,
                 hasAccess: true,
@@ -171,7 +171,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
               };
             }
 
-            // No access by default
+            // No access by default (executive board members only get explicitly granted modules)
             return {
               moduleId: module.id,
               hasAccess: false,
