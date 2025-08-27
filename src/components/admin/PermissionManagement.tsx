@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Users, Settings, Shield, UserCheck } from 'lucide-react';
+import { Users, Settings, Shield, UserCheck, Boxes } from 'lucide-react';
 import { PermissionGroupManager } from './PermissionGroupManager';
 import { UserGroupAssignment } from './UserGroupAssignment';
+import { UserModuleAssignment } from './UserModuleAssignment';
 import { AdvancedPermissionPanels } from './AdvancedPermissionPanels';
 import { ExecutiveBoardPermissionPanel } from './ExecutiveBoardPermissionPanel';
 import { PermissionErrorBoundary } from './PermissionErrorBoundary';
@@ -143,10 +144,11 @@ export const PermissionManagement = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="groups">Groups</TabsTrigger>
-          <TabsTrigger value="assignments">User Assignments</TabsTrigger>
+          <TabsTrigger value="assignments">Group Assignments</TabsTrigger>
+          <TabsTrigger value="modules">Module Assignments</TabsTrigger>
           <TabsTrigger value="executive">Executive Board</TabsTrigger>
           <TabsTrigger value="advanced">Advanced Panels</TabsTrigger>
         </TabsList>
@@ -161,6 +163,10 @@ export const PermissionManagement = () => {
         
         <TabsContent value="assignments" className="space-y-4">
           <UserGroupAssignment />
+        </TabsContent>
+        
+        <TabsContent value="modules" className="space-y-4">
+          <UserModuleAssignment />
         </TabsContent>
         
         <TabsContent value="executive" className="space-y-4">

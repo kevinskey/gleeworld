@@ -2,122 +2,184 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { toast } from 'sonner';
-import { Settings, Users, Search, Plus, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { useUserModulePermissions, UserWithPermissions } from '@/hooks/useUserModulePermissions';
-import { UNIFIED_MODULES } from '@/config/unified-modules';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Search, Users, Plus, X, Settings } from 'lucide-react';
+import { useUserModulePermissions } from '@/hooks/useUserModulePermissions';
+import { getActiveModules } from '@/config/unified-modules';
 
-export const UserModuleAssignment = () => {
-  const { 
-    loading, 
-    error, 
-    grantModuleAccess, 
-    revokeModuleAccess, 
-    getAllUsersWithPermissions 
-  } = useUserModulePermissions();
-  
-  const [users, setUsers] = useState<UserWithPermissions[]>([]);
-  const [selectedUser, setSelectedUser] = useState<string>('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [loadingUsers, setLoadingUsers] = useState(false);
+interface User {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: string;
+  modules: string[];
+}
 
-  const loadUsers = async () => {
-    setLoadingUsers(true);
+const AssignModulesDialog = ({
+  user,
+  open,
+  onOpenChange,
+  onAssign
+}: {
+  user: User | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAssign: () => void;
+}) => {
+  const { grantModuleAccess, revokeModuleAccess } = useUserModulePermissions();
+  const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const activeModules = getActiveModules();
+
+  useEffect(() => {
+    if (user) {
+      setSelectedModules(user.modules);
+    }
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!user) return;
+
+    setLoading(true);
     try {
-      const usersWithPerms = await getAllUsersWithPermissions();
-      setUsers(usersWithPerms);
-    } catch (err) {
-      console.error('Error loading users:', err);
-      toast.error('Failed to load users');
+      const currentModules = new Set(user.modules);
+      const newModules = new Set(selectedModules);
+
+      // Add new modules
+      for (const moduleId of newModules) {
+        if (!currentModules.has(moduleId)) {
+          await grantModuleAccess(user.id, moduleId, 'Assigned via admin panel');
+        }
+      }
+
+      // Remove modules
+      for (const moduleId of currentModules) {
+        if (!newModules.has(moduleId)) {
+          await revokeModuleAccess(user.id, moduleId);
+        }
+      }
+
+      onAssign();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error updating modules:', error);
     } finally {
-      setLoadingUsers(false);
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
+  const toggleModule = (moduleId: string) => {
+    setSelectedModules(prev =>
+      prev.includes(moduleId)
+        ? prev.filter(id => id !== moduleId)
+        : [...prev, moduleId]
+    );
+  };
 
-  // Filter users based on search term
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Assign Modules</DialogTitle>
+          <DialogDescription>
+            {user && `Assign specific modules to ${user.full_name || user.email}`}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Available Modules</Label>
+            <ScrollArea className="h-64 border rounded-md p-4">
+              <div className="grid grid-cols-1 gap-2">
+                {activeModules.map(module => (
+                  <div key={module.id} className="flex items-center space-x-3 p-2 hover:bg-muted rounded-md">
+                    <Checkbox
+                      id={module.id}
+                      checked={selectedModules.includes(module.id)}
+                      onCheckedChange={() => toggleModule(module.id)}
+                    />
+                    <div className="flex items-center gap-2 flex-1">
+                      <module.icon className="w-4 h-4" style={{ color: `var(--${module.iconColor})` }} />
+                      <div>
+                        <Label htmlFor={module.id} className="text-sm font-medium cursor-pointer">
+                          {module.title}
+                        </Label>
+                        <p className="text-xs text-muted-foreground">{module.description}</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {module.category}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+          <div className="flex justify-between items-center text-sm text-muted-foreground">
+            <span>{selectedModules.length} of {activeModules.length} modules selected</span>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={loading}>
+              {loading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export const UserModuleAssignment = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const { getAllUsersWithPermissions } = useUserModulePermissions();
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const usersWithPerms = await getAllUsersWithPermissions();
+      setUsers(usersWithPerms.map(user => ({
+        id: user.user_id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        modules: user.modules
+      })));
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAssignModules = () => {
+    fetchUsers();
+  };
+
   const filteredUsers = users.filter(user =>
-    user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Get available modules (only active ones)
-  const availableModules = UNIFIED_MODULES.filter(module => module.isActive);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-  const selectedUserData = users.find(u => u.user_id === selectedUser);
-
-  const handleModuleToggle = async (moduleId: string, hasAccess: boolean) => {
-    if (!selectedUser) return;
-    
-    try {
-      let success;
-      if (hasAccess) {
-        success = await revokeModuleAccess(selectedUser, moduleId);
-        if (success) {
-          toast.success('Module access revoked');
-        }
-      } else {
-        success = await grantModuleAccess(selectedUser, moduleId);
-        if (success) {
-          toast.success('Module access granted');
-        }
-      }
-      
-      if (success) {
-        // Refresh the users list to show updated permissions
-        await loadUsers();
-      }
-    } catch (err) {
-      toast.error('Failed to update module access');
-    }
-  };
-
-  const handleGrantAllModules = async () => {
-    if (!selectedUser) return;
-    
-    try {
-      const promises = availableModules.map(module => 
-        grantModuleAccess(selectedUser, module.id)
-      );
-      
-      await Promise.all(promises);
-      await loadUsers();
-      toast.success('All modules granted');
-    } catch (err) {
-      toast.error('Failed to grant all modules');
-    }
-  };
-
-  const handleRevokeAllModules = async () => {
-    if (!selectedUser || !selectedUserData) return;
-    
-    try {
-      const promises = selectedUserData.modules.map(moduleId => 
-        revokeModuleAccess(selectedUser, moduleId)
-      );
-      
-      await Promise.all(promises);
-      await loadUsers();
-      toast.success('All modules revoked');
-    } catch (err) {
-      toast.error('Failed to revoke all modules');
-    }
-  };
-
-  if (loadingUsers) {
+  if (loading) {
     return (
       <Card>
-        <CardContent className="py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading users and permissions...</p>
-          </div>
+        <CardContent className="p-6">
+          <div className="text-center">Loading users...</div>
         </CardContent>
       </Card>
     );
@@ -125,167 +187,108 @@ export const UserModuleAssignment = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-primary" />
-            <div>
-              <CardTitle>User Module Assignment</CardTitle>
-              <CardDescription>
-                Assign specific modules to individual users
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* User Search and Selection */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search users by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1"
-              />
-            </div>
-            
-            <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a user to manage their module access..." />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredUsers.map((user) => (
-                  <SelectItem key={user.user_id} value={user.user_id}>
-                    <div className="flex items-center gap-2">
-                      <span>{user.full_name}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {user.role}
-                      </Badge>
-                      {user.is_exec_board && (
-                        <Badge variant="secondary" className="text-xs">
-                          Executive
-                        </Badge>
-                      )}
-                      <span className="text-sm text-muted-foreground">
-                        {user.modules.length} modules
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">User Module Assignment</h2>
+          <p className="text-muted-foreground">
+            Assign specific modules to individual users
+          </p>
+        </div>
+      </div>
 
-          {/* Selected User Info */}
-          {selectedUserData && (
-            <Card className="bg-muted/50">
-              <CardContent className="pt-4">
-                <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {filteredUsers.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Users Found</h3>
+              <p className="text-muted-foreground">
+                {searchTerm ? 'No users match your search criteria.' : 'No users available for module assignment.'}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          filteredUsers.map(user => (
+            <Card key={user.id}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold">{selectedUserData.full_name}</h3>
-                    <p className="text-sm text-muted-foreground">{selectedUserData.email}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline">{selectedUserData.role}</Badge>
-                      {selectedUserData.is_exec_board && (
-                        <Badge variant="secondary">Executive Board</Badge>
-                      )}
-                    </div>
+                    <CardTitle className="text-lg">
+                      {user.full_name || user.email}
+                    </CardTitle>
+                    <CardDescription>
+                      {user.email} • Role: {user.role}
+                    </CardDescription>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleGrantAllModules}
-                      disabled={loading}
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Grant All
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRevokeAllModules}
-                      disabled={loading || selectedUserData.modules.length === 0}
-                    >
-                      <X className="h-3 w-3 mr-1" />
-                      Revoke All
-                    </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setAssignDialogOpen(true);
+                    }}
+                  >
+                    <Settings className="w-3 h-3 mr-1" />
+                    Manage Modules
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">
+                    Assigned Modules ({user.modules.length})
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {user.modules.length === 0 ? (
+                      <span className="text-sm text-muted-foreground">No modules assigned</span>
+                    ) : (
+                      user.modules.map(moduleId => {
+                        const module = getActiveModules().find(m => m.id === moduleId);
+                        return module ? (
+                          <Badge
+                            key={moduleId}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            <module.icon className="w-3 h-3" />
+                            {module.title}
+                          </Badge>
+                        ) : (
+                          <Badge key={moduleId} variant="destructive">
+                            {moduleId} (not found)
+                          </Badge>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
-                
-                <div className="text-sm">
-                  <strong>Current Access:</strong> {selectedUserData.modules.length} of {availableModules.length} modules
-                </div>
               </CardContent>
             </Card>
-          )}
+          ))
+        )}
+      </div>
 
-          {/* Module Assignment Grid */}
-          {selectedUserData && (
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold">Available Modules</h4>
-              <div className="grid gap-3">
-                {availableModules.map((module) => {
-                  const hasAccess = selectedUserData.modules.includes(module.id);
-                  const IconComponent = module.icon;
-                  
-                  return (
-                    <Card key={module.id} className="transition-colors">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 flex-1">
-                            <IconComponent className="h-5 w-5 text-muted-foreground" />
-                            <div className="flex-1">
-                              <h5 className="font-medium">{module.title}</h5>
-                              <p className="text-sm text-muted-foreground line-clamp-1">
-                                {module.description}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline" className="text-xs">
-                                  {module.category}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                          <Switch
-                            checked={hasAccess}
-                            onCheckedChange={() => handleModuleToggle(module.id, hasAccess)}
-                            disabled={loading}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {!selectedUser && (
-            <Card>
-              <CardContent className="py-12">
-                <div className="text-center text-muted-foreground">
-                  <Users className="w-16 h-16 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Select a User</h3>
-                  <p>Choose a user from the dropdown above to manage their module access permissions.</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {error && (
-            <Card className="border-destructive">
-              <CardContent className="pt-6">
-                <div className="text-center text-destructive">
-                  <p className="font-medium">Error</p>
-                  <p className="text-sm">{error}</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </CardContent>
-      </Card>
+      <AssignModulesDialog
+        user={selectedUser}
+        open={assignDialogOpen}
+        onOpenChange={(open) => {
+          setAssignDialogOpen(open);
+          if (!open) setSelectedUser(null);
+        }}
+        onAssign={handleAssignModules}
+      />
     </div>
   );
 };
