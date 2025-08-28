@@ -26,6 +26,7 @@ import FanDashboard from "./pages/FanDashboard";
 // import AdminDashboard from "./pages/AdminDashboard";
 import { DuesManagement } from "./pages/DuesManagement";
 import PermissionsPage from "./pages/admin/Permissions";
+import WeekPage from "./pages/music-theory/WeekPage";
 
 import ContractSigning from "./pages/ContractSigning";
 import AdminSigning from "./pages/AdminSigning";
@@ -289,6 +290,15 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <NotationBasics />
+                  </PublicRoute>
+                } 
+              />
+              {/* Music Theory Week pages */}
+              <Route 
+                path="/music-theory/week/:weekNumber" 
+                element={
+                  <PublicRoute>
+                    <WeekPage />
                   </PublicRoute>
                 } 
               />

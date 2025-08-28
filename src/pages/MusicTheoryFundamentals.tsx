@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -379,43 +380,57 @@ const MusicTheoryFundamentals = () => {
                   <div key={month.month} className="mb-6">
                     <h3 className="text-lg font-semibold text-primary mb-3">{month.month}</h3>
                     <div className="space-y-2">
-                      {month.weeks.map((week, weekIndex) => (
-                        <div key={weekIndex} className={`p-3 rounded-lg border ${week.isExam ? 'bg-primary/5 border-primary/20' : 'bg-muted/50'}`}>
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                            <div className="flex items-center gap-2">
-                              {week.isExam && <Award className="w-4 h-4 text-primary" />}
-                              <span className="font-medium">
-                                Week {week.week}
-                              </span>
-                              {week.date && (
-                                <Badge variant="outline" className="text-xs">
-                                  {week.date}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center justify-between flex-1">
-                              <div className="flex items-center gap-3">
-                                <span className="text-muted-foreground">{week.topic}</span>
-                                {week.week === 1 && (
-                                  <div className="flex items-center gap-1">
-                                    <Music className="w-8 h-8 text-primary" />
-                                    <span className="text-3xl">♪ ♫ 𝄞</span>
-                                  </div>
+                      {month.weeks.map((week, weekIndex) => {
+                        const isClickableWeek = typeof week.week === 'number' && week.week <= 2;
+                        const weekContent = (
+                          <div className={`p-3 rounded-lg border ${week.isExam ? 'bg-primary/5 border-primary/20' : 'bg-muted/50'} ${isClickableWeek ? 'hover:bg-muted cursor-pointer transition-colors' : ''}`}>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                              <div className="flex items-center gap-2">
+                                {week.isExam && <Award className="w-4 h-4 text-primary" />}
+                                <span className="font-medium">
+                                  Week {week.week}
+                                </span>
+                                {week.date && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {week.date}
+                                  </Badge>
                                 )}
                               </div>
-                              {week.week === 1 && (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => window.location.href = '/music-theory/notation-basics'}
-                                >
-                                  Start Learning
-                                </Button>
-                              )}
+                              <div className="flex items-center justify-between flex-1">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-muted-foreground">{week.topic}</span>
+                                  {week.week === 1 && (
+                                    <div className="flex items-center gap-1">
+                                      <Music className="w-8 h-8 text-primary" />
+                                      <span className="text-3xl">♪ ♫ 𝄞</span>
+                                    </div>
+                                  )}
+                                </div>
+                                {isClickableWeek && (
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                  >
+                                    View Week
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+
+                        return (
+                          <div key={weekIndex}>
+                            {isClickableWeek ? (
+                              <Link to={`/music-theory/week/${week.week}`}>
+                                {weekContent}
+                              </Link>
+                            ) : (
+                              weekContent
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                     {monthIndex < weeklySchedule.length - 1 && <Separator className="mt-6" />}
                   </div>
