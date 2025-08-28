@@ -1,0 +1,38 @@
+-- Add a new hero slide for Music 240 class
+INSERT INTO gw_hero_slides (
+  title,
+  description,
+  image_url,
+  mobile_image_url,
+  action_button_text,
+  action_button_url,
+  action_button_enabled,
+  title_position_horizontal,
+  title_position_vertical,
+  description_position_horizontal,
+  description_position_vertical,
+  title_size,
+  description_size,
+  display_order,
+  is_active,
+  usage_context,
+  slide_duration_seconds
+) VALUES (
+  'Music 240: Advanced Performance',
+  'Advanced vocal techniques, performance skills, and ensemble work for experienced singers.',
+  '/images/music-240-hero.jpg',
+  '/images/music-240-hero-mobile.jpg',
+  'Enroll Now',
+  '/music-240',
+  true,
+  'center',
+  'center',
+  'center',
+  'center',
+  'large',
+  'medium',
+  1,
+  true,
+  'homepage',
+  5
+);

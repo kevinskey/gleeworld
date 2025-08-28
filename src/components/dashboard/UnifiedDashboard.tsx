@@ -3,7 +3,7 @@ import { MessagesPanel } from './MessagesPanel';
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { CommunityHubModule } from './modules/CommunityHubModule';
-import DashboardHeroCarousel from '@/components/hero/DashboardHeroCarousel';
+import { SplitClassHero } from '@/components/hero/SplitClassHero';
 import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon } from 'lucide-react';
@@ -79,7 +79,7 @@ export const UnifiedDashboard = () => {
 
           {/* Row 1: Hero + Features side-by-side */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-            <DashboardHeroCarousel />
+            <SplitClassHero />
             <div className="self-center w-full"><DashboardFeaturesCarousel /></div>
           </div>
 
@@ -367,7 +367,7 @@ export const UnifiedDashboard = () => {
       <div className="px-6 py-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
           {/* Left: Hero */}
-          <DashboardHeroCarousel />
+          <SplitClassHero />
           <div className="self-center w-full"><DashboardFeaturesCarousel /></div>
         </div>
       </div>
