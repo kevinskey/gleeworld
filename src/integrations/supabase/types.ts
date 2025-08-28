@@ -12387,6 +12387,63 @@ export type Database = {
         }
         Relationships: []
       }
+      liturgical_psalms: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          cycle: string
+          id: string
+          lectionary_id: string
+          psalm_reference: string
+          psalm_text: string | null
+          refrain_reference: string | null
+          refrain_text: string | null
+          scraped_at: string | null
+          season: string
+          source_url: string | null
+          title: string
+          updated_at: string
+          verses: Json | null
+          week: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          cycle: string
+          id?: string
+          lectionary_id: string
+          psalm_reference: string
+          psalm_text?: string | null
+          refrain_reference?: string | null
+          refrain_text?: string | null
+          scraped_at?: string | null
+          season: string
+          source_url?: string | null
+          title: string
+          updated_at?: string
+          verses?: Json | null
+          week: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          cycle?: string
+          id?: string
+          lectionary_id?: string
+          psalm_reference?: string
+          psalm_text?: string | null
+          refrain_reference?: string | null
+          refrain_text?: string | null
+          scraped_at?: string | null
+          season?: string
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+          verses?: Json | null
+          week?: string
+        }
+        Relationships: []
+      }
       materials_budget: {
         Row: {
           cost: number | null
