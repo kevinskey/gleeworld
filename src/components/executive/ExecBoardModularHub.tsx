@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Settings, Crown } from "lucide-react";
+import { Settings, Crown, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +24,7 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
   
   const [activeTab, setActiveTab] = useState('overview');
   const [isConfigMode, setIsConfigMode] = useState(false);
+  const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [modulePreferences, setModulePreferences] = useState<Record<string, boolean>>({});
 
   // Check if user is executive board member
@@ -98,6 +99,60 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
         variant: "destructive",
       });
     }
+  };
+
+  // Handle module card clicks
+  const handleModuleClick = (moduleId: string) => {
+    setSelectedModule(moduleId);
+  };
+
+  // Render selected module component
+  const renderSelectedModule = () => {
+    if (!selectedModule) return null;
+    
+    const module = accessibleModules.find(m => m.id === selectedModule);
+    if (!module) return null;
+
+    const ModuleComponent = module.component;
+    
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <module.icon className="h-6 w-6 text-purple-600" />
+              <div>
+                <CardTitle>{module.title}</CardTitle>
+                <p className="text-sm text-muted-foreground">{module.description}</p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedModule(null)}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ModuleComponent 
+            user={{
+              id: profile?.user_id,
+              email: profile?.email,
+              full_name: profile?.full_name,
+              role: profile?.role,
+              exec_board_role: profile?.exec_board_role,
+              is_exec_board: profile?.is_exec_board,
+              is_admin: profile?.is_admin,
+              is_super_admin: profile?.is_super_admin
+            }} 
+            isFullPage={false} 
+          />
+        </CardContent>
+      </Card>
+    );
   };
 
   // Get enabled modules based on both accessibility and user preferences
@@ -182,6 +237,8 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
               ))}
             </div>
           </div>
+        ) : selectedModule ? (
+          renderSelectedModule()
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid grid-cols-6 mb-4">
@@ -194,40 +251,40 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                {enabledModules.slice(0, 4).map((module) => {
-                  const ModuleComponent = module.component;
-                  return (
-                    <Card key={module.id} className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <module.icon className="h-4 w-4 text-purple-600" />
-                        <h4 className="font-medium text-sm">{module.title}</h4>
-                      </div>
-                      <ModuleComponent preview={true} execRole={execRole} />
-                    </Card>
-                  );
-                })}
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {enabledModules.slice(0, 6).map((module) => (
+                  <Card 
+                    key={module.id} 
+                    className="p-4 cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-purple-300"
+                    onClick={() => handleModuleClick(module.id)}
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <module.icon className="h-5 w-5 text-purple-600" />
+                      <h4 className="font-medium text-sm">{module.title}</h4>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{module.description}</p>
+                  </Card>
+                ))}
               </div>
             </TabsContent>
 
             {Object.entries(modulesByCategory).map(([category, categoryModules]) => (
-              <TabsContent key={category} value={category} className="space-y-4">
-                {categoryModules.map((module) => {
-                  const ModuleComponent = module.component;
-                  return (
-                    <Card key={module.id}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center gap-2">
-                          <module.icon className="h-5 w-5 text-purple-600" />
-                          <CardTitle className="text-base">{module.title}</CardTitle>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <ModuleComponent preview={false} execRole={execRole} />
-                      </CardContent>
+              <TabsContent key={category} value={category} className="space-y-3">
+                <div className="grid gap-3 md:grid-cols-2">
+                  {categoryModules.map((module) => (
+                    <Card 
+                      key={module.id} 
+                      className="p-4 cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-purple-300"
+                      onClick={() => handleModuleClick(module.id)}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <module.icon className="h-5 w-5 text-purple-600" />
+                        <h4 className="font-medium">{module.title}</h4>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{module.description}</p>
                     </Card>
-                  );
-                })}
+                  ))}
+                </div>
               </TabsContent>
             ))}
           </Tabs>
