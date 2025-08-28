@@ -195,17 +195,33 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
                 <Badge variant="secondary" className="text-xs">
                   {enabledModules.length} modules active
                 </Badge>
+                {loading && (
+                  <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs">
+                    Loading...
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsConfigMode(!isConfigMode)}
-            className="text-purple-600 hover:text-purple-700"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.location.reload()}
+              className="text-purple-600 hover:text-purple-700"
+              title="Refresh modules"
+            >
+              <Crown className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsConfigMode(!isConfigMode)}
+              className="text-purple-600 hover:text-purple-700"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
