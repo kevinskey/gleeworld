@@ -1,0 +1,38 @@
+-- Add a new hero slide for Music Theory Fundamentals class
+INSERT INTO gw_hero_slides (
+  title,
+  description,
+  image_url,
+  mobile_image_url,
+  action_button_text,
+  action_button_url,
+  action_button_enabled,
+  title_position_horizontal,
+  title_position_vertical,
+  description_position_horizontal,
+  description_position_vertical,
+  title_size,
+  description_size,
+  display_order,
+  is_active,
+  usage_context,
+  slide_duration_seconds
+) VALUES (
+  'Master Music Theory Fundamentals',
+  'Practice sight singing, complete assignments, and build a strong foundation in music theory and performance.',
+  '/images/music-theory-hero.jpg',
+  '/images/music-theory-hero-mobile.jpg',
+  'Start Learning',
+  '/music-theory-fundamentals',
+  true,
+  'center',
+  'center',
+  'center',
+  'center',
+  'large',
+  'medium',
+  3,
+  true,
+  'homepage',
+  5
+);
