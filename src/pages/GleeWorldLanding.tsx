@@ -23,6 +23,7 @@ import { MusicStaffIcon } from "@/components/icons/MusicStaffIcon";
 import { FAQNavigationCards } from "@/components/landing/FAQNavigationCards";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { SplitClassHero } from "@/components/hero/SplitClassHero";
 import { 
   Calendar, 
   MapPin,
@@ -301,6 +302,13 @@ export const GleeWorldLanding = () => {
       <div className="absolute inset-0 -z-10 opacity-20 mix-blend-overlay" style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0.08'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")" }} aria-hidden="true" />
       
       <PublicLayout>
+
+      {/* Split Class Hero */}
+      <section className="relative z-30 py-6 px-4 sm:px-6 md:px-8 lg:px-12 w-full">
+        <div className="w-full max-w-screen-xl mx-auto">
+          <SplitClassHero />
+        </div>
+      </section>
 
       {/* MUS 240 Hero Link */}
       <section className="relative z-30 py-6 px-4 sm:px-6 md:px-8 lg:px-12 w-full">
