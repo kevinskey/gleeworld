@@ -103,17 +103,39 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
 
   // Handle module card clicks
   const handleModuleClick = (moduleId: string) => {
+    console.log('🎯 Module card clicked:', moduleId);
+    console.log('🎯 Available modules:', accessibleModules?.map(m => m.id));
+    console.log('🎯 Setting selected module to:', moduleId);
     setSelectedModule(moduleId);
   };
 
   // Render selected module component
   const renderSelectedModule = () => {
-    if (!selectedModule) return null;
+    console.log('🎯 renderSelectedModule called, selectedModule:', selectedModule);
+    if (!selectedModule) {
+      console.log('🎯 No selected module, returning null');
+      return null;
+    }
     
     const module = accessibleModules.find(m => m.id === selectedModule);
-    if (!module) return null;
+    console.log('🎯 Found module:', module);
+    if (!module) {
+      console.log('🎯 Module not found in accessible modules, returning null');
+      return null;
+    }
 
     const ModuleComponent = module.component;
+    console.log('🎯 Module component:', ModuleComponent);
+    console.log('🎯 About to render module with user:', {
+      id: profile?.user_id,
+      email: profile?.email,
+      full_name: profile?.full_name,
+      role: profile?.role,
+      exec_board_role: profile?.exec_board_role,
+      is_exec_board: profile?.is_exec_board,
+      is_admin: profile?.is_admin,
+      is_super_admin: profile?.is_super_admin
+    });
     
     return (
       <Card className="mt-6">
