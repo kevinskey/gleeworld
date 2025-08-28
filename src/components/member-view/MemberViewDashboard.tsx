@@ -67,6 +67,7 @@ export const MemberViewDashboard = () => {
   const renderDashboardContent = () => {
     console.log('MemberViewDashboard: rendering dashboard for user:', user);
     console.log('MemberViewDashboard: user role is:', user.role);
+    console.log('MemberViewDashboard: user is_exec_board:', user.is_exec_board);
     
     switch (user.role) {
       case 'super-admin':
@@ -75,6 +76,9 @@ export const MemberViewDashboard = () => {
       case 'admin':
         console.log('MemberViewDashboard: Loading AdminDashboard');
         return <AdminDashboard user={user} />;
+      case 'executive':
+        console.log('MemberViewDashboard: Loading MemberDashboard for executive board member');
+        return <MemberDashboardV2 user={user} />;
       case 'alumnae':
         console.log('MemberViewDashboard: Loading AlumnaeDashboard');
         return <AlumnaeDashboard user={user} />;
@@ -96,6 +100,8 @@ export const MemberViewDashboard = () => {
         return 'Super Admin Dashboard';
       case 'admin':
         return 'Admin Dashboard';
+      case 'executive':
+        return 'Executive Board Dashboard';
       case 'alumnae':
         return 'Alumnae Dashboard';
       case 'auditioner':

@@ -17,6 +17,7 @@ import { AuditionStatsWidget } from "@/components/member-view/AuditionStatsWidge
 import { getModulesByCategory } from "@/config/unified-modules";
 import { MemberSightReadingModule } from "@/components/modules/MemberSightReadingModule";
 import { QuickActions } from "@/components/community/QuickActions";
+import { ExecBoardModularHub } from "@/components/executive/ExecBoardModularHub";
 
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
@@ -216,6 +217,13 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
         <section className="mb-6">
           <MemberSightReadingModule user={user} isFullPage={false} />
         </section>
+
+        {/* Executive Board Module Hub - only for exec board members */}
+        {user.is_exec_board && (
+          <section className="mb-6">
+            <ExecBoardModularHub className="w-full" />
+          </section>
+        )}
 
         {/* Top grid with key modules */}
         <section className="responsive-grid-3">
