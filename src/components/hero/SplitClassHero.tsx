@@ -33,7 +33,7 @@ export const SplitClassHero: React.FC = () => {
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
-                      Music Theory Fundamentals
+                      Music Fundamentals
                     </h2>
                   </div>
                   <p className="text-sm sm:text-base text-muted-foreground mb-3">
