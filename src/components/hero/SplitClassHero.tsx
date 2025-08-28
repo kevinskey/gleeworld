@@ -77,7 +77,7 @@ export const SplitClassHero: React.FC = () => {
                     </h2>
                   </div>
                   <p className="text-sm sm:text-base text-muted-foreground mb-3">
-                    Advanced vocal techniques, performance skills, and ensemble work for experienced singers
+                    Survey of African-American Music - explore the rich history and cultural impact of Black musical traditions
                   </p>
                   <Button 
                     size="sm" 
