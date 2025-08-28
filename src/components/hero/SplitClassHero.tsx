@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Music } from 'lucide-react';
+import { BookOpen, Music, ArrowRight } from 'lucide-react';
 
 export const SplitClassHero: React.FC = () => {
   return (
@@ -82,9 +82,10 @@ export const SplitClassHero: React.FC = () => {
                   <Button 
                     size="sm" 
                     variant="secondary"
-                    className="pointer-events-auto shadow-lg"
+                    className="pointer-events-auto shadow-lg flex items-center gap-2"
                   >
-                    Enroll Now
+                    Enter
+                    <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
