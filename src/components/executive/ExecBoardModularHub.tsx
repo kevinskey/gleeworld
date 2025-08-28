@@ -38,10 +38,17 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
   } = useSimplifiedModuleAccess(profile?.user_id);
 
   const accessibleModules = getAccessibleModules();
+
+  // Get enabled modules based on both accessibility and user preferences
+  const enabledModules = accessibleModules.filter(module => 
+    modulePreferences[module.id] !== false // Default to true if no preference set
+  );
   
   console.log('🎭 ExecBoardModularHub: User profile =', { profile, execRole, isExecBoard });
   console.log('🎭 ExecBoardModularHub: Accessible modules =', { accessibleModules, count: accessibleModules?.length });
   console.log('🎭 ExecBoardModularHub: Loading =', loading);
+  console.log('🎭 ExecBoardModularHub: Module preferences =', modulePreferences);
+  console.log('🎭 ExecBoardModularHub: Enabled modules =', enabledModules?.length, enabledModules?.map(m => m.id));
 
   useEffect(() => {
     if (isExecBoard && user) {
@@ -177,11 +184,6 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
     );
   };
 
-  // Get enabled modules based on both accessibility and user preferences
-  const enabledModules = accessibleModules.filter(module => 
-    modulePreferences[module.id] !== false // Default to true if no preference set
-  );
-
   // Group modules by category
   const modulesByCategory = enabledModules.reduce((acc, module) => {
     if (!acc[module.category]) acc[module.category] = [];
@@ -290,19 +292,34 @@ export const ExecBoardModularHub = ({ className }: ExecBoardModularHubProps) => 
 
             <TabsContent value="overview" className="space-y-4">
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {enabledModules.slice(0, 6).map((module) => (
-                  <Card 
-                    key={module.id} 
-                    className="p-4 cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-purple-300"
-                    onClick={() => handleModuleClick(module.id)}
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      <module.icon className="h-5 w-5 text-purple-600" />
-                      <h4 className="font-medium text-sm">{module.title}</h4>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{module.description}</p>
-                  </Card>
-                ))}
+                {enabledModules.length === 0 ? (
+                  <div className="col-span-full text-center p-8">
+                    <p className="text-muted-foreground">No modules available. 
+                      {loading ? ' Loading...' : ' Check permissions or refresh.'}
+                    </p>
+                    <pre className="text-xs mt-2 text-left bg-muted p-2 rounded">
+                      {JSON.stringify({
+                        accessible: accessibleModules?.length || 0,
+                        preferences: Object.keys(modulePreferences).length,
+                        enabled: enabledModules.length
+                      }, null, 2)}
+                    </pre>
+                  </div>
+                ) : (
+                  enabledModules.slice(0, 6).map((module) => (
+                    <Card 
+                      key={module.id} 
+                      className="p-4 cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-purple-300"
+                      onClick={() => handleModuleClick(module.id)}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <module.icon className="h-5 w-5 text-purple-600" />
+                        <h4 className="font-medium text-sm">{module.title}</h4>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{module.description}</p>
+                    </Card>
+                  ))
+                )}
               </div>
             </TabsContent>
 
