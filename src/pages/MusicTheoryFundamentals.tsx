@@ -8,6 +8,11 @@ import { Separator } from '@/components/ui/separator';
 import { Music, Clock, MapPin, User, GraduationCap, BookOpen, Award, Calendar, CheckCircle } from 'lucide-react';
 
 const MusicTheoryFundamentals = () => {
+  const [showObjectives, setShowObjectives] = React.useState(false);
+  const [showMaterials, setShowMaterials] = React.useState(false);
+  const [showGrading, setShowGrading] = React.useState(false);
+  const [showPolicies, setShowPolicies] = React.useState(false);
+
   const weeklySchedule = [
     {
       month: "August",
@@ -158,213 +163,171 @@ const MusicTheoryFundamentals = () => {
               </CardContent>
             </Card>
 
-            {/* Course Structure */}
+            {/* Course Objectives - Collapsed by default */}
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle>Course Structure & Schedule</CardTitle>
+                <CardTitle className="flex items-center gap-2 cursor-pointer" onClick={() => setShowObjectives(!showObjectives)}>
+                  <GraduationCap className="w-6 h-6" />
+                  Course & Learning Objectives
+                  <span className="ml-auto text-sm text-muted-foreground">
+                    {showObjectives ? 'Hide' : 'Show'} Details
+                  </span>
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-6">
-                  This course is designed as a foundational preparatory course for all music majors and minors. 
-                  To ensure students develop well-rounded musicianship, the course is divided into three 
-                  interdependent components:
-                </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <Card className="border-l-4 border-l-primary">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">1. Keyboard Skills</CardTitle>
-                      <CardDescription>Mondays</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        Focuses on building technical proficiency and practical musicianship at the keyboard.
-                      </p>
-                    </CardContent>
-                  </Card>
+              {showObjectives && (
+                <CardContent>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold mb-4">Course Objectives</h3>
+                      <p className="mb-4 font-medium">By the end of this course, students will be able to:</p>
+                      <ul className="space-y-3 text-muted-foreground">
+                        <li className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          Demonstrate fundamental keyboard proficiency through scales, chords, harmonization, and repertoire.
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          Apply theoretical concepts such as notation, intervals, scales, and chord progressions in written and aural exercises.
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          Recognize and define essential music terminology across historical periods and genres.
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          Integrate keyboard, theory, and historical knowledge into broader musicianship and academic study.
+                        </li>
+                      </ul>
+                    </div>
 
-                  <Card className="border-l-4 border-l-primary">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">2. Music Theory</CardTitle>
-                      <CardDescription>Tuesdays & Thursdays</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        Provides the structural and analytical tools necessary for understanding written music.
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-l-4 border-l-primary">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">3. History & Terminology</CardTitle>
-                      <CardDescription>Fridays</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        Grounds students in vocabulary, stylistic traditions, and cultural contexts that shape music study.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="bg-slate-800 border border-slate-600 rounded-lg p-4">
-                  <h4 className="font-semibold text-white mb-2">Important Requirements:</h4>
-                  <ul className="space-y-1 text-sm text-white">
-                    <li>• Each component has its own grading system and assignments</li>
-                    <li>• Students must remain engaged in all three areas</li>
-                    <li>• A minimum grade of C (74%) in each individual component is required</li>
-                    <li>• Neglecting one component will affect overall progress</li>
-                  </ul>
-                </div>
-              </CardContent>
+                    <div>
+                      <h3 className="font-semibold mb-4">Student Learning Objectives</h3>
+                      <p className="mb-4 font-medium">Upon successful completion, students will demonstrate skills in:</p>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="font-semibold text-primary text-sm mb-2">1. Keyboard Skills</h4>
+                          <ul className="space-y-1 text-xs text-muted-foreground">
+                            <li>• Basic performance skills and technique</li>
+                            <li>• Scales, arpeggios, and primary triads</li>
+                            <li>• Harmonization and transposition</li>
+                          </ul>
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-semibold text-primary text-sm mb-2">2. Music Theory</h4>
+                          <ul className="space-y-1 text-xs text-muted-foreground">
+                            <li>• Notation fluency and construction</li>
+                            <li>• Rhythmic principles and chord progressions</li>
+                            <li>• Harmonic analysis and aural skills</li>
+                          </ul>
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-semibold text-primary text-sm mb-2">3. History & Terminology</h4>
+                          <ul className="space-y-1 text-xs text-muted-foreground">
+                            <li>• Essential music vocabulary</li>
+                            <li>• Major stylistic periods and composers</li>
+                            <li>• Historical and contemporary contexts</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
             </Card>
 
-            {/* Course & Student Learning Objectives */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <GraduationCap className="w-6 h-6" />
-                    Course Objectives
-                  </CardTitle>
-                </CardHeader>
+            {/* Required Materials - Collapsed by default */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 cursor-pointer" onClick={() => setShowMaterials(!showMaterials)}>
+                  <BookOpen className="w-6 h-6" />
+                  Required Materials
+                  <span className="ml-auto text-sm text-muted-foreground">
+                    {showMaterials ? 'Hide' : 'Show'} Details
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              {showMaterials && (
                 <CardContent>
-                  <p className="mb-4 font-medium">By the end of this course, students will be able to:</p>
-                  <ul className="space-y-3 text-muted-foreground">
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      Demonstrate fundamental keyboard proficiency through scales, chords, harmonization, and repertoire.
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      Apply theoretical concepts such as notation, intervals, scales, and chord progressions in written and aural exercises.
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      Recognize and define essential music terminology across historical periods and genres.
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      Integrate keyboard, theory, and historical knowledge into broader musicianship and academic study.
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Student Learning Objectives</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="mb-4 font-medium">Upon successful completion, students will demonstrate skills in:</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <h4 className="font-semibold text-primary mb-2">Keyboard Skills</h4>
+                      <p className="text-sm text-muted-foreground">Alfred's Group Piano for Adults, Book 1 (Lancaster & Renfrow)</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-primary mb-2">Music Theory</h4>
+                      <p className="text-sm text-muted-foreground">Instructor handouts and selected texts (see component syllabus)</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-primary mb-2">History & Terminology</h4>
+                      <p className="text-sm text-muted-foreground">Instructor handouts, online resources, and listening assignments</p>
+                    </div>
+                  </div>
                   
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold text-primary text-sm mb-2">1. Keyboard Skills</h4>
-                      <ul className="space-y-1 text-xs text-muted-foreground">
-                        <li>• Basic performance skills and technique</li>
-                        <li>• Scales, arpeggios, and primary triads</li>
-                        <li>• Harmonization and transposition</li>
-                      </ul>
+                  <Separator className="my-4" />
+                  
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-3">
+                      <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+                      Fundamentals Hub (Lovable/ChatGPT interface) for sight singing and dictation assignments
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+                      Manuscript paper, pencil, and personal device with audio playback/recording
+                    </li>
+                  </ul>
+                </CardContent>
+              )}
+            </Card>
+
+            {/* Grading Policy - Collapsed by default */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 cursor-pointer" onClick={() => setShowGrading(!showGrading)}>
+                  <Award className="w-6 h-6" />
+                  Grading Policy
+                  <span className="ml-auto text-sm text-muted-foreground">
+                    {showGrading ? 'Hide' : 'Show'} Details
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              {showGrading && (
+                <CardContent>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                    <h4 className="font-semibold text-red-800 mb-2">Critical Requirement:</h4>
+                    <p className="text-red-700 text-sm">
+                      Students must earn at least a C (74%) or higher in each component (Keyboard Skills, Theory, and History/Terminology) to pass Fundamentals of Music overall.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                      <span>Keyboard Skills</span>
+                      <Badge variant="secondary">33.3%</Badge>
                     </div>
-                    
-                    <div>
-                      <h4 className="font-semibold text-primary text-sm mb-2">2. Music Theory</h4>
-                      <ul className="space-y-1 text-xs text-muted-foreground">
-                        <li>• Notation fluency and construction</li>
-                        <li>• Rhythmic principles and chord progressions</li>
-                        <li>• Harmonic analysis and aural skills</li>
-                      </ul>
+                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                      <span>Music Theory</span>
+                      <Badge variant="secondary">33.3%</Badge>
                     </div>
-                    
-                    <div>
-                      <h4 className="font-semibold text-primary text-sm mb-2">3. History & Terminology</h4>
-                      <ul className="space-y-1 text-xs text-muted-foreground">
-                        <li>• Essential music vocabulary</li>
-                        <li>• Major stylistic periods and composers</li>
-                        <li>• Historical and contemporary contexts</li>
-                      </ul>
+                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                      <span>History/Terminology</span>
+                      <Badge variant="secondary">33.3%</Badge>
+                    </div>
+                  </div>
+
+                  <div className="bg-muted/30 border border-border rounded-lg p-4">
+                    <h4 className="font-semibold text-foreground mb-2">Example Scenario:</h4>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <p>• Keyboard Skills = 82% (B)</p>
+                      <p>• Theory = 76% (C)</p>
+                      <p>• History/Terminology = 64% (D)</p>
+                      <p className="font-semibold text-foreground">→ Student does NOT pass the course, even though the overall average is 74%.</p>
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            </div>
-
-            {/* Required Materials */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Required Materials</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-primary mb-2">Keyboard Skills</h4>
-                    <p className="text-sm text-muted-foreground">Alfred's Group Piano for Adults, Book 1 (Lancaster & Renfrow)</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-primary mb-2">Music Theory</h4>
-                    <p className="text-sm text-muted-foreground">Instructor handouts and selected texts (see component syllabus)</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-primary mb-2">History & Terminology</h4>
-                    <p className="text-sm text-muted-foreground">Instructor handouts, online resources, and listening assignments</p>
-                  </div>
-                </div>
-                
-                <Separator className="my-4" />
-                
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-3">
-                    <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
-                    Fundamentals Hub (Lovable/ChatGPT interface) for sight singing and dictation assignments
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
-                    Manuscript paper, pencil, and personal device with audio playback/recording
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Grading Policy */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Grading Policy</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                  <h4 className="font-semibold text-red-800 mb-2">Critical Requirement:</h4>
-                  <p className="text-red-700 text-sm">
-                    Students must earn at least a C (74%) or higher in each component (Keyboard Skills, Theory, and History/Terminology) to pass Fundamentals of Music overall.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                    <span>Keyboard Skills</span>
-                    <Badge variant="secondary">33.3%</Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                    <span>Music Theory</span>
-                    <Badge variant="secondary">33.3%</Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                    <span>History/Terminology</span>
-                    <Badge variant="secondary">33.3%</Badge>
-                  </div>
-                </div>
-
-                <div className="bg-muted/30 border border-border rounded-lg p-4">
-                  <h4 className="font-semibold text-foreground mb-2">Example Scenario:</h4>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <p>• Keyboard Skills = 82% (B)</p>
-                    <p>• Theory = 76% (C)</p>
-                    <p>• History/Terminology = 64% (D)</p>
-                    <p className="font-semibold text-foreground">→ Student does NOT pass the course, even though the overall average is 74%.</p>
-                  </div>
-                </div>
-              </CardContent>
+              )}
             </Card>
 
             {/* Weekly Schedule */}
@@ -438,119 +401,76 @@ const MusicTheoryFundamentals = () => {
               </CardContent>
             </Card>
 
-            {/* Class Structure */}
+            {/* Policies - Collapsed by default */}
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle>Weekly Class Structure (Typical)</CardTitle>
+                <CardTitle className="flex items-center gap-2 cursor-pointer" onClick={() => setShowPolicies(!showPolicies)}>
+                  <CheckCircle className="w-6 h-6" />
+                  Course Policies & Information
+                  <span className="ml-auto text-sm text-muted-foreground">
+                    {showPolicies ? 'Hide' : 'Show'} Details
+                  </span>
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4 p-3 bg-muted/50 rounded-lg">
-                    <div className="bg-primary text-primary-foreground rounded px-2 py-1 text-sm font-medium">
-                      5–10 min
-                    </div>
+              {showPolicies && (
+                <CardContent>
+                  <div className="space-y-6">
                     <div>
-                      <h4 className="font-medium">Warm-Up</h4>
-                      <p className="text-sm text-muted-foreground">Sight singing with solfège, rhythm syllables</p>
+                      <h4 className="font-semibold text-primary mb-2">Attendance & Participation</h4>
+                      <p className="text-muted-foreground mb-4">
+                        Because each component meets only once or twice per week, attendance is mandatory. Students are expected to:
+                      </p>
+                      <ul className="space-y-2 text-muted-foreground">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                          Arrive prepared with all required materials
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                          Participate actively in class discussion and performance activities
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                          Submit assignments on time
+                        </li>
+                      </ul>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-4 p-3 bg-muted/50 rounded-lg">
-                    <div className="bg-primary text-primary-foreground rounded px-2 py-1 text-sm font-medium">
-                      25–30 min
-                    </div>
+
+                    <Separator />
+
                     <div>
-                      <h4 className="font-medium">Core Topic</h4>
-                      <p className="text-sm text-muted-foreground">Theory instruction (notation, scales, harmony)</p>
+                      <h4 className="font-semibold text-primary mb-2">Accessibility</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Spelman College is committed to ensuring full participation of all students. If you have a documented 
+                        disability and need reasonable accommodations, contact the Student Access Center at 404-270-5289. 
+                        Located in MacVicar Hall, Room 106.
+                      </p>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-4 p-3 bg-muted/50 rounded-lg">
-                    <div className="bg-primary text-primary-foreground rounded px-2 py-1 text-sm font-medium">
-                      10 min
-                    </div>
+
+                    <Separator />
+
                     <div>
-                      <h4 className="font-medium">Application</h4>
-                      <p className="text-sm text-muted-foreground">Ear training dictation or listening recognition</p>
+                      <h4 className="font-semibold text-primary mb-2">Academic Integrity</h4>
+                      <p className="text-sm text-muted-foreground">
+                        All work must be your own. Submitting work that is not yours will result in course failure. 
+                        If you're having trouble with deadlines or assignments, please talk to Dr. Johnson proactively 
+                        rather than risk academic dishonesty.
+                      </p>
+                    </div>
+
+                    <Separator />
+
+                    <div>
+                      <h4 className="font-semibold text-primary mb-2">Title IX</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Spelman provides a safe learning environment free from discrimination and harassment. 
+                        Faculty are "responsible employees" and must report incidents to the Title IX Director. 
+                        Support services are available through Counseling Services, Health Services, and Public Safety.
+                      </p>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Attendance & Participation */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Attendance & Participation</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Because each component meets only once or twice per week, attendance is mandatory. Students are expected to:
-                </p>
-                <ul className="space-y-2 text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
-                    Arrive prepared with all required materials
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
-                    Participate actively in class discussion and performance activities
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
-                    Submit assignments on time
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Policies */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Course Policies</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="font-semibold text-primary mb-2">Accessibility</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Spelman College is committed to ensuring full participation of all students. If you have a documented 
-                      disability and need reasonable accommodations, contact the Student Access Center at 404-270-5289. 
-                      Located in MacVicar Hall, Room 106.
-                    </p>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <h4 className="font-semibold text-primary mb-2">Academic Integrity</h4>
-                    <p className="text-sm text-muted-foreground">
-                      All work must be your own. Submitting work that is not yours will result in course failure. 
-                      If you're having trouble with deadlines or assignments, please talk to Dr. Johnson proactively 
-                      rather than risk academic dishonesty.
-                    </p>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <h4 className="font-semibold text-primary mb-2">Incomplete Policy</h4>
-                    <p className="text-sm text-muted-foreground">
-                      An Incomplete (IP) may be assigned for extenuating circumstances preventing completion of final 
-                      work. Must be completed by deadline specified on academic calendar or automatically becomes an F.
-                    </p>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <h4 className="font-semibold text-primary mb-2">Title IX</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Spelman provides a safe learning environment free from discrimination and harassment. 
-                      Faculty are "responsible employees" and must report incidents to the Title IX Director. 
-                      Support services are available through Counseling Services, Health Services, and Public Safety.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
+                </CardContent>
+              )}
             </Card>
 
             {/* Get Started Section */}
