@@ -207,9 +207,9 @@ const MusicTheoryFundamentals = () => {
                   </Card>
                 </div>
 
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-amber-800 mb-2">Important Requirements:</h4>
-                  <ul className="space-y-1 text-sm text-amber-700">
+                <div className="bg-slate-800 border border-slate-600 rounded-lg p-4">
+                  <h4 className="font-semibold text-white mb-2">Important Requirements:</h4>
+                  <ul className="space-y-1 text-sm text-white">
                     <li>• Each component has its own grading system and assignments</li>
                     <li>• Students must remain engaged in all three areas</li>
                     <li>• A minimum grade of C (74%) in each individual component is required</li>
