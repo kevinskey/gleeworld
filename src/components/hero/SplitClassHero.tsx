@@ -79,14 +79,16 @@ export const SplitClassHero: React.FC = () => {
                   <p className="text-sm sm:text-base text-muted-foreground mb-3">
                     Survey of African-American Music - explore the rich history and cultural impact of Black musical traditions
                   </p>
-                  <Button 
-                    size="sm" 
-                    variant="secondary"
-                    className="pointer-events-auto shadow-lg flex items-center gap-2"
-                  >
-                    Enter
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button 
+                      size="sm" 
+                      variant="secondary"
+                      className="pointer-events-auto shadow-lg flex items-center gap-2"
+                    >
+                      Enter
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
