@@ -1,7 +1,7 @@
 import { LucideIcon } from 'lucide-react';
 
 // Action types
-export type ActionType = 'modal' | 'navigation' | 'function';
+export type ActionType = 'modal' | 'navigation' | 'function' | 'submenu';
 
 // Base action definition
 export interface UnifiedAction {
@@ -18,6 +18,7 @@ export interface UnifiedAction {
   onClick?: () => void;
   route?: string; // For navigation actions
   modalComponent?: React.ComponentType<any>; // For modal actions
+  submenuActions?: UnifiedAction[]; // For submenu actions
   // Database mapping for permissions
   dbFunctionName?: string;
   // Role restrictions (in addition to database permissions)

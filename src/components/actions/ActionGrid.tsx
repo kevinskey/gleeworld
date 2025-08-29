@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { useNavigate } from "react-router-dom";
 import { useUnifiedActions } from "@/hooks/useUnifiedActions";
 import { ActionWithPermissions, ActionFilterOptions } from "@/types/unified-actions";
 import { ExcuseGenerator } from "@/components/attendance/ExcuseGenerator";
 import { FullAttendanceRecord } from "@/components/attendance/FullAttendanceRecord";
+import { ChevronDown } from "lucide-react";
 
 interface ActionGridProps {
   filterOptions?: ActionFilterOptions;
@@ -90,6 +92,62 @@ export const ActionGrid = ({
         const IconComponent = action.icon;
         const isDisabled = !action.hasPermission;
         
+        // Handle submenu actions
+        if (action.type === 'submenu' && action.submenuActions) {
+          return (
+            <EnhancedTooltip 
+              key={action.id} 
+              content={isDisabled ? "Access denied" : action.description}
+            >
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    className={`h-20 lg:h-24 flex-col space-y-2 text-xs lg:text-sm w-full relative ${
+                      isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                    } transition-all duration-200`}
+                    variant={isDisabled ? "ghost" : "outline"}
+                    disabled={isDisabled}
+                  >
+                    <IconComponent className={`h-6 w-6 lg:h-7 lg:w-7 ${action.iconColor}`} />
+                    <span className="text-center leading-tight font-medium">
+                      {action.title}
+                    </span>
+                    <ChevronDown className="h-3 w-3 absolute bottom-1 right-1" />
+                    {action.isNew && (
+                      <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
+                        NEW
+                      </div>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 bg-background border border-border shadow-lg z-50">
+                  {action.submenuActions
+                    .sort((a, b) => a.title.localeCompare(b.title))
+                    .map((submenuAction) => {
+                      const SubmenuIcon = submenuAction.icon;
+                      return (
+                        <DropdownMenuItem
+                          key={submenuAction.id}
+                          onClick={() => handleActionClick(submenuAction as ActionWithPermissions)}
+                          className="cursor-pointer"
+                        >
+                          <SubmenuIcon className={`mr-2 h-4 w-4 ${submenuAction.iconColor}`} />
+                          <div className="flex flex-col">
+                            <span className="font-medium">{submenuAction.title}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {submenuAction.description}
+                            </span>
+                          </div>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </EnhancedTooltip>
+          );
+        }
+        
+        // Regular action buttons
         return (
           <EnhancedTooltip 
             key={action.id} 

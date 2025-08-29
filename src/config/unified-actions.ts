@@ -164,53 +164,7 @@ export const UNIFIED_ACTIONS: UnifiedAction[] = [
     dbFunctionName: 'scheduling_management'
   },
 
-  // Members Actions
-  {
-    id: 'auditions',
-    title: 'Auditions',
-    description: 'Manage audition process and candidate evaluations',
-    icon: Mic,
-    iconColor: 'text-pink-600',
-    category: 'members',
-    type: 'navigation',
-    route: '/auditions',
-    isActive: true,
-    dbFunctionName: 'audition_management'
-  },
-  {
-    id: 'attendance',
-    title: 'Attendance',
-    description: 'Track and manage member attendance for rehearsals and events',
-    icon: UserCheck,
-    iconColor: 'text-emerald-600',
-    category: 'members',
-    type: 'modal',
-    isActive: true,
-    dbFunctionName: 'attendance_management'
-  },
-  {
-    id: 'submit-excuse',
-    title: 'Submit Excuse',
-    description: 'Submit excuse requests for missed rehearsals or events',
-    icon: Clock,
-    iconColor: 'text-amber-600',
-    category: 'members',
-    type: 'modal',
-    isActive: true,
-    dbFunctionName: 'attendance_management'
-  },
-  {
-    id: 'view-full-record',
-    title: 'View Full Record',
-    description: 'View complete attendance history and statistics',
-    icon: FileText,
-    iconColor: 'text-blue-600',
-    category: 'members',
-    type: 'navigation',
-    route: '/member/attendance/full-record',
-    isActive: true,
-    dbFunctionName: 'attendance_management'
-  },
+  // Members Actions (alphabetized)
   {
     id: 'attendance-policy',
     title: 'Attendance Policy',
@@ -224,17 +178,39 @@ export const UNIFIED_ACTIONS: UnifiedAction[] = [
     dbFunctionName: 'handbook'
   },
   {
-    id: 'user-management',
-    title: 'User Management',
-    description: 'Manage user accounts, roles, and member information',
-    icon: Users,
-    iconColor: 'text-gray-600',
+    id: 'attendance',
+    title: 'Attendance',
+    description: 'Track and manage member attendance for rehearsals and events',
+    icon: UserCheck,
+    iconColor: 'text-emerald-600',
+    category: 'members',
+    type: 'modal',
+    isActive: true,
+    dbFunctionName: 'attendance_management'
+  },
+  {
+    id: 'auditions',
+    title: 'Auditions',
+    description: 'Manage audition process and candidate evaluations',
+    icon: Mic,
+    iconColor: 'text-pink-600',
     category: 'members',
     type: 'navigation',
-    route: '/user-management',
+    route: '/auditions',
     isActive: true,
-    dbFunctionName: 'user_management',
-    requiredRoles: ['admin', 'super_admin']
+    dbFunctionName: 'audition_management'
+  },
+  {
+    id: 'musical-leadership',
+    title: 'Musical Leadership',
+    description: 'Coordinate musical direction and leadership activities',
+    icon: School,
+    iconColor: 'text-violet-600',
+    category: 'members',
+    type: 'navigation',
+    route: '/musical-leadership',
+    isActive: true,
+    dbFunctionName: 'musical_leadership'
   },
   {
     id: 'permissions',
@@ -250,16 +226,102 @@ export const UNIFIED_ACTIONS: UnifiedAction[] = [
     requiredRoles: ['admin', 'super_admin']
   },
   {
-    id: 'musical-leadership',
-    title: 'Musical Leadership',
-    description: 'Coordinate musical direction and leadership activities',
-    icon: School,
-    iconColor: 'text-violet-600',
+    id: 'section-leader-tools',
+    title: 'Section Leader Tools',
+    description: 'Access section leader utilities and resources',
+    icon: UserCheck,
+    iconColor: 'text-indigo-600',
+    category: 'members',
+    type: 'submenu',
+    isActive: true,
+    dbFunctionName: 'section_leader_management',
+    requiredExecPositions: ['section_leader_s1', 'section_leader_s2', 'section_leader_a1', 'section_leader_a2', 'student_conductor'],
+    submenuActions: [
+      {
+        id: 'section-leader',
+        title: 'Section Leader',
+        description: 'Section leader dashboard and tools',
+        icon: UserCheck,
+        iconColor: 'text-blue-600',
+        category: 'members',
+        type: 'navigation',
+        route: '/section-leader',
+        isActive: true,
+        dbFunctionName: 'section_leader_management'
+      },
+      {
+        id: 'sight-reading-generator',
+        title: 'Sight Reading Generator',
+        description: 'Generate sight reading exercises for students',
+        icon: Music,
+        iconColor: 'text-green-600',
+        category: 'members',
+        type: 'navigation',
+        route: '/sight-reading-generator',
+        isActive: true,
+        dbFunctionName: 'sight_reading_tools'
+      },
+      {
+        id: 'sight-reading-submission',
+        title: 'Sight Reading Submission',
+        description: 'View and manage sight reading submissions',
+        icon: FileText,
+        iconColor: 'text-purple-600',
+        category: 'members',
+        type: 'navigation',
+        route: '/sight-reading-submissions',
+        isActive: true,
+        dbFunctionName: 'sight_reading_tools'
+      },
+      {
+        id: 'student-conductor',
+        title: 'Student Conductor',
+        description: 'Student conductor tools and resources',
+        icon: School,
+        iconColor: 'text-amber-600',
+        category: 'members',
+        type: 'navigation',
+        route: '/student-conductor',
+        isActive: true,
+        dbFunctionName: 'student_conductor_management'
+      }
+    ]
+  },
+  {
+    id: 'submit-excuse',
+    title: 'Submit Excuse',
+    description: 'Submit excuse requests for missed rehearsals or events',
+    icon: Clock,
+    iconColor: 'text-amber-600',
+    category: 'members',
+    type: 'modal',
+    isActive: true,
+    dbFunctionName: 'attendance_management'
+  },
+  {
+    id: 'user-management',
+    title: 'User Management',
+    description: 'Manage user accounts, roles, and member information',
+    icon: Users,
+    iconColor: 'text-gray-600',
     category: 'members',
     type: 'navigation',
-    route: '/musical-leadership',
+    route: '/user-management',
     isActive: true,
-    dbFunctionName: 'musical_leadership'
+    dbFunctionName: 'user_management',
+    requiredRoles: ['admin', 'super_admin']
+  },
+  {
+    id: 'view-full-record',
+    title: 'View Full Record',
+    description: 'View complete attendance history and statistics',
+    icon: FileText,
+    iconColor: 'text-blue-600',
+    category: 'members',
+    type: 'navigation',
+    route: '/member/attendance/full-record',
+    isActive: true,
+    dbFunctionName: 'attendance_management'
   },
 
   // Media Actions
