@@ -449,7 +449,7 @@ export default function UnifiedBookingPage() {
           style={{ backgroundImage: `url(/lovable-uploads/ab597cd8-2a01-4085-9e87-e6745610d2f8.png)` }}
         ></div>
         
-        <div className="relative max-w-6xl mx-auto px-4 py-8">
+        <div className="relative max-w-6xl mx-auto px-2 md:px-4 py-8">
           
           {/* Header */}
           <div className="text-center mb-12">
