@@ -60,6 +60,8 @@ const GleeAcademy = () => {
   const handleCourseClick = (courseId: string) => {
     if (courseId === 'african-american-music') {
       navigate('/classes/mus240');
+    } else if (courseId === 'music-fundamentals') {
+      navigate('/music-theory-fundamentals');
     }
   };
 
@@ -107,7 +109,7 @@ const GleeAcademy = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {courses.map(course => {
               const IconComponent = course.icon;
-              const isClickable = course.id === 'african-american-music';
+              const isClickable = course.id === 'african-american-music' || course.id === 'music-fundamentals';
               return <Card 
                 key={course.id} 
                 className={`group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm h-full flex flex-col ${isClickable ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
@@ -148,7 +150,8 @@ const GleeAcademy = () => {
                           size="sm"
                           onClick={isClickable ? (e) => { e.stopPropagation(); handleCourseClick(course.id); } : undefined}
                         >
-                          {course.id === 'african-american-music' ? 'Enter MUS 240' : 'Learn More'}
+                          {course.id === 'african-american-music' ? 'Enter MUS 240' : 
+                           course.id === 'music-fundamentals' ? 'Enter Music Theory' : 'Learn More'}
                           <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                       </div>
