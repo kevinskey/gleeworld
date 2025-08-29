@@ -6,7 +6,7 @@ import { Music, Settings } from "lucide-react";
 import { ResponsiveNavigation } from "@/components/navigation/ResponsiveNavigation";
 import { HeaderClock } from "@/components/ui/header-clock";
 import { MusicStaffMenu } from "@/components/ui/music-staff-menu";
-import { HeaderRadioPlayer } from "@/components/radio/HeaderRadioPlayer";
+
 import { useAuth } from "@/contexts/AuthContext";
 
 export const PublicHeader = () => {
