@@ -1,361 +1,207 @@
+
 import { useParams, Link } from 'react-router-dom';
 import { WEEKS } from '../../data/mus240Weeks';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { ExternalLink, Play, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-
-// Helper function to extract video ID from YouTube URLs
-const getVideoId = (url: string) => {
-  try {
-    const urlObj = new URL(url);
-    if (urlObj.hostname === 'youtu.be') {
-      return urlObj.pathname.slice(1);
-    }
-    if (urlObj.hostname.includes('youtube.com')) {
-      const videoId = urlObj.searchParams.get('v');
-      if (videoId) return videoId;
-    }
-    // Handle shortened URLs and other formats
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-      /youtube\.com\/v\/([^&\n?#]+)/
-    ];
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match) return match[1];
-    }
-  } catch {
-    return null;
-  }
-  return null;
-};
-
-// Create education-friendly embed URL with privacy-enhanced mode
-const createEmbedUrl = (videoId: string) => {
-  const params = new URLSearchParams({
-    autoplay: '0',
-    rel: '0',
-    modestbranding: '1',
-    fs: '1',
-    controls: '1',
-    cc_load_policy: '1',
-    iv_load_policy: '3',
-    playsinline: '1',
-    enablejsapi: '1'
-  });
-  // Use regular YouTube for better compatibility with older videos
-  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
-};
-
-// Removed problematic video availability checking
-
-
-type Comment = { 
-  id: string; 
-  week: number; 
-  track_index: number | null; 
-  author: string | null; 
-  content: string; 
-  created_at: string; 
-};
+import { ArrowLeft, Play, ExternalLink, Calendar, Music, Clock, Globe } from 'lucide-react';
+import backgroundImage from '@/assets/mus240-background.jpg';
 
 export default function WeekDetail() {
-  console.log('WeekDetail component loading...');
-  const { week } = useParams();
-  const num = Number(week);
-  const wk = WEEKS.find(w => w.number === num);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [author, setAuthor] = useState('');
-  const [content, setContent] = useState('');
-  const [failedEmbeds, setFailedEmbeds] = useState<Set<number>>(new Set());
+  const { weekNumber } = useParams();
+  const week = WEEKS.find(w => w.number === parseInt(weekNumber || '0'));
+  const [embedFailed, setEmbedFailed] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    (async () => {
-      const { data, error } = await supabase
-        .from('smaam_comments')
-        .select('*')
-        .eq('week', num)
-        .order('created_at', { ascending: false });
-      if (!error && data) setComments(data as Comment[]);
-    })();
-
-    // Removed video availability checking
-  }, [num, wk]);
-
-  const post = async (track_index: number | null, a: string, c: string) => {
-    if (!c.trim()) return;
-    const { data, error } = await supabase
-      .from('smaam_comments')
-      .insert([{ week: num, track_index, author: a || null, content: c }])
-      .select();
-    if (!error && data) {
-      setComments(prev => [...data as Comment[], ...prev]);
-      setAuthor('');
-      setContent('');
-    }
-  };
-
-  const handleEmbedError = (trackIndex: number) => {
-    setFailedEmbeds(prev => new Set([...prev, trackIndex]));
-  };
-
-  if (!wk) {
-    console.log('Week not found for number:', num);
+  if (!week) {
     return (
       <UniversalLayout showHeader={true} showFooter={false}>
-        <main className="max-w-5xl mx-auto p-4">
-          <p>Week not found.</p>
-          <Link to="/classes/mus240/listening" className="text-blue-600 hover:underline">← Back to Listening Hub</Link>
-        </main>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-4">Week Not Found</h1>
+            <Link to="/classes/mus240/listening" className="text-blue-600 hover:underline">
+              ← Back to Listening Hub
+            </Link>
+          </div>
+        </div>
       </UniversalLayout>
     );
   }
 
-  console.log('Week found:', wk);
-  console.log('Week tracks:', wk.tracks);
-  console.log('Total tracks found for week', num, ':', wk.tracks.length);
+  const handleEmbedError = (trackIndex: number) => {
+    setEmbedFailed(prev => ({ ...prev, [trackIndex]: true }));
+  };
+
+  const getVideoId = (url: string): string | null => {
+    const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    return match ? match[1] : null;
+  };
+
+  const isHistoricalVideo = (title: string): boolean => {
+    const historicalKeywords = ['1939', 'field hollers', 'lomax', 'historical', 'archive', 'library of congress'];
+    return historicalKeywords.some(keyword => title.toLowerCase().includes(keyword));
+  };
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
-      <main className="max-w-5xl mx-auto p-4">
-        <header className="mb-4">
-          <h1 className="text-2xl font-semibold">Week {wk.number}</h1>
-          <div className="text-xs text-muted-foreground">{wk.date}</div>
-          <p className="mt-2">{wk.title}</p>
-          <Link to="/classes/mus240/listening" className="text-sm text-blue-600 hover:underline">← All weeks</Link>
-        </header>
+      <div 
+        className="min-h-screen bg-cover bg-center bg-no-repeat relative"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10"></div>
+        
+        <main className="relative z-10 max-w-5xl mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <Link 
+              to="/classes/mus240/listening" 
+              className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-6 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 hover:bg-white/20"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Listening Hub
+            </Link>
+            
+            <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/30">
+              <div className="flex items-start gap-6 mb-6">
+                <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl shadow-lg flex-shrink-0">
+                  {week.number}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 text-gray-500 mb-2">
+                    <Calendar className="h-4 w-4" />
+                    <time className="text-sm font-medium">
+                      {new Date(week.date).toLocaleDateString('en-US', { 
+                        weekday: 'long',
+                        month: 'long', 
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </time>
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                    {week.title}
+                  </h1>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-6 text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Music className="h-5 w-5" />
+                  <span className="font-medium">{week.tracks.length} Listening Examples</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  <span>Week {week.number} Materials</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <section className="rounded-2xl border p-4 mb-6">
-          <h2 className="text-lg font-medium">Listening</h2>
-          <ul className="mt-2 space-y-3">
-            {wk.tracks.map((t, i) => {
-              const isYouTube = t.url.includes('youtube.com') || t.url.includes('youtu.be');
-              const videoId = getVideoId(t.url);
-              const embedUrl = videoId ? createEmbedUrl(videoId) : null;
-              
-              // Auto-detect problematic videos that likely won't embed
-              const isHistoricalVideo = t.title.includes('Fisk Jubilee') || 
-                                       t.title.includes('Ma Rainey') || 
-                                       t.title.includes('Field Hollers') ||
-                                       t.title.includes('1909') || 
-                                       t.title.includes('1923') ||
-                                       t.title.includes('1939') ||
-                                       t.title.toLowerCase().includes('historical');
-              
-              const embedFailed = failedEmbeds.has(i) || isHistoricalVideo;
-              
-              console.log(`Track ${i}:`, { 
-                title: t.title, 
-                url: t.url, 
-                isYouTube, 
-                videoId, 
-                embedUrl, 
-                embedFailed,
-                isHistoricalVideo
-              });
-              
-              // Extra debugging for Fisk track
-              if (t.title.includes('Fisk')) {
-                console.log('🎵 FISK TRACK DEBUG:', {
-                  title: t.title,
-                  url: t.url,
-                  isYouTube,
-                  videoId,
-                  embedUrl,
-                  embedFailed,
-                  isHistoricalVideo,
-                  shouldShowEmbed: isYouTube && videoId && !embedFailed
-                });
-              }
-              
+          {/* Tracks Section */}
+          <section className="space-y-6">
+            {week.tracks.map((track, index) => {
+              const isYouTube = track.url.includes('youtube.com') || track.url.includes('youtu.be');
+              const videoId = getVideoId(track.url);
+              const isHistorical = isHistoricalVideo(track.title);
+              const hasEmbedFailed = embedFailed[index];
+
               return (
-                <li key={i} className="rounded-xl border p-3">
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <div>
-                      <div className="font-medium">{t.title}</div>
-                      <div className="text-xs text-muted-foreground">{t.source}</div>
+                <div key={index} className="bg-white/95 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-start gap-3">
+                      <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">
+                        {index + 1}
+                      </div>
+                      <span className="flex-1">{track.title}</span>
+                    </h3>
+                    <div className="ml-11 flex items-center gap-2 text-gray-500">
+                      <Globe className="h-4 w-4" />
+                      <span className="text-sm font-medium">Source: {track.source}</span>
                     </div>
-                    <a 
-                      href={t.url} 
-                      target="_blank" 
-                      rel="noopener" 
-                      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      Open on {t.source}
-                    </a>
                   </div>
 
                   {/* YouTube embed with enhanced handling */}
                   {isYouTube && videoId && (
                     <div className="mb-3">
-                      <div className="text-xs text-muted-foreground mb-2">
-                        DEBUG: embedFailed={embedFailed.toString()}, isHistoricalVideo={isHistoricalVideo.toString()}, videoId={videoId}
-                      </div>
-                      {!embedFailed ? (
+                      {!hasEmbedFailed ? (
                         <div className="relative">
                           <iframe
-                            src={embedUrl}
-                            title={t.title}
-                            className="w-full aspect-video rounded-lg"
+                            className="w-full aspect-video rounded-xl shadow-lg"
+                            src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+                            title={track.title}
                             frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
-                            referrerPolicy="strict-origin-when-cross-origin"
-                            onError={(e) => {
-                              console.log('❌ Iframe error for:', t.title);
-                              handleEmbedError(i);
-                            }}
-                            onLoad={(e) => {
-                              console.log('✅ Iframe loaded for:', t.title);
-                              // Check for embedding restrictions after a delay
-                              setTimeout(() => {
-                                const iframe = e.currentTarget;
-                                if (iframe && iframe.offsetHeight < 100) {
-                                  console.log('🚫 Video likely blocked, switching to fallback for:', t.title);
-                                  handleEmbedError(i);
-                                }
-                              }, 3000);
-                            }}
-                          />
-                          {/* Fallback detection overlay */}
-                          <div 
-                            className="absolute inset-0 pointer-events-none"
-                            onError={() => {
-                              console.log('❌ Overlay error for:', t.title);
-                              handleEmbedError(i);
-                            }}
+                            onError={() => handleEmbedError(index)}
                           />
                         </div>
                       ) : (
-                        /* Fallback to thumbnail with modal player */
-                        <div className="relative group">
-                          <div 
-                            className="cursor-pointer relative"
-                            onClick={() => {
-                              // Open directly in YouTube
-                              window.open(t.url, '_blank');
-                            }}
-                          >
-                            <img 
-                              src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
-                              alt={t.title}
-                              className="w-full aspect-video object-cover rounded-lg"
-                              onError={(e) => {
-                                e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                              }}
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors rounded-lg">
-                              <div className="bg-red-600 text-white p-4 rounded-full group-hover:scale-110 transition-transform shadow-lg">
-                                <Play className="h-8 w-8 ml-1" />
-                              </div>
+                        <div className="w-full aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-gray-300">
+                          <div className="text-center p-6 max-w-md">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                              <Play className="h-8 w-8 text-red-600" />
                             </div>
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 rounded-b-lg">
-                              <p className="text-white font-medium">Click to play video</p>
-                              <p className="text-white/80 text-sm">{t.title}</p>
-                            </div>
+                            <h4 className="font-semibold text-gray-900 mb-2">Video Restricted</h4>
+                            <p className="text-sm text-gray-600 mb-4">
+                              This historical recording has embedding restrictions.
+                            </p>
+                            <a
+                              href={track.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              Watch on YouTube
+                            </a>
                           </div>
-                          
-                          <Alert className="mt-2">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>
-                              This historical recording cannot be embedded due to YouTube restrictions. Click the thumbnail above to watch on YouTube, or use the "Open on YouTube" button.
-                            </AlertDescription>
-                          </Alert>
                         </div>
                       )}
                     </div>
                   )}
 
-                  {/* Show notice for failed embeds only */}
+                  {/* Non-YouTube content */}
+                  {!isYouTube && (
+                    <div className="w-full aspect-video bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl flex items-center justify-center border border-blue-200 mb-3">
+                      <div className="text-center p-6">
+                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                          <ExternalLink className="h-8 w-8 text-blue-600" />
+                        </div>
+                        <h4 className="font-semibold text-gray-900 mb-2">External Resource</h4>
+                        <p className="text-sm text-gray-600 mb-4">
+                          This content is hosted on {track.source}
+                        </p>
+                        <a
+                          href={track.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          View Resource
+                        </a>
+                      </div>
+                    </div>
+                  )}
 
-
-                  <TrackCommentBox onPost={(a, c) => post(i, a, c)} />
-                  <CommentList items={comments.filter(c => c.track_index === i)} label={`Track ${i + 1}`} />
-                </li>
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-3 ml-11">
+                    <a
+                      href={track.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span className="text-sm font-medium">Open in New Tab</span>
+                    </a>
+                  </div>
+                </div>
               );
             })}
-          </ul>
-        </section>
-
-        <section className="rounded-2xl border p-4">
-          <h2 className="text-lg font-medium">General Week Comments</h2>
-          <div className="mt-2 flex flex-col gap-2">
-            <input 
-              className="border rounded-xl p-2" 
-              placeholder="Your name (optional)" 
-              value={author} 
-              onChange={e => setAuthor(e.target.value)} 
-            />
-            <textarea 
-              className="border rounded-xl p-2 min-h-[90px]" 
-              placeholder="Share your insight or question…" 
-              value={content} 
-              onChange={e => setContent(e.target.value)} 
-            />
-            <button 
-              className="px-3 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors self-start" 
-              onClick={() => post(null, author, content)}
-            >
-              Post
-            </button>
-          </div>
-          <CommentList items={comments.filter(c => c.track_index === null)} label="Week" />
-        </section>
-      </main>
+          </section>
+        </main>
+      </div>
     </UniversalLayout>
-  );
-}
-
-function TrackCommentBox({ onPost }: { onPost: (author: string, content: string) => void }) {
-  const [a, setA] = useState('');
-  const [c, setC] = useState('');
-  
-  const handlePost = () => {
-    onPost(a, c);
-    setA('');
-    setC('');
-  };
-
-  return (
-    <div className="mt-3 flex flex-col gap-2">
-      <input 
-        className="border rounded-xl p-2" 
-        placeholder="Your name (optional)" 
-        value={a} 
-        onChange={e => setA(e.target.value)} 
-      />
-      <textarea 
-        className="border rounded-xl p-2 min-h-[70px]" 
-        placeholder="Comment on this track…" 
-        value={c} 
-        onChange={e => setC(e.target.value)} 
-      />
-      <button 
-        className="self-start px-3 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors" 
-        onClick={handlePost}
-      >
-        Post for this track
-      </button>
-    </div>
-  );
-}
-
-function CommentList({ items, label }: { items: Comment[]; label: string }) {
-  if (!items.length) return <div className="mt-3 text-sm text-muted-foreground">No comments yet.</div>;
-  
-  return (
-    <div className="mt-3 space-y-2">
-      {items.map(c => (
-        <div key={c.id} className="rounded-xl border p-3 bg-muted/50">
-          <div className="text-xs text-muted-foreground">
-            {label} • {c.author || 'Anonymous'} • {new Date(c.created_at).toLocaleString()}
-          </div>
-          <div className="mt-1">{c.content}</div>
-        </div>
-      ))}
-    </div>
   );
 }
