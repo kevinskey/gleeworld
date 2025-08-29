@@ -453,8 +453,8 @@ export default function UnifiedBookingPage() {
           
           {/* Header */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-primary to-primary/80 rounded-full mb-6 shadow-xl animate-fade-in">
-              <CalendarIcon className="h-12 w-12 text-primary-foreground" />
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-full mb-6 shadow-xl animate-fade-in">
+              <CalendarIcon className="h-6 w-6 text-primary-foreground" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent mb-4 leading-tight font-dancing">
               Book an Appointment with Doc
