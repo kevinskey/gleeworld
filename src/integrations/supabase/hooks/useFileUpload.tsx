@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 
 export interface UploadProgress {
   file: File;
@@ -13,6 +13,7 @@ export interface UploadProgress {
 export function useFileUpload() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
+  const { toast } = useToast();
 
   const uploadFile = async (file: File, bucket: string, path?: string): Promise<string | null> => {
     try {
@@ -30,7 +31,11 @@ export function useFileUpload() {
 
       if (error) {
         console.error('Upload error:', error);
-        toast.error('Failed to upload file');
+        toast({
+          title: "Upload Failed",
+          description: "Failed to upload file",
+          variant: "destructive",
+        });
         return null;
       }
 
@@ -42,7 +47,11 @@ export function useFileUpload() {
       return urlData.publicUrl;
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload file');
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload file",
+        variant: "destructive",
+      });
       return null;
     } finally {
       setUploading(false);
@@ -149,10 +158,17 @@ export function useFileUpload() {
     const errorCount = results.filter(r => r.status === 'error').length;
     
     if (successCount > 0) {
-      toast.success(`Successfully uploaded ${successCount} file${successCount > 1 ? 's' : ''}`);
+      toast({
+        title: "Upload Successful",
+        description: `Successfully uploaded ${successCount} file${successCount > 1 ? 's' : ''}`,
+      });
     }
     if (errorCount > 0) {
-      toast.error(`Failed to upload ${errorCount} file${errorCount > 1 ? 's' : ''}`);
+      toast({
+        title: "Upload Errors",
+        description: `Failed to upload ${errorCount} file${errorCount > 1 ? 's' : ''}`,
+        variant: "destructive",
+      });
     }
 
     return results;
