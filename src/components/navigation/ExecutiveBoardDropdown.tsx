@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from '@/components/ui/dropdown-menu';
-import { Crown, ChevronRight, User, Eye } from 'lucide-react';
+import { Crown, User, Eye } from 'lucide-react';
 import { useExecutiveBoardMembers } from '@/hooks/useExecutiveBoardMembers';
 
 export const ExecutiveBoardDropdown: React.FC = () => {
@@ -34,7 +34,6 @@ export const ExecutiveBoardDropdown: React.FC = () => {
       <DropdownMenuSubTrigger className="cursor-pointer">
         <Crown className="mr-2 h-4 w-4" />
         Executive Board
-        <ChevronRight className="ml-auto h-4 w-4" />
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent className="w-64 bg-background border border-border shadow-lg z-[210]">
         {/* Overview Dashboard */}
@@ -50,7 +49,10 @@ export const ExecutiveBoardDropdown: React.FC = () => {
         {members.map((member) => (
           <DropdownMenuItem 
             key={member.user_id}
-            onClick={() => navigate(`/admin/executive-board/member/${member.user_id}`)}
+            onClick={() => {
+              console.log('Navigating to member dashboard:', member.user_id);
+              navigate(`/dashboard/executive-board/member/${member.user_id}`);
+            }}
             className="cursor-pointer"
           >
             <User className="mr-2 h-4 w-4" />
