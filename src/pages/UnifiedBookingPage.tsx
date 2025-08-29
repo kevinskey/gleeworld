@@ -445,11 +445,9 @@ export default function UnifiedBookingPage() {
       <div className="min-h-screen relative">
         {/* Background Image */}
         <div 
-          className="absolute inset-0 bg-contain bg-center bg-no-repeat opacity-20" 
+          className="absolute inset-0 bg-contain bg-center bg-no-repeat opacity-30" 
           style={{ backgroundImage: `url(/lovable-uploads/ab597cd8-2a01-4085-9e87-e6745610d2f8.png)` }}
         ></div>
-        {/* Subtle background color */}
-        <div className="absolute inset-0 bg-background"></div>
         
         <div className="relative max-w-6xl mx-auto px-4 py-8">
           
