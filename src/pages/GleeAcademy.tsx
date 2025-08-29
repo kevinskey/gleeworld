@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Music, BookOpen, Users, Mic, Eye, Crown, ChevronRight, GraduationCap, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 const courses = [{
   id: 'choral-conducting',
   title: 'Choral Conducting and Literature',
@@ -54,6 +55,14 @@ const courses = [{
   highlights: ['Leadership Skills', 'Mentorship Training', 'Team Building', 'Communication']
 }];
 const GleeAcademy = () => {
+  const navigate = useNavigate();
+  
+  const handleCourseClick = (courseId: string) => {
+    if (courseId === 'african-american-music') {
+      navigate('/classes/mus240');
+    }
+  };
+
   return <UniversalLayout>
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         {/* Hero Section */}
@@ -98,7 +107,12 @@ const GleeAcademy = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {courses.map(course => {
               const IconComponent = course.icon;
-              return <Card key={course.id} className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm">
+              const isClickable = course.id === 'african-american-music';
+              return <Card 
+                key={course.id} 
+                className={`group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm h-full flex flex-col ${isClickable ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
+                onClick={isClickable ? () => handleCourseClick(course.id) : undefined}
+              >
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -115,22 +129,26 @@ const GleeAcademy = () => {
                         {course.title}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="flex-1 flex flex-col">
                       <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
                         {course.description}
                       </p>
                       
-                      <div className="space-y-3">
+                      <div className="space-y-3 flex-1 flex flex-col">
                         <h4 className="font-medium text-sm text-foreground">Course Highlights:</h4>
-                        <ul className="space-y-1">
+                        <ul className="space-y-1 flex-1">
                           {course.highlights.map((highlight, index) => <li key={index} className="flex items-center gap-2 text-xs text-muted-foreground">
                               <ChevronRight className="h-3 w-3 text-primary flex-shrink-0" />
                               {highlight}
                             </li>)}
                         </ul>
                         
-                        <Button className="w-full mt-4 group-hover:bg-primary/90 transition-colors" size="sm">
-                          Learn More
+                        <Button 
+                          className="w-full mt-4 group-hover:bg-primary/90 transition-colors" 
+                          size="sm"
+                          onClick={isClickable ? (e) => { e.stopPropagation(); handleCourseClick(course.id); } : undefined}
+                        >
+                          {course.id === 'african-american-music' ? 'Enter MUS 240' : 'Learn More'}
                           <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                       </div>
