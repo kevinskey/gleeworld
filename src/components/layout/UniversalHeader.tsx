@@ -107,14 +107,16 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
               </SheetTrigger>
               <SheetContent side="right" className="w-64">
                 <nav className="flex flex-col gap-2 mt-8">
-                  <Button 
-                    variant={location.pathname === '/dashboard' ? "default" : "ghost"}
-                    onClick={() => navigate('/dashboard')}
-                    className="justify-start"
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    My Dashboard
-                  </Button>
+                  {isAdmin && (
+                    <Button 
+                      variant={location.pathname === '/dashboard' ? "default" : "ghost"}
+                      onClick={() => navigate('/dashboard')}
+                      className="justify-start"
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      My Dashboard
+                    </Button>
+                  )}
                   <Button 
                     variant={location.pathname === '/dashboard/member' ? "default" : "ghost"}
                     onClick={() => navigate('/dashboard/member')}
@@ -199,13 +201,15 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     <DropdownMenuSeparator />
                     
                     {/* Main Dashboard Views */}
-                    <DropdownMenuItem 
-                      onClick={() => navigate('/dashboard')}
-                      className="cursor-pointer"
-                    >
-                      <User className="mr-2 h-4 w-4" />
-                      My Dashboard
-                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/dashboard')}
+                        className="cursor-pointer"
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        My Dashboard
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem 
                       onClick={() => navigate('/dashboard/member')}
                       className="cursor-pointer"
@@ -238,15 +242,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     )}
                     
                     <DropdownMenuSeparator />
-                    
-                    {/* MUS240 Class View */}
-                    <DropdownMenuItem 
-                      onClick={() => navigate('/classes/mus240')}
-                      className="cursor-pointer"
-                    >
-                      <Music className="mr-2 h-4 w-4" />
-                      MUS 240 Class
-                    </DropdownMenuItem>
                     
                     {/* Public View */}
                     <DropdownMenuItem 

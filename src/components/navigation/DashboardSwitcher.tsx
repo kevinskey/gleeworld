@@ -16,7 +16,14 @@ export const DashboardSwitcher = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
   
-  if (!user || !userProfile || !isAdmin(userProfile.role)) {
+  if (!user || !userProfile) {
+    return null;
+  }
+
+  // Check admin permissions using profile flags
+  const hasAdminAccess = userProfile.is_admin || userProfile.is_super_admin || userProfile.is_exec_board;
+  
+  if (!hasAdminAccess) {
     return null;
   }
 

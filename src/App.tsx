@@ -147,6 +147,7 @@ import FirstYearConsolePage from "./pages/console/FirstYearConsolePage";
 import SetupCrewPage from "./pages/SetupCrewPage";
 import { Onboarding } from "./pages/Onboarding";
 import StudentRegistration from "./pages/StudentRegistration";
+import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import ClassLanding from "./pages/mus240/ClassLanding";
 import SyllabusPage from "./pages/mus240/SyllabusPage";
 import AssignmentWeek from "./pages/mus240/AssignmentWeek";
@@ -336,16 +337,18 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <UniversalLayout>
-                      <UnifiedDashboard />
-                    </UniversalLayout>
-                  </ProtectedRoute>
-                 } 
-               />
+               <Route 
+                 path="/dashboard" 
+                 element={
+                   <ProtectedRoute>
+                     <AdminOnlyRoute>
+                       <UniversalLayout>
+                         <UnifiedDashboard />
+                       </UniversalLayout>
+                     </AdminOnlyRoute>
+                   </ProtectedRoute>
+                  } 
+                />
                <Route 
                  path="/dashboard/member" 
                  element={
@@ -400,9 +403,11 @@ const App = () => {
                   path="/admin" 
                   element={
                     <ProtectedRoute>
-                      <UniversalLayout>
-                        <UnifiedDashboard />
-                      </UniversalLayout>
+                      <AdminOnlyRoute>
+                        <UniversalLayout>
+                          <UnifiedDashboard />
+                        </UniversalLayout>
+                      </AdminOnlyRoute>
                     </ProtectedRoute>
                    } 
                  />

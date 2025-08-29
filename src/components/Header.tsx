@@ -255,7 +255,6 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
     { id: 'member', label: 'Member Dashboard', icon: Users, route: '/dashboard/member' },
     { id: 'fan', label: 'Fan', icon: Heart, route: '/dashboard/fan' },
     { id: 'alumnae', label: 'Alumnae', icon: GraduationCap, route: '/dashboard/alumnae' },
-    { id: 'mus240', label: 'MUS 240 Class', icon: BookOpen, route: '/classes/mus240' },
     { id: 'public', label: 'Public', icon: Globe, route: '/dashboard/public' }
   ];
 
@@ -263,7 +262,6 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
     if (location.pathname === '/dashboard/member') return 'Member Dashboard';
     if (location.pathname === '/dashboard/fan') return 'Fan';
     if (location.pathname === '/dashboard/alumnae') return 'Alumnae';
-    if (location.pathname === '/dashboard/mus240') return 'MUS 240 Class';
     if (location.pathname === '/dashboard/public') return 'Public';
     if (location.pathname === '/dashboard') return 'My Dashboard';
     return 'Super Admin Dashboard';
