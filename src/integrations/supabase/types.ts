@@ -12705,8 +12705,13 @@ export type Database = {
           created_by: string | null
           description: string
           display_order: number | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
           id: string
           is_active: boolean
+          is_file_upload: boolean | null
+          mime_type: string | null
           title: string
           updated_at: string
           url: string
@@ -12717,8 +12722,13 @@ export type Database = {
           created_by?: string | null
           description: string
           display_order?: number | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
           id?: string
           is_active?: boolean
+          is_file_upload?: boolean | null
+          mime_type?: string | null
           title: string
           updated_at?: string
           url: string
@@ -12729,8 +12739,13 @@ export type Database = {
           created_by?: string | null
           description?: string
           display_order?: number | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
           id?: string
           is_active?: boolean
+          is_file_upload?: boolean | null
+          mime_type?: string | null
           title?: string
           updated_at?: string
           url?: string

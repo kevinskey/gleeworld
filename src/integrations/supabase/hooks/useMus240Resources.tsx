@@ -12,6 +12,11 @@ export interface Mus240Resource {
   created_by?: string;
   created_at: string;
   updated_at: string;
+  file_path?: string;
+  file_name?: string;
+  file_size?: number;
+  mime_type?: string;
+  is_file_upload?: boolean;
 }
 
 export function useMus240Resources() {
