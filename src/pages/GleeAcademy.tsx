@@ -118,8 +118,8 @@ const GleeAcademy = () => {
                 onClick={isClickable ? () => handleCourseClick(course.id) : undefined}
               >
                 {!isClickable && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-                    <div className="text-4xl font-bold text-muted-foreground/20 transform rotate-180 select-none whitespace-nowrap">
+                  <div className="absolute inset-0 z-10 flex items-end justify-start pointer-events-none overflow-hidden">
+                    <div className="text-3xl font-bold text-muted-foreground/20 transform rotate-45 select-none whitespace-nowrap origin-bottom-left translate-x-8 -translate-y-4">
                       Under Development
                     </div>
                   </div>
