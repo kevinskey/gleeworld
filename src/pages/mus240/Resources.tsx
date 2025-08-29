@@ -1,13 +1,45 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, ExternalLink, BookOpen, Globe, FileText, Settings, Download } from 'lucide-react';
+import { ArrowLeft, Users, ExternalLink, BookOpen, Globe, FileText, Settings, Download, Eye } from 'lucide-react';
 import { useMus240Resources, type Mus240Resource } from '@/integrations/supabase/hooks/useMus240Resources';
+import { DocumentViewer } from '@/components/mus240/DocumentViewer';
 import backgroundImage from '@/assets/mus240-background.jpg';
 
 export default function Resources() {
   const { data: resources, isLoading } = useMus240Resources();
+  const [viewerState, setViewerState] = useState<{
+    isOpen: boolean;
+    resource: Mus240Resource | null;
+  }>({
+    isOpen: false,
+    resource: null,
+  });
+
+  const openViewer = (resource: Mus240Resource) => {
+    setViewerState({ isOpen: true, resource });
+  };
+
+  const closeViewer = () => {
+    setViewerState({ isOpen: false, resource: null });
+  };
+
+  const canPreview = (resource: Mus240Resource) => {
+    if (!resource.is_file_upload) return false;
+    
+    const fileName = resource.file_name?.toLowerCase() || '';
+    const mimeType = resource.mime_type || '';
+    
+    return (
+      mimeType === 'application/pdf' ||
+      fileName.endsWith('.pdf') ||
+      mimeType.includes('presentation') ||
+      fileName.endsWith('.ppt') ||
+      fileName.endsWith('.pptx')
+    );
+  };
 
   const getCategoryIcon = (category: Mus240Resource['category']) => {
     switch (category) {
@@ -128,36 +160,54 @@ export default function Resources() {
                           {resource.description}
                         </p>
                         
-                        <Button 
-                          asChild
-                          size="sm" 
-                          className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0"
-                        >
-                          {resource.is_file_upload ? (
-                            <a 
-                              href={resource.url} 
-                              download={resource.file_name}
-                              className="inline-flex items-center gap-2"
+                        <div className="flex gap-2">
+                          {/* Preview Button for supported files */}
+                          {resource.is_file_upload && canPreview(resource) && (
+                            <Button
+                              onClick={() => openViewer(resource)}
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 bg-white/20 hover:bg-white/30 text-gray-700 hover:text-gray-900 border-gray-300"
                             >
-                              <Download className="h-4 w-4" />
-                              Download {resource.file_name?.split('.').pop()?.toUpperCase() || 'File'}
-                            </a>
-                          ) : (
-                            <a 
-                              href={resource.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                              Access Resource
-                            </a>
+                              <Eye className="h-4 w-4 mr-2" />
+                              Preview
+                            </Button>
                           )}
-                        </Button>
+                          
+                          {/* Main Action Button */}
+                          <Button 
+                            asChild
+                            size="sm" 
+                            className={`bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0 ${
+                              resource.is_file_upload && canPreview(resource) ? 'flex-1' : 'w-full'
+                            }`}
+                          >
+                            {resource.is_file_upload ? (
+                              <a 
+                                href={resource.url} 
+                                download={resource.file_name}
+                                className="inline-flex items-center gap-2"
+                              >
+                                <Download className="h-4 w-4" />
+                                Download {resource.file_name?.split('.').pop()?.toUpperCase() || 'File'}
+                              </a>
+                            ) : (
+                              <a 
+                                href={resource.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                                Access Resource
+                              </a>
+                            )}
+                          </Button>
+                        </div>
                         
                         {/* Show file size for downloads */}
                         {resource.is_file_upload && resource.file_size && (
-                          <p className="text-xs text-white/60 mt-2 text-center">
+                          <p className="text-xs text-gray-500 mt-2 text-center">
                             {(resource.file_size / 1024 / 1024).toFixed(1)} MB
                           </p>
                         )}
@@ -169,6 +219,18 @@ export default function Resources() {
             )}
           </div>
         </main>
+
+        {/* Document Viewer Modal */}
+        {viewerState.resource && (
+          <DocumentViewer
+            isOpen={viewerState.isOpen}
+            onClose={closeViewer}
+            fileUrl={viewerState.resource.url}
+            fileName={viewerState.resource.file_name || 'document'}
+            fileType={viewerState.resource.mime_type || ''}
+            title={viewerState.resource.title}
+          />
+        )}
       </div>
     </UniversalLayout>
   );

@@ -7,15 +7,23 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Plus, Edit, Trash2, ExternalLink, Settings, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, ExternalLink, Settings, Upload, Eye } from 'lucide-react';
 import { useMus240ResourcesAdmin, useDeleteMus240Resource, type Mus240Resource } from '@/integrations/supabase/hooks/useMus240Resources';
 import { ResourceForm } from '@/components/mus240/admin/ResourceForm';
 import { MultiFileUpload } from '@/components/mus240/admin/MultiFileUpload';
+import { DocumentViewer } from '@/components/mus240/DocumentViewer';
 import { toast } from 'sonner';
 
 export default function ResourcesAdmin() {
   const [selectedResource, setSelectedResource] = useState<Mus240Resource | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [viewerState, setViewerState] = useState<{
+    isOpen: boolean;
+    resource: Mus240Resource | null;
+  }>({
+    isOpen: false,
+    resource: null,
+  });
   const { data: resources, isLoading } = useMus240ResourcesAdmin();
   const deleteMutation = useDeleteMus240Resource();
 
@@ -42,6 +50,29 @@ export default function ResourcesAdmin() {
   const handleFormSuccess = () => {
     setIsFormOpen(false);
     setSelectedResource(null);
+  };
+
+  const openViewer = (resource: Mus240Resource) => {
+    setViewerState({ isOpen: true, resource });
+  };
+
+  const closeViewer = () => {
+    setViewerState({ isOpen: false, resource: null });
+  };
+
+  const canPreview = (resource: Mus240Resource) => {
+    if (!resource.is_file_upload) return false;
+    
+    const fileName = resource.file_name?.toLowerCase() || '';
+    const mimeType = resource.mime_type || '';
+    
+    return (
+      mimeType === 'application/pdf' ||
+      fileName.endsWith('.pdf') ||
+      mimeType.includes('presentation') ||
+      fileName.endsWith('.ppt') ||
+      fileName.endsWith('.pptx')
+    );
   };
 
   const getCategoryColor = (category: string) => {
@@ -147,6 +178,15 @@ export default function ResourcesAdmin() {
                       <CardTitle className="text-lg">{resource.title}</CardTitle>
                     </div>
                     <div className="flex items-center gap-2">
+                      {resource.is_file_upload && canPreview(resource) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openViewer(resource)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -233,6 +273,18 @@ export default function ResourcesAdmin() {
         </Card>
       </TabsContent>
     </Tabs>
+
+        {/* Document Viewer Modal */}
+        {viewerState.resource && (
+          <DocumentViewer
+            isOpen={viewerState.isOpen}
+            onClose={closeViewer}
+            fileUrl={viewerState.resource.url}
+            fileName={viewerState.resource.file_name || 'document'}
+            fileType={viewerState.resource.mime_type || ''}
+            title={viewerState.resource.title}
+          />
+        )}
       </div>
     </UniversalLayout>
   );
