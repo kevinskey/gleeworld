@@ -155,10 +155,16 @@ export const PresentationViewer = ({ isOpen, onClose, fileUrl, fileName, title }
                   <p className="text-slate-300 mb-4">
                     {fileName}
                   </p>
-                  <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-4">
+                  <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-4 mb-4">
                     <p className="text-sm text-slate-200">
                       <strong className="text-amber-300">Preview Mode:</strong> This is a slideshow interface for PowerPoint presentations. 
                       In a full implementation, actual slide content would be displayed here.
+                    </p>
+                  </div>
+                  <div className="bg-blue-900/30 border border-blue-500/30 rounded-lg p-3">
+                    <p className="text-xs text-blue-200">
+                      <strong className="text-blue-300">Development Note:</strong> Use the playback controls below to simulate 
+                      slide navigation. In production, this would display actual PowerPoint slide content.
                     </p>
                   </div>
                 </div>

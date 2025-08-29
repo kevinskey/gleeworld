@@ -86,35 +86,83 @@ export function DocumentViewer({
     </div>
   );
 
-  const renderPowerPointViewer = () => (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 bg-gray-50 rounded-lg overflow-hidden">
-        <iframe
-          src={`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`}
-          className="w-full h-full border-0"
-          title={`PowerPoint Viewer - ${fileName}`}
-          onError={() => {
-            toast.error('Failed to load PowerPoint file. Try downloading instead.');
-          }}
-        />
-      </div>
-      <div className="mt-4 flex gap-4">
-        <div className="flex-1 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <p className="text-sm text-amber-800">
-            <strong>Note:</strong> PowerPoint files are viewed using Google Docs viewer. 
-            For full functionality, consider downloading the file.
-          </p>
+  const renderPowerPointViewer = () => {
+    // Check if this is a development/mock URL
+    const isDevelopmentUrl = fileUrl.includes('object/public/mus240-resources') && 
+                            !fileUrl.startsWith('http://') && 
+                            !fileUrl.startsWith('https://');
+    
+    if (isDevelopmentUrl || fileUrl.includes('localhost') || fileUrl.includes('sandbox.lovable.dev')) {
+      return (
+        <div className="h-full flex flex-col">
+          <div className="flex-1 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg overflow-hidden flex items-center justify-center">
+            <div className="text-center p-8 max-w-md">
+              <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg mx-auto mb-6 flex items-center justify-center">
+                <Presentation className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-4">PowerPoint Preview</h3>
+              <h4 className="text-lg font-medium text-amber-300 mb-3">{fileName}</h4>
+              <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-4 mb-6">
+                <p className="text-sm text-slate-200">
+                  <strong className="text-amber-300">Development Mode:</strong> PowerPoint preview is not available in development. 
+                  In production, this would show the full presentation using Google Docs viewer.
+                </p>
+              </div>
+              <p className="text-slate-300 text-sm">
+                Download the file to view the actual PowerPoint content on your device.
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 flex gap-4">
+            <div className="flex-1 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-800">
+                <strong>Note:</strong> In production, PowerPoint files will be viewable using Google Docs viewer. 
+                For now, use the slideshow interface or download the file.
+              </p>
+            </div>
+            <Button
+              onClick={() => setShowSlideshow(true)}
+              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+            >
+              <Presentation className="h-4 w-4 mr-2" />
+              Start Slideshow
+            </Button>
+          </div>
         </div>
-        <Button
-          onClick={() => setShowSlideshow(true)}
-          className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
-        >
-          <Presentation className="h-4 w-4 mr-2" />
-          Start Slideshow
-        </Button>
+      );
+    }
+    
+    // Production PowerPoint viewer using Google Docs
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex-1 bg-gray-50 rounded-lg overflow-hidden">
+          <iframe
+            src={`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`}
+            className="w-full h-full border-0"
+            title={`PowerPoint Viewer - ${fileName}`}
+            onError={() => {
+              toast.error('Failed to load PowerPoint file. Try downloading instead.');
+            }}
+          />
+        </div>
+        <div className="mt-4 flex gap-4">
+          <div className="flex-1 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-800">
+              <strong>Note:</strong> PowerPoint files are viewed using Google Docs viewer. 
+              For full functionality, consider downloading the file.
+            </p>
+          </div>
+          <Button
+            onClick={() => setShowSlideshow(true)}
+            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+          >
+            <Presentation className="h-4 w-4 mr-2" />
+            Start Slideshow
+          </Button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderUnsupportedFile = () => (
     <div className="h-full flex flex-col items-center justify-center text-center p-8">
