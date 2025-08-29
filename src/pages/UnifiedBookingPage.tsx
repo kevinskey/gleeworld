@@ -473,7 +473,7 @@ export default function UnifiedBookingPage() {
               {user && (
                 <Card className="border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent shadow-lg backdrop-blur-sm animate-fade-in">
                   <CardHeader className="pb-4">
-                    <h2 className="flex items-center text-lg text-primary">
+                    <h2 className="flex items-center text-lg text-primary font-dancing">
                       <User className="h-5 w-5 mr-2" />
                       Welcome Back, {user.user_metadata?.full_name?.split(' ')[0] || user.user_metadata?.first_name || user.email?.split('@')[0]}!
                     </h2>
