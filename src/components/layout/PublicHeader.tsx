@@ -61,17 +61,6 @@ export const PublicHeader = () => {
 
             {/* Right side actions */}
             <div className="flex items-center gap-2 lg:gap-3">
-              
-              {/* Dashboard Link for Authenticated Users */}
-              {user && (
-                <Button asChild variant="outline" className="hidden md:flex lg:text-base">
-                  <Link to="/dashboard">
-                    <Settings className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
-                    Dashboard
-                  </Link>
-                </Button>
-              )}
-              
               {/* Auth Button */}
               {!user && (
                 <Button asChild className="hidden md:flex lg:text-base lg:px-6 lg:py-2">
@@ -112,14 +101,6 @@ export const PublicHeader = () => {
                   <span className="font-semibold text-sm text-foreground">Menu</span>
                 </div>
                 <nav className="flex flex-col gap-1 pt-3">
-                  {user && (
-                    <Button asChild variant="outline" size="sm" className="mb-2 text-sm justify-start">
-                      <Link to="/dashboard" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
-                        <Settings className="h-4 w-4" />
-                        My Dashboard
-                      </Link>
-                    </Button>
-                  )}
                   <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
                 </nav>
               </DropdownMenuContent>
