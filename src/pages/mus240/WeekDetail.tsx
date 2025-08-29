@@ -256,7 +256,7 @@ export default function WeekDetail() {
                           <Alert className="mt-2">
                             <AlertCircle className="h-4 w-4" />
                             <AlertDescription>
-                              This video cannot be embedded due to YouTube restrictions. Click the thumbnail to open in a popup player.
+                              This historical recording cannot be embedded due to YouTube restrictions. Click the thumbnail above to watch on YouTube, or use the "Open on YouTube" button.
                             </AlertDescription>
                           </Alert>
                         </div>

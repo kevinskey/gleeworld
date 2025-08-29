@@ -18,7 +18,7 @@ export const WEEKS: Week[] = [
     date: "2025-09-03",
     title: "Spirituals and Early Blues: From Field Hollers to Form",
     tracks: [
-      { title: "Fisk Jubilee Singers – Swing Low, Sweet Chariot", source: "YouTube", url: "https://www.youtube.com/watch?v=QGAsuwK7v1g" },
+      { title: "Fisk Jubilee Singers – Swing Low, Sweet Chariot", source: "YouTube", url: "https://www.youtube.com/watch?v=GUvBGZnL9rE" },
       { title: "Field Hollers (1939) – John & Ruby Lomax", source: "LOC", url: "https://www.loc.gov/item/lomaxbib000056/" },
       { title: "Ma Rainey – Bo-Weavil Blues", source: "YouTube", url: "https://www.youtube.com/watch?v=0AXsGz5_yg8" }
     ]
