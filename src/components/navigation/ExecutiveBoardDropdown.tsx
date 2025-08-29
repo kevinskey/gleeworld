@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from '@/components/ui/dropdown-menu';
-import { Crown, User, Eye } from 'lucide-react';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Crown, User, Eye, ChevronDown } from 'lucide-react';
 import { useExecutiveBoardMembers } from '@/hooks/useExecutiveBoardMembers';
+import { Button } from '@/components/ui/button';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator 
+} from '@/components/ui/dropdown-menu';
 
 export const ExecutiveBoardDropdown: React.FC = () => {
   const navigate = useNavigate();
@@ -30,12 +37,17 @@ export const ExecutiveBoardDropdown: React.FC = () => {
   }
 
   return (
-    <DropdownMenuSub>
-      <DropdownMenuSubTrigger className="cursor-pointer">
-        <Crown className="mr-2 h-4 w-4" />
-        Executive Board
-      </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="w-64 bg-background border border-border shadow-lg z-[210]">
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <DropdownMenuItem className="cursor-pointer flex items-center justify-between w-full">
+          <div className="flex items-center">
+            <Crown className="mr-2 h-4 w-4" />
+            Executive Board
+          </div>
+          <ChevronDown className="h-4 w-4" />
+        </DropdownMenuItem>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-64 bg-background border border-border shadow-lg" side="right" align="start">
         {/* Overview Dashboard */}
         <DropdownMenuItem 
           onClick={() => navigate('/admin/executive-board')}
@@ -44,6 +56,8 @@ export const ExecutiveBoardDropdown: React.FC = () => {
           <Eye className="mr-2 h-4 w-4" />
           Executive Overview
         </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
         
         {/* Individual Member Dashboards */}
         {members.map((member) => (
@@ -64,7 +78,7 @@ export const ExecutiveBoardDropdown: React.FC = () => {
             </div>
           </DropdownMenuItem>
         ))}
-      </DropdownMenuSubContent>
-    </DropdownMenuSub>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
