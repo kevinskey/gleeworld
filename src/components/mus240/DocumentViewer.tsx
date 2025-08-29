@@ -4,8 +4,9 @@ import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, ExternalLink, X, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
+import { Download, ExternalLink, X, ZoomIn, ZoomOut, RotateCw, Presentation } from 'lucide-react';
 import { toast } from 'sonner';
+import { PresentationViewer } from './PresentationViewer';
 
 // Import the styles
 import '@react-pdf-viewer/core/lib/styles/index.css';
@@ -31,6 +32,7 @@ export function DocumentViewer({
   const [zoom, setZoom] = useState(SpecialZoomLevel.PageFit);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [showSlideshow, setShowSlideshow] = useState(false);
 
   // Create plugins
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
@@ -96,11 +98,20 @@ export function DocumentViewer({
           }}
         />
       </div>
-      <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-        <p className="text-sm text-amber-800">
-          <strong>Note:</strong> PowerPoint files are viewed using Google Docs viewer. 
-          For full functionality, consider downloading the file.
-        </p>
+      <div className="mt-4 flex gap-4">
+        <div className="flex-1 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-sm text-amber-800">
+            <strong>Note:</strong> PowerPoint files are viewed using Google Docs viewer. 
+            For full functionality, consider downloading the file.
+          </p>
+        </div>
+        <Button
+          onClick={() => setShowSlideshow(true)}
+          className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+        >
+          <Presentation className="h-4 w-4 mr-2" />
+          Start Slideshow
+        </Button>
       </div>
     </div>
   );
@@ -199,6 +210,17 @@ export function DocumentViewer({
             </div>
           </div>
         </div>
+        
+        {/* Slideshow Modal */}
+        {isPowerPoint && (
+          <PresentationViewer
+            isOpen={showSlideshow}
+            onClose={() => setShowSlideshow(false)}
+            fileUrl={fileUrl}
+            fileName={fileName}
+            title={title}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
