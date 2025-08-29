@@ -135,7 +135,7 @@ export const PresentationViewer = ({ isOpen, onClose, fileUrl, fileName, title }
             {/* Slide Content */}
             <div className="flex-1 flex items-center justify-center p-8 overflow-hidden">
               <div 
-                className="bg-white shadow-lg rounded-lg max-w-full max-h-full flex items-center justify-center"
+                className="bg-gradient-to-br from-slate-800 to-slate-900 shadow-lg rounded-lg max-w-full max-h-full flex items-center justify-center border border-slate-600"
                 style={{
                   transform: `scale(${zoom}) rotate(${rotation}deg)`,
                   transition: 'transform 0.3s ease-in-out',
@@ -149,15 +149,15 @@ export const PresentationViewer = ({ isOpen, onClose, fileUrl, fileName, title }
                   <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg mx-auto mb-4 flex items-center justify-center">
                     <Play className="h-8 w-8 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h2 className="text-2xl font-bold text-white mb-2">
                     Slide {currentSlide}
                   </h2>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-slate-300 mb-4">
                     {fileName}
                   </p>
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <p className="text-sm text-yellow-800">
-                      <strong>Preview Mode:</strong> This is a slideshow interface for PowerPoint presentations. 
+                  <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-4">
+                    <p className="text-sm text-slate-200">
+                      <strong className="text-amber-300">Preview Mode:</strong> This is a slideshow interface for PowerPoint presentations. 
                       In a full implementation, actual slide content would be displayed here.
                     </p>
                   </div>
