@@ -461,20 +461,6 @@ export default function UnifiedBookingPage() {
               <p className="text-lg text-muted-foreground leading-relaxed mb-6">
                 Book your office appointment or lesson here.
               </p>
-              <div className="flex flex-wrap justify-center gap-4 text-sm">
-                <div className="flex items-center gap-2 bg-primary/10 px-3 py-2 rounded-full">
-                  <Clock className="h-4 w-4 text-primary" />
-                  <span className="text-primary">Flexible scheduling</span>
-                </div>
-                <div className="flex items-center gap-2 bg-secondary/10 px-3 py-2 rounded-full">
-                  <CalendarIcon className="h-4 w-4 text-secondary" />
-                  <span className="text-secondary">Multiple options</span>
-                </div>
-                <div className="flex items-center gap-2 bg-accent/10 px-3 py-2 rounded-full">
-                  <CheckCircle className="h-4 w-4 text-accent" />
-                  <span className="text-accent">Instant confirmation</span>
-                </div>
-              </div>
             </div>
           </div>
 
