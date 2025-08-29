@@ -496,15 +496,27 @@ export default function UnifiedBookingPage() {
                 </CardHeader>
                 <CardContent className="p-8">
                   <div className="flex justify-center">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={(date) => setSelectedDate(date || null)}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                      className="pointer-events-auto border rounded-lg p-4"
-                      numberOfMonths={2}
-                    />
+                    <div className="w-full max-w-2xl">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => {
+                          console.log('Calendar date selected:', date);
+                          console.log('Current selectedDate:', selectedDate);
+                          setSelectedDate(date || null);
+                        }}
+                        disabled={(date) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const isDisabled = date < today;
+                          console.log('Date disabled check:', date.toDateString(), 'vs today:', today.toDateString(), 'disabled:', isDisabled);
+                          return isDisabled;
+                        }}
+                        initialFocus
+                        className="pointer-events-auto border rounded-lg p-4 bg-background w-full"
+                        numberOfMonths={2}
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
