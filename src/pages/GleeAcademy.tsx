@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Music, BookOpen, Users, Mic, Eye, Crown, ChevronRight, GraduationCap, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import academyHeroImage from '@/assets/glee-world-academy-hero.jpg';
 const courses = [{
   id: 'choral-conducting',
   title: 'Choral Conducting and Literature',
@@ -70,32 +71,12 @@ const GleeAcademy = () => {
   return <UniversalLayout>
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         {/* Hero Section */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-primary via-primary/90 to-secondary py-16 px-6">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80')] bg-cover bg-center opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-black/20" />
-          
-          <div className="relative max-w-4xl mx-auto text-center text-white">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/20 backdrop-blur px-4 py-2 text-sm font-medium text-white mb-6">
-              <Star className="h-4 w-4" />
-              100+ Years of Musical Excellence
-            </div>
-            
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 drop-shadow-lg">
-              Glee Academy
-            </h1>
-            <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-8 drop-shadow-md">
-              Elevate your musical journey with world-class instruction from the Spelman College Glee Club tradition
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-lg">
-                Explore Courses
-              </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                Contact Us
-              </Button>
-            </div>
-          </div>
+        <div className="relative overflow-hidden">
+          <img 
+            src={academyHeroImage} 
+            alt="Glee World Academy" 
+            className="w-full h-[60vh] md:h-[70vh] object-cover"
+          />
         </div>
 
         {/* Courses Section */}
