@@ -454,7 +454,7 @@ export default function UnifiedBookingPage() {
             <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-primary to-primary/80 rounded-full mb-6 shadow-xl animate-fade-in">
               <CalendarIcon className="h-12 w-12 text-primary-foreground" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent mb-4 leading-tight" style={{ fontFamily: 'cursive' }}>
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent mb-4 leading-tight font-dancing">
               Book an Appointment with Doc
             </h1>
             <div className="max-w-2xl mx-auto">
