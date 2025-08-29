@@ -117,13 +117,6 @@ const GleeAcademy = () => {
                 className={`group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm h-full flex flex-col relative ${isClickable ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
                 onClick={isClickable ? () => handleCourseClick(course.id) : undefined}
               >
-                {!isClickable && (
-                  <div className="absolute inset-0 z-10 flex items-end justify-start pointer-events-none overflow-hidden">
-                    <div className="text-3xl font-bold text-muted-foreground/20 transform rotate-45 select-none whitespace-nowrap origin-bottom-left translate-x-8 -translate-y-4">
-                      Under Development
-                    </div>
-                  </div>
-                )}
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
