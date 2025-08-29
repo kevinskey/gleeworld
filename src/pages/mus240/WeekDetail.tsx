@@ -190,20 +190,19 @@ export default function WeekDetail() {
                             allowFullScreen
                             referrerPolicy="strict-origin-when-cross-origin"
                             onError={(e) => {
-                              console.log('❌ Iframe error for:', t.title, e);
+                              console.log('❌ Iframe error for:', t.title);
                               handleEmbedError(i);
                             }}
                             onLoad={(e) => {
                               console.log('✅ Iframe loaded for:', t.title);
-                              // Add a delay to check if video actually loads
+                              // Check for embedding restrictions after a delay
                               setTimeout(() => {
                                 const iframe = e.currentTarget;
-                                const rect = iframe.getBoundingClientRect();
-                                if (rect.height < 100) {
-                                  console.log('🚫 Iframe too small, likely blocked for:', t.title);
+                                if (iframe && iframe.offsetHeight < 100) {
+                                  console.log('🚫 Video likely blocked, switching to fallback for:', t.title);
                                   handleEmbedError(i);
                                 }
-                              }, 2000);
+                              }, 3000);
                             }}
                           />
                           {/* Fallback detection overlay */}
@@ -221,16 +220,8 @@ export default function WeekDetail() {
                           <div 
                             className="cursor-pointer relative"
                             onClick={() => {
-                              // Try to open in a modal or new window optimized for playback
-                              const newWindow = window.open(
-                                `https://www.youtube.com/embed/${videoId}?autoplay=1&origin=${window.location.origin}`,
-                                'youtube-player',
-                                'width=800,height=450,scrollbars=yes,resizable=yes'
-                              );
-                              if (!newWindow) {
-                                // Fallback to direct YouTube link
-                                window.open(t.url, '_blank');
-                              }
+                              // Open directly in YouTube
+                              window.open(t.url, '_blank');
                             }}
                           >
                             <img 
