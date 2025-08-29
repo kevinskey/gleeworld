@@ -11,16 +11,7 @@ export default function WeekDetail() {
   
   // Handle both parameter names (weekNumber and week)
   const weekNumberString = weekNumber || weekParam;
-  
-  // Debug logging
-  console.log('WeekDetail: weekNumber param:', weekNumber);
-  console.log('WeekDetail: week param:', weekParam);
-  console.log('WeekDetail: using weekNumberString:', weekNumberString);
-  console.log('WeekDetail: WEEKS data:', WEEKS);
-  console.log('WeekDetail: Available week numbers:', WEEKS.map(w => w.number));
-  
   const week = WEEKS.find(w => w.number === parseInt(weekNumberString || '0'));
-  console.log('WeekDetail: Found week:', week);
   
   const [embedFailed, setEmbedFailed] = useState<Record<string, boolean>>({});
 

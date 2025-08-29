@@ -8,16 +8,10 @@ import backgroundImage from '@/assets/mus240-background.jpg';
 export default function ListeningHub() {
   const [q, setQ] = useState('');
   
-  // Debug logging
-  console.log('ListeningHub: WEEKS data:', WEEKS);
-  console.log('ListeningHub: WEEKS length:', WEEKS.length);
-  
   const items = WEEKS.filter(w =>
     w.title.toLowerCase().includes(q.toLowerCase()) ||
     w.tracks.some(t => t.title.toLowerCase().includes(q.toLowerCase()))
   );
-  
-  console.log('ListeningHub: Filtered items:', items);
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
