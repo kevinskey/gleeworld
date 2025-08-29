@@ -38,16 +38,15 @@ const createEmbedUrl = (videoId: string) => {
     autoplay: '0',
     rel: '0',
     modestbranding: '1',
-    showinfo: '0',
     fs: '1',
     controls: '1',
-    cc_load_policy: '1', // Show captions if available
-    iv_load_policy: '3', // Hide video annotations
-    playsinline: '1', // Better mobile experience
-    origin: window.location.origin // Required for some embedded videos
+    cc_load_policy: '1',
+    iv_load_policy: '3',
+    playsinline: '1',
+    enablejsapi: '1'
   });
-  // Use privacy-enhanced mode for better compatibility
-  return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
+  // Use regular YouTube for better compatibility with older videos
+  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 };
 
 // Removed problematic video availability checking
@@ -189,24 +188,22 @@ export default function WeekDetail() {
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             allowFullScreen
+                            referrerPolicy="strict-origin-when-cross-origin"
                             onError={(e) => {
                               console.log('❌ Iframe error for:', t.title, e);
                               handleEmbedError(i);
                             }}
                             onLoad={(e) => {
                               console.log('✅ Iframe loaded for:', t.title);
-                              // Check if iframe loaded successfully
-                              const iframe = e.currentTarget;
-                              try {
-                                // If we can't access contentDocument, it likely means blocked
-                                if (!iframe.contentDocument && !iframe.contentWindow) {
-                                  console.log('🚫 Iframe blocked for:', t.title);
+                              // Add a delay to check if video actually loads
+                              setTimeout(() => {
+                                const iframe = e.currentTarget;
+                                const rect = iframe.getBoundingClientRect();
+                                if (rect.height < 100) {
+                                  console.log('🚫 Iframe too small, likely blocked for:', t.title);
                                   handleEmbedError(i);
                                 }
-                              } catch {
-                                // Cross-origin restrictions, but video might still work
-                                console.log('🔒 Cross-origin restrictions for:', t.title, 'but video might work');
-                              }
+                              }, 2000);
                             }}
                           />
                           {/* Fallback detection overlay */}
