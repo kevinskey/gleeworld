@@ -67,7 +67,7 @@ export function DocumentViewer({
 
   const renderPDFViewer = () => (
     <div className="h-full">
-      <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}>
+      <Worker workerUrl={`https://unpkg.com/pdfjs-dist@5.3.93/build/pdf.worker.min.js`}>
         <div className="h-full overflow-hidden">
           <Viewer
             fileUrl={fileUrl}
