@@ -7,14 +7,19 @@ import { ArrowLeft, Play, ExternalLink, Calendar, Music, Clock, Globe } from 'lu
 import backgroundImage from '@/assets/mus240-background.jpg';
 
 export default function WeekDetail() {
-  const { weekNumber } = useParams();
+  const { weekNumber, week: weekParam } = useParams();
+  
+  // Handle both parameter names (weekNumber and week)
+  const weekNumberString = weekNumber || weekParam;
   
   // Debug logging
   console.log('WeekDetail: weekNumber param:', weekNumber);
+  console.log('WeekDetail: week param:', weekParam);
+  console.log('WeekDetail: using weekNumberString:', weekNumberString);
   console.log('WeekDetail: WEEKS data:', WEEKS);
   console.log('WeekDetail: Available week numbers:', WEEKS.map(w => w.number));
   
-  const week = WEEKS.find(w => w.number === parseInt(weekNumber || '0'));
+  const week = WEEKS.find(w => w.number === parseInt(weekNumberString || '0'));
   console.log('WeekDetail: Found week:', week);
   
   const [embedFailed, setEmbedFailed] = useState<Record<string, boolean>>({});
