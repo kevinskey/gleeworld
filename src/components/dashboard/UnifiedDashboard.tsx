@@ -319,7 +319,7 @@ export const UnifiedDashboard = () => {
   }
 
   // Default view: If user is super admin and on default /dashboard route, show the SuperAdminDashboard
-  if (profile?.is_super_admin && viewMode === 'default') {
+  if ((profile?.is_super_admin || profile?.role === 'super-admin') && viewMode === 'default') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         <div className="px-6 pt-4">
