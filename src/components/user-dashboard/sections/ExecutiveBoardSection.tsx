@@ -6,7 +6,9 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -145,39 +147,28 @@ export const ExecutiveBoardSection = ({ isExecBoardMember }: ExecutiveBoardSecti
                   );
                 })}
                 
-                {/* Section Leader Tools Submenu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <DropdownMenuItem className="cursor-pointer flex items-center justify-between">
-                      <div className="flex items-center">
-                        <UserCheck className="h-4 w-4 mr-2" />
-                        Section Leader Tools
-                      </div>
-                      <ChevronDown className="h-4 w-4" />
-                    </DropdownMenuItem>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent 
-                    side="right" 
-                    align="start"
-                    className="w-56 bg-background border border-border shadow-lg z-50"
-                  >
-                    {sectionLeaderActions
-                      .sort((a, b) => a.name.localeCompare(b.name))
-                      .map((action) => {
-                        const ActionIcon = action.icon;
-                        return (
-                          <DropdownMenuItem
-                            key={action.route}
-                            onClick={() => navigate(action.route)}
-                            className="cursor-pointer"
-                          >
-                            <ActionIcon className="h-4 w-4 mr-2" />
-                            {action.name}
-                          </DropdownMenuItem>
-                        );
-                      })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <DropdownMenuSeparator />
+                
+                {/* Section Leader Tools Group */}
+                <DropdownMenuLabel className="text-xs text-muted-foreground px-2 py-1.5">
+                  Section Leader Tools
+                </DropdownMenuLabel>
+                
+                {sectionLeaderActions
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((action) => {
+                    const ActionIcon = action.icon;
+                    return (
+                      <DropdownMenuItem
+                        key={action.route}
+                        onClick={() => navigate(action.route)}
+                        className="cursor-pointer"
+                      >
+                        <ActionIcon className="h-4 w-4 mr-2" />
+                        {action.name}
+                      </DropdownMenuItem>
+                    );
+                  })}
               </DropdownMenuContent>
             </DropdownMenu>
           </EnhancedTooltip>
