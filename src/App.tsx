@@ -47,6 +47,7 @@ import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
 import ProfileSetup from "./pages/ProfileSetup";
 import Calendar from "./pages/Calendar";
+import { AppointmentAdminDashboard } from "./components/admin/AppointmentAdminDashboard";
 
 import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
@@ -406,6 +407,18 @@ const App = () => {
                       <AdminOnlyRoute>
                         <UniversalLayout>
                           <UnifiedDashboard />
+                        </UniversalLayout>
+                      </AdminOnlyRoute>
+                    </ProtectedRoute>
+                   } 
+                 />
+                <Route 
+                  path="/admin/appointments" 
+                  element={
+                    <ProtectedRoute>
+                      <AdminOnlyRoute>
+                        <UniversalLayout>
+                          <AppointmentAdminDashboard />
                         </UniversalLayout>
                       </AdminOnlyRoute>
                     </ProtectedRoute>
