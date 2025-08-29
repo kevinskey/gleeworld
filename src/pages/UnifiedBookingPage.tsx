@@ -516,7 +516,7 @@ export default function UnifiedBookingPage() {
                             return isDisabled;
                           }}
                           initialFocus
-                          className="pointer-events-auto border rounded-lg p-6 bg-background w-full text-lg scale-110"
+                          className="pointer-events-auto border rounded-lg p-6 bg-background w-full text-lg scale-110 [&_.rdp-day]:h-8 [&_.rdp-day]:min-h-8 md:[&_.rdp-day]:h-auto md:[&_.rdp-day]:min-h-auto [&_.rdp-day_button]:h-8 [&_.rdp-day_button]:min-h-8 md:[&_.rdp-day_button]:h-auto md:[&_.rdp-day_button]:min-h-auto"
                           numberOfMonths={2}
                         />
                       </div>
