@@ -445,11 +445,11 @@ export default function UnifiedBookingPage() {
       <div className="min-h-screen relative">
         {/* Background Image */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat" 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20" 
           style={{ backgroundImage: `url(${schedulerBackground})` }}
         ></div>
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-background/80"></div>
+        {/* Subtle background color */}
+        <div className="absolute inset-0 bg-background"></div>
         
         <div className="relative max-w-6xl mx-auto px-4 py-8">
           
