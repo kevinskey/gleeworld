@@ -70,7 +70,7 @@ export const UnifiedDashboard = () => {
         </div>
         
         {/* Member Dashboard Content */}
-        <div className="px-6 py-4 space-y-6">
+        <div className="px-0 sm:px-6 py-4 space-y-6">
           {/* Welcome Section */}
           <div className="bg-card rounded-lg p-6 border shadow-sm">
             <h1 className="text-2xl font-bold text-primary mb-2">Welcome to Your Member Dashboard</h1>
