@@ -459,7 +459,7 @@ export default function UnifiedBookingPage() {
             </h1>
             <div className="max-w-2xl mx-auto">
               <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                Book your consultation, lesson, or meeting with our team
+                Book your office appointment or lesson here.
               </p>
               <div className="flex flex-wrap justify-center gap-4 text-sm">
                 <div className="flex items-center gap-2 bg-primary/10 px-3 py-2 rounded-full">
