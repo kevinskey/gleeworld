@@ -49,15 +49,6 @@ export function DocumentViewer({
     fileName.toLowerCase().endsWith('.ppt') || 
     fileName.toLowerCase().endsWith('.pptx');
 
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('Download started');
-  };
 
   const handleOpenExternal = () => {
     window.open(fileUrl, '_blank');
@@ -140,9 +131,9 @@ export function DocumentViewer({
         This file type cannot be previewed directly. Please download the file to view its contents.
       </p>
       <div className="flex gap-3">
-        <Button onClick={handleDownload} className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Download File
+        <Button onClick={handleOpenExternal} className="flex items-center gap-2">
+          <ExternalLink className="h-4 w-4" />
+          Open File
         </Button>
         <Button variant="outline" onClick={handleOpenExternal} className="flex items-center gap-2">
           <ExternalLink className="h-4 w-4" />
@@ -173,15 +164,6 @@ export function DocumentViewer({
                 </span>
               )}
               
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownload}
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Download
-              </Button>
               
               <Button
                 variant="outline"
