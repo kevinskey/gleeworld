@@ -114,9 +114,16 @@ const GleeAcademy = () => {
               const isClickable = course.id === 'african-american-music' || course.id === 'music-fundamentals' || course.id === 'private-lessons';
               return <Card 
                 key={course.id} 
-                className={`group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm h-full flex flex-col ${isClickable ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
+                className={`group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm h-full flex flex-col relative ${isClickable ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
                 onClick={isClickable ? () => handleCourseClick(course.id) : undefined}
               >
+                {!isClickable && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                    <div className="text-6xl font-bold text-muted-foreground/20 transform rotate-45 select-none whitespace-nowrap">
+                      Under Development
+                    </div>
+                  </div>
+                )}
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
