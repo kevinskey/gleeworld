@@ -78,7 +78,7 @@ export const UnifiedDashboard = () => {
           </div>
 
           {/* Row 1: Hero + Features side-by-side */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
             <SplitClassHero />
             <div className="self-center w-full"><DashboardFeaturesCarousel /></div>
           </div>
