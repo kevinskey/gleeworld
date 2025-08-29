@@ -60,19 +60,22 @@ export const ExecutiveBoardSection = ({ isExecBoardMember }: ExecutiveBoardSecti
   ];
 
   const execPositions = [
-    { name: "President", icon: Crown, route: "/dashboard" },
-    { name: "Vice President", icon: Shield, route: "/dashboard" },
-    { name: "Secretary", icon: FileText, route: "/dashboard" },
-    { name: "Treasurer", icon: DollarSign, route: "/dashboard" },
     { name: "Business Manager", icon: ShoppingBag, route: "/dashboard" },
-    { name: "Librarian", icon: BookOpen, route: "/dashboard" },
     { name: "Chaplain", icon: Star, route: "/dashboard" },
     { name: "Historian", icon: Calendar, route: "/dashboard" },
+    { name: "Librarian", icon: BookOpen, route: "/dashboard" },
+    { name: "President", icon: Crown, route: "/dashboard" },
+    { name: "Secretary", icon: FileText, route: "/dashboard" },
     { name: "Social Chair", icon: Users, route: "/dashboard" },
+    { name: "Treasurer", icon: DollarSign, route: "/dashboard" },
+    { name: "Vice President", icon: Shield, route: "/dashboard" },
+  ];
+
+  const sectionLeaderActions = [
     { name: "Section Leader", icon: UserCheck, route: "/dashboard/section-leader" },
-    { name: "Student Conductor", icon: Music2, route: "/dashboard/student-conductor" },
     { name: "Sight Reading Generator", icon: Wand2, route: "/sight-reading-generator" },
     { name: "Sight Reading Submission", icon: FileAudio, route: "/sight-reading-submission" },
+    { name: "Student Conductor", icon: Music2, route: "/dashboard/student-conductor" },
   ];
 
   return (
@@ -126,7 +129,7 @@ export const ExecutiveBoardSection = ({ isExecBoardMember }: ExecutiveBoardSecti
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="end" 
-                className="w-48 bg-white border shadow-lg z-50"
+                className="w-48 bg-background border border-border shadow-lg z-50"
               >
                 {execPositions.map((position) => {
                   const IconComponent = position.icon;
@@ -134,12 +137,47 @@ export const ExecutiveBoardSection = ({ isExecBoardMember }: ExecutiveBoardSecti
                     <DropdownMenuItem 
                       key={position.route}
                       onClick={() => navigate(position.route)}
+                      className="cursor-pointer"
                     >
                       <IconComponent className="h-4 w-4 mr-2" />
                       {position.name}
                     </DropdownMenuItem>
                   );
                 })}
+                
+                {/* Section Leader Tools Submenu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <DropdownMenuItem className="cursor-pointer flex items-center justify-between">
+                      <div className="flex items-center">
+                        <UserCheck className="h-4 w-4 mr-2" />
+                        Section Leader Tools
+                      </div>
+                      <ChevronDown className="h-4 w-4" />
+                    </DropdownMenuItem>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    side="right" 
+                    align="start"
+                    className="w-56 bg-background border border-border shadow-lg z-50"
+                  >
+                    {sectionLeaderActions
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((action) => {
+                        const ActionIcon = action.icon;
+                        return (
+                          <DropdownMenuItem
+                            key={action.route}
+                            onClick={() => navigate(action.route)}
+                            className="cursor-pointer"
+                          >
+                            <ActionIcon className="h-4 w-4 mr-2" />
+                            {action.name}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </DropdownMenuContent>
             </DropdownMenu>
           </EnhancedTooltip>
