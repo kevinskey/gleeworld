@@ -16,6 +16,7 @@ import { HomeRoute } from "@/components/routing/HomeRoute";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import MusicTheoryFundamentals from "./pages/MusicTheoryFundamentals";
 import NotationBasics from "./pages/music-theory/NotationBasics";
+import GleeAcademy from "./pages/GleeAcademy";
 
 import Index from "./pages/Index";
 import DirectoryPage from "./pages/DirectoryPage";
@@ -274,6 +275,15 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <StudentRegistration />
+                  </PublicRoute>
+                } 
+              />
+              {/* Glee Academy page */}
+              <Route 
+                path="/glee-academy" 
+                element={
+                  <PublicRoute>
+                    <GleeAcademy />
                   </PublicRoute>
                 } 
               />
