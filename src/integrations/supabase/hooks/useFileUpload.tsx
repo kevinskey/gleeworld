@@ -19,83 +19,50 @@ export function useFileUpload() {
     try {
       setUploading(true);
       
-      // Generate file path if not provided
-      const timestamp = Date.now();
-      const randomSuffix = Math.random().toString(36).substring(7);
-      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const filePath = path || `${timestamp}-${randomSuffix}-${safeFileName}`;
+      // Simplified approach - just use a simple HTTP request to bypass Supabase client issues
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bucket', 'mus240-resources');
       
-      // Always use the mus240-resources bucket
-      const targetBucket = 'mus240-resources';
-      
-      // First try direct storage API
-      try {
-        const { data, error } = await supabase.storage
-          .from(targetBucket)
-          .upload(filePath, file, {
-            upsert: false
-          });
-
-        if (error) {
-          throw error;
+      const response = await fetch(`https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/upload-file`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         }
+      });
 
-        if (!data) {
-          throw new Error('No data returned from upload');
-        }
-
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from(targetBucket)
-          .getPublicUrl(data.path);
-
-        if (!urlData?.publicUrl) {
-          throw new Error('Failed to generate file URL');
-        }
-
-        toast({
-          title: "Upload Successful",
-          description: "File uploaded successfully",
-        });
-
-        return urlData.publicUrl;
-      } catch (directUploadError) {
-        console.log('Direct upload failed, trying edge function:', directUploadError);
-        
-        // Fallback to edge function upload
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('bucket', targetBucket);
-
-        const { data: functionData, error: functionError } = await supabase.functions.invoke('upload-file', {
-          body: formData
-        });
-
-        if (functionError) {
-          throw functionError;
-        }
-
-        if (!functionData?.success) {
-          throw new Error(functionData?.error || 'Upload failed');
-        }
-
-        toast({
-          title: "Upload Successful",
-          description: "File uploaded successfully via backup method",
-        });
-
-        return functionData.url;
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Upload failed');
+      }
+
+      toast({
+        title: "Upload Successful",
+        description: "File uploaded successfully",
+      });
+
+      return result.url;
 
     } catch (error) {
       console.error('Upload error:', error);
       
-      // Provide more specific error message based on error type
-      let errorMessage = 'Unknown error occurred';
-      if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        errorMessage = 'Network connection issue. Please check your internet connection and try again.';
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
+      let errorMessage = 'Upload failed. ';
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage += 'Network connectivity issue. Please check your internet connection.';
+        } else if (error.message.includes('CORS')) {
+          errorMessage += 'Browser security restriction. Please try refreshing the page.';
+        } else {
+          errorMessage += error.message;
+        }
+      } else {
+        errorMessage += 'Unknown error occurred.';
       }
       
       toast({

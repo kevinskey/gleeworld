@@ -168,3 +168,6 @@ verify_jwt = true
 
 [functions.receive-sms]
 verify_jwt = false
+
+[functions.upload-file]
+verify_jwt = false
