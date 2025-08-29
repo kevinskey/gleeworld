@@ -337,69 +337,8 @@ const App = () => {
                     <Accounting />
                   </ProtectedRoute>
                 } 
-              />
-               <Route 
-                 path="/dashboard" 
-                 element={
-                   <ProtectedRoute>
-                     <AdminOnlyRoute>
-                       <UniversalLayout>
-                         <UnifiedDashboard />
-                       </UniversalLayout>
-                     </AdminOnlyRoute>
-                   </ProtectedRoute>
-                  } 
-                />
-               <Route 
-                 path="/dashboard/member" 
-                 element={
-                   <ProtectedRoute>
-                     <UniversalLayout>
-                       <UnifiedDashboard />
-                     </UniversalLayout>
-                   </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                 path="/dashboard/fan" 
-                 element={
-                   <ProtectedRoute>
-                     <UniversalLayout>
-                       <UnifiedDashboard />
-                     </UniversalLayout>
-                   </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                 path="/dashboard/alumnae" 
-                 element={
-                   <ProtectedRoute>
-                     <UniversalLayout>
-                       <UnifiedDashboard />
-                     </UniversalLayout>
-                   </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                 path="/dashboard/mus240" 
-                 element={
-                   <ProtectedRoute>
-                     <UniversalLayout>
-                       <UnifiedDashboard />
-                     </UniversalLayout>
-                   </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                 path="/dashboard/public" 
-                 element={
-                   <ProtectedRoute>
-                     <UniversalLayout>
-                       <UnifiedDashboard />
-                     </UniversalLayout>
-                   </ProtectedRoute>
-                  } 
-                />
+               />
+               {/* Admin routes - place before dashboard routes for proper matching */}
                 <Route 
                   path="/admin" 
                   element={
@@ -412,15 +351,77 @@ const App = () => {
                     </ProtectedRoute>
                    } 
                  />
+                 <Route 
+                   path="/admin/appointments" 
+                   element={
+                     <ProtectedRoute>
+                       <AdminOnlyRoute>
+                         <UniversalLayout>
+                           <AppointmentAdminDashboard />
+                         </UniversalLayout>
+                       </AdminOnlyRoute>
+                     </ProtectedRoute>
+                    } 
+                  />
                 <Route 
-                  path="/admin/appointments" 
+                  path="/dashboard" 
                   element={
                     <ProtectedRoute>
                       <AdminOnlyRoute>
                         <UniversalLayout>
-                          <AppointmentAdminDashboard />
+                          <UnifiedDashboard />
                         </UniversalLayout>
                       </AdminOnlyRoute>
+                    </ProtectedRoute>
+                   } 
+                 />
+                <Route 
+                  path="/dashboard/member" 
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout>
+                        <UnifiedDashboard />
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                   } 
+                 />
+                 <Route 
+                  path="/dashboard/fan" 
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout>
+                        <UnifiedDashboard />
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                   } 
+                 />
+                 <Route 
+                  path="/dashboard/alumnae" 
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout>
+                        <UnifiedDashboard />
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                   } 
+                 />
+                 <Route 
+                  path="/dashboard/mus240" 
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout>
+                        <UnifiedDashboard />
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                   } 
+                 />
+                 <Route 
+                  path="/dashboard/public" 
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout>
+                        <UnifiedDashboard />
+                      </UniversalLayout>
                     </ProtectedRoute>
                    } 
                  />
