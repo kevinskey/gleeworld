@@ -10,7 +10,7 @@ export const SplitClassHero: React.FC = () => {
         <CardContent className="p-0">
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Music Theory Fundamentals - Top on mobile/tablet, Left on desktop */}
-            <div className="relative h-[180px] sm:h-[220px] md:h-[260px] lg:h-[320px] group overflow-hidden">
+            <div className="relative h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] group overflow-hidden">
               <a 
                 href="/music-theory-fundamentals" 
                 className="absolute inset-0 z-10 group-hover:bg-black/10 transition-colors duration-300"
@@ -50,7 +50,7 @@ export const SplitClassHero: React.FC = () => {
             </div>
 
             {/* Music 240 - Bottom on mobile/tablet, Right on desktop */}
-            <div className="relative h-[180px] sm:h-[220px] md:h-[260px] lg:h-[320px] group overflow-hidden">
+            <div className="relative h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] group overflow-hidden">
               <a 
                 href="/music-240" 
                 className="absolute inset-0 z-10 group-hover:bg-black/10 transition-colors duration-300"
