@@ -1,31 +1,15 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, ExternalLink, BookOpen, Globe, FileText } from 'lucide-react';
+import { ArrowLeft, Users, ExternalLink, BookOpen, Globe, FileText, Settings } from 'lucide-react';
+import { useMus240Resources, type Mus240Resource } from '@/integrations/supabase/hooks/useMus240Resources';
 import backgroundImage from '@/assets/mus240-background.jpg';
 
-interface Resource {
-  id: string;
-  title: string;
-  url: string;
-  description: string;
-  category: 'reading' | 'website' | 'video' | 'article' | 'database';
-}
-
 export default function Resources() {
-  const [resources] = useState<Resource[]>([
-    {
-      id: '1',
-      title: 'African Origins and Adaptations in African American Music',
-      url: 'https://timeline.carnegiehall.org/stories/african-origins-and-adaptations-in-african-american-music',
-      description: 'Explore the African musical traditions that form the foundation of African American music, including rhythmic patterns, call-and-response techniques, and instrumental traditions that crossed the Atlantic and evolved in America.',
-      category: 'website'
-    }
-  ]);
+  const { data: resources, isLoading } = useMus240Resources();
 
-  const getCategoryIcon = (category: Resource['category']) => {
+  const getCategoryIcon = (category: Mus240Resource['category']) => {
     switch (category) {
       case 'reading': return BookOpen;
       case 'website': return Globe;
@@ -36,7 +20,7 @@ export default function Resources() {
     }
   };
 
-  const getCategoryColor = (category: Resource['category']) => {
+  const getCategoryColor = (category: Mus240Resource['category']) => {
     switch (category) {
       case 'reading': return 'bg-blue-100 text-blue-800';
       case 'website': return 'bg-green-100 text-green-800';
@@ -61,13 +45,23 @@ export default function Resources() {
         <main className="relative z-10 max-w-6xl mx-auto p-6">
           {/* Header with back navigation */}
           <div className="mb-8">
-            <Link 
-              to="/classes/mus240" 
-              className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-4 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 hover:bg-white/20"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to MUS 240
-            </Link>
+            <div className="flex items-center justify-between mb-4">
+              <Link 
+                to="/classes/mus240" 
+                className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 hover:bg-white/20"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to MUS 240
+              </Link>
+              
+              <Link 
+                to="/classes/mus240/resources/admin" 
+                className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 hover:bg-white/20"
+              >
+                <Settings className="h-4 w-4" />
+                Manage Resources
+              </Link>
+            </div>
             
             <div className="text-center">
               <div className="inline-flex items-center gap-3 mb-4 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
@@ -84,7 +78,15 @@ export default function Resources() {
 
           {/* Resources Grid */}
           <div className="space-y-8">
-            {resources.length === 0 ? (
+            {isLoading ? (
+              <Card className="bg-white/10 backdrop-blur-sm border border-white/20">
+                <CardContent className="py-12 text-center">
+                  <Users className="h-12 w-12 text-white/40 mx-auto mb-4" />
+                  <h3 className="text-xl font-medium text-white mb-2">Loading Resources...</h3>
+                  <p className="text-white/60">Please wait while we fetch the resources</p>
+                </CardContent>
+              </Card>
+            ) : !resources || resources.length === 0 ? (
               <Card className="bg-white/10 backdrop-blur-sm border border-white/20">
                 <CardContent className="py-12 text-center">
                   <Users className="h-12 w-12 text-white/40 mx-auto mb-4" />

@@ -47,6 +47,7 @@ import StudentRegistration from "@/pages/StudentRegistration";
 import ClassLanding from "@/pages/mus240/ClassLanding";
 import AssignmentJournal from "@/pages/mus240/AssignmentJournal";
 import Resources from "@/pages/mus240/Resources";
+import ResourcesAdmin from "@/pages/mus240/admin/ResourcesAdmin";
 import ListeningHub from "@/pages/mus240/ListeningHub";
 import AssignmentWeek from "@/pages/mus240/AssignmentWeek";
 import WeekDetail from "@/pages/mus240/WeekDetail";
@@ -231,9 +232,13 @@ export const router = createBrowserRouter([
     element: <AssignmentJournal />,
   },
   {
-    path: "/classes/mus240/resources",
-    element: <Resources />,
-  },
+        path: "/classes/mus240/resources",
+        element: <Resources />,
+      },
+      {
+        path: "/classes/mus240/resources/admin",
+        element: <ResourcesAdmin />,
+      },
   {
     path: "*",
     element: <NotFound />,

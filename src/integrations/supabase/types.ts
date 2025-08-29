@@ -12698,6 +12698,45 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_resources: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string
+          display_order: number | null
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          display_order?: number | null
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          display_order?: number | null
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       music_albums: {
         Row: {
           artist: string
