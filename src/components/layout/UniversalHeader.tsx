@@ -94,58 +94,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
               </div>
             </EnhancedTooltip>
             
-            {/* Main Navigation - Show views directly in header */}
-            {user && !isMobile && (
-              <nav className="flex items-center gap-1 ml-4">
-                <Button 
-                  variant={location.pathname === '/dashboard' ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => navigate('/dashboard')}
-                  className="text-xs px-3"
-                >
-                  <User className="mr-1 h-3 w-3" />
-                  My Dashboard
-                </Button>
-                <Button 
-                  variant={location.pathname === '/dashboard/member' ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => navigate('/dashboard/member')}
-                  className="text-xs px-3"
-                >
-                  <User className="mr-1 h-3 w-3" />
-                  Member
-                </Button>
-                <Button 
-                  variant={location.pathname === '/dashboard/fan' ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => navigate('/dashboard/fan')}
-                  className="text-xs px-3"
-                >
-                  <Heart className="mr-1 h-3 w-3" />
-                  Fan
-                </Button>
-                <Button 
-                  variant={location.pathname === '/dashboard/alumnae' ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => navigate('/dashboard/alumnae')}
-                  className="text-xs px-3"
-                >
-                  <GraduationCap className="mr-1 h-3 w-3" />
-                  Alumnae
-                </Button>
-                {hasExecBoardPerms && (
-                  <Button 
-                    variant={location.pathname.startsWith('/admin') ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => navigate('/admin')}
-                    className="text-xs px-3"
-                  >
-                    <Crown className="mr-1 h-3 w-3" />
-                    Admin
-                  </Button>
-                )}
-              </nav>
-            )}
           </div>
 
           {/* Mobile Navigation Menu */}
@@ -245,8 +193,49 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       <LayoutDashboard className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-48 bg-background border border-border shadow-lg z-[200]" align="end">
+                  <DropdownMenuContent className="w-56 bg-background border border-border shadow-lg z-[200]" align="end">
                     <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    
+                    {/* Main Dashboard Views */}
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/dashboard')}
+                      className="cursor-pointer"
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      My Dashboard
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/dashboard/member')}
+                      className="cursor-pointer"
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      Member
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/dashboard/fan')}
+                      className="cursor-pointer"
+                    >
+                      <Heart className="mr-2 h-4 w-4" />
+                      Fan
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/dashboard/alumnae')}
+                      className="cursor-pointer"
+                    >
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      Alumnae
+                    </DropdownMenuItem>
+                    {hasExecBoardPerms && (
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/admin')}
+                        className="cursor-pointer"
+                      >
+                        <Crown className="mr-2 h-4 w-4" />
+                        Admin
+                      </DropdownMenuItem>
+                    )}
+                    
                     <DropdownMenuSeparator />
                     
                     {/* MUS240 Class View */}
