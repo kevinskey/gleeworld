@@ -446,7 +446,7 @@ export default function UnifiedBookingPage() {
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20" 
-          style={{ backgroundImage: `url(${schedulerBackground})` }}
+          style={{ backgroundImage: `url(/lovable-uploads/ab597cd8-2a01-4085-9e87-e6745610d2f8.png)` }}
         ></div>
         {/* Subtle background color */}
         <div className="absolute inset-0 bg-background"></div>
