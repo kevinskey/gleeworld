@@ -516,7 +516,7 @@ export default function UnifiedBookingPage() {
                             return isDisabled;
                           }}
                           initialFocus
-                          className="pointer-events-auto border rounded-lg px-2 py-6 bg-background w-full text-lg scale-110 [&_.rdp-day]:h-8 [&_.rdp-day]:min-h-8 md:[&_.rdp-day]:h-auto md:[&_.rdp-day]:min-h-auto [&_.rdp-day_button]:h-8 [&_.rdp-day_button]:min-h-8 md:[&_.rdp-day_button]:h-auto md:[&_.rdp-day_button]:min-h-auto [&_.rdp-week]:gap-y-0 [&_.rdp-tbody]:gap-y-0 [&_tr]:leading-none [&_tbody_tr]:mb-0 [&_.rdp-week]:mb-0 [&_.rdp-table]:border-spacing-0 max-md:[&_.rdp-table]:leading-tight max-md:[&_td]:py-0 max-md:[&_tr]:h-8"
+                          className="pointer-events-auto border rounded-lg px-2 py-2 bg-background w-full text-lg scale-110 [&_.rdp-day]:h-8 [&_.rdp-day]:min-h-8 md:[&_.rdp-day]:h-auto md:[&_.rdp-day]:min-h-auto [&_.rdp-day_button]:h-8 [&_.rdp-day_button]:min-h-8 md:[&_.rdp-day_button]:h-auto md:[&_.rdp-day_button]:min-h-auto [&_.rdp-week]:gap-y-0 [&_.rdp-tbody]:gap-y-0 [&_tr]:leading-none [&_tbody_tr]:mb-0 [&_.rdp-week]:mb-0 [&_.rdp-table]:border-spacing-0 max-md:[&_.rdp-table]:leading-tight max-md:[&_td]:py-0 max-md:[&_tr]:h-8"
                           numberOfMonths={2}
                         />
                       </div>
