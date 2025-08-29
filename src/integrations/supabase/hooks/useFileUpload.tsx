@@ -19,37 +19,57 @@ export function useFileUpload() {
     try {
       setUploading(true);
       
+      // Log file details for debugging
+      console.log('Starting upload:', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        bucket: bucket
+      });
+      
       // Generate file path if not provided
-      const filePath = path || `${Date.now()}-${file.name}`;
+      const timestamp = Date.now();
+      const randomSuffix = Math.random().toString(36).substring(7);
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = path || `${timestamp}-${randomSuffix}-${safeFileName}`;
+      
+      // Always use the mus240-resources bucket regardless of parameter
+      const targetBucket = 'mus240-resources';
+      
+      console.log('Uploading to:', { bucket: targetBucket, path: filePath });
       
       const { data, error } = await supabase.storage
-        .from(bucket)
+        .from(targetBucket)
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
+          contentType: file.type || 'application/octet-stream'
         });
 
       if (error) {
         console.error('Upload error:', error);
         toast({
           title: "Upload Failed",
-          description: "Failed to upload file",
+          description: `Failed to upload file: ${error.message}`,
           variant: "destructive",
         });
         return null;
       }
 
+      console.log('Upload successful:', data);
+
       // Get public URL
       const { data: urlData } = supabase.storage
-        .from(bucket)
+        .from(targetBucket)
         .getPublicUrl(data.path);
 
+      console.log('Public URL:', urlData.publicUrl);
       return urlData.publicUrl;
     } catch (error) {
       console.error('Upload error:', error);
       toast({
         title: "Upload Failed",
-        description: "Failed to upload file",
+        description: `Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
       return null;
