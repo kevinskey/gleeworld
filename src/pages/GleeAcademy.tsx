@@ -119,7 +119,7 @@ const GleeAcademy = () => {
               >
                 {!isClickable && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-                    <div className="text-6xl font-bold text-muted-foreground/20 transform rotate-45 select-none whitespace-nowrap">
+                    <div className="text-4xl font-bold text-muted-foreground/20 transform rotate-180 select-none whitespace-nowrap">
                       Under Development
                     </div>
                   </div>
