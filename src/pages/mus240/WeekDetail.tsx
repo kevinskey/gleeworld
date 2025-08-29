@@ -191,6 +191,9 @@ export default function WeekDetail() {
                   {/* YouTube embed with enhanced handling */}
                   {isYouTube && videoId && (
                     <div className="mb-3">
+                      <div className="text-xs text-muted-foreground mb-2">
+                        DEBUG: embedFailed={embedFailed.toString()}, isHistoricalVideo={isHistoricalVideo.toString()}, videoId={videoId}
+                      </div>
                       {!embedFailed ? (
                         <div className="relative">
                           <iframe
