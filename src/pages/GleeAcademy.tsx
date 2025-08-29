@@ -154,7 +154,7 @@ const GleeAcademy = () => {
                         >
                           {course.id === 'african-american-music' ? 'Enter MUS 240' : 
                            course.id === 'music-fundamentals' ? 'Enter Music Theory' :
-                           course.id === 'private-lessons' ? 'Book with Doc' : 'Learn More'}
+                           course.id === 'private-lessons' ? 'Book with Doc' : 'Under Development'}
                           <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                       </div>
