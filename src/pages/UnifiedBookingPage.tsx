@@ -496,7 +496,7 @@ export default function UnifiedBookingPage() {
                     Select any available date from the calendar below. All appointments are scheduled in Eastern Time (ET).
                   </p>
                 </CardHeader>
-                <CardContent className="p-10">
+                <CardContent className="px-4 py-10">
                   <div className="pt-8">
                     <div className="flex justify-center">
                       <div className="w-full max-w-5xl">
