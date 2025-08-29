@@ -486,17 +486,17 @@ export default function UnifiedBookingPage() {
                 </Card>
               )}
               
-              <Card className="shadow-xl border border-border/50 backdrop-blur-sm bg-card/80">
-                <CardHeader className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-t-lg border-b border-border/50">
-                  <CardTitle className="flex items-center text-2xl font-bold">
-                    <CalendarIcon className="h-6 w-6 mr-3 text-primary" />
+              <Card className="shadow-xl border border-border/50 backdrop-blur-sm bg-card/80 max-w-6xl mx-auto">
+                <CardHeader className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-t-lg border-b border-border/50 p-8">
+                  <CardTitle className="flex items-center text-3xl font-bold">
+                    <CalendarIcon className="h-8 w-8 mr-4 text-primary" />
                     Choose Your Appointment Date
                   </CardTitle>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground text-lg mt-2">
                     Select any available date from the calendar below. All appointments are scheduled in Eastern Time (ET).
                   </p>
                 </CardHeader>
-                <CardContent className="p-8">
+                <CardContent className="p-10">
                   <div className="flex justify-center">
                     <div className="w-full max-w-4xl">
                       <Calendar
