@@ -498,7 +498,7 @@ export default function UnifiedBookingPage() {
                 </CardHeader>
                 <CardContent className="p-8">
                   <div className="flex justify-center">
-                    <div className="w-full max-w-2xl">
+                    <div className="w-full max-w-4xl">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
@@ -515,7 +515,7 @@ export default function UnifiedBookingPage() {
                           return isDisabled;
                         }}
                         initialFocus
-                        className="pointer-events-auto border rounded-lg p-4 bg-background w-full"
+                        className="pointer-events-auto border rounded-lg p-6 bg-background w-full text-lg scale-110"
                         numberOfMonths={2}
                       />
                     </div>
