@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, ExternalLink, BookOpen, Globe, FileText, Settings } from 'lucide-react';
+import { ArrowLeft, Users, ExternalLink, BookOpen, Globe, FileText, Settings, Download } from 'lucide-react';
 import { useMus240Resources, type Mus240Resource } from '@/integrations/supabase/hooks/useMus240Resources';
 import backgroundImage from '@/assets/mus240-background.jpg';
 
@@ -139,7 +139,7 @@ export default function Resources() {
                               download={resource.file_name}
                               className="inline-flex items-center gap-2"
                             >
-                              <ExternalLink className="h-4 w-4" />
+                              <Download className="h-4 w-4" />
                               Download {resource.file_name?.split('.').pop()?.toUpperCase() || 'File'}
                             </a>
                           ) : (
@@ -154,6 +154,13 @@ export default function Resources() {
                             </a>
                           )}
                         </Button>
+                        
+                        {/* Show file size for downloads */}
+                        {resource.is_file_upload && resource.file_size && (
+                          <p className="text-xs text-white/60 mt-2 text-center">
+                            {(resource.file_size / 1024 / 1024).toFixed(1)} MB
+                          </p>
+                        )}
                       </CardContent>
                     </Card>
                   );

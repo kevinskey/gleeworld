@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { ArrowLeft, Plus, Edit, Trash2, ExternalLink, Settings } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Plus, Edit, Trash2, ExternalLink, Settings, Upload } from 'lucide-react';
 import { useMus240ResourcesAdmin, useDeleteMus240Resource, type Mus240Resource } from '@/integrations/supabase/hooks/useMus240Resources';
 import { ResourceForm } from '@/components/mus240/admin/ResourceForm';
+import { MultiFileUpload } from '@/components/mus240/admin/MultiFileUpload';
 import { toast } from 'sonner';
 
 export default function ResourcesAdmin() {
@@ -71,30 +73,38 @@ export default function ResourcesAdmin() {
               <h1 className="text-2xl font-bold">Manage MUS 240 Resources</h1>
             </div>
           </div>
-          
-          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={handleCreate}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Resource
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>
-                  {selectedResource ? 'Edit Resource' : 'Add New Resource'}
-                </DialogTitle>
-              </DialogHeader>
-              <ResourceForm
-                resource={selectedResource || undefined}
-                onSuccess={handleFormSuccess}
-                onCancel={() => setIsFormOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
         </div>
 
-        {/* Resources List */}
+        {/* Main Content */}
+        <Tabs defaultValue="manage" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="manage">Manage Resources</TabsTrigger>
+            <TabsTrigger value="upload">Bulk Upload</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="manage" className="space-y-4">
+            <div className="flex justify-end">
+              <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={handleCreate}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Single Resource
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {selectedResource ? 'Edit Resource' : 'Add New Resource'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <ResourceForm
+                    resource={selectedResource || undefined}
+                    onSuccess={handleFormSuccess}
+                    onCancel={() => setIsFormOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
         <div className="grid gap-4">
           {isLoading ? (
             <Card>
@@ -122,6 +132,11 @@ export default function ResourcesAdmin() {
                         <Badge className={getCategoryColor(resource.category)}>
                           {resource.category}
                         </Badge>
+                        {resource.is_file_upload && (
+                          <Badge variant="outline" className="text-xs">
+                            📁 File
+                          </Badge>
+                        )}
                         {!resource.is_active && (
                           <Badge variant="secondary">Inactive</Badge>
                         )}
@@ -173,15 +188,21 @@ export default function ResourcesAdmin() {
                   </p>
                   
                   <div className="flex items-center gap-2">
-                    <a 
-                      href={resource.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      {resource.url}
-                    </a>
+                    {resource.is_file_upload ? (
+                      <span className="text-sm text-muted-foreground">
+                        📁 {resource.file_name} ({resource.file_size ? `${(resource.file_size / 1024 / 1024).toFixed(1)}MB` : 'Unknown size'})
+                      </span>
+                    ) : (
+                      <a 
+                        href={resource.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        {resource.url}
+                      </a>
+                    )}
                   </div>
                   
                   <div className="text-xs text-muted-foreground">
@@ -193,6 +214,25 @@ export default function ResourcesAdmin() {
             ))
           )}
         </div>
+      </TabsContent>
+
+      <TabsContent value="upload" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              Bulk File Upload
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Upload multiple files at once. Each file will become a separate resource.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <MultiFileUpload onUploadComplete={() => {/* Resources will refresh automatically */}} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
       </div>
     </UniversalLayout>
   );
