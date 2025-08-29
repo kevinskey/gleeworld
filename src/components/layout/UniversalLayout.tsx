@@ -1,5 +1,6 @@
 
 import { ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import { UniversalHeader } from "./UniversalHeader";
 import { UniversalFooter } from "./UniversalFooter";
 import { ResponsiveContainer } from "@/components/shared/ResponsiveContainer";
@@ -25,9 +26,19 @@ export const UniversalLayout = ({
   viewMode,
   onViewModeChange,
 }: UniversalLayoutProps) => {
+  const location = useLocation();
+  
+  // Hide header for public, fan, and alumnae pages
+  const hideHeaderPaths = [
+    '/dashboard/public',
+    '/dashboard/fan', 
+    '/dashboard/alumnae'
+  ];
+  
+  const shouldShowHeader = showHeader && !hideHeaderPaths.includes(location.pathname);
   return (
     <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
-      {showHeader && (
+      {shouldShowHeader && (
         <UniversalHeader 
           viewMode={viewMode}
           onViewModeChange={onViewModeChange}
