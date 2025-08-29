@@ -134,7 +134,15 @@ export default function WeekDetail() {
               const isYouTube = t.url.includes('youtube.com') || t.url.includes('youtu.be');
               const videoId = getVideoId(t.url);
               const embedUrl = videoId ? createEmbedUrl(videoId) : null;
-              const embedFailed = failedEmbeds.has(i);
+              
+              // Auto-detect problematic videos that likely won't embed
+              const isHistoricalVideo = t.title.includes('Fisk Jubilee') || 
+                                       t.title.includes('Ma Rainey') || 
+                                       t.title.includes('1909') || 
+                                       t.title.includes('1923') ||
+                                       t.title.toLowerCase().includes('historical');
+              
+              const embedFailed = failedEmbeds.has(i) || isHistoricalVideo;
               
               console.log(`Track ${i}:`, { 
                 title: t.title, 
@@ -142,7 +150,8 @@ export default function WeekDetail() {
                 isYouTube, 
                 videoId, 
                 embedUrl, 
-                embedFailed
+                embedFailed,
+                isHistoricalVideo
               });
               
               // Extra debugging for Fisk track
@@ -154,6 +163,7 @@ export default function WeekDetail() {
                   videoId,
                   embedUrl,
                   embedFailed,
+                  isHistoricalVideo,
                   shouldShowEmbed: isYouTube && videoId && !embedFailed
                 });
               }
