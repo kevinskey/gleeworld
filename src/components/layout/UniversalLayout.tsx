@@ -21,7 +21,7 @@ export const UniversalLayout = ({
   showHeader = true, 
   showFooter = true,
   className = "",
-  maxWidth = "full",
+  maxWidth = "2xl",
   containerized = true,
   viewMode,
   onViewModeChange,
