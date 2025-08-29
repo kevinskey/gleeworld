@@ -367,11 +367,9 @@ const App = () => {
                   path="/dashboard" 
                   element={
                     <ProtectedRoute>
-                      <AdminOnlyRoute>
-                        <UniversalLayout>
-                          <UnifiedDashboard />
-                        </UniversalLayout>
-                      </AdminOnlyRoute>
+                      <UniversalLayout>
+                        <UnifiedDashboard />
+                      </UniversalLayout>
                     </ProtectedRoute>
                    } 
                  />
