@@ -120,47 +120,64 @@ const GleeAcademy = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {courses.map((course) => {
                 const IconComponent = course.icon;
+                const isAfricanAmericanMusic = course.id === 'african-american-music';
+                
+                const CardWrapper = ({ children }: { children: React.ReactNode }) => {
+                  if (isAfricanAmericanMusic) {
+                    return (
+                      <a href="/classes/mus240" className="block">
+                        {children}
+                      </a>
+                    );
+                  }
+                  return <>{children}</>;
+                };
+
                 return (
-                  <Card key={course.id} className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                            <IconComponent className="h-5 w-5 text-primary" />
+                  <CardWrapper key={course.id}>
+                    <Card className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm h-full">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                              <IconComponent className="h-5 w-5 text-primary" />
+                            </div>
+                            <Badge variant="secondary" className="text-xs">
+                              {course.level}
+                            </Badge>
                           </div>
-                          <Badge variant="secondary" className="text-xs">
-                            {course.level}
-                          </Badge>
+                          <span className="text-sm text-muted-foreground">{course.duration}</span>
                         </div>
-                        <span className="text-sm text-muted-foreground">{course.duration}</span>
-                      </div>
-                      <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">
-                        {course.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
-                        {course.description}
-                      </p>
-                      
-                      <div className="space-y-3">
-                        <h4 className="font-medium text-sm text-foreground">Course Highlights:</h4>
-                        <ul className="space-y-1">
-                          {course.highlights.map((highlight, index) => (
-                            <li key={index} className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <ChevronRight className="h-3 w-3 text-primary flex-shrink-0" />
-                              {highlight}
-                            </li>
-                          ))}
-                        </ul>
+                        <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">
+                          {course.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-1 flex flex-col">
+                        <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
+                          {course.description}
+                        </p>
                         
-                        <Button className="w-full mt-4 group-hover:bg-primary/90 transition-colors" size="sm">
-                          Learn More
-                          <ChevronRight className="h-4 w-4 ml-1" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        <div className="space-y-3 flex-1">
+                          <h4 className="font-medium text-sm text-foreground">Course Highlights:</h4>
+                          <ul className="space-y-1">
+                            {course.highlights.map((highlight, index) => (
+                              <li key={index} className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <ChevronRight className="h-3 w-3 text-primary flex-shrink-0" />
+                                {highlight}
+                              </li>
+                            ))}
+                          </ul>
+                          
+                          <div className="mt-auto pt-4">
+                            <Button className="w-full group-hover:bg-primary/90 transition-colors" size="sm">
+                              {isAfricanAmericanMusic ? 'Enter MUS 240' : 'Learn More'}
+                              <ChevronRight className="h-4 w-4 ml-1" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CardWrapper>
                 );
               })}
             </div>
