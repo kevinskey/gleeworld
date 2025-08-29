@@ -138,8 +138,10 @@ export default function WeekDetail() {
               // Auto-detect problematic videos that likely won't embed
               const isHistoricalVideo = t.title.includes('Fisk Jubilee') || 
                                        t.title.includes('Ma Rainey') || 
+                                       t.title.includes('Field Hollers') ||
                                        t.title.includes('1909') || 
                                        t.title.includes('1923') ||
+                                       t.title.includes('1939') ||
                                        t.title.toLowerCase().includes('historical');
               
               const embedFailed = failedEmbeds.has(i) || isHistoricalVideo;
