@@ -23,7 +23,7 @@ import { MusicStaffIcon } from "@/components/icons/MusicStaffIcon";
 import { FAQNavigationCards } from "@/components/landing/FAQNavigationCards";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { SplitClassHero } from "@/components/hero/SplitClassHero";
+
 import { 
   Calendar, 
   MapPin,
@@ -303,54 +303,6 @@ export const GleeWorldLanding = () => {
       
       <PublicLayout>
 
-      {/* Split Class Hero */}
-      <section className="relative z-30 py-6 px-4 sm:px-6 md:px-8 lg:px-12 w-full">
-        <div className="w-full max-w-screen-xl mx-auto">
-          <SplitClassHero />
-        </div>
-      </section>
-
-      {/* MUS 240 Hero Link */}
-      <section className="relative z-30 py-6 px-4 sm:px-6 md:px-8 lg:px-12 w-full">
-        <div className="w-full max-w-screen-xl mx-auto">
-          <Link 
-            to="/classes/mus240" 
-            className="group block"
-          >
-            <div className="relative overflow-hidden bg-gradient-to-br from-orange-800 to-amber-600 rounded-2xl p-8 md:p-12 shadow-xl border border-amber-400/30 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-              {/* Gradient overlay for depth */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-              
-              <div className="relative z-10 text-center">
-                <div className="inline-flex items-center gap-3 mb-4 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                  <Music className="h-5 w-5 text-amber-300" />
-                  <span className="text-white/90 font-medium text-sm">New Course Available</span>
-                </div>
-                
-                <h2 className="text-3xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-lg">
-                  MUS 240
-                </h2>
-                
-                <p className="text-xl md:text-2xl font-light text-white/95 mb-4 max-w-2xl mx-auto">
-                  Survey of African American Music
-                </p>
-                
-                <div className="flex items-center justify-center gap-2 text-white/80 text-sm">
-                  <Calendar className="h-4 w-4" />
-                  <span>Fall 2025</span>
-                  <span className="mx-2">•</span>
-                  <span>Dr. Kevin Johnson</span>
-                </div>
-                
-                <div className="mt-6 inline-flex items-center gap-2 text-white/90 font-medium group-hover:text-white transition-colors">
-                  <span>Enter Course</span>
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </div>
-          </Link>
-        </div>
-      </section>
 
       {/* Hero Section */}
       <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
