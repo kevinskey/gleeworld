@@ -15,52 +15,53 @@ export function useFileUpload() {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const { toast } = useToast();
 
-  const uploadFile = async (file: File, bucket: string, path?: string): Promise<string | null> => {
+  const uploadFile = async (file: File, bucket: string = 'mus240-resources', path?: string): Promise<string | null> => {
     try {
       setUploading(true);
+      console.log('Starting file upload:', file.name, 'to bucket:', bucket);
       
-      // Simplified approach - just use a simple HTTP request to bypass Supabase client issues
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('bucket', 'mus240-resources');
-      
-      const response = await fetch(`https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/upload-file`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        }
-      });
+      // Generate unique filename
+      const timestamp = Date.now();
+      const randomSuffix = Math.random().toString(36).substring(7);
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = path || `${timestamp}-${randomSuffix}-${safeFileName}`;
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Upload directly to Supabase Storage now that bucket exists
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type
+        });
+
+      if (error) {
+        console.error('Storage upload error:', error);
+        throw error;
       }
 
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Upload failed');
-      }
+      console.log('Upload successful:', data);
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(data.path);
+
+      console.log('Public URL:', urlData.publicUrl);
 
       toast({
         title: "Upload Successful",
         description: "File uploaded successfully",
       });
 
-      return result.url;
+      return urlData.publicUrl;
 
     } catch (error) {
       console.error('Upload error:', error);
       
       let errorMessage = 'Upload failed. ';
       if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch')) {
-          errorMessage += 'Network connectivity issue. Please check your internet connection.';
-        } else if (error.message.includes('CORS')) {
-          errorMessage += 'Browser security restriction. Please try refreshing the page.';
-        } else {
-          errorMessage += error.message;
-        }
+        errorMessage += error.message;
       } else {
         errorMessage += 'Unknown error occurred.';
       }
