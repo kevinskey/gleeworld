@@ -74,21 +74,43 @@ export function useFileUpload() {
         setUploadProgress(updatedProgress);
         onProgress?.(updatedProgress);
 
-        const filePath = `${Date.now()}-${index}-${file.name}`;
+        // Generate unique file path
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(7);
+        const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filePath = `${timestamp}-${randomSuffix}-${safeFileName}`;
+        
+        console.log(`Uploading file: ${file.name} to path: ${filePath}`);
         
         const { data, error } = await supabase.storage
-          .from(bucket)
+          .from('mus240-resources')
           .upload(filePath, file, {
             cacheControl: '3600',
-            upsert: false
+            upsert: false,
+            contentType: file.type
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase upload error:', error);
+          throw new Error(`Upload failed: ${error.message}`);
+        }
+
+        if (!data || !data.path) {
+          throw new Error('Upload successful but no file path returned');
+        }
+
+        console.log(`Upload successful for: ${file.name}, path: ${data.path}`);
 
         // Get public URL
         const { data: urlData } = supabase.storage
-          .from(bucket)
+          .from('mus240-resources')
           .getPublicUrl(data.path);
+
+        if (!urlData || !urlData.publicUrl) {
+          throw new Error('Failed to get public URL for uploaded file');
+        }
+
+        console.log(`Public URL generated: ${urlData.publicUrl}`);
 
         // Update status to completed
         const finalProgress = [...updatedProgress];
