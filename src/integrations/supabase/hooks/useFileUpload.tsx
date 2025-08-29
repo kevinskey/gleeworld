@@ -19,57 +19,77 @@ export function useFileUpload() {
     try {
       setUploading(true);
       
-      // Log file details for debugging
-      console.log('Starting upload:', {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        bucket: bucket
-      });
-      
       // Generate file path if not provided
       const timestamp = Date.now();
       const randomSuffix = Math.random().toString(36).substring(7);
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filePath = path || `${timestamp}-${randomSuffix}-${safeFileName}`;
       
-      // Always use the mus240-resources bucket regardless of parameter
+      // Always use the mus240-resources bucket
       const targetBucket = 'mus240-resources';
       
-      console.log('Uploading to:', { bucket: targetBucket, path: filePath });
-      
+      // Upload file with simplified options
       const { data, error } = await supabase.storage
         .from(targetBucket)
         .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type || 'application/octet-stream'
+          upsert: false
         });
 
       if (error) {
-        console.error('Upload error:', error);
+        console.error('Supabase upload error:', error);
         toast({
           title: "Upload Failed",
-          description: `Failed to upload file: ${error.message}`,
+          description: `Upload failed: ${error.message}`,
           variant: "destructive",
         });
         return null;
       }
 
-      console.log('Upload successful:', data);
+      if (!data) {
+        console.error('Upload failed: No data returned');
+        toast({
+          title: "Upload Failed",
+          description: "Upload failed: No data returned from server",
+          variant: "destructive",
+        });
+        return null;
+      }
 
       // Get public URL
       const { data: urlData } = supabase.storage
         .from(targetBucket)
         .getPublicUrl(data.path);
 
-      console.log('Public URL:', urlData.publicUrl);
+      if (!urlData?.publicUrl) {
+        console.error('Failed to get public URL');
+        toast({
+          title: "Upload Failed",
+          description: "Failed to generate file URL",
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      toast({
+        title: "Upload Successful",
+        description: "File uploaded successfully",
+      });
+
       return urlData.publicUrl;
     } catch (error) {
       console.error('Upload error:', error);
+      
+      // Provide more specific error message based on error type
+      let errorMessage = 'Unknown error occurred';
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        errorMessage = 'Network connection issue. Please check your internet connection and try again.';
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Upload Failed",
-        description: `Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: errorMessage,
         variant: "destructive",
       });
       return null;
