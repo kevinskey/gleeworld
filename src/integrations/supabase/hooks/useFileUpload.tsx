@@ -28,54 +28,65 @@ export function useFileUpload() {
       // Always use the mus240-resources bucket
       const targetBucket = 'mus240-resources';
       
-      // Upload file with simplified options
-      const { data, error } = await supabase.storage
-        .from(targetBucket)
-        .upload(filePath, file, {
-          upsert: false
+      // First try direct storage API
+      try {
+        const { data, error } = await supabase.storage
+          .from(targetBucket)
+          .upload(filePath, file, {
+            upsert: false
+          });
+
+        if (error) {
+          throw error;
+        }
+
+        if (!data) {
+          throw new Error('No data returned from upload');
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from(targetBucket)
+          .getPublicUrl(data.path);
+
+        if (!urlData?.publicUrl) {
+          throw new Error('Failed to generate file URL');
+        }
+
+        toast({
+          title: "Upload Successful",
+          description: "File uploaded successfully",
         });
 
-      if (error) {
-        console.error('Supabase upload error:', error);
-        toast({
-          title: "Upload Failed",
-          description: `Upload failed: ${error.message}`,
-          variant: "destructive",
+        return urlData.publicUrl;
+      } catch (directUploadError) {
+        console.log('Direct upload failed, trying edge function:', directUploadError);
+        
+        // Fallback to edge function upload
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('bucket', targetBucket);
+
+        const { data: functionData, error: functionError } = await supabase.functions.invoke('upload-file', {
+          body: formData
         });
-        return null;
+
+        if (functionError) {
+          throw functionError;
+        }
+
+        if (!functionData?.success) {
+          throw new Error(functionData?.error || 'Upload failed');
+        }
+
+        toast({
+          title: "Upload Successful",
+          description: "File uploaded successfully via backup method",
+        });
+
+        return functionData.url;
       }
 
-      if (!data) {
-        console.error('Upload failed: No data returned');
-        toast({
-          title: "Upload Failed",
-          description: "Upload failed: No data returned from server",
-          variant: "destructive",
-        });
-        return null;
-      }
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from(targetBucket)
-        .getPublicUrl(data.path);
-
-      if (!urlData?.publicUrl) {
-        console.error('Failed to get public URL');
-        toast({
-          title: "Upload Failed",
-          description: "Failed to generate file URL",
-          variant: "destructive",
-        });
-        return null;
-      }
-
-      toast({
-        title: "Upload Successful",
-        description: "File uploaded successfully",
-      });
-
-      return urlData.publicUrl;
     } catch (error) {
       console.error('Upload error:', error);
       
