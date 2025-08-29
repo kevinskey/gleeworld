@@ -497,27 +497,29 @@ export default function UnifiedBookingPage() {
                   </p>
                 </CardHeader>
                 <CardContent className="p-10">
-                  <div className="flex justify-center">
-                    <div className="w-full max-w-4xl">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(date) => {
-                          console.log('Calendar date selected:', date);
-                          console.log('Current selectedDate:', selectedDate);
-                          setSelectedDate(date || null);
-                        }}
-                        disabled={(date) => {
-                          const today = new Date();
-                          today.setHours(0, 0, 0, 0);
-                          const isDisabled = date < today;
-                          console.log('Date disabled check:', date.toDateString(), 'vs today:', today.toDateString(), 'disabled:', isDisabled);
-                          return isDisabled;
-                        }}
-                        initialFocus
-                        className="pointer-events-auto border rounded-lg p-6 bg-background w-full text-lg scale-110"
-                        numberOfMonths={2}
-                      />
+                  <div className="pt-8">
+                    <div className="flex justify-center">
+                      <div className="w-full max-w-5xl">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={(date) => {
+                            console.log('Calendar date selected:', date);
+                            console.log('Current selectedDate:', selectedDate);
+                            setSelectedDate(date || null);
+                          }}
+                          disabled={(date) => {
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const isDisabled = date < today;
+                            console.log('Date disabled check:', date.toDateString(), 'vs today:', today.toDateString(), 'disabled:', isDisabled);
+                            return isDisabled;
+                          }}
+                          initialFocus
+                          className="pointer-events-auto border rounded-lg p-6 bg-background w-full text-lg scale-110"
+                          numberOfMonths={2}
+                        />
+                      </div>
                     </div>
                   </div>
                 </CardContent>
