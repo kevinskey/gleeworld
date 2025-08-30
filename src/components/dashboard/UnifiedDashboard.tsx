@@ -307,9 +307,14 @@ export const UnifiedDashboard = () => {
             {publicViewMode === 'monitor' ? (
               <PublicDashboardMonitor />
             ) : (
-              // Show the actual public experience without dashboard wrapper
-              <div className="relative -mx-6 -my-4">
-                <PublicLanding />
+              // Show the actual public experience in an iframe to simulate real visitor experience
+              <div className="relative -mx-6 -my-4 h-screen">
+                <iframe
+                  src="/"
+                  title="Public GleeWorld.org Experience"
+                  className="w-full h-full border-0"
+                  style={{ minHeight: '100vh' }}
+                />
               </div>
             )}
           </div>
