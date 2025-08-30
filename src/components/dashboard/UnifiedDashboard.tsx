@@ -307,7 +307,10 @@ export const UnifiedDashboard = () => {
             {publicViewMode === 'monitor' ? (
               <PublicDashboardMonitor />
             ) : (
-              <PublicLanding />
+              // Show the actual public experience without dashboard wrapper
+              <div className="relative -mx-6 -my-4">
+                <PublicLanding />
+              </div>
             )}
           </div>
         </div>
