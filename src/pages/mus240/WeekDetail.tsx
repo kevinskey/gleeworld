@@ -1,11 +1,12 @@
 
 import { useParams, Link } from 'react-router-dom';
 import { WEEKS, Track } from '../../data/mus240Weeks';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { ArrowLeft, Play, ExternalLink, Calendar, Music, Clock, Globe, Edit, Save, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useMus240VideoEdits } from '@/hooks/useMus240VideoEdits';
 import backgroundImage from '@/assets/mus240-background.jpg';
 
 export default function WeekDetail() {
@@ -13,11 +14,14 @@ export default function WeekDetail() {
   
   // Handle both parameter names (weekNumber and week)
   const weekNumberString = weekNumber || weekParam;
-  const week = WEEKS.find(w => w.number === parseInt(weekNumberString || '0'));
+  const weekNum = parseInt(weekNumberString || '0');
+  const week = WEEKS.find(w => w.number === weekNum);
   
   const [embedFailed, setEmbedFailed] = useState<Record<string, boolean>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [editedTracks, setEditedTracks] = useState<Track[]>([]);
+  
+  const { tracks: savedTracks, loading, saving, saveVideoEdits } = useMus240VideoEdits(weekNum);
 
   if (!week) {
     return (
@@ -34,10 +38,15 @@ export default function WeekDetail() {
     );
   }
 
-  // Initialize editedTracks when week is available
-  if (week && editedTracks.length === 0) {
-    setEditedTracks(week.tracks);
-  }
+  // Use saved tracks if available, otherwise fall back to default week tracks
+  const displayTracks = savedTracks.length > 0 ? savedTracks : week.tracks;
+
+  // Initialize editedTracks when tracks change
+  useEffect(() => {
+    if (!isEditing) {
+      setEditedTracks(displayTracks);
+    }
+  }, [displayTracks, isEditing]);
 
   const handleEditTrack = (index: number, field: keyof Track, value: string) => {
     setEditedTracks(prev => prev.map((track, i) => 
@@ -45,16 +54,15 @@ export default function WeekDetail() {
     ));
   };
 
-  const handleSaveChanges = () => {
-    // Here you would typically save to a database
-    // For now, we'll just update the local state and show a success message
-    console.log('Saving changes:', editedTracks);
-    setIsEditing(false);
-    // You could add a toast notification here
+  const handleSaveChanges = async () => {
+    const success = await saveVideoEdits(editedTracks);
+    if (success) {
+      setIsEditing(false);
+    }
   };
 
   const handleCancelEdit = () => {
-    setEditedTracks(week.tracks);
+    setEditedTracks(displayTracks);
     setIsEditing(false);
   };
 
@@ -133,7 +141,7 @@ export default function WeekDetail() {
                 <div className="flex items-center gap-6 text-gray-600">
                   <div className="flex items-center gap-2">
                     <Music className="h-5 w-5" />
-                    <span className="font-medium">{week.tracks.length} Listening Examples</span>
+                    <span className="font-medium">{displayTracks.length} Listening Examples</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5" />
@@ -157,10 +165,11 @@ export default function WeekDetail() {
                       <Button 
                         onClick={handleSaveChanges}
                         size="sm"
+                        disabled={saving}
                         className="flex items-center gap-2"
                       >
                         <Save className="h-4 w-4" />
-                        Save
+                        {saving ? 'Saving...' : 'Save'}
                       </Button>
                       <Button 
                         onClick={handleCancelEdit}

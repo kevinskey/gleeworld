@@ -12752,6 +12752,33 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_video_edits: {
+        Row: {
+          created_at: string | null
+          edited_by: string | null
+          id: string
+          tracks: Json
+          updated_at: string | null
+          week_number: number
+        }
+        Insert: {
+          created_at?: string | null
+          edited_by?: string | null
+          id?: string
+          tracks: Json
+          updated_at?: string | null
+          week_number: number
+        }
+        Update: {
+          created_at?: string | null
+          edited_by?: string | null
+          id?: string
+          tracks?: Json
+          updated_at?: string | null
+          week_number?: number
+        }
+        Relationships: []
+      }
       music_albums: {
         Row: {
           artist: string
