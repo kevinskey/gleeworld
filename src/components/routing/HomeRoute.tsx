@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useRoleBasedRedirect } from '@/hooks/useRoleBasedRedirect';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
@@ -11,6 +11,10 @@ export const HomeRoute = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { userProfile } = useUserProfile(user);
+  const [searchParams] = useSearchParams();
+  
+  // Check if this is a forced public view
+  const isPublicView = searchParams.get('view') === 'public';
   
   // Debug logging for auth state
   console.log('🏠 HomeRoute render:', {
@@ -27,18 +31,18 @@ export const HomeRoute = () => {
     sessionStorage.removeItem('redirectAfterAuth');
   }, []);
   
-  // Use the role-based redirect hook to handle automatic redirection
+  // Use the role-based redirect hook to handle automatic redirection (only if not public view)
   useRoleBasedRedirect();
   
-  // Force redirect for authenticated super-admin users
+  // Force redirect for authenticated super-admin users (only if not public view)
   useEffect(() => {
-    if (!authLoading && user && userProfile) {
+    if (!authLoading && user && userProfile && !isPublicView) {
       if (userProfile.is_super_admin || userProfile.role === 'super-admin') {
         console.log('🚀 HomeRoute: Force redirecting super-admin to dashboard');
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [authLoading, user, userProfile, navigate]);
+  }, [authLoading, user, userProfile, navigate, isPublicView]);
 
   // Show loading while determining auth status
   if (authLoading) {
@@ -49,11 +53,12 @@ export const HomeRoute = () => {
     );
   }
 
-  // For public/non-authenticated users, show the landing page
+  // For public/non-authenticated users OR forced public view, show the landing page
   console.log('🌐 Showing public landing page for user:', {
     hasUser: !!user,
     userEmail: user?.email,
     authLoading,
+    isPublicView,
     shouldShowLanding: true
   });
   

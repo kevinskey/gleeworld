@@ -361,7 +361,7 @@ export const PublicDashboardMonitor = () => {
             Refresh
           </Button>
           <Button asChild>
-            <a href="/" target="_blank" rel="noopener noreferrer">
+            <a href="/?view=public" target="_blank" rel="noopener noreferrer">
               <Eye className="h-4 w-4 mr-2" />
               View Public
               <ExternalLink className="h-3 w-3 ml-1" />
