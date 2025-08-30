@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { WEEKS, Track } from '../../data/mus240Weeks';
 import { useState } from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { ArrowLeft, Play, ExternalLink, Calendar, Music, Clock, Globe, Edit, Save, X } from 'lucide-react';
+import { ArrowLeft, Play, ExternalLink, Calendar, Music, Clock, Globe, Edit, Save, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import backgroundImage from '@/assets/mus240-background.jpg';
@@ -56,6 +56,19 @@ export default function WeekDetail() {
   const handleCancelEdit = () => {
     setEditedTracks(week.tracks);
     setIsEditing(false);
+  };
+
+  const handleAddTrack = () => {
+    const newTrack: Track = {
+      title: "New Video Title",
+      source: "YouTube",
+      url: "https://www.youtube.com/watch?v="
+    };
+    setEditedTracks(prev => [...prev, newTrack]);
+  };
+
+  const handleRemoveTrack = (index: number) => {
+    setEditedTracks(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleEmbedError = (trackIndex: number) => {
@@ -167,6 +180,21 @@ export default function WeekDetail() {
 
           {/* Tracks Section */}
           <section className="space-y-6">
+            {isEditing && (
+              <div className="bg-white/95 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 border-dashed">
+                <div className="text-center">
+                  <Button 
+                    onClick={handleAddTrack}
+                    variant="outline"
+                    className="flex items-center gap-2 mx-auto"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add New Video
+                  </Button>
+                </div>
+              </div>
+            )}
+            
             {editedTracks.map((track, index) => {
               const isYouTube = track.url.includes('youtube.com') || track.url.includes('youtu.be');
               const videoId = getVideoId(track.url);
@@ -183,29 +211,41 @@ export default function WeekDetail() {
                       <div className="flex-1">
                         {isEditing ? (
                           <div className="space-y-3">
-                            <div>
-                              <label className="text-sm font-medium text-gray-700 mb-1 block">Title</label>
-                              <Input
-                                value={track.title}
-                                onChange={(e) => handleEditTrack(index, 'title', e.target.value)}
-                                className="text-lg font-bold"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-700 mb-1 block">Video URL</label>
-                              <Input
-                                value={track.url}
-                                onChange={(e) => handleEditTrack(index, 'url', e.target.value)}
-                                placeholder="https://www.youtube.com/watch?v=..."
-                              />
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-700 mb-1 block">Source</label>
-                              <Input
-                                value={track.source}
-                                onChange={(e) => handleEditTrack(index, 'source', e.target.value)}
-                                placeholder="YouTube, Internet Archive, etc."
-                              />
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="flex-1 space-y-3">
+                                <div>
+                                  <label className="text-sm font-medium text-gray-700 mb-1 block">Title</label>
+                                  <Input
+                                    value={track.title}
+                                    onChange={(e) => handleEditTrack(index, 'title', e.target.value)}
+                                    className="text-lg font-bold"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-gray-700 mb-1 block">Video URL</label>
+                                  <Input
+                                    value={track.url}
+                                    onChange={(e) => handleEditTrack(index, 'url', e.target.value)}
+                                    placeholder="https://www.youtube.com/watch?v=..."
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-gray-700 mb-1 block">Source</label>
+                                  <Input
+                                    value={track.source}
+                                    onChange={(e) => handleEditTrack(index, 'source', e.target.value)}
+                                    placeholder="YouTube, Internet Archive, etc."
+                                  />
+                                </div>
+                              </div>
+                              <Button 
+                                onClick={() => handleRemoveTrack(index)}
+                                variant="outline"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 self-start mt-6"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
                         ) : (
