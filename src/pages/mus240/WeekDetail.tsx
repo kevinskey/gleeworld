@@ -17,7 +17,7 @@ export default function WeekDetail() {
   
   const [embedFailed, setEmbedFailed] = useState<Record<string, boolean>>({});
   const [isEditing, setIsEditing] = useState(false);
-  const [editedTracks, setEditedTracks] = useState<Track[]>(week?.tracks || []);
+  const [editedTracks, setEditedTracks] = useState<Track[]>([]);
 
   if (!week) {
     return (
@@ -34,8 +34,8 @@ export default function WeekDetail() {
     );
   }
 
-  // Update editedTracks when week changes
-  if (editedTracks.length === 0 && week.tracks.length > 0) {
+  // Initialize editedTracks when week is available
+  if (week && editedTracks.length === 0) {
     setEditedTracks(week.tracks);
   }
 
