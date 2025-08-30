@@ -360,12 +360,6 @@ export const PublicDashboardMonitor = () => {
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button asChild>
-            <a href="/?view=public">
-              <Eye className="h-4 w-4 mr-2" />
-              View Public
-            </a>
-          </Button>
         </div>
       </div>
 

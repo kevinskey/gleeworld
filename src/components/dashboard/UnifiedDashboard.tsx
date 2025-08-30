@@ -6,7 +6,7 @@ import { CommunityHubModule } from './modules/CommunityHubModule';
 import { SplitClassHero } from '@/components/hero/SplitClassHero';
 import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon, Eye } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { MemberNavigation } from '@/components/member/MemberNavigation';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -307,14 +307,19 @@ export const UnifiedDashboard = () => {
             {publicViewMode === 'monitor' ? (
               <PublicDashboardMonitor />
             ) : (
-              // Show the actual public experience in an iframe to simulate real visitor experience
-              <div className="relative -mx-6 -my-4 h-screen">
-                <iframe
-                  src="/"
-                  title="Public GleeWorld.org Experience"
-                  className="w-full h-full border-0"
-                  style={{ minHeight: '100vh' }}
-                />
+              // Show button to view public page
+              <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                <Button 
+                  onClick={() => window.location.href = '/?view=public'}
+                  size="lg"
+                  className="px-8 py-4 text-lg"
+                >
+                  <Eye className="h-5 w-5 mr-2" />
+                  View Public Site
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Click to view the live public website
+                </p>
               </div>
             )}
           </div>
