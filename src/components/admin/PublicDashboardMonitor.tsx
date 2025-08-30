@@ -516,7 +516,7 @@ export const PublicDashboardMonitor = () => {
                           <>
                             {editingItem?.type === 'hero' && editingItem?.id === slide.id ? (
                               <>
-                                <Button size="sm" onClick={saveEdit}>
+                                <Button size="sm" onClick={saveEdit} className="bg-green-600 hover:bg-green-700">
                                   <Save className="h-4 w-4" />
                                 </Button>
                                 <Button size="sm" variant="outline" onClick={cancelEdit}>
@@ -529,6 +529,7 @@ export const PublicDashboardMonitor = () => {
                                   size="sm" 
                                   variant="outline"
                                   onClick={() => startEdit('hero', slide.id, slide)}
+                                  className="hover:bg-blue-50"
                                 >
                                   <Edit3 className="h-4 w-4" />
                                 </Button>
@@ -539,13 +540,28 @@ export const PublicDashboardMonitor = () => {
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => toggleActive('hero', slide.id, slide.is_active || false)}
+                                  className={slide.is_active ? "text-orange-600" : "text-green-600"}
+                                >
+                                  {slide.is_active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
+                                </Button>
                               </>
                             )}
                           </>
                         )}
-                        <Button variant="outline" size="sm">
-                          <Settings className="h-4 w-4" />
-                        </Button>
+                        {!editMode && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => toggleActive('hero', slide.id, slide.is_active || false)}
+                            className={slide.is_active ? "text-orange-600" : "text-green-600"}
+                          >
+                            {slide.is_active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
