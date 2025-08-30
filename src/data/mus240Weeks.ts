@@ -28,9 +28,9 @@ export const WEEKS: Week[] = [
     date: "2025-09-10",
     title: "Ragtime and Piano Traditions",
     tracks: [
-      { title: "Scott Joplin – Maple Leaf Rag", source: "Internet Archive", url: "https://archive.org/details/MapleLeafRag_651" },
-      { title: "James Scott – Frog Legs Rag", source: "YouTube", url: "https://www.youtube.com/watch?v=6PZ1D6IMgGk" },
-      { title: "Eubie Blake – Charleston Rag", source: "YouTube", url: "https://www.youtube.com/watch?v=1qkK4I1f0bE" }
+      { title: "Scott Joplin – Maple Leaf Rag", source: "YouTube", url: "https://www.youtube.com/watch?v=pMAtL7n_-rc" },
+      { title: "James Scott – Frog Legs Rag", source: "YouTube", url: "https://www.youtube.com/watch?v=9E62iA6KCIQ" },
+      { title: "Eubie Blake – Charleston Rag", source: "YouTube", url: "https://www.youtube.com/watch?v=bO-NaEj2dQ0" }
     ]
   },
   {
