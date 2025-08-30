@@ -6,7 +6,7 @@ import { CommunityHubModule } from './modules/CommunityHubModule';
 import { SplitClassHero } from '@/components/hero/SplitClassHero';
 import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon, Eye } from 'lucide-react';
+import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon, Eye, Music } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { MemberNavigation } from '@/components/member/MemberNavigation';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -71,10 +71,34 @@ export const UnifiedDashboard = () => {
         
         {/* Member Dashboard Content */}
         <div className="px-0 sm:px-6 py-4 space-y-6">
-          {/* Welcome Section */}
-          <div className="bg-card rounded-lg p-6 border shadow-sm">
-            <h1 className="text-2xl font-bold text-primary mb-2">Welcome to Your Member Dashboard</h1>
-            <p className="text-muted-foreground">Stay connected with the Spelman College Glee Club community.</p>
+          {/* Glee Academy Hero Section */}
+          <div 
+            className="relative bg-gradient-to-r from-primary/90 to-primary rounded-xl overflow-hidden cursor-pointer transform transition-transform duration-300 hover:scale-[1.02] shadow-lg"
+            onClick={() => window.location.href = '/glee-academy'}
+          >
+            <div className="absolute inset-0 bg-black/20"></div>
+            <div className="relative z-10 p-8 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">Welcome to Glee Academy</h1>
+                  <p className="text-white/90 text-lg mb-4">
+                    Enhance your musical journey with our comprehensive learning platform
+                  </p>
+                  <Button 
+                    variant="secondary" 
+                    size="lg"
+                    className="bg-white text-primary hover:bg-white/90"
+                  >
+                    Start Learning →
+                  </Button>
+                </div>
+                <div className="hidden md:block">
+                  <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
+                    <Music className="w-16 h-16 text-white" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Row 1: Hero + Features side-by-side */}
