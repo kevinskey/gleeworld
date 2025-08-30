@@ -18,7 +18,7 @@ import { AlumnaeDashboardMonitor } from '@/components/admin/AlumnaeDashboardMoni
 import { ExecBoardModulePanel } from '@/components/executive/ExecBoardModulePanel';
 import FanDashboard from '@/pages/FanDashboard';
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
-import PublicLanding from '@/pages/PublicLanding';
+import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
 export const UnifiedDashboard = () => {
@@ -307,14 +307,14 @@ export const UnifiedDashboard = () => {
             {publicViewMode === 'monitor' ? (
               <PublicDashboardMonitor />
             ) : (
-              <PublicLanding />
+              <GleeWorldLanding />
             )}
           </div>
         </div>
       );
     } else {
-      // Show the actual public landing page for non-admin users
-      return <PublicLanding />;
+      // Show the actual GleeWorld landing page for non-admin users
+      return <GleeWorldLanding />;
     }
   }
 
