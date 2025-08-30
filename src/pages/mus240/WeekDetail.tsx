@@ -1,9 +1,11 @@
 
 import { useParams, Link } from 'react-router-dom';
-import { WEEKS } from '../../data/mus240Weeks';
+import { WEEKS, Track } from '../../data/mus240Weeks';
 import { useState } from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { ArrowLeft, Play, ExternalLink, Calendar, Music, Clock, Globe } from 'lucide-react';
+import { ArrowLeft, Play, ExternalLink, Calendar, Music, Clock, Globe, Edit, Save, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import backgroundImage from '@/assets/mus240-background.jpg';
 
 export default function WeekDetail() {
@@ -14,6 +16,8 @@ export default function WeekDetail() {
   const week = WEEKS.find(w => w.number === parseInt(weekNumberString || '0'));
   
   const [embedFailed, setEmbedFailed] = useState<Record<string, boolean>>({});
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTracks, setEditedTracks] = useState<Track[]>(week?.tracks || []);
 
   if (!week) {
     return (
@@ -29,6 +33,30 @@ export default function WeekDetail() {
       </UniversalLayout>
     );
   }
+
+  // Update editedTracks when week changes
+  if (editedTracks.length === 0 && week.tracks.length > 0) {
+    setEditedTracks(week.tracks);
+  }
+
+  const handleEditTrack = (index: number, field: keyof Track, value: string) => {
+    setEditedTracks(prev => prev.map((track, i) => 
+      i === index ? { ...track, [field]: value } : track
+    ));
+  };
+
+  const handleSaveChanges = () => {
+    // Here you would typically save to a database
+    // For now, we'll just update the local state and show a success message
+    console.log('Saving changes:', editedTracks);
+    setIsEditing(false);
+    // You could add a toast notification here
+  };
+
+  const handleCancelEdit = () => {
+    setEditedTracks(week.tracks);
+    setIsEditing(false);
+  };
 
   const handleEmbedError = (trackIndex: number) => {
     setEmbedFailed(prev => ({ ...prev, [trackIndex]: true }));
@@ -88,14 +116,50 @@ export default function WeekDetail() {
                 </div>
               </div>
               
-              <div className="flex items-center gap-6 text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Music className="h-5 w-5" />
-                  <span className="font-medium">{week.tracks.length} Listening Examples</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-6 text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <Music className="h-5 w-5" />
+                    <span className="font-medium">{week.tracks.length} Listening Examples</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    <span>Week {week.number} Materials</span>
+                  </div>
                 </div>
+                
                 <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  <span>Week {week.number} Materials</span>
+                  {!isEditing ? (
+                    <Button 
+                      onClick={() => setIsEditing(true)}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Edit className="h-4 w-4" />
+                      Edit Videos
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        onClick={handleSaveChanges}
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <Save className="h-4 w-4" />
+                        Save
+                      </Button>
+                      <Button 
+                        onClick={handleCancelEdit}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <X className="h-4 w-4" />
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -103,7 +167,7 @@ export default function WeekDetail() {
 
           {/* Tracks Section */}
           <section className="space-y-6">
-            {week.tracks.map((track, index) => {
+            {editedTracks.map((track, index) => {
               const isYouTube = track.url.includes('youtube.com') || track.url.includes('youtu.be');
               const videoId = getVideoId(track.url);
               const isHistorical = isHistoricalVideo(track.title);
@@ -112,16 +176,49 @@ export default function WeekDetail() {
               return (
                 <div key={index} className="bg-white/95 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20">
                   <div className="mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-start gap-3">
+                    <div className="flex items-start gap-3 mb-2">
                       <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">
                         {index + 1}
                       </div>
-                      <span className="flex-1">{track.title}</span>
-                    </h3>
-                    <div className="ml-11 flex items-center gap-2 text-gray-500">
-                      <Globe className="h-4 w-4" />
-                      <span className="text-sm font-medium">Source: {track.source}</span>
+                      <div className="flex-1">
+                        {isEditing ? (
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 mb-1 block">Title</label>
+                              <Input
+                                value={track.title}
+                                onChange={(e) => handleEditTrack(index, 'title', e.target.value)}
+                                className="text-lg font-bold"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 mb-1 block">Video URL</label>
+                              <Input
+                                value={track.url}
+                                onChange={(e) => handleEditTrack(index, 'url', e.target.value)}
+                                placeholder="https://www.youtube.com/watch?v=..."
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 mb-1 block">Source</label>
+                              <Input
+                                value={track.source}
+                                onChange={(e) => handleEditTrack(index, 'source', e.target.value)}
+                                placeholder="YouTube, Internet Archive, etc."
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <h3 className="text-xl font-bold text-gray-900">{track.title}</h3>
+                        )}
+                      </div>
                     </div>
+                    {!isEditing && (
+                      <div className="ml-11 flex items-center gap-2 text-gray-500">
+                        <Globe className="h-4 w-4" />
+                        <span className="text-sm font-medium">Source: {track.source}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* YouTube embed with enhanced handling */}
