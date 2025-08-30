@@ -307,20 +307,7 @@ export const UnifiedDashboard = () => {
             {publicViewMode === 'monitor' ? (
               <PublicDashboardMonitor />
             ) : (
-              // Show button to view public page
-              <div className="flex flex-col items-center justify-center py-16 space-y-4">
-                <Button 
-                  onClick={() => window.location.href = '/?view=public'}
-                  size="lg"
-                  className="px-8 py-4 text-lg"
-                >
-                  <Eye className="h-5 w-5 mr-2" />
-                  View Public Site
-                </Button>
-                <p className="text-sm text-muted-foreground">
-                  Click to view the live public website
-                </p>
-              </div>
+              <PublicLanding />
             )}
           </div>
         </div>
