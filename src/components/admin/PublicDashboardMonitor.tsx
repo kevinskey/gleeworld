@@ -478,18 +478,33 @@ export const PublicDashboardMonitor = () => {
                             </div>
                           </div>
                         ) : (
-                          <div>
-                            <div className="flex items-center gap-3 mb-2">
-                              <Badge variant="outline">Slide {index + 1}</Badge>
-                              {getStatusBadge(slide.is_active || false)}
-                              <span className="text-sm text-muted-foreground">
-                                Duration: {slide.slide_duration_seconds || 10}s
-                              </span>
+                          <div className="flex items-start gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <Badge variant="outline">Slide {index + 1}</Badge>
+                                {getStatusBadge(slide.is_active || false)}
+                                <span className="text-sm text-muted-foreground">
+                                  Duration: {slide.slide_duration_seconds || 10}s
+                                </span>
+                              </div>
+                              <h4 className="font-medium">{slide.title || 'Untitled Slide'}</h4>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {slide.description || 'No description'}
+                              </p>
                             </div>
-                            <h4 className="font-medium">{slide.title || 'Untitled Slide'}</h4>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {slide.description || 'No description'}
-                            </p>
+                            {slide.image_url && (
+                              <div className="flex-shrink-0">
+                                <img 
+                                  src={slide.image_url} 
+                                  alt={`Preview of ${slide.title || 'slide'}`}
+                                  className="w-16 h-10 object-cover rounded border bg-muted"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
