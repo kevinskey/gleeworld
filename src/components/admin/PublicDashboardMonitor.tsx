@@ -108,13 +108,19 @@ export const PublicDashboardMonitor = () => {
     try {
       setLoading(true);
       
-      // Fetch hero slides
-      const { data: heroSlides } = await supabase
+      // Fetch hero slides - get all slides in edit mode, only active ones in normal mode
+      const heroQuery = supabase
         .from('gw_hero_slides')
         .select('*')
         .eq('usage_context', 'homepage')
-        .eq('is_active', true)
         .order('display_order', { ascending: true });
+      
+      // Only filter by active status if not in edit mode
+      if (!editMode) {
+        heroQuery.eq('is_active', true);
+      }
+      
+      const { data: heroSlides } = await heroQuery;
 
       // Fetch public events
       const { data: events } = await supabase
@@ -159,7 +165,7 @@ export const PublicDashboardMonitor = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [editMode]); // Re-fetch when edit mode changes
 
   const getStatusBadge = (isActive: boolean) => (
     <Badge variant={isActive ? "default" : "secondary"}>
@@ -275,7 +281,7 @@ export const PublicDashboardMonitor = () => {
       if (error) throw error;
 
       toast.success('Item deleted successfully');
-      fetchDashboardData();
+      await fetchDashboardData(); // Make sure we wait for the fetch to complete
     } catch (error) {
       console.error('Error deleting item:', error);
       toast.error('Failed to delete item');
