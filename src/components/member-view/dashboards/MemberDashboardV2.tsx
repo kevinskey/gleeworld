@@ -150,6 +150,36 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
         {/* Quick Actions Bar */}
         <QuickActions />
 
+        {/* Hero Welcome + Community Hub */}
+        <section aria-label="Member welcome" className="animate-fade-in w-full overflow-hidden">
+          <Card className="relative overflow-hidden border bg-background/40 w-full">
+            <div className="absolute inset-0">
+              <img
+                src="/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png"
+                alt="Historic Spelman campus background"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background/70" />
+            </div>
+          <CardContent className="card-compact relative z-10 h-[280px] sm:h-[320px] md:h-[400px] flex flex-col justify-between">
+            <div className="flex items-center gap-2 md:gap-4">
+              <Avatar className="touch-target h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14">
+                <AvatarImage src={avatarUrl || undefined} alt={`${firstName} avatar`} />
+                <AvatarFallback>{getInitials(user.full_name)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="mobile-text-2xl font-bold tracking-tight">Welcome, {firstName}</h1>
+                <p className="mobile-text-lg text-muted-foreground">To Amaze and Inspire.</p>
+              </div>
+            </div>
+
+            <div className="w-full responsive-grid-2 gap-2 md:gap-4">
+              <div className="w-full overflow-hidden"><CommunityHubWidget /></div>
+              <div className="w-full overflow-hidden"><AuditionStatsWidget /></div>
+            </div>
+          </CardContent>
+          </Card>
+        </section>
 
 {/* Calendar for all members (collapsed by default) */}
 <section aria-label="Member calendar" className="animate-fade-in">

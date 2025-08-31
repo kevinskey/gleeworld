@@ -9,7 +9,6 @@ import { useMus240Progress } from '@/hooks/useMus240Progress';
 import { ASSIGNMENTS } from '@/data/mus240Assignments';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { ErrorState } from '@/components/shared/ErrorState';
 
 export const Mus240GradesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -26,19 +25,11 @@ export const Mus240GradesPage: React.FC = () => {
   if (error) {
     return (
       <div className="container mx-auto p-6 space-y-6">
-        <ErrorState 
-          message={error} 
-          onRetry={() => window.location.reload()}
-        />
+        <div className="text-center text-destructive">Error: {error}</div>
       </div>
     );
   }
 
-  console.log('Mus240GradesPage - Grade Summary:', gradeSummary);
-  console.log('Mus240GradesPage - Submissions:', submissions);
-  console.log('Mus240GradesPage - Attendance Stats:', attendanceStats);
-
-  console.log('Mus240GradesPage loaded - checking data...', { gradeSummary, submissions, attendanceStats });
   const assignmentPoints = gradeSummary?.assignment_points || 0;
   const participationPoints = gradeSummary?.participation_points || 0;
   const overallPoints = gradeSummary?.overall_points || 0;
