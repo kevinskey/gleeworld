@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { Music, Calendar, BookOpen, Users } from 'lucide-react';
+import { Music, Calendar, BookOpen, Users, TrendingUp } from 'lucide-react';
 import backgroundImage from '@/assets/mus240-background.jpg';
 
 export default function ClassLanding() {
@@ -22,6 +22,12 @@ export default function ClassLanding() {
       to: '/classes/mus240/assignments', 
       desc: 'Prompts, rubrics, due dates',
       icon: Calendar
+    },
+    { 
+      title: 'Grades & Progress', 
+      to: '/classes/mus240/grades', 
+      desc: 'Your performance & attendance',
+      icon: TrendingUp
     },
     { 
       title: 'Resources', 

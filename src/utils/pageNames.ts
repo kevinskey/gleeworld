@@ -41,6 +41,7 @@ export const PAGE_NAMES: Record<string, string> = {
   '/classes/mus240/syllabus': 'MUS 240 Syllabus',
   '/classes/mus240/listening': 'MUS 240 Listening Hub',
   '/classes/mus240/assignments': 'MUS 240 Assignments',
+  '/classes/mus240/grades': 'MUS 240 Grades & Progress',
   '/classes/mus240/resources': 'MUS 240 Resources'
 };
 

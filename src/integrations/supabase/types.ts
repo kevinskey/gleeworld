@@ -12565,6 +12565,51 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_grade_summaries: {
+        Row: {
+          assignment_points: number
+          assignment_possible: number
+          calculated_at: string
+          id: string
+          letter_grade: string | null
+          overall_percentage: number
+          overall_points: number
+          overall_possible: number
+          participation_points: number
+          participation_possible: number
+          semester: string
+          student_id: string
+        }
+        Insert: {
+          assignment_points?: number
+          assignment_possible?: number
+          calculated_at?: string
+          id?: string
+          letter_grade?: string | null
+          overall_percentage?: number
+          overall_points?: number
+          overall_possible?: number
+          participation_points?: number
+          participation_possible?: number
+          semester?: string
+          student_id: string
+        }
+        Update: {
+          assignment_points?: number
+          assignment_possible?: number
+          calculated_at?: string
+          id?: string
+          letter_grade?: string | null
+          overall_percentage?: number
+          overall_points?: number
+          overall_possible?: number
+          participation_points?: number
+          participation_possible?: number
+          semester?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
       mus240_journal_comments: {
         Row: {
           commenter_id: string
@@ -12664,6 +12709,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mus240_participation_grades: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          points_earned: number
+          points_possible: number
+          semester: string
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          points_earned?: number
+          points_possible?: number
+          semester?: string
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          points_earned?: number
+          points_possible?: number
+          semester?: string
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       mus240_reading_requirements: {
         Row: {
@@ -15777,6 +15858,10 @@ export type Database = {
       calculate_event_budget_totals: {
         Args: { event_id_param: string }
         Returns: undefined
+      }
+      calculate_mus240_grade_summary: {
+        Args: { semester_param?: string; student_id_param: string }
+        Returns: Json
       }
       calculate_semester_grade: {
         Args: { semester_name_param?: string; user_id_param: string }
