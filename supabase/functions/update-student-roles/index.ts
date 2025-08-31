@@ -92,7 +92,9 @@ Deno.serve(async (req) => {
     const studentIds = students.map(s => s.student_id)
 
     // Update student roles using service role key (bypasses RLS)
-    const { data: updateResult, error: updateError } = await supabaseClient
+    console.log(`Attempting to update ${studentIds.length} students to 'student' role`)
+    
+    const { data: updateResult, error: updateError, count } = await supabaseClient
       .from('gw_profiles')
       .update({ 
         role: 'student',
@@ -100,6 +102,7 @@ Deno.serve(async (req) => {
       })
       .in('user_id', studentIds)
       .neq('role', 'student') // Only update if not already student
+      .select('user_id, role')
 
     if (updateError) {
       console.log('Update error:', updateError)
@@ -109,12 +112,14 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log(`Successfully updated roles for students in MUS 240`)
+    const actualUpdated = updateResult ? updateResult.length : 0;
+    console.log(`Successfully updated ${actualUpdated} student roles to 'student'`)
     
     return new Response(
       JSON.stringify({ 
-        message: 'Student roles updated successfully',
-        updated: studentIds.length,
+        message: `Successfully updated ${actualUpdated} student roles`,
+        updated: actualUpdated,
+        total_students: studentIds.length,
         students: studentIds
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

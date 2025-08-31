@@ -7,9 +7,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Search, Users, Download, Save, UserCheck, Mail, Calendar } from 'lucide-react';
+import { ArrowLeft, Search, Users, Download, Save, UserCheck, Mail, Calendar, ChevronDown, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import backgroundImage from '@/assets/mus240-background.jpg';
 
@@ -43,6 +44,7 @@ export const Mus240AdminPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isEnrollmentCollapsed, setIsEnrollmentCollapsed] = useState(true);
 
   // Check if user is admin
   useEffect(() => {
@@ -165,10 +167,17 @@ export const Mus240AdminPage: React.FC = () => {
   };
 
   const updateStudentRoles = async () => {
+    setLoading(true);
     try {
+      const session = await supabase.auth.getSession();
+      if (!session.data.session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
+      console.log('Calling update-student-roles function...');
       const { data, error } = await supabase.functions.invoke('update-student-roles', {
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          Authorization: `Bearer ${session.data.session.access_token}`
         }
       });
 
@@ -176,7 +185,7 @@ export const Mus240AdminPage: React.FC = () => {
         console.error('Error updating student roles:', error);
         toast({
           title: "Error",
-          description: "Failed to update student roles",
+          description: `Failed to update student roles: ${error.message}`,
           variant: "destructive",
         });
         return;
@@ -185,7 +194,7 @@ export const Mus240AdminPage: React.FC = () => {
       console.log('Student roles update result:', data);
       toast({
         title: "Success",
-        description: `Updated ${data.updated} student roles to 'student'`,
+        description: data.message || `Updated ${data.updated} student roles to 'student'`,
       });
       
       // Refresh the data
@@ -194,9 +203,11 @@ export const Mus240AdminPage: React.FC = () => {
       console.error('Error calling update-student-roles function:', error);
       toast({
         title: "Error",
-        description: "Failed to update student roles",
+        description: `Failed to update student roles: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -388,6 +399,14 @@ export const Mus240AdminPage: React.FC = () => {
               Save Enrollments
             </Button>
             <Button 
+              onClick={updateStudentRoles} 
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <UserCheck className="h-4 w-4 mr-2" />
+              Update to Student Role
+            </Button>
+            <Button 
               onClick={downloadCSV} 
               variant="outline" 
               disabled={grades.length === 0}
@@ -400,68 +419,85 @@ export const Mus240AdminPage: React.FC = () => {
 
           {/* Two Column Layout */}
           <div className="grid lg:grid-cols-2 gap-6">
-            {/* User Selection */}
+            {/* User Selection - Collapsible */}
             <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-amber-600" />
-                  Student Enrollment ({selectedUsers.size} selected)
-                </CardTitle>
-                <CardDescription>
-                  Select users to enroll in MUS 240 Fall 2024
-                </CardDescription>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="max-h-96 overflow-y-auto space-y-2">
-                  {filteredUsers.map((user) => (
-                    <div
-                      key={user.user_id}
-                      className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50"
-                    >
-                      <Checkbox
-                        checked={selectedUsers.has(user.user_id)}
-                        onCheckedChange={(checked) => 
-                          handleUserSelection(user.user_id, checked as boolean)
-                        }
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {user.full_name}
-                          </p>
-                          {user.is_enrolled && (
-                            <Badge variant="secondary" className="text-xs">
-                              Enrolled
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {user.email}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(user.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
+              <Collapsible open={!isEnrollmentCollapsed} onOpenChange={setIsEnrollmentCollapsed}>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-white/10 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <UserCheck className="h-5 w-5 text-amber-600" />
+                          Student Enrollment ({selectedUsers.size} selected)
+                        </CardTitle>
+                        <CardDescription>
+                          Select users to enroll in MUS 240 Fall 2024
+                        </CardDescription>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {user.role}
-                      </Badge>
+                      {isEnrollmentCollapsed ? (
+                        <ChevronRight className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                      )}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardHeader className="pt-0">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Input
+                        placeholder="Search users..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="max-h-96 overflow-y-auto space-y-2">
+                      {filteredUsers.map((user) => (
+                        <div
+                          key={user.user_id}
+                          className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50"
+                        >
+                          <Checkbox
+                            checked={selectedUsers.has(user.user_id)}
+                            onCheckedChange={(checked) => 
+                              handleUserSelection(user.user_id, checked as boolean)
+                            }
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {user.full_name}
+                              </p>
+                              {user.is_enrolled && (
+                                <Badge variant="secondary" className="text-xs">
+                                  Enrolled
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                {user.email}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {new Date(user.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {user.role}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
             </Card>
 
             {/* Current Grades */}
@@ -477,14 +513,6 @@ export const Mus240AdminPage: React.FC = () => {
                       Current grades for enrolled students
                     </CardDescription>
                   </div>
-                  <Button 
-                    onClick={updateStudentRoles}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    Update Roles to 'Student'
-                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
