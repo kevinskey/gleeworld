@@ -164,6 +164,42 @@ export const Mus240AdminPage: React.FC = () => {
     }
   };
 
+  const updateStudentRoles = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('update-student-roles', {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      });
+
+      if (error) {
+        console.error('Error updating student roles:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update student roles",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Student roles update result:', data);
+      toast({
+        title: "Success",
+        description: `Updated ${data.updated} student roles to 'student'`,
+      });
+      
+      // Refresh the data
+      await Promise.all([fetchUsers(), fetchGrades()]);
+    } catch (error) {
+      console.error('Error calling update-student-roles function:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update student roles",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleUserSelection = (userId: string, isSelected: boolean) => {
     const newSelected = new Set(selectedUsers);
     if (isSelected) {
@@ -431,13 +467,25 @@ export const Mus240AdminPage: React.FC = () => {
             {/* Current Grades */}
             <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-amber-600" />
-                  Current Enrolled Students ({grades.length})
-                </CardTitle>
-                <CardDescription>
-                  Current grades for enrolled students
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-amber-600" />
+                      Current Enrolled Students ({grades.length})
+                    </CardTitle>
+                    <CardDescription>
+                      Current grades for enrolled students
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    onClick={updateStudentRoles}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    Update Roles to 'Student'
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="max-h-96 overflow-y-auto">
