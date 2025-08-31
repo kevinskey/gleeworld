@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get all MUS 240 students
+    // Get all MUS 240 students using the service role client
     const { data: students, error: studentsError } = await supabaseClient
       .from('mus240_grade_summaries')
       .select('student_id')
@@ -99,10 +99,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    const studentIds = students.map(s => s.student_id)
+    console.log(`Found ${students.length} students enrolled in MUS 240 Fall 2024`)
 
-    // Use the database function to update student roles (bypasses triggers)
-    console.log(`Calling database function to update student roles for MUS 240`)
+    // Call the secure database function that bypasses triggers
+    console.log(`Calling secure database function to update student roles`)
     
     const { data: updateResult, error: updateError } = await supabaseClient
       .rpc('update_mus240_student_roles')
@@ -122,8 +122,8 @@ Deno.serve(async (req) => {
       JSON.stringify({ 
         message: `Successfully updated ${actualUpdated} student roles`,
         updated: actualUpdated,
-        total_students: studentIds.length,
-        students: studentIds
+        total_students: students.length,
+        details: updateResult
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
