@@ -52,7 +52,7 @@ import ListeningHub from "@/pages/mus240/ListeningHub";
 import AssignmentWeek from "@/pages/mus240/AssignmentWeek";
 import WeekDetail from "@/pages/mus240/WeekDetail";
 import SyllabusPage from "@/pages/mus240/SyllabusPage";
-import { Mus240GradesPage } from "@/pages/classes/mus240/Mus240GradesPage";
+import { Mus240GradesPage } from "@/pages/mus240/Mus240GradesPage";
 
 export const router = createBrowserRouter([
   {
