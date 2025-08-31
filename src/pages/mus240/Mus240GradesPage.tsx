@@ -14,6 +14,15 @@ export const Mus240GradesPage: React.FC = () => {
   const navigate = useNavigate();
   const { gradeSummary, participationGrade, submissions, attendanceStats, loading, error, getLetterGradeColor } = useMus240Progress();
 
+  console.log('Mus240GradesPage - Debug:', {
+    loading,
+    error,
+    gradeSummary,
+    participationGrade,
+    submissions,
+    attendanceStats
+  });
+
   if (loading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
