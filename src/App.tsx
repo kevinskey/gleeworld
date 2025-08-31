@@ -158,6 +158,7 @@ import WeekDetail from "./pages/mus240/WeekDetail";
 import AssignmentJournal from "./pages/mus240/AssignmentJournal";
 import Resources from "./pages/mus240/Resources";
 import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
+import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -1429,8 +1430,16 @@ const App = () => {
                                     <ResourcesAdmin />
                                   </ProtectedRoute>
                                 } 
-                              />
-                         </Routes>
+                               />
+                               <Route 
+                                 path="/classes/mus240/grades" 
+                                 element={
+                                   <PublicRoute>
+                                     <Mus240GradesPage />
+                                   </PublicRoute>
+                                 } 
+                               />
+                          </Routes>
                     </Suspense>
                    <GlobalMusicPlayer />
                 </div>
