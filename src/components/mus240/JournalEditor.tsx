@@ -176,6 +176,11 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
 
         <div className="flex gap-2 justify-between">
           <div>
+            {/* Debug info - Remove this later */}
+            <div className="text-xs text-muted-foreground mb-2">
+              Debug: userEntry={userEntry ? 'exists' : 'null'}, isPublished={isPublished ? 'true' : 'false'}
+            </div>
+            
             {userEntry && !isPublished && (
               <Button
                 onClick={handleDelete}
