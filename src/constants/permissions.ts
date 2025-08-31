@@ -3,6 +3,7 @@ export const USER_ROLES = {
   VISITOR: 'visitor',
   FAN: 'fan',
   AUDITIONER: 'auditioner',
+  STUDENT: 'student',
   ALUMNA: 'alumna',
   MEMBER: 'member',
   ADMIN: 'admin',
@@ -58,6 +59,14 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'view_own_payments',
     'view_own_w9_forms',
     'sign_contracts',
+    'access_handbook',
+  ],
+  [USER_ROLES.STUDENT]: [
+    'view_own_contracts',
+    'view_own_payments',
+    'view_own_w9_forms',
+    'sign_contracts',
+    'submit_w9_forms',
     'access_handbook',
   ],
   [USER_ROLES.ALUMNA]: [
