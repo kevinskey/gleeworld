@@ -118,28 +118,45 @@ export const Mus240AdminPage: React.FC = () => {
 
   const fetchGrades = async () => {
     try {
+      // First get grade summaries
       const { data: summaries, error: summariesError } = await supabase
         .from('mus240_grade_summaries')
-        .select(`
-          *,
-          gw_profiles!inner(full_name, email)
-        `)
-        .eq('semester', 'Fall 2024')
-        .order('gw_profiles(full_name)');
+        .select('*')
+        .eq('semester', 'Fall 2024');
 
       if (summariesError) throw summariesError;
 
-      const formattedGrades: StudentGrade[] = (summaries || []).map((summary: any) => ({
-        student_id: summary.student_id,
-        full_name: summary.gw_profiles.full_name || 'Unknown',
-        email: summary.gw_profiles.email || '',
-        assignment_points: summary.assignment_points || 0,
-        participation_points: summary.participation_points || 0,
-        overall_points: summary.overall_points || 0,
-        overall_percentage: summary.overall_percentage || 0,
-        letter_grade: summary.letter_grade || 'N/A',
-        semester: summary.semester,
-      }));
+      if (!summaries || summaries.length === 0) {
+        setGrades([]);
+        return;
+      }
+
+      // Then get profile information for each student
+      const studentIds = summaries.map(s => s.student_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', studentIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create a map for quick lookup
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      const formattedGrades: StudentGrade[] = summaries.map((summary: any) => {
+        const profile = profileMap.get(summary.student_id);
+        return {
+          student_id: summary.student_id,
+          full_name: profile?.full_name || 'Unknown',
+          email: profile?.email || '',
+          assignment_points: summary.assignment_points || 0,
+          participation_points: summary.participation_points || 0,
+          overall_points: summary.overall_points || 0,
+          overall_percentage: summary.overall_percentage || 0,
+          letter_grade: summary.letter_grade || 'N/A',
+          semester: summary.semester,
+        };
+      });
 
       setGrades(formattedGrades);
     } catch (error) {
