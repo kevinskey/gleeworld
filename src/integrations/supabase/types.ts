@@ -16719,6 +16719,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      update_mus240_student_roles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          new_role: string
+          old_role: string
+          user_id: string
+        }[]
+      }
       update_user_role: {
         Args: { new_role: string; user_id: string }
         Returns: boolean

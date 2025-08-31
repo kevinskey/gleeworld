@@ -101,20 +101,11 @@ Deno.serve(async (req) => {
 
     const studentIds = students.map(s => s.student_id)
 
-    // Update student roles using service role key (completely bypasses RLS and triggers)
-    console.log(`Attempting to update ${studentIds.length} students to 'student' role using service role`)
+    // Use the database function to update student roles (bypasses triggers)
+    console.log(`Calling database function to update student roles for MUS 240`)
     
-    // Use a raw SQL approach to bypass all triggers and RLS
-    const { data: updateResult, error: updateError } = await supabaseClient.rpc('exec_sql', {
-      query: `
-        UPDATE gw_profiles 
-        SET role = 'student', updated_at = now() 
-        WHERE user_id = ANY($1::uuid[]) 
-        AND role != 'student'
-        RETURNING user_id, role;
-      `,
-      params: [studentIds]
-    }).single()
+    const { data: updateResult, error: updateError } = await supabaseClient
+      .rpc('update_mus240_student_roles')
 
     if (updateError) {
       console.log('Update error:', updateError)
@@ -125,7 +116,7 @@ Deno.serve(async (req) => {
     }
 
     const actualUpdated = updateResult ? updateResult.length : 0;
-    console.log(`Successfully updated ${actualUpdated} student roles to 'student'`)
+    console.log(`Successfully updated ${actualUpdated} student roles to 'student'`, updateResult)
     
     return new Response(
       JSON.stringify({ 
