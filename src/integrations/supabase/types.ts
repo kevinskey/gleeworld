@@ -12690,6 +12690,36 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_assignment_types: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          percentage: number | null
+          total_points: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          percentage?: number | null
+          total_points: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          percentage?: number | null
+          total_points?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       mus240_grade_summaries: {
         Row: {
           assignment_points: number
@@ -12871,6 +12901,47 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_performance_levels: {
+        Row: {
+          created_at: string | null
+          criterion_id: string | null
+          description: string
+          id: string
+          level_name: string
+          level_value: number
+          points: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          criterion_id?: string | null
+          description: string
+          id?: string
+          level_name: string
+          level_value: number
+          points: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          criterion_id?: string | null
+          description?: string
+          id?: string
+          level_name?: string
+          level_value?: number
+          points?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_performance_levels_criterion_id_fkey"
+            columns: ["criterion_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_rubric_criteria"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mus240_reading_requirements: {
         Row: {
           assignment_id: string
@@ -12957,6 +13028,122 @@ export type Database = {
           url?: string
         }
         Relationships: []
+      }
+      mus240_rubric_criteria: {
+        Row: {
+          assignment_type_id: string | null
+          created_at: string | null
+          criterion_name: string
+          description: string | null
+          display_order: number | null
+          id: string
+          max_points: number
+          updated_at: string | null
+          weight_percentage: number
+        }
+        Insert: {
+          assignment_type_id?: string | null
+          created_at?: string | null
+          criterion_name: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          max_points: number
+          updated_at?: string | null
+          weight_percentage: number
+        }
+        Update: {
+          assignment_type_id?: string | null
+          created_at?: string | null
+          criterion_name?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          max_points?: number
+          updated_at?: string | null
+          weight_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_rubric_criteria_assignment_type_id_fkey"
+            columns: ["assignment_type_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_assignment_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mus240_rubric_scores: {
+        Row: {
+          created_at: string | null
+          criterion_id: string | null
+          graded_by: string | null
+          id: string
+          instructor_comments: string | null
+          performance_level_id: string | null
+          points_earned: number
+          submission_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          criterion_id?: string | null
+          graded_by?: string | null
+          id?: string
+          instructor_comments?: string | null
+          performance_level_id?: string | null
+          points_earned: number
+          submission_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          criterion_id?: string | null
+          graded_by?: string | null
+          id?: string
+          instructor_comments?: string | null
+          performance_level_id?: string | null
+          points_earned?: number
+          submission_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_rubric_scores_criterion_id_fkey"
+            columns: ["criterion_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_rubric_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mus240_rubric_scores_graded_by_fkey"
+            columns: ["graded_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mus240_rubric_scores_graded_by_fkey"
+            columns: ["graded_by"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mus240_rubric_scores_performance_level_id_fkey"
+            columns: ["performance_level_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_performance_levels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mus240_rubric_scores_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "assignment_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mus240_video_edits: {
         Row: {
