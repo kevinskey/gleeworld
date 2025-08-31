@@ -274,10 +274,15 @@ export const Mus240AdminPage: React.FC = () => {
     });
   };
 
-  const filteredUsers = users.filter(user =>
-    user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const searchLower = searchTerm.toLowerCase().trim();
+    if (!searchLower) return true; // Show all users if no search term
+    
+    const fullName = (user.full_name || '').toLowerCase();
+    const email = (user.email || '').toLowerCase();
+    
+    return fullName.includes(searchLower) || email.includes(searchLower);
+  });
 
   const getLetterGradeColor = (grade: string) => {
     switch (grade) {
