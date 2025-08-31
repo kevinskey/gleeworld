@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Settings, Download, Edit, Save, X, Users } from 'lucide-react';
@@ -224,17 +221,15 @@ export const AdminGradesCard: React.FC = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Card className="bg-white/95 backdrop-blur-sm border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 cursor-pointer">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-gradient-to-br from-red-500 to-pink-600 rounded-lg">
-                <Settings className="h-5 w-5 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900">Administrator</h3>
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 cursor-pointer">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
+              <Settings className="h-5 w-5 text-white" />
             </div>
-            <p className="text-gray-600 leading-relaxed">Manage student grades and export data</p>
-          </CardContent>
-        </Card>
+            <h3 className="text-xl font-semibold text-gray-900">Administrator</h3>
+          </div>
+          <p className="text-gray-600 leading-relaxed">Manage student grades and export data</p>
+        </div>
       </DialogTrigger>
       
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
