@@ -243,7 +243,21 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     
                     <DropdownMenuSeparator />
                     
-                    {/* Public View */}
+                    {/* Public Pages */}
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/')}
+                      className="cursor-pointer"
+                    >
+                      <Globe className="mr-2 h-4 w-4" />
+                      Landing Page
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/glee-academy')}
+                      className="cursor-pointer"
+                    >
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      Glee Academy
+                    </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => navigate('/dashboard/public')}
                       className="cursor-pointer"
