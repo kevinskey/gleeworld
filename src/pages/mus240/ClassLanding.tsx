@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Music, Calendar, BookOpen, Users, TrendingUp } from 'lucide-react';
 import backgroundImage from '@/assets/mus240-background.jpg';
+import { AdminGradesCard } from '@/components/mus240/admin/AdminGradesCard';
 
 export default function ClassLanding() {
   const cards = [
@@ -99,6 +100,9 @@ export default function ClassLanding() {
                 </Link>
               );
             })}
+            
+            {/* Admin Card - Only visible to administrators */}
+            <AdminGradesCard />
           </section>
           
           {/* Course Description */}
