@@ -38,6 +38,7 @@ export const Mus240GradesPage: React.FC = () => {
   console.log('Mus240GradesPage - Submissions:', submissions);
   console.log('Mus240GradesPage - Attendance Stats:', attendanceStats);
 
+  console.log('Mus240GradesPage loaded - checking data...', { gradeSummary, submissions, attendanceStats });
   const assignmentPoints = gradeSummary?.assignment_points || 0;
   const participationPoints = gradeSummary?.participation_points || 0;
   const overallPoints = gradeSummary?.overall_points || 0;
