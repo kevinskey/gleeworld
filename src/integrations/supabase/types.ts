@@ -3578,7 +3578,11 @@ export type Database = {
       }
       gw_attendance_qr_codes: {
         Row: {
+          assignment_id: string | null
+          context_type: string | null
+          course_code: string | null
           created_at: string
+          custom_data: Json | null
           event_id: string
           expires_at: string
           generated_at: string
@@ -3588,11 +3592,16 @@ export type Database = {
           location_data: Json | null
           max_scans: number | null
           qr_token: string
+          redirect_url: string | null
           scan_count: number
           updated_at: string
         }
         Insert: {
+          assignment_id?: string | null
+          context_type?: string | null
+          course_code?: string | null
           created_at?: string
+          custom_data?: Json | null
           event_id: string
           expires_at: string
           generated_at?: string
@@ -3602,11 +3611,16 @@ export type Database = {
           location_data?: Json | null
           max_scans?: number | null
           qr_token: string
+          redirect_url?: string | null
           scan_count?: number
           updated_at?: string
         }
         Update: {
+          assignment_id?: string | null
+          context_type?: string | null
+          course_code?: string | null
           created_at?: string
+          custom_data?: Json | null
           event_id?: string
           expires_at?: string
           generated_at?: string
@@ -3616,6 +3630,7 @@ export type Database = {
           location_data?: Json | null
           max_scans?: number | null
           qr_token?: string
+          redirect_url?: string | null
           scan_count?: number
           updated_at?: string
         }
@@ -8280,6 +8295,116 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      gw_qr_codes: {
+        Row: {
+          assignment_id: string | null
+          content: string
+          context_type: string | null
+          course_code: string | null
+          course_name: string | null
+          created_at: string | null
+          created_by: string
+          custom_data: Json | null
+          description: string | null
+          expires_at: string | null
+          generated_at: string | null
+          id: string
+          is_active: boolean | null
+          max_scans: number | null
+          qr_token: string
+          qr_type: string
+          scan_count: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assignment_id?: string | null
+          content: string
+          context_type?: string | null
+          course_code?: string | null
+          course_name?: string | null
+          created_at?: string | null
+          created_by: string
+          custom_data?: Json | null
+          description?: string | null
+          expires_at?: string | null
+          generated_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_scans?: number | null
+          qr_token: string
+          qr_type: string
+          scan_count?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assignment_id?: string | null
+          content?: string
+          context_type?: string | null
+          course_code?: string | null
+          course_name?: string | null
+          created_at?: string | null
+          created_by?: string
+          custom_data?: Json | null
+          description?: string | null
+          expires_at?: string | null
+          generated_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_scans?: number | null
+          qr_token?: string
+          qr_type?: string
+          scan_count?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      gw_qr_scans: {
+        Row: {
+          additional_data: Json | null
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          qr_code_id: string
+          scan_location: Json | null
+          scanned_at: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          additional_data?: Json | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          qr_code_id: string
+          scan_location?: Json | null
+          scanned_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          additional_data?: Json | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          qr_code_id?: string
+          scan_location?: Json | null
+          scanned_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_qr_scans_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "gw_qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_radio_episodes: {
         Row: {
@@ -16014,6 +16139,16 @@ export type Database = {
       }
       encrypt_square_token: {
         Args: { token: string }
+        Returns: string
+      }
+      generate_course_qr_code: {
+        Args: {
+          p_content: string
+          p_course_code?: string
+          p_expires_minutes?: number
+          p_qr_type?: string
+          p_title: string
+        }
         Returns: string
       }
       generate_qr_token: {
