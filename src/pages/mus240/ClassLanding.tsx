@@ -3,6 +3,7 @@ import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Music, Calendar, BookOpen, Users, TrendingUp } from 'lucide-react';
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { AdminGradesCard } from '@/components/mus240/admin/AdminGradesCard';
+import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
 
 export default function ClassLanding() {
   const cards = [
@@ -40,6 +41,7 @@ export default function ClassLanding() {
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
+      <Mus240UserAvatar />
       <div 
         className="min-h-screen bg-cover bg-center bg-no-repeat relative bg-gradient-to-br from-orange-800 to-amber-600"
         style={{

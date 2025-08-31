@@ -158,6 +158,7 @@ import WeekDetail from "./pages/mus240/WeekDetail";
 import AssignmentJournal from "./pages/mus240/AssignmentJournal";
 import Resources from "./pages/mus240/Resources";
 import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
+import { Mus240AdminPage } from "./pages/mus240/admin/Mus240AdminPage";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
@@ -1438,8 +1439,16 @@ const App = () => {
                                      <Mus240GradesPage />
                                    </PublicRoute>
                                  } 
-                               />
-                          </Routes>
+                                />
+                                <Route 
+                                  path="/classes/mus240/admin" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <Mus240AdminPage />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                           </Routes>
                     </Suspense>
                    <GlobalMusicPlayer />
                 </div>

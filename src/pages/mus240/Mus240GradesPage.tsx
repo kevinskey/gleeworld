@@ -12,6 +12,7 @@ import { ASSIGNMENTS } from '@/data/mus240Assignments';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import backgroundImage from '@/assets/mus240-background.jpg';
+import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
 
 export const Mus240GradesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -85,7 +86,8 @@ export const Mus240GradesPage: React.FC = () => {
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
-      <div 
+      <Mus240UserAvatar />
+      <div
         className="min-h-screen bg-cover bg-center bg-no-repeat relative"
         style={{
           backgroundImage: `url(${backgroundImage})`,
