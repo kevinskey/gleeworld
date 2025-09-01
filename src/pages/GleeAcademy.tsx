@@ -71,7 +71,7 @@ const GleeAcademy = () => {
   return <UniversalLayout>
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
       {/* Hero Section */}
-      <div className="relative overflow-hidden -mt-20 sm:-mt-24 md:-mt-28 lg:-mt-32">
+      <div className="relative overflow-hidden pt-4 sm:pt-6 md:pt-8 lg:pt-10">
         <img 
           src={academyHeroImage} 
           alt="Glee World Academy" 
