@@ -27,6 +27,16 @@ export const AdminOnlyRoute = ({ children }: AdminOnlyRouteProps) => {
   // Check if user has admin privileges
   const isAdmin = userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.is_exec_board;
   
+  console.log('AdminOnlyRoute: Checking admin access', {
+    user: !!user,
+    userProfile: !!userProfile,
+    isAdmin,
+    is_admin: userProfile?.is_admin,
+    is_super_admin: userProfile?.is_super_admin,
+    is_exec_board: userProfile?.is_exec_board,
+    role: userProfile?.role
+  });
+  
   if (!isAdmin) {
     // Redirect non-admin users to member dashboard
     return <Navigate to="/dashboard/member" replace />;
