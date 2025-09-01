@@ -12720,6 +12720,57 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_assignments: {
+        Row: {
+          assignment_type: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          instructions: string | null
+          is_active: boolean
+          points: number
+          prompt: string
+          resources: string[] | null
+          rubric: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          points?: number
+          prompt: string
+          resources?: string[] | null
+          rubric?: Json | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          points?: number
+          prompt?: string
+          resources?: string[] | null
+          rubric?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mus240_grade_summaries: {
         Row: {
           assignment_points: number
@@ -12802,6 +12853,7 @@ export type Database = {
       }
       mus240_journal_entries: {
         Row: {
+          assignment_db_id: string | null
           assignment_id: string
           content: string
           created_at: string
@@ -12813,6 +12865,7 @@ export type Database = {
           word_count: number
         }
         Insert: {
+          assignment_db_id?: string | null
           assignment_id: string
           content: string
           created_at?: string
@@ -12824,6 +12877,7 @@ export type Database = {
           word_count?: number
         }
         Update: {
+          assignment_db_id?: string | null
           assignment_id?: string
           content?: string
           created_at?: string
@@ -12834,11 +12888,20 @@ export type Database = {
           updated_at?: string
           word_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "mus240_journal_entries_assignment_db_id_fkey"
+            columns: ["assignment_db_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mus240_journal_grades: {
         Row: {
           ai_model: string | null
+          assignment_db_id: string | null
           assignment_id: string
           created_at: string
           feedback: string | null
@@ -12854,6 +12917,7 @@ export type Database = {
         }
         Insert: {
           ai_model?: string | null
+          assignment_db_id?: string | null
           assignment_id: string
           created_at?: string
           feedback?: string | null
@@ -12869,6 +12933,7 @@ export type Database = {
         }
         Update: {
           ai_model?: string | null
+          assignment_db_id?: string | null
           assignment_id?: string
           created_at?: string
           feedback?: string | null
@@ -12882,7 +12947,15 @@ export type Database = {
           student_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "mus240_journal_grades_assignment_db_id_fkey"
+            columns: ["assignment_db_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mus240_journal_reads: {
         Row: {
