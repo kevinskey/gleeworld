@@ -109,17 +109,17 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             {user && (
               <>
                 {/* Keep dashboard switcher as secondary navigation */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 p-0 rounded-md hover:bg-accent/20"
-                      type="button"
-                    >
-                      <LayoutDashboard className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                    </Button>
-                  </DropdownMenuTrigger>
+                  <DropdownMenu>
+                   <DropdownMenuTrigger asChild>
+                     <Button 
+                       variant="ghost" 
+                       size="sm" 
+                       className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 p-0 rounded-md hover:bg-accent/20"
+                       type="button"
+                     >
+                       <LayoutDashboard className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8" />
+                     </Button>
+                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 bg-background border border-border shadow-lg z-[200]" align="end">
                     <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
                     <DropdownMenuSeparator />
