@@ -39,6 +39,96 @@ const AssignmentWeek: React.FC = () => {
     }
   }, [submissions]);
 
+  // If no weekNumber is provided, show all assignments overview
+  if (!weekNumber) {
+    return (
+      <UniversalLayout>
+        <div className="container mx-auto py-8 space-y-6">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">MUS 240 Assignments</h1>
+            <p className="text-lg text-muted-foreground">All course assignments organized by week</p>
+          </div>
+
+          {mus240Assignments.map((weekData) => (
+            <Card key={weekData.week} className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Week {weekData.week}: {weekData.topic}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {weekData.startDate} - {weekData.endDate}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {weekData.assignments.map((assignment) => {
+                    const { submitted, graded, score } = getSubmissionStatus(assignment.id);
+                    
+                    return (
+                      <Card 
+                        key={assignment.id}
+                        className={`relative group hover:shadow-lg transition-all cursor-pointer ${
+                          submitted ? 'border-green-300 bg-green-50/50' : ''
+                        }`}
+                        onClick={() => {
+                          if (assignment.type === 'listening-journal') {
+                            navigate(`/classes/mus240/assignments/${assignment.id}`);
+                          } else {
+                            handleSubmitAssignment(assignment);
+                          }
+                        }}
+                      >
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">{assignment.title}</CardTitle>
+                          <div className="flex flex-wrap items-center gap-1">
+                            <Badge variant="outline" className="text-xs">
+                              {getTypeIcon(assignment.type)}
+                              {assignment.type.replace('_', ' ')}
+                            </Badge>
+                            <Badge variant="secondary" className="text-xs">
+                              {assignment.points} pts
+                            </Badge>
+                            {submitted && (
+                              <Badge variant="default" className="bg-green-600 text-xs">
+                                <CheckCircle2 className="h-3 w-3 mr-1" />
+                                Submitted
+                              </Badge>
+                            )}
+                            {graded && (
+                              <Badge variant="default" className="bg-blue-600 text-xs">
+                                <GraduationCap className="h-3 w-3 mr-1" />
+                                {Math.round(score)}%
+                              </Badge>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-2">
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                            {assignment.description}
+                          </p>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+                            {assignment.estimatedTime && <span>{assignment.estimatedTime}</span>}
+                          </div>
+                          {graded && score !== null && (
+                            <div className="mt-2">
+                              <Progress value={score} className="h-1" />
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </UniversalLayout>
+    );
+  }
+
   if (!week) {
     return (
       <UniversalLayout>
