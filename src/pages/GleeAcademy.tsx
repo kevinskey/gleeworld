@@ -69,104 +69,103 @@ const GleeAcademy = () => {
   };
 
   return <UniversalLayout>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-        {/* Hero Section */}
-        <div className="relative overflow-hidden">
-          <img 
-            src={academyHeroImage} 
-            alt="Glee World Academy" 
-            className="w-full h-[60vh] md:h-[70vh] object-cover"
-          />
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <img 
+          src={academyHeroImage} 
+          alt="Glee World Academy" 
+          className="w-full h-[50vh] sm:h-[60vh] md:h-[70vh] object-cover"
+        />
+      </div>
 
-        {/* Courses Section */}
-        <div className="py-16 px-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                Our Course Offerings
-              </h2>
-              
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {courses.map(course => {
-              const IconComponent = course.icon;
-              const isClickable = course.id === 'african-american-music' || course.id === 'music-fundamentals' || course.id === 'private-lessons';
-              return <Card 
-                key={course.id} 
-                className={`group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm h-full flex flex-col relative ${isClickable ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
-                onClick={isClickable ? () => handleCourseClick(course.id) : undefined}
-              >
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                            <IconComponent className="h-5 w-5 text-primary" />
-                          </div>
-                          <Badge variant="secondary" className="text-xs">
-                            {course.level}
-                          </Badge>
-                        </div>
-                        <span className="text-sm text-muted-foreground">{course.duration}</span>
-                      </div>
-                      <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">
-                        {course.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-1 flex flex-col">
-                      <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
-                        {course.description}
-                      </p>
-                      
-                      <div className="space-y-3 flex-1 flex flex-col">
-                        <h4 className="font-medium text-sm text-foreground">Course Highlights:</h4>
-                        <ul className="space-y-1 flex-1">
-                          {course.highlights.map((highlight, index) => <li key={index} className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <ChevronRight className="h-3 w-3 text-primary flex-shrink-0" />
-                              {highlight}
-                            </li>)}
-                        </ul>
-                        
-                        <Button 
-                          className="w-full mt-4 group-hover:bg-primary/90 transition-colors" 
-                          size="sm"
-                          onClick={isClickable ? (e) => { e.stopPropagation(); handleCourseClick(course.id); } : undefined}
-                        >
-                          {course.id === 'african-american-music' ? 'Enter MUS 240' : 
-                           course.id === 'music-fundamentals' ? 'Enter Music Theory' :
-                           course.id === 'private-lessons' ? 'Book with Doc' : 'Under Development'}
-                          <ChevronRight className="h-4 w-4 ml-1" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>;
-            })}
-            </div>
+      {/* Courses Section */}
+      <div className="py-8 sm:py-12 lg:py-16 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Our Course Offerings
+            </h2>
           </div>
-        </div>
 
-        {/* Call to Action Section */}
-        <div className="bg-muted/30 py-12 px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              Ready to Begin Your Musical Journey?
-            </h3>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join our community of musicians and experience the transformative power of music education rooted in excellence and tradition.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90">
-                Apply Now
-              </Button>
-              <Button size="lg" variant="outline">
-                Schedule a Consultation
-              </Button>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {courses.map(course => {
+            const IconComponent = course.icon;
+            const isClickable = course.id === 'african-american-music' || course.id === 'music-fundamentals' || course.id === 'private-lessons';
+            return <Card 
+              key={course.id} 
+              className={`group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm h-full flex flex-col relative ${isClickable ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
+              onClick={isClickable ? () => handleCourseClick(course.id) : undefined}
+            >
+                <CardHeader className="pb-3 sm:pb-4">
+                  <div className="flex items-start justify-between mb-3 flex-wrap sm:flex-nowrap gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {course.level}
+                      </Badge>
+                    </div>
+                    <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">{course.duration}</span>
+                  </div>
+                  <CardTitle className="text-base sm:text-lg font-semibold group-hover:text-primary transition-colors leading-tight">
+                    {course.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col pt-0">
+                  <p className="text-muted-foreground mb-4 text-xs sm:text-sm leading-relaxed">
+                    {course.description}
+                  </p>
+                  
+                  <div className="space-y-3 flex-1 flex flex-col">
+                    <h4 className="font-medium text-xs sm:text-sm text-foreground">Course Highlights:</h4>
+                    <ul className="space-y-1 flex-1">
+                      {course.highlights.map((highlight, index) => <li key={index} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <ChevronRight className="h-3 w-3 text-primary flex-shrink-0 mt-0.5" />
+                          <span className="leading-relaxed">{highlight}</span>
+                        </li>)}
+                    </ul>
+                    
+                    <Button 
+                      className="w-full mt-4 group-hover:bg-primary/90 transition-colors text-xs sm:text-sm" 
+                      size="sm"
+                      onClick={isClickable ? (e) => { e.stopPropagation(); handleCourseClick(course.id); } : undefined}
+                    >
+                      {course.id === 'african-american-music' ? 'Enter MUS 240' : 
+                       course.id === 'music-fundamentals' ? 'Enter Music Theory' :
+                       course.id === 'private-lessons' ? 'Book with Doc' : 'Under Development'}
+                      <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>;
+          })}
           </div>
         </div>
       </div>
+
+      {/* Call to Action Section */}
+      <div className="bg-muted/30 py-8 sm:py-12 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-4">
+            Ready to Begin Your Musical Journey?
+          </h3>
+          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto">
+            Join our community of musicians and experience the transformative power of music education rooted in excellence and tradition.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <Button size="lg" className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-sm sm:text-base">
+              Apply Now
+            </Button>
+            <Button size="lg" variant="outline" className="text-sm sm:text-base">
+              Schedule a Consultation
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
     </UniversalLayout>;
 };
 export default GleeAcademy;
