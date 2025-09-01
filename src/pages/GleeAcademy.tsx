@@ -71,11 +71,11 @@ const GleeAcademy = () => {
   return <UniversalLayout>
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden -mt-16 sm:-mt-20">
         <img 
           src={academyHeroImage} 
           alt="Glee World Academy" 
-          className="w-full h-[40vh] xs:h-[45vh] sm:h-[55vh] md:h-[65vh] lg:h-[75vh] xl:h-[80vh] object-cover object-center"
+          className="w-full h-[50vh] xs:h-[55vh] sm:h-[65vh] md:h-[75vh] lg:h-[85vh] xl:h-[90vh] object-contain"
         />
         {/* Logo Overlay - Hidden on Mobile */}
         <div className="absolute inset-0 hidden sm:flex items-center justify-center bg-black/30">
