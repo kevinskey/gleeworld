@@ -13,6 +13,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isReset = searchParams.get('reset') === 'true';
+  const theme = searchParams.get('theme') as 'default' | 'mus240' || 'default';
 
   console.log('🔄 Auth component render:', {
     hasUser: !!user,
@@ -56,10 +57,25 @@ const Auth = () => {
     );
   }
 
+  const getTitle = () => {
+    if (isReset) return "Reset Password";
+    return theme === 'mus240' 
+      ? "MUS 240: Survey of African American Music" 
+      : "Welcome Back to Glee World!";
+  };
+
+  const getSubtitle = () => {
+    if (isReset) return "Enter your new password";
+    return theme === 'mus240'
+      ? "Sign in to access course materials and assignments"
+      : "Sign in to your account or create a new one";
+  };
+
   return (
     <AuthLayout 
-      title={isReset ? "Reset Password" : "Welcome Back to Glee World!"}
-      subtitle={isReset ? "Enter your new password" : "Sign in to your account or create a new one"}
+      title={getTitle()}
+      subtitle={getSubtitle()}
+      theme={theme}
     >
       <AuthTabs />
     </AuthLayout>

@@ -38,6 +38,7 @@ import Accounting from "./pages/Accounting";
 import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
 
 import AuditionerDashboardPage from "./pages/AuditionerDashboardPage";
+import Mus240Auth from "./pages/Mus240Auth";
 
 import EventPlanner from "./pages/EventPlanner";
 import BudgetApprovals from "./pages/BudgetApprovals";
@@ -232,6 +233,14 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <AuthPage />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/auth/mus240" 
+                element={
+                  <PublicRoute>
+                    <Mus240Auth />
                   </PublicRoute>
                 } 
               />
