@@ -1,0 +1,346 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Plus, Edit, Eye, Calendar, Users, Brain, BarChart3, BookOpen } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Assignment {
+  id: string;
+  title: string;
+  description: string;
+  prompt: string;
+  points: number;
+  due_date: string;
+  is_active: boolean;
+  assignment_type: string;
+  created_at: string;
+}
+
+export const AssignmentManager = () => {
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    prompt: '',
+    points: 100,
+    due_date: '',
+    assignment_type: 'listening_journal'
+  });
+
+  useEffect(() => {
+    fetchAssignments();
+  }, []);
+
+  const fetchAssignments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('mus240_assignments')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAssignments(data || []);
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+      toast.error('Failed to load assignments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (editingAssignment) {
+        const { error } = await supabase
+          .from('mus240_assignments')
+          .update({
+            title: formData.title,
+            description: formData.description,
+            prompt: formData.prompt,
+            points: formData.points,
+            due_date: formData.due_date || null,
+            assignment_type: formData.assignment_type
+          })
+          .eq('id', editingAssignment.id);
+
+        if (error) throw error;
+        toast.success('Assignment updated successfully');
+      } else {
+        const { error } = await supabase
+          .from('mus240_assignments')
+          .insert({
+            title: formData.title,
+            description: formData.description,
+            prompt: formData.prompt,
+            points: formData.points,
+            due_date: formData.due_date || null,
+            assignment_type: formData.assignment_type
+          });
+
+        if (error) throw error;
+        toast.success('Assignment created successfully');
+      }
+
+      setIsCreateModalOpen(false);
+      setEditingAssignment(null);
+      setFormData({
+        title: '',
+        description: '',
+        prompt: '',
+        points: 100,
+        due_date: '',
+        assignment_type: 'listening_journal'
+      });
+      fetchAssignments();
+    } catch (error) {
+      console.error('Error saving assignment:', error);
+      toast.error('Failed to save assignment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleAssignmentStatus = async (assignment: Assignment) => {
+    try {
+      const { error } = await supabase
+        .from('mus240_assignments')
+        .update({ is_active: !assignment.is_active })
+        .eq('id', assignment.id);
+
+      if (error) throw error;
+      
+      toast.success(
+        assignment.is_active ? 'Assignment deactivated' : 'Assignment activated'
+      );
+      fetchAssignments();
+    } catch (error) {
+      console.error('Error updating assignment status:', error);
+      toast.error('Failed to update assignment status');
+    }
+  };
+
+  const openEditModal = (assignment: Assignment) => {
+    setEditingAssignment(assignment);
+    setFormData({
+      title: assignment.title,
+      description: assignment.description || '',
+      prompt: assignment.prompt,
+      points: assignment.points,
+      due_date: assignment.due_date ? assignment.due_date.split('T')[0] : '',
+      assignment_type: assignment.assignment_type
+    });
+    setIsCreateModalOpen(true);
+  };
+
+  const getAIAssistance = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('mus240-instructor-assistant', {
+        body: {
+          task: 'assignment_ideas',
+          prompt: 'Generate 3 creative listening journal assignment ideas for my Survey of African American Music course. Include specific music examples and learning objectives.'
+        }
+      });
+
+      if (error) throw error;
+      
+      // For now, just show the response in a toast - could be enhanced with a modal
+      toast.success('AI suggestions generated! Check the console for ideas.');
+      console.log('AI Assignment Ideas:', data.response);
+    } catch (error) {
+      console.error('Error getting AI assistance:', error);
+      toast.error('Failed to get AI assistance');
+    }
+  };
+
+  if (loading && assignments.length === 0) {
+    return <div>Loading assignments...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Assignment Manager</h2>
+          <p className="text-gray-600">Create and manage listening journal assignments</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={getAIAssistance} variant="outline">
+            <Brain className="h-4 w-4 mr-2" />
+            AI Ideas
+          </Button>
+          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                New Assignment
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingAssignment ? 'Edit Assignment' : 'Create New Assignment'}
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="prompt">Assignment Prompt</Label>
+                  <Textarea
+                    id="prompt"
+                    value={formData.prompt}
+                    onChange={(e) => setFormData({...formData, prompt: e.target.value})}
+                    rows={6}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="points">Points</Label>
+                    <Input
+                      id="points"
+                      type="number"
+                      value={formData.points}
+                      onChange={(e) => setFormData({...formData, points: parseInt(e.target.value)})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="due_date">Due Date</Label>
+                    <Input
+                      id="due_date"
+                      type="date"
+                      value={formData.due_date}
+                      onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    {editingAssignment ? 'Update' : 'Create'} Assignment
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      {/* Assignments Grid */}
+      <div className="grid gap-4">
+        {assignments.map((assignment) => (
+          <Card key={assignment.id} className={`${!assignment.is_active ? 'opacity-60' : ''}`}>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    {assignment.title}
+                    {assignment.is_active ? (
+                      <Badge variant="default">Active</Badge>
+                    ) : (
+                      <Badge variant="secondary">Inactive</Badge>
+                    )}
+                  </CardTitle>
+                  {assignment.description && (
+                    <p className="text-sm text-gray-600 mt-1">{assignment.description}</p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openEditModal(assignment)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={assignment.is_active ? "destructive" : "default"}
+                    onClick={() => toggleAssignmentStatus(assignment)}
+                  >
+                    {assignment.is_active ? 'Deactivate' : 'Activate'}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Prompt:</p>
+                  <p className="text-sm bg-gray-50 p-2 rounded">
+                    {assignment.prompt.length > 200 
+                      ? `${assignment.prompt.substring(0, 200)}...` 
+                      : assignment.prompt
+                    }
+                  </p>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <BarChart3 className="h-4 w-4" />
+                    {assignment.points} points
+                  </div>
+                  {assignment.due_date && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      Due {new Date(assignment.due_date).toLocaleDateString()}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    0 submissions
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {assignments.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
+            <p className="text-gray-600 mb-4">Create your first listening journal assignment to get started.</p>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Assignment
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
