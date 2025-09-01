@@ -4,30 +4,43 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, BookOpen, Users, Edit, Eye } from 'lucide-react';
+import { ArrowLeft, BookOpen, Users, Edit, Eye, Settings } from 'lucide-react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { JournalEditor } from '@/components/mus240/JournalEditor';
 import { JournalReader } from '@/components/mus240/JournalReader';
-import { mus240Assignments } from '@/data/mus240Assignments';
+import { AssignmentPromptEditor } from '@/components/mus240/AssignmentPromptEditor';
+import { mus240Assignments, Assignment } from '@/data/mus240Assignments';
 import { useMus240Journals } from '@/hooks/useMus240Journals';
+import { useAssignmentEditor } from '@/hooks/useAssignmentEditor';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const AssignmentJournal: React.FC = () => {
   const { assignmentId } = useParams<{ assignmentId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('write');
   const [userEntry, setUserEntry] = useState<any>(null);
+  const [currentAssignment, setCurrentAssignment] = useState<Assignment | null>(null);
   
   const { fetchUserEntry } = useMus240Journals();
+  const { updateAssignment, getUpdatedAssignment } = useAssignmentEditor();
+  const { isAdmin } = useUserRole();
 
-  // Find the assignment from our data
-  const assignment = mus240Assignments
+  // Find the assignment from our data and check for updates
+  const baseAssignment = mus240Assignments
     .flatMap(week => week.assignments)
     .find(a => a.id === assignmentId && a.type === 'listening-journal');
 
   useEffect(() => {
-    if (assignment) {
+    if (baseAssignment) {
+      const updatedAssignment = getUpdatedAssignment(baseAssignment);
+      setCurrentAssignment(updatedAssignment);
+    }
+  }, [baseAssignment, getUpdatedAssignment]);
+
+  useEffect(() => {
+    if (currentAssignment) {
       const loadUserEntry = async () => {
-        const entry = await fetchUserEntry(assignment.id);
+        const entry = await fetchUserEntry(currentAssignment.id);
         setUserEntry(entry);
         
         // If user has published their journal, switch to read tab
@@ -37,9 +50,9 @@ const AssignmentJournal: React.FC = () => {
       };
       loadUserEntry();
     }
-  }, [assignment, fetchUserEntry]);
+  }, [currentAssignment, fetchUserEntry]);
 
-  if (!assignment) {
+  if (!currentAssignment) {
     return (
       <UniversalLayout>
         <div className="container mx-auto py-8">
@@ -64,10 +77,17 @@ const AssignmentJournal: React.FC = () => {
     setActiveTab('read');
     // Refresh user entry
     const loadUserEntry = async () => {
-      const entry = await fetchUserEntry(assignment.id);
-      setUserEntry(entry);
+      if (currentAssignment) {
+        const entry = await fetchUserEntry(currentAssignment.id);
+        setUserEntry(entry);
+      }
     };
     loadUserEntry();
+  };
+
+  const handleAssignmentUpdate = (updatedAssignment: Assignment) => {
+    updateAssignment(updatedAssignment);
+    setCurrentAssignment(updatedAssignment);
   };
 
   return (
@@ -91,13 +111,13 @@ const AssignmentJournal: React.FC = () => {
               <div>
                 <CardTitle className="flex items-center gap-2 mb-2">
                   <BookOpen className="h-5 w-5" />
-                  {assignment.title}
+                  {currentAssignment.title}
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline">{assignment.type}</Badge>
-                  <Badge variant="secondary">{assignment.points} points</Badge>
-                  <Badge variant={new Date(assignment.dueDate) < new Date() ? "destructive" : "default"}>
-                    Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                  <Badge variant="outline">{currentAssignment.type}</Badge>
+                  <Badge variant="secondary">{currentAssignment.points} points</Badge>
+                  <Badge variant={new Date(currentAssignment.dueDate) < new Date() ? "destructive" : "default"}>
+                    Due: {new Date(currentAssignment.dueDate).toLocaleDateString()}
                   </Badge>
                 </div>
               </div>
@@ -110,6 +130,14 @@ const AssignmentJournal: React.FC = () => {
             </div>
           </CardHeader>
         </Card>
+
+        {/* Admin Assignment Editor */}
+        {isAdmin() && (
+          <AssignmentPromptEditor
+            assignment={currentAssignment}
+            onAssignmentUpdate={handleAssignmentUpdate}
+          />
+        )}
 
         {/* Tabs for Write/Read */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -126,14 +154,14 @@ const AssignmentJournal: React.FC = () => {
           
           <TabsContent value="write" className="mt-6">
             <JournalEditor 
-              assignment={assignment} 
+              assignment={currentAssignment} 
               onPublished={handleJournalPublished}
             />
           </TabsContent>
           
           <TabsContent value="read" className="mt-6">
             {userEntry?.is_published ? (
-              <JournalReader assignment={assignment} />
+              <JournalReader assignment={currentAssignment} />
             ) : (
               <Card>
                 <CardContent className="text-center py-12">
