@@ -16,11 +16,12 @@ export const WEEKS: Week[] = [
   {
     number: 2,
     date: "2025-09-03",
-    title: "Spirituals and Early Blues: From Field Hollers to Form",
+    title: "Spirituals and Vocal Traditions",
     tracks: [
-      { title: "Fisk Jubilee Singers – Swing Low, Sweet Chariot", source: "YouTube", url: "https://www.youtube.com/watch?v=GUvBGZnL9rE" },
-      { title: "Field Hollers (1939) – John & Ruby Lomax", source: "LOC", url: "https://www.loc.gov/item/lomaxbib000056/" },
-      { title: "Ma Rainey – C.C. Rider", source: "YouTube", url: "https://www.youtube.com/watch?v=Yd60nI4sa9A" }
+      { title: "Fisk Jubilee Singers – \"Swing Low, Sweet Chariot\"", source: "YouTube", url: "https://www.youtube.com/watch?v=GUvBGZnL9rE" },
+      { title: "Field Holler (archival example) – Lomax collection", source: "LOC", url: "https://www.loc.gov/item/lomaxbib000056/" },
+      { title: "Robert Johnson – \"Cross Road Blues\"", source: "YouTube", url: "https://www.youtube.com/watch?v=Rt3gcSyL5vg" },
+      { title: "Kevin Phillip Johnson's arrangement of \"Children, Go Where I Send Thee\"", source: "Sheet Music Plus", url: "https://www.sheetmusicplus.com" }
     ]
   },
   {
