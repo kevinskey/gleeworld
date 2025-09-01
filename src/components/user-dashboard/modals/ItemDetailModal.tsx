@@ -89,7 +89,7 @@ export const ItemDetailModal = ({ isOpen, onClose, item }: ItemDetailModalProps)
           {item.dueDate && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
-              Due: {new Date(item.dueDate).toLocaleDateString()}
+              Due: {new Date(item.dueDate + 'T12:00:00').toLocaleDateString()}
             </div>
           )}
           

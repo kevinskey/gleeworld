@@ -80,7 +80,7 @@ const SightReadingPage = () => {
                     {assignments.map((assignment) => {
                       const progress = Math.round((assignment.completedCount / assignment.assignedCount) * 100);
                       const isCompleted = assignment.completedCount === assignment.assignedCount;
-                      const isOverdue = new Date(assignment.dueDate) < new Date();
+                      const isOverdue = new Date(assignment.dueDate + 'T12:00:00') < new Date();
                       
                       return (
                         <div key={assignment.id} className="p-4 bg-muted/30 rounded-lg">
@@ -88,7 +88,7 @@ const SightReadingPage = () => {
                             <div className="flex-1">
                               <h4 className="font-semibold">{assignment.title}</h4>
                               <p className="text-sm text-muted-foreground">
-                                Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                                Due: {new Date(assignment.dueDate + 'T12:00:00').toLocaleDateString()}
                               </p>
                               <div className="flex items-center gap-2 mt-2">
                                 <Badge 

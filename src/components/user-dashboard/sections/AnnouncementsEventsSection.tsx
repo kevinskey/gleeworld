@@ -135,7 +135,7 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
                       </div>
                       <div className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        Due: {new Date(item.dueDate).toLocaleDateString()}
+                        Due: {new Date(item.dueDate + 'T12:00:00').toLocaleDateString()}
                       </div>
                     </div>
                   ))
@@ -222,7 +222,7 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
                         </div>
                         <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                           <Clock className="h-3 w-3" />
-                          Due: {new Date(item.dueDate).toLocaleDateString()}
+                          Due: {new Date(item.dueDate + 'T12:00:00').toLocaleDateString()}
                         </div>
                       </div>
                     ))
@@ -251,7 +251,7 @@ export const AnnouncementsEventsSection = ({ upcomingEvents }: AnnouncementsEven
                   <div className="border border-primary/10 rounded-lg p-2 bg-background/50">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-lg font-bold text-foreground">${duesInfo.totalDue.toFixed(2)}</span>
-                      <span className="text-xs text-muted-foreground">Due: {new Date(duesInfo.dueDate).toLocaleDateString()}</span>
+                      <span className="text-xs text-muted-foreground">Due: {new Date(duesInfo.dueDate + 'T12:00:00').toLocaleDateString()}</span>
                     </div>
                     <div className="space-y-1">
                       {duesInfo.items.map((item, index) => (

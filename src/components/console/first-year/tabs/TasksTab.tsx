@@ -151,7 +151,7 @@ export const TasksTab = () => {
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                      <span>Due: {new Date(task.dueDate + 'T12:00:00').toLocaleDateString()}</span>
                       <span>Assigned to: {task.assignedTo} students</span>
                       <span>Completed: {task.completed}/{task.assignedTo}</span>
                     </div>

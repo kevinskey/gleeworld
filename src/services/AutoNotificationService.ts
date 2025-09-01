@@ -187,7 +187,7 @@ export const AutoNotificationService = {
     await this.sendNotification({
       userId,
       title: 'Payment Due',
-      message: `Payment of $${amount} for ${description} is due on ${new Date(dueDate).toLocaleDateString()}`,
+      message: `Payment of $${amount} for ${description} is due on ${new Date(dueDate + 'T12:00:00').toLocaleDateString()}`,
       type: 'warning',
       category: 'payment',
       actionUrl: `/payments`,

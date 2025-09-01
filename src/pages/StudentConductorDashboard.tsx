@@ -389,7 +389,7 @@ export const StudentConductorDashboard = () => {
                               <h4 className="text-lg md:text-xl font-semibold">{assignment.title}</h4>
                               <p className="text-base md:text-lg text-muted-foreground">Due: {assignment.dueDate}</p>
                             </div>
-                            <Badge variant={new Date(assignment.dueDate) < new Date() ? "destructive" : "default"}>
+                            <Badge variant={new Date(assignment.dueDate + 'T12:00:00') < new Date() ? "destructive" : "default"}>
                               {assignment.completedCount}/{assignment.assignedCount} Complete
                             </Badge>
                           </div>
