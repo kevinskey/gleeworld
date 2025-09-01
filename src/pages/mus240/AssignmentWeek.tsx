@@ -39,6 +39,128 @@ const AssignmentWeek: React.FC = () => {
     }
   }, [submissions]);
 
+  // If no weekNumber provided, show assignments overview
+  if (!weekNumber) {
+    return (
+      <UniversalLayout>
+        <div className="container mx-auto py-8">
+          <div className="mb-8">
+            <div className="flex items-center gap-4 mb-6">
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate('/classes/mus240')}
+                className="mb-4"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to MUS 240
+              </Button>
+            </div>
+            
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                MUS 240 Assignments
+              </h1>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                Explore weekly assignments and track your progress through the course
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {mus240Assignments.map((weekData) => (
+              <Card 
+                key={weekData.week} 
+                className="hover:shadow-lg transition-shadow cursor-pointer group"
+                onClick={() => navigate(`/classes/mus240/week/${weekData.week}`)}
+              >
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <Badge variant="secondary" className="mb-2">
+                      Week {weekData.week}
+                    </Badge>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(weekData.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </div>
+                  </div>
+                  <CardTitle className="group-hover:text-primary transition-colors">
+                    {weekData.topic}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {weekData.assignments.map((assignment) => {
+                      const submission = submissionMap[assignment.id];
+                      const submitted = Boolean(submission);
+                      const graded = submitted && submission.grade !== null;
+                      
+                      return (
+                        <div 
+                          key={assignment.id}
+                          className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (assignment.type === 'listening-journal') {
+                              navigate(`/classes/mus240/assignments/${assignment.id}`);
+                            }
+                          }}
+                        >
+                          <div className="flex-shrink-0">
+                            {graded ? (
+                              <CheckCircle2 className="h-5 w-5 text-green-500" />
+                            ) : submitted ? (
+                              <Clock className="h-5 w-5 text-yellow-500" />
+                            ) : (
+                              <BookOpen className="h-5 w-5 text-gray-400" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm truncate">
+                              {assignment.title}
+                            </h4>
+                            <p className="text-xs text-muted-foreground">
+                              Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                              {assignment.points && ` • ${assignment.points} pts`}
+                            </p>
+                          </div>
+                          {graded && (
+                            <div className="flex-shrink-0">
+                              <Badge variant="outline" className="text-xs">
+                                {submission.grade}%
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="mt-4 pt-3 border-t">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {weekData.assignments.filter(a => submissionMap[a.id]).length} / {weekData.assignments.length} completed
+                      </span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/classes/mus240/week/${weekData.week}`);
+                        }}
+                      >
+                        View Week →
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </UniversalLayout>
+    );
+  }
+
   if (!week) {
     return (
       <UniversalLayout>
