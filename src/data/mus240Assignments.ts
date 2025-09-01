@@ -161,6 +161,150 @@ export const mus240Assignments: WeekAssignments[] = [
         points: 50
       }
     ]
+  },
+  {
+    week: 9,
+    topic: "Hip-Hop Culture and Rap Music",
+    startDate: "2025-10-15",
+    endDate: "2025-10-21",
+    assignments: [
+      {
+        id: "lj8",
+        title: "Listening Journal 8: Hip-Hop Foundations",
+        description: "Analyze the emergence of hip-hop culture and early rap music.",
+        instructions: "Examine sampling techniques, lyrical content, and the four elements of hip-hop culture.",
+        dueDate: "2025-10-24",
+        type: "listening-journal",
+        estimatedTime: "45 minutes",
+        points: 20
+      }
+    ]
+  },
+  {
+    week: 10,
+    topic: "Contemporary R&B and Neo-Soul",
+    startDate: "2025-10-22",
+    endDate: "2025-10-28",
+    assignments: [
+      {
+        id: "lj9",
+        title: "Listening Journal 9: Contemporary R&B Evolution",
+        description: "Study the evolution of R&B from the 1990s to present day.",
+        instructions: "Compare traditional R&B with contemporary styles, noting technological and cultural influences.",
+        dueDate: "2025-10-31",
+        type: "listening-journal",
+        estimatedTime: "40 minutes",
+        points: 20
+      }
+    ]
+  },
+  {
+    week: 11,
+    topic: "Gospel's Modern Evolution",
+    startDate: "2025-10-29",
+    endDate: "2025-11-04",
+    assignments: [
+      {
+        id: "lj10",
+        title: "Listening Journal 10: Contemporary Gospel",
+        description: "Examine modern gospel music and its fusion with other genres.",
+        instructions: "Analyze how contemporary gospel incorporates elements from R&B, hip-hop, and pop music.",
+        dueDate: "2025-11-07",
+        type: "listening-journal",
+        estimatedTime: "40 minutes",
+        points: 20
+      }
+    ]
+  },
+  {
+    week: 12,
+    topic: "Jazz Fusion and Modern Jazz",
+    startDate: "2025-11-05",
+    endDate: "2025-11-11",
+    assignments: [
+      {
+        id: "lj11",
+        title: "Listening Journal 11: Jazz Evolution",
+        description: "Trace jazz development from bebop through fusion to contemporary jazz.",
+        instructions: "Compare different jazz eras and analyze the incorporation of electronic elements.",
+        dueDate: "2025-11-14",
+        type: "listening-journal",
+        estimatedTime: "45 minutes",
+        points: 20
+      }
+    ]
+  },
+  {
+    week: 13,
+    topic: "African American Music in Popular Culture",
+    startDate: "2025-11-12",
+    endDate: "2025-11-18",
+    assignments: [
+      {
+        id: "lj12",
+        title: "Listening Journal 12: Global Influence",
+        description: "Examine the global influence of African American music on world music.",
+        instructions: "Analyze how African American musical styles have influenced international artists and genres.",
+        dueDate: "2025-11-21",
+        type: "listening-journal",
+        estimatedTime: "40 minutes",
+        points: 20
+      }
+    ]
+  },
+  {
+    week: 14,
+    topic: "Music and Social Justice",
+    startDate: "2025-11-19",
+    endDate: "2025-11-25",
+    assignments: [
+      {
+        id: "lj13",
+        title: "Listening Journal 13: Protest and Resistance",
+        description: "Study the role of African American music in social movements.",
+        instructions: "Analyze protest songs from different eras and their impact on social change.",
+        dueDate: "2025-12-05",
+        type: "listening-journal",
+        estimatedTime: "45 minutes",
+        points: 20
+      }
+    ]
+  },
+  {
+    week: 15,
+    topic: "Future Directions and Legacy",
+    startDate: "2025-12-03",
+    endDate: "2025-12-09",
+    assignments: [
+      {
+        id: "final-project",
+        title: "Final Research Project: Musical Legacy Analysis",
+        description: "Create a comprehensive research project analyzing the legacy and future of African American music.",
+        instructions: "Choose a specific artist, genre, or movement and trace its historical significance and contemporary relevance. Include multimedia presentation.",
+        dueDate: "2025-12-12",
+        type: "project",
+        estimatedTime: "4 hours",
+        points: 75
+      }
+    ]
+  },
+  {
+    week: 16,
+    topic: "Final Presentations and Course Reflection",
+    startDate: "2025-12-10",
+    endDate: "2025-12-16",
+    assignments: [
+      {
+        id: "final-reflection",
+        title: "Course Reflection Essay",
+        description: "Write a reflective essay on your learning journey through African American music history.",
+        instructions: "Reflect on how the course has changed your understanding of music, culture, and history. Connect course themes to contemporary issues.",
+        dueDate: "2025-12-16",
+        type: "essay",
+        estimatedTime: "2 hours",
+        points: 25
+      }
+    ]
   }
 ];
 
