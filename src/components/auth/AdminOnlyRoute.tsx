@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import { useUserRole } from "@/hooks/useUserRole";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 interface AdminOnlyRouteProps {
@@ -10,7 +10,7 @@ interface AdminOnlyRouteProps {
 
 export const AdminOnlyRoute = ({ children }: AdminOnlyRouteProps) => {
   const { user, loading: authLoading } = useAuth();
-  const { userProfile, loading: profileLoading } = useUserProfile(user);
+  const { profile, loading: profileLoading, isAdmin } = useUserRole();
   
   if (authLoading || profileLoading) {
     return (
@@ -24,22 +24,19 @@ export const AdminOnlyRoute = ({ children }: AdminOnlyRouteProps) => {
     return <Navigate to="/auth" replace />;
   }
   
-  // Check if user has admin privileges
-  const isAdmin = userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.is_exec_board;
-  
   console.log('AdminOnlyRoute: Checking admin access', {
     user: !!user,
-    userProfile: !!userProfile,
-    userProfileData: userProfile,
-    isAdmin,
-    is_admin: userProfile?.is_admin,
-    is_super_admin: userProfile?.is_super_admin,
-    is_exec_board: userProfile?.is_exec_board,
-    role: userProfile?.role,
+    profile: !!profile,
+    profileData: profile,
+    isAdmin: isAdmin(),
+    is_admin: profile?.is_admin,
+    is_super_admin: profile?.is_super_admin,
+    is_exec_board: profile?.is_exec_board,
+    role: profile?.role,
     currentPath: window.location.pathname
   });
   
-  if (!isAdmin) {
+  if (!isAdmin()) {
     // Redirect non-admin users to member dashboard
     return <Navigate to="/dashboard/member" replace />;
   }
