@@ -39,6 +39,46 @@ const AssignmentWeek: React.FC = () => {
     }
   }, [submissions]);
 
+  const handleSubmitAssignment = (assignment: any) => {
+    toast({
+      title: "Feature Coming Soon",
+      description: `${assignment.title} submission will be available soon.`,
+    });
+  };
+
+  const getSubmissionStatus = (assignmentId: string) => {
+    if (!submissionMap || !submissions) {
+      return { submitted: false, graded: false, score: null };
+    }
+    
+    const submission = submissionMap[assignmentId];
+    if (!submission) return { submitted: false, graded: false, score: null };
+    
+    return {
+      submitted: true,
+      graded: submission.status === 'graded' && submission.score !== null,
+      score: submission.score
+    };
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'listening_journal': return <BookOpen className="h-4 w-4" />;
+      case 'sight_reading': return <Music className="h-4 w-4" />;
+      case 'theory_quiz': return <FileText className="h-4 w-4" />;
+      default: return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'listening_journal': return 'bg-blue-500';
+      case 'sight_reading': return 'bg-green-500';
+      case 'theory_quiz': return 'bg-purple-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
   // If no weekNumber is provided, show all assignments overview
   if (!weekNumber) {
     return (
@@ -150,41 +190,6 @@ const AssignmentWeek: React.FC = () => {
     );
   }
 
-  const handleSubmitAssignment = (assignment: any) => {
-    toast({
-      title: "Feature Coming Soon",
-      description: `${assignment.title} submission will be available soon.`,
-    });
-  };
-
-  const getSubmissionStatus = (assignmentId: string) => {
-    const submission = submissionMap[assignmentId];
-    if (!submission) return { submitted: false, graded: false, score: null };
-    
-    return {
-      submitted: true,
-      graded: submission.status === 'graded' && submission.score !== null,
-      score: submission.score
-    };
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'listening_journal': return <BookOpen className="h-4 w-4" />;
-      case 'sight_reading': return <Music className="h-4 w-4" />;
-      case 'theory_quiz': return <FileText className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'listening_journal': return 'bg-blue-500';
-      case 'sight_reading': return 'bg-green-500';
-      case 'theory_quiz': return 'bg-purple-500';
-      default: return 'bg-gray-500';
-    }
-  };
 
   return (
     <UniversalLayout>
