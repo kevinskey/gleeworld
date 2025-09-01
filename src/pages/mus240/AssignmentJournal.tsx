@@ -52,7 +52,7 @@ const AssignmentJournal: React.FC = () => {
     }
   }, [currentAssignment, fetchUserEntry]);
 
-  if (!currentAssignment) {
+  if (!baseAssignment) {
     return (
       <UniversalLayout>
         <div className="container mx-auto py-8">
@@ -68,6 +68,18 @@ const AssignmentJournal: React.FC = () => {
               </Button>
             </CardContent>
           </Card>
+        </div>
+      </UniversalLayout>
+    );
+  }
+
+  if (!currentAssignment) {
+    return (
+      <UniversalLayout>
+        <div className="container mx-auto py-8">
+          <div className="text-center">
+            <p>Loading assignment...</p>
+          </div>
         </div>
       </UniversalLayout>
     );
