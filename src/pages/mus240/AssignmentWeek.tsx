@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, BookOpen, Music, FileText, Clock } from 'lucide-react';
+import { Calendar, BookOpen, Music, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { mus240Assignments } from '@/data/mus240Assignments';
@@ -66,10 +66,6 @@ const AssignmentWeek: React.FC = () => {
                             <Badge variant="secondary">
                               {assignment.points} points
                             </Badge>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              {assignment.estimatedTime}
-                            </div>
                           </div>
                           <div className="text-sm">
                             <strong>Due:</strong> {new Date(assignment.dueDate).toLocaleDateString()}
