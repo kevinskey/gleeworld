@@ -75,19 +75,19 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             <EnhancedTooltip 
               content="Go to GleeWorld Home" 
               disabled={isMobile || location.pathname === '/admin'}
-              className="z-[200]"
+              className="z-10"
             >
               <div className="flex items-center gap-1 flex-shrink-0">
-                <Link to="/" className="flex items-center gap-1 hover:scale-105 transition-transform duration-200 relative z-[110]">
-                  <div className="relative z-[111]">
+                <Link to="/" className="flex items-center gap-1 hover:scale-105 transition-transform duration-200 relative">
+                  <div className="relative">
                     <img 
                       src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
                       alt="Spelman College Glee Club" 
-                      className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain flex-shrink-0 drop-shadow-md relative z-[112]"
+                      className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain flex-shrink-0 drop-shadow-md relative"
                     />
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 z-[111] pointer-events-none"></div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 pointer-events-none"></div>
                   </div>
-                  <span className="text-foreground font-bold text-lg sm:text-xl md:text-2xl whitespace-nowrap drop-shadow-sm relative z-[112]">
+                  <span className="text-foreground font-bold text-lg sm:text-xl md:text-2xl whitespace-nowrap drop-shadow-sm relative">
                     GleeWorld
                   </span>
                 </Link>
