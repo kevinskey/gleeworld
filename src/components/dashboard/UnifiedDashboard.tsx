@@ -80,7 +80,7 @@ export const UnifiedDashboard = () => {
             <div className="relative z-10 p-8 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold mb-2">Welcome to Glee Academy</h1>
+                  <h1 className="text-3xl font-bold mb-2 text-white">Welcome to Glee Academy</h1>
                   <p className="text-white/90 text-lg mb-4">
                     Enhance your musical journey with our comprehensive learning platform
                   </p>
