@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Calendar, BookOpen, Music, FileText, GraduationCap, CheckCircle2, AlertCircle, Star } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Calendar, BookOpen, Music, FileText, GraduationCap, CheckCircle2, AlertCircle, Star, ArrowLeft } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { mus240Assignments } from '@/data/mus240Assignments';
 import backgroundImage from '@/assets/mus240-background.jpg';
@@ -44,6 +44,16 @@ const AssignmentWeek: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10"></div>
         
         <main className="relative z-10 max-w-6xl mx-auto px-4 py-12">
+          {/* Back Button */}
+          <div className="mb-6">
+            <Link 
+              to="/classes/mus240" 
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white hover:bg-white/20 transition-all duration-300"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to MUS 240
+            </Link>
+          </div>
           {/* Hero Section */}
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
