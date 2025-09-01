@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, BookOpen, Music, FileText } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Calendar, BookOpen, Music, FileText, GraduationCap, CheckCircle2, AlertCircle, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { mus240Assignments } from '@/data/mus240Assignments';
@@ -35,6 +36,151 @@ const AssignmentWeek: React.FC = () => {
           <h1 className="text-3xl font-bold mb-2">MUS 240 Assignments</h1>
           <p className="text-lg text-muted-foreground">Complete assignments to deepen your understanding of African American music</p>
         </div>
+
+        {/* Assignment Instructions and Rubrics */}
+        <Card className="mb-8 border-amber-200 bg-amber-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-800">
+              <GraduationCap className="h-5 w-5" />
+              Assignment Instructions & Rubrics
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+              {/* Listening Journals Instructions */}
+              <AccordionItem value="listening-journals">
+                <AccordionTrigger className="text-left">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-blue-600" />
+                    <span className="font-semibold">Listening Journals (20 pts each)</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-blue-600" />
+                        Writing Instructions
+                      </h4>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span><strong>Length:</strong> 250-300 words exactly</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span><strong>Focus:</strong> Identify genre, style traits, and cultural significance</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span><strong>Analysis:</strong> Connect musical features to historical context</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span><strong>Terminology:</strong> Use correct musical terms</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span><strong>Comments:</strong> Respond to 2 other students' journals</span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <Star className="h-4 w-4 text-amber-600" />
+                        Grading Rubric
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between items-center p-2 bg-white rounded border">
+                          <span>Musical Analysis (40%)</span>
+                          <span className="font-medium">8 pts</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-white rounded border">
+                          <span>Historical Context (30%)</span>
+                          <span className="font-medium">6 pts</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-white rounded border">
+                          <span>Terminology Usage (20%)</span>
+                          <span className="font-medium">4 pts</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-white rounded border">
+                          <span>Writing Quality (10%)</span>
+                          <span className="font-medium">2 pts</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Midterm Essay Instructions */}
+              <AccordionItem value="midterm-essay">
+                <AccordionTrigger className="text-left">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-purple-600" />
+                    <span className="font-semibold">Midterm Essay (50 pts)</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-purple-600" />
+                        Essay Requirements
+                      </h4>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span><strong>Topic:</strong> Development of African American music from spirituals to funk</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span><strong>Length:</strong> 1000-1200 words</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span><strong>Structure:</strong> Clear thesis, evidence from course materials</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span><strong>Analysis:</strong> Connect musical elements across genres</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span><strong>Context:</strong> Discuss cultural and social influences</span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <Star className="h-4 w-4 text-amber-600" />
+                        Grading Rubric
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between items-center p-2 bg-white rounded border">
+                          <span>Thesis & Argument (30%)</span>
+                          <span className="font-medium">15 pts</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-white rounded border">
+                          <span>Musical Analysis (25%)</span>
+                          <span className="font-medium">12.5 pts</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-white rounded border">
+                          <span>Historical Context (25%)</span>
+                          <span className="font-medium">12.5 pts</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-white rounded border">
+                          <span>Organization & Writing (20%)</span>
+                          <span className="font-medium">10 pts</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+        </Card>
 
         {mus240Assignments.map((weekData) => (
           <Card key={weekData.week} className="mb-6">
