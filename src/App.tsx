@@ -1456,13 +1456,13 @@ const App = () => {
                                 <Route 
                                   path="/classes/mus240/admin" 
                                   element={
-                                    <ProtectedRoute>
+                                    <Mus240EnrollmentRoute>
                                       <AdminOnlyRoute>
                                         <Mus240AdminPage />
                                       </AdminOnlyRoute>
-                                    </ProtectedRoute>
+                                    </Mus240EnrollmentRoute>
                                   } 
-                                />
+                                 />
                                 <Route 
                                   path="/classes/mus240/instructor" 
                                   element={
