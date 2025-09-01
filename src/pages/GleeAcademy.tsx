@@ -166,7 +166,7 @@ const GleeAcademy = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="text-sm sm:text-base"
+              className="text-sm sm:text-base border-2 border-primary text-primary hover:bg-primary hover:text-white"
               onClick={() => navigate('/booking')}
             >
               Schedule a Consultation
