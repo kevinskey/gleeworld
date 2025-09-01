@@ -12836,6 +12836,54 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_journal_grades: {
+        Row: {
+          ai_model: string | null
+          assignment_id: string
+          created_at: string
+          feedback: string | null
+          graded_at: string
+          graded_by: string | null
+          id: string
+          journal_id: string | null
+          letter_grade: string | null
+          overall_score: number
+          rubric: Json
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          ai_model?: string | null
+          assignment_id: string
+          created_at?: string
+          feedback?: string | null
+          graded_at?: string
+          graded_by?: string | null
+          id?: string
+          journal_id?: string | null
+          letter_grade?: string | null
+          overall_score: number
+          rubric?: Json
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          ai_model?: string | null
+          assignment_id?: string
+          created_at?: string
+          feedback?: string | null
+          graded_at?: string
+          graded_by?: string | null
+          id?: string
+          journal_id?: string | null
+          letter_grade?: string | null
+          overall_score?: number
+          rubric?: Json
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mus240_journal_reads: {
         Row: {
           id: string

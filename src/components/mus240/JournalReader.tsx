@@ -3,239 +3,222 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MessageCircle, Eye, User, Clock, CheckCircle, Target } from 'lucide-react';
+import { MessageSquare, Send, GraduationCap, Bot } from 'lucide-react';
 import { useMus240Journals } from '@/hooks/useMus240Journals';
+import { useJournalGrading } from '@/hooks/useJournalGrading';
+import { useAuth } from '@/contexts/AuthContext';
 import { Assignment } from '@/data/mus240Assignments';
-
-interface JournalEntry {
-  id: string;
-  assignment_id: string;
-  student_id: string;
-  content: string;
-  word_count: number;
-  created_at: string;
-  student_name?: string;
-}
+import { InstructorGradingModal } from './InstructorGradingModal';
 
 interface JournalReaderProps {
   assignment: Assignment;
 }
 
 export const JournalReader: React.FC<JournalReaderProps> = ({ assignment }) => {
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
-  const [commentText, setCommentText] = useState('');
-  const [readEntries, setReadEntries] = useState<Set<string>>(new Set());
-  
+  const { user } = useAuth();
+  const [journals, setJournals] = useState<any[]>([]);
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [selectedJournal, setSelectedJournal] = useState<string | null>(null);
+  const [isInstructor, setIsInstructor] = useState(false);
+  const [gradingModal, setGradingModal] = useState<{ isOpen: boolean; journal: any }>({
+    isOpen: false,
+    journal: null
+  });
+  const [grades, setGrades] = useState<Record<string, any>>({});
+
   const { 
-    fetchPublishedEntries, 
-    fetchComments, 
-    addComment, 
-    markAsRead,
-    comments,
-    readingProgress,
-    fetchReadingProgress,
+    fetchPublishedJournals, 
+    fetchJournalComments, 
+    addJournalComment,
     loading 
   } = useMus240Journals();
 
-  useEffect(() => {
-    const loadEntries = async () => {
-      const publishedEntries = await fetchPublishedEntries(assignment.id);
-      setEntries(publishedEntries);
-    };
-    
-    loadEntries();
-    fetchReadingProgress(assignment.id);
-  }, [assignment.id, fetchPublishedEntries, fetchReadingProgress]);
+  const { fetchAllGradesForAssignment } = useJournalGrading();
 
-  const handleReadEntry = async (entry: JournalEntry) => {
-    setSelectedEntry(entry);
-    await fetchComments(entry.id);
-    
-    if (!readEntries.has(entry.id)) {
-      await markAsRead(entry.id);
-      setReadEntries(prev => new Set([...prev, entry.id]));
-      // Refresh reading progress
-      fetchReadingProgress(assignment.id);
-    }
+  useEffect(() => {
+    const loadJournals = async () => {
+      const publishedJournals = await fetchPublishedJournals(assignment.id);
+      setJournals(publishedJournals || []);
+
+      // Load grades for instructor view
+      if (user) {
+        // Check if user is instructor (simplified check - you may want to enhance this)
+        const profile = user.user_metadata || {};
+        const userIsInstructor = profile.role === 'instructor' || profile.is_admin;
+        setIsInstructor(userIsInstructor);
+
+        if (userIsInstructor) {
+          const assignmentGrades = await fetchAllGradesForAssignment(assignment.id);
+          const gradeMap = assignmentGrades?.reduce((acc: any, grade: any) => {
+            acc[grade.student_id] = grade;
+            return acc;
+          }, {}) || {};
+          setGrades(gradeMap);
+        }
+      }
+    };
+    loadJournals();
+  }, [assignment.id, fetchPublishedJournals, fetchAllGradesForAssignment, user]);
+
+  const loadComments = async (journalId: string) => {
+    const journalComments = await fetchJournalComments(journalId);
+    setComments(journalComments || []);
+    setSelectedJournal(journalId);
   };
 
   const handleAddComment = async () => {
-    if (!selectedEntry || !commentText.trim()) return;
+    if (!newComment.trim() || !selectedJournal) return;
     
-    const comment = await addComment(selectedEntry.id, commentText.trim());
-    if (comment) {
-      setCommentText('');
+    const success = await addJournalComment(selectedJournal, newComment);
+    if (success) {
+      setNewComment('');
+      loadComments(selectedJournal); // Reload comments
     }
   };
 
-  const progress = readingProgress[assignment.id];
-  const hasMetRequirement = progress?.journals_read >= (progress?.required_reads || 2);
+  const handleGradeJournal = (journal: any) => {
+    setGradingModal({ isOpen: true, journal });
+  };
+
+  const handleGradeComplete = (grade: any) => {
+    setGrades(prev => ({
+      ...prev,
+      [gradingModal.journal.user_id]: grade
+    }));
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-32 bg-muted animate-pulse rounded-lg"></div>
+        ))}
+      </div>
+    );
+  }
+
+  if (journals.length === 0) {
+    return (
+      <Card>
+        <CardContent className="text-center py-8">
+          <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-lg font-medium">No published journals yet</p>
+          <p className="text-muted-foreground">
+            Check back later when your classmates have published their journal entries.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Reading Progress */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Reading Requirement Progress
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <Badge variant={hasMetRequirement ? "default" : "secondary"}>
-              {progress?.journals_read || 0} / {progress?.required_reads || 2} journals read
-            </Badge>
-            {hasMetRequirement && (
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle className="h-4 w-4" />
-                <span className="text-sm font-medium">Requirement completed!</span>
-              </div>
-            )}
-          </div>
-          {!hasMetRequirement && (
-            <Alert className="mt-3">
-              <AlertDescription>
-                You must read and comment on at least {(progress?.required_reads || 2) - (progress?.journals_read || 0)} more journal(s) 
-                to complete this week's peer review requirement.
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Journal List */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5" />
-              Peer Journals ({entries.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {entries.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                No peer journals have been published yet.
-              </p>
-            ) : (
-              entries.map((entry) => (
-                <Card 
-                  key={entry.id} 
-                  className={`cursor-pointer transition-colors hover:bg-muted/50 ${
-                    selectedEntry?.id === entry.id ? 'ring-2 ring-primary' : ''
-                  }`}
-                  onClick={() => handleReadEntry(entry)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        <span className="font-medium">
-                          {entry.student_name || 'Anonymous'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {readEntries.has(entry.id) && (
-                          <Badge variant="outline" className="text-xs">
-                            <Eye className="h-3 w-3 mr-1" />
-                            Read
-                          </Badge>
-                        )}
-                        <Badge variant="secondary" className="text-xs">
-                          {entry.word_count} words
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      {new Date(entry.created_at).toLocaleDateString()}
-                    </div>
-                    <p className="text-sm mt-2 line-clamp-2">
-                      {entry.content.substring(0, 120)}...
-                    </p>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Selected Journal and Comments */}
-        {selectedEntry && (
-          <Card>
+      {journals.map((journal) => {
+        const grade = grades[journal.user_id];
+        
+        return (
+          <Card key={journal.id} className="relative">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5" />
-                Journal & Comments
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  {journal.author_name || 'Anonymous'}
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  {grade && (
+                    <Badge variant="default">
+                      {grade.overall_score}% ({grade.letter_grade})
+                    </Badge>
+                  )}
+                  {isInstructor && (
+                    <Button
+                      onClick={() => handleGradeJournal(journal)}
+                      size="sm"
+                      variant="outline"
+                      className="flex items-center gap-1"
+                    >
+                      <GraduationCap className="h-3 w-3" />
+                      {grade ? 'View Grade' : 'Grade'}
+                    </Button>
+                  )}
+                </div>
+              </div>
             </CardHeader>
+            
             <CardContent className="space-y-4">
-              {/* Journal Content */}
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-medium">
-                    {selectedEntry.student_name || 'Anonymous'}
-                  </span>
-                  <Badge variant="outline">
-                    {selectedEntry.word_count} words
-                  </Badge>
-                </div>
-                <div className="prose prose-sm max-w-none">
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                    {selectedEntry.content}
-                  </p>
-                </div>
+              <div className="prose prose-sm max-w-none">
+                <p className="whitespace-pre-wrap">{journal.content}</p>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t">
+                <span className="text-sm text-muted-foreground">
+                  Published {new Date(journal.published_at).toLocaleDateString()}
+                </span>
+                <Button 
+                  onClick={() => loadComments(journal.id)}
+                  variant="ghost" 
+                  size="sm"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  View Comments
+                </Button>
               </div>
 
               {/* Comments Section */}
-              <div className="space-y-3">
-                <h4 className="font-medium">Comments</h4>
-                
-                {comments[selectedEntry.id]?.map((comment) => (
-                  <div key={comment.id} className="bg-background border rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">
-                        {comment.commenter_name}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(comment.created_at).toLocaleDateString()}
-                      </span>
+              {selectedJournal === journal.id && (
+                <div className="space-y-4 mt-4 pt-4 border-t">
+                  <h4 className="font-medium">Comments</h4>
+                  
+                  {comments.length > 0 ? (
+                    <div className="space-y-3">
+                      {comments.map((comment) => (
+                        <div key={comment.id} className="bg-muted/50 p-3 rounded-lg">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-medium">{comment.author_name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(comment.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-sm">{comment.content}</p>
+                        </div>
+                      ))}
                     </div>
-                    <p className="text-sm">{comment.content}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No comments yet.</p>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Textarea
+                      placeholder="Add a thoughtful comment..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      className="min-h-[80px] resize-none"
+                    />
+                    <Button 
+                      onClick={handleAddComment}
+                      disabled={!newComment.trim()}
+                      size="sm"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
                   </div>
-                ))}
-
-                {(!comments[selectedEntry.id] || comments[selectedEntry.id].length === 0) && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No comments yet. Be the first to provide feedback!
-                  </p>
-                )}
-
-                {/* Add Comment */}
-                <div className="space-y-2">
-                  <Textarea
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder="Write a thoughtful comment about this journal entry..."
-                    className="min-h-[80px]"
-                  />
-                  <Button 
-                    onClick={handleAddComment}
-                    disabled={!commentText.trim() || loading}
-                    size="sm"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Add Comment
-                  </Button>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
-        )}
-      </div>
+        );
+      })}
+
+      {/* Grading Modal */}
+      <InstructorGradingModal
+        isOpen={gradingModal.isOpen}
+        onClose={() => setGradingModal({ isOpen: false, journal: null })}
+        assignment={assignment}
+        journal={gradingModal.journal}
+        existingGrade={gradingModal.journal ? grades[gradingModal.journal.user_id] : null}
+        onGradeComplete={handleGradeComplete}
+      />
     </div>
   );
 };

@@ -1,564 +1,272 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Edit, Calendar, Award, Upload, CheckCircle2, Clock, FileText, ArrowLeft, Music } from 'lucide-react';
-import { ASSIGNMENTS, Assignment, WeekAssignments } from '@/data/mus240Assignments';
-import { format } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { ArrowLeft, Calendar, BookOpen, Music, FileText, CheckCircle2, Clock, Star, GraduationCap } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { ASSIGNMENTS } from '@/data/mus240Assignments';
+import { useMus240Progress } from '@/hooks/useMus240Progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import backgroundImage from '@/assets/mus240-background.jpg';
 
-type SubmissionStatus = {
-  [assignmentId: string]: {
-    id: string;
-    submitted: boolean;
-    submissionDate?: string;
-    fileName?: string;
-    status: 'submitted' | 'graded' | 'returned';
-    grade?: number;
-    feedback?: string;
-  };
-};
+interface AssignmentWeekProps {
+  week: string;
+  topic: string;
+  startDate: string;
+  endDate: string;
+  assignments: any[];
+}
 
-export default function Assignments() {
+const AssignmentWeek: React.FC = () => {
+  const { weekNumber } = useParams<{ weekNumber: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const [assignments, setAssignments] = useState<WeekAssignments[]>(ASSIGNMENTS);
-  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  const [submissions, setSubmissions] = useState<SubmissionStatus>({});
-  const [uploadingFile, setUploadingFile] = useState(false);
+  const { submissions, loading } = useMus240Progress();
+  const [submissionMap, setSubmissionMap] = useState<Record<string, any>>({});
 
-  // Load submissions on component mount
+  const week = ASSIGNMENTS.find(w => w.week.toString() === weekNumber);
+
   useEffect(() => {
-    if (user) {
-      loadSubmissions();
+    if (submissions) {
+      const map = submissions.reduce((acc: any, sub: any) => {
+        acc[sub.assignment_id] = sub;
+        return acc;
+      }, {});
+      setSubmissionMap(map);
     }
-  }, [user]);
+  }, [submissions]);
 
-  const loadSubmissions = async () => {
-    if (!user) return;
+  if (!week) {
+    return (
+      <UniversalLayout>
+        <div className="container mx-auto py-8">
+          <Card>
+            <CardContent className="text-center py-12">
+              <h2 className="text-2xl font-bold mb-4">Week Not Found</h2>
+              <p className="text-muted-foreground mb-6">
+                The requested week could not be found.
+              </p>
+              <Button onClick={() => navigate('/classes/mus240/assignments')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Assignments
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </UniversalLayout>
+    );
+  }
 
-    try {
-      const { data, error } = await supabase
-        .from('assignment_submissions')
-        .select('*')
-        .eq('student_id', user.id);
-
-      if (error) throw error;
-
-      const submissionMap: SubmissionStatus = {};
-      data?.forEach((submission) => {
-        submissionMap[submission.assignment_id] = {
-          id: submission.id,
-          submitted: true,
-          submissionDate: submission.submitted_at,
-          fileName: submission.file_name,
-          status: submission.status as "submitted" | "graded" | "returned",
-          grade: submission.grade,
-          feedback: submission.feedback,
-        };
-      });
-
-      setSubmissions(submissionMap);
-    } catch (error) {
-      console.error('Error loading submissions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load your submissions.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getAssignmentTypeColor = (type: Assignment['type']) => {
-    switch (type) {
-      case 'listening_journal': return 'bg-blue-100 text-blue-800';
-      case 'reflection_paper': return 'bg-green-100 text-green-800';
-      case 'research_project': return 'bg-purple-100 text-purple-800';
-      case 'exam': return 'bg-red-100 text-red-800';
-      case 'final_reflection': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getAssignmentTypeName = (type: Assignment['type']) => {
-    switch (type) {
-      case 'listening_journal': return 'Listening Journal';
-      case 'reflection_paper': return 'Reflection Paper';
-      case 'research_project': return 'Research Project';
-      case 'exam': return 'Exam';
-      case 'final_reflection': return 'Final Reflection';
-      default: return 'Assignment';
-    }
-  };
-
-  const handleSubmitAssignment = (assignment: Assignment) => {
-    setSelectedAssignment(assignment);
-    setSubmissionDialogOpen(true);
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !selectedAssignment || !user) return;
-
-    setUploadingFile(true);
-    try {
-      // Create file path with user ID and assignment ID
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${selectedAssignment.id}_${Date.now()}.${fileExt}`;
-
-      // Upload file to Supabase storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('assignment-submissions')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL for the file
-      const { data: { publicUrl } } = supabase.storage
-        .from('assignment-submissions')
-        .getPublicUrl(fileName);
-
-      // Create submission record
-      const { data: submissionData, error: submissionError } = await supabase
-        .from('assignment_submissions')
-        .insert({
-          assignment_id: selectedAssignment.id,
-          student_id: user.id,
-          file_url: publicUrl,
-          file_name: file.name,
-          file_size: file.size,
-        })
-        .select()
-        .single();
-
-      if (submissionError) throw submissionError;
-
-      // Update local state
-      setSubmissions(prev => ({
-        ...prev,
-        [selectedAssignment.id]: {
-          id: submissionData.id,
-          submitted: true,
-          submissionDate: submissionData.submitted_at,
-          fileName: file.name,
-          status: submissionData.status as "submitted" | "graded" | "returned",
-        }
-      }));
-
-      toast({
-        title: "Assignment Submitted",
-        description: `Your ${selectedAssignment.title} has been submitted successfully.`,
-      });
-
-      setSubmissionDialogOpen(false);
-      setSelectedAssignment(null);
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      toast({
-        title: "Upload Failed",
-        description: "Failed to submit your assignment. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setUploadingFile(false);
-    }
-  };
-
-  const handleEditAssignment = (assignment: Assignment) => {
-    setEditingAssignment({ ...assignment });
-    setIsEditDialogOpen(true);
-  };
-
-  const handleSaveAssignment = () => {
-    if (!editingAssignment) return;
-
-    setAssignments(prev => prev.map(week => ({
-      ...week,
-      assignments: week.assignments.map(assignment =>
-        assignment.id === editingAssignment.id ? editingAssignment : assignment
-      )
-    })));
-
-    setIsEditDialogOpen(false);
-    setEditingAssignment(null);
-  };
-
-  const updateEditingAssignment = (field: keyof Assignment, value: any) => {
-    if (!editingAssignment) return;
-    setEditingAssignment({ ...editingAssignment, [field]: value });
+  const handleSubmitAssignment = (assignment: any) => {
+    toast({
+      title: "Feature Coming Soon",
+      description: `${assignment.title} submission will be available soon.`,
+    });
   };
 
   const getSubmissionStatus = (assignmentId: string) => {
-    return submissions[assignmentId];
+    const submission = submissionMap[assignmentId];
+    if (!submission) return { submitted: false, graded: false, score: null };
+    
+    return {
+      submitted: true,
+      graded: submission.status === 'graded' && submission.score !== null,
+      score: submission.score
+    };
   };
 
-  const isSubmitted = (assignmentId: string) => {
-    return submissions[assignmentId]?.submitted || false;
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'listening_journal': return <BookOpen className="h-4 w-4" />;
+      case 'sight_reading': return <Music className="h-4 w-4" />;
+      case 'theory_quiz': return <FileText className="h-4 w-4" />;
+      default: return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'listening_journal': return 'bg-blue-500';
+      case 'sight_reading': return 'bg-green-500';
+      case 'theory_quiz': return 'bg-purple-500';
+      default: return 'bg-gray-500';
+    }
   };
 
   return (
-    <UniversalLayout showHeader={true} showFooter={false}>
-      <div 
-        className="min-h-screen bg-cover bg-center bg-no-repeat relative"
-        style={{
-          backgroundImage: `url(${backgroundImage})`,
-        }}
-      >
-        {/* Gradient overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20"></div>
-        
-        <main className="relative z-10 max-w-6xl mx-auto p-6">
-          {/* Header with back navigation */}
-          <div className="mb-8">
-            <Link 
-              to="/classes/mus240" 
-              className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-4 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 hover:bg-white/20"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to MUS 240
-            </Link>
-            
-            <div className="text-center">
-              <div className="inline-flex items-center gap-3 mb-4 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                <Calendar className="h-6 w-6 text-amber-300" />
-                <span className="text-white/90 font-medium">Assignments</span>
-              </div>
-              
-              <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
-                MUS 240 Assignments
-              </h1>
-              <p className="text-white/80 text-lg">Week-by-week assignment schedule with detailed instructions</p>
-            </div>
+    <UniversalLayout>
+      <div className="container mx-auto py-8 space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/classes/mus240/assignments')}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Assignments
+          </Button>
+        </div>
+
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">Week {week.week}</h1>
+          <p className="text-lg text-muted-foreground">{week.topic}</p>
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <Calendar className="h-4 w-4" />
+            <span className="text-sm">
+              {week.startDate} - {week.endDate}
+            </span>
           </div>
+        </div>
 
-        <div className="space-y-8">
-          {assignments.map((week) => (
-            <section key={week.number} className="space-y-4">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                <div className="border-l-4 border-amber-400 pl-4">
-                  <h2 className="text-2xl font-semibold text-white">Week {week.number}</h2>
-                  <p className="text-sm text-white/70">
-                    {format(new Date(week.date), 'MMMM d, yyyy')} • {week.title}
+        {/* Assignments Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {week.assignments.map((assignment, index) => {
+            const { submitted, graded, score } = getSubmissionStatus(assignment.id);
+            
+            return (
+              <Card 
+                key={assignment.id}
+                className={`relative group hover:shadow-xl transition-all cursor-pointer bg-white/95 backdrop-blur-sm border border-white/30 hover:bg-white hover:shadow-2xl hover:-translate-y-1 ${
+                  submitted ? 'border-green-300 bg-green-50/95' : 'hover:border-white/50'
+                }`}
+                onClick={() => {
+                  if (!submitted) {
+                    if (assignment.type === 'listening_journal') {
+                      navigate(`/classes/mus240/assignments/${assignment.id}`);
+                    } else {
+                      handleSubmitAssignment(assignment);
+                    }
+                  } else if (assignment.type === 'listening_journal') {
+                    navigate(`/classes/mus240/assignments/${assignment.id}`);
+                  }
+                }}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg mb-2 group-hover:text-primary transition-colors">
+                        {assignment.title}
+                      </CardTitle>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          {getTypeIcon(assignment.type)}
+                          {assignment.type.replace('_', ' ')}
+                        </Badge>
+                        <Badge variant="secondary">
+                          {assignment.points} pts
+                        </Badge>
+                        {submitted && (
+                          <Badge variant="default" className="bg-green-600">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Submitted
+                          </Badge>
+                        )}
+                        {graded && (
+                          <Badge variant="default" className="bg-blue-600 flex items-center gap-1">
+                            <GraduationCap className="h-3 w-3" />
+                            {Math.round(score)}%
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div 
+                      className={`w-3 h-3 rounded-full ${getTypeColor(assignment.type)} opacity-60 group-hover:opacity-100 transition-opacity`}
+                    />
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {assignment.description}
                   </p>
-                </div>
-              </div>
-
-              {week.assignments.length === 0 ? (
-                <Card className="border-dashed bg-white/5 backdrop-blur-sm border-white/30">
-                  <CardContent className="py-8 text-center text-white/60">
-                    No assignments scheduled for this week
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {week.assignments.map((assignment) => {
-                    const submissionStatus = getSubmissionStatus(assignment.id);
-                    const submitted = isSubmitted(assignment.id);
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        Due Date
+                      </span>
+                      <span className="font-medium">
+                        {new Date(assignment.dueDate).toLocaleDateString()}
+                      </span>
+                    </div>
                     
-                    return (
-                      <Card 
-                        key={assignment.id} 
-                        className={`relative group hover:shadow-xl transition-all cursor-pointer bg-white/95 backdrop-blur-sm border border-white/30 hover:bg-white hover:shadow-2xl hover:-translate-y-1 ${
-                          submitted ? 'border-green-300 bg-green-50/95' : 'hover:border-white/50'
-                        }`}
-                        onClick={() => {
-                          if (!submitted) {
-                            if (assignment.type === 'listening_journal') {
-                              navigate(`/classes/mus240/assignments/${assignment.id}`);
-                            } else {
-                              handleSubmitAssignment(assignment);
-                            }
+                    {assignment.estimatedTime && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Est. Time</span>
+                        <span>{assignment.estimatedTime}</span>
+                      </div>
+                    )}
+
+                    {graded && score !== null && (
+                      <div className="pt-2 border-t">
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="text-muted-foreground">Your Score</span>
+                          <span className="font-bold text-lg">{Math.round(score)}%</span>
+                        </div>
+                        <Progress value={score} className="h-2" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-2">
+                    {!submitted ? (
+                      <Button 
+                        size="sm" 
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (assignment.type === 'listening_journal') {
+                            navigate(`/classes/mus240/assignments/${assignment.id}`);
+                          } else {
+                            handleSubmitAssignment(assignment);
                           }
                         }}
                       >
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-2">
-                              <div className="flex gap-2">
-                                <Badge className={getAssignmentTypeColor(assignment.type)}>
-                                  {getAssignmentTypeName(assignment.type)}
-                                </Badge>
-                                {submitted && (
-                                  <Badge variant="outline" className="border-green-500 text-green-700">
-                                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                                    Submitted
-                                  </Badge>
-                                )}
-                              </div>
-                              <CardTitle className="text-lg">{assignment.title}</CardTitle>
-                            </div>
-                            <div className="flex gap-2">
-                              {!submitted && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleSubmitAssignment(assignment);
-                                  }}
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <Upload className="h-4 w-4" />
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditAssignment(assignment);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        
-                        <CardContent className="space-y-3">
-                          <p className="text-sm text-muted-foreground line-clamp-3">
-                            {assignment.description}
-                          </p>
-                          
-                          {assignment.instructions && (
-                            <div className="p-3 bg-muted/50 rounded-lg">
-                              <p className="text-xs font-medium text-muted-foreground mb-1">Instructions:</p>
-                              <p className="text-sm">{assignment.instructions}</p>
-                            </div>
-                          )}
-
-                          {submitted && submissionStatus && (
-                            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                              <div className="flex items-center gap-2 mb-2">
-                                <FileText className="h-4 w-4 text-green-600" />
-                                <span className="text-sm font-medium text-green-800">
-                                  {submissionStatus.fileName}
-                                </span>
-                              </div>
-                              <p className="text-xs text-green-600">
-                                Submitted: {format(new Date(submissionStatus.submissionDate!), 'MMM d, yyyy h:mm a')}
-                              </p>
-                              {submissionStatus.grade && (
-                                <p className="text-xs text-green-600 mt-1">
-                                  Grade: {submissionStatus.grade}/{assignment.points}
-                                </p>
-                              )}
-                            </div>
-                          )}
-
-                          <div className="flex items-center justify-between text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              <span>Due: {format(new Date(assignment.dueDate), 'MMM d')}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Award className="h-4 w-4" />
-                              <span>{assignment.points} pts</span>
-                            </div>
-                          </div>
-
-                          {!submitted && (
-                            <div className="pt-2">
-                              {assignment.type === 'listening_journal' ? (
-                                <Button 
-                                  size="sm" 
-                                  className="w-full"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/classes/mus240/assignments/${assignment.id}`);
-                                  }}
-                                >
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Open Journal
-                                </Button>
-                              ) : (
-                                <Button 
-                                  size="sm" 
-                                  className="w-full"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleSubmitAssignment(assignment);
-                                  }}
-                                >
-                                  <Upload className="h-4 w-4 mr-2" />
-                                  Submit Assignment
-                                </Button>
-                              )}
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-          ))}
+                        Start Assignment
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (assignment.type === 'listening_journal') {
+                            navigate(`/classes/mus240/assignments/${assignment.id}`);
+                          }
+                        }}
+                      >
+                        View Submission
+                        {graded && <Star className="h-3 w-3 ml-1" />}
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
-        
-        </main>
+
+        {/* Week Summary */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Week {week.week} Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              This week focuses on <strong>{week.topic}</strong>. Complete all assignments by their due dates 
+              to stay on track with the course schedule.
+            </p>
+          </CardContent>
+        </Card>
       </div>
-
-        {/* Assignment Submission Dialog */}
-        <Dialog open={submissionDialogOpen} onOpenChange={setSubmissionDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Submit Assignment</DialogTitle>
-            </DialogHeader>
-            
-            {selectedAssignment && (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium">{selectedAssignment.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Due: {format(new Date(selectedAssignment.dueDate), 'MMMM d, yyyy')}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Points: {selectedAssignment.points}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="assignment-file">Upload your assignment file</Label>
-                  <Input
-                    id="assignment-file"
-                    type="file"
-                    accept=".pdf,.doc,.docx,.txt,.mp3,.wav,.m4a"
-                    onChange={handleFileUpload}
-                    disabled={uploadingFile}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Accepted formats: PDF, Word documents, text files, audio files (for listening journals)
-                  </p>
-                </div>
-
-                {uploadingFile && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4 animate-spin" />
-                    Uploading your assignment...
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-3">
-                  <Button variant="outline" onClick={() => setSubmissionDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Assignment Edit Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Edit Assignment</DialogTitle>
-            </DialogHeader>
-            
-            {editingAssignment && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                      id="title"
-                      value={editingAssignment.title}
-                      onChange={(e) => updateEditingAssignment('title', e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="type">Type</Label>
-                    <Select 
-                      value={editingAssignment.type} 
-                      onValueChange={(value) => updateEditingAssignment('type', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="listening_journal">Listening Journal</SelectItem>
-                        <SelectItem value="reflection_paper">Reflection Paper</SelectItem>
-                        <SelectItem value="research_project">Research Project</SelectItem>
-                        <SelectItem value="exam">Exam</SelectItem>
-                        <SelectItem value="final_reflection">Final Reflection</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="points">Points</Label>
-                    <Input
-                      id="points"
-                      type="number"
-                      value={editingAssignment.points}
-                      onChange={(e) => updateEditingAssignment('points', parseInt(e.target.value) || 0)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="dueDate">Due Date</Label>
-                    <Input
-                      id="dueDate"
-                      type="date"
-                      value={editingAssignment.dueDate}
-                      onChange={(e) => updateEditingAssignment('dueDate', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={editingAssignment.description}
-                    onChange={(e) => updateEditingAssignment('description', e.target.value)}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="instructions">Instructions (Optional)</Label>
-                  <Textarea
-                    id="instructions"
-                    value={editingAssignment.instructions || ''}
-                    onChange={(e) => updateEditingAssignment('instructions', e.target.value)}
-                    rows={4}
-                    placeholder="Detailed instructions for students..."
-                  />
-                </div>
-
-                <div className="flex justify-end gap-3">
-                  <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSaveAssignment}>
-                    Save Changes
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
     </UniversalLayout>
   );
-}
+};
+
+export default AssignmentWeek;
