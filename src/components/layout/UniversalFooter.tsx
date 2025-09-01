@@ -1,8 +1,9 @@
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export const UniversalFooter = () => {
   const currentYear = new Date().getFullYear();
+  const navigate = useNavigate();
 
   return (
     <footer className="relative z-20 bg-background/95 backdrop-blur-sm border-t border-border mt-auto">
@@ -17,7 +18,7 @@ export const UniversalFooter = () => {
           </div>
 
           {/* Quick Links */}
-          <div className="text-center col-span-1 md:col-span-1">
+          <div className="text-center col-span-1 md:col-span-1 cursor-pointer" onClick={() => navigate('/')}>
             <h4 className="text-sm font-medium text-foreground mb-1">Quick Links</h4>
             <div className="space-y-0.5">
               <Link 
