@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Calendar, BookOpen, Music, FileText, CheckCircle2, Clock, Star, GraduationCap } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { ASSIGNMENTS } from '@/data/mus240Assignments';
+import { mus240Assignments } from '@/data/mus240Assignments';
 import { useMus240Progress } from '@/hooks/useMus240Progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -27,7 +27,7 @@ const AssignmentWeek: React.FC = () => {
   const { submissions, loading } = useMus240Progress();
   const [submissionMap, setSubmissionMap] = useState<Record<string, any>>({});
 
-  const week = ASSIGNMENTS.find(w => w.week.toString() === weekNumber);
+  const week = mus240Assignments.find(w => w.week.toString() === weekNumber);
 
   useEffect(() => {
     if (submissions) {

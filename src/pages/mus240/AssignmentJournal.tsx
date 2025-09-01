@@ -8,7 +8,7 @@ import { ArrowLeft, BookOpen, Users, Edit, Eye } from 'lucide-react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { JournalEditor } from '@/components/mus240/JournalEditor';
 import { JournalReader } from '@/components/mus240/JournalReader';
-import { ASSIGNMENTS } from '@/data/mus240Assignments';
+import { mus240Assignments } from '@/data/mus240Assignments';
 import { useMus240Journals } from '@/hooks/useMus240Journals';
 
 const AssignmentJournal: React.FC = () => {
@@ -20,9 +20,9 @@ const AssignmentJournal: React.FC = () => {
   const { fetchUserEntry } = useMus240Journals();
 
   // Find the assignment from our data
-  const assignment = ASSIGNMENTS
+  const assignment = mus240Assignments
     .flatMap(week => week.assignments)
-    .find(a => a.id === assignmentId && a.type === 'listening_journal');
+    .find(a => a.id === assignmentId && a.type === 'listening-journal');
 
   useEffect(() => {
     if (assignment) {

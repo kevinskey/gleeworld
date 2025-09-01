@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Calendar, FileText, Users, TrendingUp, Clock, Music } from 'lucide-react';
 import { useMus240Progress } from '@/hooks/useMus240Progress';
-import { ASSIGNMENTS } from '@/data/mus240Assignments';
+import { mus240Assignments } from '@/data/mus240Assignments';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import backgroundImage from '@/assets/mus240-background.jpg';
@@ -71,10 +71,10 @@ export const Mus240GradesPage: React.FC = () => {
 
   // Get assignment details for submissions
   const getAssignmentDetails = (assignmentId: string) => {
-    for (const week of ASSIGNMENTS) {
+    for (const week of mus240Assignments) {
       for (const assignment of week.assignments) {
         if (assignment.id === assignmentId) {
-          return { ...assignment, weekNumber: week.number, weekTitle: week.title };
+          return { ...assignment, weekNumber: week.week, weekTitle: week.topic };
         }
       }
     }

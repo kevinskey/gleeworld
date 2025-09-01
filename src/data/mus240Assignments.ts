@@ -1,4 +1,3 @@
-
 export interface Assignment {
   id: string;
   title: string;
@@ -70,3 +69,6 @@ export const mus240Assignments: WeekAssignments[] = [
     ]
   }
 ];
+
+// Export alias for backward compatibility
+export const ASSIGNMENTS = mus240Assignments;
