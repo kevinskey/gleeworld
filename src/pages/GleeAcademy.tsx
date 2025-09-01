@@ -163,7 +163,12 @@ const GleeAcademy = () => {
             >
               Apply Now
             </Button>
-            <Button size="lg" variant="outline" className="text-sm sm:text-base">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="text-sm sm:text-base"
+              onClick={() => navigate('/booking')}
+            >
               Schedule a Consultation
             </Button>
           </div>
