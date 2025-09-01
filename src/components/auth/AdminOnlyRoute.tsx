@@ -30,11 +30,13 @@ export const AdminOnlyRoute = ({ children }: AdminOnlyRouteProps) => {
   console.log('AdminOnlyRoute: Checking admin access', {
     user: !!user,
     userProfile: !!userProfile,
+    userProfileData: userProfile,
     isAdmin,
     is_admin: userProfile?.is_admin,
     is_super_admin: userProfile?.is_super_admin,
     is_exec_board: userProfile?.is_exec_board,
-    role: userProfile?.role
+    role: userProfile?.role,
+    currentPath: window.location.pathname
   });
   
   if (!isAdmin) {
