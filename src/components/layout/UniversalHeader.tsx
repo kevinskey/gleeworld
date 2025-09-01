@@ -252,7 +252,10 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       Landing Page
                     </DropdownMenuItem>
                     <DropdownMenuItem 
-                      onClick={() => navigate('/glee-academy')}
+                      onClick={() => {
+                        navigate('/glee-academy');
+                        window.scrollTo(0, 0);
+                      }}
                       className="cursor-pointer"
                     >
                       <GraduationCap className="mr-2 h-4 w-4" />
