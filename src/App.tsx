@@ -160,6 +160,7 @@ import AssignmentJournal from "./pages/mus240/AssignmentJournal";
 import Resources from "./pages/mus240/Resources";
 import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
 import { Mus240AdminPage } from "./pages/mus240/admin/Mus240AdminPage";
+import { InstructorConsole } from "./pages/mus240/InstructorConsole";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
@@ -1449,6 +1450,16 @@ const App = () => {
                                     <ProtectedRoute>
                                       <AdminOnlyRoute>
                                         <Mus240AdminPage />
+                                      </AdminOnlyRoute>
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/classes/mus240/instructor" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <AdminOnlyRoute>
+                                        <InstructorConsole />
                                       </AdminOnlyRoute>
                                     </ProtectedRoute>
                                   } 
