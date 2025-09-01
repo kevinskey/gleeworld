@@ -6,6 +6,7 @@ export interface Assignment {
   dueDate: string;
   type: 'listening-journal' | 'essay' | 'quiz' | 'project';
   estimatedTime?: string;
+  points?: number;
 }
 
 export interface WeekAssignments {
@@ -30,7 +31,8 @@ export const mus240Assignments: WeekAssignments[] = [
         instructions: "Focus on rhythmic patterns, call-and-response structures, and vocal techniques. How do these elements appear in later African American musical forms?",
         dueDate: "2024-08-23",
         type: "listening-journal",
-        estimatedTime: "45 minutes"
+        estimatedTime: "45 minutes",
+        points: 10
       }
     ]
   },
@@ -47,7 +49,8 @@ export const mus240Assignments: WeekAssignments[] = [
         instructions: "Examine the dual meaning of spirituals as both religious expression and coded messages for the Underground Railroad.",
         dueDate: "2024-08-30",
         type: "listening-journal",
-        estimatedTime: "30 minutes"
+        estimatedTime: "30 minutes",
+        points: 10
       }
     ]
   },
@@ -64,11 +67,13 @@ export const mus240Assignments: WeekAssignments[] = [
         instructions: "Focus on instrumental techniques, vocal styles, and lyrical themes. How did the migration north change the blues?",
         dueDate: "2024-09-06",
         type: "listening-journal",
-        estimatedTime: "40 minutes"
+        estimatedTime: "40 minutes",
+        points: 10
       }
     ]
   }
 ];
 
-// Export alias for backward compatibility
+// Export aliases for backward compatibility
 export const ASSIGNMENTS = mus240Assignments;
+export const WEEK_ASSIGNMENTS = mus240Assignments;

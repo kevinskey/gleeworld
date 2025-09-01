@@ -135,12 +135,12 @@ const AssignmentWeek: React.FC = () => {
                 }`}
                 onClick={() => {
                   if (!submitted) {
-                    if (assignment.type === 'listening_journal') {
+                    if (assignment.type === 'listening-journal') {
                       navigate(`/classes/mus240/assignments/${assignment.id}`);
                     } else {
                       handleSubmitAssignment(assignment);
                     }
-                  } else if (assignment.type === 'listening_journal') {
+                  } else if (assignment.type === 'listening-journal') {
                     navigate(`/classes/mus240/assignments/${assignment.id}`);
                   }
                 }}
@@ -220,7 +220,7 @@ const AssignmentWeek: React.FC = () => {
                         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (assignment.type === 'listening_journal') {
+                          if (assignment.type === 'listening-journal') {
                             navigate(`/classes/mus240/assignments/${assignment.id}`);
                           } else {
                             handleSubmitAssignment(assignment);
@@ -236,7 +236,7 @@ const AssignmentWeek: React.FC = () => {
                         className="w-full"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (assignment.type === 'listening_journal') {
+                          if (assignment.type === 'listening-journal') {
                             navigate(`/classes/mus240/assignments/${assignment.id}`);
                           }
                         }}

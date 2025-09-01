@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,7 +20,7 @@ export interface JournalEntry {
 export interface JournalComment {
   id: string;
   journal_id: string;
-  user_id: string;
+  commenter_id: string;
   content: string;
   created_at: string;
   author_name: string;
@@ -36,6 +35,25 @@ export interface ReadingProgress {
   last_read_at: string;
 }
 
+// Simple API helper using known Supabase URL and key
+const SUPABASE_URL = "https://oopmlreysjzuxzylyheb.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg";
+
+const apiCall = async (endpoint: string, options?: RequestInit) => {
+  const session = await supabase.auth.getSession();
+  const token = session.data.session?.access_token;
+  
+  return fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    ...options,
+  });
+};
+
 export const useMus240Journals = () => {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [comments, setComments] = useState<Record<string, JournalComment[]>>({});
@@ -48,15 +66,11 @@ export const useMus240Journals = () => {
     if (!user) return null;
     
     try {
-      const { data, error } = await supabase
-        .from('mus240_journals')
-        .select('*')
-        .eq('assignment_id', assignmentId)
-        .eq('student_id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
+      const response = await apiCall(`mus240_journals?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`);
+      if (!response.ok) throw new Error('Failed to fetch user entry');
+      
+      const data = await response.json();
+      return data[0] || null;
     } catch (error) {
       console.error('Error fetching user entry:', error);
       return null;
@@ -65,23 +79,25 @@ export const useMus240Journals = () => {
 
   const fetchPublishedJournals = async (assignmentId: string): Promise<JournalEntry[]> => {
     try {
-      const { data, error } = await supabase
-        .from('mus240_journals')
-        .select(`
-          *,
-          gw_profiles!student_id (
-            full_name
-          )
-        `)
-        .eq('assignment_id', assignmentId)
-        .eq('is_published', true)
-        .order('published_at', { ascending: false });
+      const response = await apiCall(`mus240_journals?assignment_id=eq.${assignmentId}&is_published=eq.true&order=published_at.desc`);
+      if (!response.ok) throw new Error('Failed to fetch published journals');
+      
+      const journals = await response.json();
+      
+      // Get author names
+      if (journals.length === 0) return [];
+      
+      const studentIds = [...new Set(journals.map((j: any) => j.student_id))];
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name')
+        .in('user_id', studentIds as string[]);
 
-      if (error) throw error;
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
 
-      return (data || []).map(journal => ({
+      return journals.map((journal: any) => ({
         ...journal,
-        author_name: journal.gw_profiles?.full_name || 'Anonymous'
+        author_name: profileMap.get(journal.student_id) || 'Anonymous'
       }));
     } catch (error) {
       console.error('Error fetching published journals:', error);
@@ -91,22 +107,25 @@ export const useMus240Journals = () => {
 
   const fetchJournalComments = async (journalId: string): Promise<JournalComment[]> => {
     try {
-      const { data, error } = await supabase
-        .from('mus240_journal_comments')
-        .select(`
-          *,
-          gw_profiles!user_id (
-            full_name
-          )
-        `)
-        .eq('journal_id', journalId)
-        .order('created_at', { ascending: true });
+      const response = await apiCall(`mus240_journal_comments?journal_id=eq.${journalId}&order=created_at.asc`);
+      if (!response.ok) throw new Error('Failed to fetch comments');
+      
+      const comments = await response.json();
+      
+      // Get commenter names
+      if (comments.length === 0) return [];
+      
+      const commenterIds = [...new Set(comments.map((c: any) => c.commenter_id))];
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name')
+        .in('user_id', commenterIds as string[]);
 
-      if (error) throw error;
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
 
-      return (data || []).map(comment => ({
+      return comments.map((comment: any) => ({
         ...comment,
-        author_name: comment.gw_profiles?.full_name || 'Anonymous'
+        author_name: profileMap.get(comment.commenter_id) || 'Anonymous'
       }));
     } catch (error) {
       console.error('Error fetching journal comments:', error);
@@ -118,15 +137,19 @@ export const useMus240Journals = () => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('mus240_journal_comments')
-        .insert({
+      const response = await apiCall('mus240_journal_comments', {
+        method: 'POST',
+        headers: {
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
           journal_id: journalId,
-          user_id: user.id,
+          commenter_id: user.id,
           content: content.trim()
-        });
+        })
+      });
 
-      if (error) throw error;
+      if (!response.ok) throw new Error('Failed to add comment');
 
       toast({
         title: "Comment Added",
@@ -151,19 +174,21 @@ export const useMus240Journals = () => {
     try {
       const wordCount = content.trim().split(/\s+/).filter(word => word.length > 0).length;
 
-      const { error } = await supabase
-        .from('mus240_journals')
-        .upsert({
+      const response = await apiCall('mus240_journals', {
+        method: 'POST',
+        headers: {
+          'Prefer': 'return=minimal,resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
           assignment_id: assignmentId,
           student_id: user.id,
           content,
           word_count: wordCount,
           is_published: false
-        }, {
-          onConflict: 'assignment_id,student_id'
-        });
+        })
+      });
 
-      if (error) throw error;
+      if (!response.ok) throw new Error('Failed to save journal');
 
       toast({
         title: "Journal Saved",
@@ -186,16 +211,18 @@ export const useMus240Journals = () => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('mus240_journals')
-        .update({
+      const response = await apiCall(`mus240_journals?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
           is_published: true,
           published_at: new Date().toISOString()
         })
-        .eq('assignment_id', assignmentId)
-        .eq('student_id', user.id);
+      });
 
-      if (error) throw error;
+      if (!response.ok) throw new Error('Failed to publish journal');
 
       toast({
         title: "Journal Published",
@@ -218,25 +245,21 @@ export const useMus240Journals = () => {
     if (!user) return false;
 
     try {
-      // Check if journal has comments
-      const { data: comments, error: commentsError } = await supabase
-        .from('mus240_journal_comments')
-        .select('id')
-        .eq('journal_id', assignmentId);
+      // Check if journal has comments first
+      const commentsResponse = await apiCall(`mus240_journal_comments?journal_id=eq.${assignmentId}&select=id`);
 
-      if (commentsError) throw commentsError;
-
-      if (comments && comments.length > 0) {
-        throw new Error('Cannot delete journal with existing comments');
+      if (commentsResponse.ok) {
+        const comments = await commentsResponse.json();
+        if (comments && comments.length > 0) {
+          throw new Error('Cannot delete journal with existing comments');
+        }
       }
 
-      const { error } = await supabase
-        .from('mus240_journals')
-        .delete()
-        .eq('assignment_id', assignmentId)
-        .eq('student_id', user.id);
+      const response = await apiCall(`mus240_journals?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`, {
+        method: 'DELETE'
+      });
 
-      if (error) throw error;
+      if (!response.ok) throw new Error('Failed to delete journal');
 
       toast({
         title: "Journal Deleted",
