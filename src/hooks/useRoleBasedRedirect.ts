@@ -122,7 +122,8 @@ export const useRoleBasedRedirect = () => {
     const isOnTargetPage = location.pathname.includes('/admin') || 
                           location.pathname.includes('/dashboard') || 
                           location.pathname.includes('/fan') || 
-                          location.pathname.includes('/alumnae');
+                          location.pathname.includes('/alumnae') ||
+                          location.pathname.startsWith('/classes/mus240');
     
     if (!isOnAuthPage && !isOnRootPage && isOnTargetPage) {
       console.log('useRoleBasedRedirect: Already on target page, skipping redirect');
