@@ -233,7 +233,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
               <p className="font-medium">Instructions:</p>
               <div className="text-xs space-y-1 pl-2">
                 {assignment.instructions.split('\n').map((line, index) => {
-                  if (line.trim() === '') return <br key={index} />;
+                  if (line.trim() === '') return null; // Skip empty lines
                   if (line.startsWith('•')) {
                     return (
                       <p key={index} className="flex items-start gap-1">
@@ -251,7 +251,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
               </div>
             </div>
             
-            <p className="mt-3"><strong>Due:</strong> {new Date(assignment.dueDate).toLocaleDateString()}</p>
+            <p className="mt-3"><strong>Due:</strong> {new Date(assignment.dueDate + 'T12:00:00').toLocaleDateString()}</p>
           </div>
         </CardContent>
       </Card>
