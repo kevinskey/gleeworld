@@ -128,8 +128,8 @@ const AssignmentJournal: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">{currentAssignment.type}</Badge>
                   <Badge variant="secondary">{currentAssignment.points} points</Badge>
-                  <Badge variant={new Date(currentAssignment.dueDate) < new Date() ? "destructive" : "default"}>
-                    Due: {new Date(currentAssignment.dueDate).toLocaleDateString()}
+                  <Badge variant={new Date(currentAssignment.dueDate + 'T12:00:00') < new Date() ? "destructive" : "default"}>
+                    Due: {new Date(currentAssignment.dueDate + 'T12:00:00').toLocaleDateString()}
                   </Badge>
                 </div>
               </div>
