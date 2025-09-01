@@ -77,26 +77,6 @@ const GleeAcademy = () => {
           alt="Glee World Academy" 
           className="w-full object-contain"
         />
-        {/* Logo Overlay - Hidden on Mobile */}
-        <div className="absolute inset-0 hidden sm:flex items-center justify-center bg-black/30">
-          <div className="text-center px-4 max-w-lg">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight">
-              Glee World
-            </h1>
-            <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-white/90 mb-6">
-              Academy
-            </h2>
-            <p className="text-base md:text-lg text-white/80 mb-8 leading-relaxed">
-              To Amaze and Inspire
-            </p>
-            <Button 
-              size="lg" 
-              className="bg-primary hover:bg-primary/90 text-white px-6 py-3"
-            >
-              Explore Courses
-            </Button>
-          </div>
-        </div>
       </div>
 
       {/* Courses Section */}
