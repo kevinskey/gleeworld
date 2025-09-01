@@ -253,7 +253,7 @@ const AssignmentWeek: React.FC = () => {
                             </Badge>
                           </div>
                           <div className="text-sm text-gray-700">
-                            <strong>Due:</strong> {new Date(assignment.dueDate).toLocaleDateString()}
+                            <strong>Due:</strong> {new Date(assignment.dueDate + 'T12:00:00').toLocaleDateString()}
                           </div>
                         </div>
                         <div className="ml-4">
