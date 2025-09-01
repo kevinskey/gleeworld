@@ -43,8 +43,8 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
         setIsPublished(entry.is_published);
         setUserEntry(entry);
         
-        // Load grade if exists
-        const gradeData = await fetchStudentGrade(assignment.id, entry.user_id);
+        // Load grade if exists - fix: use student_id instead of user_id
+        const gradeData = await fetchStudentGrade(assignment.id, entry.student_id);
         setGrade(gradeData);
       }
     };
