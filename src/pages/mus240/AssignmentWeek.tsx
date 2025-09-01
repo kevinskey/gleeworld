@@ -262,7 +262,7 @@ const AssignmentWeek: React.FC = () => {
                               onClick={() => navigate(`/classes/mus240/assignments/${assignment.id}`)}
                               className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg"
                             >
-                              Open Journal
+                              <span className="text-white">Open Journal</span>
                             </Button>
                           ) : (
                             <Button variant="outline" disabled className="border-gray-300 text-gray-500">
