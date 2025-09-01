@@ -75,7 +75,7 @@ const GleeAcademy = () => {
         <img 
           src={academyHeroImage} 
           alt="Glee World Academy" 
-          className="w-full h-[50vh] xs:h-[55vh] sm:h-[65vh] md:h-[75vh] lg:h-[85vh] xl:h-[90vh] object-contain"
+          className="w-full h-[50vh] xs:h-[55vh] sm:h-[65vh] md:h-[75vh] lg:h-[85vh] xl:h-[90vh] object-cover"
         />
         {/* Logo Overlay - Hidden on Mobile */}
         <div className="absolute inset-0 hidden sm:flex items-center justify-center bg-black/30">
