@@ -136,6 +136,14 @@ export const useRoleBasedRedirect = () => {
       const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
       const isPostLogin = redirectAfterAuth !== null || location.pathname === '/auth';
       
+      // Don't redirect if user is on MUS 240 pages or other specific areas
+      if (location.pathname.startsWith('/classes/mus240') || 
+          location.pathname.startsWith('/admin') ||
+          location.pathname.includes('/dashboard')) {
+        console.log('🛑 useRoleBasedRedirect: User on specific area, not redirecting');
+        return;
+      }
+      
       // For public pages other than root, don't auto-redirect unless coming from auth
       if (!isPostLogin) {
         if (!isOnRootPage) {
