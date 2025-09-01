@@ -103,7 +103,7 @@ const AssignmentWeek: React.FC = () => {
                           </li>
                           <li className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
-                            <span className="text-white/90"><strong>Comments:</strong> Respond to 2 other students' journals</span>
+                            <span className="text-white/90"><strong>Peer Comments:</strong> Respond thoughtfully to 2 other students' journals (minimum 50 words each)</span>
                           </li>
                         </ul>
                       </div>
@@ -114,20 +114,24 @@ const AssignmentWeek: React.FC = () => {
                         </h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between items-center p-2 bg-white/10 rounded border border-white/20">
-                            <span className="text-white/90">Musical Analysis (40%)</span>
-                            <span className="font-medium text-white">8 pts</span>
+                            <span className="text-white/90">Musical Analysis (35%)</span>
+                            <span className="font-medium text-white">7 pts</span>
                           </div>
                           <div className="flex justify-between items-center p-2 bg-white/10 rounded border border-white/20">
-                            <span className="text-white/90">Historical Context (30%)</span>
-                            <span className="font-medium text-white">6 pts</span>
+                            <span className="text-white/90">Historical Context (25%)</span>
+                            <span className="font-medium text-white">5 pts</span>
                           </div>
                           <div className="flex justify-between items-center p-2 bg-white/10 rounded border border-white/20">
-                            <span className="text-white/90">Terminology Usage (20%)</span>
-                            <span className="font-medium text-white">4 pts</span>
+                            <span className="text-white/90">Terminology Usage (15%)</span>
+                            <span className="font-medium text-white">3 pts</span>
                           </div>
                           <div className="flex justify-between items-center p-2 bg-white/10 rounded border border-white/20">
                             <span className="text-white/90">Writing Quality (10%)</span>
                             <span className="font-medium text-white">2 pts</span>
+                          </div>
+                          <div className="flex justify-between items-center p-2 bg-white/10 rounded border border-white/20">
+                            <span className="text-white/90">Peer Comments (15%)</span>
+                            <span className="font-medium text-white">3 pts</span>
                           </div>
                         </div>
                       </div>
