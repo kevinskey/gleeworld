@@ -148,7 +148,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
             <Lock className="h-4 w-4" />
             <AlertDescription>
               Copy and paste is disabled. You must type your journal entry directly. 
-              Aim for 250-300 words focusing on {assignment.instructions}
+              Aim for 250-300 words focusing on the assignment prompt below.
             </AlertDescription>
           </Alert>
 
@@ -225,11 +225,33 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
             </div>
           </div>
 
-          <div className="text-sm text-muted-foreground">
-            <p className="font-medium">Assignment Details:</p>
-            <p>{assignment.description}</p>
-            <p className="mt-2"><strong>Focus:</strong> {assignment.instructions}</p>
-            <p><strong>Due:</strong> {new Date(assignment.dueDate).toLocaleDateString()}</p>
+          <div className="text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg">
+            <p className="font-medium mb-2">Assignment Details:</p>
+            <p className="mb-3">{assignment.description}</p>
+            
+            <div className="space-y-2">
+              <p className="font-medium">Instructions:</p>
+              <div className="text-xs space-y-1 pl-2">
+                {assignment.instructions.split('\n').map((line, index) => {
+                  if (line.trim() === '') return <br key={index} />;
+                  if (line.startsWith('•')) {
+                    return (
+                      <p key={index} className="flex items-start gap-1">
+                        <span className="text-primary">•</span>
+                        <span>{line.substring(1).trim()}</span>
+                      </p>
+                    );
+                  }
+                  return (
+                    <p key={index} className={line.includes('Guidelines') || line.includes('Prompt') ? 'font-semibold mt-3 mb-1' : ''}>
+                      {line}
+                    </p>
+                  );
+                })}
+              </div>
+            </div>
+            
+            <p className="mt-3"><strong>Due:</strong> {new Date(assignment.dueDate).toLocaleDateString()}</p>
           </div>
         </CardContent>
       </Card>
