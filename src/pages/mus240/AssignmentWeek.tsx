@@ -276,7 +276,15 @@ export default function Assignments() {
                         className={`relative group hover:shadow-xl transition-all cursor-pointer bg-white/95 backdrop-blur-sm border border-white/30 hover:bg-white hover:shadow-2xl hover:-translate-y-1 ${
                           submitted ? 'border-green-300 bg-green-50/95' : 'hover:border-white/50'
                         }`}
-                        onClick={() => !submitted && handleSubmitAssignment(assignment)}
+                        onClick={() => {
+                          if (!submitted) {
+                            if (assignment.type === 'listening_journal') {
+                              navigate(`/classes/mus240/assignments/${assignment.id}`);
+                            } else {
+                              handleSubmitAssignment(assignment);
+                            }
+                          }
+                        }}
                       >
                         <CardHeader className="pb-3">
                           <div className="flex items-start justify-between">
