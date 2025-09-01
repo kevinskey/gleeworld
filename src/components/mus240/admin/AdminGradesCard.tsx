@@ -15,12 +15,12 @@ export const AdminGradesCard: React.FC = () => {
       
       const { data, error } = await supabase
         .from('gw_profiles')
-        .select('is_admin, is_super_admin')
+        .select('is_admin, is_super_admin, is_exec_board')
         .eq('user_id', user.id)
         .single();
       
       if (data && !error) {
-        setIsAdmin(data.is_admin || data.is_super_admin);
+        setIsAdmin(data.is_admin || data.is_super_admin || data.is_exec_board);
       }
     };
 
