@@ -7,6 +7,7 @@ import { BookOpen, Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-reac
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface Assignment {
   id: string;
@@ -30,6 +31,7 @@ interface Submission {
 export const AssignmentsList: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -229,6 +231,18 @@ export const AssignmentsList: React.FC = () => {
                   variant={submission ? "secondary" : "default"} 
                   size="sm"
                   disabled={status === 'overdue' && !submission}
+                  onClick={() => {
+                    if (assignment.assignment_type === 'listening_journal') {
+                      navigate(`/classes/mus240/assignments/${assignment.id}`);
+                    } else {
+                      // Handle other assignment types here
+                      toast({
+                        title: "Coming Soon",
+                        description: "This assignment type is not yet implemented.",
+                        variant: "default"
+                      });
+                    }
+                  }}
                 >
                   {submission ? 'View Submission' : 'Start Assignment'}
                 </Button>
