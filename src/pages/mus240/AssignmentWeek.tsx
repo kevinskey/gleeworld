@@ -103,6 +103,7 @@ const AssignmentWeek: React.FC = () => {
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {weekData.assignments.map((assignment) => {
+                    console.log('Assignment data:', assignment);
                     const { submitted, graded, score } = getSubmissionStatus(assignment.id);
                     
                     return (
@@ -220,6 +221,7 @@ const AssignmentWeek: React.FC = () => {
         {/* Assignments Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {week.assignments.map((assignment, index) => {
+            console.log('Week assignment data:', assignment);
             const { submitted, graded, score } = getSubmissionStatus(assignment.id);
             
             return (
