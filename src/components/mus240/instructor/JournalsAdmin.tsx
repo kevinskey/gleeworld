@@ -30,6 +30,13 @@ interface JournalEntry {
   };
 }
 
+interface GradingJournal {
+  id: string;
+  user_id: string;
+  content: string;
+  author_name: string;
+}
+
 export const JournalsAdmin = () => {
   const [journals, setJournals] = useState<JournalEntry[]>([]);
   const [filteredJournals, setFilteredJournals] = useState<JournalEntry[]>([]);
@@ -39,7 +46,7 @@ export const JournalsAdmin = () => {
   const [filterAssignment, setFilterAssignment] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [gradingModalOpen, setGradingModalOpen] = useState(false);
-  const [selectedJournal, setSelectedJournal] = useState<JournalEntry | null>(null);
+  const [selectedJournal, setSelectedJournal] = useState<GradingJournal | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
 
   useEffect(() => {
@@ -141,25 +148,27 @@ export const JournalsAdmin = () => {
   };
 
   const openGradingModal = (journal: JournalEntry) => {
-    // Create a mock assignment since we're using different data structure
-    const mockAssignment = {
+    // Create assignment object matching the Assignment interface
+    const assignment = assignments.find(a => a.id === journal.assignment_id);
+    const mockAssignment: Assignment = {
       id: journal.assignment_id,
-      title: assignments.find(a => a.id === journal.assignment_id)?.title || 'Unknown Assignment',
-      description: '',
-      prompt: assignments.find(a => a.id === journal.assignment_id)?.prompt || '',
-      points: assignments.find(a => a.id === journal.assignment_id)?.points || 100,
-      dueDate: assignments.find(a => a.id === journal.assignment_id)?.due_date || '',
-      type: 'listening_journal'
+      title: assignment?.title || 'Unknown Assignment',
+      description: assignment?.description || '',
+      instructions: assignment?.instructions || assignment?.prompt || '',
+      dueDate: assignment?.due_date || '',
+      type: 'listening-journal',
+      points: assignment?.points || 100
     };
 
-    const mockJournal = {
+    // Create journal object matching the expected interface
+    const gradingJournal: GradingJournal = {
       id: journal.id,
       user_id: journal.student_id,
       content: journal.content,
       author_name: journal.user_profile?.full_name || 'Unknown Student'
     };
 
-    setSelectedJournal(mockJournal);
+    setSelectedJournal(gradingJournal);
     setSelectedAssignment(mockAssignment);
     setGradingModalOpen(true);
   };
@@ -359,7 +368,7 @@ export const JournalsAdmin = () => {
           onClose={() => setGradingModalOpen(false)}
           assignment={selectedAssignment}
           journal={selectedJournal}
-          existingGrade={selectedJournal.grade}
+          existingGrade={undefined}
           onGradeComplete={handleGradeComplete}
         />
       )}
