@@ -12771,6 +12771,42 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_enrollments: {
+        Row: {
+          created_at: string
+          enrolled_at: string
+          enrollment_status: string
+          final_grade: string | null
+          id: string
+          instructor_notes: string | null
+          semester: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enrolled_at?: string
+          enrollment_status?: string
+          final_grade?: string | null
+          id?: string
+          instructor_notes?: string | null
+          semester?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enrolled_at?: string
+          enrollment_status?: string
+          final_grade?: string | null
+          id?: string
+          instructor_notes?: string | null
+          semester?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mus240_grade_summaries: {
         Row: {
           assignment_points: number
@@ -16751,6 +16787,10 @@ export type Database = {
       }
       is_current_user_treasurer: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_enrolled_in_mus240: {
+        Args: { user_id_param?: string }
         Returns: boolean
       }
       is_executive_board_member: {

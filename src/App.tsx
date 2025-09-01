@@ -150,6 +150,7 @@ import SetupCrewPage from "./pages/SetupCrewPage";
 import { Onboarding } from "./pages/Onboarding";
 import StudentRegistration from "./pages/StudentRegistration";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
+import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
 import ClassLanding from "./pages/mus240/ClassLanding";
 import SyllabusPage from "./pages/mus240/SyllabusPage";
 import AssignmentWeek from "./pages/mus240/AssignmentWeek";
@@ -1359,92 +1360,96 @@ const App = () => {
                                 </ProtectedRoute>
                               } 
                              />
-                              {/* MUS 240 Class Pages */}
+                              {/* MUS 240 Class Pages - Protected by enrollment */}
                               <Route 
                                 path="/mus240" 
                                 element={
-                                  <PublicRoute>
+                                  <Mus240EnrollmentRoute>
                                     <ClassLanding />
-                                  </PublicRoute>
+                                  </Mus240EnrollmentRoute>
                                 } 
                               />
                               <Route 
                                 path="/classes/mus240" 
                                 element={
-                                  <PublicRoute>
+                                  <Mus240EnrollmentRoute>
                                     <ClassLanding />
-                                  </PublicRoute>
+                                  </Mus240EnrollmentRoute>
                                 } 
                               />
                              <Route 
                                path="/classes/mus240/syllabus" 
                                element={
-                                   <PublicRoute>
-                                    <SyllabusPage />
-                                  </PublicRoute>
+                                   <Mus240EnrollmentRoute>
+                                     <SyllabusPage />
+                                   </Mus240EnrollmentRoute>
                                } 
                              />
                               <Route 
                                 path="/classes/mus240/assignments" 
                                 element={
-                                   <PublicRoute>
+                                   <Mus240EnrollmentRoute>
                                      <AssignmentWeek />
-                                   </PublicRoute>
+                                   </Mus240EnrollmentRoute>
                                 } 
                               />
                               <Route 
                                 path="/classes/mus240/assignments/:assignmentId" 
                                 element={
-                                  <PublicRoute>
+                                  <Mus240EnrollmentRoute>
                                     <AssignmentJournal />
-                                  </PublicRoute>
+                                  </Mus240EnrollmentRoute>
                                 } 
                               />
                               <Route 
                                 path="/classes/mus240/listening" 
                                 element={
-                                  <PublicRoute>
+                                  <Mus240EnrollmentRoute>
                                     <ListeningHub />
-                                  </PublicRoute>
+                                  </Mus240EnrollmentRoute>
                                 } 
                               />
                               <Route 
                                 path="/classes/mus240/listening/:week" 
                                 element={
-                                  <PublicRoute>
+                                  <Mus240EnrollmentRoute>
                                     <WeekDetail />
-                                  </PublicRoute>
+                                  </Mus240EnrollmentRoute>
                                 } 
                               />
                               <Route 
                                 path="/classes/mus240/resources" 
                                 element={
-                                  <PublicRoute>
+                                  <Mus240EnrollmentRoute>
                                     <Resources />
-                                  </PublicRoute>
+                                  </Mus240EnrollmentRoute>
                                 } 
                               />
                               <Route 
                                 path="/classes/mus240/resources/admin" 
                                 element={
                                   <ProtectedRoute>
-                                    <ResourcesAdmin />
+                                    <AdminOnlyRoute>
+                                      <ResourcesAdmin />
+                                    </AdminOnlyRoute>
                                   </ProtectedRoute>
-                                } 
+                               } 
                                />
                                <Route 
                                  path="/classes/mus240/grades" 
                                  element={
-                                   <PublicRoute>
+                                   <Mus240EnrollmentRoute>
                                      <Mus240GradesPage />
-                                   </PublicRoute>
+                                   </Mus240EnrollmentRoute>
                                  } 
                                 />
                                 <Route 
                                   path="/classes/mus240/admin" 
                                   element={
                                     <ProtectedRoute>
-                                      <Mus240AdminPage />
+                                      <AdminOnlyRoute>
+                                        <Mus240AdminPage />
+                                      </AdminOnlyRoute>
                                     </ProtectedRoute>
                                   } 
                                 />
