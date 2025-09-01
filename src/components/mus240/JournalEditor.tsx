@@ -116,7 +116,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
   };
 
   const isMinimumLength = wordCount >= 250;
-  const isMaximumLength = wordCount <= 300;
+  const isWithinWordLimit = wordCount >= 250 && wordCount <= 300;
 
   return (
     <div className="space-y-6">
@@ -181,7 +181,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
             </Alert>
           )}
 
-          {!isMaximumLength && wordCount > 0 && (
+          {wordCount > 300 && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
@@ -217,7 +217,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
               
               <Button
                 onClick={handlePublish}
-                disabled={!isMinimumLength || !isMaximumLength || isPublished || loading}
+                disabled={!isWithinWordLimit || isPublished || loading}
               >
                 <Send className="h-4 w-4 mr-2" />
                 Publish for Peer Review
