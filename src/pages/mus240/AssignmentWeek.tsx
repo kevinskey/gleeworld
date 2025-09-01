@@ -248,7 +248,7 @@ const AssignmentWeek: React.FC = () => {
                               {getTypeIcon(assignment.type)}
                               <span className="ml-1">{assignment.type.replace('-', ' ')}</span>
                             </Badge>
-                            <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                            <Badge variant="secondary">
                               {assignment.points} points
                             </Badge>
                           </div>
