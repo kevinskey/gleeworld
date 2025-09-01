@@ -32,7 +32,7 @@ export const mus240Assignments: WeekAssignments[] = [
         dueDate: "2025-08-31",
         type: "listening-journal",
         estimatedTime: "45 minutes",
-        points: 10
+        points: 20
       }
     ]
   },
@@ -50,7 +50,7 @@ export const mus240Assignments: WeekAssignments[] = [
         dueDate: "2025-09-07",
         type: "listening-journal",
         estimatedTime: "30 minutes",
-        points: 10
+        points: 20
       }
     ]
   },
@@ -68,7 +68,7 @@ export const mus240Assignments: WeekAssignments[] = [
         dueDate: "2025-09-14",
         type: "listening-journal",
         estimatedTime: "40 minutes",
-        points: 10
+        points: 20
       }
     ]
   },
@@ -86,7 +86,7 @@ export const mus240Assignments: WeekAssignments[] = [
         dueDate: "2025-09-21",
         type: "listening-journal",
         estimatedTime: "45 minutes",
-        points: 10
+        points: 20
       }
     ]
   },
@@ -104,7 +104,7 @@ export const mus240Assignments: WeekAssignments[] = [
         dueDate: "2025-09-28",
         type: "listening-journal",
         estimatedTime: "40 minutes",
-        points: 10
+        points: 20
       }
     ]
   },
@@ -122,7 +122,7 @@ export const mus240Assignments: WeekAssignments[] = [
         dueDate: "2025-10-05",
         type: "listening-journal",
         estimatedTime: "45 minutes",
-        points: 10
+        points: 20
       }
     ]
   },
@@ -140,7 +140,7 @@ export const mus240Assignments: WeekAssignments[] = [
         dueDate: "2025-10-12",
         type: "listening-journal",
         estimatedTime: "40 minutes",
-        points: 10
+        points: 20
       }
     ]
   },
