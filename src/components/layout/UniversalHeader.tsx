@@ -162,25 +162,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             <MusicalToolkit />
-
-            {/* Site Search */}
-            <div className="hidden md:block w-64">
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search the website..."
-                  className="pl-8"
-                  onKeyDown={(e) => {
-                    const target = e.target as HTMLInputElement;
-                    if (e.key === 'Enter') {
-                      const q = target.value.trim();
-                      if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
-                      else navigate('/search');
-                    }
-                  }}
-                />
-              </div>
-            </div>
             
             {user && (
               <>
