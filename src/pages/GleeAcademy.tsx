@@ -71,26 +71,12 @@ const GleeAcademy = () => {
   return <UniversalLayout>
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
       {/* Hero Section */}
-      <div className="relative h-screen overflow-hidden">
+      <div className="relative overflow-hidden">
         <img 
           src={academyHeroImage} 
           alt="Glee World Academy" 
-          className="absolute inset-0 w-full h-full object-cover"
+          className="w-full h-[50vh] sm:h-[60vh] md:h-[70vh] object-cover"
         />
-        <div className="absolute inset-0 bg-black/40"></div>
-        <div className="relative z-10 flex items-center justify-center h-full px-4 sm:px-6">
-          <div className="text-center text-white max-w-4xl mx-auto">
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6">
-              Welcome to Glee Academy
-            </h1>
-            <p className="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 text-white/90 max-w-2xl mx-auto">
-              Experience the transformative power of music education rooted in excellence and tradition
-            </p>
-            <Button size="lg" className="bg-white text-primary hover:bg-white/90 text-sm sm:text-base">
-              Start Your Journey
-            </Button>
-          </div>
-        </div>
       </div>
 
       {/* Courses Section */}
