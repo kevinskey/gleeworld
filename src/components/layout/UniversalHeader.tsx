@@ -97,64 +97,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             
           </div>
 
-          {/* Mobile Navigation Menu */}
-          {user && isMobile && (
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="md:hidden">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-64">
-                <nav className="flex flex-col gap-2 mt-8">
-                  {isAdmin && (
-                    <Button 
-                      variant={location.pathname === '/dashboard' ? "default" : "ghost"}
-                      onClick={() => navigate('/dashboard')}
-                      className="justify-start"
-                    >
-                      <User className="mr-2 h-4 w-4" />
-                      My Dashboard
-                    </Button>
-                  )}
-                  <Button 
-                    variant={location.pathname === '/dashboard/member' ? "default" : "ghost"}
-                    onClick={() => navigate('/dashboard/member')}
-                    className="justify-start"
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    Member Dashboard
-                  </Button>
-                  <Button 
-                    variant={location.pathname === '/dashboard/fan' ? "default" : "ghost"}
-                    onClick={() => navigate('/dashboard/fan')}
-                    className="justify-start"
-                  >
-                    <Heart className="mr-2 h-4 w-4" />
-                    Fan View
-                  </Button>
-                  <Button 
-                    variant={location.pathname === '/dashboard/alumnae' ? "default" : "ghost"}
-                    onClick={() => navigate('/dashboard/alumnae')}
-                    className="justify-start"
-                  >
-                    <GraduationCap className="mr-2 h-4 w-4" />
-                    Alumnae View
-                  </Button>
-                  {hasExecBoardPerms && (
-                    <Button 
-                      variant={location.pathname.startsWith('/admin') ? "default" : "ghost"}
-                      onClick={() => navigate('/admin')}
-                      className="justify-start"
-                    >
-                      <Crown className="mr-2 h-4 w-4" />
-                      Admin Panel
-                    </Button>
-                  )}
-                </nav>
-              </SheetContent>
-            </Sheet>
-          )}
+          {/* Mobile Navigation Menu - Removed */}
 
           {/* Mobile spacer */}
           <div className="flex-1 md:hidden"></div>
