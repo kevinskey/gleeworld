@@ -2,13 +2,9 @@ import React, { useState, lazy, Suspense, useMemo } from 'react';
 import { MessagesPanel } from './MessagesPanel';
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { CommunityHubModule } from './modules/CommunityHubModule';
-import { SplitClassHero } from '@/components/hero/SplitClassHero';
-import DashboardFeaturesCarousel from '@/components/hero/DashboardFeaturesCarousel';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon, Eye, Music } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import { MemberNavigation } from '@/components/member/MemberNavigation';
 import { useUserRole } from '@/hooks/useUserRole';
 import { IncompleteProfileBanner } from '@/components/shared/IncompleteProfileBanner';
 import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
@@ -19,6 +15,12 @@ import { ExecBoardModulePanel } from '@/components/executive/ExecBoardModulePane
 import FanDashboard from '@/pages/FanDashboard';
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
+
+// Lazy load heavy components to improve initial load time
+const CommunityHubModule = lazy(() => import('./modules/CommunityHubModule').then(m => ({ default: m.CommunityHubModule })));
+const SplitClassHero = lazy(() => import('@/components/hero/SplitClassHero').then(m => ({ default: m.SplitClassHero })));
+const DashboardFeaturesCarousel = lazy(() => import('@/components/hero/DashboardFeaturesCarousel'));
+const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then(m => ({ default: m.MemberNavigation })));
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
 export const UnifiedDashboard = () => {
@@ -103,14 +105,21 @@ export const UnifiedDashboard = () => {
 
           {/* Row 1: Hero + Features side-by-side */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
-            <SplitClassHero />
-            <div className="self-center w-full"><DashboardFeaturesCarousel /></div>
+            <Suspense fallback={<div className="h-48 bg-muted animate-pulse rounded-lg" />}>
+              <SplitClassHero />
+            </Suspense>
+            <div className="self-center w-full">
+              <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
+                <DashboardFeaturesCarousel />
+              </Suspense>
+            </div>
           </div>
-
 
           {/* Community Hub for Members */}
           <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
-            <CommunityHubModule />
+            <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded" />}>
+              <CommunityHubModule />
+            </Suspense>
           </div>
 
           {/* Calendar Section */}
@@ -144,16 +153,18 @@ export const UnifiedDashboard = () => {
                 <Users className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                 Member Resources
               </h2>
-              <MemberNavigation user={{
-                id: profile.user_id,
-                email: profile.email,
-                full_name: profile.full_name,
-                role: profile.role,
-                exec_board_role: profile.exec_board_role,
-                is_exec_board: profile.is_exec_board,
-                is_admin: profile.is_admin,
-                is_super_admin: profile.is_super_admin
-              }} />
+              <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded" />}>
+                <MemberNavigation user={{
+                  id: profile.user_id,
+                  email: profile.email,
+                  full_name: profile.full_name,
+                  role: profile.role,
+                  exec_board_role: profile.exec_board_role,
+                  is_exec_board: profile.is_exec_board,
+                  is_admin: profile.is_admin,
+                  is_super_admin: profile.is_super_admin
+                }} />
+              </Suspense>
             </div>
           )}
         </div>
@@ -391,8 +402,14 @@ export const UnifiedDashboard = () => {
       <div className="px-6 py-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
           {/* Left: Hero */}
-          <SplitClassHero />
-          <div className="self-center w-full"><DashboardFeaturesCarousel /></div>
+          <Suspense fallback={<div className="h-48 bg-muted animate-pulse rounded-lg" />}>
+            <SplitClassHero />
+          </Suspense>
+          <div className="self-center w-full">
+            <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
+              <DashboardFeaturesCarousel />
+            </Suspense>
+          </div>
         </div>
       </div>
 
@@ -417,7 +434,9 @@ export const UnifiedDashboard = () => {
           className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden transition-[max-height,opacity] duration-300"
           style={{ maxHeight: activeModuleId ? 0 : 'calc(45vh + 400px)', opacity: activeModuleId ? 0 : 1 }}
         >
-          <CommunityHubModule />
+          <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded" />}>
+            <CommunityHubModule />
+          </Suspense>
         </div>
       </div>
       {/* Row 3: Unified Calendar visible to all logged-in users */}
@@ -457,16 +476,18 @@ export const UnifiedDashboard = () => {
       {/* Row 4: Simple Member Navigation */}
       {profile && (
         <div className="px-6 pb-10">
-          <MemberNavigation user={{
-            id: profile.user_id,
-            email: profile.email,
-            full_name: profile.full_name,
-            role: profile.role,
-            exec_board_role: profile.exec_board_role,
-            is_exec_board: profile.is_exec_board,
-            is_admin: profile.is_admin,
-            is_super_admin: profile.is_super_admin
-          }} />
+          <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded" />}>
+            <MemberNavigation user={{
+              id: profile.user_id,
+              email: profile.email,
+              full_name: profile.full_name,
+              role: profile.role,
+              exec_board_role: profile.exec_board_role,
+              is_exec_board: profile.is_exec_board,
+              is_admin: profile.is_admin,
+              is_super_admin: profile.is_super_admin
+            }} />
+          </Suspense>
         </div>
       )}
 
