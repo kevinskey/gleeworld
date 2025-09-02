@@ -237,8 +237,6 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       graded_at: new Date().toISOString()
     };
 
-    console.log('Attempting to insert grade data:', JSON.stringify(gradeData, null, 2));
-
     const { data: grade, error: gradeError } = await supabase
       .from('mus240_journal_grades')
       .upsert(gradeData)
