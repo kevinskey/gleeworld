@@ -73,16 +73,20 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
         clearCache();
 
         console.log('FastPDFViewer: Loading PDF document:', signedUrl);
+        console.log('FastPDFViewer: Original pdfUrl:', pdfUrl);
 
         let doc;
         try {
           doc = await pdfjsLib.getDocument({ url: signedUrl }).promise;
+          console.log('FastPDFViewer: PDF loaded with primary method, pages:', doc.numPages);
         } catch (primaryErr) {
           console.warn('Primary PDF load failed, retrying with ArrayBuffer', primaryErr);
           const resp = await fetch(signedUrl);
           if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
           const ab = await resp.arrayBuffer();
+          console.log('FastPDFViewer: Fetched ArrayBuffer, size:', ab.byteLength);
           doc = await pdfjsLib.getDocument({ data: ab }).promise;
+          console.log('FastPDFViewer: PDF loaded with ArrayBuffer method, pages:', doc.numPages);
         }
 
         if (cancelled) return;
