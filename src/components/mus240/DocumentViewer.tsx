@@ -243,17 +243,6 @@ export function DocumentViewer({
                 </span>
               )}
               
-              {!isPowerPoint && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOpenExternal}
-                  className="flex items-center gap-2"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Open External
-                </Button>
-              )}
               
               <Button
                 variant="ghost"
