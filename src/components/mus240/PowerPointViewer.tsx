@@ -31,6 +31,8 @@ export function PowerPointViewer({
 
   // Try different viewer methods
   const getViewerUrl = () => {
+    // For private Supabase storage URLs, external viewers often fail due to CORS
+    // Let's try a direct approach first, then fallback
     const encodedUrl = encodeURIComponent(fileUrl);
     
     switch (viewerMethod) {
@@ -57,9 +59,10 @@ export function PowerPointViewer({
       setViewerMethod('microsoft');
       setIsLoading(true);
       setHasError(false);
+      toast.info('Trying Microsoft Office Online viewer...');
     } else if (viewerMethod === 'microsoft') {
       setViewerMethod('download');
-      toast.error('PowerPoint viewer failed to load. Please download the file.');
+      toast.error('Online PowerPoint viewers are blocked. Please download the file to view it.');
     }
   };
 
@@ -83,18 +86,20 @@ export function PowerPointViewer({
     if (viewerMethod === 'download' || !viewerUrl) {
       return (
         <div className="h-full flex flex-col items-center justify-center text-center p-8">
-          <div className="bg-red-100 rounded-full p-6 mb-4">
-            <AlertCircle className="h-12 w-12 text-red-500" />
+          <div className="bg-amber-100 rounded-full p-6 mb-4">
+            <Presentation className="h-12 w-12 text-amber-600" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">Unable to Display PowerPoint</h3>
-          <p className="text-muted-foreground mb-6 max-w-md">
-            The online viewers were unable to display this PowerPoint file. 
-            Please download the file to view it on your device.
+          <h3 className="text-lg font-semibold mb-2">PowerPoint Viewer Blocked</h3>
+          <p className="text-muted-foreground mb-4 max-w-md">
+            Online PowerPoint viewers (Google Docs, Microsoft Office Online) are blocked by CORS policy for private files.
+          </p>
+          <p className="text-sm text-muted-foreground mb-6 max-w-md">
+            To view this PowerPoint presentation, please download it or open it in a new tab.
           </p>
           <div className="flex gap-3">
             <Button onClick={handleOpenExternal} className="flex items-center gap-2">
               <ExternalLink className="h-4 w-4" />
-              Open PowerPoint
+              Download & Open
             </Button>
             <Button variant="outline" onClick={resetViewer} className="flex items-center gap-2">
               <RefreshCw className="h-4 w-4" />
@@ -127,6 +132,7 @@ export function PowerPointViewer({
           onLoad={handleIframeLoad}
           onError={handleIframeError}
           sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          allow="cross-origin-isolated"
         />
       </div>
     );
