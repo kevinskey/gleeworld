@@ -36,7 +36,7 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
   const { getPage, preloadPage, clearCache, preloadAdjacentPages } = usePDFPageCache(
     pdf, 
-    containerWidth, 
+    containerWidth > 0 ? containerWidth : 800, 
     1.2
   );
 
@@ -109,7 +109,10 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
 
   // Render current page and preload adjacent pages
   useEffect(() => {
-    if (!pdf || !canvasRef.current || containerWidth === 0) return;
+    if (!pdf || !canvasRef.current) return;
+    
+    // Use fallback width if container width is not available yet
+    const effectiveWidth = containerWidth > 0 ? containerWidth : 800;
 
     const renderCurrentPage = async () => {
       console.log('FastPDFViewer: Starting to render page', currentPage);
@@ -164,7 +167,7 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
     };
 
     renderCurrentPage();
-  }, [pdf, currentPage, containerWidth, getPage, preloadPage, preloadAdjacentPages, onPageChange, totalPages]);
+  }, [pdf, currentPage, getPage, preloadPage, preloadAdjacentPages, onPageChange, totalPages]);
 
   // Page navigation
   const goToPage = useCallback((page: number) => {
