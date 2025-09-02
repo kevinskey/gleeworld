@@ -189,6 +189,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       assignment_id,
       journal_id,
       overall_score: gradingResult.overall_score,
+      letter_grade: gradingResult.letter_grade,
       rubric: {
         criteria: activeRubric.criteria,
         scores: gradingResult.rubric_scores
@@ -201,9 +202,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
 
     const { data: grade, error: gradeError } = await supabase
       .from('mus240_journal_grades')
-      .upsert(gradeData, {
-        onConflict: 'assignment_id,student_id'
-      })
+      .upsert(gradeData)
       .select()
       .single();
 
