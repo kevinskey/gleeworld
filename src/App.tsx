@@ -138,6 +138,7 @@ import RecurringOptions from "./pages/booking/RecurringOptions";
 import CustomerInfo from "./pages/booking/CustomerInfo";
 import BookingConfirmation from "./pages/booking/BookingConfirmation";
 import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
+import ExecutiveBoardMemberDashboard from "./pages/ExecutiveBoardMemberDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
 import LibrarianDashboardPage from "./pages/LibrarianDashboardPage";
 import QRGeneratorPage from "./pages/QRGenerator";
@@ -456,7 +457,17 @@ const App = () => {
                       </UniversalLayout>
                     </ProtectedRoute>
                    } 
-                 />
+                  />
+                 <Route 
+                   path="/dashboard/executive-board/member/:userId" 
+                   element={
+                     <ProtectedRoute>
+                       <UniversalLayout>
+                         <ExecutiveBoardMemberDashboard />
+                       </UniversalLayout>
+                     </ProtectedRoute>
+                    } 
+                  />
                <Route 
                  path="/fan" 
                  element={
