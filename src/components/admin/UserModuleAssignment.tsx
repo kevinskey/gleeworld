@@ -209,6 +209,8 @@ export const UserModuleAssignment = () => {
     const emailMatch = user.email?.toLowerCase().includes(searchLower) || false;
     const roleMatch = user.role?.toLowerCase().includes(searchLower) || false;
     
+    const shouldInclude = nameMatch || emailMatch || roleMatch;
+    
     // Always log the first user named Onnesty when searching
     if (user.full_name?.toLowerCase().includes('onnesty') && searchTerm) {
       console.log('🔍 Found Onnesty during search:', {
@@ -218,11 +220,19 @@ export const UserModuleAssignment = () => {
         nameMatch,
         emailMatch,
         roleMatch,
-        shouldMatch: nameMatch || emailMatch || roleMatch
+        shouldMatch: shouldInclude,
+        finalResult: shouldInclude ? 'INCLUDED' : 'EXCLUDED'
       });
     }
     
-    return nameMatch || emailMatch || roleMatch;
+    return shouldInclude;
+  });
+
+  console.log('🔍 Filter results:', {
+    totalUsers: users.length,
+    filteredCount: filteredUsers.length,
+    searchTerm,
+    onnestyInFiltered: filteredUsers.find(u => u.full_name?.toLowerCase().includes('onnesty'))?.full_name || 'NOT FOUND'
   });
 
   useEffect(() => {
