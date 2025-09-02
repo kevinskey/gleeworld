@@ -12814,7 +12814,7 @@ export type Database = {
           calculated_at: string
           id: string
           letter_grade: string | null
-          overall_percentage: number
+          overall_percentage: number | null
           overall_points: number | null
           overall_possible: number
           participation_points: number | null
@@ -12828,7 +12828,7 @@ export type Database = {
           calculated_at?: string
           id?: string
           letter_grade?: string | null
-          overall_percentage?: number
+          overall_percentage?: number | null
           overall_points?: number | null
           overall_possible?: number
           participation_points?: number | null
@@ -12842,7 +12842,7 @@ export type Database = {
           calculated_at?: string
           id?: string
           letter_grade?: string | null
-          overall_percentage?: number
+          overall_percentage?: number | null
           overall_points?: number | null
           overall_possible?: number
           participation_points?: number | null
