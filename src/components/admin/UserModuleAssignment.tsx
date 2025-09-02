@@ -166,6 +166,17 @@ export const UserModuleAssignment = () => {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const { getAllUsersWithPermissions } = useUserModulePermissions();
 
+  // Debug state changes
+  useEffect(() => {
+    console.log('🔍 UserModuleAssignment state changed:', {
+      usersCount: users.length,
+      searchTerm,
+      loading,
+      selectedUser: selectedUser?.email,
+      assignDialogOpen
+    });
+  }, [users, searchTerm, loading, selectedUser, assignDialogOpen]);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -248,7 +259,10 @@ export const UserModuleAssignment = () => {
           <Input
             placeholder="Search users..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              console.log('🔍 Search input change:', e.target.value);
+              setSearchTerm(e.target.value);
+            }}
             className="pl-10"
           />
         </div>
