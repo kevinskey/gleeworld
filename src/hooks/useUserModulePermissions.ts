@@ -149,13 +149,24 @@ export const useUserModulePermissions = () => {
 
   const getAllUsersWithPermissions = async (): Promise<UserWithPermissions[]> => {
     try {
+      console.log('🔍 Fetching users from gw_profiles...');
       // Get all users
       const { data: users, error: usersError } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email, role, is_exec_board')
         .order('full_name');
       
-      if (usersError) throw usersError;
+      console.log('🔍 Raw gw_profiles data:', {
+        count: users?.length || 0,
+        error: usersError,
+        sampleUsers: users?.slice(0, 5).map(u => ({ name: u.full_name, email: u.email })),
+        onnestyInResults: users?.find(u => u.full_name?.toLowerCase().includes('onnesty'))
+      });
+      
+      if (usersError) {
+        console.error('🔍 Error fetching users:', usersError);
+        throw usersError;
+      }
       
       // Get all active permissions
       const { data: perms, error: permsError } = await supabase
