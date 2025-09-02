@@ -6,6 +6,7 @@ import { Download, ExternalLink, X, ZoomIn, ZoomOut, RotateCw, Presentation, Pla
 import { toast } from 'sonner';
 import { PresentationViewer } from './PresentationViewer';
 import { PowerPointViewer } from './PowerPointViewer';
+import { FastPDFViewer } from '@/components/FastPDFViewer';
 
 interface DocumentViewerProps {
   isOpen: boolean;
@@ -28,7 +29,6 @@ export function DocumentViewer({
   const [totalPages, setTotalPages] = useState(0);
   const [showSlideshow, setShowSlideshow] = useState(false);
   const [showPowerPointViewer, setShowPowerPointViewer] = useState(false);
-  const [pdfError, setPdfError] = useState(false);
 
   const isPDF = fileType === 'application/pdf' || 
     fileName.toLowerCase().endsWith('.pdf') || 
@@ -125,45 +125,11 @@ export function DocumentViewer({
     console.log('DocumentViewer: Rendering PDF with URL:', fileUrl);
     console.log('DocumentViewer: PDF detection - fileType:', fileType, 'fileName:', fileName, 'isPDF:', isPDF);
     return (
-      <div className="h-full relative">
-        <iframe
-          src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
-          className="w-full h-full border-0"
-          title={title || 'PDF Document'}
-          onLoad={() => {
-            console.log('DocumentViewer: PDF loaded in Google Docs Viewer');
-            setPdfError(false);
-          }}
-          onError={(e) => {
-            console.error('DocumentViewer: PDF embedding failed:', e);
-            setPdfError(true);
-            // Auto-open in window when iframe fails
-            setTimeout(() => {
-              window.open(fileUrl, 'pdfWindow', 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=yes,menubar=yes');
-            }, 1000);
-          }}
+      <div className="h-full">
+        <FastPDFViewer 
+          pdfUrl={fileUrl} 
+          className="h-full w-full"
         />
-        {/* Error fallback overlay - only show when there's an error */}
-        {pdfError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
-            <div className="text-center p-6 bg-white rounded-lg shadow-lg max-w-md">
-              <AlertCircle className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Opening PDF in Window</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                The PDF is opening in a new window for better viewing.
-              </p>
-              <div className="flex gap-2 justify-center">
-                <Button
-                  onClick={() => window.open(fileUrl, 'pdfWindow', 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=yes,menubar=yes')}
-                  className="flex items-center gap-2"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Open PDF Window
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   };
