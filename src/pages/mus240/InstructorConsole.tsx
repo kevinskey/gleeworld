@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Edit } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Edit, ArrowLeft, Home, ChevronRight } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { AssignmentManager } from '@/components/mus240/instructor/AssignmentManager';
 import { JournalsAdmin } from '@/components/mus240/instructor/JournalsAdmin';
 import { GradesAdmin } from '@/components/mus240/instructor/GradesAdmin';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 
 export const InstructorConsole = () => {
   const { isAdmin, loading } = useUserRole();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('assignments');
 
   if (loading) {
@@ -29,8 +30,44 @@ export const InstructorConsole = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Navigation Header */}
+      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Breadcrumb Navigation */}
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/classes/mus240')}
+                className="p-2 hover:bg-gray-100"
+              >
+                <Home className="h-4 w-4" />
+              </Button>
+              <ChevronRight className="h-4 w-4" />
+              <span className="text-gray-400">MUS 240</span>
+              <ChevronRight className="h-4 w-4" />
+              <span className="font-medium text-gray-900">Instructor Console</span>
+            </div>
+            
+            {/* Quick Actions */}
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/classes/mus240')}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Course
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
