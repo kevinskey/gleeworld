@@ -189,13 +189,13 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       assignment_id,
       journal_id,
       overall_score: gradingResult.overall_score,
-      letter_grade: gradingResult.letter_grade,
+      // letter_grade is auto-generated, don't insert it
       rubric: {
         criteria: activeRubric.criteria,
         scores: gradingResult.rubric_scores
       },
       feedback: gradingResult.overall_feedback,
-      ai_model: 'gpt-4.1-2025-04-14',
+      ai_model: 'gpt-4-turbo',
       graded_by: null, // AI grading
       graded_at: new Date().toISOString()
     };
