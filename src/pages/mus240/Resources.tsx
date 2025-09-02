@@ -167,31 +167,20 @@ export default function Resources() {
                               onClick={() => openViewer(resource)}
                               size="sm"
                               variant="outline"
-                              className="flex-1 bg-white/20 hover:bg-white/30 text-gray-700 hover:text-gray-900 border-gray-300"
+                              className="w-full bg-white/20 hover:bg-white/30 text-gray-700 hover:text-gray-900 border-gray-300"
                             >
                               <Eye className="h-4 w-4 mr-2" />
                               Preview
                             </Button>
                           )}
                           
-                          {/* Main Action Button */}
-                          <Button 
-                            asChild
-                            size="sm" 
-                            className={`bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0 ${
-                              resource.is_file_upload && canPreview(resource) ? 'flex-1' : 'w-full'
-                            }`}
-                          >
-                            {resource.is_file_upload ? (
-                              <a 
-                                href={resource.url} 
-                                download={resource.file_name}
-                                className="inline-flex items-center gap-2"
-                              >
-                                <Download className="h-4 w-4" />
-                                Download {resource.file_name?.split('.').pop()?.toUpperCase() || 'File'}
-                              </a>
-                            ) : (
+                          {/* For non-file resources or non-previewable files */}
+                          {(!resource.is_file_upload || !canPreview(resource)) && (
+                            <Button 
+                              asChild
+                              size="sm" 
+                              className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0"
+                            >
                               <a 
                                 href={resource.url} 
                                 target="_blank" 
@@ -201,8 +190,8 @@ export default function Resources() {
                                 <ExternalLink className="h-4 w-4" />
                                 Access Resource
                               </a>
-                            )}
-                          </Button>
+                            </Button>
+                          )}
                         </div>
                         
                         {/* Show file size for downloads */}
