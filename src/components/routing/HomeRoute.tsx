@@ -34,11 +34,13 @@ export const HomeRoute = () => {
   // Use the role-based redirect hook to handle automatic redirection (only if not public view)
   useRoleBasedRedirect();
   
-  // Force redirect for authenticated super-admin users (only if not public view)
+  // Force redirect for authenticated admin/executive users (only if not public view)
   useEffect(() => {
     if (!authLoading && user && userProfile && !isPublicView) {
-      if (userProfile.is_super_admin || userProfile.role === 'super-admin') {
-        console.log('🚀 HomeRoute: Force redirecting super-admin to dashboard');
+      if (userProfile.is_super_admin || userProfile.role === 'super-admin' || 
+          userProfile.is_admin || userProfile.role === 'admin' || 
+          userProfile.is_exec_board) {
+        console.log('🚀 HomeRoute: Force redirecting admin/executive to dashboard');
         navigate('/dashboard', { replace: true });
       }
     }
