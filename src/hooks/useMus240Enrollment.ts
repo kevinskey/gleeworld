@@ -33,7 +33,7 @@ export const useMus240Enrollment = () => {
           .select('*')
           .eq('student_id', user.id)
           .eq('enrollment_status', 'enrolled')
-          .single();
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error checking MUS 240 enrollment:', error);

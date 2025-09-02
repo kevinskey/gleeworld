@@ -51,7 +51,7 @@ export const EnrollmentManager = () => {
         .from('mus240_enrollments')
         .select(`
           *,
-          gw_profiles!mus240_enrollments_student_id_fkey(
+          gw_profiles!student_id(
             full_name,
             email
           )
