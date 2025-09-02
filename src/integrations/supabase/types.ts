@@ -12815,7 +12815,7 @@ export type Database = {
           id: string
           letter_grade: string | null
           overall_percentage: number
-          overall_points: number
+          overall_points: number | null
           overall_possible: number
           participation_points: number | null
           participation_possible: number
@@ -12829,7 +12829,7 @@ export type Database = {
           id?: string
           letter_grade?: string | null
           overall_percentage?: number
-          overall_points?: number
+          overall_points?: number | null
           overall_possible?: number
           participation_points?: number | null
           participation_possible?: number
@@ -12843,7 +12843,7 @@ export type Database = {
           id?: string
           letter_grade?: string | null
           overall_percentage?: number
-          overall_points?: number
+          overall_points?: number | null
           overall_possible?: number
           participation_points?: number | null
           participation_possible?: number
