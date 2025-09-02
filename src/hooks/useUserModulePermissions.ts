@@ -150,11 +150,16 @@ export const useUserModulePermissions = () => {
   const getAllUsersWithPermissions = async (): Promise<UserWithPermissions[]> => {
     try {
       console.log('🔍 Fetching users from gw_profiles...');
-      // Get all users
+      // Get all users using the same query pattern as the working useUsers hook
       const { data: users, error: usersError } = await supabase
         .from('gw_profiles')
-        .select('user_id, full_name, email, role, is_exec_board')
-        .order('full_name');
+        .select(`
+          id, user_id, email, full_name, first_name, last_name, role,
+          exec_board_role, is_exec_board, avatar_url, phone, voice_part, 
+          class_year, join_date, status, dues_paid, notes, is_admin, 
+          is_super_admin, title, bio, graduation_year, verified, created_at
+        `)
+        .order('created_at', { ascending: false });
       
       console.log('🔍 Raw gw_profiles data:', {
         count: users?.length || 0,
@@ -176,17 +181,32 @@ export const useUserModulePermissions = () => {
       
       if (permsError) throw permsError;
       
-      // Combine users with their permissions
-      const usersWithPermissions: UserWithPermissions[] = (users || []).map(user => ({
-        user_id: user.user_id,
-        full_name: user.full_name || user.email || 'Unknown User',
-        email: user.email || '',
-        role: user.role || 'member',
-        is_exec_board: user.is_exec_board || false,
-        modules: (perms || [])
-          .filter(p => p.user_id === user.user_id)
-          .map(p => p.module_id)
-      }));
+      // Combine users with their permissions, filtering out invalid entries like useUsers does
+      const usersWithPermissions: UserWithPermissions[] = (users || [])
+        .filter(profile => profile.user_id) // Only include profiles with valid user_id
+        .map(profile => {
+          // Build full_name like useUsers does
+          const fullName = profile.full_name || 
+                          (profile.first_name && profile.last_name ? 
+                           `${profile.first_name} ${profile.last_name}` : null) ||
+                          profile.email || 'Unknown User';
+                          
+          return {
+            user_id: profile.user_id,
+            full_name: fullName,
+            email: profile.email || '',
+            role: profile.role || 'member',
+            is_exec_board: profile.is_exec_board || false,
+            modules: (perms || [])
+              .filter(p => p.user_id === profile.user_id)
+              .map(p => p.module_id)
+          };
+        });
+      
+      console.log('🔍 Final users with permissions:', {
+        count: usersWithPermissions.length,
+        onnestyFound: usersWithPermissions.find(u => u.full_name?.toLowerCase().includes('onnesty'))
+      });
       
       return usersWithPermissions;
     } catch (err) {
