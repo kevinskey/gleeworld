@@ -87,32 +87,15 @@ export function DocumentViewer({
             <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg mx-auto mb-6 flex items-center justify-center">
               <Presentation className="h-10 w-10 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-4">PowerPoint Options</h3>
+            <h3 className="text-xl font-bold text-white mb-4">Content Protected</h3>
             <h4 className="text-lg font-medium text-amber-300 mb-4">{fileName}</h4>
             
-            <div className="space-y-3">
-              <Button
-                onClick={() => setShowPowerPointViewer(true)}
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-              >
-                <Presentation className="h-4 w-4 mr-2" />
-                View PowerPoint Online
-              </Button>
-              
-              <Button
-                onClick={() => setShowSlideshow(true)}
-                variant="outline"
-                className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <Play className="h-4 w-4 mr-2" />
-                Interactive Slideshow
-              </Button>
-            </div>
-            
-            <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-4 mt-4">
-              <p className="text-xs text-slate-200">
-                <strong className="text-amber-300">Choose your viewing option:</strong> Online viewer for full PowerPoint 
-                functionality, or Interactive slideshow for a presentation experience.
+            <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-4">
+              <p className="text-sm text-slate-200">
+                This PowerPoint presentation is protected and cannot be viewed or downloaded directly.
+              </p>
+              <p className="text-xs text-slate-300 mt-2">
+                Please contact your instructor for access to this content.
               </p>
             </div>
           </div>
@@ -164,16 +147,17 @@ export function DocumentViewer({
                 </span>
               )}
               
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenExternal}
-                className="flex items-center gap-2"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Open External
-              </Button>
+              {!isPowerPoint && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenExternal}
+                  className="flex items-center gap-2"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open External
+                </Button>
+              )}
               
               <Button
                 variant="ghost"
