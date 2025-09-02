@@ -169,14 +169,25 @@ export const UserModuleAssignment = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Starting to fetch users...');
       const usersWithPerms = await getAllUsersWithPermissions();
-      setUsers(usersWithPerms.map(user => ({
+      console.log('🔍 Raw users from getAllUsersWithPermissions:', usersWithPerms.length, usersWithPerms.slice(0, 3));
+      
+      const transformedUsers = usersWithPerms.map(user => ({
         id: user.user_id,
         email: user.email,
         full_name: user.full_name,
         role: user.role,
         modules: user.modules
-      })));
+      }));
+      
+      console.log('🔍 Transformed users:', transformedUsers.length, transformedUsers.slice(0, 3));
+      
+      // Specifically look for Onnesty
+      const onnesty = transformedUsers.find(u => u.full_name?.toLowerCase().includes('onnesty'));
+      console.log('🔍 Found Onnesty in transformed users:', onnesty);
+      
+      setUsers(transformedUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
