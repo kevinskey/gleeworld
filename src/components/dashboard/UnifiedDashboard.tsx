@@ -18,7 +18,7 @@ import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
 
 // Lazy load heavy components to improve initial load time
 const CommunityHubModule = lazy(() => import('./modules/CommunityHubModule').then(m => ({ default: m.CommunityHubModule })));
-const SplitClassHero = lazy(() => import('@/components/hero/SplitClassHero').then(m => ({ default: m.SplitClassHero })));
+
 const DashboardFeaturesCarousel = lazy(() => import('@/components/hero/DashboardFeaturesCarousel'));
 const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then(m => ({ default: m.MemberNavigation })));
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
@@ -104,15 +104,11 @@ export const UnifiedDashboard = () => {
           </div>
 
           {/* Row 1: Hero + Features side-by-side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
-            <Suspense fallback={<div className="h-48 bg-muted animate-pulse rounded-lg" />}>
-              <SplitClassHero />
+          {/* Features carousel */}
+          <div className="w-full">
+            <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
+              <DashboardFeaturesCarousel />
             </Suspense>
-            <div className="self-center w-full">
-              <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
-                <DashboardFeaturesCarousel />
-              </Suspense>
-            </div>
           </div>
 
           {/* Community Hub for Members */}
@@ -400,16 +396,10 @@ export const UnifiedDashboard = () => {
 
       {/* Row 1: Hero + Features side-by-side */}
       <div className="px-6 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-          {/* Left: Hero */}
-          <Suspense fallback={<div className="h-48 bg-muted animate-pulse rounded-lg" />}>
-            <SplitClassHero />
+        <div className="w-full">
+          <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
+            <DashboardFeaturesCarousel />
           </Suspense>
-          <div className="self-center w-full">
-            <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
-              <DashboardFeaturesCarousel />
-            </Suspense>
-          </div>
         </div>
       </div>
 
