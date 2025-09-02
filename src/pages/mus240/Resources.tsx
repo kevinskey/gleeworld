@@ -31,9 +31,10 @@ export default function Resources() {
     const url = resource.url.toLowerCase();
     const isGoogleSlides = url.includes('docs.google.com/presentation') || url.includes('slides.google.com');
     const isYouTube = url.includes('youtu.be') || url.includes('youtube.com/watch');
+    const isWebsite = resource.category === 'website' || url.startsWith('http');
     
     // External previewable content
-    if (isGoogleSlides || isYouTube) {
+    if (isGoogleSlides || isYouTube || isWebsite) {
       return true;
     }
     

@@ -35,6 +35,7 @@ export function DocumentViewer({
     fileName.toLowerCase().endsWith('.pptx');
   const isGoogleSlides = fileUrl.includes('docs.google.com/presentation') || fileUrl.includes('slides.google.com');
   const isYouTube = fileUrl.includes('youtu.be') || fileUrl.includes('youtube.com/watch');
+  const isWebsite = !isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && (fileUrl.startsWith('http') || fileUrl.startsWith('https'));
 
 
   const handleOpenExternal = () => {
@@ -51,6 +52,7 @@ export function DocumentViewer({
     if (isPowerPoint) return 'PowerPoint';
     if (isGoogleSlides) return 'Google Slides';
     if (isYouTube) return 'YouTube Video';
+    if (isWebsite) return 'Website';
     return fileName.split('.').pop()?.toUpperCase() || 'Document';
   };
 
@@ -204,6 +206,25 @@ export function DocumentViewer({
     );
   };
 
+  const renderWebsiteViewer = () => {
+    return (
+      <div className="h-full">
+        <iframe
+          src={fileUrl}
+          className="w-full h-full border-0 rounded-lg"
+          title={`Website - ${title}`}
+          loading="lazy"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+          referrerPolicy="strict-origin-when-cross-origin"
+          onError={(e) => {
+            console.warn('Website iframe error:', e);
+            toast.error('Error loading website');
+          }}
+        />
+      </div>
+    );
+  };
+
   const renderUnsupportedFile = () => (
     <div className="h-full flex flex-col items-center justify-center text-center p-8">
       <div className="bg-gray-100 rounded-full p-6 mb-4">
@@ -268,7 +289,8 @@ export function DocumentViewer({
           {isPowerPoint && renderPowerPointViewer()}
           {isGoogleSlides && renderGoogleSlidesViewer()}
           {isYouTube && renderYouTubeViewer()}
-          {!isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && renderUnsupportedFile()}
+          {isWebsite && renderWebsiteViewer()}
+          {!isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && !isWebsite && renderUnsupportedFile()}
         </div>
 
         <div className="flex-shrink-0 pt-4 border-t">
