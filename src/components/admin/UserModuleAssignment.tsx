@@ -99,27 +99,33 @@ const AssignModulesDialog = ({
             <Label>Available Modules</Label>
             <ScrollArea className="h-64 border rounded-md p-4">
               <div className="grid grid-cols-1 gap-2">
-                {activeModules.map(module => (
-                  <div key={module.id} className="flex items-center space-x-3 p-2 hover:bg-muted rounded-md">
-                    <Checkbox
-                      id={module.id}
-                      checked={selectedModules.includes(module.id)}
-                      onCheckedChange={() => toggleModule(module.id)}
-                    />
-                    <div className="flex items-center gap-2 flex-1">
-                      <module.icon className="w-4 h-4" style={{ color: `var(--${module.iconColor})` }} />
-                      <div>
-                        <Label htmlFor={module.id} className="text-sm font-medium cursor-pointer">
-                          {module.title}
-                        </Label>
-                        <p className="text-xs text-muted-foreground">{module.description}</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {module.category}
-                    </Badge>
+                {activeModules.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No modules available
                   </div>
-                ))}
+                ) : (
+                  activeModules.map(module => (
+                    <div key={module.id} className="flex items-center space-x-3 p-2 hover:bg-muted rounded-md">
+                      <Checkbox
+                        id={module.id}
+                        checked={selectedModules.includes(module.id)}
+                        onCheckedChange={() => toggleModule(module.id)}
+                      />
+                      <div className="flex items-center gap-2 flex-1">
+                        <module.icon className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <Label htmlFor={module.id} className="text-sm font-medium cursor-pointer">
+                            {module.title}
+                          </Label>
+                          <p className="text-xs text-muted-foreground">{module.description}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {module.category}
+                      </Badge>
+                    </div>
+                  ))
+                )}
               </div>
             </ScrollArea>
           </div>
