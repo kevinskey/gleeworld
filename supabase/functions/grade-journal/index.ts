@@ -224,7 +224,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
     // Store the grade in the database
     const gradeData = {
       student_id,
-      assignment_id,
+      assignment_id: assignment_id, // Convert UUID to string if needed
       journal_id,
       overall_score: gradingResult.overall_score,
       letter_grade: gradingResult.letter_grade,
@@ -236,6 +236,8 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       ai_model: 'gpt-5-2025-08-07',
       graded_by: null // AI grading
     };
+
+    console.log('About to insert grade data:', JSON.stringify(gradeData, null, 2));
 
     const { data: grade, error: gradeError } = await supabase
       .from('mus240_journal_grades')
