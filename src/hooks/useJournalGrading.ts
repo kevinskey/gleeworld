@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,13 +18,74 @@ export interface JournalGrade {
   graded_at: string;
 }
 
+export type GradeBreakdown = Record<string, number>;
+
+export type GradeResponse = {
+  success: boolean;
+  grade: {
+    id: string;
+    assignment_id: string;
+    student_id: string;
+    journal_id: string;
+    overall_score: number;
+    letter_grade: string;
+    rubric_scores: Array<{
+      criterion: string;
+      score: number;
+      max_score: number;
+      feedback: string;
+    }>;
+    overall_feedback: string;
+    created_at?: string;
+  };
+  trace?: string;
+  error?: string;
+};
+
+export async function gradeJournalWithAI(
+  supabaseClient: SupabaseClient,
+  journal: { id: string; assignment_id: string; student_id: string; content: string }
+): Promise<GradeResponse> {
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  const token = sessionData?.session?.access_token ?? "";
+  
+  try {
+    const { data, error } = await supabaseClient.functions.invoke("grade-journal", {
+      body: {
+        assignment_id: journal.assignment_id,
+        journal_content: journal.content,
+        student_id: journal.student_id,
+        journal_id: journal.id,
+      },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Edge function error');
+    }
+
+    return data as GradeResponse;
+  } catch (e: any) {
+    // Normalize error to a plain string to prevent object rendering in React
+    let msg = e?.message || "Grading failed";
+    if (e?.context?.response && typeof e.context.response.json === "function") {
+      try {
+        const detail = await e.context.response.json();
+        const status = e.context.response.status;
+        msg = `${detail?.error || msg}${status ? ` [${status}]` : ""}${detail?.trace ? ` trace=${detail.trace}` : ""}`;
+      } catch {}
+    }
+    throw new Error(msg);
+  }
+}
+
 export const useJournalGrading = () => {
   const [loading, setLoading] = useState(false);
   const [grades, setGrades] = useState<JournalGrade[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const gradeJournalWithAI = async (
+  const gradeJournalWithAI_legacy = async (
     assignmentId: string,
     journalContent: string,
     studentId: string,
@@ -31,90 +93,37 @@ export const useJournalGrading = () => {
   ) => {
     setLoading(true);
     try {
-      console.log('useJournalGrading: About to call edge function with:');
-      console.log('- assignmentId:', assignmentId);
-      console.log('- studentId:', studentId);
-      console.log('- journalId:', journalId);
-      console.log('- journalContent length:', journalContent?.length);
-      
-      const { data, error } = await supabase.functions.invoke('grade-journal', {
-        body: {
-          assignment_id: assignmentId,
-          journal_content: journalContent,
-          student_id: studentId,
-          journal_id: journalId
-        }
-      });
+      const journal = {
+        id: journalId || '',
+        assignment_id: assignmentId,
+        student_id: studentId,
+        content: journalContent
+      };
 
-      if (error) {
-        console.error('Edge function error:', error);
-        const errorMessage = error.message || 'Edge function returned an error';
-        const errorDetails = {
-          error: errorMessage,
-          trace: error.stack || 'No stack trace available',
-          context: error.context || 'No additional context'
-        };
-        
-        toast({
-          title: "Grading Failed",
-          description: `${errorMessage}. Check console for details.`,
-          variant: "destructive"
-        });
-        
-        throw { ...error, details: errorDetails };
-      }
+      const result = await gradeJournalWithAI(supabase, journal);
 
-      if (!data) {
-        const errorDetails = {
-          error: 'No data returned from edge function',
-          trace: 'Edge function returned null or undefined data',
-          context: 'This may indicate a server error or timeout'
-        };
-        
-        toast({
-          title: "Grading Failed",
-          description: "No response from AI grading service",
-          variant: "destructive"
-        });
-        
-        throw { message: 'No data returned', details: errorDetails };
-      }
-
-      if (!data.success) {
-        const errorDetails = {
-          error: data.error || 'Grading operation failed',
-          trace: data.trace || 'No trace information available',
-          context: 'Edge function returned success: false'
-        };
-        
-        toast({
-          title: "Grading Failed",
-          description: data.error || "AI grading operation failed",
-          variant: "destructive"
-        });
-        
-        throw { message: data.error || 'Grading failed', details: errorDetails };
+      if (!result.success) {
+        throw new Error(result.error || 'Grading failed');
       }
 
       toast({
         title: "Journal Graded Successfully",
-        description: `Grade: ${data.grade.overall_score}% (${data.grade.letter_grade})`,
+        description: `Grade: ${result.grade.overall_score}% (${result.grade.letter_grade})`,
       });
 
-      return data.grade;
+      return result.grade;
     } catch (error: any) {
       console.error('Error grading journal:', error);
       
-      // If error doesn't already have details, create them
-      if (!error.details) {
-        error.details = {
-          error: error.message || 'Unknown error occurred',
-          trace: error.stack || 'No stack trace available',
-          context: 'Client-side error during edge function call'
-        };
-      }
+      const errorMessage = error instanceof Error ? error.message : String(error);
       
-      throw error;
+      toast({
+        title: "Grading Failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -163,7 +172,7 @@ export const useJournalGrading = () => {
   return {
     loading,
     grades,
-    gradeJournalWithAI,
+    gradeJournalWithAI: gradeJournalWithAI_legacy,
     fetchStudentGrade,
     fetchAllGradesForAssignment
   };

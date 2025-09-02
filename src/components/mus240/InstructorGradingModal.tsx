@@ -5,12 +5,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Bot, Loader2 } from 'lucide-react';
-import { useJournalGrading } from '@/hooks/useJournalGrading';
+import { gradeJournalWithAI, type GradeResponse } from '@/hooks/useJournalGrading';
+import { supabase } from '@/integrations/supabase/client';
 
 interface InstructorGradingModalProps {
   isOpen: boolean;
@@ -38,49 +40,52 @@ export const InstructorGradingModal: React.FC<InstructorGradingModalProps> = ({
   existingGrade,
   onGradeComplete
 }) => {
-  const [gradeResult, setGradeResult] = useState<any>(existingGrade);
-  const [errorDetails, setErrorDetails] = useState<any>(null);
-  const { loading, gradeJournalWithAI } = useJournalGrading();
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [result, setResult] = useState<GradeResponse | null>(null);
 
   const handleGradeWithAI = async () => {
+    setErrorMsg(null);
+    setResult(null);
+    setLoading(true);
+    
     try {
-      setErrorDetails(null); // Clear previous errors
-      
-      // Use journal.assignment_id (UUID) instead of assignment.id (might be old string)
-      const assignmentId = journal.assignment_id || assignment.id;
       console.log('Grading journal with data:');
-      console.log('- assignmentId (using journal.assignment_id):', assignmentId);
+      console.log('- assignmentId:', journal.assignment_id);
       console.log('- journal.student_id:', journal.student_id);
       console.log('- journal.id:', journal.id);
-      console.log('- journal object:', journal);
       
-      const result = await gradeJournalWithAI(
-        assignmentId,
-        journal.content,
-        journal.student_id,
-        journal.id
-      );
-      
-      setGradeResult(result);
-      onGradeComplete(result);
-    } catch (error: any) {
-      console.error('Failed to grade journal:', error);
-      setErrorDetails(error.details || {
-        error: error.message || 'Unknown error occurred',
-        trace: error.stack || 'No stack trace available',
-        context: 'Error during AI grading process'
+      const res = await gradeJournalWithAI(supabase, {
+        id: journal.id,
+        assignment_id: journal.assignment_id,
+        student_id: journal.student_id,
+        content: journal.content
       });
+      
+      setResult(res);
+      if (res.success && res.grade) {
+        onGradeComplete(res.grade);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error('Failed to grade journal:', errorMessage);
+      setErrorMsg(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="grading-desc">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Grade Journal: {assignment.title}
             <Badge variant="outline">{journal.author_name}</Badge>
           </DialogTitle>
+          <DialogDescription id="grading-desc">
+            Runs rubric grading and saves a grade for this journal submission.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -92,98 +97,78 @@ export const InstructorGradingModal: React.FC<InstructorGradingModalProps> = ({
             </div>
           </div>
 
-          {/* Grading Actions */}
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={handleGradeWithAI}
-              disabled={loading}
-              className="flex items-center gap-2"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Bot className="h-4 w-4" />
-              )}
-              {existingGrade ? 'Re-grade with AI' : 'Grade with AI'}
-            </Button>
-            
-            {gradeResult && (
-              <Badge variant="default" className="text-lg px-3 py-1">
-                {gradeResult.overall_score}% ({gradeResult.letter_grade})
-              </Badge>
-            )}
-          </div>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Student ID: <span className="font-medium">{journal.student_id}</span>
+            </p>
 
-          {/* Error Display */}
-          {errorDetails && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2 text-destructive">Grading Error</h3>
-                <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg space-y-3">
-                  <div>
-                    <h4 className="font-medium text-sm text-destructive mb-1">Error:</h4>
-                    <p className="text-sm">{errorDetails.error}</p>
+            {/* Error Display */}
+            {errorMsg && (
+              <div className="bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
+                <p className="text-sm text-destructive">{errorMsg}</p>
+              </div>
+            )}
+
+            {/* Success Result */}
+            {result?.success && result.grade && (
+              <div className="space-y-4">
+                <div className="rounded border p-4 bg-green-50 border-green-200">
+                  <div className="flex items-center gap-4 mb-3">
+                    <Badge variant="default" className="text-lg px-3 py-1">
+                      {result.grade.overall_score}% ({result.grade.letter_grade})
+                    </Badge>
                   </div>
                   
-                  {errorDetails.context && (
-                    <div>
-                      <h4 className="font-medium text-sm text-destructive mb-1">Context:</h4>
-                      <p className="text-sm">{errorDetails.context}</p>
+                  {result.grade.overall_feedback && (
+                    <div className="mb-3">
+                      <h4 className="font-medium text-sm mb-1">Overall Feedback</h4>
+                      <p className="text-sm">{result.grade.overall_feedback}</p>
                     </div>
                   )}
-                  
-                  {errorDetails.trace && (
-                    <details className="text-xs">
-                      <summary className="font-medium text-destructive cursor-pointer">Technical Details</summary>
-                      <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
-                        {errorDetails.trace}
-                      </pre>
-                    </details>
+
+                  {result.grade.rubric_scores && (
+                    <div>
+                      <h4 className="font-medium text-sm mb-2">Rubric Breakdown</h4>
+                      <div className="grid gap-2">
+                        {result.grade.rubric_scores.map((score, index) => (
+                          <div key={index} className="border rounded p-3 bg-white">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium text-sm">{score.criterion}</span>
+                              <Badge variant="outline">
+                                {score.score}/{score.max_score}
+                              </Badge>
+                            </div>
+                            <Progress 
+                              value={(score.score / score.max_score) * 100} 
+                              className="h-2 mb-1"
+                            />
+                            <p className="text-xs text-muted-foreground">{score.feedback}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {result.trace && (
+                    <p className="mt-2 text-xs text-muted-foreground">trace: {result.trace}</p>
                   )}
                 </div>
               </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button onClick={handleGradeWithAI} disabled={loading} className="flex items-center gap-2">
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Bot className="h-4 w-4" />
+                )}
+                {loading ? "Grading…" : "Grade with AI"}
+              </Button>
+              <Button variant="outline" onClick={onClose} disabled={loading}>
+                Close
+              </Button>
             </div>
-          )}
-
-          {/* Grade Results */}
-          {gradeResult && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2">Overall Feedback</h3>
-                <div className="bg-blue-50 p-3 rounded-lg border">
-                  <p className="text-sm">{gradeResult.overall_feedback}</p>
-                </div>
-              </div>
-
-              {gradeResult.rubric_scores && (
-                <div>
-                  <h3 className="font-medium mb-3">Rubric Breakdown</h3>
-                  <div className="grid gap-3">
-                    {gradeResult.rubric_scores.map((score: any, index: number) => (
-                      <div key={index} className="border rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{score.criterion}</span>
-                          <Badge variant="outline">
-                            {score.score}/{score.max_score}
-                          </Badge>
-                        </div>
-                        <Progress 
-                          value={(score.score / score.max_score) * 100} 
-                          className="h-2 mb-2"
-                        />
-                        <p className="text-xs text-muted-foreground">{score.feedback}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
           </div>
         </div>
       </DialogContent>
