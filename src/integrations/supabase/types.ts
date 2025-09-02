@@ -12805,7 +12805,22 @@ export type Database = {
           student_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_mus240_enrollments_student_profile"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_mus240_enrollments_student_profile"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       mus240_grade_summaries: {
         Row: {
