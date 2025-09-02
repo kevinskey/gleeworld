@@ -243,7 +243,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
 
     const { data: grade, error: gradeError } = await supabase
       .from('mus240_journal_grades')
-      .upsert(gradeData)
+      .insert(gradeData)
       .select()
       .single();
 
