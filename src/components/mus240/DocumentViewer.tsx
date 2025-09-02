@@ -126,48 +126,30 @@ export function DocumentViewer({
     console.log('DocumentViewer: PDF detection - fileType:', fileType, 'fileName:', fileName, 'isPDF:', isPDF);
     return (
       <div className="h-full relative">
-        <iframe
-          src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
-          className="w-full h-full border-0"
-          title={title || 'PDF Document'}
-          onLoad={() => {
-            console.log('DocumentViewer: PDF loaded directly');
-            setPdfError(false);
-          }}
-          onError={(e) => {
-            console.error('DocumentViewer: Direct PDF load failed:', e);
-            setPdfError(true);
-          }}
-        />
-        {/* Error fallback overlay - only show when there's an error */}
-        {pdfError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
-            <div className="text-center p-6 bg-white rounded-lg shadow-lg max-w-md">
-              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">PDF Not Available</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                This PDF file could not be loaded. It may have been moved or deleted.
-              </p>
-              <div className="flex gap-2 justify-center">
-                <Button
-                  onClick={() => window.open(fileUrl, '_blank')}
-                  variant="outline"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Try Direct Link
-                </Button>
-                <Button
-                  onClick={() => {
-                    toast.info('Please contact your instructor if this file should be available.');
-                  }}
-                  variant="outline"
-                >
-                  Report Issue
-                </Button>
-              </div>
+        {/* Always show the fallback message for PDFs since embedding often fails */}
+        <div className="absolute inset-0 flex items-center justify-center bg-background/95 backdrop-blur-sm">
+          <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
+            <div className="p-3 bg-blue-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <ExternalLink className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">View PDF Document</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              {title || fileName}
+            </p>
+            <p className="text-xs text-muted-foreground mb-6">
+              PDF documents open in a new tab for the best viewing experience.
+            </p>
+            <div className="flex gap-2 justify-center">
+              <Button
+                onClick={() => window.open(fileUrl, '_blank')}
+                className="flex items-center gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Open PDF
+              </Button>
             </div>
           </div>
-        )}
+        </div>
       </div>
     );
   };
