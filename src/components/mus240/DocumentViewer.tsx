@@ -1,6 +1,4 @@
 import { useState, useRef } from 'react';
-import { Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,10 +6,7 @@ import { Download, ExternalLink, X, ZoomIn, ZoomOut, RotateCw, Presentation, Pla
 import { toast } from 'sonner';
 import { PresentationViewer } from './PresentationViewer';
 import { PowerPointViewer } from './PowerPointViewer';
-
-// Import the styles
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import { FastPDFViewer } from '@/components/FastPDFViewer';
 
 interface DocumentViewerProps {
   isOpen: boolean;
@@ -30,19 +25,10 @@ export function DocumentViewer({
   fileType, 
   title 
 }: DocumentViewerProps) {
-  const [zoom, setZoom] = useState(SpecialZoomLevel.PageFit);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [showSlideshow, setShowSlideshow] = useState(false);
   const [showPowerPointViewer, setShowPowerPointViewer] = useState(false);
-
-  // Create plugins
-  const defaultLayoutPluginInstance = defaultLayoutPlugin({
-    sidebarTabs: (defaultTabs) => [
-      defaultTabs[0], // Thumbnail tab
-      defaultTabs[1], // Bookmark tab
-    ],
-  });
 
   const isPDF = fileType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf');
   const isPowerPoint = fileType.includes('presentation') || 
@@ -104,22 +90,22 @@ export function DocumentViewer({
     return url;
   };
 
-  const renderPDFViewer = () => (
-    <div className="h-full">
-      <div className="h-full overflow-hidden">
-        <Viewer
-          fileUrl={fileUrl}
-          plugins={[defaultLayoutPluginInstance]}
-          defaultScale={zoom}
-          onDocumentLoad={(e) => {
-            setTotalPages(e.doc.numPages);
-            setCurrentPage(1);
+  const renderPDFViewer = () => {
+    console.log('DocumentViewer: Rendering PDF with URL:', fileUrl);
+    return (
+      <div className="h-full">
+        <FastPDFViewer 
+          pdfUrl={fileUrl}
+          className="h-full"
+          onPageChange={(page, total) => {
+            console.log('DocumentViewer: Page changed to', page, 'of', total);
+            setCurrentPage(page);
+            setTotalPages(total);
           }}
-          onPageChange={(e) => setCurrentPage(e.currentPage + 1)}
         />
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderPowerPointViewer = () => {
     return (
