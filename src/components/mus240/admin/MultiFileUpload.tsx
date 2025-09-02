@@ -88,6 +88,10 @@ export function MultiFileUpload({ onUploadComplete, defaultCategory = 'reading' 
       const successfulUploads = results.filter(r => r.status === 'completed' && r.url);
       
       for (const upload of successfulUploads) {
+        // Extract the actual filename from the URL since edge function generates unique names
+        const urlParts = upload.url!.split('/');
+        const actualFileName = urlParts[urlParts.length - 1];
+        
         await createMutation.mutateAsync({
           title: upload.file.name.replace(/\.[^/.]+$/, ''),
           url: upload.url!,
@@ -95,8 +99,8 @@ export function MultiFileUpload({ onUploadComplete, defaultCategory = 'reading' 
           category: defaultCategory as any,
           is_active: true,
           display_order: 0,
-          file_path: upload.file.name,
-          file_name: upload.file.name,
+          file_path: actualFileName, // Use the actual filename from storage
+          file_name: upload.file.name, // Keep original name for display
           file_size: upload.file.size,
           mime_type: upload.file.type,
           is_file_upload: true,

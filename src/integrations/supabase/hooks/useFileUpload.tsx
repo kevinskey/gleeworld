@@ -49,8 +49,9 @@ export function useFileUpload() {
         throw new Error(data?.error || 'Upload failed');
       }
 
-      const publicUrl = data.publicUrl;
-      console.log('Upload successful:', data.fileName, 'URL:', publicUrl);
+      // The edge function returns 'url' not 'publicUrl'
+      const publicUrl = data.url;
+      console.log('Upload successful:', data.fileName || data.path, 'URL:', publicUrl);
 
       toast({
         title: "Upload Successful",
