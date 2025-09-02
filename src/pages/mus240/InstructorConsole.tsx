@@ -3,19 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Edit, ArrowLeft, Home, ChevronRight } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Edit, ArrowLeft, Home, ChevronRight, GraduationCap } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { AssignmentManager } from '@/components/mus240/instructor/AssignmentManager';
 import { JournalsAdmin } from '@/components/mus240/instructor/JournalsAdmin';
 import { GradesAdmin } from '@/components/mus240/instructor/GradesAdmin';
 import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';
+import { useMus240InstructorStats } from '@/hooks/useMus240InstructorStats';
 import { toast } from 'sonner';
 
 export const InstructorConsole = () => {
   const { isAdmin, loading } = useUserRole();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('assignments');
+  const { stats, loading: statsLoading, error: statsError } = useMus240InstructorStats();
 
   if (loading) {
     return (
@@ -83,13 +85,15 @@ export const InstructorConsole = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Active Assignments</p>
-                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-2xl font-bold">
+                    {statsLoading ? '...' : stats.activeAssignments}
+                  </p>
                 </div>
                 <BookOpen className="h-8 w-8 text-blue-600" />
               </div>
@@ -100,10 +104,12 @@ export const InstructorConsole = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Student Journals</p>
-                  <p className="text-2xl font-bold">248</p>
+                  <p className="text-sm text-gray-600">Total Journals</p>
+                  <p className="text-2xl font-bold">
+                    {statsLoading ? '...' : stats.totalJournals}
+                  </p>
                 </div>
-                <Users className="h-8 w-8 text-green-600" />
+                <Eye className="h-8 w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
@@ -113,7 +119,9 @@ export const InstructorConsole = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Pending Grades</p>
-                  <p className="text-2xl font-bold">34</p>
+                  <p className="text-2xl font-bold">
+                    {statsLoading ? '...' : stats.pendingGrades}
+                  </p>
                 </div>
                 <BarChart3 className="h-8 w-8 text-orange-600" />
               </div>
@@ -124,10 +132,26 @@ export const InstructorConsole = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">AI Assists Today</p>
-                  <p className="text-2xl font-bold">7</p>
+                  <p className="text-sm text-gray-600">Enrolled Students</p>
+                  <p className="text-2xl font-bold">
+                    {statsLoading ? '...' : stats.totalStudents}
+                  </p>
                 </div>
-                <Brain className="h-8 w-8 text-purple-600" />
+                <GraduationCap className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Class Average</p>
+                  <p className="text-2xl font-bold">
+                    {statsLoading ? '...' : stats.averageGrade ? `${stats.averageGrade}%` : 'N/A'}
+                  </p>
+                </div>
+                <Users className="h-8 w-8 text-indigo-600" />
               </div>
             </CardContent>
           </Card>
