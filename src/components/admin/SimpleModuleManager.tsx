@@ -53,21 +53,15 @@ export function SimpleModuleManager() {
 
       if (modulesError) throw modulesError;
 
-      // Get current assignments with user info
+      // Get current assignments with proper joins
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('gw_module_permissions')
         .select(`
           id,
           permission_type,
           granted_at,
-          gw_profiles!inner(
-            email,
-            full_name
-          ),
-          gw_modules!inner(
-            key,
-            name
-          )
+          user_id,
+          module_id
         `)
         .eq('is_active', true)
         .order('granted_at', { ascending: false });
@@ -76,8 +70,38 @@ export function SimpleModuleManager() {
 
       setModules(modulesData || []);
       
-      // Transform assignments data - temporarily return empty until foreign keys are fixed
-      const transformedAssignments = [];
+      // Get additional data for assignments
+      const transformedAssignments: UserModuleAssignment[] = [];
+      
+      if (assignmentsData) {
+        for (const assignment of assignmentsData) {
+          // Get user info
+          const { data: userProfile } = await supabase
+            .from('gw_profiles')
+            .select('email, full_name')
+            .eq('user_id', assignment.user_id)
+            .single();
+          
+          // Get module info
+          const { data: moduleInfo } = await supabase
+            .from('gw_modules')
+            .select('key, name')
+            .eq('id', assignment.module_id)
+            .single();
+          
+          if (userProfile && moduleInfo) {
+            transformedAssignments.push({
+              id: assignment.id,
+              user_email: userProfile.email || '',
+              user_name: userProfile.full_name || '',
+              module_key: moduleInfo.key || '',
+              module_name: moduleInfo.name || '',
+              permission_type: assignment.permission_type as 'view' | 'manage',
+              granted_at: assignment.granted_at
+            });
+          }
+        }
+      }
       
       setAssignments(transformedAssignments);
     } catch (error) {
