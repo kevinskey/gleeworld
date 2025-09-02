@@ -163,6 +163,7 @@ import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
 import { Mus240AdminPage } from "./pages/mus240/admin/Mus240AdminPage";
 import { InstructorConsole } from "./pages/mus240/InstructorConsole";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
+import WritingGraderPage from "./pages/writing/WritingGraderPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -325,6 +326,15 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <WeekPage />
+                  </PublicRoute>
+                } 
+              />
+              {/* Writing Grader page */}
+              <Route 
+                path="/writing-grader" 
+                element={
+                  <PublicRoute>
+                    <WritingGraderPage />
                   </PublicRoute>
                 } 
               />

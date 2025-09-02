@@ -37,6 +37,7 @@ export const ROUTES = {
   STUDENT_REGISTRATION: '/student-registration',
   MUSIC_THEORY_FUNDAMENTALS: '/music-theory-fundamentals',
   NOTATION_BASICS: '/music-theory/notation-basics',
+  WRITING_GRADER: '/writing-grader',
   FULL_ATTENDANCE_RECORD: '/member/attendance/full-record',
   ATTENDANCE_POLICY: '/handbook/attendance-policy'
 } as const;
@@ -79,5 +80,6 @@ export const PUBLIC_ROUTES = [
   ROUTES.SHOP_SUCCESS,
   ROUTES.STUDENT_REGISTRATION,
   ROUTES.MUSIC_THEORY_FUNDAMENTALS,
-  ROUTES.NOTATION_BASICS
+  ROUTES.NOTATION_BASICS,
+  ROUTES.WRITING_GRADER
 ] as const;
