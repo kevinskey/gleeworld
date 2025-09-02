@@ -218,9 +218,27 @@ export function DocumentViewer({
           referrerPolicy="strict-origin-when-cross-origin"
           onError={(e) => {
             console.warn('Website iframe error:', e);
-            toast.error('Error loading website');
+            toast.error('This website cannot be embedded. Opening in new tab...');
+            setTimeout(() => {
+              window.open(fileUrl, '_blank');
+            }, 1000);
           }}
         />
+        {/* Fallback message for blocked content */}
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
+          <div className="text-center p-6 bg-white rounded-lg shadow-lg pointer-events-auto">
+            <p className="text-sm text-muted-foreground mb-4">
+              If the website doesn't load, it may block embedding for security reasons.
+            </p>
+            <Button
+              onClick={() => window.open(fileUrl, '_blank')}
+              className="flex items-center gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Open in New Tab
+            </Button>
+          </div>
+        </div>
       </div>
     );
   };
