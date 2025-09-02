@@ -33,6 +33,13 @@ export const useSheetMusicUrl = (pdfUrl: string | null) => {
         }
 
         if (isSupabaseStorage) {
+          // Check if this is already a public URL
+          if (pdfUrl.includes('/storage/v1/object/public/')) {
+            console.log('useSheetMusicUrl: Using public storage URL directly:', pdfUrl);
+            setSignedUrl(pdfUrl);
+            return;
+          }
+
           // Normalize Supabase storage URLs (convert public URLs to correct URL based on bucket privacy)
           const afterBase = pdfUrl.split('/storage/v1/object/')[1]; // e.g., "public/sheet-music/path..."
           const segments = afterBase.split('/');
@@ -40,7 +47,13 @@ export const useSheetMusicUrl = (pdfUrl: string | null) => {
           const bucket = segments[1];
           const path = segments.slice(2).join('/').split('?')[0];
 
+          console.log('useSheetMusicUrl: Processing Supabase storage URL');
+          console.log('useSheetMusicUrl: afterBase:', afterBase);
+          console.log('useSheetMusicUrl: bucket:', bucket);
+          console.log('useSheetMusicUrl: path:', path);
+
           const url = await getFileUrl(bucket, path);
+          console.log('useSheetMusicUrl: Got URL from getFileUrl:', url);
           setSignedUrl(url);
           return;
         }
