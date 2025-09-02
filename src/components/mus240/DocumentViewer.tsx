@@ -35,6 +35,7 @@ export function DocumentViewer({
     fileName.toLowerCase().endsWith('.ppt') || 
     fileName.toLowerCase().endsWith('.pptx');
   const isGoogleSlides = fileUrl.includes('docs.google.com/presentation') || fileUrl.includes('slides.google.com');
+  const isYouTube = fileUrl.includes('youtu.be') || fileUrl.includes('youtube.com/watch');
 
 
   const handleOpenExternal = () => {
@@ -50,6 +51,7 @@ export function DocumentViewer({
     if (isPDF) return 'PDF';
     if (isPowerPoint) return 'PowerPoint';
     if (isGoogleSlides) return 'Google Slides';
+    if (isYouTube) return 'YouTube Video';
     return fileName.split('.').pop()?.toUpperCase() || 'Document';
   };
 
@@ -90,6 +92,25 @@ export function DocumentViewer({
     } else if (url.includes('/edit')) {
       // Edit URL - replace with embed
       return url.replace('/edit', '/embed?start=false&loop=false&delayms=3000');
+    }
+    
+    return url;
+  };
+
+  // Convert YouTube URL to embed format
+  const getYouTubeEmbedUrl = (url: string) => {
+    // Extract video ID from various YouTube URL formats
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/, // Standard formats
+      /youtube\.com\/v\/([^&\n?#]+)/, // Old embed format
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) {
+        const videoId = match[1];
+        return `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1`;
+      }
     }
     
     return url;
@@ -147,6 +168,27 @@ export function DocumentViewer({
           onError={(e) => {
             console.warn('Google Slides iframe error:', e);
             toast.error('Error loading Google Slides presentation');
+          }}
+        />
+      </div>
+    );
+  };
+
+  const renderYouTubeViewer = () => {
+    const embedUrl = getYouTubeEmbedUrl(fileUrl);
+    
+    return (
+      <div className="h-full">
+        <iframe
+          src={embedUrl}
+          className="w-full h-full border-0 rounded-lg"
+          title={`YouTube Video - ${title}`}
+          allowFullScreen
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          onError={(e) => {
+            console.warn('YouTube iframe error:', e);
+            toast.error('Error loading YouTube video');
           }}
         />
       </div>
@@ -227,7 +269,8 @@ export function DocumentViewer({
           {isPDF && renderPDFViewer()}
           {isPowerPoint && renderPowerPointViewer()}
           {isGoogleSlides && renderGoogleSlidesViewer()}
-          {!isPDF && !isPowerPoint && !isGoogleSlides && renderUnsupportedFile()}
+          {isYouTube && renderYouTubeViewer()}
+          {!isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && renderUnsupportedFile()}
         </div>
 
         <div className="flex-shrink-0 pt-4 border-t">
