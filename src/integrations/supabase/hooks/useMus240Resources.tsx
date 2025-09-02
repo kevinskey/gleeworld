@@ -21,7 +21,7 @@ export interface Mus240Resource {
 
 export function useMus240Resources() {
   return useQuery({
-    queryKey: ['mus240-resources'],
+    queryKey: ['mus240-resources', Date.now()], // Force cache refresh
     queryFn: async () => {
       const { data, error } = await supabase
         .from('mus240_resources')
