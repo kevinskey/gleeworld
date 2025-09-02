@@ -186,6 +186,8 @@ export function DocumentViewer({
           allowFullScreen
           loading="lazy"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+          referrerPolicy="strict-origin-when-cross-origin"
           onError={(e) => {
             console.warn('YouTube iframe error:', e);
             toast.error('Error loading YouTube video');
