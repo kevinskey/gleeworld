@@ -68,7 +68,7 @@ export const useMus240Enrollments = (semester: string = 'Fall 2024') => {
   };
 
   const getActiveEnrollments = () => {
-    return enrollments.filter(e => e.enrollment_status === 'active');
+    return enrollments.filter(e => e.enrollment_status === 'enrolled');
   };
 
   const getTotalStudents = () => {

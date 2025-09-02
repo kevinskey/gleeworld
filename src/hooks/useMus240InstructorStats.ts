@@ -39,6 +39,15 @@ export const useMus240InstructorStats = () => {
 
       if (assignmentsError) throw assignmentsError;
 
+      // Get enrolled students
+      const { data: enrollments, error: enrollmentsError } = await supabase
+        .from('mus240_enrollments')
+        .select('student_id')
+        .eq('semester', 'Fall 2024')
+        .eq('enrollment_status', 'enrolled');
+
+      if (enrollmentsError) throw enrollmentsError;
+
       // Get total published journals
       const { data: journals, error: journalsError } = await supabase
         .from('mus240_journal_entries')
@@ -57,17 +66,6 @@ export const useMus240InstructorStats = () => {
       // Calculate pending grades (journals without grades)
       const gradedJournalIds = new Set(grades?.map(g => g.journal_id) || []);
       const pendingGrades = (journals || []).filter(j => !gradedJournalIds.has(j.id)).length;
-
-      // Get enrolled students from enrollments table
-      const { data: enrollments, error: enrollmentsError } = await supabase
-        .from('mus240_enrollments')
-        .select('student_id')
-        .eq('semester', 'Fall 2024')
-        .eq('enrollment_status', 'active');
-
-      if (enrollmentsError) {
-        console.error('Error fetching enrollments:', enrollmentsError);
-      }
 
       // Get unique students from enrollments, fallback to journal entries
       const uniqueStudents = enrollments?.length 
