@@ -93,3 +93,89 @@ export const useModulePermissions = () => {
     refetch: fetchPermissions
   };
 };
+
+// Enhanced hook for checking specific module permissions using the new functions
+export const useSpecificModulePermissions = (moduleName: string) => {
+  const { user } = useAuth();
+  const [canAccess, setCanAccess] = useState(false);
+  const [canManage, setCanManage] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkPermissions();
+  }, [user, moduleName]);
+
+  const checkPermissions = async () => {
+    if (!user) {
+      setCanAccess(false);
+      setCanManage(false);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Check if user has access to the module
+      const { data: accessData, error: accessError } = await supabase
+        .rpc('current_user_has_executive_function_access', {
+          function_name_param: moduleName,
+          permission_type_param: 'can_access'
+        });
+
+      // Check if user can manage the module
+      const { data: manageData, error: manageError } = await supabase
+        .rpc('current_user_has_executive_function_access', {
+          function_name_param: moduleName,
+          permission_type_param: 'can_manage'
+        });
+
+      if (accessError || manageError) {
+        console.error('Permission check failed:', accessError || manageError);
+      }
+
+      setCanAccess(accessData || false);
+      setCanManage(manageData || false);
+    } catch (error) {
+      console.error('Error checking permissions:', error);
+      setCanAccess(false);
+      setCanManage(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { canAccess, canManage, loading };
+};
+
+// Helper function to check if user has admin access
+export const useAdminAccess = () => {
+  const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkAdminAccess();
+  }, [user]);
+
+  const checkAdminAccess = async () => {
+    if (!user) {
+      setIsAdmin(false);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .rpc('current_user_can_access_admin_modules');
+
+      if (!error) {
+        setIsAdmin(data || false);
+      }
+    } catch (error) {
+      console.error('Error checking admin access:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { isAdmin, loading };
+};
