@@ -125,18 +125,21 @@ export function DocumentViewer({
     console.log('DocumentViewer: PDF detection - fileType:', fileType, 'fileName:', fileName, 'isPDF:', isPDF);
     return (
       <div className="h-full">
-        <object
-          data={fileUrl}
-          type="application/pdf"
-          className="w-full h-full"
+        <iframe
+          src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
+          className="w-full h-full border-0"
           title={title || 'PDF Document'}
-        >
-          <iframe
-            src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
-            className="w-full h-full border-0"
-            title={title || 'PDF Document'}
-          />
-        </object>
+          onLoad={() => {
+            console.log('DocumentViewer: PDF loaded in Google Docs Viewer');
+          }}
+          onError={(e) => {
+            console.error('DocumentViewer: PDF failed to load:', e);
+            toast.error('Failed to load PDF. Opening in new tab...');
+            setTimeout(() => {
+              window.open(fileUrl, '_blank');
+            }, 1000);
+          }}
+        />
       </div>
     );
   };
