@@ -90,6 +90,8 @@ serve(async (req) => {
       .from(bucket)
       .getPublicUrl(finalFileName);
 
+    console.log('Generated public URL:', publicUrl);
+
     return new Response(
       JSON.stringify({
         success: true,
