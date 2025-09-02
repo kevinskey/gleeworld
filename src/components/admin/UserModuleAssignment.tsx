@@ -196,6 +196,16 @@ export const UserModuleAssignment = () => {
     const emailMatch = user.email?.toLowerCase().includes(searchLower) || false;
     const roleMatch = user.role?.toLowerCase().includes(searchLower) || false;
     
+    console.log('🔍 UserModuleAssignment Search Debug:', {
+      searchTerm: searchLower,
+      user: user.email,
+      name: user.full_name,
+      nameMatch,
+      emailMatch,
+      roleMatch,
+      result: nameMatch || emailMatch || roleMatch
+    });
+    
     return nameMatch || emailMatch || roleMatch;
   });
 
