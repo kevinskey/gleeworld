@@ -239,6 +239,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
     };
 
     console.log('About to insert grade data:', JSON.stringify(gradeData, null, 2));
+    console.log('Fields being inserted:', Object.keys(gradeData));
 
     const { data: grade, error: gradeError } = await supabase
       .from('mus240_journal_grades')
@@ -248,6 +249,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
 
     if (gradeError) {
       console.error('Error saving grade:', gradeError);
+      console.error('Grade data that failed:', JSON.stringify(gradeData, null, 2));
       throw new Error(`Failed to save grade: ${gradeError.message}`);
     }
 
