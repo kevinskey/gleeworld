@@ -196,18 +196,26 @@ export const UserModuleAssignment = () => {
     const emailMatch = user.email?.toLowerCase().includes(searchLower) || false;
     const roleMatch = user.role?.toLowerCase().includes(searchLower) || false;
     
-    console.log('🔍 UserModuleAssignment Search Debug:', {
-      searchTerm: searchLower,
-      user: user.email,
-      name: user.full_name,
-      nameMatch,
-      emailMatch,
-      roleMatch,
-      result: nameMatch || emailMatch || roleMatch
-    });
+    // Debug only for first few users to avoid spam
+    if (users.indexOf(user) < 3) {
+      console.log('🔍 UserModuleAssignment Search Debug:', {
+        searchTerm: searchLower,
+        user: user.email,
+        name: user.full_name,
+        nameToSearch: user.full_name?.toLowerCase(),
+        emailToSearch: user.email?.toLowerCase(),
+        roleToSearch: user.role?.toLowerCase(),
+        nameMatch,
+        emailMatch,
+        roleMatch,
+        result: nameMatch || emailMatch || roleMatch
+      });
+    }
     
     return nameMatch || emailMatch || roleMatch;
   });
+
+  console.log('🔍 Total users:', users.length, 'Filtered users:', filteredUsers.length, 'Search term:', searchTerm);
 
   useEffect(() => {
     fetchUsers();
