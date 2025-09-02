@@ -188,10 +188,16 @@ export const UserModuleAssignment = () => {
     fetchUsers();
   };
 
-  const filteredUsers = users.filter(user =>
-    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    if (!searchTerm.trim()) return true; // Show all users when search is empty
+    
+    const searchLower = searchTerm.toLowerCase().trim();
+    const nameMatch = user.full_name?.toLowerCase().includes(searchLower) || false;
+    const emailMatch = user.email?.toLowerCase().includes(searchLower) || false;
+    const roleMatch = user.role?.toLowerCase().includes(searchLower) || false;
+    
+    return nameMatch || emailMatch || roleMatch;
+  });
 
   useEffect(() => {
     fetchUsers();
