@@ -12,7 +12,7 @@ import { BulkSelectControls } from "./BulkSelectControls";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QuickAddUserForm } from "@/components/upload/QuickAddUserForm";
 import { useRoleTransitions } from "@/hooks/useRoleTransitions";
-import { useAvatarConversion } from "@/hooks/useAvatarConversion";
+
 
 import { User } from "@/hooks/useUsers";
 import { useToast } from "@/hooks/use-toast";
@@ -34,7 +34,6 @@ import {
   ChevronRight,
   Music,
   Loader2,
-  Camera,
   ImageIcon
 } from "lucide-react";
 
@@ -64,7 +63,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
   const [changingRoles, setChangingRoles] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const { transitionUserRole } = useRoleTransitions();
-  const { converting, convertAuditionerAvatars } = useAvatarConversion();
+  
 
   const handleUpdateSuccess = () => {
     toast({
@@ -124,15 +123,6 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
     }
   };
 
-  const handleConvertAvatars = async () => {
-    console.log('Starting avatar conversion process...');
-    const result = await convertAuditionerAvatars();
-    if (result && result.successful > 0) {
-      console.log(`Successfully converted ${result.successful} avatars`);
-      // Refresh the user list to show updated avatars
-      onRefetch();
-    }
-  };
 
   const filteredUsers = useMemo(() => {
     let filtered = [...users];
@@ -226,19 +216,6 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button 
-                  onClick={handleConvertAvatars}
-                  disabled={converting}
-                  variant="secondary"
-                  className="gap-2 bg-secondary hover:bg-secondary/80"
-                >
-                  {converting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Camera className="h-4 w-4" />
-                  )}
-                  Convert Auditioner Avatars
-                </Button>
                 <Button onClick={() => setAddDialogOpen(true)} className="gap-2 bg-primary hover:bg-primary/90">
                   <UserPlus className="h-4 w-4" />
                   Add User
