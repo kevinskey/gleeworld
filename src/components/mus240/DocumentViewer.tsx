@@ -38,7 +38,12 @@ export function DocumentViewer({
 
 
   const handleOpenExternal = () => {
-    window.open(fileUrl, '_blank');
+    if (isGoogleSlides) {
+      // Open Google Slides in a new window with specific dimensions
+      window.open(fileUrl, 'googleslideswindow', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+    } else {
+      window.open(fileUrl, '_blank');
+    }
   };
 
   const getFileTypeDisplay = () => {
