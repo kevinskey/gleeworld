@@ -12817,7 +12817,7 @@ export type Database = {
           overall_percentage: number
           overall_points: number
           overall_possible: number
-          participation_points: number
+          participation_points: number | null
           participation_possible: number
           semester: string
           student_id: string
@@ -12831,7 +12831,7 @@ export type Database = {
           overall_percentage?: number
           overall_points?: number
           overall_possible?: number
-          participation_points?: number
+          participation_points?: number | null
           participation_possible?: number
           semester?: string
           student_id: string
@@ -12845,7 +12845,7 @@ export type Database = {
           overall_percentage?: number
           overall_points?: number
           overall_possible?: number
-          participation_points?: number
+          participation_points?: number | null
           participation_possible?: number
           semester?: string
           student_id?: string
