@@ -37,11 +37,21 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         // Get user profile  
         const { data: profile, error: profileError } = await supabase
           .from('gw_profiles')
-          .select('role, is_super_admin, is_exec_board, is_admin')
+          .select('role, is_super_admin, is_exec_board, is_admin, email')
           .eq('user_id', targetUserId)
           .maybeSingle();
 
         if (profileError) throw profileError;
+
+        // Get email-based permissions
+        let emailPermissions: string[] = [];
+        if (profile?.email) {
+          const { data: emailPerms } = await supabase.rpc('get_user_username_permissions', {
+            user_email_param: profile.email
+          });
+          emailPermissions = emailPerms?.map((p: any) => p.module_name) || [];
+          console.log('🔍 Email permissions for', profile.email, ':', emailPermissions);
+        }
 
         console.log('🔍 useSimplifiedModuleAccess: DEBUGGING EXECUTIVE ACCESS');
         console.log('🔍 Target User ID:', targetUserId);
@@ -160,6 +170,22 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             };
           }
 
+          // Check email-based permissions first (highest priority)
+          const modulePermissionNames = [module.id, module.id.replace('-', '_')];
+          // Special case: librarian permission grants access to music-library
+          if (module.id === 'music-library' && emailPermissions.includes('librarian')) {
+            modulePermissionNames.push('librarian');
+          }
+          
+          if (modulePermissionNames.some(name => emailPermissions.includes(name))) {
+            console.log('📧 Email permission found for module:', module.id, 'via permission:', modulePermissionNames.find(name => emailPermissions.includes(name)));
+            return {
+              moduleId: module.id,
+              hasAccess: true,
+              source: 'explicit_permission' as const
+            };
+          }
+
           // Check if user has explicit permission for this module
           if (grantedModuleIds.has(module.id)) {
             console.log('✅ Explicit permission found for module:', module.id);
@@ -170,8 +196,8 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             };
           }
 
-          // ONLY standard members (not exec board) get default member modules
-          if (profile?.role === 'member' && !profile?.is_exec_board && STANDARD_MEMBER_MODULE_IDS.includes(module.id)) {
+          // Standard members get default member modules (regardless of exec board status)
+          if (profile?.role === 'member' && STANDARD_MEMBER_MODULE_IDS.includes(module.id)) {
             console.log('👤 Member default access for module:', module.id);
             return {
               moduleId: module.id,
@@ -180,7 +206,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             };
           }
 
-          // No access by default (executive board members only get explicitly granted modules)
+          // No access by default (users only get explicitly granted modules via email or database)
           console.log('❌ No access for module:', module.id);
             return {
               moduleId: module.id,
