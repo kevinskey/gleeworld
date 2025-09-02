@@ -6,7 +6,6 @@ import { Download, ExternalLink, X, ZoomIn, ZoomOut, RotateCw, Presentation, Pla
 import { toast } from 'sonner';
 import { PresentationViewer } from './PresentationViewer';
 import { PowerPointViewer } from './PowerPointViewer';
-import { FastPDFViewer } from '@/components/FastPDFViewer';
 
 interface DocumentViewerProps {
   isOpen: boolean;
@@ -120,9 +119,10 @@ export function DocumentViewer({
     console.log('DocumentViewer: Rendering PDF with URL:', fileUrl);
     return (
       <div className="h-full">
-        <FastPDFViewer 
-          pdfUrl={fileUrl}
-          className="h-full"
+        <iframe
+          src={fileUrl}
+          className="w-full h-full border-0"
+          title={title || 'PDF Document'}
         />
       </div>
     );
