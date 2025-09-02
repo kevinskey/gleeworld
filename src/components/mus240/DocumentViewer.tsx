@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, ExternalLink, X, ZoomIn, ZoomOut, RotateCw, Presentation, Play } from 'lucide-react';
+import { Download, ExternalLink, X, ZoomIn, ZoomOut, RotateCw, Presentation, Play, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { PresentationViewer } from './PresentationViewer';
 import { PowerPointViewer } from './PowerPointViewer';
@@ -28,6 +28,7 @@ export function DocumentViewer({
   const [totalPages, setTotalPages] = useState(0);
   const [showSlideshow, setShowSlideshow] = useState(false);
   const [showPowerPointViewer, setShowPowerPointViewer] = useState(false);
+  const [pdfError, setPdfError] = useState(false);
 
   const isPDF = fileType === 'application/pdf' || 
     fileName.toLowerCase().endsWith('.pdf') || 
@@ -124,34 +125,49 @@ export function DocumentViewer({
     console.log('DocumentViewer: Rendering PDF with URL:', fileUrl);
     console.log('DocumentViewer: PDF detection - fileType:', fileType, 'fileName:', fileName, 'isPDF:', isPDF);
     return (
-      <div className="h-full">
+      <div className="h-full relative">
         <iframe
           src={fileUrl}
           className="w-full h-full border-0"
           title={title || 'PDF Document'}
           onLoad={() => {
             console.log('DocumentViewer: PDF loaded directly');
+            setPdfError(false);
           }}
           onError={(e) => {
             console.error('DocumentViewer: Direct PDF load failed:', e);
-            toast.error('PDF cannot be displayed in browser. Opening in new tab...');
-            setTimeout(() => {
-              window.open(fileUrl, '_blank');
-            }, 1500);
+            setPdfError(true);
           }}
         />
-        {/* Manual fallback button */}
-        <div className="absolute top-4 right-4 z-10">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => window.open(fileUrl, '_blank')}
-            className="bg-white/90 backdrop-blur-sm border-gray-300 text-gray-700 hover:bg-white"
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Open in New Tab
-          </Button>
-        </div>
+        {/* Error fallback overlay - only show when there's an error */}
+        {pdfError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
+            <div className="text-center p-6 bg-white rounded-lg shadow-lg max-w-md">
+              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">PDF Not Available</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                This PDF file could not be loaded. It may have been moved or deleted.
+              </p>
+              <div className="flex gap-2 justify-center">
+                <Button
+                  onClick={() => window.open(fileUrl, '_blank')}
+                  variant="outline"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Try Direct Link
+                </Button>
+                <Button
+                  onClick={() => {
+                    toast.info('Please contact your instructor if this file should be available.');
+                  }}
+                  variant="outline"
+                >
+                  Report Issue
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
