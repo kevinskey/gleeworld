@@ -230,7 +230,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       assignment_id: assignment_id,
       journal_id,
       overall_score: gradingResult.overall_score,
-      // letter_grade is generated automatically based on overall_score
+      letter_grade: gradingResult.letter_grade,
       rubric: {
         criteria: activeRubric.criteria,
         scores: gradingResult.rubric_scores
