@@ -33,43 +33,35 @@ export const InstructorConsole = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Navigation Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Breadcrumb Navigation */}
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/classes/mus240')}
-                className="p-2 hover:bg-gray-100"
-              >
-                <Home className="h-4 w-4" />
-              </Button>
-              <ChevronRight className="h-4 w-4" />
-              <span className="text-gray-400">MUS 240</span>
-              <ChevronRight className="h-4 w-4" />
-              <span className="font-medium text-gray-900">Instructor Console</span>
-            </div>
-            
-            {/* Quick Actions */}
-            <div className="flex items-center space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => navigate('/classes/mus240')}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Course
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto p-6">
+        {/* Breadcrumb Navigation */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/classes/mus240')}
+              className="p-2 hover:bg-gray-100"
+            >
+              <Home className="h-4 w-4" />
+            </Button>
+            <ChevronRight className="h-4 w-4" />
+            <span className="text-gray-400">MUS 240</span>
+            <ChevronRight className="h-4 w-4" />
+            <span className="font-medium text-gray-900">Instructor Console</span>
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/classes/mus240')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Course
+          </Button>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
