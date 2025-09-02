@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,14 +35,19 @@ const AssignModulesDialog = ({
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const activeModules = getActiveModules();
-  console.log('🔍 AssignModulesDialog: activeModules =', activeModules.length, activeModules.map(m => ({ id: m.id, title: m.title })));
+  // Memoize activeModules to prevent re-render loop
+  const activeModules = useMemo(() => {
+    const modules = getActiveModules();
+    console.log('🔍 AssignModulesDialog: Memoized activeModules =', modules.length);
+    return modules;
+  }, []);
 
   useEffect(() => {
     if (user) {
       // Only show modules that are currently active
       const activeModuleIds = activeModules.map(m => m.id);
       const validModules = user.modules.filter(moduleId => activeModuleIds.includes(moduleId));
+      console.log('🔍 Setting selectedModules for user:', user.full_name, 'modules:', validModules);
       setSelectedModules(validModules);
     }
   }, [user, activeModules]);
