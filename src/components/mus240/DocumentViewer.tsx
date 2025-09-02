@@ -29,7 +29,10 @@ export function DocumentViewer({
   const [showSlideshow, setShowSlideshow] = useState(false);
   const [showPowerPointViewer, setShowPowerPointViewer] = useState(false);
 
-  const isPDF = fileType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf');
+  const isPDF = fileType === 'application/pdf' || 
+    fileName.toLowerCase().endsWith('.pdf') || 
+    fileUrl.toLowerCase().includes('.pdf') ||
+    fileUrl.toLowerCase().includes('pdf');
   const isPowerPoint = fileType.includes('presentation') || 
     fileName.toLowerCase().endsWith('.ppt') || 
     fileName.toLowerCase().endsWith('.pptx');
@@ -119,6 +122,7 @@ export function DocumentViewer({
 
   const renderPDFViewer = () => {
     console.log('DocumentViewer: Rendering PDF with URL:', fileUrl);
+    console.log('DocumentViewer: PDF detection - fileType:', fileType, 'fileName:', fileName, 'isPDF:', isPDF);
     return (
       <div className="h-full">
         <object
