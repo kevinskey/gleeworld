@@ -96,35 +96,41 @@ const AssignModulesDialog = ({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Available Modules</Label>
-            <ScrollArea className="h-64 border rounded-md p-4">
+            <Label>Available Modules ({activeModules.length} total)</Label>
+            <ScrollArea className="h-64 border rounded-md p-4 bg-background">
               <div className="grid grid-cols-1 gap-2">
                 {activeModules.length === 0 ? (
                   <div className="text-center py-4 text-muted-foreground">
                     No modules available
                   </div>
                 ) : (
-                  activeModules.map(module => (
-                    <div key={module.id} className="flex items-center space-x-3 p-2 hover:bg-muted rounded-md">
-                      <Checkbox
-                        id={module.id}
-                        checked={selectedModules.includes(module.id)}
-                        onCheckedChange={() => toggleModule(module.id)}
-                      />
-                      <div className="flex items-center gap-2 flex-1">
-                        <module.icon className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <Label htmlFor={module.id} className="text-sm font-medium cursor-pointer">
-                            {module.title}
-                          </Label>
-                          <p className="text-xs text-muted-foreground">{module.description}</p>
+                  activeModules.map((module, index) => {
+                    console.log(`🔍 Rendering module ${index}:`, module.id, module.title);
+                    return (
+                      <div key={module.id} className="flex items-center space-x-3 p-2 hover:bg-muted rounded-md border-b">
+                        <Checkbox
+                          id={`module-${module.id}`}
+                          checked={selectedModules.includes(module.id)}
+                          onCheckedChange={(checked) => {
+                            console.log(`🔍 Checkbox changed for ${module.id}:`, checked);
+                            toggleModule(module.id);
+                          }}
+                        />
+                        <div className="flex items-center gap-2 flex-1">
+                          <module.icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <Label htmlFor={`module-${module.id}`} className="text-sm font-medium cursor-pointer block">
+                              {module.title}
+                            </Label>
+                            <p className="text-xs text-muted-foreground truncate">{module.description}</p>
+                          </div>
                         </div>
+                        <Badge variant="outline" className="text-xs flex-shrink-0">
+                          {module.category}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {module.category}
-                      </Badge>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </ScrollArea>
@@ -133,10 +139,16 @@ const AssignModulesDialog = ({
             <span>{selectedModules.length} of {activeModules.length} active modules selected</span>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={() => {
+              console.log('🔍 Cancel button clicked');
+              onOpenChange(false);
+            }}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={loading}>
+            <Button onClick={() => {
+              console.log('🔍 Save button clicked, selectedModules:', selectedModules);
+              handleSave();
+            }} disabled={loading}>
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
