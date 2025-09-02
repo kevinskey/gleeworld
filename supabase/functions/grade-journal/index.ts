@@ -162,7 +162,8 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
           },
           { role: 'user', content: rubricPrompt }
         ],
-        max_completion_tokens: 1000
+        max_completion_tokens: 800,
+        response_format: { type: 'json_object' }
         // Note: temperature not supported in GPT-5 models
       }),
     });
@@ -230,7 +231,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       assignment_id: assignment_id,
       journal_id,
       overall_score: gradingResult.overall_score,
-      letter_grade: gradingResult.letter_grade,
+      // letter_grade is generated automatically based on overall_score
       rubric: {
         criteria: activeRubric.criteria,
         scores: gradingResult.rubric_scores
@@ -265,7 +266,10 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
     return new Response(
       JSON.stringify({
         success: true,
-        grade: gradingResult,
+        grade: {
+          ...gradingResult,
+          letter_grade: grade.letter_grade // Use the generated letter grade from DB
+        },
         grade_id: grade.id
       }),
       { 
