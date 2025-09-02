@@ -31,6 +31,12 @@ export const UsernamePermissionsManager = () => {
 
     setIsGranting(true);
     try {
+      console.log('🔍 Attempting to grant permission:', {
+        email: formData.userEmail,
+        module: formData.moduleName,
+        notes: formData.notes
+      });
+
       const success = await grantPermission(
         formData.userEmail,
         formData.moduleName,
@@ -38,13 +44,17 @@ export const UsernamePermissionsManager = () => {
         formData.notes || undefined
       );
 
+      console.log('🔍 Grant permission result:', success);
+
       if (success) {
         setFormData({ userEmail: '', moduleName: '', notes: '' });
         toast.success(`Access granted to ${formData.userEmail} for ${formData.moduleName}`);
+      } else {
+        toast.error('Failed to grant permission - function returned false');
       }
     } catch (error) {
-      console.error('Error granting permission:', error);
-      toast.error('Failed to grant permission');
+      console.error('🚨 Error granting permission:', error);
+      toast.error(`Failed to grant permission: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGranting(false);
     }

@@ -102,7 +102,14 @@ export const useUsernamePermissionsAdmin = () => {
     notes?: string
   ) => {
     try {
-      const { error } = await supabase
+      console.log('🔍 Attempting to upsert permission:', {
+        userEmail,
+        moduleName,
+        expiresAt,
+        notes
+      });
+
+      const { data, error } = await supabase
         .from('username_permissions')
         .upsert({
           user_email: userEmail,
@@ -112,9 +119,15 @@ export const useUsernamePermissionsAdmin = () => {
           is_active: true
         }, {
           onConflict: 'user_email,module_name'
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      console.log('🔍 Upsert result:', { data, error });
+
+      if (error) {
+        console.error('🚨 Database error:', error);
+        throw error;
+      }
 
       toast({
         title: "Permission Granted",
@@ -124,10 +137,10 @@ export const useUsernamePermissionsAdmin = () => {
       await fetchAllPermissions();
       return true;
     } catch (err: any) {
-      console.error('Error granting permission:', err);
+      console.error('🚨 Error granting permission:', err);
       toast({
         title: "Error",
-        description: "Failed to grant permission",
+        description: `Failed to grant permission: ${err.message || 'Unknown error'}`,
         variant: "destructive",
       });
       return false;
