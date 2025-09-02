@@ -27,6 +27,17 @@ export default function Resources() {
   };
 
   const canPreview = (resource: Mus240Resource) => {
+    // Check for external previewable content
+    const url = resource.url.toLowerCase();
+    const isGoogleSlides = url.includes('docs.google.com/presentation') || url.includes('slides.google.com');
+    const isYouTube = url.includes('youtu.be') || url.includes('youtube.com/watch');
+    
+    // External previewable content
+    if (isGoogleSlides || isYouTube) {
+      return true;
+    }
+    
+    // File uploads
     if (!resource.is_file_upload) return false;
     
     const fileName = resource.file_name?.toLowerCase() || '';
@@ -160,39 +171,39 @@ export default function Resources() {
                           {resource.description}
                         </p>
                         
-                        <div className="flex gap-2">
-                          {/* Preview Button for supported files */}
-                          {resource.is_file_upload && canPreview(resource) && (
-                            <Button
-                              onClick={() => openViewer(resource)}
-                              size="sm"
-                              variant="outline"
-                              className="w-full bg-white/20 hover:bg-white/30 text-gray-700 hover:text-gray-900 border-gray-300"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              Preview
-                            </Button>
-                          )}
-                          
-                          {/* For non-file resources or non-previewable files */}
-                          {(!resource.is_file_upload || !canPreview(resource)) && (
-                            <Button 
-                              asChild
-                              size="sm" 
-                              className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0"
-                            >
-                              <a 
-                                href={resource.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2"
-                              >
-                                <ExternalLink className="h-4 w-4" />
-                                Access Resource
-                              </a>
-                            </Button>
-                          )}
-                        </div>
+                         <div className="flex gap-2">
+                           {/* Preview Button for supported content */}
+                           {canPreview(resource) && (
+                             <Button
+                               onClick={() => openViewer(resource)}
+                               size="sm"
+                               variant="outline"
+                               className="w-full bg-white/20 hover:bg-white/30 text-gray-700 hover:text-gray-900 border-gray-300"
+                             >
+                               <Eye className="h-4 w-4 mr-2" />
+                               Preview
+                             </Button>
+                           )}
+                           
+                           {/* For non-previewable content */}
+                           {!canPreview(resource) && (
+                             <Button 
+                               asChild
+                               size="sm" 
+                               className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0"
+                             >
+                               <a 
+                                 href={resource.url} 
+                                 target="_blank" 
+                                 rel="noopener noreferrer"
+                                 className="inline-flex items-center gap-2"
+                               >
+                                 <ExternalLink className="h-4 w-4" />
+                                 Access Resource
+                               </a>
+                             </Button>
+                           )}
+                         </div>
                         
                         {/* Show file size for downloads */}
                         {resource.is_file_upload && resource.file_size && (
