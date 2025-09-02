@@ -48,6 +48,7 @@ export function DocumentViewer({
   const isPowerPoint = fileType.includes('presentation') || 
     fileName.toLowerCase().endsWith('.ppt') || 
     fileName.toLowerCase().endsWith('.pptx');
+  const isGoogleSlides = fileUrl.includes('docs.google.com/presentation') || fileUrl.includes('slides.google.com');
 
 
   const handleOpenExternal = () => {
@@ -57,7 +58,40 @@ export function DocumentViewer({
   const getFileTypeDisplay = () => {
     if (isPDF) return 'PDF';
     if (isPowerPoint) return 'PowerPoint';
+    if (isGoogleSlides) return 'Google Slides';
     return fileName.split('.').pop()?.toUpperCase() || 'Document';
+  };
+
+  // Convert Google Slides URL to embed format
+  const getGoogleSlidesEmbedUrl = (url: string) => {
+    // Handle different Google Slides URL formats
+    let presentationId = '';
+    
+    // Extract presentation ID from various URL formats
+    const patterns = [
+      /\/presentation\/d\/([a-zA-Z0-9-_]+)/,
+      /\/presentation\/u\/\d+\/d\/([a-zA-Z0-9-_]+)/,
+      /id=([a-zA-Z0-9-_]+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) {
+        presentationId = match[1];
+        break;
+      }
+    }
+    
+    if (presentationId) {
+      return `https://docs.google.com/presentation/d/${presentationId}/embed?start=false&loop=false&delayms=3000`;
+    }
+    
+    // If no ID found, try to convert edit URL to embed URL
+    if (url.includes('/edit')) {
+      return url.replace('/edit', '/embed?start=false&loop=false&delayms=3000');
+    }
+    
+    return url;
   };
 
   const renderPDFViewer = () => (
@@ -100,6 +134,22 @@ export function DocumentViewer({
             </div>
           </div>
         </div>
+      </div>
+    );
+  };
+
+  const renderGoogleSlidesViewer = () => {
+    const embedUrl = getGoogleSlidesEmbedUrl(fileUrl);
+    
+    return (
+      <div className="h-full">
+        <iframe
+          src={embedUrl}
+          className="w-full h-full border-0 rounded-lg"
+          title={`Google Slides - ${title}`}
+          allowFullScreen
+          loading="lazy"
+        />
       </div>
     );
   };
@@ -174,7 +224,8 @@ export function DocumentViewer({
         <div className="flex-1 overflow-hidden">
           {isPDF && renderPDFViewer()}
           {isPowerPoint && renderPowerPointViewer()}
-          {!isPDF && !isPowerPoint && renderUnsupportedFile()}
+          {isGoogleSlides && renderGoogleSlidesViewer()}
+          {!isPDF && !isPowerPoint && !isGoogleSlides && renderUnsupportedFile()}
         </div>
 
         <div className="flex-shrink-0 pt-4 border-t">
