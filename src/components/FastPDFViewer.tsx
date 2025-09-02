@@ -340,7 +340,7 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
           
           <canvas
             ref={canvasRef}
-            className="w-full h-auto block mx-auto bg-white"
+            className="w-full h-auto block mx-auto bg-background"
             style={{ maxHeight: '100%', objectFit: 'contain' }}
           />
 
