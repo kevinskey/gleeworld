@@ -95,7 +95,7 @@ serve(async (req) => {
         success: true,
         fileName: finalFileName,
         originalName: file.name,
-        publicUrl,
+        url: publicUrl,
         size: file.size,
         type: file.type,
         path: data.path
