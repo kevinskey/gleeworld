@@ -19,7 +19,7 @@ const LibrarianDashboardPage = () => {
     );
   }
   
-  const hasLibrarianAccess = permissions.includes('music-library');
+  const hasLibrarianAccess = permissions.includes('librarian');
   
   if (!hasLibrarianAccess) {
     return (
