@@ -171,11 +171,18 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
 
     const aiResponse = await response.json();
     console.log('OpenAI response received');
+    console.log('Full AI response:', JSON.stringify(aiResponse, null, 2));
 
     let gradingResult: GradingResult;
     
     try {
       const aiContent = aiResponse.choices[0].message.content;
+      console.log('AI content to parse:', aiContent);
+      
+      if (!aiContent || aiContent.trim() === '') {
+        throw new Error('Empty AI response content');
+      }
+      
       const parsed = JSON.parse(aiContent);
       
       // Calculate overall score
@@ -220,7 +227,6 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       assignment_id,
       journal_id,
       overall_score: gradingResult.overall_score,
-      // letter_grade is auto-generated, don't insert it
       rubric: {
         criteria: activeRubric.criteria,
         scores: gradingResult.rubric_scores
@@ -229,8 +235,9 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       ai_model: 'gpt-5-2025-08-07',
       graded_by: null, // AI grading
       graded_at: new Date().toISOString()
-      // created_at and updated_at will be set by database defaults/triggers
     };
+
+    console.log('Attempting to insert grade data:', JSON.stringify(gradeData, null, 2));
 
     const { data: grade, error: gradeError } = await supabase
       .from('mus240_journal_grades')
