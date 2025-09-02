@@ -112,6 +112,7 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
     if (!pdf || !canvasRef.current || containerWidth === 0) return;
 
     const renderCurrentPage = async () => {
+      console.log('FastPDFViewer: Starting to render page', currentPage);
       setIsLoading(true);
       
       // Try to get page from cache first
@@ -121,14 +122,18 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
         // Instantly display cached page
         const ctx = canvasRef.current?.getContext('2d');
         if (ctx && canvasRef.current) {
+          console.log('FastPDFViewer: Rendering cached page', currentPage, 'size:', cachedCanvas.width, 'x', cachedCanvas.height);
           canvasRef.current.width = cachedCanvas.width;
           canvasRef.current.height = cachedCanvas.height;
           ctx.clearRect(0, 0, cachedCanvas.width, cachedCanvas.height);
           ctx.drawImage(cachedCanvas, 0, 0);
           setIsLoading(false);
-          console.log(`FastPDFViewer: Page ${currentPage} rendered from cache`);
+          console.log(`FastPDFViewer: Page ${currentPage} rendered from cache successfully`);
+        } else {
+          console.error('FastPDFViewer: Failed to get canvas context for cached page');
         }
       } else {
+        console.log('FastPDFViewer: Page not in cache, preloading', currentPage);
         // Render page if not in cache
         await preloadPage(currentPage);
         const newCachedCanvas = getPage(currentPage);
@@ -136,14 +141,19 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
         if (newCachedCanvas && canvasRef.current) {
           const ctx = canvasRef.current.getContext('2d');
           if (ctx) {
+            console.log('FastPDFViewer: Rendering fresh page', currentPage, 'size:', newCachedCanvas.width, 'x', newCachedCanvas.height);
             canvasRef.current.width = newCachedCanvas.width;
             canvasRef.current.height = newCachedCanvas.height;
             ctx.clearRect(0, 0, newCachedCanvas.width, newCachedCanvas.height);
             ctx.drawImage(newCachedCanvas, 0, 0);
+            console.log(`FastPDFViewer: Page ${currentPage} rendered fresh successfully`);
+          } else {
+            console.error('FastPDFViewer: Failed to get canvas context for fresh page');
           }
+        } else {
+          console.error('FastPDFViewer: Failed to get cached page after preload', currentPage);
         }
         setIsLoading(false);
-        console.log(`FastPDFViewer: Page ${currentPage} rendered fresh`);
       }
 
       // Preload adjacent pages in the background
@@ -340,11 +350,13 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
           
           <canvas
             ref={canvasRef}
-            className="w-full h-auto block mx-auto"
+            className="w-full h-auto block mx-auto border"
             style={{ 
               maxHeight: '100%', 
               objectFit: 'contain',
-              background: 'white'
+              background: 'white',
+              minHeight: '400px',
+              border: '1px solid #ddd'
             }}
           />
 
