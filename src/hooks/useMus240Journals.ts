@@ -66,7 +66,7 @@ export const useMus240Journals = () => {
     if (!user) return null;
     
     try {
-      const response = await apiCall(`mus240_journals?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`);
+      const response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`);
       if (!response.ok) throw new Error('Failed to fetch user entry');
       
       const data = await response.json();
@@ -79,7 +79,7 @@ export const useMus240Journals = () => {
 
   const fetchPublishedJournals = async (assignmentId: string): Promise<JournalEntry[]> => {
     try {
-      const response = await apiCall(`mus240_journals?assignment_id=eq.${assignmentId}&is_published=eq.true&order=published_at.desc`);
+      const response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&is_published=eq.true&order=published_at.desc`);
       if (!response.ok) throw new Error('Failed to fetch published journals');
       
       const journals = await response.json();
@@ -174,7 +174,7 @@ export const useMus240Journals = () => {
     try {
       const wordCount = content.trim().split(/\s+/).filter(word => word.length > 0).length;
 
-      const response = await apiCall('mus240_journals', {
+      const response = await apiCall('mus240_journal_entries', {
         method: 'POST',
         headers: {
           'Prefer': 'return=minimal,resolution=merge-duplicates'
@@ -211,7 +211,7 @@ export const useMus240Journals = () => {
     if (!user) return false;
 
     try {
-      const response = await apiCall(`mus240_journals?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`, {
+      const response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`, {
         method: 'PATCH',
         headers: {
           'Prefer': 'return=minimal'
@@ -246,7 +246,7 @@ export const useMus240Journals = () => {
 
     try {
       // Check if journal has comments first
-      const commentsResponse = await apiCall(`mus240_journal_comments?journal_id=eq.${assignmentId}&select=id`);
+      const commentsResponse = await apiCall(`mus240_journal_comments?journal_entry_id=eq.${assignmentId}&select=id`);
 
       if (commentsResponse.ok) {
         const comments = await commentsResponse.json();
@@ -255,7 +255,7 @@ export const useMus240Journals = () => {
         }
       }
 
-      const response = await apiCall(`mus240_journals?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`, {
+      const response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`, {
         method: 'DELETE'
       });
 
