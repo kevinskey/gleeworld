@@ -222,7 +222,9 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       feedback: gradingResult.overall_feedback,
       ai_model: 'gpt-5-2025-08-07',
       graded_by: null, // AI grading
-      graded_at: new Date().toISOString()
+      graded_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
     const { data: grade, error: gradeError } = await supabase
