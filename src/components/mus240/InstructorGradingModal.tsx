@@ -21,7 +21,7 @@ interface InstructorGradingModalProps {
   };
   journal: {
     id: string;
-    user_id: string;
+    student_id: string;
     content: string;
     author_name: string;
   };
@@ -45,7 +45,7 @@ export const InstructorGradingModal: React.FC<InstructorGradingModalProps> = ({
       const result = await gradeJournalWithAI(
         assignment.id,
         journal.content,
-        journal.user_id,
+        journal.student_id,
         journal.id
       );
       
