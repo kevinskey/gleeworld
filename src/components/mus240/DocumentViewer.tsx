@@ -94,34 +94,10 @@ export function DocumentViewer({
     console.log('DocumentViewer: Rendering PDF with URL:', fileUrl);
     return (
       <div className="h-full">
-        <object
-          data={fileUrl}
-          type="application/pdf"
-          className="w-full h-full"
-          title={title || 'PDF Document'}
-        >
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-            <p className="mb-4">Unable to display PDF in browser.</p>
-            <Button
-              onClick={() => window.open(fileUrl, '_blank')}
-              className="mb-2"
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Open PDF in New Tab
-            </Button>
-            <Button
-              onClick={() => {
-                const link = document.createElement('a');
-                link.href = fileUrl;
-                link.download = fileName;
-                link.click();
-              }}
-              variant="outline"
-            >
-              Download PDF
-            </Button>
-          </div>
-        </object>
+        <FastPDFViewer 
+          pdfUrl={fileUrl}
+          className="h-full"
+        />
       </div>
     );
   };
