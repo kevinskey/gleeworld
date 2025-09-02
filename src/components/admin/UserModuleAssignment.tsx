@@ -35,6 +35,7 @@ const AssignModulesDialog = ({
   const [loading, setLoading] = useState(false);
 
   const activeModules = getActiveModules();
+  console.log('🔍 AssignModulesDialog: activeModules =', activeModules.length, activeModules.map(m => ({ id: m.id, title: m.title })));
 
   useEffect(() => {
     if (user) {
