@@ -56,6 +56,7 @@ export async function gradeJournalWithAI(
         journal_content: journal.content,
         student_id: journal.student_id,
         journal_id: journal.id,
+        stub_test: true // Enable stub test mode for now
       },
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });

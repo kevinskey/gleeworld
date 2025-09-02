@@ -68,7 +68,7 @@ serve(async (req) => {
     const requestBody = await req.json();
     console.log('Raw request body:', JSON.stringify(requestBody, null, 2));
     
-    const { assignment_id, journal_content, student_id, journal_id, rubric }: GradingRequest = requestBody;
+    const { assignment_id, journal_content, student_id, journal_id, rubric, stub_test }: GradingRequest & { stub_test?: boolean } = requestBody;
 
     console.log('Extracted values:');
     console.log('- assignment_id:', assignment_id);
@@ -117,8 +117,25 @@ serve(async (req) => {
 
     const activeRubric = rubric || defaultRubric;
 
-    // Create detailed prompt for GPT
-    const rubricPrompt = `
+    let gradingResult: GradingResult;
+
+    // Check if this is a stub test (skip AI call)
+    if (stub_test) {
+      console.log('=== STUB TEST MODE - SKIPPING AI CALL ===');
+      gradingResult = {
+        overall_score: 88,
+        letter_grade: 'B+',
+        rubric_scores: activeRubric.criteria.map(criterion => ({
+          criterion: criterion.name,
+          score: Math.round(criterion.max_points * 0.88),
+          max_score: criterion.max_points,
+          feedback: `Good work on ${criterion.name.toLowerCase()}. Shows understanding of the material.`
+        })),
+        overall_feedback: 'This is a stub test grade. The journal demonstrates good listening skills and analysis.'
+      };
+    } else {
+      // Real AI grading
+      const rubricPrompt = `
 You are an expert music instructor grading a listening journal entry. Grade this journal based on the following rubric:
 
 ${activeRubric.criteria.map(c => `
@@ -145,84 +162,85 @@ Grade each criterion and provide specific feedback. Return your response as a JS
 Be constructive, specific, and encouraging in your feedback. Focus on musical elements and listening skills.
 `;
 
-    console.log('=== CALLING OPENAI API ===');
+      console.log('=== CALLING OPENAI API ===');
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are a professional music instructor with expertise in grading listening assignments. Always respond with valid JSON only.'
-          },
-          { role: 'user', content: rubricPrompt }
-        ],
-        max_completion_tokens: 800,
-        response_format: { type: 'json_object' }
-        // Note: temperature not supported in GPT-5 models
-      }),
-    });
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini', // Using more stable model
+          messages: [
+            { 
+              role: 'system', 
+              content: 'You are a professional music instructor with expertise in grading listening assignments. Always respond with valid JSON only.'
+            },
+            { role: 'user', content: rubricPrompt }
+          ],
+          max_tokens: 800,
+          temperature: 0.7,
+          response_format: { type: 'json_object' }
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
-    }
-
-    const aiResponse = await response.json();
-    console.log('=== OPENAI RESPONSE RECEIVED ===');
-    console.log('OpenAI status:', response.status);
-    console.log('Full AI response:', JSON.stringify(aiResponse, null, 2));
-
-    let gradingResult: GradingResult;
-    
-    try {
-      const aiContent = aiResponse.choices[0].message.content;
-      console.log('AI content to parse:', aiContent);
-      
-      if (!aiContent || aiContent.trim() === '') {
-        throw new Error('Empty AI response content');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('OpenAI API error details:', errorText);
+        throw new Error(`OpenAI API error: ${response.status} - ${response.statusText}`);
       }
+
+      const aiResponse = await response.json();
+      console.log('=== OPENAI RESPONSE RECEIVED ===');
+      console.log('OpenAI status:', response.status);
+      console.log('Full AI response:', JSON.stringify(aiResponse, null, 2));
       
-      const parsed = JSON.parse(aiContent);
-      
-      // Calculate overall score
-      const totalScore = parsed.rubric_scores.reduce((sum: number, score: RubricScore) => sum + score.score, 0);
-      const maxScore = parsed.rubric_scores.reduce((sum: number, score: RubricScore) => sum + score.max_score, 0);
-      const overallScore = Math.round((totalScore / maxScore) * 100);
-      
-      // Determine letter grade
-      let letterGrade = 'F';
-      if (overallScore >= 90) letterGrade = 'A';
-      else if (overallScore >= 80) letterGrade = 'B';
-      else if (overallScore >= 70) letterGrade = 'C';
-      else if (overallScore >= 60) letterGrade = 'D';
-      
-      gradingResult = {
-        overall_score: overallScore,
-        letter_grade: letterGrade,
-        rubric_scores: parsed.rubric_scores,
-        overall_feedback: parsed.overall_feedback
-      };
-      
-    } catch (parseError) {
-      console.error('Error parsing AI response:', parseError);
-      
-      // Fallback grading
-      gradingResult = {
-        overall_score: 85,
-        letter_grade: 'B',
-        rubric_scores: activeRubric.criteria.map(criterion => ({
-          criterion: criterion.name,
-          score: Math.round(criterion.max_points * 0.85),
-          max_score: criterion.max_points,
-          feedback: 'Good work on this criterion. AI grading encountered a parsing error.'
-        })),
-        overall_feedback: 'Good listening journal entry. The AI grading system encountered a technical issue, so this is a default grade. Please have your instructor review manually.'
-      };
+      try {
+        const aiContent = aiResponse.choices[0].message.content;
+        console.log('AI content to parse:', aiContent);
+        
+        if (!aiContent || aiContent.trim() === '') {
+          throw new Error('Empty AI response content');
+        }
+        
+        const parsed = JSON.parse(aiContent);
+        
+        // Calculate overall score
+        const totalScore = parsed.rubric_scores.reduce((sum: number, score: RubricScore) => sum + score.score, 0);
+        const maxScore = parsed.rubric_scores.reduce((sum: number, score: RubricScore) => sum + score.max_score, 0);
+        const overallScore = Math.round((totalScore / maxScore) * 100);
+        
+        // Determine letter grade
+        let letterGrade = 'F';
+        if (overallScore >= 90) letterGrade = 'A';
+        else if (overallScore >= 80) letterGrade = 'B';
+        else if (overallScore >= 70) letterGrade = 'C';
+        else if (overallScore >= 60) letterGrade = 'D';
+        
+        gradingResult = {
+          overall_score: overallScore,
+          letter_grade: letterGrade,
+          rubric_scores: parsed.rubric_scores,
+          overall_feedback: parsed.overall_feedback
+        };
+        
+      } catch (parseError) {
+        console.error('Error parsing AI response:', parseError);
+        
+        // Fallback grading
+        gradingResult = {
+          overall_score: 85,
+          letter_grade: 'B',
+          rubric_scores: activeRubric.criteria.map(criterion => ({
+            criterion: criterion.name,
+            score: Math.round(criterion.max_points * 0.85),
+            max_score: criterion.max_points,
+            feedback: 'Good work on this criterion. AI grading encountered a parsing error.'
+          })),
+          overall_feedback: 'Good listening journal entry. The AI grading system encountered a technical issue, so this is a default grade. Please have your instructor review manually.'
+        };
+      }
     }
 
     console.log('=== PREPARING DATABASE INSERT ===');
