@@ -375,11 +375,11 @@ export const UnifiedDashboard = () => {
   if (profile?.is_exec_board && viewMode === 'default') {
     console.log('🎯 UnifiedDashboard: Showing executive board dashboard for user:', profile.user_id);
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 overflow-auto">
         <div className="px-6 pt-4">
           <IncompleteProfileBanner userProfile={profile} />
         </div>
-        <div className="px-6 py-4">
+        <div className="px-6 py-4 pb-8">
           <ExecBoardModulePanel />
         </div>
       </div>

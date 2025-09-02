@@ -19,7 +19,7 @@ export const ExecBoardModulePanel = () => {
 
   useEffect(() => {
     console.log('🔍 ExecBoardModulePanel: useEffect triggered');
-    console.log('🔍 User:', user);
+    console.log('🔍 User:', user?.email);
     console.log('🔍 Access Loading state:', accessLoading);
     console.log('🔍 Has access function:', typeof hasAccess);
     
@@ -30,12 +30,12 @@ export const ExecBoardModulePanel = () => {
     
     console.log('🎯 ExecBoardModulePanel: Fetching accessible modules for user:', user.id);
     const accessibleModules = getAccessibleModules();
-    console.log('🎯 ExecBoardModulePanel: Accessible modules:', accessibleModules);
+    console.log('🎯 ExecBoardModulePanel: Accessible modules:', accessibleModules.map(m => `${m.id} (${m.title})`));
     const moduleIds = accessibleModules.map(module => module.id);
     console.log('🎯 ExecBoardModulePanel: Module IDs:', moduleIds);
     setUserModules(moduleIds);
     setLoading(false);
-  }, [user?.id, accessLoading]); // Removed getAccessibleModules from dependencies to prevent infinite loop
+  }, [user?.id, accessLoading]);
 
   const handleModuleClick = (moduleId: string) => {
     if (userModules.includes(moduleId)) {
@@ -132,7 +132,26 @@ export const ExecBoardModulePanel = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-h-[calc(100vh-120px)] overflow-y-auto">
+      {/* Debug Info */}
+      {loading && (
+        <Card>
+          <CardContent className="text-center py-4">
+            <p>Loading modules...</p>
+          </CardContent>
+        </Card>
+      )}
+      
+      {!loading && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="py-2">
+            <p className="text-xs text-orange-700">
+              Debug: Found {userModules.length} modules for user {user?.email}
+              {userModules.length > 0 && `: ${userModules.join(', ')}`}
+            </p>
+          </CardContent>
+        </Card>
+      )}
       {/* Quick Access Section */}
       <Card>
         <Collapsible open={!quickAccessCollapsed} onOpenChange={setQuickAccessCollapsed}>
@@ -242,14 +261,21 @@ export const ExecBoardModulePanel = () => {
       {/* Render selected module */}
       {renderModuleComponent()}
 
-      {assignedModules.length === 0 && (
-        <Card>
+      {!loading && assignedModules.length === 0 && (
+        <Card className="border-red-200 bg-red-50">
           <CardContent className="text-center py-12">
             <Crown className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No Modules Assigned</h3>
             <p className="text-muted-foreground mb-4">
-              Contact an administrator to get access to executive modules.
+              Debug info: User {user?.email} has exec board status but no accessible modules found.
+              This might be a permission configuration issue.
             </p>
+            <div className="text-xs text-left bg-white p-4 rounded border">
+              <p><strong>User ID:</strong> {user?.id}</p>
+              <p><strong>User Modules:</strong> {userModules.join(', ') || 'None'}</p>
+              <p><strong>Total UNIFIED_MODULES:</strong> {UNIFIED_MODULES.length}</p>
+              <p><strong>Active UNIFIED_MODULES:</strong> {UNIFIED_MODULES.filter(m => m.isActive).length}</p>
+            </div>
           </CardContent>
         </Card>
       )}
