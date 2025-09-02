@@ -125,11 +125,17 @@ export function DocumentViewer({
     console.log('DocumentViewer: Rendering PDF with URL:', fileUrl);
     console.log('DocumentViewer: PDF detection - fileType:', fileType, 'fileName:', fileName, 'isPDF:', isPDF);
     return (
-      <div className="h-full">
-        <FastPDFViewer 
-          pdfUrl={fileUrl} 
-          className="h-full w-full"
-        />
+      <div className="h-full flex flex-col items-center justify-center text-center p-8">
+        <div className="bg-red-100 rounded-full p-6 mb-4">
+          <AlertCircle className="h-12 w-12 text-red-600" />
+        </div>
+        <h3 className="text-lg font-semibold mb-2">PDF File Not Found</h3>
+        <p className="text-muted-foreground mb-6 max-w-md">
+          The PDF file "{fileName}" is not available at the moment. This may be due to a temporary storage issue.
+        </p>
+        <p className="text-sm text-muted-foreground mb-6">
+          Please contact your instructor or try again later.
+        </p>
       </div>
     );
   };
