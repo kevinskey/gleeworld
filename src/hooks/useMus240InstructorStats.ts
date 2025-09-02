@@ -58,8 +58,21 @@ export const useMus240InstructorStats = () => {
       const gradedJournalIds = new Set(grades?.map(g => g.journal_id) || []);
       const pendingGrades = (journals || []).filter(j => !gradedJournalIds.has(j.id)).length;
 
-      // Get unique students
-      const uniqueStudents = new Set((journals || []).map(j => j.student_id)).size;
+      // Get enrolled students from enrollments table
+      const { data: enrollments, error: enrollmentsError } = await supabase
+        .from('mus240_enrollments')
+        .select('student_id')
+        .eq('semester', 'Fall 2024')
+        .eq('enrollment_status', 'active');
+
+      if (enrollmentsError) {
+        console.error('Error fetching enrollments:', enrollmentsError);
+      }
+
+      // Get unique students from enrollments, fallback to journal entries
+      const uniqueStudents = enrollments?.length 
+        ? new Set(enrollments.map(e => e.student_id)).size
+        : new Set((journals || []).map(j => j.student_id)).size;
 
       // Calculate average grade
       const totalScores = grades?.reduce((sum, grade) => sum + (grade.overall_score || 0), 0) || 0;
