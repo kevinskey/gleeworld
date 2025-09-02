@@ -127,7 +127,7 @@ export function DocumentViewer({
     return (
       <div className="h-full relative">
         <iframe
-          src={fileUrl}
+          src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
           className="w-full h-full border-0"
           title={title || 'PDF Document'}
           onLoad={() => {
