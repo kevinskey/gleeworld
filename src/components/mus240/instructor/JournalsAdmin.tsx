@@ -65,6 +65,8 @@ export const JournalsAdmin = () => {
   };
 
   const handleGradeJournal = (journal: any) => {
+    console.log('Selected journal for grading:', journal);
+    console.log('Journal student_id:', journal.student_id);
     setGradingModal({
       isOpen: true,
       journal,

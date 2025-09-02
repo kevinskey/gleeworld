@@ -42,6 +42,12 @@ export const InstructorGradingModal: React.FC<InstructorGradingModalProps> = ({
 
   const handleGradeWithAI = async () => {
     try {
+      console.log('Grading journal with data:');
+      console.log('- assignment.id:', assignment.id);
+      console.log('- journal.student_id:', journal.student_id);
+      console.log('- journal.id:', journal.id);
+      console.log('- journal object:', journal);
+      
       const result = await gradeJournalWithAI(
         assignment.id,
         journal.content,

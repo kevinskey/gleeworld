@@ -31,6 +31,12 @@ export const useJournalGrading = () => {
   ) => {
     setLoading(true);
     try {
+      console.log('useJournalGrading: About to call edge function with:');
+      console.log('- assignmentId:', assignmentId);
+      console.log('- studentId:', studentId);
+      console.log('- journalId:', journalId);
+      console.log('- journalContent length:', journalContent?.length);
+      
       const { data, error } = await supabase.functions.invoke('grade-journal', {
         body: {
           assignment_id: assignmentId,

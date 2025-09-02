@@ -53,13 +53,27 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const requestBody = await req.json();
+    console.log('Raw request body:', JSON.stringify(requestBody, null, 2));
+    
     const { assignment_id, journal_content, student_id, journal_id, rubric }: GradingRequest = requestBody;
 
-    console.log('Grading journal for assignment:', assignment_id, 'student:', student_id);
-    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    console.log('Extracted values:');
+    console.log('- assignment_id:', assignment_id);
+    console.log('- student_id:', student_id); 
+    console.log('- journal_id:', journal_id);
+    console.log('- journal_content length:', journal_content?.length);
 
     if (!student_id) {
+      console.error('student_id is missing or null:', student_id);
       throw new Error('Missing required field: student_id');
+    }
+    
+    if (!assignment_id) {
+      throw new Error('Missing required field: assignment_id');
+    }
+    
+    if (!journal_content) {
+      throw new Error('Missing required field: journal_content');
     }
 
     // Default rubric for listening journals
