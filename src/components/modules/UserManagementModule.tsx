@@ -15,8 +15,8 @@ export const UserManagementModule = ({ user, isFullPage = false }: ModuleProps) 
   const { isSuperAdmin, isAdmin, isExecutiveBoard } = useUserRole();
   const { permissions: usernamePermissions, loading: permissionsLoading } = useUsernamePermissions(authUser?.email);
 
-  // Check if user has access to user management
-  const hasUserManagementAccess = isSuperAdmin() || isAdmin() || isExecutiveBoard() || usernamePermissions.includes('user-management');
+  // Simplified access - everyone is a member, exec board gets admin access
+  const hasUserManagementAccess = isExecutiveBoard() || usernamePermissions.includes('user-management');
 
   // Show loading state while checking permissions
   if (permissionsLoading) {

@@ -10,7 +10,7 @@ interface AdminOnlyRouteProps {
 
 export const AdminOnlyRoute = ({ children }: AdminOnlyRouteProps) => {
   const { user, loading: authLoading } = useAuth();
-  const { profile, loading: profileLoading, isAdmin } = useUserRole();
+  const { profile, loading: profileLoading, isAdmin, isExecutiveBoard } = useUserRole();
   
   if (authLoading || profileLoading) {
     return (
@@ -36,8 +36,9 @@ export const AdminOnlyRoute = ({ children }: AdminOnlyRouteProps) => {
     currentPath: window.location.pathname
   });
   
-  if (!isAdmin()) {
-    // Redirect non-admin users to member dashboard
+  // Simplified: Only executive board members get admin access
+  if (!isExecutiveBoard()) {
+    // Redirect non-executive users to member dashboard
     return <Navigate to="/dashboard/member" replace />;
   }
   

@@ -8,12 +8,16 @@ export const PermissionsModule = ({ user, isFullPage = false }: ModuleProps) => 
   return (
     <ModuleWrapper
       id="permissions-management"
-      title="Permissions Management"
-      description="Configure user roles, permissions, and access controls"
+      title="Executive Board Access"
+      description="Manage executive board positions and access (everyone else is a member)"
       icon={Shield}
       iconColor="red"
       fullPage={isFullPage}
     >
+      <div className="p-4 bg-blue-50 rounded-lg mb-4">
+        <h3 className="font-semibold text-blue-900">Simplified Access System</h3>
+        <p className="text-blue-700 text-sm">All users are now members. Only executive board positions get special access.</p>
+      </div>
       <PermissionManagement />
     </ModuleWrapper>
   );
