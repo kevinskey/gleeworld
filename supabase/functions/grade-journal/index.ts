@@ -52,9 +52,15 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { assignment_id, journal_content, student_id, journal_id, rubric }: GradingRequest = await req.json();
+    const requestBody = await req.json();
+    const { assignment_id, journal_content, student_id, journal_id, rubric }: GradingRequest = requestBody;
 
     console.log('Grading journal for assignment:', assignment_id, 'student:', student_id);
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+
+    if (!student_id) {
+      throw new Error('Missing required field: student_id');
+    }
 
     // Default rubric for listening journals
     const defaultRubric = {
