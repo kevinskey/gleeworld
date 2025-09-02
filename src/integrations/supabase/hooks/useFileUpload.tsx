@@ -26,41 +26,38 @@ export function useFileUpload() {
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filePath = path || `${timestamp}-${randomSuffix}-${safeFileName}`;
 
-      // For development environment, simulate successful upload
-      console.log('Using development simulation for file upload');
-      
-      // Create a mock URL that matches the expected format
-      const mockUrl = `https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/${bucket}/${filePath}`;
-      
-      // Store file info in localStorage for development
-      const fileInfo = {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        path: filePath,
-        url: mockUrl,
-        timestamp: Date.now(),
-        originalFile: file.name // Keep track of original file for reference
-      };
-      
-      try {
-        const existingFiles = JSON.parse(localStorage.getItem('dev_uploaded_files') || '[]');
-        existingFiles.push(fileInfo);
-        localStorage.setItem('dev_uploaded_files', JSON.stringify(existingFiles));
-        console.log('File info stored in localStorage for development:', fileInfo);
-      } catch (storageError) {
-        console.warn('Could not store file info in localStorage:', storageError);
+      // Create FormData for the upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bucket', bucket);
+      formData.append('fileName', filePath);
+
+      console.log('Uploading file via edge function:', filePath);
+
+      // Use the upload-file edge function
+      const { data, error } = await supabase.functions.invoke('upload-file', {
+        body: formData
+      });
+
+      if (error) {
+        console.error('Upload function error:', error);
+        throw new Error(error.message || 'Upload failed');
       }
 
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!data?.success) {
+        console.error('Upload function returned error:', data);
+        throw new Error(data?.error || 'Upload failed');
+      }
+
+      const publicUrl = data.publicUrl;
+      console.log('Upload successful:', data.fileName, 'URL:', publicUrl);
 
       toast({
         title: "Upload Successful",
-        description: `${file.name} uploaded successfully (development mode)`,
+        description: `${file.name} uploaded successfully`,
       });
 
-      return mockUrl;
+      return publicUrl;
 
     } catch (error) {
       console.error('Upload error:', error);

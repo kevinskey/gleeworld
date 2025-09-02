@@ -1,98 +1,122 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { 
-      headers: corsHeaders,
-      status: 200 
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Upload function called');
-    
-    // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    // Parse the form data
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
-    const bucket = formData.get('bucket') as string || 'mus240-resources';
-    
-    if (!file) {
-      throw new Error('No file provided');
+    if (req.method !== 'POST') {
+      return new Response(
+        JSON.stringify({ error: 'Method not allowed' }),
+        { 
+          status: 405, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    console.log('Processing file:', {
-      name: file.name,
-      size: file.size,
-      type: file.type
-    });
+    const formData = await req.formData();
+    const file = formData.get('file') as File;
+    const bucket = formData.get('bucket') as string;
+    const fileName = formData.get('fileName') as string;
+    
+    if (!file) {
+      return new Response(
+        JSON.stringify({ error: 'No file provided' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
-    // Generate unique filename
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substring(7);
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filePath = `${timestamp}-${randomSuffix}-${safeFileName}`;
+    if (!bucket) {
+      return new Response(
+        JSON.stringify({ error: 'No bucket specified' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
-    // Convert file to array buffer
+    console.log(`Uploading file: ${fileName || file.name} to bucket: ${bucket}`);
+    console.log(`File size: ${file.size} bytes, type: ${file.type}`);
+
+    // Convert file to ArrayBuffer
     const fileBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(fileBuffer);
+    const finalFileName = fileName || `${Date.now()}-${Math.random().toString(36).substring(2)}-${file.name}`;
 
     // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
+    const { data, error } = await supabaseClient.storage
       .from(bucket)
-      .upload(filePath, uint8Array, {
+      .upload(finalFileName, fileBuffer, {
         contentType: file.type,
+        cacheControl: '3600',
         upsert: false
       });
 
     if (error) {
       console.error('Storage upload error:', error);
-      throw error;
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to upload file to storage', 
+          details: error.message 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    console.log('Upload successful:', data);
+    console.log('File uploaded successfully:', data);
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
+    // Generate public URL
+    const { data: { publicUrl } } = supabaseClient.storage
       .from(bucket)
-      .getPublicUrl(data.path);
+      .getPublicUrl(finalFileName);
 
     return new Response(
       JSON.stringify({
         success: true,
-        url: urlData.publicUrl,
+        fileName: finalFileName,
+        originalName: file.name,
+        publicUrl,
+        size: file.size,
+        type: file.type,
         path: data.path
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
 
   } catch (error) {
     console.error('Upload function error:', error);
-    
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message
+      JSON.stringify({ 
+        error: 'Internal server error', 
+        details: error.message 
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      },
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
-})
+});
