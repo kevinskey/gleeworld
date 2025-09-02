@@ -79,11 +79,17 @@ const AssignModulesDialog = ({
   };
 
   const toggleModule = (moduleId: string) => {
-    setSelectedModules(prev =>
-      prev.includes(moduleId)
+    console.log('🔍 toggleModule called with:', moduleId);
+    console.log('🔍 Current selectedModules before toggle:', selectedModules);
+    
+    setSelectedModules(prev => {
+      const newSelection = prev.includes(moduleId)
         ? prev.filter(id => id !== moduleId)
-        : [...prev, moduleId]
-    );
+        : [...prev, moduleId];
+      
+      console.log('🔍 New selectedModules after toggle:', newSelection);
+      return newSelection;
+    });
   };
 
   const assignExecutiveBoardModules = () => {
