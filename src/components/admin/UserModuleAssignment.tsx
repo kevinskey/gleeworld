@@ -199,6 +199,8 @@ export const UserModuleAssignment = () => {
     fetchUsers();
   };
 
+  console.log('🔍 UserModuleAssignment render - users:', users.length, 'searchTerm:', searchTerm);
+  
   const filteredUsers = users.filter(user => {
     if (!searchTerm.trim()) return true; // Show all users when search is empty
     
@@ -207,15 +209,16 @@ export const UserModuleAssignment = () => {
     const emailMatch = user.email?.toLowerCase().includes(searchLower) || false;
     const roleMatch = user.role?.toLowerCase().includes(searchLower) || false;
     
-    // Debug: Check if Onnesty Peele is in the users array
-    if (searchTerm && searchTerm.toLowerCase().includes('onnest')) {
-      const onnesty = users.find(u => u.full_name?.toLowerCase().includes('onnesty'));
-      console.log('🔍 Looking for Onnesty in users array:', {
-        searchTerm,
-        onnestyFound: onnesty ? onnesty.full_name : 'NOT FOUND',
-        onnestyEmail: onnesty ? onnesty.email : 'N/A',
-        totalUsers: users.length,
-        sampleUsers: users.slice(0, 3).map(u => ({ name: u.full_name, email: u.email }))
+    // Always log the first user named Onnesty when searching
+    if (user.full_name?.toLowerCase().includes('onnesty') && searchTerm) {
+      console.log('🔍 Found Onnesty during search:', {
+        searchTerm: searchLower,
+        userName: user.full_name,
+        userEmail: user.email,
+        nameMatch,
+        emailMatch,
+        roleMatch,
+        shouldMatch: nameMatch || emailMatch || roleMatch
       });
     }
     
