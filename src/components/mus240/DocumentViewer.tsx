@@ -126,18 +126,17 @@ export function DocumentViewer({
     return (
       <div className="h-full">
         <iframe
-          src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
+          src={`https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(fileUrl)}`}
           className="w-full h-full border-0"
           title={title || 'PDF Document'}
           onLoad={() => {
-            console.log('DocumentViewer: PDF loaded in Google Docs Viewer');
+            console.log('DocumentViewer: PDF loaded in PDF.js viewer');
           }}
           onError={(e) => {
-            console.error('DocumentViewer: PDF failed to load:', e);
-            toast.error('Failed to load PDF. Opening in new tab...');
-            setTimeout(() => {
-              window.open(fileUrl, '_blank');
-            }, 1000);
+            console.error('DocumentViewer: PDF.js failed, trying Google Docs Viewer');
+            // Fallback to Google Docs Viewer
+            const iframe = e.target as HTMLIFrameElement;
+            iframe.src = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
           }}
         />
       </div>
