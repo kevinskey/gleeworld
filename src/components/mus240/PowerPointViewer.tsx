@@ -94,28 +94,16 @@ export function PowerPointViewer({
     if (viewerMethod === 'download' || !viewerUrl) {
       return (
         <div className="h-full flex flex-col items-center justify-center text-center p-8">
-          <div className="bg-blue-100 rounded-full p-6 mb-4">
-            <Presentation className="h-12 w-12 text-blue-600" />
+          <div className="bg-amber-100 rounded-full p-6 mb-4">
+            <AlertCircle className="h-12 w-12 text-amber-600" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">PowerPoint File Ready</h3>
+          <h3 className="text-lg font-semibold mb-2">Content Protected</h3>
           <p className="text-muted-foreground mb-4 max-w-md">
-            This PowerPoint presentation is stored privately and can't be viewed in external online viewers.
+            This PowerPoint presentation is protected and cannot be viewed or downloaded directly.
           </p>
           <p className="text-sm text-muted-foreground mb-6 max-w-md">
-            Click the button below to download and open the presentation on your device.
+            Please contact your instructor for access to this content.
           </p>
-          <div className="flex flex-col gap-3 items-center">
-            <Button onClick={handleOpenExternal} className="flex items-center gap-2">
-              <ExternalLink className="h-4 w-4" />
-              Download PowerPoint
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              File size: {fileName.includes('Negro_Folk_Music') ? '81.3 MB' : 
-                         fileName.includes('Survey_of_African_American') ? '787 KB' :
-                         fileName.includes('Chapter_Two_Instrument') ? '606 KB' :
-                         fileName.includes('Negro_Spiritual') ? '5.8 MB' : 'Unknown'}
-            </p>
-          </div>
         </div>
       );
     }
