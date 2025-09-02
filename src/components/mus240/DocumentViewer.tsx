@@ -119,11 +119,18 @@ export function DocumentViewer({
     console.log('DocumentViewer: Rendering PDF with URL:', fileUrl);
     return (
       <div className="h-full">
-        <iframe
-          src={fileUrl}
-          className="w-full h-full border-0"
+        <object
+          data={fileUrl}
+          type="application/pdf"
+          className="w-full h-full"
           title={title || 'PDF Document'}
-        />
+        >
+          <iframe
+            src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
+            className="w-full h-full border-0"
+            title={title || 'PDF Document'}
+          />
+        </object>
       </div>
     );
   };
