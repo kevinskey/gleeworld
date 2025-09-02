@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, Users, Plus, X, Settings } from 'lucide-react';
 import { useUserModulePermissions } from '@/hooks/useUserModulePermissions';
 import { getActiveModules } from '@/config/unified-modules';
+import { EXECUTIVE_MODULE_IDS, STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
 
 interface User {
   id: string;
@@ -85,6 +86,35 @@ const AssignModulesDialog = ({
     );
   };
 
+  const assignExecutiveBoardModules = () => {
+    if (!user) return;
+    
+    const activeModuleIds = activeModules.map(m => m.id);
+    const execModulesToAssign = EXECUTIVE_MODULE_IDS.filter(moduleId => 
+      activeModuleIds.includes(moduleId) && !selectedModules.includes(moduleId)
+    );
+    
+    setSelectedModules(prev => [...prev, ...execModulesToAssign]);
+    console.log('🔍 Assigned exec board modules:', execModulesToAssign);
+  };
+
+  const assignStandardMemberModules = () => {
+    if (!user) return;
+    
+    const activeModuleIds = activeModules.map(m => m.id);
+    const standardModulesToAssign = STANDARD_MEMBER_MODULE_IDS.filter(moduleId => 
+      activeModuleIds.includes(moduleId) && !selectedModules.includes(moduleId)
+    );
+    
+    setSelectedModules(prev => [...prev, ...standardModulesToAssign]);
+    console.log('🔍 Assigned standard member modules:', standardModulesToAssign);
+  };
+
+  const clearAllModules = () => {
+    setSelectedModules([]);
+    console.log('🔍 Cleared all modules');
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -95,6 +125,34 @@ const AssignModulesDialog = ({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          {/* Quick Assignment Buttons */}
+          <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={assignStandardMemberModules}
+              className="text-xs"
+            >
+              + Standard Member Modules
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={assignExecutiveBoardModules}
+              className="text-xs"
+            >
+              + Executive Board Modules
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearAllModules}
+              className="text-xs text-destructive hover:text-destructive"
+            >
+              Clear All
+            </Button>
+          </div>
+          
           <div>
             <Label>Available Modules ({activeModules.length} total)</Label>
             <ScrollArea className="h-64 border rounded-md p-4 bg-background">
