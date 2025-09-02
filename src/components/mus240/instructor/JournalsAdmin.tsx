@@ -43,29 +43,17 @@ export const JournalsAdmin = () => {
     }
   };
 
-  const handleDeleteJournal = async (journal: any) => {
-    if (!confirm(`Are you sure you want to delete ${journal.user_profile?.full_name}'s journal entry? This action cannot be undone.`)) {
+  const handleDeleteJournal = async (journalId: string, studentName: string) => {
+    if (!confirm(`Are you sure you want to delete ${studentName}'s journal entry? This action cannot be undone.`)) {
       return;
     }
 
     try {
-      // Delete comments first
-      await supabase
-        .from('mus240_journal_comments')
-        .delete()
-        .eq('journal_entry_id', journal.id);
-
-      // Delete grades
-      await supabase
-        .from('mus240_journal_grades')
-        .delete()
-        .eq('journal_id', journal.id);
-
-      // Delete journal
+      // Delete journal entry directly
       await supabase
         .from('mus240_journal_entries')
         .delete()
-        .eq('id', journal.id);
+        .eq('id', journalId);
 
       alert('Journal entry deleted successfully');
       fetchJournals();
@@ -105,7 +93,7 @@ export const JournalsAdmin = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleDeleteJournal(journal)}
+                    onClick={() => handleDeleteJournal(journal.id, journal.user_profile?.full_name || 'Unknown Student')}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4" />
