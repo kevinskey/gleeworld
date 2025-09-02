@@ -59,7 +59,7 @@ export const useUserScores = () => {
   };
 
   const addScore = async (scoreData: Omit<UserScoreInsert, 'user_id' | 'created_at'>) => {
-    if (!userProfile?.id) return;
+    if (!user?.id) return;
 
     try {
       setLoading(true);
@@ -67,7 +67,7 @@ export const useUserScores = () => {
         .from('gw_scores')
         .insert({
           ...scoreData,
-          user_id: userProfile.id,
+          user_id: user.id,
           created_at: new Date().toISOString(),
         })
         .select()
