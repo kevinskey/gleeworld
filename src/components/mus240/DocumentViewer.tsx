@@ -60,16 +60,17 @@ export function DocumentViewer({
     return fileName.split('.').pop()?.toUpperCase() || 'Document';
   };
 
-  // Convert Google Slides URL to embed format
   const getGoogleSlidesEmbedUrl = (url: string) => {
+    console.log('Converting Google Slides URL:', url);
+    
     // Handle different Google Slides URL formats
     let presentationId = '';
     
     // Extract presentation ID from various URL formats
     const patterns = [
+      /\/presentation\/d\/e\/([a-zA-Z0-9-_]+)/, // Published format (this should match the URL in question)
       /\/presentation\/d\/([a-zA-Z0-9-_]+)/, // Standard format
       /\/presentation\/u\/\d+\/d\/([a-zA-Z0-9-_]+)/, // User-specific format
-      /\/presentation\/d\/e\/([a-zA-Z0-9-_]+)/, // Published format
       /id=([a-zA-Z0-9-_]+)/ // Query parameter format
     ];
     
@@ -77,28 +78,32 @@ export function DocumentViewer({
       const match = url.match(pattern);
       if (match) {
         presentationId = match[1];
+        console.log('Found presentation ID:', presentationId);
         break;
       }
     }
     
     if (presentationId) {
-      // Check if it's a published presentation (contains /d/e/)
-      if (url.includes('/d/e/')) {
-        return `https://docs.google.com/presentation/d/e/${presentationId}/embed?start=false&loop=false&delayms=3000`;
-      } else {
-        return `https://docs.google.com/presentation/d/${presentationId}/embed?start=false&loop=false&delayms=3000`;
-      }
+      // Always use the published embed format for better compatibility
+      const embedUrl = `https://docs.google.com/presentation/d/e/${presentationId}/embed?start=false&loop=false&delayms=3000`;
+      console.log('Generated embed URL:', embedUrl);
+      return embedUrl;
     }
     
     // If no ID found, try to convert different URL types
     if (url.includes('/pub?')) {
       // Published presentation - replace /pub with /embed
-      return url.replace('/pub?', '/embed?').replace('start=true', 'start=false');
+      const embedUrl = url.replace('/pub?', '/embed?').replace('start=true', 'start=false');
+      console.log('Converted /pub URL to embed:', embedUrl);
+      return embedUrl;
     } else if (url.includes('/edit')) {
       // Edit URL - replace with embed
-      return url.replace('/edit', '/embed?start=false&loop=false&delayms=3000');
+      const embedUrl = url.replace('/edit', '/embed?start=false&loop=false&delayms=3000');
+      console.log('Converted /edit URL to embed:', embedUrl);
+      return embedUrl;
     }
     
+    console.log('Using original URL as fallback:', url);
     return url;
   };
 
