@@ -227,15 +227,15 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       assignment_id: assignment_id,
       journal_id,
       overall_score: gradingResult.overall_score,
-      letter_grade: gradingResult.letter_grade,
+      // letter_grade is generated automatically based on overall_score
       rubric: {
         criteria: activeRubric.criteria,
         scores: gradingResult.rubric_scores
       },
       feedback: gradingResult.overall_feedback,
       ai_model: 'gpt-5-2025-08-07',
-      graded_by: null, // AI grading
-      graded_at: new Date().toISOString()
+      graded_by: null // AI grading
+      // graded_at has default of now()
     };
 
     console.log('About to insert grade data:', JSON.stringify(gradeData, null, 2));
