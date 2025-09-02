@@ -14,10 +14,6 @@ export const PermissionsModule = ({ user, isFullPage = false }: ModuleProps) => 
       iconColor="red"
       fullPage={isFullPage}
     >
-      <div className="p-4 bg-blue-50 rounded-lg mb-4">
-        <h3 className="font-semibold text-blue-900">Simplified Access System</h3>
-        <p className="text-blue-700 text-sm">All users are now members. Only executive board positions get special access.</p>
-      </div>
       <PermissionManagement />
     </ModuleWrapper>
   );
