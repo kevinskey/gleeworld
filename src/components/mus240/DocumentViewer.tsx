@@ -93,14 +93,17 @@ export function DocumentViewer({
   const renderPDFViewer = () => {
     console.log('DocumentViewer: Rendering PDF with URL:', fileUrl);
     return (
-      <div className="h-full">
-        <FastPDFViewer 
-          pdfUrl={fileUrl}
-          className="h-full"
-          onPageChange={(page, total) => {
-            console.log('DocumentViewer: Page changed to', page, 'of', total);
-            setCurrentPage(page);
-            setTotalPages(total);
+      <div className="h-full w-full flex items-center justify-center">
+        <iframe
+          src={fileUrl}
+          className="w-full h-full border-0"
+          title={title || 'PDF Document'}
+          onLoad={() => {
+            console.log('DocumentViewer: PDF iframe loaded successfully');
+          }}
+          onError={(e) => {
+            console.error('DocumentViewer: PDF iframe failed to load:', e);
+            toast.error('Failed to load PDF document');
           }}
         />
       </div>
