@@ -1,7 +1,6 @@
 import React from 'react';
 import { LibrarianDashboard } from '@/components/librarian/LibrarianDashboard';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserRole } from '@/hooks/useUserRole';
 import { useUsernamePermissions } from '@/hooks/useUsernamePermissions';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Shield } from 'lucide-react';
@@ -10,27 +9,27 @@ const LibrarianDashboardPage = () => {
   console.log('🔍 LibrarianDashboardPage rendering');
   
   const { user } = useAuth();
-  const { isAdmin, isSuperAdmin, profile } = useUserRole();
-  const { permissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
-
-  if (permissionsLoading) {
+  const { permissions, loading } = useUsernamePermissions(user?.email);
+  
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <LoadingSpinner size="lg" text="Checking permissions..." />
       </div>
     );
   }
-
-  // Check if user has librarian access
-  const hasLibrarianAccess = isAdmin() || isSuperAdmin() || permissions.includes('music-library');
-
+  
+  const hasLibrarianAccess = permissions.includes('music-library');
+  
   if (!hasLibrarianAccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <Shield className="mx-auto h-12 w-12 text-red-500 mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600">You don't have permission to access the Librarian Dashboard.</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+        <div className="max-w-md mx-auto text-center">
+          <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-foreground mb-2">Access Denied</h1>
+          <p className="text-muted-foreground">
+            You don't have permission to access the Librarian Dashboard. Please contact an administrator if you believe this is an error.
+          </p>
         </div>
       </div>
     );
