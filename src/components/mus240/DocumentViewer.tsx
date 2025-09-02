@@ -69,9 +69,10 @@ export function DocumentViewer({
     
     // Extract presentation ID from various URL formats
     const patterns = [
-      /\/presentation\/d\/([a-zA-Z0-9-_]+)/,
-      /\/presentation\/u\/\d+\/d\/([a-zA-Z0-9-_]+)/,
-      /id=([a-zA-Z0-9-_]+)/
+      /\/presentation\/d\/([a-zA-Z0-9-_]+)/, // Standard format
+      /\/presentation\/u\/\d+\/d\/([a-zA-Z0-9-_]+)/, // User-specific format
+      /\/presentation\/d\/e\/([a-zA-Z0-9-_]+)/, // Published format
+      /id=([a-zA-Z0-9-_]+)/ // Query parameter format
     ];
     
     for (const pattern of patterns) {
@@ -83,11 +84,20 @@ export function DocumentViewer({
     }
     
     if (presentationId) {
-      return `https://docs.google.com/presentation/d/${presentationId}/embed?start=false&loop=false&delayms=3000`;
+      // Check if it's a published presentation (contains /d/e/)
+      if (url.includes('/d/e/')) {
+        return `https://docs.google.com/presentation/d/e/${presentationId}/embed?start=false&loop=false&delayms=3000`;
+      } else {
+        return `https://docs.google.com/presentation/d/${presentationId}/embed?start=false&loop=false&delayms=3000`;
+      }
     }
     
-    // If no ID found, try to convert edit URL to embed URL
-    if (url.includes('/edit')) {
+    // If no ID found, try to convert different URL types
+    if (url.includes('/pub?')) {
+      // Published presentation - replace /pub with /embed
+      return url.replace('/pub?', '/embed?').replace('start=true', 'start=false');
+    } else if (url.includes('/edit')) {
+      // Edit URL - replace with embed
       return url.replace('/edit', '/embed?start=false&loop=false&delayms=3000');
     }
     
