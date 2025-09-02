@@ -4,10 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, BarChart3, Calendar, User, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { InstructorGradingModal } from '../InstructorGradingModal';
 
 export const JournalsAdmin = () => {
   const [journals, setJournals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [gradingModal, setGradingModal] = useState<{
+    isOpen: boolean;
+    journal: any;
+    assignment: any;
+  }>({
+    isOpen: false,
+    journal: null,
+    assignment: null
+  });
 
   useEffect(() => {
     fetchJournals();
@@ -31,7 +41,18 @@ export const JournalsAdmin = () => {
             .eq('user_id', journal.student_id)
             .single();
 
-          return { ...journal, user_profile: profileData };
+          const { data: assignmentData } = await supabase
+            .from('mus240_assignments')
+            .select('title, id')
+            .eq('id', journal.assignment_id)
+            .single();
+
+          return { 
+            ...journal, 
+            user_profile: profileData,
+            assignment: assignmentData,
+            author_name: profileData?.full_name || 'Unknown Student'
+          };
         })
       );
 
@@ -43,6 +64,13 @@ export const JournalsAdmin = () => {
     }
   };
 
+  const handleGradeJournal = (journal: any) => {
+    setGradingModal({
+      isOpen: true,
+      journal,
+      assignment: journal.assignment || { id: journal.assignment_id, title: 'Unknown Assignment' }
+    });
+  };
   const handleDeleteJournal = async (journalId: string, studentName: string) => {
     if (!confirm(`Are you sure you want to delete ${studentName}'s journal entry? This action cannot be undone.`)) {
       return;
@@ -86,9 +114,13 @@ export const JournalsAdmin = () => {
                   <p className="text-sm text-gray-600">{journal.user_profile?.email}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline">
-                    <Eye className="h-4 w-4 mr-1" />
-                    View
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleGradeJournal(journal)}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-1" />
+                    Grade
                   </Button>
                   <Button
                     size="sm"
@@ -114,12 +146,28 @@ export const JournalsAdmin = () => {
                     <Calendar className="h-4 w-4" />
                     Published {new Date(journal.submitted_at).toLocaleDateString()}
                   </div>
+                  <div className="text-sm text-gray-600">
+                    Assignment: {journal.assignment?.title || 'Unknown Assignment'}
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {gradingModal.isOpen && (
+        <InstructorGradingModal
+          isOpen={gradingModal.isOpen}
+          onClose={() => setGradingModal({ isOpen: false, journal: null, assignment: null })}
+          assignment={gradingModal.assignment}
+          journal={gradingModal.journal}
+          onGradeComplete={() => {
+            fetchJournals();
+            setGradingModal({ isOpen: false, journal: null, assignment: null });
+          }}
+        />
+      )}
     </div>
   );
 };
