@@ -166,17 +166,6 @@ export const UserModuleAssignment = () => {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const { getAllUsersWithPermissions } = useUserModulePermissions();
 
-  // Debug state changes
-  useEffect(() => {
-    console.log('🔍 UserModuleAssignment state changed:', {
-      usersCount: users.length,
-      searchTerm,
-      loading,
-      selectedUser: selectedUser?.email,
-      assignDialogOpen
-    });
-  }, [users, searchTerm, loading, selectedUser, assignDialogOpen]);
-
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -207,26 +196,8 @@ export const UserModuleAssignment = () => {
     const emailMatch = user.email?.toLowerCase().includes(searchLower) || false;
     const roleMatch = user.role?.toLowerCase().includes(searchLower) || false;
     
-    // Debug only for first few users to avoid spam
-    if (users.indexOf(user) < 3) {
-      console.log('🔍 UserModuleAssignment Search Debug:', {
-        searchTerm: searchLower,
-        user: user.email,
-        name: user.full_name,
-        nameToSearch: user.full_name?.toLowerCase(),
-        emailToSearch: user.email?.toLowerCase(),
-        roleToSearch: user.role?.toLowerCase(),
-        nameMatch,
-        emailMatch,
-        roleMatch,
-        result: nameMatch || emailMatch || roleMatch
-      });
-    }
-    
     return nameMatch || emailMatch || roleMatch;
   });
-
-  console.log('🔍 Total users:', users.length, 'Filtered users:', filteredUsers.length, 'Search term:', searchTerm);
 
   useEffect(() => {
     fetchUsers();
@@ -259,10 +230,7 @@ export const UserModuleAssignment = () => {
           <Input
             placeholder="Search users..."
             value={searchTerm}
-            onChange={(e) => {
-              console.log('🔍 Search input change:', e.target.value);
-              setSearchTerm(e.target.value);
-            }}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
         </div>
