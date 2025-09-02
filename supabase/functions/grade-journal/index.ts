@@ -121,7 +121,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-5-2025-08-07',
         messages: [
           { 
             role: 'system', 
@@ -129,8 +129,8 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
           },
           { role: 'user', content: rubricPrompt }
         ],
-        max_tokens: 1000,
-        temperature: 0.3
+        max_completion_tokens: 1000
+        // Note: temperature not supported in GPT-5 models
       }),
     });
 
@@ -195,7 +195,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
         scores: gradingResult.rubric_scores
       },
       feedback: gradingResult.overall_feedback,
-      ai_model: 'gpt-4-turbo',
+      ai_model: 'gpt-5-2025-08-07',
       graded_by: null, // AI grading
       graded_at: new Date().toISOString()
     };
