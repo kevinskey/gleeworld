@@ -235,6 +235,8 @@ export const UserModuleAssignment = () => {
     onnestyInFiltered: filteredUsers.find(u => u.full_name?.toLowerCase().includes('onnesty'))?.full_name || 'NOT FOUND'
   });
 
+  console.log('🔍 First 5 filtered users:', filteredUsers.slice(0, 5).map(u => ({ name: u.full_name, email: u.email })));
+
   useEffect(() => {
     fetchUsers();
   }, []);
