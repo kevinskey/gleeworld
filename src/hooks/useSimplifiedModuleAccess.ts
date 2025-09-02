@@ -61,17 +61,39 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         console.log('🔍 Is Super Admin?', profile?.is_super_admin);
         console.log('🔍 Is Admin?', profile?.is_admin);
 
-        // Get explicit permissions from database via RPC
-        console.log('🔍 useSimplifiedModuleAccess: calling get_user_modules RPC for user:', targetUserId);
-        const { data: userModules, error: moduleError } = await supabase
-          .rpc('get_user_modules', { p_user: targetUserId });
+        // Check if user has executive board access to any functions
+        console.log('🔍 Checking executive board access...');
+        let executiveFunctions: string[] = [];
+        if (profile?.is_exec_board || profile?.is_admin || profile?.is_super_admin) {
+          console.log('🔍 User has exec board or admin status, checking function access...');
+          
+          // Get functions this user has access to through executive position
+          const { data: execFunctions, error: execError } = await supabase
+            .from('gw_executive_board_members')
+            .select(`
+              position,
+              gw_executive_position_functions!inner(
+                can_access,
+                can_manage,
+                gw_app_functions!inner(name, module)
+              )
+            `)
+            .eq('user_id', targetUserId)
+            .eq('is_active', true);
 
-        console.log('🔍 useSimplifiedModuleAccess: RPC response:', { userModules, moduleError });
-
-        if (moduleError) {
-          console.error('🚨 useSimplifiedModuleAccess: RPC error:', moduleError);
-          throw moduleError;
+          if (!execError && execFunctions) {
+            execFunctions.forEach((execMember: any) => {
+              execMember.gw_executive_position_functions.forEach((posFunc: any) => {
+                if (posFunc.can_access && posFunc.gw_app_functions) {
+                  executiveFunctions.push(posFunc.gw_app_functions.module);
+                  console.log('✅ Found exec function access:', posFunc.gw_app_functions.name, '-> module:', posFunc.gw_app_functions.module);
+                }
+              });
+            });
+          }
         }
+
+        console.log('🔍 Executive functions accessible:', executiveFunctions);
 
         // Create a mapping from database module names to frontend module IDs
         const moduleMapping: Record<string, string> = {
@@ -137,18 +159,9 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'executive-functions': 'executive'
         };
 
-        // Get module permissions from RPC
-        const grantedModuleIds = new Set();
-        if (userModules && Array.isArray(userModules)) {
-          userModules.forEach((module: any) => {
-            console.log('🔍 Processing module:', module);
-            if (module.can_view) {
-              const frontendModuleId = moduleMapping[module.module_key] || module.module_key;
-              console.log(`🔍 Mapping ${module.module_key} -> ${frontendModuleId}`);
-              grantedModuleIds.add(frontendModuleId);
-            }
-          });
-        }
+        // Process granted modules using executive functions access
+        const grantedModuleIds = new Set(executiveFunctions); // Start with executive functions
+        console.log('🔍 Final granted module IDs from exec functions:', Array.from(grantedModuleIds));
 
         console.log('🔍 useSimplifiedModuleAccess: granted module IDs =', Array.from(grantedModuleIds));
         console.log('🔍 useSimplifiedModuleAccess: profile is_exec_board =', profile?.is_exec_board);
@@ -186,13 +199,13 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             };
           }
 
-          // Check if user has explicit permission for this module
+          // Check if user has explicit permission for this module (through exec board or other means)
           if (grantedModuleIds.has(module.id)) {
             console.log('✅ Explicit permission found for module:', module.id);
             return {
               moduleId: module.id,
               hasAccess: true,
-              source: 'explicit_permission' as const
+              source: profile?.is_exec_board ? 'executive_board' as const : 'explicit_permission' as const
             };
           }
 
