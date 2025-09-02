@@ -1,5 +1,7 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuditionForm } from "../AuditionFormProvider";
@@ -20,28 +22,20 @@ export function MusicalBackgroundPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Did you sing in middle school?</FormLabel>
-            <div className="flex gap-4">
+            <RadioGroup
+              value={field.value === true ? "yes" : field.value === false ? "no" : ""}
+              onValueChange={(value) => field.onChange(value === "yes")}
+              className="flex gap-4"
+            >
               <div className="flex items-center space-x-2">
-                <input 
-                  type="radio" 
-                  id="middle-school-yes" 
-                  checked={field.value === true}
-                  onChange={() => field.onChange(true)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="middle-school-yes" className="text-sm">Yes</label>
+                <RadioGroupItem value="yes" id="middle-school-yes" />
+                <Label htmlFor="middle-school-yes">Yes</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <input 
-                  type="radio" 
-                  id="middle-school-no" 
-                  checked={field.value === false}
-                  onChange={() => field.onChange(false)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="middle-school-no" className="text-sm">No</label>
+                <RadioGroupItem value="no" id="middle-school-no" />
+                <Label htmlFor="middle-school-no">No</Label>
               </div>
-            </div>
+            </RadioGroup>
           </FormItem>
         )}
       />
@@ -52,28 +46,20 @@ export function MusicalBackgroundPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Did you sing in high school?</FormLabel>
-            <div className="flex gap-4">
+            <RadioGroup
+              value={field.value === true ? "yes" : field.value === false ? "no" : ""}
+              onValueChange={(value) => field.onChange(value === "yes")}
+              className="flex gap-4"
+            >
               <div className="flex items-center space-x-2">
-                <input 
-                  type="radio" 
-                  id="high-school-yes" 
-                  checked={field.value === true}
-                  onChange={() => field.onChange(true)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="high-school-yes" className="text-sm">Yes</label>
+                <RadioGroupItem value="yes" id="high-school-yes" />
+                <Label htmlFor="high-school-yes">Yes</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <input 
-                  type="radio" 
-                  id="high-school-no" 
-                  checked={field.value === false}
-                  onChange={() => field.onChange(false)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="high-school-no" className="text-sm">No</label>
+                <RadioGroupItem value="no" id="high-school-no" />
+                <Label htmlFor="high-school-no">No</Label>
               </div>
-            </div>
+            </RadioGroup>
           </FormItem>
         )}
       />
@@ -126,28 +112,20 @@ export function MusicalBackgroundPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Do you play an instrument well enough to perform with it?</FormLabel>
-            <div className="flex gap-4">
+            <RadioGroup
+              value={field.value === true ? "yes" : field.value === false ? "no" : ""}
+              onValueChange={(value) => field.onChange(value === "yes")}
+              className="flex gap-4"
+            >
               <div className="flex items-center space-x-2">
-                <input 
-                  type="radio" 
-                  id="instrument-yes" 
-                  checked={field.value === true}
-                  onChange={() => field.onChange(true)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="instrument-yes" className="text-sm">Yes</label>
+                <RadioGroupItem value="yes" id="instrument-yes" />
+                <Label htmlFor="instrument-yes">Yes</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <input 
-                  type="radio" 
-                  id="instrument-no" 
-                  checked={field.value === false}
-                  onChange={() => field.onChange(false)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="instrument-no" className="text-sm">No</label>
+                <RadioGroupItem value="no" id="instrument-no" />
+                <Label htmlFor="instrument-no">No</Label>
               </div>
-            </div>
+            </RadioGroup>
           </FormItem>
         )}
       />
@@ -174,28 +152,20 @@ export function MusicalBackgroundPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Are you a soloist?</FormLabel>
-            <div className="flex gap-4">
+            <RadioGroup
+              value={field.value === true ? "yes" : field.value === false ? "no" : ""}
+              onValueChange={(value) => field.onChange(value === "yes")}
+              className="flex gap-4"
+            >
               <div className="flex items-center space-x-2">
-                <input 
-                  type="radio" 
-                  id="soloist-yes" 
-                  checked={field.value === true}
-                  onChange={() => field.onChange(true)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="soloist-yes" className="text-sm">Yes</label>
+                <RadioGroupItem value="yes" id="soloist-yes" />
+                <Label htmlFor="soloist-yes">Yes</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <input 
-                  type="radio" 
-                  id="soloist-no" 
-                  checked={field.value === false}
-                  onChange={() => field.onChange(false)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="soloist-no" className="text-sm">No</label>
+                <RadioGroupItem value="no" id="soloist-no" />
+                <Label htmlFor="soloist-no">No</Label>
               </div>
-            </div>
+            </RadioGroup>
           </FormItem>
         )}
       />

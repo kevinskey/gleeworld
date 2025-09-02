@@ -1,5 +1,7 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuditionForm } from "../AuditionFormProvider";
 
@@ -46,28 +48,20 @@ export function PersonalInfoPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Are you interested in leadership opportunities within the Glee Club? (Optional)</FormLabel>
-            <div className="flex gap-4">
+            <RadioGroup
+              value={field.value === true ? "yes" : field.value === false ? "no" : ""}
+              onValueChange={(value) => field.onChange(value === "yes")}
+              className="flex gap-4"
+            >
               <div className="flex items-center space-x-2">
-                <input 
-                  type="radio" 
-                  id="leadership-yes" 
-                  checked={field.value === true}
-                  onChange={() => field.onChange(true)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="leadership-yes" className="text-sm">Yes</label>
+                <RadioGroupItem value="yes" id="leadership-yes" />
+                <Label htmlFor="leadership-yes">Yes</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <input 
-                  type="radio" 
-                  id="leadership-no" 
-                  checked={field.value === false}
-                  onChange={() => field.onChange(false)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="leadership-no" className="text-sm">No</label>
+                <RadioGroupItem value="no" id="leadership-no" />
+                <Label htmlFor="leadership-no">No</Label>
               </div>
-            </div>
+            </RadioGroup>
           </FormItem>
         )}
       />
