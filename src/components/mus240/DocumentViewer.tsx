@@ -126,19 +126,32 @@ export function DocumentViewer({
     return (
       <div className="h-full">
         <iframe
-          src={`https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(fileUrl)}`}
+          src={fileUrl}
           className="w-full h-full border-0"
           title={title || 'PDF Document'}
           onLoad={() => {
-            console.log('DocumentViewer: PDF loaded in PDF.js viewer');
+            console.log('DocumentViewer: PDF loaded directly');
           }}
           onError={(e) => {
-            console.error('DocumentViewer: PDF.js failed, trying Google Docs Viewer');
-            // Fallback to Google Docs Viewer
-            const iframe = e.target as HTMLIFrameElement;
-            iframe.src = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+            console.error('DocumentViewer: Direct PDF load failed:', e);
+            toast.error('PDF cannot be displayed in browser. Opening in new tab...');
+            setTimeout(() => {
+              window.open(fileUrl, '_blank');
+            }, 1500);
           }}
         />
+        {/* Manual fallback button */}
+        <div className="absolute top-4 right-4 z-10">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => window.open(fileUrl, '_blank')}
+            className="bg-white/90 backdrop-blur-sm border-gray-300 text-gray-700 hover:bg-white"
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Open in New Tab
+          </Button>
+        </div>
       </div>
     );
   };
