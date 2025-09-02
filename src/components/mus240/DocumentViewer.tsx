@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import { Worker, Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
+import { Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Download, ExternalLink, X, ZoomIn, ZoomOut, RotateCw, Presentation, Play } from 'lucide-react';
@@ -106,20 +106,18 @@ export function DocumentViewer({
 
   const renderPDFViewer = () => (
     <div className="h-full">
-      <Worker workerUrl={`https://unpkg.com/pdfjs-dist@5.3.93/build/pdf.worker.min.js`}>
-        <div className="h-full overflow-hidden">
-          <Viewer
-            fileUrl={fileUrl}
-            plugins={[defaultLayoutPluginInstance]}
-            defaultScale={zoom}
-            onDocumentLoad={(e) => {
-              setTotalPages(e.doc.numPages);
-              setCurrentPage(1);
-            }}
-            onPageChange={(e) => setCurrentPage(e.currentPage + 1)}
-          />
-        </div>
-      </Worker>
+      <div className="h-full overflow-hidden">
+        <Viewer
+          fileUrl={fileUrl}
+          plugins={[defaultLayoutPluginInstance]}
+          defaultScale={zoom}
+          onDocumentLoad={(e) => {
+            setTotalPages(e.doc.numPages);
+            setCurrentPage(1);
+          }}
+          onPageChange={(e) => setCurrentPage(e.currentPage + 1)}
+        />
+      </div>
     </div>
   );
 
@@ -159,6 +157,11 @@ export function DocumentViewer({
           title={`Google Slides - ${title}`}
           allowFullScreen
           loading="lazy"
+          sandbox="allow-scripts allow-same-origin allow-presentation"
+          onError={(e) => {
+            console.warn('Google Slides iframe error:', e);
+            toast.error('Error loading Google Slides presentation');
+          }}
         />
       </div>
     );
@@ -190,11 +193,14 @@ export function DocumentViewer({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-7xl max-h-[90vh] h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0 pb-4 border-b">
+          <DialogTitle className="text-lg font-semibold truncate max-w-md">
+            {title}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            Document viewer for {getFileTypeDisplay()} file: {fileName}
+          </DialogDescription>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <DialogTitle className="text-lg font-semibold truncate max-w-md">
-                {title}
-              </DialogTitle>
               <Badge variant="outline">
                 {getFileTypeDisplay()}
               </Badge>
