@@ -42,6 +42,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== STARTING JOURNAL GRADING FUNCTION ===');
+    
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     console.log('OpenAI API key configured:', openAIApiKey ? 'Yes' : 'No');
     
@@ -143,7 +145,7 @@ Grade each criterion and provide specific feedback. Return your response as a JS
 Be constructive, specific, and encouraging in your feedback. Focus on musical elements and listening skills.
 `;
 
-    console.log('Sending request to OpenAI...');
+    console.log('=== CALLING OPENAI API ===');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -170,7 +172,8 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
     }
 
     const aiResponse = await response.json();
-    console.log('OpenAI response received');
+    console.log('=== OPENAI RESPONSE RECEIVED ===');
+    console.log('OpenAI status:', response.status);
     console.log('Full AI response:', JSON.stringify(aiResponse, null, 2));
 
     let gradingResult: GradingResult;
@@ -221,7 +224,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       };
     }
 
-    // Store the grade in the database
+    console.log('=== PREPARING DATABASE INSERT ===');
     const gradeData = {
       student_id,
       assignment_id: assignment_id,
@@ -238,6 +241,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       // graded_at has default of now()
     };
 
+    console.log('=== ATTEMPTING DATABASE INSERT ===');
     console.log('About to insert grade data:', JSON.stringify(gradeData, null, 2));
     console.log('Fields being inserted:', Object.keys(gradeData));
 
@@ -248,10 +252,13 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       .single();
 
     if (gradeError) {
+      console.error('=== DATABASE INSERT FAILED ===');
       console.error('Error saving grade:', gradeError);
       console.error('Grade data that failed:', JSON.stringify(gradeData, null, 2));
       throw new Error(`Failed to save grade: ${gradeError.message}`);
     }
+
+    console.log('=== DATABASE INSERT SUCCESSFUL ===');
 
     console.log('Grade saved successfully:', grade.id);
 
