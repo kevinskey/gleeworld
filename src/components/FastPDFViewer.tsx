@@ -340,8 +340,12 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
           
           <canvas
             ref={canvasRef}
-            className="w-full h-auto block mx-auto bg-background"
-            style={{ maxHeight: '100%', objectFit: 'contain' }}
+            className="w-full h-auto block mx-auto"
+            style={{ 
+              maxHeight: '100%', 
+              objectFit: 'contain',
+              background: 'white'
+            }}
           />
 
           {/* Touch/Click zones visual hint */}
