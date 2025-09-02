@@ -39,10 +39,13 @@ export const InstructorGradingModal: React.FC<InstructorGradingModalProps> = ({
   onGradeComplete
 }) => {
   const [gradeResult, setGradeResult] = useState<any>(existingGrade);
+  const [errorDetails, setErrorDetails] = useState<any>(null);
   const { loading, gradeJournalWithAI } = useJournalGrading();
 
   const handleGradeWithAI = async () => {
     try {
+      setErrorDetails(null); // Clear previous errors
+      
       // Use journal.assignment_id (UUID) instead of assignment.id (might be old string)
       const assignmentId = journal.assignment_id || assignment.id;
       console.log('Grading journal with data:');
@@ -60,8 +63,13 @@ export const InstructorGradingModal: React.FC<InstructorGradingModalProps> = ({
       
       setGradeResult(result);
       onGradeComplete(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to grade journal:', error);
+      setErrorDetails(error.details || {
+        error: error.message || 'Unknown error occurred',
+        trace: error.stack || 'No stack trace available',
+        context: 'Error during AI grading process'
+      });
     }
   };
 
@@ -105,6 +113,37 @@ export const InstructorGradingModal: React.FC<InstructorGradingModalProps> = ({
               </Badge>
             )}
           </div>
+
+          {/* Error Display */}
+          {errorDetails && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-medium mb-2 text-destructive">Grading Error</h3>
+                <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg space-y-3">
+                  <div>
+                    <h4 className="font-medium text-sm text-destructive mb-1">Error:</h4>
+                    <p className="text-sm">{errorDetails.error}</p>
+                  </div>
+                  
+                  {errorDetails.context && (
+                    <div>
+                      <h4 className="font-medium text-sm text-destructive mb-1">Context:</h4>
+                      <p className="text-sm">{errorDetails.context}</p>
+                    </div>
+                  )}
+                  
+                  {errorDetails.trace && (
+                    <details className="text-xs">
+                      <summary className="font-medium text-destructive cursor-pointer">Technical Details</summary>
+                      <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
+                        {errorDetails.trace}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Grade Results */}
           {gradeResult && (

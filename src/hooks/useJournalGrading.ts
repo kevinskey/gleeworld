@@ -46,25 +46,74 @@ export const useJournalGrading = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        const errorMessage = error.message || 'Edge function returned an error';
+        const errorDetails = {
+          error: errorMessage,
+          trace: error.stack || 'No stack trace available',
+          context: error.context || 'No additional context'
+        };
+        
+        toast({
+          title: "Grading Failed",
+          description: `${errorMessage}. Check console for details.`,
+          variant: "destructive"
+        });
+        
+        throw { ...error, details: errorDetails };
+      }
+
+      if (!data) {
+        const errorDetails = {
+          error: 'No data returned from edge function',
+          trace: 'Edge function returned null or undefined data',
+          context: 'This may indicate a server error or timeout'
+        };
+        
+        toast({
+          title: "Grading Failed",
+          description: "No response from AI grading service",
+          variant: "destructive"
+        });
+        
+        throw { message: 'No data returned', details: errorDetails };
+      }
 
       if (!data.success) {
-        throw new Error(data.error || 'Grading failed');
+        const errorDetails = {
+          error: data.error || 'Grading operation failed',
+          trace: data.trace || 'No trace information available',
+          context: 'Edge function returned success: false'
+        };
+        
+        toast({
+          title: "Grading Failed",
+          description: data.error || "AI grading operation failed",
+          variant: "destructive"
+        });
+        
+        throw { message: data.error || 'Grading failed', details: errorDetails };
       }
 
       toast({
-        title: "Journal Graded",
+        title: "Journal Graded Successfully",
         description: `Grade: ${data.grade.overall_score}% (${data.grade.letter_grade})`,
       });
 
       return data.grade;
     } catch (error: any) {
       console.error('Error grading journal:', error);
-      toast({
-        title: "Grading Failed",
-        description: error.message || "Failed to grade journal with AI",
-        variant: "destructive"
-      });
+      
+      // If error doesn't already have details, create them
+      if (!error.details) {
+        error.details = {
+          error: error.message || 'Unknown error occurred',
+          trace: error.stack || 'No stack trace available',
+          context: 'Client-side error during edge function call'
+        };
+      }
+      
       throw error;
     } finally {
       setLoading(false);
