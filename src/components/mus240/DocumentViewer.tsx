@@ -205,37 +205,24 @@ export function DocumentViewer({
 
   const renderWebsiteViewer = () => {
     return (
-      <div className="h-full">
-        <iframe
-          src={fileUrl}
-          className="w-full h-full border-0 rounded-lg"
-          title={`Website - ${title}`}
-          loading="lazy"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-          referrerPolicy="strict-origin-when-cross-origin"
-          onError={(e) => {
-            console.warn('Website iframe error:', e);
-            toast.error('This website cannot be embedded. Opening in new tab...');
-            setTimeout(() => {
-              window.open(fileUrl, '_blank');
-            }, 1000);
-          }}
-        />
-        {/* Fallback message for blocked content */}
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
-          <div className="text-center p-6 bg-white rounded-lg shadow-lg pointer-events-auto">
-            <p className="text-sm text-muted-foreground mb-4">
-              If the website doesn't load, it may block embedding for security reasons.
-            </p>
-            <Button
-              onClick={() => window.open(fileUrl, '_blank')}
-              className="flex items-center gap-2"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Open in New Tab
-            </Button>
-          </div>
+      <div className="h-full flex flex-col items-center justify-center text-center p-8">
+        <div className="bg-blue-100 rounded-full p-6 mb-4">
+          <ExternalLink className="h-12 w-12 text-blue-600" />
         </div>
+        <h3 className="text-lg font-semibold mb-2">Open Website</h3>
+        <p className="text-muted-foreground mb-6 max-w-md">
+          {title || fileName}
+        </p>
+        <p className="text-sm text-muted-foreground mb-6">
+          This will open in a new tab. This window will stay open so you can easily return.
+        </p>
+        <Button 
+          onClick={() => window.open(fileUrl, '_blank')} 
+          className="flex items-center gap-2"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Open Website
+        </Button>
       </div>
     );
   };
