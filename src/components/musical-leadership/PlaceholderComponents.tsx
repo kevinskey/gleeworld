@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Settings } from 'lucide-react';
 import { SheetMusicAnnotationLibrary } from './SheetMusicAnnotationLibrary';
+import { CommunicationCenter as CommunicationCenterComponent } from './CommunicationCenter';
 
 interface SectionLeaderManagementProps {
   user?: any;
@@ -30,10 +31,7 @@ export const SheetMusicAnnotations = ({ user }: any) => {
 };
 
 export const CommunicationCenter = ({ user }: any) => (
-  <Card>
-    <CardHeader><CardTitle>Communication Center</CardTitle></CardHeader>
-    <CardContent><p className="text-muted-foreground">Communication center functionality coming soon.</p></CardContent>
-  </Card>
+  <CommunicationCenterComponent user={user} />
 );
 
 export const SectionRosterManager = ({ user, section }: any) => (
