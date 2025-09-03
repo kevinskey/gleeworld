@@ -12771,6 +12771,45 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_audio_resources: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          duration: number | null
+          file_path: string
+          file_size: number | null
+          id: string
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          file_path: string
+          file_size?: number | null
+          id?: string
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       mus240_enrollments: {
         Row: {
           created_at: string

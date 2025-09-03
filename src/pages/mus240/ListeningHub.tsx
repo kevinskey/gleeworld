@@ -2,16 +2,43 @@ import { Link } from 'react-router-dom';
 import { WEEKS } from '../../data/mus240Weeks';
 import { useState } from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { Search, Play, Calendar, Music, ArrowLeft } from 'lucide-react';
+import { Search, Play, Calendar, Music, ArrowLeft, Upload, Brain, Trash2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import backgroundImage from '@/assets/mus240-background.jpg';
+import { AudioBulkUpload } from '@/components/mus240/AudioBulkUpload';
+import { useAudioResources } from '@/hooks/useAudioResources';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ListeningHub() {
   const [q, setQ] = useState('');
+  const [activeTab, setActiveTab] = useState('weekly-listening');
+  const [showUpload, setShowUpload] = useState(false);
+  const { user } = useAuth();
+  
+  const { resources: aiMusicResources, loading: aiMusicLoading, refetch: refetchAiMusic, getFileUrl, deleteResource } = useAudioResources('ai-music');
   
   const items = WEEKS.filter(w =>
     w.title.toLowerCase().includes(q.toLowerCase()) ||
     w.tracks.some(t => t.title.toLowerCase().includes(q.toLowerCase()))
   );
+
+  const formatFileSize = (bytes: number | null): string => {
+    if (!bytes) return 'Unknown size';
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(1)} MB`;
+  };
+
+  const formatDuration = (seconds: number | null): string => {
+    if (!seconds) return 'Unknown duration';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const isAdmin = user && ['admin', 'super-admin'].includes(user.user_metadata?.role);
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
@@ -51,18 +78,6 @@ export default function ListeningHub() {
               Explore the rich tapestry of African American music through curated listening experiences, 
               from West African foundations to contemporary innovations.
             </p>
-            
-            <div className="flex items-center justify-center gap-8 text-white/80">
-              <div className="flex items-center gap-2">
-                <Music className="h-5 w-5" />
-                <span>{WEEKS.length} Weeks</span>
-              </div>
-              <div className="hidden sm:block w-1 h-1 bg-white/60 rounded-full"></div>
-              <div className="flex items-center gap-2">
-                <Play className="h-5 w-5" />
-                <span>{WEEKS.reduce((total, week) => total + week.tracks.length, 0)} Tracks</span>
-              </div>
-            </div>
           </div>
 
           {/* Search Section */}
@@ -78,74 +93,207 @@ export default function ListeningHub() {
             </div>
           </div>
 
-          {/* Results Counter */}
-          {q && (
-            <div className="mb-6 text-center text-white/70">
-              Found {items.length} result{items.length !== 1 ? 's' : ''} for "{q}"
-            </div>
-          )}
+          {/* Tabbed Content */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/30">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsTrigger value="weekly-listening" className="flex items-center gap-2">
+                  <Music className="h-4 w-4" />
+                  Weekly Listening
+                </TabsTrigger>
+                <TabsTrigger value="ai-music" className="flex items-center gap-2">
+                  <Brain className="h-4 w-4" />
+                  AI Music
+                </TabsTrigger>
+                <TabsTrigger value="supplementary" className="flex items-center gap-2">
+                  <Play className="h-4 w-4" />
+                  Supplementary
+                </TabsTrigger>
+              </TabsList>
 
-          {/* Week Cards Grid */}
-          <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {items.map((week) => (
-              <Link 
-                key={week.number} 
-                to={`/classes/mus240/listening/${week.number}`}
-                className="group block"
-              >
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6 shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 relative">
-                  {/* Week Number Badge */}
-                  <div className="absolute -top-3 -right-3 bg-gradient-to-br from-amber-500 to-orange-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
-                    {week.number}
+              {/* Weekly Listening Tab */}
+              <TabsContent value="weekly-listening">
+                {/* Results Counter */}
+                {q && (
+                  <div className="mb-6 text-center text-gray-700">
+                    Found {items.length} result{items.length !== 1 ? 's' : ''} for "{q}"
                   </div>
+                )}
 
-                  {/* Date */}
-                  <div className="flex items-center gap-2 text-gray-500 mb-3">
-                    <Calendar className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6" />
-                    <time className="text-sm font-medium">
-                      {new Date(week.date).toLocaleDateString('en-US', { 
-                        month: 'long', 
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </time>
-                  </div>
+                {/* Week Cards Grid */}
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {items.map((week) => (
+                    <Link 
+                      key={week.number} 
+                      to={`/classes/mus240/listening/${week.number}`}
+                      className="group block"
+                    >
+                      <Card className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 relative">
+                        {/* Week Number Badge */}
+                        <div className="absolute -top-3 -right-3 bg-gradient-to-br from-amber-500 to-orange-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
+                          {week.number}
+                        </div>
 
-                  {/* Title */}
-                  <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-2xl xl:text-3xl font-semibold text-gray-900 mb-4 leading-tight group-hover:text-amber-600 transition-colors">
-                    {week.title}
-                  </h3>
+                        <CardContent className="p-6">
+                          {/* Date */}
+                          <div className="flex items-center gap-2 text-gray-500 mb-3">
+                            <Calendar className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6" />
+                            <time className="text-sm font-medium">
+                              {new Date(week.date).toLocaleDateString('en-US', { 
+                                month: 'long', 
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </time>
+                          </div>
 
-                  {/* Track Count */}
-                  <div className="flex items-center gap-2 text-gray-500 mb-4">
-                    <Play className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6" />
-                    <span className="text-sm">
-                      {week.tracks.length} track{week.tracks.length !== 1 ? 's' : ''}
-                    </span>
-                  </div>
+                          {/* Title */}
+                          <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-2xl xl:text-3xl font-semibold text-gray-900 mb-4 leading-tight group-hover:text-amber-600 transition-colors">
+                            {week.title}
+                          </h3>
 
-                  {/* Visual indicator */}
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
-                      <Play className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 text-white" />
+                          {/* Track Count */}
+                          <div className="flex items-center gap-2 text-gray-500 mb-4">
+                            <Play className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6" />
+                            <span className="text-sm">
+                              {week.tracks.length} track{week.tracks.length !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+
+                          {/* Visual indicator */}
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
+                              <Play className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 text-white" />
+                            </div>
+                            <span className="font-medium">Start Listening</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Empty State */}
+                {items.length === 0 && q && (
+                  <div className="text-center py-16">
+                    <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200 max-w-md mx-auto">
+                      <Music className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">No matches found</h3>
+                      <p className="text-gray-600">Try searching for different keywords or browse all weeks above.</p>
                     </div>
-                    <span className="font-medium">Start Listening</span>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* AI Music Tab */}
+              <TabsContent value="ai-music">
+                <div className="space-y-6">
+                  {/* Upload Section */}
+                  {isAdmin && (
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="flex items-center gap-2">
+                            <Upload className="h-5 w-5" />
+                            Upload AI Music Files
+                          </CardTitle>
+                          <Button
+                            onClick={() => setShowUpload(!showUpload)}
+                            variant={showUpload ? "outline" : "default"}
+                          >
+                            {showUpload ? 'Hide Upload' : 'Show Upload'}
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      {showUpload && (
+                        <CardContent>
+                          <AudioBulkUpload
+                            category="ai-music"
+                            onUploadComplete={() => {
+                              refetchAiMusic();
+                              setShowUpload(false);
+                            }}
+                          />
+                        </CardContent>
+                      )}
+                    </Card>
+                  )}
+
+                  {/* Resources Grid */}
+                  <div className="grid gap-4">
+                    {aiMusicLoading ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                        <p className="text-gray-600 mt-2">Loading AI music resources...</p>
+                      </div>
+                    ) : aiMusicResources.length === 0 ? (
+                      <div className="text-center py-16">
+                        <Brain className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No AI Music Resources</h3>
+                        <p className="text-gray-600">
+                          {isAdmin ? 'Upload some AI music files to get started.' : 'No AI music resources have been uploaded yet.'}
+                        </p>
+                      </div>
+                    ) : (
+                      aiMusicResources.map((resource) => (
+                        <Card key={resource.id}>
+                          <CardContent className="p-6">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                  {resource.title}
+                                </h3>
+                                {resource.description && (
+                                  <p className="text-gray-600 mb-4">{resource.description}</p>
+                                )}
+                                
+                                <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                                  <Badge variant="secondary">{resource.category}</Badge>
+                                  <span>{formatFileSize(resource.file_size)}</span>
+                                  {resource.duration && (
+                                    <span>{formatDuration(resource.duration)}</span>
+                                  )}
+                                  <span>{new Date(resource.created_at).toLocaleDateString()}</span>
+                                </div>
+
+                                <audio 
+                                  controls 
+                                  className="w-full"
+                                  src={getFileUrl(resource.file_path)}
+                                >
+                                  Your browser does not support the audio element.
+                                </audio>
+                              </div>
+
+                              {isAdmin && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteResource(resource.id, resource.file_path)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
                   </div>
                 </div>
-              </Link>
-            ))}
-          </section>
+              </TabsContent>
 
-          {/* Empty State */}
-          {items.length === 0 && q && (
-            <div className="text-center py-16">
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 max-w-md mx-auto">
-                <Music className="h-16 w-16 text-white/50 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">No matches found</h3>
-                <p className="text-white/70">Try searching for different keywords or browse all weeks above.</p>
-              </div>
-            </div>
-          )}
+              {/* Supplementary Tab */}
+              <TabsContent value="supplementary">
+                <div className="text-center py-16">
+                  <Play className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Supplementary Materials</h3>
+                  <p className="text-gray-600">Additional listening materials and resources will be added here.</p>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
         </main>
       </div>
     </UniversalLayout>
