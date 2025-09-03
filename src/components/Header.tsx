@@ -25,6 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
+import { HeaderRadioControls } from "@/components/radio/HeaderRadioControls";
 import { 
   Home, 
   Library, 
@@ -357,6 +358,9 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
                 )}
               </Button>
             )}
+
+            {/* Radio Controls */}
+            <HeaderRadioControls />
 
             {/* Dashboard Views Dropdown - Only for admins */}
             {isAdmin && (
