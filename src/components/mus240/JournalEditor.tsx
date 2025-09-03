@@ -251,7 +251,14 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
               </div>
             </div>
             
-            <p className="mt-3"><strong>Due:</strong> {new Date(assignment.dueDate + 'T12:00:00').toLocaleDateString()}</p>
+            <div className="flex items-center justify-between">
+              <p><strong>Due:</strong> {new Date(assignment.dueDate + 'T12:00:00').toLocaleDateString()}</p>
+              {new Date() > new Date(assignment.dueDate + 'T12:00:00') && (
+                <p className="text-amber-600 font-medium text-sm">
+                  ⚠️ Assignment past due - Late work policy applies (5% per day)
+                </p>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
