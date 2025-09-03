@@ -160,54 +160,64 @@ export const ExecBoardModulePanel = () => {
       <div className="w-full section-spacing">
         {/* Hero Section for Standard Member Modules */}
         <section aria-label="Member modules" className="animate-fade-in w-full overflow-hidden">
-          <Card className="relative overflow-hidden border bg-background/40 w-full">
-            {/* Day/Night Toggle */}
-            <Button variant="outline" size="sm" className="absolute top-4 right-4 z-20 bg-background/80 backdrop-blur-sm" onClick={() => setIsDayMode(!isDayMode)}>
-              {isDayMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-            </Button>
-            
-            <div className="absolute inset-0">
-              <img src="/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png" alt="Historic Spelman campus background" className={`w-full h-full object-cover transition-all duration-700 ${isDayMode ? 'brightness-125 contrast-110 saturate-110' : 'brightness-50 contrast-125 saturate-75 hue-rotate-180 sepia-[0.3]'}`} />
-              <div className={`absolute inset-0 transition-all duration-700 ${isDayMode ? 'bg-gradient-to-b from-background/10 via-background/15 to-background/30' : 'bg-gradient-to-b from-blue-950/40 via-blue-900/50 to-blue-950/70'}`} />
+          <div className="relative">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-muted/20">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,hsl(var(--primary)/0.1),transparent)]"></div>
             </div>
-            <CardContent className="card-compact relative z-10 h-[320px] sm:h-[360px] md:h-[400px] flex flex-col justify-between pt-8">
-              <div className="flex items-center gap-2 md:gap-4 pt-5">
-                <div className="bg-blue-900/90 rounded-lg p-4 flex items-center gap-2 md:gap-4">
-                  <Sparkles className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 text-white drop-shadow-lg" />
-                  <div>
-                    <h1 className="mobile-text-2xl font-bold tracking-tight text-white drop-shadow-lg">EXEC BOARD DASHBOARD</h1>
-                    <p className="mobile-text-lg text-white/80 drop-shadow-md">Your core Glee Club modules</p>
+            
+            <Card className="relative border-0 bg-transparent shadow-none">
+              <CardContent className="px-6 py-8 md:py-12">
+                {/* Header */}
+                <div className="text-center mb-8 md:mb-12">
+                  <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-primary/10 border border-primary/20 mb-4">
+                    <Crown className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-medium text-primary">Executive Board Dashboard</span>
                   </div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+                    Welcome to GleeWorld
+                  </h1>
+                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Access your essential Glee Club tools and executive functions
+                  </p>
                 </div>
-              </div>
 
-              <div className="w-full responsive-grid-4 gap-2 md:gap-3">
-                {standardModules.map(module => {
-                  const IconComponent = getModuleIcon(module.id);
-                  return (
-                    <Card key={module.id} className="cursor-pointer hover:bg-muted/50 transition-colors bg-background/60 backdrop-blur-sm" onClick={() => handleModuleClick(module.id)}>
-                      <CardContent className="p-2 md:p-3">
-                        <div className="text-center">
-                          <IconComponent className="h-6 w-6 text-primary mx-auto mb-1" />
-                          <h3 className="font-medium text-xs mb-1">{module.title}</h3>
-                          <p className="text-xs text-muted-foreground line-clamp-1">{module.description}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-                <Card className="cursor-pointer hover:bg-muted/50 transition-colors bg-background/60 backdrop-blur-sm border-primary/50" onClick={() => handleModuleClick('check-in-check-out')}>
-                  <CardContent className="p-2 md:p-3">
-                    <div className="text-center">
-                      <CheckSquare className="h-6 w-6 text-primary mx-auto mb-1" />
-                      <h3 className="font-medium text-xs mb-1">Check In/Check Out</h3>
-                      <p className="text-xs text-muted-foreground line-clamp-1">Track attendance</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
+                {/* Module Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
+                  {standardModules.map(module => {
+                    const IconComponent = getModuleIcon(module.id);
+                    return (
+                      <Card 
+                        key={module.id} 
+                        className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm border-border/50" 
+                        onClick={() => handleModuleClick(module.id)}
+                      >
+                        <CardContent className="p-4 text-center">
+                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/20 transition-colors">
+                            <IconComponent className="h-6 w-6 text-primary" />
+                          </div>
+                          <h3 className="font-semibold text-sm mb-1 text-foreground">{module.title}</h3>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{module.description}</p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                  <Card 
+                    className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm border-primary/30 ring-1 ring-primary/20" 
+                    onClick={() => handleModuleClick('check-in-check-out')}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <div className="w-12 h-12 rounded-lg bg-primary/15 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/25 transition-colors">
+                        <CheckSquare className="h-6 w-6 text-primary" />
+                      </div>
+                      <h3 className="font-semibold text-sm mb-1 text-foreground">Check In/Out</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2">Track attendance</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </section>
 
         {/* Executive Functions Section - Accordion Style */}
