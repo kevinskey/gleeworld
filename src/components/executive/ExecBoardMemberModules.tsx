@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Crown, Settings, Users, Calendar, MessageSquare, Music, Home, CheckSquare } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Crown, Settings, Users, Calendar, MessageSquare, Music, Home, CheckSquare, Sparkles } from 'lucide-react';
 import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
 import { STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
@@ -126,136 +127,184 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
   const standardModules = getStandardMemberModules();
 
   return (
-    <div className="space-y-6">
-      {/* Standard Member Modules */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Home className="h-5 w-5 text-primary" />
-            <CardTitle>Member Dashboard</CardTitle>
-            <CardDescription>
-              Core Glee Club modules for all members
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {standardModules.map((module) => {
-              const IconComponent = getModuleIcon(module.id);
-              return (
-                <Card 
-                  key={module.id} 
-                  className="cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => handleModuleClick(module.id)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <IconComponent className="h-8 w-8 text-primary" />
-                      <div className="flex-1">
-                        <h5 className="font-medium text-sm">{module.title}</h5>
-                        <p className="text-xs text-muted-foreground line-clamp-1">
-                          {module.description}
+    <div className="w-full overflow-x-hidden page-container">
+      <div className="w-full section-spacing">
+        {/* Hero Section for Standard Member Modules */}
+        <section aria-label="Member modules" className="animate-fade-in w-full overflow-hidden">
+          <Card className="relative overflow-hidden border bg-background/40 w-full">
+            <div className="absolute inset-0">
+              <img
+                src="/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png"
+                alt="Historic Spelman campus background"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background/70" />
+            </div>
+            <CardContent className="card-compact relative z-10 h-[320px] sm:h-[360px] md:h-[400px] flex flex-col justify-between">
+              <div className="flex items-center gap-2 md:gap-4">
+                <Sparkles className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 text-primary" />
+                <div>
+                  <h1 className="mobile-text-2xl font-bold tracking-tight">Member Dashboard</h1>
+                  <p className="mobile-text-lg text-muted-foreground">Your core Glee Club modules</p>
+                </div>
+              </div>
+
+              <div className="w-full responsive-grid-2 gap-2 md:gap-4">
+                <div className="grid grid-cols-2 gap-2">
+                  {standardModules.slice(0, 4).map((module) => {
+                    const IconComponent = getModuleIcon(module.id);
+                    return (
+                      <Card 
+                        key={module.id} 
+                        className="cursor-pointer hover:bg-muted/50 transition-colors bg-background/60 backdrop-blur-sm"
+                        onClick={() => handleModuleClick(module.id)}
+                      >
+                        <CardContent className="p-3">
+                          <div className="flex flex-col items-center text-center gap-2">
+                            <IconComponent className="h-6 w-6 text-primary" />
+                            <span className="text-xs font-medium">{module.title}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+                
+                {standardModules.length > 4 && (
+                  <Card className="bg-background/60 backdrop-blur-sm">
+                    <CardContent className="p-4">
+                      <div className="text-center">
+                        <Music className="h-8 w-8 text-primary mx-auto mb-2" />
+                        <h3 className="font-medium text-sm mb-1">Additional Modules</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {standardModules.length - 4} more modules available
                         </p>
                       </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Executive Functions Section - Accordion Style */}
+        {assignedModules.length > 0 && (
+          <section className="mb-6">
+            <Accordion type="multiple" className="w-full">
+              <AccordionItem value="executive-functions">
+                <AccordionTrigger className="text-base">
+                  <div className="flex items-center gap-2">
+                    <Crown className="h-4 w-4 text-primary" /> 
+                    Executive Functions
+                    <Badge variant="secondary" className="ml-2">
+                      {user.exec_board_role}
+                    </Badge>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <Card>
+                    <CardContent className="pt-6 space-y-4">
+                      {Object.entries(execModulesByCategory).map(([category, modules]) => {
+                        const IconComponent = getCategoryIcon(category);
+                        
+                        return (
+                          <div key={category} className="space-y-3">
+                            <div className="flex items-center gap-2 mb-3">
+                              {IconComponent && <IconComponent className="h-4 w-4" />}
+                              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                                {category}
+                              </h4>
+                              <div className="flex-1 h-px bg-border" />
+                            </div>
+                            
+                            <div className="responsive-grid-2 gap-2">
+                              {modules.map((module) => (
+                                <Card 
+                                  key={module.id} 
+                                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                  onClick={() => handleModuleClick(module.id)}
+                                >
+                                  <CardContent className="p-3">
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <h5 className="font-medium text-sm">{module.title}</h5>
+                                          <Badge variant="outline" className="text-xs px-1 py-0">
+                                            Executive
+                                          </Badge>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground line-clamp-2">
+                                          {module.description}
+                                        </p>
+                                      </div>
+                                      <Settings className="h-3 w-3 ml-2 opacity-50" />
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </CardContent>
+                  </Card>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </section>
+        )}
+
+        {/* All Modules in Accordion Style */}
+        <section>
+          <Accordion type="multiple" className="w-full">
+            {/* Standard Member Modules */}
+            <AccordionItem value="member-modules">
+              <AccordionTrigger className="text-base">
+                <div className="flex items-center gap-2">
+                  <Home className="h-4 w-4 text-primary" /> 
+                  Member Modules
+                  <Badge variant="outline" className="ml-2">
+                    {standardModules.length} modules
+                  </Badge>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="responsive-grid-3 gap-3">
+                      {standardModules.map((module) => {
+                        const IconComponent = getModuleIcon(module.id);
+                        return (
+                          <Card 
+                            key={module.id} 
+                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => handleModuleClick(module.id)}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-center gap-3">
+                                <IconComponent className="h-8 w-8 text-primary flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <h5 className="font-medium text-sm">{module.title}</h5>
+                                  <p className="text-xs text-muted-foreground line-clamp-2">
+                                    {module.description}
+                                  </p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </section>
 
-      {/* Executive Functions */}
-      {assignedModules.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-primary" />
-                <div>
-                  <CardTitle>Executive Functions</CardTitle>
-                  <CardDescription>
-                    Role: {user.exec_board_role} • {assignedModules.length} executive modules
-                  </CardDescription>
-                </div>
-              </div>
-              <Badge variant="secondary">
-                Executive Access
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {Object.entries(execModulesByCategory).map(([category, modules]) => {
-                const IconComponent = getCategoryIcon(category);
-                
-                return (
-                  <div key={category}>
-                    <div className="flex items-center gap-2 mb-3">
-                      {IconComponent && <IconComponent className="h-4 w-4" />}
-                      <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                        {category}
-                      </h4>
-                      <div className="flex-1 h-px bg-border" />
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      {modules.map((module) => (
-                        <Card 
-                          key={module.id} 
-                          className="cursor-pointer hover:bg-muted/50 transition-colors"
-                          onClick={() => handleModuleClick(module.id)}
-                        >
-                          <CardContent className="p-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h5 className="font-medium text-sm">{module.title}</h5>
-                                  <Badge variant="outline" className="text-xs px-1 py-0">
-                                    Executive
-                                  </Badge>
-                                </div>
-                                <p className="text-xs text-muted-foreground line-clamp-2">
-                                  {module.description}
-                                </p>
-                              </div>
-                              <Settings className="h-3 w-3 ml-2 opacity-50" />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* No executive modules assigned state */}
-      {assignedModules.length === 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Crown className="h-5 w-5 text-primary" />
-              <CardTitle>Executive Functions</CardTitle>
-            </div>
-            <CardDescription>
-              No executive modules have been assigned to this user yet.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center text-muted-foreground py-8">
-              <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p className="text-sm">Contact an administrator to request executive module access.</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {renderModuleComponent()}
+        {renderModuleComponent()}
+      </div>
     </div>
   );
 };
