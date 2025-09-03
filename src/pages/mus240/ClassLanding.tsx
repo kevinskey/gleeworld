@@ -75,7 +75,7 @@ export default function ClassLanding() {
               <div className="hidden sm:block w-1 h-1 bg-white/60 rounded-full"></div>
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 xl:h-8 xl:w-8" />
-                <span>Dr. Kevin Johnson</span>
+                <span className="text-xl md:text-3xl lg:text-2xl xl:text-4xl font-medium">Dr. Kevin Johnson</span>
               </div>
             </div>
           </div>
