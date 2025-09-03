@@ -34,6 +34,7 @@ import {
   Upload,
   AlertTriangle
 } from "lucide-react";
+import { WardrobeCSVImportDialog } from "./WardrobeCSVImportDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -63,6 +64,7 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const categories = [
@@ -305,7 +307,11 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 w-full sm:w-auto">
-            <Button variant="outline" className="shadow-sm text-sm lg:text-base">
+            <Button 
+              variant="outline" 
+              className="shadow-sm text-sm lg:text-base"
+              onClick={() => setIsImportDialogOpen(true)}
+            >
               <Upload className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Import CSV</span>
               <span className="sm:hidden">Import</span>
@@ -536,6 +542,16 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
           )}
         </CardContent>
       </Card>
+
+      {/* CSV Import Dialog */}
+      <WardrobeCSVImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        onSuccess={() => {
+          fetchInventory();
+          setIsImportDialogOpen(false);
+        }}
+      />
     </div>
   );
 };
