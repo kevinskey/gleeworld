@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { AudioBulkUpload } from '@/components/mus240/AudioBulkUpload';
 import { useAudioResources } from '@/hooks/useAudioResources';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function ListeningHub() {
@@ -17,6 +18,7 @@ export default function ListeningHub() {
   const [activeTab, setActiveTab] = useState('weekly-listening');
   const [showUpload, setShowUpload] = useState(false);
   const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
   
   const { resources: aiMusicResources, loading: aiMusicLoading, refetch: refetchAiMusic, getFileUrl, deleteResource } = useAudioResources('ai-music');
   
@@ -38,12 +40,8 @@ export default function ListeningHub() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const isAdmin = user && (
-    ['admin', 'super-admin'].includes(user.user_metadata?.role) || 
-    ['admin', 'super-admin'].includes(user.user_metadata?.user_role) ||
-    user.user_metadata?.is_admin === true ||
-    user.user_metadata?.is_super_admin === true
-  );
+  const isAdmin = userProfile?.is_admin || userProfile?.is_super_admin || 
+                  userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
