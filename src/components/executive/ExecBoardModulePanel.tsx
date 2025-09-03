@@ -181,7 +181,21 @@ export const ExecBoardModulePanel = () => {
                 </div>
               </div>
 
-              <div className="w-full responsive-grid-1 gap-2 md:gap-4">
+              <div className="w-full responsive-grid-3 gap-2 md:gap-4">
+                {standardModules.map(module => {
+                  const IconComponent = getModuleIcon(module.id);
+                  return (
+                    <Card key={module.id} className="cursor-pointer hover:bg-muted/50 transition-colors bg-background/60 backdrop-blur-sm" onClick={() => handleModuleClick(module.id)}>
+                      <CardContent className="p-4">
+                        <div className="text-center">
+                          <IconComponent className="h-8 w-8 text-primary mx-auto mb-2" />
+                          <h3 className="font-medium text-sm mb-1">{module.title}</h3>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{module.description}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
                 <Card className="cursor-pointer hover:bg-muted/50 transition-colors bg-background/60 backdrop-blur-sm" onClick={() => handleModuleClick('check-in-check-out')}>
                   <CardContent className="p-4">
                     <div className="text-center">
@@ -252,47 +266,6 @@ export const ExecBoardModulePanel = () => {
             </Accordion>
           </section>}
 
-        {/* All Modules in Accordion Style */}
-        <section>
-          <Accordion type="multiple" className="w-full">
-            {/* Standard Member Modules */}
-            <AccordionItem value="member-modules">
-              <AccordionTrigger className="text-base">
-                <div className="flex items-center gap-2">
-                  <Home className="h-4 w-4 text-primary" /> 
-                  Member Modules
-                  <Badge variant="outline" className="ml-2">
-                    {standardModules.length} modules
-                  </Badge>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="responsive-grid-3 gap-3">
-                      {standardModules.map(module => {
-                      const IconComponent = getModuleIcon(module.id);
-                      return <Card key={module.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleModuleClick(module.id)}>
-                            <CardContent className="p-4">
-                              <div className="flex items-center gap-3">
-                                <IconComponent className="h-8 w-8 text-primary flex-shrink-0" />
-                                <div className="min-w-0 flex-1">
-                                  <h5 className="font-medium text-sm">{module.title}</h5>
-                                  <p className="text-xs text-muted-foreground line-clamp-2">
-                                    {module.description}
-                                  </p>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>;
-                    })}
-                    </div>
-                  </CardContent>
-                </Card>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </section>
 
         {renderModuleComponent()}
 
