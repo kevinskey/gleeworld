@@ -59,7 +59,7 @@ export default function ClassLanding() {
               <span className="text-white/90 font-medium text-lg lg:text-xl xl:text-2xl">Spelman College</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl lg:text-9xl xl:text-[12rem] font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+            <h1 className="text-6xl md:text-8xl lg:text-9xl xl:text-[12rem] font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
               MUS 240
             </h1>
             
