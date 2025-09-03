@@ -334,7 +334,7 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
 
       {/* Inventory Table */}
       <Card className="shadow-sm border-0 bg-background">
-        <CardHeader className="pb-2 lg:pb-4 px-4 lg:px-6">
+        <CardHeader className="pb-4 lg:pb-6 px-6 lg:px-8">
           <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2 lg:gap-3 text-lg lg:text-xl">
             <div className="flex items-center gap-2 lg:gap-3">
               <Package className="h-5 w-5 lg:h-6 lg:w-6 text-primary" />
