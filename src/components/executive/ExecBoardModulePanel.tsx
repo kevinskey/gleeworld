@@ -177,7 +177,7 @@ export const ExecBoardModulePanel = () => {
                 alt="Historic Spelman campus background"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background/70" />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/15 to-background/30" />
             </div>
             <CardContent className="card-compact relative z-10 h-[320px] sm:h-[360px] md:h-[400px] flex flex-col justify-between pt-8">
               <div className="flex items-center gap-2 md:gap-4 pt-5">
