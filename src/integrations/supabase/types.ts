@@ -12954,6 +12954,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "mus240_group_applications_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mus240_group_applications_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "mus240_group_applications_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
@@ -12991,6 +13005,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "mus240_project_groups"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mus240_group_memberships_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mus240_group_memberships_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -13278,7 +13306,22 @@ export type Database = {
           semester?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "mus240_project_groups_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mus240_project_groups_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       mus240_reading_requirements: {
         Row: {
