@@ -3,28 +3,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Crown, Settings, Users, Calendar, MessageSquare, Music, Home, CheckSquare, Sparkles, DollarSign, Heart, Sun, Moon } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Crown, Settings, Users, Calendar, MessageSquare, Music, Home, CheckSquare, Sparkles, DollarSign, Heart, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
 import { STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
+
 export const ExecBoardModulePanel = () => {
-  const {
-    user
-  } = useAuth();
-  const {
-    profile
-  } = useUserRole();
-  const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { profile } = useUserRole();
+  const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [userModules, setUserModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDayMode, setIsDayMode] = useState(true);
+  
   const {
     getAccessibleModules,
     loading: accessLoading,
     hasAccess
   } = useSimplifiedModuleAccess(user?.id);
+
   useEffect(() => {
     console.log('🔍 ExecBoardModulePanel: useEffect triggered');
     console.log('🔍 User:', user?.email);
@@ -42,33 +41,23 @@ export const ExecBoardModulePanel = () => {
     setUserModules(moduleIds);
     setLoading(false);
   }, [user?.id, accessLoading]);
-  const handleModuleClick = (moduleId: string) => {
-    if (hasAccess(moduleId)) {
-      setSelectedModule(moduleId);
-    }
+
+  const toggleModule = (moduleId: string) => {
+    setExpandedModule(expandedModule === moduleId ? null : moduleId);
   };
-  const renderModuleComponent = () => {
-    if (!selectedModule) return null;
-    const module = UNIFIED_MODULES.find(m => m.id === selectedModule);
-    if (!module) return null;
-    return <div className="mt-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">{module.title}</h3>
-          <Button variant="outline" size="sm" onClick={() => setSelectedModule(null)}>
-            Close
-          </Button>
+
+  const renderModuleContent = (moduleId: string) => {
+    const moduleConfig = UNIFIED_MODULES.find(m => m.id === moduleId);
+    if (!moduleConfig?.component) {
+      return (
+        <div className="p-6 text-center text-muted-foreground">
+          <p>Module content coming soon!</p>
         </div>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center text-muted-foreground">
-              {React.createElement(module.icon, { className: "w-16 h-16 mx-auto mb-4" })}
-              <h3 className="text-lg font-medium mb-2">{module.title}</h3>
-              <p>{module.description}</p>
-              <p className="text-sm mt-2">Module functionality coming soon...</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>;
+      );
+    }
+    
+    const ModuleComponent = moduleConfig.component;
+    return <ModuleComponent user={user} isFullPage={true} />;
   };
 
   // Get standard member modules
@@ -111,12 +100,18 @@ export const ExecBoardModulePanel = () => {
     else if (['ai-tools', 'hero-manager', 'press-kits', 'first-year-console', 'settings'].includes(module.id)) {
       execCategory = 'Tools & Administration';
     }
+    // Entertainment & Media
+    else if (['karaoke', 'media-library'].includes(module.id)) {
+      execCategory = 'Entertainment & Media';
+    }
+
     if (!acc[execCategory]) {
       acc[execCategory] = [];
     }
     acc[execCategory].push(module);
     return acc;
   }, {} as Record<string, typeof assignedModules>);
+
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'Executive Leadership':
@@ -131,10 +126,13 @@ export const ExecBoardModulePanel = () => {
         return Heart;
       case 'Tools & Administration':
         return Settings;
+      case 'Entertainment & Media':
+        return Sparkles;
       default:
         return Settings;
     }
   };
+
   const getModuleIcon = (moduleId: string) => {
     const icons = {
       'community-hub': Home,
@@ -145,18 +143,24 @@ export const ExecBoardModulePanel = () => {
     };
     return icons[moduleId as keyof typeof icons] || Home;
   };
+
   if (loading || accessLoading) {
-    return <Card>
+    return (
+      <Card>
         <CardContent className="py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading modules...</p>
           </div>
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
+
   const standardModules = getStandardMemberModules();
-  return <div className="w-full overflow-x-hidden page-container">
+
+  return (
+    <div className="w-full overflow-x-hidden page-container">
       <div className="w-full section-spacing">
         {/* Hero Section for Standard Member Modules */}
         <section aria-label="Member modules" className="animate-fade-in w-full overflow-hidden">
@@ -182,46 +186,89 @@ export const ExecBoardModulePanel = () => {
                   </p>
                 </div>
 
-                {/* Module Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
-                  {standardModules.map(module => {
-                    const IconComponent = getModuleIcon(module.id);
-                    return (
-                      <Card 
-                        key={module.id} 
-                        className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm border-border/50" 
-                        onClick={() => handleModuleClick(module.id)}
+                {/* Standard Module Grid with Collapsible Content */}
+                <div className="space-y-4 max-w-5xl mx-auto">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    {standardModules.map(module => {
+                      const IconComponent = getModuleIcon(module.id);
+                      const isExpanded = expandedModule === module.id;
+                      
+                      return (
+                        <div key={module.id} className="space-y-2">
+                          <Collapsible 
+                            open={isExpanded} 
+                            onOpenChange={() => toggleModule(module.id)}
+                          >
+                            <CollapsibleTrigger asChild>
+                              <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm border-border/50">
+                                <CardContent className="p-4 text-center">
+                                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/20 transition-colors">
+                                    <IconComponent className="h-6 w-6 text-primary" />
+                                  </div>
+                                  <h3 className="font-semibold text-sm mb-1 text-foreground">{module.title}</h3>
+                                  <p className="text-xs text-muted-foreground line-clamp-2">{module.description}</p>
+                                  <div className="mt-2">
+                                    {isExpanded ? (
+                                      <ChevronUp className="h-4 w-4 mx-auto text-muted-foreground" />
+                                    ) : (
+                                      <ChevronDown className="h-4 w-4 mx-auto text-muted-foreground" />
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </CollapsibleTrigger>
+                          </Collapsible>
+                        </div>
+                      );
+                    })}
+                    
+                    {/* Check In/Out Module */}
+                    <div className="space-y-2">
+                      <Collapsible 
+                        open={expandedModule === 'check-in-check-out'} 
+                        onOpenChange={() => toggleModule('check-in-check-out')}
                       >
-                        <CardContent className="p-4 text-center">
-                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/20 transition-colors">
-                            <IconComponent className="h-6 w-6 text-primary" />
-                          </div>
-                          <h3 className="font-semibold text-sm mb-1 text-foreground">{module.title}</h3>
-                          <p className="text-xs text-muted-foreground line-clamp-2">{module.description}</p>
+                        <CollapsibleTrigger asChild>
+                          <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm border-primary/30 ring-1 ring-primary/20">
+                            <CardContent className="p-4 text-center">
+                              <div className="w-12 h-12 rounded-lg bg-primary/15 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/25 transition-colors">
+                                <CheckSquare className="h-6 w-6 text-primary" />
+                              </div>
+                              <h3 className="font-semibold text-sm mb-1 text-foreground">Check In/Out</h3>
+                              <p className="text-xs text-muted-foreground line-clamp-2">Track attendance</p>
+                              <div className="mt-2">
+                                {expandedModule === 'check-in-check-out' ? (
+                                  <ChevronUp className="h-4 w-4 mx-auto text-muted-foreground" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4 mx-auto text-muted-foreground" />
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </CollapsibleTrigger>
+                      </Collapsible>
+                    </div>
+                  </div>
+
+                  {/* Expanded Module Content */}
+                  {expandedModule && (
+                    <div className="mt-6">
+                      <Card className="shadow-lg border-primary/20">
+                        <CardContent className="p-0">
+                          {renderModuleContent(expandedModule)}
                         </CardContent>
                       </Card>
-                    );
-                  })}
-                  <Card 
-                    className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm border-primary/30 ring-1 ring-primary/20" 
-                    onClick={() => handleModuleClick('check-in-check-out')}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className="w-12 h-12 rounded-lg bg-primary/15 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/25 transition-colors">
-                        <CheckSquare className="h-6 w-6 text-primary" />
-                      </div>
-                      <h3 className="font-semibold text-sm mb-1 text-foreground">Check In/Out</h3>
-                      <p className="text-xs text-muted-foreground line-clamp-2">Track attendance</p>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
         </section>
 
-        {/* Executive Functions Section - Accordion Style */}
-        {assignedModules.length > 0 && <section className="mb-6">
+        {/* Executive Functions Section - Accordion Style with Collapsible Modules */}
+        {assignedModules.length > 0 && (
+          <section className="mb-6">
             <Accordion type="multiple" className="w-full">
               <AccordionItem value="executive-functions">
                 <AccordionTrigger className="text-base">
@@ -237,50 +284,80 @@ export const ExecBoardModulePanel = () => {
                   <Card>
                     <CardContent className="pt-6 space-y-4">
                       {Object.entries(execModulesByCategory).map(([category, modules]) => {
-                    const IconComponent = getCategoryIcon(category);
-                    return <div key={category} className="space-y-3">
-                        <div className="flex items-center gap-2 mb-3">
-                          <IconComponent className="h-4 w-4 text-primary" />
-                          <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                        const IconComponent = getCategoryIcon(category);
+                        return (
+                          <div key={category} className="space-y-3">
+                            <div className="flex items-center gap-2 mb-3">
+                              <IconComponent className="h-4 w-4 text-primary" />
+                              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                                 {category}
                               </h4>
                               <div className="flex-1 h-px bg-border" />
                             </div>
                             
-                            <div className="responsive-grid-2 gap-2">
-                              {modules.map(module => <Card key={module.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleModuleClick(module.id)}>
-                                  <CardContent className="p-3">
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <h5 className="font-medium text-sm">{module.title}</h5>
-                                          <Badge variant="outline" className="text-xs px-1 py-0">
-                                            Executive
-                                          </Badge>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground line-clamp-2">
-                                          {module.description}
-                                        </p>
-                                      </div>
-                                      <Settings className="h-3 w-3 ml-2 opacity-50" />
-                                    </div>
-                                  </CardContent>
-                                </Card>)}
+                            <div className="space-y-2">
+                              {modules.map(module => {
+                                const isExpanded = expandedModule === module.id;
+                                
+                                return (
+                                  <div key={module.id} className="space-y-2">
+                                    <Collapsible 
+                                      open={isExpanded} 
+                                      onOpenChange={() => toggleModule(module.id)}
+                                    >
+                                      <CollapsibleTrigger asChild>
+                                        <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+                                          <CardContent className="p-3">
+                                            <div className="flex items-start justify-between">
+                                              <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                  <h5 className="font-medium text-sm">{module.title}</h5>
+                                                  <Badge variant="outline" className="text-xs px-1 py-0">
+                                                    Executive
+                                                  </Badge>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                                  {module.description}
+                                                </p>
+                                              </div>
+                                              <div className="ml-2">
+                                                {isExpanded ? (
+                                                  <ChevronUp className="h-3 w-3 opacity-50" />
+                                                ) : (
+                                                  <ChevronDown className="h-3 w-3 opacity-50" />
+                                                )}
+                                              </div>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+                                      </CollapsibleTrigger>
+                                      
+                                      <CollapsibleContent className="space-y-2">
+                                        <Card className="border-t-0 rounded-t-none shadow-lg">
+                                          <CardContent className="p-0">
+                                            {renderModuleContent(module.id)}
+                                          </CardContent>
+                                        </Card>
+                                      </CollapsibleContent>
+                                    </Collapsible>
+                                  </div>
+                                );
+                              })}
                             </div>
-                          </div>;
-                  })}
+                          </div>
+                        );
+                      })}
                     </CardContent>
                   </Card>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-          </section>}
-
-
-        {renderModuleComponent()}
+          </section>
+        )}
 
         {/* No executive modules assigned state */}
-        {!loading && assignedModules.length === 0 && <Card className="border-muted">
+        {!loading && assignedModules.length === 0 && (
+          <Card className="border-muted">
             <CardContent className="text-center py-12">
               <Crown className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No Executive Functions Assigned</h3>
@@ -291,7 +368,9 @@ export const ExecBoardModulePanel = () => {
                 Contact an administrator to request executive module access.
               </p>
             </CardContent>
-          </Card>}
+          </Card>
+        )}
       </div>
-    </div>;
+    </div>
+  );
 };
