@@ -360,7 +360,9 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
             )}
 
             {/* Radio Controls */}
-            <HeaderRadioControls />
+            <div className="flex items-center">
+              <HeaderRadioControls />
+            </div>
 
             {/* Dashboard Views Dropdown - Only for admins */}
             {isAdmin && (
