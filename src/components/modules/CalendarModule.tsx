@@ -26,69 +26,14 @@ export const CalendarModule = ({ user, isFullPage = false }: ModuleProps) => {
           <Calendar className="h-6 w-6 text-primary" />
           <div>
             <h2 className="text-xl font-bold">Calendar</h2>
-            <p className="text-sm text-muted-foreground">Upcoming events and rehearsals</p>
           </div>
         </div>
-        <Badge variant="secondary">
-          Today
-        </Badge>
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Next Event Card */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Next Event
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <NextEventCard />
-          </CardContent>
-        </Card>
-        
-        {/* Upcoming Events Summary */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">This Week</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span>Rehearsal - Tuesday</span>
-              </div>
-              <span className="text-muted-foreground">7:00 PM</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Performance - Friday</span>
-              </div>
-              <span className="text-muted-foreground">8:00 PM</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span>Sectional - Sunday</span>
-              </div>
-              <span className="text-muted-foreground">2:00 PM</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Mini Calendar View */}
+      {/* Main Calendar View */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Calendar Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="max-h-80 overflow-hidden">
-            <CalendarViews />
-          </div>
+        <CardContent className="p-0">
+          <CalendarViews />
         </CardContent>
       </Card>
     </div>
