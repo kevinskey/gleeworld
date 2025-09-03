@@ -184,7 +184,7 @@ export const ExecBoardModulePanel = () => {
                 <div className="bg-blue-900/90 rounded-lg p-4 flex items-center gap-2 md:gap-4">
                   <Sparkles className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 text-white drop-shadow-lg" />
                   <div>
-                    <h1 className="mobile-text-2xl font-bold tracking-tight text-white drop-shadow-lg">Member Dashboard</h1>
+                    <h1 className="mobile-text-2xl font-bold tracking-tight text-white drop-shadow-lg">EXEC BOARD DASHBOARD</h1>
                     <p className="mobile-text-lg text-white/80 drop-shadow-md">Your core Glee Club modules</p>
                   </div>
                 </div>
