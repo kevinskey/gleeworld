@@ -222,7 +222,7 @@ export const ExecBoardModulePanel = () => {
                         <CardContent className="p-2 flex-1 flex items-center justify-center h-full">
                           <div className="flex flex-col items-center justify-center gap-1">
                             <IconComponent className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors" />
-                            <span className="text-xs font-medium group-hover:text-primary-foreground transition-colors text-center leading-tight">{module.title}</span>
+                            <span className="text-xs font-medium group-hover:text-primary-foreground transition-colors text-center leading-tight pb-1">{module.title}</span>
                           </div>
                         </CardContent>
                       </Card>
