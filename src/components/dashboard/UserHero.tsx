@@ -74,7 +74,7 @@ export const UserHero = () => {
 
             {/* Name and Description */}
             <div className="flex-grow flex flex-col justify-center space-y-1">
-              <h1 className="text-4xl font-semibold text-foreground normal-case tracking-tight leading-tight">
+              <h1 className="text-4xl font-semibold text-foreground normal-case tracking-tight leading-tight text-left">
                 {getDisplayName()}
               </h1>
               <div className="flex items-center gap-2 text-lg text-muted-foreground">
