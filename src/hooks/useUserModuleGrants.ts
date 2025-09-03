@@ -77,41 +77,16 @@ export function useUserModuleGrants(userId?: string) {
             setGrants([]);
           } else {
             console.log('🔧 useUserModuleGrants: RPC data:', data);
-            // The RPC returns array of tuples, need to parse them
+            // The RPC returns array of objects with module data
             const parsedGrants: ModuleGrant[] = (data || []).map((item: any) => {
-              try {
-                // If it's a string in tuple format, parse it
-                if (typeof item === 'string') {
-                  const match = item.match(/\(([^,]+),([^,]+),([^,]+),([^,]+),([^)]+)\)/);
-                  if (match) {
-                    return {
-                      module_key: match[1],
-                      module_name: match[2],
-                      can_view: match[3] === 't',
-                      can_manage: match[4] === 't',
-                      category: 'general'
-                    };
-                  }
-                }
-                // Otherwise assume it's an object
-                return {
-                  module_key: item.module_key || item.module_name || 'unknown',
-                  module_name: item.module_name || item.module_key || 'unknown',
-                  can_view: item.can_view ?? item.has_access ?? true,
-                  can_manage: item.can_manage ?? false,
-                  category: item.category || 'general'
-                };
-              } catch (err) {
-                console.error('🔧 useUserModuleGrants: Error parsing item:', item, err);
-                return {
-                  module_key: 'error',
-                  module_name: 'error',
-                  can_view: false,
-                  can_manage: false,
-                  category: 'general'
-                };
-              }
-            }).filter(grant => grant.module_key !== 'error' && grant.module_key !== 'unknown');
+              return {
+                module_key: item.module_key || item.module_name || 'unknown',
+                module_name: item.module_name || item.module_key || 'unknown',
+                can_view: item.can_view ?? true,
+                can_manage: item.can_manage ?? item.can_edit ?? false,
+                category: item.category || 'general'
+              };
+            }).filter(grant => grant.module_key !== 'unknown');
             
             console.log('🔧 useUserModuleGrants: Parsed grants:', parsedGrants);
             setGrants(parsedGrants);
