@@ -53,7 +53,7 @@ export default function ClassLanding() {
         
         <main className="relative z-10 w-full px-4 lg:px-8 py-12">
           {/* Hero Section with Redesigned Title */}
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 flex flex-col items-center justify-center">
             <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
               <Music className="h-6 w-6 text-amber-300" />
               <span className="text-white/90 font-medium text-xl lg:text-xl xl:text-2xl">Spelman College</span>
