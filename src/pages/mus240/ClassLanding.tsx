@@ -56,18 +56,18 @@ export default function ClassLanding() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
               <Music className="h-6 w-6 text-amber-300" />
-              <span className="text-white/90 font-medium text-lg lg:text-xl xl:text-2xl">Spelman College</span>
+              <span className="text-white/90 font-medium text-xl lg:text-xl xl:text-2xl">Spelman College</span>
             </div>
             
-            <h1 className="text-6xl md:text-8xl lg:text-9xl xl:text-[12rem] font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+            <h1 className="text-7xl md:text-8xl lg:text-9xl xl:text-[12rem] font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
               MUS 240
             </h1>
             
-            <h2 className="text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-light text-white/95 mb-6 mx-auto leading-relaxed">
+            <h2 className="text-4xl md:text-4xl lg:text-6xl xl:text-7xl font-light text-white/95 mb-6 mx-auto leading-relaxed">
               Survey of African American Music
             </h2>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-white/80 text-lg lg:text-xl xl:text-2xl">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-white/80 text-xl lg:text-xl xl:text-2xl">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 lg:h-6 lg:w-6 xl:h-8 xl:w-8" />
                 <span>Fall 2025</span>
@@ -95,9 +95,9 @@ export default function ClassLanding() {
                       <div className="p-3 sm:p-2 lg:p-4 xl:p-6 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg lg:rounded-xl">
                         <IconComponent className="h-6 w-6 sm:h-5 sm:w-5 lg:h-10 lg:w-10 xl:h-12 xl:w-12 text-white" />
                       </div>
-                      <h3 className="text-4xl sm:text-2xl lg:text-3xl xl:text-4xl font-semibold text-gray-900">{card.title}</h3>
+                      <h3 className="text-5xl sm:text-2xl lg:text-3xl xl:text-4xl font-semibold text-gray-900">{card.title}</h3>
                     </div>
-                    <p className="text-gray-600 text-xl sm:text-base lg:text-xl xl:text-2xl leading-relaxed">{card.desc}</p>
+                    <p className="text-gray-600 text-2xl sm:text-base lg:text-xl xl:text-2xl leading-relaxed">{card.desc}</p>
                   </div>
                 </Link>
               );
@@ -110,7 +110,7 @@ export default function ClassLanding() {
           {/* Course Description */}
           <div className="mt-16 text-center">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
-              <p className="text-white/90 text-xl lg:text-2xl xl:text-3xl leading-relaxed">
+              <p className="text-white/90 text-2xl lg:text-2xl xl:text-3xl leading-relaxed">
                 Explore the rich tapestry of African American musical traditions, from spirituals and blues to jazz, gospel, R&B, and hip-hop. Discover how music has been a vehicle for cultural expression, social change, and artistic innovation.
               </p>
             </div>
