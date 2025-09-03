@@ -109,47 +109,7 @@ export const ExecBoardModulePanel = () => {
     }).filter(Boolean);
   };
 
-  // Get executive modules (assigned modules that aren't standard member modules)
-  const assignedModules = getAccessibleModules().filter(module => 
-    !STANDARD_MEMBER_MODULE_IDS.includes(module.id)
-  );
-
-  // Group executive modules by category
-  const execModulesByCategory = assignedModules.reduce((acc, module) => {
-    // Create executive-specific category groupings
-    let execCategory = 'General Tools';
-    
-    // Executive Leadership modules
-    if (['attendance-management', 'user-management', 'auditions', 'permissions', 'wardrobe'].includes(module.id)) {
-      execCategory = 'Executive Leadership';
-    }
-    // Communications & Events
-    else if (['email-management', 'notifications', 'pr-coordinator', 'scheduling-module', 'service-management', 'calendar-management', 'tour-management', 'booking-forms'].includes(module.id)) {
-      execCategory = 'Communications & Events';
-    }
-    // Musical Direction
-    else if (['student-conductor', 'section-leader', 'sight-singing-management', 'librarian', 'radio-management'].includes(module.id)) {
-      execCategory = 'Musical Direction';
-    }
-    // Financial Management
-    else if (['contracts', 'budgets', 'receipts-records', 'approval-system', 'glee-ledger', 'monthly-statements', 'check-requests'].includes(module.id)) {
-      execCategory = 'Financial Management';
-    }
-    // Member Engagement
-    else if (['buckets-of-love', 'wellness', 'alumnae-portal', 'fan-engagement', 'glee-writing'].includes(module.id)) {
-      execCategory = 'Member Engagement';
-    }
-    // Tools & Administration
-    else if (['ai-tools', 'hero-manager', 'press-kits', 'first-year-console', 'settings'].includes(module.id)) {
-      execCategory = 'Tools & Administration';
-    }
-    
-    if (!acc[execCategory]) {
-      acc[execCategory] = [];
-    }
-    acc[execCategory].push(module);
-    return acc;
-  }, {} as Record<string, typeof assignedModules>);
+  // Removed unnecessary executive module categorization - modules not needed
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -269,72 +229,7 @@ export const ExecBoardModulePanel = () => {
           </Card>
         </section>
 
-        {/* Executive Functions Section - Accordion Style */}
-        {assignedModules.length > 0 && (
-          <section className="mb-6">
-            <Accordion type="multiple" className="w-full">
-              <AccordionItem value="executive-functions">
-                <AccordionTrigger className="text-base">
-                  <div className="flex items-center gap-2">
-                    <Crown className="h-4 w-4 text-primary" /> 
-                    Executive Functions
-                    <Badge variant="secondary" className="ml-2">
-                      {profile?.exec_board_role || 'Executive'}
-                    </Badge>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <Card>
-                    <CardContent className="pt-6 space-y-4">
-                      {Object.entries(execModulesByCategory).map(([category, modules]) => {
-                        const IconComponent = getCategoryIcon(category);
-                        
-                        return (
-                          <div key={category} className="space-y-3">
-                            <div className="flex items-center gap-2 mb-3">
-                              {IconComponent && <IconComponent className="h-4 w-4" />}
-                              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                                {category}
-                              </h4>
-                              <div className="flex-1 h-px bg-border" />
-                            </div>
-                            
-                            <div className="responsive-grid-2 gap-2">
-                              {modules.map((module) => (
-                                <Card 
-                                  key={module.id} 
-                                  className="cursor-pointer hover:bg-muted/50 transition-colors"
-                                  onClick={() => handleModuleClick(module.id)}
-                                >
-                                  <CardContent className="p-3">
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <h5 className="font-medium text-sm">{module.title}</h5>
-                                          <Badge variant="outline" className="text-xs px-1 py-0">
-                                            Executive
-                                          </Badge>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground line-clamp-2">
-                                          {module.description}
-                                        </p>
-                                      </div>
-                                      <Settings className="h-3 w-3 ml-2 opacity-50" />
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </CardContent>
-                  </Card>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </section>
-        )}
+        {/* Executive Functions Section - Removed - Not necessary */}
 
         {/* All Modules in Accordion Style */}
         <section>
@@ -385,22 +280,6 @@ export const ExecBoardModulePanel = () => {
         </section>
 
         {renderModuleComponent()}
-
-        {/* No executive modules assigned state */}
-        {!loading && assignedModules.length === 0 && (
-          <Card className="border-muted">
-            <CardContent className="text-center py-12">
-              <Crown className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No Executive Functions Assigned</h3>
-              <p className="text-muted-foreground mb-4">
-                You have access to all standard member modules above.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Contact an administrator to request executive module access.
-              </p>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );
