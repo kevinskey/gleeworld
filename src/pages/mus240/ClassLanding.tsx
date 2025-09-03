@@ -95,9 +95,9 @@ export default function ClassLanding() {
                       <div className="p-3 sm:p-2 lg:p-4 xl:p-6 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg lg:rounded-xl">
                         <IconComponent className="h-6 w-6 sm:h-5 sm:w-5 lg:h-10 lg:w-10 xl:h-12 xl:w-12 text-white" />
                       </div>
-                      <h3 className="text-3xl sm:text-2xl lg:text-3xl xl:text-4xl font-semibold text-gray-900">{card.title}</h3>
+                      <h3 className="text-4xl sm:text-2xl lg:text-3xl xl:text-4xl font-semibold text-gray-900">{card.title}</h3>
                     </div>
-                    <p className="text-gray-600 text-lg sm:text-base lg:text-xl xl:text-2xl leading-relaxed">{card.desc}</p>
+                    <p className="text-gray-600 text-xl sm:text-base lg:text-xl xl:text-2xl leading-relaxed">{card.desc}</p>
                   </div>
                 </Link>
               );
