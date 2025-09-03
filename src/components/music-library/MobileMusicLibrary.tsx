@@ -157,19 +157,19 @@ export const MobileMusicLibrary = ({
       {/* Tab Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 w-full">
         <TabsList className="flex-shrink-0 grid w-full grid-cols-4 mx-2 my-1 gap-1">{/* Reduced margins from mx-3 my-2 to mx-2 my-1 */}
-          <TabsTrigger value="library" className="text-[11px] px-1 py-1">
+          <TabsTrigger value="library" className="text-xs px-1 py-1">
             <Music className="h-4 w-4 mr-1" />
             Library
           </TabsTrigger>
-          <TabsTrigger value="study" className="text-[11px] px-1 py-1">
+          <TabsTrigger value="study" className="text-xs px-1 py-1">
             <BookOpen className="h-4 w-4 mr-1" />
             Study
           </TabsTrigger>
-          <TabsTrigger value="collections" className="text-[11px] px-1 py-1">
+          <TabsTrigger value="collections" className="text-xs px-1 py-1">
             <Star className="h-4 w-4 mr-1" />
             Collections
           </TabsTrigger>
-          <TabsTrigger value="setlists" className="text-[11px] px-1 py-1">
+          <TabsTrigger value="setlists" className="text-xs px-1 py-1">
             <List className="h-4 w-4 mr-1" />
             Setlists
           </TabsTrigger>
