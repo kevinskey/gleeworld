@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { X, Send, Search, Filter, Pin } from 'lucide-react';
+import { X, Send, Search, Filter, Pin, MoreVertical, Edit2, Trash2, Check, X as XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 interface MessagesPanelProps {
   onClose: () => void;
@@ -13,6 +17,25 @@ interface MessagesPanelProps {
 
 export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [newMessage, setNewMessage] = useState('');
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [messagesList, setMessagesList] = useState([
+    {
+      id: '1',
+      sender: 'Dr. Johnson',
+      content: 'Great job on the weekend rehearsal! The alto section really shined.',
+      timestamp: '2:34 PM',
+      isOwn: false
+    },
+    {
+      id: '2',
+      sender: 'You',
+      content: 'Thank you! We\'ve been working hard on those harmonies.',
+      timestamp: '2:36 PM',
+      isOwn: true
+    }
+  ]);
 
   const conversations = [
     {
@@ -44,22 +67,45 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
     }
   ];
 
-  const messages = [
-    {
-      id: '1',
-      sender: 'Dr. Johnson',
-      content: 'Great job on the weekend rehearsal! The alto section really shined.',
-      timestamp: '2:34 PM',
-      isOwn: false
-    },
-    {
-      id: '2',
+  const handleSendMessage = () => {
+    if (!newMessage.trim()) return;
+    
+    const message = {
+      id: Date.now().toString(),
       sender: 'You',
-      content: 'Thank you! We\'ve been working hard on those harmonies.',
-      timestamp: '2:36 PM',
+      content: newMessage,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isOwn: true
-    }
-  ];
+    };
+    
+    setMessagesList(prev => [...prev, message]);
+    setNewMessage('');
+    toast.success('Message sent!');
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    setMessagesList(prev => prev.filter(msg => msg.id !== messageId));
+    toast.success('Message deleted');
+  };
+
+  const handleEditMessage = (messageId: string, newContent: string) => {
+    setMessagesList(prev => prev.map(msg => 
+      msg.id === messageId ? { ...msg, content: newContent } : msg
+    ));
+    setEditingMessageId(null);
+    setEditContent('');
+    toast.success('Message updated');
+  };
+
+  const startEditing = (messageId: string, currentContent: string) => {
+    setEditingMessageId(messageId);
+    setEditContent(currentContent);
+  };
+
+  const cancelEditing = () => {
+    setEditingMessageId(null);
+    setEditContent('');
+  };
 
   return (
     <div className="h-full flex">
@@ -151,24 +197,105 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
 
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-4">
-                {messages.map((message) => (
+                {messagesList.map((message) => (
                   <div
                     key={message.id}
                     className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        message.isOwn
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-foreground'
-                      }`}
-                    >
-                      <p className="text-sm">{message.content}</p>
-                      <p className={`text-xs mt-1 ${
-                        message.isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                      }`}>
-                        {message.timestamp}
-                      </p>
+                    <div className="group relative">
+                      <div
+                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                          message.isOwn
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-foreground'
+                        }`}
+                      >
+                        {editingMessageId === message.id ? (
+                          <div className="space-y-2">
+                            <Textarea
+                              value={editContent}
+                              onChange={(e) => setEditContent(e.target.value)}
+                              className="min-h-[60px] text-sm"
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditMessage(message.id, editContent)}
+                                className="h-6 px-2"
+                              >
+                                <Check className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={cancelEditing}
+                                className="h-6 px-2"
+                              >
+                                <XIcon className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-sm">{message.content}</p>
+                            <p className={`text-xs mt-1 ${
+                              message.isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                            }`}>
+                              {message.timestamp}
+                            </p>
+                          </>
+                        )}
+                      </div>
+                      
+                      {message.isOwn && editingMessageId !== message.id && (
+                        <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 bg-background border border-border shadow-sm hover:bg-muted"
+                              >
+                                <MoreVertical className="w-3 h-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => startEditing(message.id, message.content)}
+                              >
+                                <Edit2 className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Message</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete this message? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteMessage(message.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -177,8 +304,14 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
 
             <div className="p-4 border-t border-border bg-background">
               <div className="flex gap-2">
-                <Input placeholder="Type a message..." className="flex-1" />
-                <Button size="sm">
+                <Input 
+                  placeholder="Type a message..." 
+                  className="flex-1" 
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                />
+                <Button size="sm" onClick={handleSendMessage} disabled={!newMessage.trim()}>
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
