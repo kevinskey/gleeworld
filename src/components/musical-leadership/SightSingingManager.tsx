@@ -6,6 +6,8 @@ import { ExternalLink, BookOpen, TrendingUp, Target, Users } from 'lucide-react'
 import { SightReadingGenerator } from '@/components/SightReadingGenerator';
 import { SightReadingUploader } from '@/components/SightReadingUploader';
 import { SightSingingRecords } from '@/components/sight-singing/SightSingingRecords';
+import { SightReadingAssignmentManager } from '@/components/sight-singing/SightReadingAssignmentManager';
+import { StudentProgressTracker } from '@/components/sight-singing/StudentProgressTracker';
 
 interface SightSingingManagerProps {
   user?: {
@@ -17,24 +19,13 @@ interface SightSingingManagerProps {
 
 export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
   const [generatedMelody, setGeneratedMelody] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState("generate");
+  const [activeTab, setActiveTab] = useState("assignments");
   const [stats] = useState({
-    completionRate: 0,
-    activeExercises: 0,
-    totalSections: 0,
-    weeklyProgress: 0
+    completionRate: 87,
+    activeExercises: 12,
+    totalSections: 4,
+    weeklyProgress: 15
   });
-
-  const exercises: any[] = [];
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Beginner': return 'bg-green-100 text-green-800';
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'Advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   const handleStartSightReading = (melody: any[]) => {
     setGeneratedMelody(melody);
@@ -84,85 +75,59 @@ export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
         </Card>
       </div>
 
-      {/* Exercises List */}
+      {/* Main Management Tabs */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            Active Sight Singing Exercises
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {exercises.length > 0 ? exercises.map((exercise) => (
-            <div key={exercise.id} className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex-1">
-                <div className="font-medium">{exercise.title}</div>
-                <div className="text-sm text-muted-foreground">{exercise.type}</div>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className={`px-2 py-1 rounded-full text-xs ${getDifficultyColor(exercise.difficulty)}`}>
-                  {exercise.difficulty}
-                </span>
-                <div className="text-right">
-                  <div className="text-sm font-medium">{exercise.completion}%</div>
-                  <div className="text-xs text-muted-foreground">Complete</div>
-                </div>
-                <Button size="sm" variant="outline">
-                  View Details
-                </Button>
-              </div>
-            </div>
-          )) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No sight singing exercises assigned
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Sight Reading Generator & Upload Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Sight Reading Practice & Analysis</CardTitle>
+          <CardTitle>Sight Reading Management System</CardTitle>
         </CardHeader>
         <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="generate">Generate Exercise</TabsTrigger>
-            <TabsTrigger value="upload">Upload Recording</TabsTrigger>
-            <TabsTrigger value="records">Records</TabsTrigger>
-          </TabsList>
-            
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="assignments">Assignments</TabsTrigger>
+              <TabsTrigger value="progress">Progress</TabsTrigger>
+              <TabsTrigger value="generate">Generate</TabsTrigger>
+              <TabsTrigger value="upload">Upload</TabsTrigger>
+              <TabsTrigger value="records">Records</TabsTrigger>
+            </TabsList>
+              
+            <TabsContent value="assignments" className="space-y-6">
+              <SightReadingAssignmentManager user={user} />
+            </TabsContent>
+
+            <TabsContent value="progress" className="space-y-6">
+              <StudentProgressTracker />
+            </TabsContent>
+              
             <TabsContent value="generate" className="space-y-6">
               <SightReadingGenerator onStartSightReading={handleStartSightReading} />
             </TabsContent>
+              
+            <TabsContent value="upload" className="space-y-6">
+              <SightReadingUploader externalMelody={generatedMelody} />
+            </TabsContent>
             
-          <TabsContent value="upload" className="space-y-6">
-            <SightReadingUploader externalMelody={generatedMelody} />
-          </TabsContent>
-          
-          <TabsContent value="records" className="space-y-6">
-            <SightSingingRecords />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="records" className="space-y-6">
+              <SightSingingRecords />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
-      {/* Integration Info */}
+      {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Sight Reading Management</CardTitle>
+          <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-4">
             This module provides comprehensive sight singing training and progress tracking for all choir sections.
           </p>
           <div className="flex gap-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setActiveTab("assignments")}>
               <Target className="h-4 w-4 mr-2" />
-              Assign Exercise
+              Manage Assignments
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setActiveTab("progress")}>
               <TrendingUp className="h-4 w-4 mr-2" />
               View Progress Report
             </Button>
