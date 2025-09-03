@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -13,26 +12,30 @@ import { Input } from "@/components/ui/input";
 import { StudyScoresPanel } from './StudyScoresPanel';
 import { MyCollectionsPanel } from './MyCollectionsPanel';
 import { SheetMusicViewDialog } from './SheetMusicViewDialog';
-
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { MusicLibraryHeader } from '@/components/music-library/MusicLibraryHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
-
 export const MusicLibrary = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  const { userProfile } = useUserProfile(user);
+  const {
+    user
+  } = useAuth();
+  const {
+    userProfile
+  } = useUserProfile(user);
   const isMobile = useIsMobile();
-  const [selectedPdf, setSelectedPdf] = useState<{url: string; title: string; id?: string} | null>(null);
+  const [selectedPdf, setSelectedPdf] = useState<{
+    url: string;
+    title: string;
+    id?: string;
+  } | null>(null);
   const [mobileView, setMobileView] = useState<'library' | 'viewer'>('library');
-  
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
-
   useEffect(() => {
     if (!isMobile) return;
     const el = scrollRef.current;
@@ -42,12 +45,13 @@ export const MusicLibrary = () => {
     onScroll();
     return () => el.removeEventListener('scroll', onScroll);
   }, [isMobile]);
-
   const scrollToTop = () => {
     const el = scrollRef.current;
-    if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
+    if (el) el.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
-
   const [activeSetlistPlayer, setActiveSetlistPlayer] = useState<string | null>(null);
   const [setlistOpen, setSetlistOpen] = useState(false);
   const [studyOpen, setStudyOpen] = useState(false);
@@ -56,37 +60,47 @@ export const MusicLibrary = () => {
   const [librarySearchQuery, setLibrarySearchQuery] = useState('');
   const [studyDialogOpen, setStudyDialogOpen] = useState(false);
   const [studyItem, setStudyItem] = useState<any>(null);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const handlePdfSelect = (pdfUrl: string, title: string, id?: string) => {
-    console.log('MusicLibrary: PDF selected:', { pdfUrl, title, id, isMobile });
-    setSelectedPdf({ url: pdfUrl, title, id });
+    console.log('MusicLibrary: PDF selected:', {
+      pdfUrl,
+      title,
+      id,
+      isMobile
+    });
+    setSelectedPdf({
+      url: pdfUrl,
+      title,
+      id
+    });
     // On mobile, switch to viewer when PDF is selected
     if (isMobile) {
       console.log('MusicLibrary: Switching to viewer mode');
       setMobileView('viewer');
     }
   };
-
   const handleOpenSetlistPlayer = (setlistId: string) => {
     setActiveSetlistPlayer(setlistId);
   };
-
   const handleCloseSetlistPlayer = () => {
     setActiveSetlistPlayer(null);
   };
-
   const openStudyMode = async () => {
     if (!selectedPdf) {
-      toast({ title: 'Select a piece', description: 'Choose a score to open Study Mode' });
+      toast({
+        title: 'Select a piece',
+        description: 'Choose a score to open Study Mode'
+      });
       return;
     }
     let item: any = null;
     if (selectedPdf.id) {
-      const { data, error } = await supabase
-        .from('gw_sheet_music')
-        .select('*')
-        .eq('id', selectedPdf.id)
-        .maybeSingle();
+      const {
+        data,
+        error
+      } = await supabase.from('gw_sheet_music').select('*').eq('id', selectedPdf.id).maybeSingle();
       if (!error && data) item = data;
     }
     if (!item) {
@@ -107,80 +121,60 @@ export const MusicLibrary = () => {
         tags: null,
         is_public: false,
         created_by: '',
-        created_at: new Date().toISOString(),
+        created_at: new Date().toISOString()
       };
     }
     setStudyItem(item);
     setStudyDialogOpen(true);
   };
-
   if (activeSetlistPlayer) {
-    return (
-      <SetlistPlayer
-        setlistId={activeSetlistPlayer}
-        onClose={handleCloseSetlistPlayer}
-      />
-    );
+    return <SetlistPlayer setlistId={activeSetlistPlayer} onClose={handleCloseSetlistPlayer} />;
   }
-
-  const navigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, route: '/dashboard' },
-    { id: 'calendar', label: 'Calendar', icon: Calendar, route: '/calendar' },
-    { id: 'events', label: 'Events', icon: Users, route: '/event-planner' },
-    { id: 'accounting', label: 'Accounting', icon: FileText, route: '/accounting' },
-    { id: 'activity', label: 'Activity', icon: Activity, route: '/activity-logs' },
-  ];
+  const navigationItems = [{
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: Home,
+    route: '/dashboard'
+  }, {
+    id: 'calendar',
+    label: 'Calendar',
+    icon: Calendar,
+    route: '/calendar'
+  }, {
+    id: 'events',
+    label: 'Events',
+    icon: Users,
+    route: '/event-planner'
+  }, {
+    id: 'accounting',
+    label: 'Accounting',
+    icon: FileText,
+    route: '/accounting'
+  }, {
+    id: 'activity',
+    label: 'Activity',
+    icon: Activity,
+    route: '/activity-logs'
+  }];
 
   // Mobile layout - simple fullscreen
   if (isMobile) {
-    return (
-      <div className="min-h-screen bg-background w-full overflow-hidden">{/* Removed max-w-full as it's redundant */}
+    return <div className="min-h-screen bg-background w-full overflow-hidden">{/* Removed max-w-full as it's redundant */}
         {/* Simple Header with Back Button */}
-        <div className="flex items-center justify-between p-2 border-b w-full">{/* Reduced padding from p-3 to p-2 */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate((userProfile?.is_admin || userProfile?.is_super_admin) ? '/admin' : '/dashboard')}
-            className="flex items-center gap-1 flex-shrink-0"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="text-sm">Back</span>
-          </Button>
-          <h1 className="text-base font-semibold truncate mx-1 pt-2">Music Library</h1>{/* Reduced margin from mx-2 to mx-1 */}
-          <div className="w-12 flex-shrink-0"></div> {/* Reduced spacer width from w-16 to w-12 */}
-        </div>
+        
 
         {/* Content */}
         <div className="flex-1">
-          {mobileView === 'library' ? (
-            <MobileMusicLibrary
-              onPdfSelect={handlePdfSelect}
-              onOpenSetlistPlayer={handleOpenSetlistPlayer}
-              selectedPdf={selectedPdf}
-              scrollContainerRef={scrollRef}
-            />
-          ) : (
-            <MobilePDFViewer
-              selectedPdf={selectedPdf}
-              onBack={() => setMobileView('library')}
-              onStudyMode={openStudyMode}
-            />
-          )}
+          {mobileView === 'library' ? <MobileMusicLibrary onPdfSelect={handlePdfSelect} onOpenSetlistPlayer={handleOpenSetlistPlayer} selectedPdf={selectedPdf} scrollContainerRef={scrollRef} /> : <MobilePDFViewer selectedPdf={selectedPdf} onBack={() => setMobileView('library')} onStudyMode={openStudyMode} />}
         </div>
 
         {/* Study Mode Dialog */}
-        <SheetMusicViewDialog
-          open={studyDialogOpen}
-          onOpenChange={setStudyDialogOpen}
-          item={studyItem}
-        />
-      </div>
-    );
+        <SheetMusicViewDialog open={studyDialogOpen} onOpenChange={setStudyDialogOpen} item={studyItem} />
+      </div>;
   }
 
   // Desktop layout - keep existing design
-  return (
-    <>
+  return <>
       <MusicLibraryHeader />
       <div className="w-full overflow-hidden page-container">
 
@@ -191,95 +185,63 @@ export const MusicLibrary = () => {
             {/* Study Scores */}
             <div className="w-full overflow-hidden border rounded">
               <div className="flex items-center justify-between card-compact">
-                <button 
-                  className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" 
-                  onClick={() => {
-                    console.log('Study Scores button clicked, current state:', studyOpen);
-                    setStudyOpen((o) => !o);
-                  }}
-                >
+                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => {
+                console.log('Study Scores button clicked, current state:', studyOpen);
+                setStudyOpen(o => !o);
+              }}>
                   {studyOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Study Scores
                 </button>
               </div>
-              {studyOpen && (
-                <div className="card-compact">
-                  <StudyScoresPanel 
-                    currentSelected={selectedPdf}
-                    onOpenScore={handlePdfSelect}
-                  />
-                </div>
-              )}
+              {studyOpen && <div className="card-compact">
+                  <StudyScoresPanel currentSelected={selectedPdf} onOpenScore={handlePdfSelect} />
+                </div>}
             </div>
 
             {/* My Collections */}
             <div className="w-full overflow-hidden border rounded">
               <div className="flex items-center justify-between card-compact">
-                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setCollectionsOpen((o) => !o)}>
+                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setCollectionsOpen(o => !o)}>
                   {collectionsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} My Collections
                 </button>
               </div>
-              {collectionsOpen && (
-                <div className="card-compact">
-                  <MyCollectionsPanel
-                    currentSelected={selectedPdf}
-                    onOpenScore={handlePdfSelect}
-                  />
-                </div>
-              )}
+              {collectionsOpen && <div className="card-compact">
+                  <MyCollectionsPanel currentSelected={selectedPdf} onOpenScore={handlePdfSelect} />
+                </div>}
             </div>
 
             {/* Setlists */}
             <div className="w-full overflow-hidden border rounded">
               <div className="flex items-center justify-between card-compact">
-                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setSetlistOpen((o) => !o)}>
+                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setSetlistOpen(o => !o)}>
                   {setlistOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Setlists
                 </button>
               </div>
-              {setlistOpen && (
-                <div className="card-compact">
-                  <SetlistBuilder 
-                    onPdfSelect={handlePdfSelect} 
-                    onOpenPlayer={handleOpenSetlistPlayer}
-                  />
-                </div>
-              )}
+              {setlistOpen && <div className="card-compact">
+                  <SetlistBuilder onPdfSelect={handlePdfSelect} onOpenPlayer={handleOpenSetlistPlayer} />
+                </div>}
             </div>
 
             {/* Music Library list */}
             <div className="w-full overflow-hidden border rounded">
               <div className="flex items-center justify-between card-compact">
-                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setLibraryOpen((o) => !o)}>
+                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setLibraryOpen(o => !o)}>
                   {libraryOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Music Library
                 </button>
               </div>
-              {libraryOpen && (
-                <div className="section-spacing">
+              {libraryOpen && <div className="section-spacing">
                   {/* Search field for Music Library */}
                   <div className="card-compact">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        placeholder="Search music library..."
-                        value={librarySearchQuery}
-                        onChange={(e) => setLibrarySearchQuery(e.target.value)}
-                        className="pl-10 h-8 mobile-text-lg"
-                      />
+                      <Input placeholder="Search music library..." value={librarySearchQuery} onChange={e => setLibrarySearchQuery(e.target.value)} className="pl-10 h-8 mobile-text-lg" />
                     </div>
                   </div>
                   
                   {/* Sheet Music Library */}
                   <div className="card-compact">
-                    <SheetMusicLibrary 
-                      searchQuery={librarySearchQuery}
-                      selectedCategory="all"
-                      sortBy="title"
-                      sortOrder="asc"
-                      viewMode="list"
-                      onPdfSelect={(url: string, title: string, id?: string) => handlePdfSelect(url, title, id)}
-                    />
+                    <SheetMusicLibrary searchQuery={librarySearchQuery} selectedCategory="all" sortBy="title" sortOrder="asc" viewMode="list" onPdfSelect={(url: string, title: string, id?: string) => handlePdfSelect(url, title, id)} />
                   </div>
-                </div>
-              )}
+                </div>}
             </div>
           </div>
 
@@ -293,36 +255,16 @@ export const MusicLibrary = () => {
                 <span className="sm:hidden text-xs">Study</span>
               </Button>
             </div>
-            {selectedPdf ? (
-              <div className="flex-1 overflow-hidden rounded-lg lg:rounded-xl">
-                <PDFViewerWithAnnotations 
-                  key={selectedPdf.url}
-                  pdfUrl={selectedPdf.url}
-                  musicTitle={selectedPdf.title}
-                  musicId={selectedPdf.id}
-                  className="w-full h-full"
-                />
-              </div>
-            ) : (
-              <div className="flex-1 relative rounded-lg lg:rounded-xl overflow-hidden bg-background shadow-lg lg:shadow-xl ring-1 ring-border mx-1 lg:mx-0">
-                <img
-                  src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png"
-                  alt="Glee World Music Library landing image"
-                  className="absolute inset-0 w-full h-full object-contain p-2 md:p-4 lg:p-6"
-                  loading="lazy"
-                />
-              </div>
-            )}
+            {selectedPdf ? <div className="flex-1 overflow-hidden rounded-lg lg:rounded-xl">
+                <PDFViewerWithAnnotations key={selectedPdf.url} pdfUrl={selectedPdf.url} musicTitle={selectedPdf.title} musicId={selectedPdf.id} className="w-full h-full" />
+              </div> : <div className="flex-1 relative rounded-lg lg:rounded-xl overflow-hidden bg-background shadow-lg lg:shadow-xl ring-1 ring-border mx-1 lg:mx-0">
+                <img src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png" alt="Glee World Music Library landing image" className="absolute inset-0 w-full h-full object-contain p-2 md:p-4 lg:p-6" loading="lazy" />
+              </div>}
           </div>
         </div>
       </div>
 
       {/* Study Mode Dialog for desktop */}
-      <SheetMusicViewDialog
-        open={studyDialogOpen}
-        onOpenChange={setStudyDialogOpen}
-        item={studyItem}
-      />
-    </>
-  );
+      <SheetMusicViewDialog open={studyDialogOpen} onOpenChange={setStudyDialogOpen} item={studyItem} />
+    </>;
 };
