@@ -168,18 +168,6 @@ export const ExecBoardModulePanel = () => {
   return (
     <div className="w-full overflow-x-hidden page-container">
       <div className="w-full section-spacing">
-        {/* Debug Info */}
-        {!loading && (
-          <Card className="border-orange-200 bg-orange-50 mb-6">
-            <CardContent className="py-2">
-              <p className="text-xs text-orange-700">
-                Debug: Found {userModules.length} modules for user {user?.email}
-                {userModules.length > 0 && `: ${userModules.join(', ')}`}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Hero Section for Standard Member Modules */}
         <section aria-label="Member modules" className="animate-fade-in w-full overflow-hidden">
           <Card className="relative overflow-hidden border bg-background/40 w-full">
