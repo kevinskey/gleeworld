@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { useCommunicationSystem } from '@/hooks/useCommunicationSystem';
 import { useAuth } from '@/contexts/AuthContext';
 import { GroupSMSInterface } from '@/components/messaging/GroupSMSInterface';
+import { CreateGroupDialog } from '@/components/messaging/GroupManagement';
 
 interface NotificationFormData {
   title: string;
@@ -466,7 +467,8 @@ const ComprehensiveNotificationSystem = () => {
               <div className="text-center py-8 text-muted-foreground">
                 <Phone className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>No message groups available</p>
-                <p className="text-sm">Create a message group first to enable SMS</p>
+                <p className="text-sm mb-4">Create a message group first to enable SMS</p>
+                <CreateGroupDialog onSuccess={() => window.location.reload()} />
               </div>
             ) : (
               <div className="space-y-4">
