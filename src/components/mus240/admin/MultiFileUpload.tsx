@@ -33,18 +33,25 @@ export function MultiFileUpload({ onUploadComplete, defaultCategory = 'reading' 
         'application/vnd.ms-powerpoint',
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        // Audio file types
+        'audio/mp4',
+        'audio/mpeg',
+        'audio/wav',
+        'audio/ogg',
+        'video/mp4', // MP4 can be audio
+        'audio/x-m4a'
       ];
       
-      const maxSize = 10 * 1024 * 1024; // 10MB
+      const maxSize = 50 * 1024 * 1024; // 50MB for audio files, 10MB for documents
       
       if (!validTypes.includes(file.type)) {
-        toast.error(`${file.name}: Invalid file type. Please upload PDF, DOC, TXT, PPT, or XLS files.`);
+        toast.error(`${file.name}: Invalid file type. Please upload PDF, DOC, TXT, PPT, XLS, or audio files (MP3, MP4, WAV, OGG).`);
         return false;
       }
       
       if (file.size > maxSize) {
-        toast.error(`${file.name}: File too large. Maximum size is 10MB.`);
+        toast.error(`${file.name}: File too large. Maximum size is 50MB.`);
         return false;
       }
       
@@ -96,7 +103,7 @@ export function MultiFileUpload({ onUploadComplete, defaultCategory = 'reading' 
           title: upload.file.name.replace(/\.[^/.]+$/, ''),
           url: upload.url!,
           description: `Uploaded file: ${upload.file.name}`,
-          category: defaultCategory as any,
+          category: upload.file.type.startsWith('audio/') || upload.file.type === 'video/mp4' ? 'audio' : defaultCategory as any,
           is_active: true,
           display_order: 0,
           file_path: actualFileName, // Use the actual filename from storage
@@ -146,13 +153,14 @@ export function MultiFileUpload({ onUploadComplete, defaultCategory = 'reading' 
           multiple
           onChange={(e) => handleFileSelect(e.target.files)}
           className="hidden"
-          accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx"
+          accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,.mp3,.mp4,.wav,.ogg,.m4a"
         />
         
         <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
         <h3 className="text-lg font-semibold mb-2">Drop files here or click to upload</h3>
         <p className="text-muted-foreground mb-4">
-          Upload multiple PDF, DOC, TXT, PPT, XLS files up to 10MB each
+          Upload multiple PDF, DOC, TXT, PPT, XLS files up to 50MB each<br />
+          <strong>Audio files supported:</strong> MP3, MP4, WAV, OGG, M4A
         </p>
         <Button
           type="button"
