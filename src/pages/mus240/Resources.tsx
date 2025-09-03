@@ -113,10 +113,10 @@ export default function Resources() {
                 <span className="text-white/90 font-medium">Resources</span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
                 MUS 240 Resources
               </h1>
-              <p className="text-white/80 text-lg">Readings, citations, media, and research materials</p>
+              <p className="text-white/80 text-sm sm:text-base md:text-lg">Readings, citations, media, and research materials</p>
             </div>
           </div>
 
@@ -139,7 +139,7 @@ export default function Resources() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {resources.map((resource) => {
                   const IconComponent = getCategoryIcon(resource.category);
                   
@@ -159,7 +159,7 @@ export default function Resources() {
                                 {resource.category}
                               </span>
                             </div>
-                            <CardTitle className="text-lg text-gray-900 group-hover:text-primary transition-colors">
+                            <CardTitle className="text-sm sm:text-base md:text-lg text-gray-900 group-hover:text-primary transition-colors">
                               {resource.title}
                             </CardTitle>
                           </div>
@@ -168,7 +168,7 @@ export default function Resources() {
                       </CardHeader>
                       
                       <CardContent className="space-y-4">
-                        <p className="text-sm text-gray-600 leading-relaxed">
+                        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                           {resource.description}
                         </p>
                         

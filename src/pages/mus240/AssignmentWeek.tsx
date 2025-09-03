@@ -61,11 +61,11 @@ const AssignmentWeek: React.FC = () => {
               <span className="text-white/90 font-medium">MUS 240</span>
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
               Assignments
             </h1>
             
-            <h2 className="text-xl md:text-2xl font-light text-white/95 mb-6 max-w-4xl mx-auto leading-relaxed">
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-light text-white/95 mb-6 max-w-4xl mx-auto leading-relaxed">
               Complete assignments to deepen your understanding of African American music
             </h2>
           </div>
@@ -236,36 +236,36 @@ const AssignmentWeek: React.FC = () => {
                 
                 <div className="space-y-4">
                   {weekData.assignments.map((assignment) => (
-                    <div key={assignment.id} className="bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/30 hover:bg-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                      <div className="flex items-start justify-between">
+                 <div key={assignment.id} className="bg-white/95 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-white/30 hover:bg-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-lg mb-2 text-gray-900">{assignment.title}</h4>
-                          <p className="text-sm text-gray-600 mb-3">
+                          <h4 className="font-semibold text-base sm:text-lg mb-2 text-gray-900">{assignment.title}</h4>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-3">
                             {assignment.description}
                           </p>
                           <div className="flex flex-wrap items-center gap-2 mb-3">
                             <Badge variant="outline" className={getTypeColor(assignment.type)}>
                               {getTypeIcon(assignment.type)}
-                              <span className="ml-1">{assignment.type.replace('-', ' ')}</span>
+                              <span className="ml-1 text-xs">{assignment.type.replace('-', ' ')}</span>
                             </Badge>
-                            <Badge variant="secondary">
+                            <Badge variant="secondary" className="text-xs">
                               {assignment.points} points
                             </Badge>
                           </div>
-                          <div className="text-sm text-gray-700">
+                          <div className="text-xs sm:text-sm text-gray-700">
                             <strong>Due:</strong> {new Date(assignment.dueDate + 'T12:00:00').toLocaleDateString()}
                           </div>
                         </div>
-                        <div className="ml-4">
+                        <div className="w-full sm:w-auto sm:ml-4">
                           {assignment.type === 'listening-journal' ? (
                             <Button 
                               onClick={() => navigate(`/classes/mus240/assignments/${assignment.id}`)}
-                              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 !text-white shadow-lg"
+                              className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 !text-white shadow-lg text-sm"
                             >
                               Open Journal
                             </Button>
                           ) : (
-                            <Button variant="outline" disabled className="border-gray-300 text-gray-500">
+                            <Button variant="outline" disabled className="w-full sm:w-auto border-gray-300 text-gray-500 text-sm">
                               Coming Soon
                             </Button>
                           )}
