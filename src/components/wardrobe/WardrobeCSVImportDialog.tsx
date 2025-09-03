@@ -46,6 +46,8 @@ const categories = ['dresses', 'pearls', 'lipstick', 'polos', 't-shirts', 'garme
 const conditions = ['new', 'good', 'fair', 'poor', 'damaged'];
 
 export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: WardrobeCSVImportDialogProps) => {
+  console.log('🔄 WardrobeCSVImportDialog component rendering, open:', open);
+  
   const { user } = useAuth();
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
@@ -67,34 +69,54 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview' | 'importing'>('upload');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  console.log('🔄 WardrobeCSVImportDialog rendered, open:', open);
+  console.log('🔄 WardrobeCSVImportDialog state initialized, open:', open);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedFile = event.target.files?.[0];
-    if (!uploadedFile) return;
+    try {
+      console.log('📂 File upload started');
+      const uploadedFile = event.target.files?.[0];
+      if (!uploadedFile) return;
 
-    if (!uploadedFile.name.endsWith('.csv')) {
+      if (!uploadedFile.name.endsWith('.csv')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select a CSV file",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setFile(uploadedFile);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          const lines = content.split('\n').filter(line => line.trim());
+          const parsedHeaders = parseCSVLine(lines[0]);
+          const parsedData = lines.slice(1).map(line => parseCSVLine(line));
+          
+          setHeaders(parsedHeaders);
+          setCsvData(parsedData);
+          setStep('mapping');
+          console.log('✅ File parsed successfully');
+        } catch (error) {
+          console.error('❌ Error parsing file:', error);
+          toast({
+            title: "File parsing error",
+            description: "There was an error reading your CSV file",
+            variant: "destructive",
+          });
+        }
+      };
+      reader.readAsText(uploadedFile);
+    } catch (error) {
+      console.error('❌ Error in handleFileUpload:', error);
       toast({
-        title: "Invalid file type",
-        description: "Please select a CSV file",
+        title: "Upload error",
+        description: "There was an error uploading your file",
         variant: "destructive",
       });
-      return;
     }
-
-    setFile(uploadedFile);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      const lines = content.split('\n').filter(line => line.trim());
-      const parsedHeaders = parseCSVLine(lines[0]);
-      const parsedData = lines.slice(1).map(line => parseCSVLine(line));
-      
-      setHeaders(parsedHeaders);
-      setCsvData(parsedData);
-      setStep('mapping');
-    };
-    reader.readAsText(uploadedFile);
   };
 
   const parseCSVLine = (line: string): string[] => {
@@ -122,89 +144,100 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
   };
 
   const generatePreview = () => {
-    const errors: string[] = [];
-    const previewData: CSVRecord[] = [];
+    try {
+      console.log('🔍 Generating preview');
+      const errors: string[] = [];
+      const previewData: CSVRecord[] = [];
 
-    // Check if required fields are mapped
-    requiredFields.forEach(field => {
-      if (!mapping[field as keyof ImportMapping]) {
-        errors.push(`Required field "${field}" is not mapped`);
+      // Check if required fields are mapped
+      requiredFields.forEach(field => {
+        if (!mapping[field as keyof ImportMapping]) {
+          errors.push(`Required field "${field}" is not mapped`);
+        }
+      });
+
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+        return;
       }
-    });
 
-    if (errors.length > 0) {
+      csvData.forEach((row, index) => {
+        try {
+          const categoryIndex = headers.indexOf(mapping.category);
+          const itemNameIndex = headers.indexOf(mapping.item_name);
+          const sizesIndex = mapping.sizes ? headers.indexOf(mapping.sizes) : -1;
+          const colorsIndex = mapping.colors ? headers.indexOf(mapping.colors) : -1;
+          const quantityTotalIndex = headers.indexOf(mapping.quantity_total);
+          const quantityAvailableIndex = headers.indexOf(mapping.quantity_available);
+          const conditionIndex = mapping.condition ? headers.indexOf(mapping.condition) : -1;
+          const lowStockIndex = mapping.low_stock_threshold ? headers.indexOf(mapping.low_stock_threshold) : -1;
+          const notesIndex = mapping.notes ? headers.indexOf(mapping.notes) : -1;
+
+          const category = row[categoryIndex]?.toLowerCase();
+          if (!categories.includes(category)) {
+            errors.push(`Row ${index + 2}: Invalid category "${category}". Must be one of: ${categories.join(', ')}`);
+            return;
+          }
+
+          const itemName = row[itemNameIndex];
+          if (!itemName) {
+            errors.push(`Row ${index + 2}: Item name is required`);
+            return;
+          }
+
+          const quantityTotal = parseInt(row[quantityTotalIndex]);
+          const quantityAvailable = parseInt(row[quantityAvailableIndex]);
+          if (isNaN(quantityTotal) || isNaN(quantityAvailable)) {
+            errors.push(`Row ${index + 2}: Quantities must be valid numbers`);
+            return;
+          }
+
+          if (quantityAvailable > quantityTotal) {
+            errors.push(`Row ${index + 2}: Available quantity cannot exceed total quantity`);
+            return;
+          }
+
+          const condition = conditionIndex >= 0 ? row[conditionIndex]?.toLowerCase() : 'good';
+          if (condition && !conditions.includes(condition)) {
+            errors.push(`Row ${index + 2}: Invalid condition "${condition}". Must be one of: ${conditions.join(', ')}`);
+            return;
+          }
+
+          const record: CSVRecord = {
+            category,
+            item_name: itemName,
+            size_available: sizesIndex >= 0 && row[sizesIndex] 
+              ? row[sizesIndex].split(',').map(s => s.trim()).filter(Boolean)
+              : [],
+            color_available: colorsIndex >= 0 && row[colorsIndex]
+              ? row[colorsIndex].split(',').map(c => c.trim()).filter(Boolean)
+              : [],
+            quantity_total: quantityTotal,
+            quantity_available: quantityAvailable,
+            condition: condition || 'good',
+            low_stock_threshold: lowStockIndex >= 0 ? parseInt(row[lowStockIndex]) || 5 : 5,
+            notes: notesIndex >= 0 ? row[notesIndex] || '' : ''
+          };
+
+          previewData.push(record);
+        } catch (error) {
+          errors.push(`Row ${index + 2}: Error processing row - ${error}`);
+        }
+      });
+
       setValidationErrors(errors);
-      return;
-    }
-
-    csvData.forEach((row, index) => {
-      try {
-        const categoryIndex = headers.indexOf(mapping.category);
-        const itemNameIndex = headers.indexOf(mapping.item_name);
-        const sizesIndex = mapping.sizes ? headers.indexOf(mapping.sizes) : -1;
-        const colorsIndex = mapping.colors ? headers.indexOf(mapping.colors) : -1;
-        const quantityTotalIndex = headers.indexOf(mapping.quantity_total);
-        const quantityAvailableIndex = headers.indexOf(mapping.quantity_available);
-        const conditionIndex = mapping.condition ? headers.indexOf(mapping.condition) : -1;
-        const lowStockIndex = mapping.low_stock_threshold ? headers.indexOf(mapping.low_stock_threshold) : -1;
-        const notesIndex = mapping.notes ? headers.indexOf(mapping.notes) : -1;
-
-        const category = row[categoryIndex]?.toLowerCase();
-        if (!categories.includes(category)) {
-          errors.push(`Row ${index + 2}: Invalid category "${category}". Must be one of: ${categories.join(', ')}`);
-          return;
-        }
-
-        const itemName = row[itemNameIndex];
-        if (!itemName) {
-          errors.push(`Row ${index + 2}: Item name is required`);
-          return;
-        }
-
-        const quantityTotal = parseInt(row[quantityTotalIndex]);
-        const quantityAvailable = parseInt(row[quantityAvailableIndex]);
-        if (isNaN(quantityTotal) || isNaN(quantityAvailable)) {
-          errors.push(`Row ${index + 2}: Quantities must be valid numbers`);
-          return;
-        }
-
-        if (quantityAvailable > quantityTotal) {
-          errors.push(`Row ${index + 2}: Available quantity cannot exceed total quantity`);
-          return;
-        }
-
-        const condition = conditionIndex >= 0 ? row[conditionIndex]?.toLowerCase() : 'good';
-        if (condition && !conditions.includes(condition)) {
-          errors.push(`Row ${index + 2}: Invalid condition "${condition}". Must be one of: ${conditions.join(', ')}`);
-          return;
-        }
-
-        const record: CSVRecord = {
-          category,
-          item_name: itemName,
-          size_available: sizesIndex >= 0 && row[sizesIndex] 
-            ? row[sizesIndex].split(',').map(s => s.trim()).filter(Boolean)
-            : [],
-          color_available: colorsIndex >= 0 && row[colorsIndex]
-            ? row[colorsIndex].split(',').map(c => c.trim()).filter(Boolean)
-            : [],
-          quantity_total: quantityTotal,
-          quantity_available: quantityAvailable,
-          condition: condition || 'good',
-          low_stock_threshold: lowStockIndex >= 0 ? parseInt(row[lowStockIndex]) || 5 : 5,
-          notes: notesIndex >= 0 ? row[notesIndex] || '' : ''
-        };
-
-        previewData.push(record);
-      } catch (error) {
-        errors.push(`Row ${index + 2}: Error processing row - ${error}`);
+      if (errors.length === 0) {
+        setPreview(previewData);
+        setStep('preview');
+        console.log('✅ Preview generated successfully');
       }
-    });
-
-    setValidationErrors(errors);
-    if (errors.length === 0) {
-      setPreview(previewData);
-      setStep('preview');
+    } catch (error) {
+      console.error('❌ Error in generatePreview:', error);
+      toast({
+        title: "Preview error",
+        description: "There was an error generating the preview",
+        variant: "destructive",
+      });
     }
   };
 
@@ -212,6 +245,7 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
     if (preview.length === 0) return;
 
     try {
+      console.log('📤 Starting import');
       setStep('importing');
       setLoading(true);
 
@@ -235,8 +269,9 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
 
       onSuccess();
       handleClose();
+      console.log('✅ Import completed successfully');
     } catch (error) {
-      console.error('Import error:', error);
+      console.error('❌ Import error:', error);
       toast({
         title: "Import failed",
         description: error instanceof Error ? error.message : "An error occurred during import",
@@ -270,24 +305,52 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
   };
 
   const downloadTemplate = () => {
-    const template = [
-      ['category', 'item_name', 'sizes', 'colors', 'quantity_total', 'quantity_available', 'condition', 'low_stock_threshold', 'notes'],
-      ['dresses', 'Black Evening Gown', 'S,M,L,XL', 'Black', '10', '8', 'good', '2', 'Formal performance dress'],
-      ['pearls', 'Classic Pearl Necklace', '', 'White', '20', '18', 'new', '3', '16-inch strand'],
-      ['lipstick', 'Performance Red', '', 'Red', '15', '12', 'new', '5', 'Stage-appropriate color']
-    ];
+    try {
+      const template = [
+        ['category', 'item_name', 'sizes', 'colors', 'quantity_total', 'quantity_available', 'condition', 'low_stock_threshold', 'notes'],
+        ['dresses', 'Black Evening Gown', 'S,M,L,XL', 'Black', '10', '8', 'good', '2', 'Formal performance dress'],
+        ['pearls', 'Classic Pearl Necklace', '', 'White', '20', '18', 'new', '3', '16-inch strand'],
+        ['lipstick', 'Performance Red', '', 'Red', '15', '12', 'new', '5', 'Stage-appropriate color']
+      ];
 
-    const csvContent = template.map(row => 
-      row.map(cell => `"${cell}"`).join(',')
-    ).join('\n');
+      const csvContent = template.map(row => 
+        row.map(cell => `"${cell}"`).join(',')
+      ).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'wardrobe_import_template.csv';
-    link.click();
-    URL.revokeObjectURL(link.href);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'wardrobe_import_template.csv';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (error) {
+      console.error('❌ Error downloading template:', error);
+      toast({
+        title: "Download error",
+        description: "There was an error downloading the template",
+        variant: "destructive",
+      });
+    }
   };
+
+  console.log('🔄 About to render Dialog, open:', open);
+
+  // If there's an error with the component state, show error dialog
+  if (!user) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Authentication Required</DialogTitle>
+            <DialogDescription>
+              You must be logged in to use the CSV import feature.
+            </DialogDescription>
+          </DialogHeader>
+          <Button onClick={() => onOpenChange(false)}>Close</Button>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
