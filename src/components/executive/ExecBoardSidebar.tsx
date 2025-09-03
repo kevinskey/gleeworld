@@ -40,7 +40,7 @@ export const ExecBoardSidebar = ({ className }: ExecBoardSidebarProps) => {
             {/* Header */}
             <Card className="p-3">
               <div className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-yellow-600" />
+                <Crown className="h-5 w-5 text-spelman-gold" />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm">Executive Board</h3>
                   <p className="text-xs text-muted-foreground truncate">
@@ -65,10 +65,11 @@ export const ExecBoardSidebar = ({ className }: ExecBoardSidebarProps) => {
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 hover:bg-accent"
+            onClick={toggleSidebar}
             title="Executive Board"
           >
-            <Crown className="h-4 w-4 text-yellow-600" />
+            <Crown className="h-4 w-4 text-spelman-gold" />
           </Button>
         </div>
       )}
