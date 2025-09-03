@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { UserPlus, Users, Search, GraduationCap, Edit3, Trash2 } from 'lucide-react';
+import { UserPlus, Users, Search, GraduationCap, Edit3, Trash2, Filter, ArrowUpDown, SortAsc, SortDesc } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,6 +38,10 @@ export const EnrollmentManager = () => {
   const [selectedSemester, setSelectedSemester] = useState('Fall 2025');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [gradeFilter, setGradeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('enrolled_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -198,10 +202,55 @@ export const EnrollmentManager = () => {
     }
   };
 
-  const filteredEnrollments = enrollments.filter(enrollment =>
-    enrollment.gw_profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    enrollment.gw_profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAndSortedEnrollments = enrollments
+    .filter(enrollment => {
+      // Search filter
+      const matchesSearch = enrollment.gw_profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        enrollment.gw_profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || enrollment.enrollment_status === statusFilter;
+      
+      // Grade filter
+      const matchesGrade = gradeFilter === 'all' || 
+        (gradeFilter === 'graded' && enrollment.final_grade) ||
+        (gradeFilter === 'ungraded' && !enrollment.final_grade);
+      
+      return matchesSearch && matchesStatus && matchesGrade;
+    })
+    .sort((a, b) => {
+      let aValue: any, bValue: any;
+      
+      switch (sortBy) {
+        case 'name':
+          aValue = a.gw_profiles?.full_name || '';
+          bValue = b.gw_profiles?.full_name || '';
+          break;
+        case 'email':
+          aValue = a.gw_profiles?.email || '';
+          bValue = b.gw_profiles?.email || '';
+          break;
+        case 'status':
+          aValue = a.enrollment_status;
+          bValue = b.enrollment_status;
+          break;
+        case 'grade':
+          aValue = a.final_grade || '';
+          bValue = b.final_grade || '';
+          break;
+        case 'enrolled_at':
+        default:
+          aValue = new Date(a.enrolled_at);
+          bValue = new Date(b.enrolled_at);
+          break;
+      }
+      
+      if (sortOrder === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -271,32 +320,97 @@ export const EnrollmentManager = () => {
         </Dialog>
       </div>
 
-      <div className="flex gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search students..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+      <div className="space-y-4">
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search students..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <Select value={selectedSemester} onValueChange={setSelectedSemester}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Fall 2025">Fall 2025</SelectItem>
+              <SelectItem value="Spring 2025">Spring 2025</SelectItem>
+              <SelectItem value="Fall 2024">Fall 2024</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="enrolled">Enrolled</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="dropped">Dropped</SelectItem>
+                <SelectItem value="withdrawn">Withdrawn</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <Select value={gradeFilter} onValueChange={setGradeFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Filter by grade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Grades</SelectItem>
+              <SelectItem value="graded">Graded</SelectItem>
+              <SelectItem value="ungraded">Ungraded</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Name</SelectItem>
+                <SelectItem value="email">Email</SelectItem>
+                <SelectItem value="enrolled_at">Enrollment Date</SelectItem>
+                <SelectItem value="status">Status</SelectItem>
+                <SelectItem value="grade">Grade</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            className="flex items-center gap-1"
+          >
+            {sortOrder === 'asc' ? (
+              <SortAsc className="h-4 w-4" />
+            ) : (
+              <SortDesc className="h-4 w-4" />
+            )}
+            {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+          </Button>
+          
+          <div className="ml-auto text-sm text-muted-foreground">
+            {filteredAndSortedEnrollments.length} of {enrollments.length} students
           </div>
         </div>
-        <Select value={selectedSemester} onValueChange={setSelectedSemester}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Fall 2025">Fall 2025</SelectItem>
-            <SelectItem value="Spring 2025">Spring 2025</SelectItem>
-            <SelectItem value="Fall 2024">Fall 2024</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="grid gap-4">
-        {filteredEnrollments.length === 0 ? (
+        {filteredAndSortedEnrollments.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
               <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -307,7 +421,7 @@ export const EnrollmentManager = () => {
             </CardContent>
           </Card>
         ) : (
-          filteredEnrollments.map((enrollment) => (
+          filteredAndSortedEnrollments.map((enrollment) => (
             <Card key={enrollment.id}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
