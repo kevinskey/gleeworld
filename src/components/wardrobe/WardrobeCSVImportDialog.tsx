@@ -67,6 +67,8 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview' | 'importing'>('upload');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
+  console.log('🔄 WardrobeCSVImportDialog rendered, open:', open);
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = event.target.files?.[0];
     if (!uploadedFile) return;

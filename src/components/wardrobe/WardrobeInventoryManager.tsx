@@ -310,7 +310,12 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
             <Button 
               variant="outline" 
               className="shadow-sm text-sm lg:text-base"
-              onClick={() => setIsImportDialogOpen(true)}
+              onClick={() => {
+                console.log('📤 CSV Import button clicked');
+                console.log('📄 Current isImportDialogOpen state:', isImportDialogOpen);
+                setIsImportDialogOpen(true);
+                console.log('📄 Setting isImportDialogOpen to true');
+              }}
             >
               <Upload className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Import CSV</span>
@@ -546,8 +551,12 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
       {/* CSV Import Dialog */}
       <WardrobeCSVImportDialog
         open={isImportDialogOpen}
-        onOpenChange={setIsImportDialogOpen}
+        onOpenChange={(open) => {
+          console.log('🔄 onOpenChange called with:', open);
+          setIsImportDialogOpen(open);
+        }}
         onSuccess={() => {
+          console.log('✅ Import success callback triggered');
           fetchInventory();
           setIsImportDialogOpen(false);
         }}
