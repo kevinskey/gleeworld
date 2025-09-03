@@ -110,7 +110,7 @@ export default function ClassLanding() {
           {/* Course Description */}
           <div className="mt-16 text-center">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
-              <p className="text-white/90 text-2xl md:text-3xl lg:text-2xl xl:text-3xl leading-relaxed">
+              <p className="text-white/90 text-lg md:text-xl lg:text-lg xl:text-xl leading-relaxed">
                 Explore the rich tapestry of African American musical traditions, from spirituals and blues to jazz, gospel, R&B, and hip-hop. Discover how music has been a vehicle for cultural expression, social change, and artistic innovation.
               </p>
             </div>
