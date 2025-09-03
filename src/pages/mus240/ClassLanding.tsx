@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { Music, Calendar, BookOpen, Users, TrendingUp } from 'lucide-react';
+import { Music, Calendar, BookOpen, Users, TrendingUp, Brain } from 'lucide-react';
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { AdminGradesCard } from '@/components/mus240/admin/AdminGradesCard';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
@@ -36,6 +36,12 @@ export default function ClassLanding() {
       to: '/classes/mus240/resources', 
       desc: 'Readings, citations, media',
       icon: Users
+    },
+    { 
+      title: 'NotebookLM', 
+      to: '/classes/mus240/notebook', 
+      desc: 'AI study companion & notes',
+      icon: Brain
     },
   ];
 
