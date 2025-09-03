@@ -15,6 +15,11 @@ import { CommunityHubModule } from './modules/CommunityHubModule';
 import { AuditionsModule } from '../modules/AuditionsModule';
 import { LibrarianModule } from '../modules/LibrarianModule';
 import { SimpleModuleHub } from '../executive/SimpleModuleHub';
+import { NotificationsModule } from '../modules/NotificationsModule';
+import { KaraokeModule } from '../modules/KaraokeModule';
+import { SightSingingModule } from '../modules/SightSingingModule';
+import { EmailManagementModule } from '../modules/EmailManagementModule';
+import { CalendarManagementModule } from '../modules/CalendarManagementModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -25,6 +30,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
     switch (selectedModule) {
       case 'email':
         return <EmailModule />;
+      case 'email-management':
+        return <EmailManagementModule />;
       case 'community-hub':
         return <CommunityHubModule />;
       case 'music-library':
@@ -37,7 +44,11 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <FinancesModule />;
       case 'attendance':
         return <AttendanceModule />;
+      case 'attendance-management':
+        return <AttendanceModule />;
       case 'radio':
+        return <RadioModule />;
+      case 'radio-management':
         return <RadioModule />;
       case 'handbook':
         return <HandbookModule />;
@@ -45,18 +56,33 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <DirectoryModule />;
       case 'media':
         return <MediaModule />;
+      case 'media-library':
+        return <MediaModule />;
       case 'executive':
+      case 'student-conductor':
+      case 'section-leader':
         return <SimpleModuleHub />;
       case 'settings':
         return <SettingsModule />;
+      case 'auditions':
       case 'auditions-management':
         return <AuditionsModule />;
       case 'librarian':
         return <LibrarianModule />;
       case 'simple-executive-hub':
         return <SimpleModuleHub />;
+      case 'notifications':
+        return <NotificationsModule />;
+      case 'karaoke':
+        return <KaraokeModule />;
+      case 'sight-singing-management':
+        return <SightSingingModule />;
+      case 'calendar-management':
+        return <CalendarManagementModule />;
+      case 'check-in-check-out':
+        return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Check In/Check Out</h2><p>Check in/out module coming soon!</p></div>;
       default:
-        return <EmailModule />;
+        return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2><p>This module is being developed. Stay tuned!</p></div>;
     }
   };
 
