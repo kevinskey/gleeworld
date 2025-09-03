@@ -310,7 +310,9 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
             <Button 
               variant="outline" 
               className="shadow-sm text-sm lg:text-base"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 console.log('📤 CSV Import button clicked');
                 console.log('📄 Current isImportDialogOpen state:', isImportDialogOpen);
                 setIsImportDialogOpen(true);
