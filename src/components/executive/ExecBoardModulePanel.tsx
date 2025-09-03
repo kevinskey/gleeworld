@@ -61,7 +61,7 @@ export const ExecBoardModulePanel = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center text-muted-foreground">
-              <module.icon className="w-16 h-16 mx-auto mb-4" />
+              {React.createElement(module.icon, { className: "w-16 h-16 mx-auto mb-4" })}
               <h3 className="text-lg font-medium mb-2">{module.title}</h3>
               <p>{module.description}</p>
               <p className="text-sm mt-2">Module functionality coming soon...</p>
