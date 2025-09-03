@@ -107,6 +107,21 @@ export default function Groups() {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">AI Music Project Groups</h1>
+        
+        {/* Instructions */}
+        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+          <h2 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">📋 Assignment Instructions</h2>
+          <div className="text-blue-800 dark:text-blue-200 space-y-2">
+            <p className="font-medium">This is a graded assignment. You must participate in a group to receive credit.</p>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              <li><strong>Have an idea?</strong> Create your own group and recruit members</li>
+              <li><strong>Looking to join?</strong> Browse existing groups and apply to ones that interest you</li>
+              <li><strong>Can't decide?</strong> You can do both - create a group AND apply to others</li>
+              <li>Groups need 3-4 members to become official and start the project</li>
+            </ul>
+          </div>
+        </div>
+        
         <p className="text-muted-foreground mb-4">
           Form groups for the AI music project. Groups need 3-4 members to be official.
         </p>
