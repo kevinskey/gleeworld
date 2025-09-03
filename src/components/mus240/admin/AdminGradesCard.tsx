@@ -36,14 +36,14 @@ export const AdminGradesCard: React.FC = () => {
       to="/classes/mus240/admin" 
       className="group block"
     >
-      <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
-            <Settings className="h-5 w-5 text-white" />
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl lg:rounded-3xl p-8 sm:p-6 lg:p-12 xl:p-16 shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105">
+        <div className="flex items-center gap-4 sm:gap-3 lg:gap-6 mb-4 sm:mb-3 lg:mb-6">
+          <div className="p-3 sm:p-2 lg:p-4 xl:p-6 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg lg:rounded-xl">
+            <Settings className="h-6 w-6 sm:h-5 sm:w-5 lg:h-10 lg:w-10 xl:h-12 xl:w-12 text-white" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900">Administrator</h3>
+          <h3 className="text-3xl sm:text-2xl lg:text-3xl xl:text-4xl font-semibold text-gray-900">Administrator</h3>
         </div>
-        <p className="text-gray-600 leading-relaxed">Manage student enrollments and grades</p>
+        <p className="text-gray-600 text-lg sm:text-base lg:text-xl xl:text-2xl leading-relaxed">Manage student enrollments and grades</p>
       </div>
     </Link>
   );
