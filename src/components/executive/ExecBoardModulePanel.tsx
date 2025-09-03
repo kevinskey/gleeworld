@@ -179,7 +179,7 @@ export const ExecBoardModulePanel = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background/70" />
             </div>
-            <CardContent className="card-compact relative z-10 h-[320px] sm:h-[360px] md:h-[400px] flex flex-col justify-between">
+            <CardContent className="card-compact relative z-10 h-[320px] sm:h-[360px] md:h-[400px] flex flex-col justify-between pt-8">
               <div className="flex items-center gap-2 md:gap-4">
                 <Sparkles className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 text-primary" />
                 <div>
