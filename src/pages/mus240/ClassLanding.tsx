@@ -97,7 +97,7 @@ export default function ClassLanding() {
                       </div>
                       <h3 className="text-5xl sm:text-2xl lg:text-3xl xl:text-4xl font-semibold text-gray-900">{card.title}</h3>
                     </div>
-                    <p className="text-gray-600 text-2xl sm:text-base lg:text-xl xl:text-2xl leading-relaxed">{card.desc}</p>
+                    <p className="text-gray-600 text-xl sm:text-sm lg:text-base xl:text-lg leading-relaxed">{card.desc}</p>
                   </div>
                 </Link>
               );
