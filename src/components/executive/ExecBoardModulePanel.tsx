@@ -10,10 +10,12 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
 import { STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
+import { useNavigate } from 'react-router-dom';
 
 export const ExecBoardModulePanel = () => {
   const { user } = useAuth();
   const { profile } = useUserRole();
+  const navigate = useNavigate();
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [userModules, setUserModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -222,31 +224,20 @@ export const ExecBoardModulePanel = () => {
                       );
                     })}
                     
-                    {/* Check In/Out Module */}
+                    {/* Sight Reading Studio Module */}
                     <div className="space-y-2">
-                      <Collapsible 
-                        open={expandedModule === 'check-in-check-out'} 
-                        onOpenChange={() => toggleModule('check-in-check-out')}
+                      <Card 
+                        className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm border-primary/30 ring-1 ring-primary/20"
+                        onClick={() => navigate('/member-sight-reading-studio')}
                       >
-                        <CollapsibleTrigger asChild>
-                          <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm border-primary/30 ring-1 ring-primary/20">
-                            <CardContent className="p-4 text-center">
-                              <div className="w-12 h-12 rounded-lg bg-primary/15 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/25 transition-colors">
-                                <CheckSquare className="h-6 w-6 text-primary" />
-                              </div>
-                              <h3 className="font-semibold text-sm mb-1 text-foreground">Check In/Out</h3>
-                              <p className="text-xs text-muted-foreground line-clamp-2">Track attendance</p>
-                              <div className="mt-2">
-                                {expandedModule === 'check-in-check-out' ? (
-                                  <ChevronUp className="h-4 w-4 mx-auto text-muted-foreground" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4 mx-auto text-muted-foreground" />
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </CollapsibleTrigger>
-                      </Collapsible>
+                        <CardContent className="p-4 text-center">
+                          <div className="w-12 h-12 rounded-lg bg-primary/15 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/25 transition-colors">
+                            <Music className="h-6 w-6 text-primary" />
+                          </div>
+                          <h3 className="font-semibold text-sm mb-1 text-foreground">Sight Reading Studio</h3>
+                          <p className="text-xs text-muted-foreground line-clamp-2">Practice sight reading and complete assignments</p>
+                        </CardContent>
+                      </Card>
                     </div>
                   </div>
 
