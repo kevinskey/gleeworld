@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SimpleAssignmentCreator } from '@/components/assignments/SimpleAssignmentCreator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -344,11 +345,16 @@ export const CommunicationCenter = ({ user }: CommunicationCenterProps) => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="assignments">Create Assignments</TabsTrigger>
           <TabsTrigger value="messages">Messages</TabsTrigger>
           <TabsTrigger value="section-leaders">Section Leaders</TabsTrigger>
           <TabsTrigger value="sectionals">Sectionals</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="assignments" className="space-y-6">
+          <SimpleAssignmentCreator />
+        </TabsContent>
 
         <TabsContent value="messages" className="space-y-4">
           <div className="flex gap-4 items-center">
