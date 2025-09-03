@@ -149,7 +149,8 @@ export const useUserModulePermissions = () => {
 
   const getAllUsersWithPermissions = async (): Promise<UserWithPermissions[]> => {
     try {
-      console.log('🔍 Fetching users from gw_profiles...');
+      console.log('🔍 getAllUsersWithPermissions: Starting fetch...');
+      
       // Get all users using the same query pattern as the working useUsers hook
       const { data: users, error: usersError } = await supabase
         .from('gw_profiles')
@@ -161,25 +162,38 @@ export const useUserModulePermissions = () => {
         `)
         .order('created_at', { ascending: false });
       
-      console.log('🔍 Raw gw_profiles data:', {
+      console.log('🔍 getAllUsersWithPermissions: Raw gw_profiles data:', {
         count: users?.length || 0,
         error: usersError,
         sampleUsers: users?.slice(0, 5).map(u => ({ name: u.full_name, email: u.email })),
-        onnestyInResults: users?.find(u => u.full_name?.toLowerCase().includes('onnesty'))
+        arianaInResults: users?.find(u => u.email === 'arianaswindell@spelman.edu')
       });
       
       if (usersError) {
-        console.error('🔍 Error fetching users:', usersError);
+        console.error('🔍 getAllUsersWithPermissions: Error fetching users:', usersError);
         throw usersError;
       }
       
       // Get all active permissions
+      console.log('🔍 getAllUsersWithPermissions: Fetching permissions...');
       const { data: perms, error: permsError } = await supabase
         .from('gw_user_module_permissions')
         .select('user_id, module_id')
         .eq('is_active', true);
       
-      if (permsError) throw permsError;
+      console.log('🔍 getAllUsersWithPermissions: Permissions data:', {
+        count: perms?.length || 0,
+        error: permsError,
+        arianaPerms: perms?.filter(p => {
+          const user = users?.find(u => u.user_id === p.user_id);
+          return user?.email === 'arianaswindell@spelman.edu';
+        })
+      });
+      
+      if (permsError) {
+        console.error('🔍 getAllUsersWithPermissions: Error fetching permissions:', permsError);
+        throw permsError;
+      }
       
       // Combine users with their permissions, filtering out invalid entries like useUsers does
       const usersWithPermissions: UserWithPermissions[] = (users || [])
@@ -190,27 +204,35 @@ export const useUserModulePermissions = () => {
                           (profile.first_name && profile.last_name ? 
                            `${profile.first_name} ${profile.last_name}` : null) ||
                           profile.email || 'Unknown User';
-                          
+          
+          const userPermissions = (perms || [])
+            .filter(p => p.user_id === profile.user_id)
+            .map(p => p.module_id);
+                           
           return {
             user_id: profile.user_id,
             full_name: fullName,
             email: profile.email || '',
             role: profile.role || 'member',
             is_exec_board: profile.is_exec_board || false,
-            modules: (perms || [])
-              .filter(p => p.user_id === profile.user_id)
-              .map(p => p.module_id)
+            modules: userPermissions
           };
         });
       
-      console.log('🔍 Final users with permissions:', {
+      console.log('🔍 getAllUsersWithPermissions: Final users with permissions:', {
         count: usersWithPermissions.length,
-        onnestyFound: usersWithPermissions.find(u => u.full_name?.toLowerCase().includes('onnesty'))
+        arianaFound: usersWithPermissions.find(u => u.email === 'arianaswindell@spelman.edu'),
+        sampleUsersWithModules: usersWithPermissions.slice(0, 3).map(u => ({
+          name: u.full_name,
+          email: u.email,
+          moduleCount: u.modules.length,
+          modules: u.modules.slice(0, 3)
+        }))
       });
       
       return usersWithPermissions;
     } catch (err) {
-      console.error('Error fetching users with permissions:', err);
+      console.error('🔍 getAllUsersWithPermissions: Catch block error:', err);
       return [];
     }
   };
