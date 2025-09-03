@@ -175,7 +175,7 @@ export const ExecBoardModulePanel = () => {
               <img
                 src="/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png"
                 alt="Historic Spelman campus background"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover brightness-125 contrast-110 saturate-110"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/15 to-background/30" />
             </div>
