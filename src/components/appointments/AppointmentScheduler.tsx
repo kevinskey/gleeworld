@@ -245,28 +245,28 @@ export const AppointmentScheduler = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1 text-xs w-full h-12 border-primary/30 hover:bg-primary/10 px-2 flex flex-col items-center justify-center">
-          <CalendarIcon className="h-4 w-4 flex-shrink-0" />
-          <span className="text-[10px] leading-tight hidden sm:inline">Schedule</span>
-          <span className="text-[10px] leading-tight sm:hidden">Schedule</span>
+        <Button variant="outline" size="sm" className="gap-2 w-full h-auto min-h-[3rem] border-primary/30 hover:bg-primary/10 px-3 py-2 flex flex-col sm:flex-row items-center justify-center">
+          <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+          <span className="text-xs sm:text-sm font-medium">Schedule Appointment</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Schedule Appointment</DialogTitle>
-          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-2">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
+      <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[95vh] overflow-y-auto mx-2 sm:mx-auto">
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="text-lg sm:text-xl">Schedule Appointment</DialogTitle>
+          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
               <strong>Appointment Scheduling:</strong> Select a date and available time slot to schedule your appointment.
               Available appointment types include meetings, consultations, office hours, and more.
             </p>
           </div>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Date Selection */}
-          <div className="space-y-4">
-            <div>
+          <div className="space-y-4 order-2 lg:order-1">
+            <div className="space-y-2">
               <label className="text-sm font-medium">Select Date</label>
+              <div className="flex justify-center">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -276,21 +276,22 @@ export const AppointmentScheduler = () => {
                     today.setHours(0, 0, 0, 0);
                     return date < today;
                   }}
-                  numberOfMonths={2}
+                  numberOfMonths={1}
                   showOutsideDays={true}
-                  className="rounded-md border"
+                  className="rounded-md border w-full max-w-sm"
                 />
+              </div>
             </div>
 
             {/* Time Slots Dropdown */}
             {selectedDate && availableSlots.length > 0 && (
-              <div>
+              <div className="space-y-2">
                 <label className="text-sm font-medium">Available Times</label>
                 <Select value={selectedTime} onValueChange={setSelectedTime}>
-                  <SelectTrigger className="mt-2">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select time" />
                   </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
+                  <SelectContent className="bg-background border shadow-lg z-50 max-h-60">
                     {availableSlots
                       .filter(slot => slot.available)
                       .map((slot) => (
@@ -304,16 +305,16 @@ export const AppointmentScheduler = () => {
             )}
 
             {selectedDate && availableSlots.filter(slot => slot.available).length === 0 && (
-              <div className="text-center py-4 text-muted-foreground">
+              <div className="text-center py-4 text-sm text-muted-foreground bg-muted/30 rounded-lg">
                 No available slots for selected duration
               </div>
             )}
           </div>
 
           {/* Appointment Form */}
-          <div>
+          <div className="order-1 lg:order-2">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
                 <FormField
                   control={form.control}
                   name="title"
