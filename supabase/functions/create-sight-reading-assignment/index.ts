@@ -14,9 +14,9 @@ interface CreateAssignmentRequest {
   points_possible?: number;
   sheet_music_id?: string;
   musicxml_content?: string;
-  target_type: 'all_members' | 'voice_part' | 'specific_users';
+  target_type: 'individual' | 'voice_part' | 'all_members';
   target_value?: string;
-  grading_period: 'quarter1' | 'quarter2' | 'quarter3' | 'quarter4' | 'semester1' | 'semester2' | 'annual';
+  grading_period: string;
 }
 
 serve(async (req) => {

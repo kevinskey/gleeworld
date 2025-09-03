@@ -151,7 +151,7 @@ export const SimpleAssignmentCreator: React.FC<SimpleAssignmentCreatorProps> = (
           description: formData.description,
           due_date: dueDate.toISOString(),
           points_possible: formData.points_possible,
-          target_type: formData.target_type === 'all' ? 'all_members' : formData.target_type,
+          target_type: formData.target_type === 'all' ? 'individual' : formData.target_type,
           target_value: formData.target_value || null,
           grading_period: formData.grading_period,
           musicxml_content: formData.musicxml_content || null
