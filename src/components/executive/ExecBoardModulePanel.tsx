@@ -9,28 +9,31 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
 import { STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
-
 export const ExecBoardModulePanel = () => {
-  const { user } = useAuth();
-  const { profile } = useUserRole();
+  const {
+    user
+  } = useAuth();
+  const {
+    profile
+  } = useUserRole();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [userModules, setUserModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDayMode, setIsDayMode] = useState(true);
-
-  const { getAccessibleModules, loading: accessLoading, hasAccess } = useSimplifiedModuleAccess(user?.id);
-
+  const {
+    getAccessibleModules,
+    loading: accessLoading,
+    hasAccess
+  } = useSimplifiedModuleAccess(user?.id);
   useEffect(() => {
     console.log('🔍 ExecBoardModulePanel: useEffect triggered');
     console.log('🔍 User:', user?.email);
     console.log('🔍 Access Loading state:', accessLoading);
     console.log('🔍 Has access function:', typeof hasAccess);
-    
     if (!user || accessLoading) {
       console.log('🔍 ExecBoardModulePanel: Waiting for user or access loading...');
       return;
     }
-    
     console.log('🎯 ExecBoardModulePanel: Fetching accessible modules for user:', user.id);
     const accessibleModules = getAccessibleModules();
     console.log('🎯 ExecBoardModulePanel: Accessible modules:', accessibleModules.map(m => `${m.id} (${m.title})`));
@@ -39,66 +42,33 @@ export const ExecBoardModulePanel = () => {
     setUserModules(moduleIds);
     setLoading(false);
   }, [user?.id, accessLoading]);
-
   const handleModuleClick = (moduleId: string) => {
-    console.log('🎯 Module clicked:', moduleId);
-    console.log('🎯 Has access:', hasAccess(moduleId));
-    console.log('🎯 Current selectedModule:', selectedModule);
-    
     if (hasAccess(moduleId)) {
-      console.log('🎯 Setting selectedModule to:', moduleId);
       setSelectedModule(moduleId);
-    } else {
-      console.log('🎯 No access to module:', moduleId);
     }
   };
-
   const renderModuleComponent = () => {
-    console.log('🔍 renderModuleComponent called, selectedModule:', selectedModule);
-    
-    if (!selectedModule) {
-      console.log('🔍 No selectedModule, returning null');
-      return null;
-    }
-    
+    if (!selectedModule) return null;
     const module = UNIFIED_MODULES.find(m => m.id === selectedModule);
-    console.log('🔍 Found module:', module);
-    
-    if (!module) {
-      console.log('🔍 Module not found in UNIFIED_MODULES');
-      return null;
-    }
-
-    return (
-      <div className="mt-4">
+    if (!module) return null;
+    return <div className="mt-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">{module.title}</h3>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setSelectedModule(null)}
-          >
+          <Button variant="outline" size="sm" onClick={() => setSelectedModule(null)}>
             Close
           </Button>
         </div>
-        <div className="min-h-[400px]">
-          {module.component ? (
-            <module.component />
-          ) : (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center text-muted-foreground">
-                  <module.icon className="w-16 h-16 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">{module.title}</h3>
-                  <p>{module.description}</p>
-                  <p className="text-sm mt-2">Module functionality coming soon...</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-    );
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-muted-foreground">
+              <module.icon className="w-16 h-16 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">{module.title}</h3>
+              <p>{module.description}</p>
+              <p className="text-sm mt-2">Module functionality coming soon...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>;
   };
 
   // Get standard member modules
@@ -109,20 +79,62 @@ export const ExecBoardModulePanel = () => {
     }).filter(Boolean);
   };
 
-  // Removed unnecessary executive module categorization - modules not needed
+  // Get executive modules (assigned modules that aren't standard member modules)
+  const assignedModules = getAccessibleModules().filter(module => !STANDARD_MEMBER_MODULE_IDS.includes(module.id));
 
+  // Group executive modules by category
+  const execModulesByCategory = assignedModules.reduce((acc, module) => {
+    // Create executive-specific category groupings
+    let execCategory = 'General Tools';
+
+    // Executive Leadership modules
+    if (['attendance-management', 'user-management', 'auditions', 'permissions', 'wardrobe'].includes(module.id)) {
+      execCategory = 'Executive Leadership';
+    }
+    // Communications & Events
+    else if (['email-management', 'notifications', 'pr-coordinator', 'scheduling-module', 'service-management', 'calendar-management', 'tour-management', 'booking-forms'].includes(module.id)) {
+      execCategory = 'Communications & Events';
+    }
+    // Musical Direction
+    else if (['student-conductor', 'section-leader', 'sight-singing-management', 'librarian', 'radio-management'].includes(module.id)) {
+      execCategory = 'Musical Direction';
+    }
+    // Financial Management
+    else if (['contracts', 'budgets', 'receipts-records', 'approval-system', 'glee-ledger', 'monthly-statements', 'check-requests'].includes(module.id)) {
+      execCategory = 'Financial Management';
+    }
+    // Member Engagement
+    else if (['buckets-of-love', 'wellness', 'alumnae-portal', 'fan-engagement', 'glee-writing'].includes(module.id)) {
+      execCategory = 'Member Engagement';
+    }
+    // Tools & Administration
+    else if (['ai-tools', 'hero-manager', 'press-kits', 'first-year-console', 'settings'].includes(module.id)) {
+      execCategory = 'Tools & Administration';
+    }
+    if (!acc[execCategory]) {
+      acc[execCategory] = [];
+    }
+    acc[execCategory].push(module);
+    return acc;
+  }, {} as Record<string, typeof assignedModules>);
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'Executive Leadership': return Users;
-      case 'Communications & Events': return MessageSquare;
-      case 'Musical Direction': return Music;
-      case 'Financial Management': return DollarSign;
-      case 'Member Engagement': return Heart;
-      case 'Tools & Administration': return Settings;
-      default: return Settings;
+      case 'Executive Leadership':
+        return Users;
+      case 'Communications & Events':
+        return MessageSquare;
+      case 'Musical Direction':
+        return Music;
+      case 'Financial Management':
+        return DollarSign;
+      case 'Member Engagement':
+        return Heart;
+      case 'Tools & Administration':
+        return Settings;
+      default:
+        return Settings;
     }
   };
-
   const getModuleIcon = (moduleId: string) => {
     const icons = {
       'community-hub': Home,
@@ -133,53 +145,30 @@ export const ExecBoardModulePanel = () => {
     };
     return icons[moduleId as keyof typeof icons] || Home;
   };
-
   if (loading || accessLoading) {
-    return (
-      <Card>
+    return <Card>
         <CardContent className="py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading modules...</p>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
   const standardModules = getStandardMemberModules();
-
-  return (
-    <div className="w-full overflow-x-hidden page-container">
+  return <div className="w-full overflow-x-hidden page-container">
       <div className="w-full section-spacing">
         {/* Hero Section for Standard Member Modules */}
         <section aria-label="Member modules" className="animate-fade-in w-full overflow-hidden">
           <Card className="relative overflow-hidden border bg-background/40 w-full">
             {/* Day/Night Toggle */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="absolute top-4 right-4 z-20 bg-background/80 backdrop-blur-sm"
-              onClick={() => setIsDayMode(!isDayMode)}
-            >
+            <Button variant="outline" size="sm" className="absolute top-4 right-4 z-20 bg-background/80 backdrop-blur-sm" onClick={() => setIsDayMode(!isDayMode)}>
               {isDayMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </Button>
             
             <div className="absolute inset-0">
-              <img
-                src="/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png"
-                alt="Historic Spelman campus background"
-                className={`w-full h-full object-cover transition-all duration-700 ${
-                  isDayMode 
-                    ? 'brightness-125 contrast-110 saturate-110' 
-                    : 'brightness-50 contrast-125 saturate-75 hue-rotate-180 sepia-[0.3]'
-                }`}
-              />
-              <div className={`absolute inset-0 transition-all duration-700 ${
-                isDayMode 
-                  ? 'bg-gradient-to-b from-background/10 via-background/15 to-background/30'
-                  : 'bg-gradient-to-b from-blue-950/40 via-blue-900/50 to-blue-950/70'
-              }`} />
+              <img src="/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png" alt="Historic Spelman campus background" className={`w-full h-full object-cover transition-all duration-700 ${isDayMode ? 'brightness-125 contrast-110 saturate-110' : 'brightness-50 contrast-125 saturate-75 hue-rotate-180 sepia-[0.3]'}`} />
+              <div className={`absolute inset-0 transition-all duration-700 ${isDayMode ? 'bg-gradient-to-b from-background/10 via-background/15 to-background/30' : 'bg-gradient-to-b from-blue-950/40 via-blue-900/50 to-blue-950/70'}`} />
             </div>
             <CardContent className="card-compact relative z-10 h-[320px] sm:h-[360px] md:h-[400px] flex flex-col justify-between pt-8">
               <div className="flex items-center gap-2 md:gap-4 pt-5">
@@ -194,44 +183,88 @@ export const ExecBoardModulePanel = () => {
 
               <div className="w-full responsive-grid-2 gap-2 md:gap-4">
                 <div className="grid grid-cols-2 gap-2">
-                  {standardModules.slice(0, 4).map((module) => {
-                    const IconComponent = getModuleIcon(module.id);
-                    return (
-                      <Card 
-                        key={module.id} 
-                        className="cursor-pointer hover:bg-muted/70 hover:scale-105 hover:shadow-lg transition-all duration-200 bg-background/60 backdrop-blur-sm border-2 hover:border-primary/50 active:scale-95 h-20 flex items-center justify-center"
-                        onClick={() => handleModuleClick(module.id)}
-                      >
-                        <div className="flex flex-col items-center justify-center gap-1 text-center w-full">
-                          <IconComponent className="h-5 w-5 text-primary transition-colors" />
-                          <span className="text-xs font-medium transition-colors leading-tight">{module.title}</span>
-                        </div>
-                      </Card>
-                    );
-                  })}
+                  {standardModules.slice(0, 4).map(module => {
+                  const IconComponent = getModuleIcon(module.id);
+                  return <Card key={module.id} className="cursor-pointer hover:bg-muted/50 transition-colors bg-background/60 backdrop-blur-sm" onClick={() => handleModuleClick(module.id)}>
+                        <CardContent className="p-3">
+                          <div className="flex flex-col items-center text-center gap-2">
+                            <IconComponent className="h-6 w-6 text-primary" />
+                            <span className="text-xs font-medium">{module.title}</span>
+                          </div>
+                        </CardContent>
+                      </Card>;
+                })}
                 </div>
                 
-                {/* Check In/Check Out Module */}
-                <Card 
-                  className="bg-background/60 backdrop-blur-sm h-20 cursor-pointer hover:bg-muted/70 hover:scale-105 hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/50 active:scale-95"
-                  onClick={() => handleModuleClick('check-in-check-out')}
-                >
-                  <CardContent className="p-4 h-full flex items-center justify-center">
-                    <div className="text-center flex flex-col items-center justify-center h-full">
-                      <CheckSquare className="h-6 w-6 text-primary mb-1" />
-                      <h3 className="font-medium text-xs mb-0">Check In/Check Out</h3>
-                      <p className="text-xs text-muted-foreground">
-                        Track arrival & departure times
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                {standardModules.length > 4 && <Card className="bg-background/60 backdrop-blur-sm">
+                    <CardContent className="p-4">
+                      <div className="text-center">
+                        <Music className="h-8 w-8 text-primary mx-auto mb-2" />
+                        <h3 className="font-medium text-sm mb-1">Additional Modules</h3>
+                        
+                      </div>
+                    </CardContent>
+                  </Card>}
               </div>
             </CardContent>
           </Card>
         </section>
 
-        {/* Executive Functions Section - Removed - Not necessary */}
+        {/* Executive Functions Section - Accordion Style */}
+        {assignedModules.length > 0 && <section className="mb-6">
+            <Accordion type="multiple" className="w-full">
+              <AccordionItem value="executive-functions">
+                <AccordionTrigger className="text-base">
+                  <div className="flex items-center gap-2">
+                    <Crown className="h-4 w-4 text-primary" /> 
+                    Executive Functions
+                    <Badge variant="secondary" className="ml-2">
+                      {profile?.exec_board_role || 'Executive'}
+                    </Badge>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <Card>
+                    <CardContent className="pt-6 space-y-4">
+                      {Object.entries(execModulesByCategory).map(([category, modules]) => {
+                    const IconComponent = getCategoryIcon(category);
+                    return <div key={category} className="space-y-3">
+                            <div className="flex items-center gap-2 mb-3">
+                              {IconComponent && <IconComponent className="h-4 w-4" />}
+                              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                                {category}
+                              </h4>
+                              <div className="flex-1 h-px bg-border" />
+                            </div>
+                            
+                            <div className="responsive-grid-2 gap-2">
+                              {modules.map(module => <Card key={module.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleModuleClick(module.id)}>
+                                  <CardContent className="p-3">
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <h5 className="font-medium text-sm">{module.title}</h5>
+                                          <Badge variant="outline" className="text-xs px-1 py-0">
+                                            Executive
+                                          </Badge>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground line-clamp-2">
+                                          {module.description}
+                                        </p>
+                                      </div>
+                                      <Settings className="h-3 w-3 ml-2 opacity-50" />
+                                    </div>
+                                  </CardContent>
+                                </Card>)}
+                            </div>
+                          </div>;
+                  })}
+                    </CardContent>
+                  </Card>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </section>}
 
         {/* All Modules in Accordion Style */}
         <section>
@@ -251,14 +284,9 @@ export const ExecBoardModulePanel = () => {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="responsive-grid-3 gap-3">
-                      {standardModules.map((module) => {
-                        const IconComponent = getModuleIcon(module.id);
-                        return (
-                          <Card 
-                            key={module.id} 
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => handleModuleClick(module.id)}
-                          >
+                      {standardModules.map(module => {
+                      const IconComponent = getModuleIcon(module.id);
+                      return <Card key={module.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleModuleClick(module.id)}>
                             <CardContent className="p-4">
                               <div className="flex items-center gap-3">
                                 <IconComponent className="h-8 w-8 text-primary flex-shrink-0" />
@@ -270,9 +298,8 @@ export const ExecBoardModulePanel = () => {
                                 </div>
                               </div>
                             </CardContent>
-                          </Card>
-                        );
-                      })}
+                          </Card>;
+                    })}
                     </div>
                   </CardContent>
                 </Card>
@@ -282,7 +309,20 @@ export const ExecBoardModulePanel = () => {
         </section>
 
         {renderModuleComponent()}
+
+        {/* No executive modules assigned state */}
+        {!loading && assignedModules.length === 0 && <Card className="border-muted">
+            <CardContent className="text-center py-12">
+              <Crown className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No Executive Functions Assigned</h3>
+              <p className="text-muted-foreground mb-4">
+                You have access to all standard member modules above.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Contact an administrator to request executive module access.
+              </p>
+            </CardContent>
+          </Card>}
       </div>
-    </div>
-  );
+    </div>;
 };
