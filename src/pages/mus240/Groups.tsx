@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Users, Plus, Clock, CheckCircle, XCircle, UserCheck, Trash2 } from 'lucide-react';
 
 export default function Groups() {
+  console.log('Groups component: Function executing');
   const { user } = useAuth();
   const {
     groups,
@@ -28,6 +29,13 @@ export default function Groups() {
     getUserApplications,
     getGroupApplications
   } = useMus240Groups();
+
+  console.log('Groups component mounted', {
+    loading,
+    error,
+    groupsCount: groups.length,
+    user: user?.id
+  });
 
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showApplyForm, setShowApplyForm] = useState(false);
@@ -96,8 +104,14 @@ export default function Groups() {
   const totalGroupsCount = groups.length;
   const maxGroups = 7;
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) {
+    console.log('Groups: Still loading...');
+    return <div>Loading...</div>;
+  }
+  if (error) {
+    console.log('Groups: Error state', error);
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

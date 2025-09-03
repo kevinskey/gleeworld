@@ -51,6 +51,7 @@ export const useMus240Groups = (semester: string = 'Fall 2024') => {
   const { user } = useAuth();
 
   useEffect(() => {
+    console.log('useMus240Groups: useEffect triggered', { user: user?.id, semester });
     if (user) {
       fetchGroups();
       fetchApplications();
@@ -59,6 +60,7 @@ export const useMus240Groups = (semester: string = 'Fall 2024') => {
 
   const fetchGroups = async () => {
     try {
+      console.log('useMus240Groups: fetchGroups starting');
       const { data, error } = await supabase
         .from('mus240_project_groups')
         .select(`
@@ -72,6 +74,7 @@ export const useMus240Groups = (semester: string = 'Fall 2024') => {
         .eq('semester', semester)
         .order('created_at', { ascending: false });
 
+      console.log('useMus240Groups: fetchGroups result', { data, error });
       if (error) throw error;
       setGroups(data as any || []);
     } catch (err) {
