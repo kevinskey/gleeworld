@@ -16978,6 +16978,10 @@ export type Database = {
         Args: { audition_application_id: string; auditioner_user_id: string }
         Returns: boolean
       }
+      refresh_all_user_permissions: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       save_onboarding_signature: {
         Args: {
           p_full_name: string
