@@ -51,7 +51,7 @@ export default function ClassLanding() {
         {/* Gradient overlay for better text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10"></div>
         
-        <main className="relative z-10 w-full px-8 lg:px-16 xl:px-24 py-12">
+        <main className="relative z-10 w-full px-4 lg:px-8 py-12">
           {/* Hero Section with Redesigned Title */}
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
