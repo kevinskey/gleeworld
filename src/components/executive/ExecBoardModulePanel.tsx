@@ -181,27 +181,27 @@ export const ExecBoardModulePanel = () => {
                 </div>
               </div>
 
-              <div className="w-full responsive-grid-3 gap-2 md:gap-4">
+              <div className="w-full responsive-grid-4 gap-2 md:gap-3">
                 {standardModules.map(module => {
                   const IconComponent = getModuleIcon(module.id);
                   return (
                     <Card key={module.id} className="cursor-pointer hover:bg-muted/50 transition-colors bg-background/60 backdrop-blur-sm" onClick={() => handleModuleClick(module.id)}>
-                      <CardContent className="p-4">
+                      <CardContent className="p-2 md:p-3">
                         <div className="text-center">
-                          <IconComponent className="h-8 w-8 text-primary mx-auto mb-2" />
-                          <h3 className="font-medium text-sm mb-1">{module.title}</h3>
-                          <p className="text-xs text-muted-foreground line-clamp-2">{module.description}</p>
+                          <IconComponent className="h-6 w-6 text-primary mx-auto mb-1" />
+                          <h3 className="font-medium text-xs mb-1">{module.title}</h3>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{module.description}</p>
                         </div>
                       </CardContent>
                     </Card>
                   );
                 })}
-                <Card className="cursor-pointer hover:bg-muted/50 transition-colors bg-background/60 backdrop-blur-sm" onClick={() => handleModuleClick('check-in-check-out')}>
-                  <CardContent className="p-4">
+                <Card className="cursor-pointer hover:bg-muted/50 transition-colors bg-background/60 backdrop-blur-sm border-primary/50" onClick={() => handleModuleClick('check-in-check-out')}>
+                  <CardContent className="p-2 md:p-3">
                     <div className="text-center">
-                      <CheckSquare className="h-8 w-8 text-primary mx-auto mb-2" />
-                      <h3 className="font-medium text-sm mb-1">Check In/Check Out</h3>
-                      <p className="text-xs text-muted-foreground">Track arrival and departure times for events and rehearsals</p>
+                      <CheckSquare className="h-6 w-6 text-primary mx-auto mb-1" />
+                      <h3 className="font-medium text-xs mb-1">Check In/Check Out</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-1">Track attendance</p>
                     </div>
                   </CardContent>
                 </Card>
