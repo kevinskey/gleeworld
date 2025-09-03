@@ -49,9 +49,10 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           emailPermissions = emailPerms?.map((p: any) => p.module_name) || [];
         }
 
-        // Executive board members get all executive modules from config (single source)
+        // Executive board members only get modules they have explicit permissions for
+        // Super admins get all executive modules, but regular exec board members need specific permissions
         let executiveFunctions: string[] = [];
-        if (profile?.is_exec_board || profile?.is_admin || profile?.is_super_admin) {
+        if (profile?.is_super_admin || profile?.role === 'super-admin' || profile?.role === 'admin') {
           executiveFunctions = EXECUTIVE_MODULE_IDS;
         }
 
