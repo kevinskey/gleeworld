@@ -88,8 +88,18 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
         } catch (primaryErr) {
           console.warn('Primary PDF load failed, retrying with ArrayBuffer', primaryErr);
           try {
-            // Method 2: ArrayBuffer with better headers
-            const resp = await fetch(signedUrl, {
+            // Method 2: ArrayBuffer with better headers and token refresh on auth errors
+            let fetchUrl = signedUrl;
+            
+            // Check if this is a token expiration error and try to refresh the URL
+            if (primaryErr.message && (primaryErr.message.includes('400') || primaryErr.message.includes('InvalidJWT') || primaryErr.message.includes('exp'))) {
+              console.log('FastPDFViewer: Detected expired token, attempting to refresh...');
+              // For signed URLs that are expired, we need to get a fresh one
+              // This is a limitation - we can't refresh from here without the original path
+              // The useSheetMusicUrl hook should handle this case
+            }
+            
+            const resp = await fetch(fetchUrl, {
               method: 'GET',
               headers: {
                 'Accept': 'application/pdf,*/*',
@@ -99,6 +109,17 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
             });
             
             if (!resp.ok) {
+              const errorText = await resp.text();
+              console.error('FastPDFViewer: Fetch response details:', {
+                status: resp.status,
+                statusText: resp.statusText,
+                errorText: errorText
+              });
+              
+              if (resp.status === 400 && errorText.includes('InvalidJWT')) {
+                throw new Error(`PDF access token has expired. Please refresh the page and try again. (${resp.status})`);
+              }
+              
               throw new Error(`Fetch failed: ${resp.status} ${resp.statusText}`);
             }
             

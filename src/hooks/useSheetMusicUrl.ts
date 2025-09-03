@@ -25,9 +25,41 @@ export const useSheetMusicUrl = (pdfUrl: string | null) => {
         const isHttp = /^https?:\/\//.test(pdfUrl);
         const isSigned = pdfUrl.includes('/storage/v1/object/sign/');
 
-        // Use signed Supabase storage URL as-is
+        // Use signed Supabase storage URL as-is, but check if it's expired
         if (isSigned && isSupabaseStorage) {
-          console.log('useSheetMusicUrl: Using signed storage URL directly:', pdfUrl);
+          console.log('useSheetMusicUrl: Checking signed storage URL for expiration:', pdfUrl);
+          
+          // Extract and decode the JWT token to check expiration
+          try {
+            const tokenParam = pdfUrl.split('token=')[1];
+            if (tokenParam) {
+              const token = tokenParam.split('&')[0]; // Handle multiple params
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              const now = Math.floor(Date.now() / 1000);
+              const exp = payload.exp;
+              
+              console.log('useSheetMusicUrl: Token expiration check:', {
+                now,
+                exp,
+                expired: now >= exp,
+                timeUntilExpiry: exp - now
+              });
+              
+              if (now >= exp) {
+                console.log('useSheetMusicUrl: Token is expired, need to regenerate');
+                setError('PDF access token has expired. Please refresh the page to get a new link.');
+                return;
+              }
+              
+              // Token is still valid, but warn if it expires soon (within 5 minutes)
+              if (exp - now < 300) {
+                console.warn('useSheetMusicUrl: Token expires soon, consider refreshing');
+              }
+            }
+          } catch (tokenError) {
+            console.warn('useSheetMusicUrl: Could not parse token for expiration check:', tokenError);
+          }
+          
           setSignedUrl(pdfUrl);
           return;
         }
