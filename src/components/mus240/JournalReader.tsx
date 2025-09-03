@@ -7,6 +7,7 @@ import { MessageSquare, Send, GraduationCap, Bot } from 'lucide-react';
 import { useMus240Journals } from '@/hooks/useMus240Journals';
 import { useJournalGrading } from '@/hooks/useJournalGrading';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import { Assignment } from '@/data/mus240Assignments';
 import { InstructorGradingModal } from './InstructorGradingModal';
 
@@ -21,6 +22,7 @@ export const JournalReader: React.FC<JournalReaderProps> = ({ assignment }) => {
   const [newComment, setNewComment] = useState('');
   const [selectedJournal, setSelectedJournal] = useState<string | null>(null);
   const [isInstructor, setIsInstructor] = useState(false);
+  const [peerCommentProgress, setPeerCommentProgress] = useState<{ count: number; points: number }>({ count: 0, points: 0 });
   const [gradingModal, setGradingModal] = useState<{ isOpen: boolean; journal: any }>({
     isOpen: false,
     journal: null
@@ -34,14 +36,14 @@ export const JournalReader: React.FC<JournalReaderProps> = ({ assignment }) => {
     loading 
   } = useMus240Journals();
 
-  const { fetchAllGradesForAssignment } = useJournalGrading();
+  const { fetchAllGradesForAssignment, getPeerCommentPoints } = useJournalGrading();
 
   useEffect(() => {
     const loadJournals = async () => {
       const publishedJournals = await fetchPublishedJournals(assignment.id);
       setJournals(publishedJournals || []);
 
-      // Load grades for instructor view
+      // Load grades for instructor view and peer comment progress for students
       if (user) {
         // Check if user is instructor (simplified check - you may want to enhance this)
         const profile = user.user_metadata || {};
@@ -55,11 +57,21 @@ export const JournalReader: React.FC<JournalReaderProps> = ({ assignment }) => {
             return acc;
           }, {}) || {};
           setGrades(gradeMap);
+        } else {
+          // Load peer comment progress for student
+          try {
+            const progress = await getPeerCommentPoints(assignment.id, user.id);
+            if (progress.success) {
+              setPeerCommentProgress({ count: progress.valid_count, points: progress.points_awarded });
+            }
+          } catch (error) {
+            console.error('Failed to load peer comment progress:', error);
+          }
         }
       }
     };
     loadJournals();
-  }, [assignment.id, fetchPublishedJournals, fetchAllGradesForAssignment, user]);
+  }, [assignment.id, fetchPublishedJournals, fetchAllGradesForAssignment, getPeerCommentPoints, user]);
 
   const loadComments = async (journalId: string) => {
     const journalComments = await fetchJournalComments(journalId);
@@ -70,10 +82,29 @@ export const JournalReader: React.FC<JournalReaderProps> = ({ assignment }) => {
   const handleAddComment = async () => {
     if (!newComment.trim() || !selectedJournal) return;
     
+    // Check word count (minimum 50 words)
+    const words = newComment.trim().split(/\s+/).filter(word => word.length > 0);
+    if (words.length < 50) {
+      toast.error(`Comments must be at least 50 words. Current: ${words.length} words.`);
+      return;
+    }
+    
     const success = await addJournalComment(selectedJournal, newComment);
     if (success) {
       setNewComment('');
       loadComments(selectedJournal); // Reload comments
+      
+      // Refresh peer comment progress for student
+      if (user && !isInstructor) {
+        try {
+          const progress = await getPeerCommentPoints(assignment.id, user.id);
+          if (progress.success) {
+            setPeerCommentProgress({ count: progress.valid_count, points: progress.points_awarded });
+          }
+        } catch (error) {
+          console.error('Failed to update peer comment progress:', error);
+        }
+      }
     }
   };
 
@@ -114,6 +145,28 @@ export const JournalReader: React.FC<JournalReaderProps> = ({ assignment }) => {
 
   return (
     <div className="space-y-6">
+      {/* Peer Comments Progress for Students */}
+      {!isInstructor && user && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-blue-900">Peer Comments Progress</h3>
+                <p className="text-sm text-blue-700">
+                  {peerCommentProgress.count}/2 qualifying comments • {peerCommentProgress.points}/3 points earned
+                </p>
+              </div>
+              <Badge variant={peerCommentProgress.count >= 2 ? "default" : "secondary"}>
+                {peerCommentProgress.count >= 2 ? "Complete" : "In Progress"}
+              </Badge>
+            </div>
+            <p className="text-xs text-blue-600 mt-2">
+              Write thoughtful comments of at least 50 words on classmates' journals to earn full credit.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {journals.map((journal) => {
         const grade = grades[journal.user_id];
         
@@ -188,20 +241,32 @@ export const JournalReader: React.FC<JournalReaderProps> = ({ assignment }) => {
                     <p className="text-sm text-muted-foreground">No comments yet.</p>
                   )}
 
-                  <div className="flex gap-2">
-                    <Textarea
-                      placeholder="Add a thoughtful comment..."
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      className="min-h-[80px] resize-none"
-                    />
-                    <Button 
-                      onClick={handleAddComment}
-                      disabled={!newComment.trim()}
-                      size="sm"
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <Textarea
+                          placeholder="Add a thoughtful comment (minimum 50 words)..."
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          className="min-h-[80px] resize-none"
+                        />
+                        <div className="flex items-center justify-between mt-1">
+                          <p className="text-xs text-muted-foreground">
+                            {newComment.trim().split(/\s+/).filter(word => word.length > 0).length}/50 words minimum
+                          </p>
+                          {newComment.trim().split(/\s+/).filter(word => word.length > 0).length >= 50 && (
+                            <Badge variant="default" className="text-xs">Ready to submit</Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={handleAddComment}
+                        disabled={!newComment.trim() || newComment.trim().split(/\s+/).filter(word => word.length > 0).length < 50}
+                        size="sm"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
