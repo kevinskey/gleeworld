@@ -216,11 +216,11 @@ export const ExecBoardModulePanel = () => {
                     return (
                       <Card 
                         key={module.id} 
-                        className="cursor-pointer hover:bg-muted/70 hover:scale-105 hover:shadow-lg transition-all duration-200 bg-background/60 backdrop-blur-sm border-2 hover:border-primary/50 active:scale-95"
+                        className="cursor-pointer hover:bg-muted/70 hover:scale-105 hover:shadow-lg transition-all duration-200 bg-background/60 backdrop-blur-sm border-2 hover:border-primary/50 active:scale-95 h-20"
                         onClick={() => handleModuleClick(module.id)}
                       >
                         <CardContent className="p-3 h-full flex items-center justify-center">
-                          <div className="flex flex-col items-center justify-center gap-2 h-full w-full">
+                          <div className="flex flex-col items-center justify-center gap-1 h-full w-full">
                             <IconComponent className="h-6 w-6 text-primary group-hover:text-primary-foreground transition-colors" />
                             <span className="text-xs font-medium group-hover:text-primary-foreground transition-colors text-center">{module.title}</span>
                           </div>
@@ -231,13 +231,13 @@ export const ExecBoardModulePanel = () => {
                 </div>
                 
                 {standardModules.length > 4 && (
-                  <Card className="bg-background/60 backdrop-blur-sm">
-                    <CardContent className="p-4">
-                      <div className="text-center">
-                        <Music className="h-8 w-8 text-primary mx-auto mb-2" />
-                        <h3 className="font-medium text-sm mb-1">Additional Modules</h3>
+                  <Card className="bg-background/60 backdrop-blur-sm h-20">
+                    <CardContent className="p-4 h-full flex items-center justify-center">
+                      <div className="text-center flex flex-col items-center justify-center h-full">
+                        <Music className="h-6 w-6 text-primary mb-1" />
+                        <h3 className="font-medium text-xs mb-0">Additional Modules</h3>
                         <p className="text-xs text-muted-foreground">
-                          {standardModules.length - 4} more modules available
+                          {standardModules.length - 4} more available
                         </p>
                       </div>
                     </CardContent>
