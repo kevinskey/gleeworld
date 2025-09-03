@@ -67,14 +67,14 @@ export default function ClassLanding() {
               Survey of African American Music
             </h2>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-white/80 text-xl md:text-2xl lg:text-xl xl:text-2xl">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 xl:h-8 xl:w-8" />
-                <span>Fall 2025</span>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-white/80 text-2xl md:text-3xl lg:text-3xl xl:text-4xl">
+              <div className="flex items-center gap-3">
+                <Calendar className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 xl:h-10 xl:w-10" />
+                <span className="text-xl md:text-2xl lg:text-2xl xl:text-3xl font-medium">Fall 2025</span>
               </div>
-              <div className="hidden sm:block w-1 h-1 bg-white/60 rounded-full"></div>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 xl:h-8 xl:w-8" />
+              <div className="hidden sm:block w-2 h-2 bg-white/60 rounded-full"></div>
+              <div className="flex items-center gap-3">
+                <Users className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 xl:h-10 xl:w-10" />
                 <span className="text-xl md:text-3xl lg:text-2xl xl:text-4xl font-medium">Dr. Kevin Johnson</span>
               </div>
             </div>
