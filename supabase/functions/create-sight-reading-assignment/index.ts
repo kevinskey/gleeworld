@@ -45,15 +45,27 @@ serve(async (req) => {
       throw new Error('Authentication required');
     }
 
-    // Verify user is admin/instructor
+    // Verify user has permission to create assignments
     const { data: profile, error: profileError } = await supabase
       .from('gw_profiles')
-      .select('is_admin, is_super_admin, role')
+      .select('is_admin, is_super_admin, role, exec_board_role, is_exec_board, is_section_leader')
       .eq('user_id', user.id)
       .single();
 
-    if (profileError || (!profile?.is_admin && !profile?.is_super_admin && profile?.role !== 'instructor')) {
-      throw new Error('Admin privileges required to create assignments');
+    if (profileError) {
+      throw new Error('Failed to verify user permissions');
+    }
+
+    // Check if user has permission: admin, super admin, instructor, student conductor, section leader, or exec board member
+    const hasPermission = profile?.is_admin || 
+                         profile?.is_super_admin || 
+                         profile?.role === 'instructor' ||
+                         profile?.exec_board_role === 'student_conductor' ||
+                         profile?.is_section_leader ||
+                         profile?.is_exec_board;
+
+    if (!hasPermission) {
+      throw new Error('Insufficient privileges to create assignments. Must be admin, instructor, student conductor, or section leader.');
     }
 
     const request: CreateAssignmentRequest = await req.json();
