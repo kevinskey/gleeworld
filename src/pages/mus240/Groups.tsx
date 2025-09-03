@@ -406,6 +406,50 @@ export default function Groups() {
         </TabsContent>
       </Tabs>
 
+      {/* Create Group Dialog */}
+      <Dialog open={showCreateGroup} onOpenChange={setShowCreateGroup}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Group</DialogTitle>
+            <DialogDescription>
+              Start your own group for the AI music project. You'll be the group leader.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateGroup} className="space-y-4">
+            <div>
+              <Label htmlFor="create_name">Group Name *</Label>
+              <Input
+                id="create_name"
+                name="name"
+                required
+                placeholder="Enter group name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="create_description">Description</Label>
+              <Textarea
+                id="create_description"
+                name="description"
+                placeholder="Describe your group's focus or goals"
+                rows={3}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1">
+                Create Group
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreateGroup(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Application Form Dialog */}
       <Dialog open={showApplyForm} onOpenChange={setShowApplyForm}>
         <DialogContent className="max-w-md">
