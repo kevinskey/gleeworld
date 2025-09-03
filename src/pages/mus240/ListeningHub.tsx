@@ -38,7 +38,12 @@ export default function ListeningHub() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const isAdmin = user && ['admin', 'super-admin'].includes(user.user_metadata?.role);
+  const isAdmin = user && (
+    ['admin', 'super-admin'].includes(user.user_metadata?.role) || 
+    ['admin', 'super-admin'].includes(user.user_metadata?.user_role) ||
+    user.user_metadata?.is_admin === true ||
+    user.user_metadata?.is_super_admin === true
+  );
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
