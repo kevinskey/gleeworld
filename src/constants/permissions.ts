@@ -275,27 +275,31 @@ export const hasEnhancedModuleAccess = (
 
 // Helper function to get executive board permissions (implemented separately to avoid circular imports)
 const getExecutiveBoardPermissions = (execBoardRole: string): string[] => {
-  // This will be populated from executiveBoardRoles.ts
+  // All executive board members get full email, SMS, and notification permissions
+  const basePermissions = ['send_emails', 'access_contracts', 'sms', 'communications', 'newsletter'];
+  
+  // Role-specific additional permissions
   const rolePermissionMap: Record<string, string[]> = {
-    'president': ['access_hero_management', 'access_dashboard_settings', 'access_youtube_management', 'access_budget_creation', 'access_contracts', 'send_emails', 'manage_username_permissions', 'access_tour_planner'],
-    'vice-president': ['access_budget_creation', 'access_contracts', 'send_emails', 'access_youtube_management', 'access_tour_planner'],
-    'treasurer': ['access_budget_creation', 'access_contracts', 'send_emails'],
-    'secretary': ['send_emails', 'access_contracts'],
-    'music-director': ['access_youtube_management', 'send_emails'],
+    'president': ['access_hero_management', 'access_dashboard_settings', 'access_youtube_management', 'access_budget_creation', 'manage_username_permissions', 'access_tour_planner'],
+    'vice-president': ['access_budget_creation', 'access_youtube_management', 'access_tour_planner'],
+    'treasurer': ['access_budget_creation'],
+    'secretary': [],
+    'music-director': ['access_youtube_management'],
     'assistant-music-director': ['access_youtube_management'],
-    'social-chair': ['send_emails', 'access_budget_creation'],
-    'publicity-chair': ['access_hero_management', 'send_emails', 'access_youtube_management'],
-    'events-coordinator': ['access_budget_creation', 'access_contracts', 'send_emails', 'access_tour_planner'],
+    'social-chair': ['access_budget_creation'],
+    'publicity-chair': ['access_hero_management', 'access_youtube_management'],
+    'events-coordinator': ['access_budget_creation', 'access_tour_planner'],
     'historian': ['access_youtube_management'],
     'librarian': [],
     'technical-director': ['access_dashboard_settings', 'access_youtube_management'],
-    'fundraising-chair': ['access_budget_creation', 'send_emails'],
-    'alumni-relations': ['send_emails'],
-    'membership-chair': ['send_emails'],
-    'tour-manager': ['access_tour_planner', 'access_contracts', 'access_budget_creation', 'send_emails'],
+    'fundraising-chair': ['access_budget_creation'],
+    'alumni-relations': [],
+    'membership-chair': [],
+    'tour-manager': ['access_tour_planner', 'access_budget_creation'],
   };
   
-  return rolePermissionMap[execBoardRole] || [];
+  const roleSpecific = rolePermissionMap[execBoardRole] || [];
+  return [...basePermissions, ...roleSpecific];
 };
 
 export const isAdmin = (userRole?: string): boolean => {
