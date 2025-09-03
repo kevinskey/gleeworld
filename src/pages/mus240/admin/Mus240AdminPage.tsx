@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GraduationCap, Users, FileText, Settings, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import backgroundImage from '@/assets/mus240-background.jpg';
 
 export const Mus240AdminPage = () => {
   const [activeTab, setActiveTab] = useState('enrollments');
@@ -16,7 +17,7 @@ export const Mus240AdminPage = () => {
       <div 
         className="min-h-screen bg-cover bg-center bg-no-repeat relative bg-gradient-to-br from-orange-800 to-amber-600"
         style={{
-          backgroundImage: `url(${require('@/assets/mus240-background.jpg')})`,
+          backgroundImage: `url(${backgroundImage})`,
         }}
       >
         {/* Gradient overlay for better text readability */}
