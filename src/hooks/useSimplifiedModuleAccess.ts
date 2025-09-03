@@ -78,7 +78,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'booking-forms': 'booking-forms',
           'alumnae-portal': 'alumnae-portal',
           'auditions': 'auditions',
-          'permissions': 'permissions',
+          'permissions-module': 'permissions',
           'wellness': 'wellness',
           'wardrobe': 'wardrobe',
           
@@ -115,13 +115,21 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'settings': 'settings',
           
           // Executive Board - Map database modules to frontend modules
-          'executive-board': 'executive',
-          'executive-board-management': 'executive',
-          'executive-functions': 'executive'
+          'executive-board': 'executive-board',
+          'executive-board-management': 'executive-board',
+          'executive-functions': 'executive-board',
+          'admin-tools': 'admin-tools',
+          'system-settings': 'admin-tools'
         };
 
         // Process granted modules using executive functions access
         const grantedModuleIds = new Set(executiveFunctions); // Start with executive functions
+        
+        // Add modules from email permissions using the mapping
+        emailPermissions.forEach(dbModuleName => {
+          const frontendModuleId = moduleMapping[dbModuleName] || dbModuleName;
+          grantedModuleIds.add(frontendModuleId);
+        });
         
         // Build access list based on permissions using only active modules
         const activeModules = getActiveModules();
