@@ -38,7 +38,7 @@ export const Mus240UserAvatar: React.FC = () => {
       <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-white/30">
         <Avatar className="h-10 w-10">
           <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
-          <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white font-semibold">
+          <AvatarFallback className="bg-spelman-blue-dark text-white font-semibold">
             {initials}
           </AvatarFallback>
         </Avatar>

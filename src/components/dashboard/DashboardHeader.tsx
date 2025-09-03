@@ -72,7 +72,7 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
           
           <Avatar className="w-10 h-10">
             <AvatarImage src={user?.user_metadata?.avatar_url} />
-            <AvatarFallback className="bg-primary text-primary-foreground">
+            <AvatarFallback className="bg-spelman-blue-dark text-white font-semibold">
               {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
