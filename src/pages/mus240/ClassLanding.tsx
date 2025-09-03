@@ -32,10 +32,16 @@ export default function ClassLanding() {
       icon: TrendingUp
     },
     { 
+      title: 'Groups', 
+      to: '/classes/mus240/groups', 
+      desc: 'Study groups & collaboration',
+      icon: Users
+    },
+    { 
       title: 'Resources', 
       to: '/classes/mus240/resources', 
       desc: 'Readings, citations, media',
-      icon: Users
+      icon: Brain
     },
   ];
 
