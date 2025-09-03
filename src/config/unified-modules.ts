@@ -679,6 +679,30 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: ExecutiveModule,
     dbFunctionName: "executive-board-management"
+  },
+  {
+    id: "executive-functions",
+    name: "executive-functions",
+    title: "Executive Functions",
+    description: "Core executive board functions and operations",
+    icon: Users,
+    iconColor: "blue",
+    category: "member-management",
+    isActive: true,
+    component: ExecutiveModule,
+    dbFunctionName: "executive-functions"
+  },
+  {
+    id: "internal-communications",
+    name: "internal-communications",
+    title: "Internal Communications",
+    description: "Internal messaging and communication tools",
+    icon: MessageSquare,
+    iconColor: "indigo",
+    category: "communications",
+    isActive: true,
+    component: EmailManagementModule,
+    dbFunctionName: "internal-communications"
   }
 ];
 
