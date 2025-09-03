@@ -253,9 +253,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                                 userProfile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
                                 user?.email?.charAt(0).toUpperCase() || 'U'
                               }
-                              {isAdmin && (
-                                <Crown className="absolute -top-1 -right-1 h-3 w-3 text-yellow-400 drop-shadow-sm" />
-                              )}
                             </AvatarFallback>
                           </Avatar>
                        </Button>
