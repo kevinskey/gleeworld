@@ -49,6 +49,18 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           emailPermissions = emailPerms?.map((p: any) => p.module_name) || [];
         }
 
+        // Get user module permissions from gw_user_module_permissions table
+        let userModulePermissions: string[] = [];
+        const { data: modulePerms, error: modulePermsError } = await supabase
+          .from('gw_user_module_permissions')
+          .select('module_id')
+          .eq('user_id', targetUserId)
+          .eq('is_active', true);
+        
+        if (!modulePermsError && modulePerms) {
+          userModulePermissions = modulePerms.map(p => p.module_id);
+        }
+
         // Executive board members only get modules they have explicit permissions for
         // Super admins get all executive modules, but regular exec board members need specific permissions
         let executiveFunctions: string[] = [];
@@ -130,6 +142,11 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         emailPermissions.forEach(dbModuleName => {
           const frontendModuleId = moduleMapping[dbModuleName] || dbModuleName;
           grantedModuleIds.add(frontendModuleId);
+        });
+        
+        // Add modules from user module permissions (direct access from gw_user_module_permissions)
+        userModulePermissions.forEach(moduleId => {
+          grantedModuleIds.add(moduleId);
         });
         
         // Build access list based on permissions using only active modules
