@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Users, Music, Plus, Check, FileText } from 'lucide-react';
+import { CalendarIcon, Users, Music, Plus, Check, FileText, Upload, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +29,8 @@ export const SimpleAssignmentCreator: React.FC<SimpleAssignmentCreatorProps> = (
   const [isCreating, setIsCreating] = useState(false);
   const [dueDate, setDueDate] = useState<Date>();
   const [showForm, setShowForm] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -38,7 +40,8 @@ export const SimpleAssignmentCreator: React.FC<SimpleAssignmentCreatorProps> = (
     points_possible: 100,
     target_type: 'all',
     target_value: '',
-    notes: ''
+    notes: '',
+    musicxml_content: ''
   });
 
   // Check if user has permission to create assignments
@@ -49,6 +52,65 @@ export const SimpleAssignmentCreator: React.FC<SimpleAssignmentCreatorProps> = (
       profile?.exec_board_role === 'student_conductor' ||
       (profile?.role && ['admin', 'director', 'instructor', 'section_leader'].includes(profile.role))
     );
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.toLowerCase().endsWith('.musicxml') && !file.name.toLowerCase().endsWith('.xml')) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please select a MusicXML file (.musicxml or .xml)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "File size must be less than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+    
+    // Read file content
+    try {
+      setIsUploading(true);
+      const content = await file.text();
+      setFormData({ ...formData, musicxml_content: content });
+      
+      if (!formData.title.trim()) {
+        // Extract title from filename
+        const fileName = file.name.replace(/\.(musicxml|xml)$/i, '');
+        setFormData(prev => ({ ...prev, title: fileName, musicxml_content: content }));
+      }
+      
+      toast({
+        title: "File Loaded",
+        description: `${file.name} has been loaded successfully.`,
+      });
+    } catch (error) {
+      console.error('Error reading file:', error);
+      toast({
+        title: "File Read Error",
+        description: "Failed to read the MusicXML file.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    setFormData({ ...formData, musicxml_content: '' });
   };
 
   const handleCreateAssignment = async () => {
@@ -70,6 +132,15 @@ export const SimpleAssignmentCreator: React.FC<SimpleAssignmentCreatorProps> = (
       return;
     }
 
+    if (formData.assignment_type === 'sight_reading' && !formData.musicxml_content) {
+      toast({
+        title: "MusicXML File Required",
+        description: "Please upload a MusicXML file for sight reading assignments.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsCreating(true);
 
     try {
@@ -80,9 +151,10 @@ export const SimpleAssignmentCreator: React.FC<SimpleAssignmentCreatorProps> = (
           description: formData.description,
           due_date: dueDate.toISOString(),
           points_possible: formData.points_possible,
-          target_type: formData.target_type,
+          target_type: formData.target_type === 'all' ? 'all_members' : formData.target_type,
           target_value: formData.target_value || null,
-          grading_period: formData.grading_period
+          grading_period: formData.grading_period,
+          musicxml_content: formData.musicxml_content || null
         }
       });
 
@@ -102,10 +174,12 @@ export const SimpleAssignmentCreator: React.FC<SimpleAssignmentCreatorProps> = (
         points_possible: 100,
         target_type: 'all',
         target_value: '',
-        notes: ''
+        notes: '',
+        musicxml_content: ''
       });
       setDueDate(undefined);
       setShowForm(false);
+      setSelectedFile(null);
       
       onAssignmentCreated?.();
 
@@ -156,6 +230,7 @@ export const SimpleAssignmentCreator: React.FC<SimpleAssignmentCreatorProps> = (
               >
                 <Music className="h-6 w-6" />
                 <span>Sight Reading</span>
+                <span className="text-xs text-muted-foreground">MusicXML file</span>
               </Button>
               
               <Button
@@ -219,6 +294,63 @@ export const SimpleAssignmentCreator: React.FC<SimpleAssignmentCreatorProps> = (
                   rows={3}
                 />
               </div>
+
+              {formData.assignment_type === 'sight_reading' && (
+                <div>
+                  <Label>MusicXML File *</Label>
+                  <div className="space-y-3">
+                    <div 
+                      className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
+                      onClick={() => document.getElementById('musicxml-file')?.click()}
+                    >
+                      <input
+                        id="musicxml-file"
+                        type="file"
+                        accept=".musicxml,.xml"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                      {!selectedFile ? (
+                        <div className="space-y-2">
+                          <Upload className="h-10 w-10 text-muted-foreground mx-auto" />
+                          <div>
+                            <p className="text-sm font-medium">Upload MusicXML File</p>
+                            <p className="text-xs text-muted-foreground">Click to browse or drag and drop</p>
+                            <p className="text-xs text-muted-foreground">.musicxml or .xml files only</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <FileText className="h-10 w-10 text-primary mx-auto" />
+                          <div>
+                            <p className="text-sm font-medium">{selectedFile.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(selectedFile.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {selectedFile && (
+                      <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          <span className="text-sm font-medium">{selectedFile.name}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={removeFile}
+                          className="h-8 w-8 p-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -360,11 +492,13 @@ export const SimpleAssignmentCreator: React.FC<SimpleAssignmentCreatorProps> = (
 
               <Button 
                 onClick={handleCreateAssignment}
-                disabled={!dueDate || !formData.title.trim() || isCreating}
+                disabled={!dueDate || !formData.title.trim() || isCreating || isUploading || (formData.assignment_type === 'sight_reading' && !formData.musicxml_content)}
                 className="w-full"
               >
                 {isCreating ? (
                   "Creating Assignment..."
+                ) : isUploading ? (
+                  "Processing File..."
                 ) : (
                   <>
                     <Check className="h-4 w-4 mr-2" />
