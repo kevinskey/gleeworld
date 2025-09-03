@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Users, Ruler, Package, ClipboardCheck, AlertCircle } from 'lucide-react';
+import { Users, Ruler, Package, ClipboardCheck, AlertCircle, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { CSVUserImport } from '../../wardrobe/CSVUserImport';
 
 interface MemberProfile {
   id: string;
@@ -44,6 +45,7 @@ export const MemberManagementPanel = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMember, setSelectedMember] = useState<MemberProfile | null>(null);
   const [showMeasurementsDialog, setShowMeasurementsDialog] = useState(false);
+  const [showCSVImport, setShowCSVImport] = useState(false);
   const [measurements, setMeasurements] = useState({
     bust_measurement: '',
     waist_measurement: '',
@@ -135,7 +137,7 @@ export const MemberManagementPanel = () => {
 
   return (
     <div className="space-y-6">
-      {/* Search */}
+      {/* Search and Actions */}
       <div className="flex gap-4">
         <Input
           placeholder="Search members..."
@@ -143,7 +145,16 @@ export const MemberManagementPanel = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1"
         />
+        <Button variant="outline" onClick={() => setShowCSVImport(!showCSVImport)}>
+          <Upload className="h-4 w-4 mr-2" />
+          Import CSV
+        </Button>
       </div>
+
+      {/* CSV Import Section */}
+      {showCSVImport && (
+        <CSVUserImport />
+      )}
 
       {/* Members Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

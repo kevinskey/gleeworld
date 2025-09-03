@@ -12,8 +12,10 @@ import {
   Calendar,
   Shirt,
   Package,
-  AlertCircle
+  AlertCircle,
+  Upload
 } from 'lucide-react';
+import { CSVUserImport } from './CSVUserImport';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Member {
@@ -71,6 +73,7 @@ export const WardrobeMemberManagement = () => {
   const [members] = useState<Member[]>(mockMembers);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
+  const [showCSVImport, setShowCSVImport] = useState(false);
 
   const filteredMembers = members.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -120,10 +123,16 @@ export const WardrobeMemberManagement = () => {
             />
           </div>
           
-          <Button>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add Member
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowCSVImport(!showCSVImport)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Import CSV
+            </Button>
+            <Button>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add Member
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -179,6 +188,11 @@ export const WardrobeMemberManagement = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* CSV Import Section */}
+      {showCSVImport && (
+        <CSVUserImport />
+      )}
 
       {/* Member List */}
       <Card className="shadow-sm border-0 bg-background">
