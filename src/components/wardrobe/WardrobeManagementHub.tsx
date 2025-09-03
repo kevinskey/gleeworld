@@ -24,6 +24,7 @@ import { WardrobeNotifications } from "./WardrobeNotifications";
 import { DressCodeMedia } from "./DressCodeMedia";
 import { MakeupTutorials } from "./MakeupTutorials";
 import { GarmentBagDistribution } from "./GarmentBagDistribution";
+import { WardrobeMemberManagement } from "./WardrobeMemberManagement";
 
 export const WardrobeManagementHub = () => {
   const [activeTab, setActiveTab] = useState("inventory");
@@ -127,7 +128,7 @@ export const WardrobeManagementHub = () => {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7">
           <TabsTrigger value="inventory" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
             <span className="hidden sm:inline">Inventory</span>
@@ -157,6 +158,10 @@ export const WardrobeManagementHub = () => {
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Garment Bags</span>
           </TabsTrigger>
+          <TabsTrigger value="members" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Members</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="inventory" className="space-y-6">
@@ -181,6 +186,10 @@ export const WardrobeManagementHub = () => {
 
         <TabsContent value="bags" className="space-y-6">
           <GarmentBagDistribution />
+        </TabsContent>
+
+        <TabsContent value="members" className="space-y-6">
+          <WardrobeMemberManagement />
         </TabsContent>
       </Tabs>
     </div>
