@@ -39,15 +39,15 @@ export default function ListeningHub() {
           {/* Hero Section */}
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <Music className="h-6 w-6 text-amber-300" />
-              <span className="text-white/90 font-medium">Listening Hub</span>
+              <Music className="h-6 w-6 md:h-7 md:w-7 text-amber-300" />
+              <span className="text-white/90 font-medium text-xl md:text-2xl lg:text-xl xl:text-2xl">Listening Hub</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+            <h1 className="text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
               MUS 240 Listening
             </h1>
             
-            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-2xl md:text-3xl lg:text-2xl xl:text-3xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
               Explore the rich tapestry of African American music through curated listening experiences, 
               from West African foundations to contemporary innovations.
             </p>
@@ -93,7 +93,7 @@ export default function ListeningHub() {
                 to={`/classes/mus240/listening/${week.number}`}
                 className="group block"
               >
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 relative">
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6 shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 relative">
                   {/* Week Number Badge */}
                   <div className="absolute -top-3 -right-3 bg-gradient-to-br from-amber-500 to-orange-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
                     {week.number}
@@ -101,7 +101,7 @@ export default function ListeningHub() {
 
                   {/* Date */}
                   <div className="flex items-center gap-2 text-gray-500 mb-3">
-                    <Calendar className="h-4 w-4" />
+                    <Calendar className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6" />
                     <time className="text-sm font-medium">
                       {new Date(week.date).toLocaleDateString('en-US', { 
                         month: 'long', 
@@ -112,13 +112,13 @@ export default function ListeningHub() {
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 leading-tight group-hover:text-amber-600 transition-colors">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-2xl xl:text-3xl font-semibold text-gray-900 mb-4 leading-tight group-hover:text-amber-600 transition-colors">
                     {week.title}
                   </h3>
 
                   {/* Track Count */}
                   <div className="flex items-center gap-2 text-gray-500 mb-4">
-                    <Play className="h-4 w-4" />
+                    <Play className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6" />
                     <span className="text-sm">
                       {week.tracks.length} track{week.tracks.length !== 1 ? 's' : ''}
                     </span>
@@ -127,7 +127,7 @@ export default function ListeningHub() {
                   {/* Visual indicator */}
                   <div className="flex items-center gap-2 text-gray-600">
                     <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
-                      <Play className="h-4 w-4 text-white" />
+                      <Play className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 text-white" />
                     </div>
                     <span className="font-medium">Start Listening</span>
                   </div>

@@ -57,15 +57,15 @@ const AssignmentWeek: React.FC = () => {
           {/* Hero Section */}
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <FileText className="h-6 w-6 text-amber-300" />
-              <span className="text-white/90 font-medium">MUS 240</span>
+              <FileText className="h-6 w-6 md:h-7 md:w-7 text-amber-300" />
+              <span className="text-white/90 font-medium text-xl md:text-2xl lg:text-xl xl:text-2xl">MUS 240</span>
             </div>
             
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
               Assignments
             </h1>
             
-            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-light text-white/95 mb-6 max-w-4xl mx-auto leading-relaxed">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-light text-white/95 mb-6 max-w-4xl mx-auto leading-relaxed">
               Complete assignments to deepen your understanding of African American music
             </h2>
           </div>
@@ -236,11 +236,11 @@ const AssignmentWeek: React.FC = () => {
                 
                 <div className="space-y-4">
                   {weekData.assignments.map((assignment) => (
-                 <div key={assignment.id} className="bg-white/95 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-white/30 hover:bg-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                 <div key={assignment.id} className="bg-white/95 backdrop-blur-sm rounded-xl px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6 shadow-lg border border-white/30 hover:bg-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                       <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-base sm:text-lg mb-2 text-gray-900">{assignment.title}</h4>
-                          <p className="text-xs sm:text-sm text-gray-600 mb-3">
+                          <h4 className="font-semibold text-xl sm:text-2xl md:text-3xl lg:text-2xl xl:text-3xl mb-2 text-gray-900">{assignment.title}</h4>
+                          <p className="text-lg sm:text-sm md:text-xl lg:text-base xl:text-lg text-gray-600 mb-3">
                             {assignment.description}
                           </p>
                           <div className="flex flex-wrap items-center gap-2 mb-3">

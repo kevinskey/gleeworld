@@ -109,14 +109,14 @@ export const Mus240GradesPage: React.FC = () => {
             
             <div className="text-center">
               <div className="inline-flex items-center gap-3 mb-4 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                <TrendingUp className="h-6 w-6 text-amber-300" />
-                <span className="text-white/90 font-medium">Grades & Progress</span>
+                <TrendingUp className="h-6 w-6 md:h-7 md:w-7 text-amber-300" />
+                <span className="text-white/90 font-medium text-xl md:text-2xl lg:text-xl xl:text-2xl">Grades & Progress</span>
               </div>
               
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-2 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
                 Your Performance
               </h1>
-              <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/80 mb-6">Track your progress in MUS 240</h2>
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl text-white/80 mb-6">Track your progress in MUS 240</h2>
               
               <Button 
                 variant="secondary" 
@@ -133,8 +133,8 @@ export const Mus240GradesPage: React.FC = () => {
           <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
             <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium text-gray-900">Overall Grade</CardTitle>
-                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" />
+                <CardTitle className="text-lg sm:text-base md:text-xl lg:text-lg xl:text-xl font-medium text-gray-900">Overall Grade</CardTitle>
+                <TrendingUp className="h-5 w-5 sm:h-4 sm:w-4 md:h-6 md:w-6 lg:h-5 lg:w-5 xl:h-6 xl:w-6 text-amber-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -150,8 +150,8 @@ export const Mus240GradesPage: React.FC = () => {
 
             <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium text-gray-900">Assignments</CardTitle>
-                <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" />
+                <CardTitle className="text-lg sm:text-base md:text-xl lg:text-lg xl:text-xl font-medium text-gray-900">Assignments</CardTitle>
+                <FileText className="h-5 w-5 sm:h-4 sm:w-4 md:h-6 md:w-6 lg:h-5 lg:w-5 xl:h-6 xl:w-6 text-amber-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-gray-900">{assignmentPoints}</div>
@@ -164,8 +164,8 @@ export const Mus240GradesPage: React.FC = () => {
 
             <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium text-gray-900">Participation</CardTitle>
-                <Users className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" />
+                <CardTitle className="text-lg sm:text-base md:text-xl lg:text-lg xl:text-xl font-medium text-gray-900">Participation</CardTitle>
+                <Users className="h-5 w-5 sm:h-4 sm:w-4 md:h-6 md:w-6 lg:h-5 lg:w-5 xl:h-6 xl:w-6 text-amber-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-gray-900">{participationPoints}</div>
@@ -178,8 +178,8 @@ export const Mus240GradesPage: React.FC = () => {
 
             <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium text-gray-900">Attendance</CardTitle>
-                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" />
+                <CardTitle className="text-lg sm:text-base md:text-xl lg:text-lg xl:text-xl font-medium text-gray-900">Attendance</CardTitle>
+                <Calendar className="h-5 w-5 sm:h-4 sm:w-4 md:h-6 md:w-6 lg:h-5 lg:w-5 xl:h-6 xl:w-6 text-amber-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-gray-900">{attendanceStats.attendanceRate.toFixed(1)}%</div>

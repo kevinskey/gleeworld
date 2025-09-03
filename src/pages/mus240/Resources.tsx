@@ -109,14 +109,14 @@ export default function Resources() {
             
             <div className="text-center">
               <div className="inline-flex items-center gap-3 mb-4 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                <Users className="h-6 w-6 text-amber-300" />
-                <span className="text-white/90 font-medium">Resources</span>
+                <Users className="h-6 w-6 md:h-7 md:w-7 text-amber-300" />
+                <span className="text-white/90 font-medium text-xl md:text-2xl lg:text-xl xl:text-2xl">Resources</span>
               </div>
               
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-2 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
                 MUS 240 Resources
               </h1>
-              <p className="text-white/80 text-sm sm:text-base md:text-lg">Readings, citations, media, and research materials</p>
+              <p className="text-white/80 text-xl sm:text-lg md:text-2xl lg:text-xl xl:text-2xl">Readings, citations, media, and research materials</p>
             </div>
           </div>
 
@@ -152,14 +152,14 @@ export default function Resources() {
                         <div className="flex items-start justify-between">
                           <div className="space-y-2 flex-1">
                             <div className="flex items-center gap-2">
-                              <div className="p-1.5 bg-gradient-to-br from-amber-500 to-orange-600 rounded-md">
-                                <IconComponent className="h-4 w-4 text-white" />
+                              <div className="p-1.5 sm:p-1 md:p-2 lg:p-3 xl:p-4 bg-gradient-to-br from-amber-500 to-orange-600 rounded-md">
+                                <IconComponent className="h-4 w-4 sm:h-3 sm:w-3 md:h-5 md:w-5 lg:h-6 lg:w-6 xl:h-7 xl:w-7 text-white" />
                               </div>
                               <span className={`text-xs px-2 py-1 rounded-full font-medium ${getCategoryColor(resource.category)}`}>
                                 {resource.category}
                               </span>
                             </div>
-                            <CardTitle className="text-sm sm:text-base md:text-lg text-gray-900 group-hover:text-primary transition-colors">
+                            <CardTitle className="text-xl sm:text-base md:text-xl lg:text-lg xl:text-xl text-gray-900 group-hover:text-primary transition-colors">
                               {resource.title}
                             </CardTitle>
                           </div>
@@ -168,7 +168,7 @@ export default function Resources() {
                       </CardHeader>
                       
                       <CardContent className="space-y-4">
-                        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                        <p className="text-lg sm:text-sm md:text-lg lg:text-base xl:text-lg text-gray-600 leading-relaxed">
                           {resource.description}
                         </p>
                         

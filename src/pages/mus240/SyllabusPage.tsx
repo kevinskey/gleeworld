@@ -30,18 +30,18 @@ export default function Syllabus() {
             
             <div className="text-center">
               <div className="inline-flex items-center gap-3 mb-4 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                <BookOpen className="h-6 w-6 text-amber-300" />
-                <span className="text-white/90 font-medium">Syllabus</span>
+                <BookOpen className="h-6 w-6 md:h-7 md:w-7 text-amber-300" />
+                <span className="text-white/90 font-medium text-xl md:text-2xl lg:text-xl xl:text-2xl">Syllabus</span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-2 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
                 Survey of African American Music
               </h1>
-              <h2 className="text-xl md:text-2xl text-white/80 mb-6">MUS 240 – Fall 2025</h2>
+              <h2 className="text-2xl md:text-3xl lg:text-3xl xl:text-4xl text-white/80 mb-6">MUS 240 – Fall 2025</h2>
               
               {/* Course Info Card */}
               <Card className="bg-white/95 backdrop-blur-sm border border-white/30 max-w-4xl mx-auto">
-                <CardContent className="p-6">
+                <CardContent className="px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6">
                   <div className="grid md:grid-cols-2 gap-4 text-sm">
                     <div className="space-y-2">
                       <p><strong>Instructor:</strong> Dr. Kevin Johnson</p>
@@ -63,7 +63,7 @@ export default function Syllabus() {
             <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <BookOpen className="h-5 w-5 text-amber-600" />
+                  <BookOpen className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 text-amber-600" />
                   Course Description
                 </CardTitle>
               </CardHeader>
