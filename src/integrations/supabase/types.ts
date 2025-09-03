@@ -12906,6 +12906,94 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_group_applications: {
+        Row: {
+          applicant_id: string
+          applied_at: string
+          email: string
+          full_name: string
+          group_id: string
+          id: string
+          main_skill_set: string
+          motivation: string | null
+          other_skills: string | null
+          phone_number: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          applicant_id: string
+          applied_at?: string
+          email: string
+          full_name: string
+          group_id: string
+          id?: string
+          main_skill_set: string
+          motivation?: string | null
+          other_skills?: string | null
+          phone_number?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          applicant_id?: string
+          applied_at?: string
+          email?: string
+          full_name?: string
+          group_id?: string
+          id?: string
+          main_skill_set?: string
+          motivation?: string | null
+          other_skills?: string | null
+          phone_number?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_group_applications_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_project_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mus240_group_memberships: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          member_id: string
+          role: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          member_id: string
+          role?: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          member_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_group_memberships_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_project_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mus240_journal_comments: {
         Row: {
           commenter_id: string
@@ -13152,6 +13240,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mus240_project_groups: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_official: boolean
+          leader_id: string
+          max_members: number
+          member_count: number
+          name: string
+          semester: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_official?: boolean
+          leader_id: string
+          max_members?: number
+          member_count?: number
+          name: string
+          semester?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_official?: boolean
+          leader_id?: string
+          max_members?: number
+          member_count?: number
+          name?: string
+          semester?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       mus240_reading_requirements: {
         Row: {
