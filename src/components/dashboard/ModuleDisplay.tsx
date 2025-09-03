@@ -20,6 +20,11 @@ import { KaraokeModule } from '../modules/KaraokeModule';
 import { SightSingingModule } from '../modules/SightSingingModule';
 import { EmailManagementModule } from '../modules/EmailManagementModule';
 import { CalendarManagementModule } from '../modules/CalendarManagementModule';
+import { BucketsOfLoveModule } from '../modules/BucketsOfLoveModule';
+import { FanEngagementModule } from '../modules/FanEngagementModule';
+import { SchedulingModule } from '../modules/SchedulingModule';
+import { CheckInCheckOutModule } from '../modules/CheckInCheckOutModule';
+import { GleeWritingWidget } from '../writing/GleeWritingWidget';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -80,7 +85,17 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
       case 'calendar-management':
         return <CalendarManagementModule />;
       case 'check-in-check-out':
-        return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Check In/Check Out</h2><p>Check in/out module coming soon!</p></div>;
+        return <CheckInCheckOutModule />;
+      case 'buckets-of-love':
+        return <BucketsOfLoveModule />;
+      case 'glee-writing':
+        return <GleeWritingWidget />;
+      case 'fan-engagement':
+        return <FanEngagementModule />;
+      case 'scheduling-module':
+        return <SchedulingModule />;
+      case 'service-management':
+        return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Service Management</h2><p>Service management module coming soon!</p></div>;
       default:
         return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2><p>This module is being developed. Stay tuned!</p></div>;
     }
