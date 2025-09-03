@@ -110,6 +110,7 @@ import { StudentConductorDashboard } from "./pages/StudentConductorDashboard";
 import TourPlanner from "./pages/TourPlanner";
 import BookingRequest from "./pages/BookingRequest";
 import Wardrobe from "./pages/Wardrobe";
+import { WardrobeManagementHub } from "./components/wardrobe/WardrobeManagementHub";
 import { ProductManagement } from "./pages/ProductManagement";
 import PRHubPage from "./pages/PRHubPage";
 import ModulesDirectory from "./pages/ModulesDirectory";
@@ -1064,6 +1065,16 @@ const App = () => {
                                 element={
                                   <ProtectedRoute>
                                     <Wardrobe />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/wardrobe-management" 
+                                element={
+                                  <ProtectedRoute>
+                                    <UniversalLayout>
+                                      <WardrobeManagementHub />
+                                    </UniversalLayout>
                                   </ProtectedRoute>
                                 } 
                               />
