@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Crown, Settings, Users, Calendar, MessageSquare } from 'lucide-react';
+import { Crown, Settings, Users, Calendar, MessageSquare, Music, Home, CheckSquare } from 'lucide-react';
 import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
+import { STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
 
 interface ExecBoardMemberModulesProps {
   user: {
@@ -61,10 +62,19 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     );
   };
 
+  // Get standard member modules
+  const getStandardMemberModules = () => {
+    return STANDARD_MEMBER_MODULE_IDS.map(moduleId => {
+      const module = UNIFIED_MODULES.find(m => m.id === moduleId);
+      return module;
+    }).filter(Boolean);
+  };
+
+  // Get executive modules (assigned modules)
   const assignedModules = getAccessibleModules();
 
-  // Group modules by category
-  const modulesByCategory = assignedModules.reduce((acc, module) => {
+  // Group executive modules by category
+  const execModulesByCategory = assignedModules.reduce((acc, module) => {
     const category = module.category || 'Other';
     if (!acc[category]) {
       acc[category] = [];
@@ -82,6 +92,17 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
       'administration': Settings
     };
     return icons[category as keyof typeof icons] || Settings;
+  };
+
+  const getModuleIcon = (moduleId: string) => {
+    const icons = {
+      'community-hub': Home,
+      'music-library': Music,
+      'calendar': Calendar,
+      'attendance': CheckSquare,
+      'check-in-check-out': CheckSquare
+    };
+    return icons[moduleId as keyof typeof icons] || Home;
   };
 
   if (loading) {
@@ -102,94 +123,139 @@ export const ExecBoardMemberModules = ({ user }: ExecBoardMemberModulesProps) =>
     return null;
   }
 
-  if (assignedModules.length === 0) {
-    return (
+  const standardModules = getStandardMemberModules();
+
+  return (
+    <div className="space-y-6">
+      {/* Standard Member Modules */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Crown className="h-5 w-5 text-primary" />
-            <CardTitle>Executive Board Modules</CardTitle>
+            <Home className="h-5 w-5 text-primary" />
+            <CardTitle>Member Dashboard</CardTitle>
+            <CardDescription>
+              Core Glee Club modules for all members
+            </CardDescription>
           </div>
-          <CardDescription>
-            No modules have been assigned to this user yet.
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-muted-foreground py-8">
-            <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p className="text-sm">Contact an administrator to request module access.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {standardModules.map((module) => {
+              const IconComponent = getModuleIcon(module.id);
+              return (
+                <Card 
+                  key={module.id} 
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handleModuleClick(module.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <IconComponent className="h-8 w-8 text-primary" />
+                      <div className="flex-1">
+                        <h5 className="font-medium text-sm">{module.title}</h5>
+                        <p className="text-xs text-muted-foreground line-clamp-1">
+                          {module.description}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
-    );
-  }
 
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Crown className="h-5 w-5 text-primary" />
-            <div>
-              <CardTitle>Executive Board Modules</CardTitle>
-              <CardDescription>
-                Role: {user.exec_board_role} • {assignedModules.length} modules assigned
-              </CardDescription>
-            </div>
-          </div>
-          <Badge variant="secondary">
-            Executive Access
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {Object.entries(modulesByCategory).map(([category, modules]) => {
-            const IconComponent = getCategoryIcon(category);
-            
-            return (
-              <div key={category}>
-                <div className="flex items-center gap-2 mb-3">
-                  {IconComponent && <IconComponent className="h-4 w-4" />}
-                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                    {category}
-                  </h4>
-                  <div className="flex-1 h-px bg-border" />
-                </div>
-                
-                <div className="grid gap-2">
-                  {modules.map((module) => (
-                    <Card 
-                      key={module.id} 
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => handleModuleClick(module.id)}
-                    >
-                      <CardContent className="p-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h5 className="font-medium text-sm">{module.title}</h5>
-                              <Badge variant="outline" className="text-xs px-1 py-0">
-                                Access
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {module.description}
-                            </p>
-                          </div>
-                          <Settings className="h-3 w-3 ml-2 opacity-50" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+      {/* Executive Functions */}
+      {assignedModules.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-primary" />
+                <div>
+                  <CardTitle>Executive Functions</CardTitle>
+                  <CardDescription>
+                    Role: {user.exec_board_role} • {assignedModules.length} executive modules
+                  </CardDescription>
                 </div>
               </div>
-            );
-          })}
-        </div>
-        
-        {renderModuleComponent()}
-      </CardContent>
-    </Card>
+              <Badge variant="secondary">
+                Executive Access
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Object.entries(execModulesByCategory).map(([category, modules]) => {
+                const IconComponent = getCategoryIcon(category);
+                
+                return (
+                  <div key={category}>
+                    <div className="flex items-center gap-2 mb-3">
+                      {IconComponent && <IconComponent className="h-4 w-4" />}
+                      <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                        {category}
+                      </h4>
+                      <div className="flex-1 h-px bg-border" />
+                    </div>
+                    
+                    <div className="grid gap-2">
+                      {modules.map((module) => (
+                        <Card 
+                          key={module.id} 
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleModuleClick(module.id)}
+                        >
+                          <CardContent className="p-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h5 className="font-medium text-sm">{module.title}</h5>
+                                  <Badge variant="outline" className="text-xs px-1 py-0">
+                                    Executive
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                  {module.description}
+                                </p>
+                              </div>
+                              <Settings className="h-3 w-3 ml-2 opacity-50" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No executive modules assigned state */}
+      {assignedModules.length === 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-primary" />
+              <CardTitle>Executive Functions</CardTitle>
+            </div>
+            <CardDescription>
+              No executive modules have been assigned to this user yet.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center text-muted-foreground py-8">
+              <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p className="text-sm">Contact an administrator to request executive module access.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {renderModuleComponent()}
+    </div>
   );
 };
