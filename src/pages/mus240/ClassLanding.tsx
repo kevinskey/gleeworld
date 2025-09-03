@@ -81,7 +81,7 @@ export default function ClassLanding() {
           </div>
 
           {/* Navigation Cards */}
-          <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+          <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {cards.map((card) => {
               const IconComponent = card.icon;
               return (
@@ -108,7 +108,7 @@ export default function ClassLanding() {
           </section>
           
           {/* Course Description */}
-          <div className="mt-16 text-center max-w-3xl mx-auto">
+          <div className="mt-16 text-center">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
               <p className="text-white/90 text-lg leading-relaxed">
                 Explore the rich tapestry of African American musical traditions, from spirituals and blues to jazz, gospel, R&B, and hip-hop. Discover how music has been a vehicle for cultural expression, social change, and artistic innovation.
