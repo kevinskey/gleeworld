@@ -52,30 +52,9 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         // Check if user has executive board access to any functions
         let executiveFunctions: string[] = [];
         if (profile?.is_exec_board || profile?.is_admin || profile?.is_super_admin) {
-          
-          // Get functions this user has access to through executive position
-          const { data: execFunctions, error: execError } = await supabase
-            .from('gw_executive_board_members')
-            .select(`
-              position,
-              gw_executive_position_functions!inner(
-                can_access,
-                can_manage,
-                gw_app_functions!inner(name, module)
-              )
-            `)
-            .eq('user_id', targetUserId)
-            .eq('is_active', true);
-
-          if (!execError && execFunctions) {
-            execFunctions.forEach((execMember: any) => {
-              execMember.gw_executive_position_functions.forEach((posFunc: any) => {
-              if (posFunc.can_access && posFunc.gw_app_functions) {
-                executiveFunctions.push(posFunc.gw_app_functions.module);
-              }
-              });
-            });
-          }
+          // For now, grant access to executive modules based on exec board status
+          // TODO: Implement proper function-based permissions when DB relationships are fixed
+          executiveFunctions = EXECUTIVE_MODULE_IDS;
         }
 
         // Create a mapping from database module names to frontend module IDs
