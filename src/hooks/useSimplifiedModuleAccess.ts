@@ -91,6 +91,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'sight-reading-preview': 'sight-reading-preview',
           'sight-reading-generator': 'sight-reading-generator',
           'member-sight-reading-studio': 'member-sight-reading-studio',
+          'sight-reading': 'sight-singing-management', // Map sight-reading permission to sight-singing-management module
           'librarian': 'librarian',
           'radio-management': 'radio-management',
           'karaoke': 'karaoke',

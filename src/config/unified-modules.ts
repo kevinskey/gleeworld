@@ -497,6 +497,115 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: UserManagementModule, // Placeholder
     dbFunctionName: "merch-store"
   },
+  {
+    id: "receipts-records",
+    name: "receipts-records",
+    title: "Receipts & Records",
+    description: "Manage receipts, financial records, and expense tracking",
+    icon: Receipt,
+    iconColor: "orange",
+    category: "finances",
+    isActive: true,
+    component: UserManagementModule, // Placeholder
+    dbFunctionName: "receipts-records"
+  },
+  {
+    id: "approval-system",
+    name: "approval-system", 
+    title: "Approval System",
+    description: "Manage approval workflows and requests",
+    icon: CheckCircle,
+    iconColor: "green",
+    category: "finances",
+    isActive: true,
+    component: UserManagementModule, // Placeholder
+    dbFunctionName: "approval-system"
+  },
+  {
+    id: "glee-ledger",
+    name: "glee-ledger",
+    title: "Glee Ledger",
+    description: "Comprehensive financial ledger and accounting",
+    icon: Database,
+    iconColor: "blue",
+    category: "finances",
+    isActive: true,
+    component: UserManagementModule, // Placeholder
+    dbFunctionName: "glee-ledger"
+  },
+  {
+    id: "monthly-statements",
+    name: "monthly-statements",
+    title: "Monthly Statements",
+    description: "Generate and manage monthly financial statements",
+    icon: FileText,
+    iconColor: "purple",
+    category: "finances",
+    isActive: true,
+    component: UserManagementModule, // Placeholder
+    dbFunctionName: "monthly-statements"
+  },
+  {
+    id: "pr-coordinator",
+    name: "pr-coordinator",
+    title: "PR Coordinator",
+    description: "Public relations and marketing coordination",
+    icon: Megaphone,
+    iconColor: "pink",
+    category: "communications",
+    isActive: true,
+    component: UserManagementModule, // Placeholder
+    dbFunctionName: "pr-coordinator"
+  },
+  {
+    id: "communications",
+    name: "communications",
+    title: "Communications Hub",
+    description: "Central communications management and coordination",
+    icon: MessageSquare,
+    iconColor: "blue",
+    category: "communications",
+    isActive: true,
+    component: UserManagementModule, // Placeholder
+    dbFunctionName: "communications"
+  },
+  {
+    id: "admin-tools",
+    name: "admin-tools",
+    title: "Admin Tools",
+    description: "Administrative tools and system management",
+    icon: Settings,
+    iconColor: "red",
+    category: "system",
+    isActive: true,
+    component: UserManagementModule, // Placeholder
+    dbFunctionName: "admin-tools"
+  },
+  {
+    id: "system-settings",
+    name: "system-settings",
+    title: "System Settings",
+    description: "Advanced system configuration and settings",
+    icon: Settings,
+    iconColor: "gray",
+    category: "system",
+    isActive: true,
+    component: SettingsModule,
+    dbFunctionName: "system-settings"
+  },
+  {
+    id: "executive-board",
+    name: "executive-board",
+    title: "Executive Board",
+    description: "Executive board management and leadership tools",
+    icon: Users,
+    iconColor: "gold",
+    category: "member-management",
+    isActive: true,
+    component: ExecutiveModule,
+    dbFunctionName: "executive-board"
+  },
+
 
   // Tools & Administration
   {
