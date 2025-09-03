@@ -17,8 +17,6 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('🚨 useSimplifiedModuleAccess: HOOK CALLED FOR USER:', user?.email, userId);
-    console.log('🚨 Current time:', new Date().toLocaleTimeString());
     
     const fetchModuleAccess = async () => {
       setLoading(true);
@@ -49,22 +47,11 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             user_email_param: profile.email
           });
           emailPermissions = emailPerms?.map((p: any) => p.module_name) || [];
-          console.log('🔍 Email permissions for', profile.email, ':', emailPermissions);
         }
 
-        console.log('🔍 useSimplifiedModuleAccess: DEBUGGING EXECUTIVE ACCESS');
-        console.log('🔍 Target User ID:', targetUserId);
-        console.log('🔍 User Profile Data:', profile);
-        console.log('🔍 Is Exec Board?', profile?.is_exec_board);
-        console.log('🔍 Role:', profile?.role);
-        console.log('🔍 Is Super Admin?', profile?.is_super_admin);
-        console.log('🔍 Is Admin?', profile?.is_admin);
-
         // Check if user has executive board access to any functions
-        console.log('🔍 Checking executive board access...');
         let executiveFunctions: string[] = [];
         if (profile?.is_exec_board || profile?.is_admin || profile?.is_super_admin) {
-          console.log('🔍 User has exec board or admin status, checking function access...');
           
           // Get functions this user has access to through executive position
           const { data: execFunctions, error: execError } = await supabase
@@ -83,16 +70,13 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           if (!execError && execFunctions) {
             execFunctions.forEach((execMember: any) => {
               execMember.gw_executive_position_functions.forEach((posFunc: any) => {
-                if (posFunc.can_access && posFunc.gw_app_functions) {
-                  executiveFunctions.push(posFunc.gw_app_functions.module);
-                  console.log('✅ Found exec function access:', posFunc.gw_app_functions.name, '-> module:', posFunc.gw_app_functions.module);
-                }
+              if (posFunc.can_access && posFunc.gw_app_functions) {
+                executiveFunctions.push(posFunc.gw_app_functions.module);
+              }
               });
             });
           }
         }
-
-        console.log('🔍 Executive functions accessible:', executiveFunctions);
 
         // Create a mapping from database module names to frontend module IDs
         const moduleMapping: Record<string, string> = {
@@ -160,21 +144,12 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
 
         // Process granted modules using executive functions access
         const grantedModuleIds = new Set(executiveFunctions); // Start with executive functions
-        console.log('🔍 Final granted module IDs from exec functions:', Array.from(grantedModuleIds));
-
-        console.log('🔍 useSimplifiedModuleAccess: granted module IDs =', Array.from(grantedModuleIds));
-        console.log('🔍 useSimplifiedModuleAccess: profile is_exec_board =', profile?.is_exec_board);
-        console.log('🔍 useSimplifiedModuleAccess: profile role =', profile?.role);
-        console.log('🔍 useSimplifiedModuleAccess: profile is_super_admin =', profile?.is_super_admin);
-        console.log('🔍 useSimplifiedModuleAccess: profile is_admin =', profile?.is_admin);
-        console.log('🔍 useSimplifiedModuleAccess: available active modules =', getActiveModules().map(m => m.id));
         
         // Build access list based on permissions using only active modules
         const activeModules = getActiveModules();
         const accessList: ModuleAccess[] = activeModules.map(module => {
           // Super admin gets everything (check multiple fields for safety)
           if (profile?.is_super_admin || profile?.role === 'super-admin' || profile?.role === 'admin') {
-            console.log('🔥 Super admin access granted for module:', module.id);
             return {
               moduleId: module.id,
               hasAccess: true,
@@ -190,7 +165,6 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           }
           
           if (modulePermissionNames.some(name => emailPermissions.includes(name))) {
-            console.log('📧 Email permission found for module:', module.id, 'via permission:', modulePermissionNames.find(name => emailPermissions.includes(name)));
             return {
               moduleId: module.id,
               hasAccess: true,
@@ -200,7 +174,6 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
 
           // Check if user has explicit permission for this module (through exec board or other means)
           if (grantedModuleIds.has(module.id)) {
-            console.log('✅ Explicit permission found for module:', module.id);
             return {
               moduleId: module.id,
               hasAccess: true,
@@ -210,7 +183,6 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
 
           // Standard members get default member modules (regardless of exec board status)
           if (profile?.role === 'member' && STANDARD_MEMBER_MODULE_IDS.includes(module.id)) {
-            console.log('👤 Member default access for module:', module.id);
             return {
               moduleId: module.id,
               hasAccess: true,
@@ -219,16 +191,12 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           }
 
           // No access by default (users only get explicitly granted modules via email or database)
-          console.log('❌ No access for module:', module.id);
             return {
               moduleId: module.id,
               hasAccess: false,
               source: 'explicit_permission' as const
             };
           });
-
-        console.log('🔍 Final access list count:', accessList.filter(a => a.hasAccess).length);
-        console.log('🔍 Final accessible modules:', accessList.filter(a => a.hasAccess).map(a => `${a.moduleId} (${a.source})`));
         
         setModuleAccess(accessList);
       } catch (err) {
@@ -257,7 +225,6 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
       accessibleModuleIds.includes(module.id)
     );
     
-    console.log('🎯 useSimplifiedModuleAccess: final accessible modules =', result.map(m => m.id));
     return result;
   };
 
