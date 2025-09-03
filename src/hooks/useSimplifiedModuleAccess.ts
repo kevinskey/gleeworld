@@ -168,8 +168,15 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             };
           }
 
-          // Removed automatic assignment of standard member modules
-          // Users now only get modules they have explicit permissions for
+          // Standard members get essential member modules (hardcoded access)
+          const essentialModules = ['community-hub', 'music-library', 'calendar', 'attendance', 'check-in-check-out', 'member-sight-reading-studio'];
+          if (profile?.role === 'member' && essentialModules.includes(module.id)) {
+            return {
+              moduleId: module.id,
+              hasAccess: true,
+              source: 'member_default' as const
+            };
+          }
 
           // No access by default (users only get explicitly granted modules via email or database)
             return {
