@@ -168,14 +168,8 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             };
           }
 
-          // Standard members get default member modules (regardless of exec board status)
-          if (profile?.role === 'member' && STANDARD_MEMBER_MODULE_IDS.includes(module.id)) {
-            return {
-              moduleId: module.id,
-              hasAccess: true,
-              source: 'member_default' as const
-            };
-          }
+          // Removed automatic assignment of standard member modules
+          // Users now only get modules they have explicit permissions for
 
           // No access by default (users only get explicitly granted modules via email or database)
             return {
