@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Volume2, VolumeX } from 'lucide-react';
@@ -35,14 +35,23 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
   const oscillatorRef = useRef<OscillatorNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
 
-  const initAudioContext = useCallback(() => {
+  const initAudioContext = useCallback(async () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
+    
+    if (audioContextRef.current.state === 'suspended') {
+      try {
+        await audioContextRef.current.resume();
+      } catch (error) {
+        console.error('Failed to resume AudioContext:', error);
+      }
+    }
+    
     return audioContextRef.current;
   }, []);
 
-  const playTone = useCallback((frequency: number, note: string) => {
+  const playTone = useCallback(async (frequency: number, note: string) => {
     console.log('PitchPipe: playTone called', { frequency, note, isPlaying });
     
     if (isPlaying === note) {
@@ -53,7 +62,12 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
 
     stopTone(); // Stop any currently playing tone
     
-    const audioContext = initAudioContext();
+    const audioContext = await initAudioContext();
+    
+    if (!audioContext || audioContext.state !== 'running') {
+      console.warn('AudioContext not available or not running');
+      return;
+    }
     
     // Create oscillator for the tone
     const oscillator = audioContext.createOscillator();
@@ -85,15 +99,31 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
 
   const stopTone = useCallback(() => {
     if (oscillatorRef.current && gainNodeRef.current && audioContextRef.current) {
-      gainNodeRef.current.gain.linearRampToValueAtTime(0, audioContextRef.current.currentTime + 0.05);
-      setTimeout(() => {
-        oscillatorRef.current?.stop();
+      try {
+        gainNodeRef.current.gain.linearRampToValueAtTime(0, audioContextRef.current.currentTime + 0.05);
+        setTimeout(() => {
+          oscillatorRef.current?.stop();
+          oscillatorRef.current = null;
+          gainNodeRef.current = null;
+        }, 50);
+      } catch (error) {
+        // Oscillator might already be stopped
         oscillatorRef.current = null;
         gainNodeRef.current = null;
-      }, 50);
+      }
     }
     setIsPlaying(null);
   }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopTone();
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close();
+      }
+    };
+  }, [stopTone]);
 
   const toggleMute = () => {
     setIsMuted(!isMuted);

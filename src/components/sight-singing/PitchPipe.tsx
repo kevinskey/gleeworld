@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { VolumeX } from 'lucide-react';
@@ -33,40 +33,46 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
     { name: 'A#', frequency: 466.16, position: 5.5 }, // Between A and B
   ];
 
-  const initAudioContext = () => {
+  const initAudioContext = useCallback(async () => {
     if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext();
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     
     if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
+      try {
+        await audioContextRef.current.resume();
+      } catch (error) {
+        console.error('Failed to resume AudioContext:', error);
+      }
     }
-  };
+    
+    return audioContextRef.current;
+  }, []);
 
-  const playNote = (frequency: number, noteName: string) => {
+  const playNote = useCallback(async (frequency: number, noteName: string) => {
     try {
-      initAudioContext();
+      const audioContext = await initAudioContext();
       
       // Stop any currently playing note
       stopCurrentNote();
       
-      if (!audioContextRef.current) return;
+      if (!audioContext || audioContext.state !== 'running') return;
 
       // Create oscillator and gain nodes
-      const oscillator = audioContextRef.current.createOscillator();
-      const gainNode = audioContextRef.current.createGain();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
       
       // Set up the audio chain
       oscillator.connect(gainNode);
-      gainNode.connect(audioContextRef.current.destination);
+      gainNode.connect(audioContext.destination);
       
       // Configure oscillator
       oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime);
+      oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
       
       // Configure gain with quick fade in only
-      gainNode.gain.setValueAtTime(0, audioContextRef.current.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.3, audioContextRef.current.currentTime + 0.02);
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.02);
       
       // Start playing (no auto-stop)
       oscillator.start();
@@ -83,9 +89,9 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
       setIsPlaying(false);
       setCurrentNote(null);
     }
-  };
+  }, [initAudioContext]);
 
-  const stopCurrentNote = () => {
+  const stopCurrentNote = useCallback(() => {
     if (oscillatorRef.current && gainNodeRef.current && audioContextRef.current) {
       try {
         const currentTime = audioContextRef.current.currentTime;
@@ -103,7 +109,17 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
     setCurrentNote(null);
     oscillatorRef.current = null;
     gainNodeRef.current = null;
-  };
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopCurrentNote();
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close();
+      }
+    };
+  }, [stopCurrentNote]);
 
 
   return (
