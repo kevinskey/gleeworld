@@ -46,24 +46,24 @@ export const ConsolidatedStatsCards = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CheckCircle className="h-4 w-4 text-emerald-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="font-semibold text-green-700">{completedCount}</p>
+                <p className="font-semibold text-emerald-700">{completedCount}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-orange-600" />
+              <Clock className="h-4 w-4 text-amber-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Pending</p>
-                <p className="font-semibold text-orange-700">{pendingCount}</p>
+                <p className="font-semibold text-amber-700">{pendingCount}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-600" />
+              <Users className="h-4 w-4 text-sky-600" />
               <div>
                 <p className="text-sm text-muted-foreground">W9 Forms</p>
-                <p className="font-semibold text-blue-700">{w9FormsCount}</p>
+                <p className="font-semibold text-sky-700">{w9FormsCount}</p>
               </div>
             </div>
           </div>
