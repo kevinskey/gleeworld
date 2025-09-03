@@ -37,12 +37,6 @@ export default function ClassLanding() {
       desc: 'Readings, citations, media',
       icon: Users
     },
-    { 
-      title: 'NotebookLM', 
-      to: '/classes/mus240/notebook', 
-      desc: 'AI study companion & notes',
-      icon: Brain
-    },
   ];
 
   return (

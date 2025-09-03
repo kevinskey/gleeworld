@@ -164,7 +164,7 @@ import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
 import { Mus240AdminPage } from "./pages/mus240/admin/Mus240AdminPage";
 import { InstructorConsole } from "./pages/mus240/InstructorConsole";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
-import NotebookLMPage from "./pages/mus240/NotebookLMPage";
+
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
@@ -1454,14 +1454,6 @@ const App = () => {
                                 element={
                                   <Mus240EnrollmentRoute>
                                     <Resources />
-                                  </Mus240EnrollmentRoute>
-                                } 
-                              />
-                              <Route 
-                                path="/classes/mus240/notebook" 
-                                element={
-                                  <Mus240EnrollmentRoute>
-                                    <NotebookLMPage />
                                   </Mus240EnrollmentRoute>
                                 } 
                               />
