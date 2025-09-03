@@ -77,16 +77,48 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
 
         let doc;
         try {
-          doc = await pdfjsLib.getDocument({ url: signedUrl }).promise;
-          console.log('FastPDFViewer: PDF loaded with primary method, pages:', doc.numPages);
+          // Method 1: Direct URL load
+          doc = await pdfjsLib.getDocument({ 
+            url: signedUrl,
+            withCredentials: false,
+            cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/',
+            cMapPacked: true
+          }).promise;
+          console.log('FastPDFViewer: PDF loaded with direct method, pages:', doc.numPages);
         } catch (primaryErr) {
           console.warn('Primary PDF load failed, retrying with ArrayBuffer', primaryErr);
-          const resp = await fetch(signedUrl);
-          if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
-          const ab = await resp.arrayBuffer();
-          console.log('FastPDFViewer: Fetched ArrayBuffer, size:', ab.byteLength);
-          doc = await pdfjsLib.getDocument({ data: ab }).promise;
-          console.log('FastPDFViewer: PDF loaded with ArrayBuffer method, pages:', doc.numPages);
+          try {
+            // Method 2: ArrayBuffer with better headers
+            const resp = await fetch(signedUrl, {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/pdf,*/*',
+                'Cache-Control': 'no-cache'
+              },
+              mode: 'cors'
+            });
+            
+            if (!resp.ok) {
+              throw new Error(`Fetch failed: ${resp.status} ${resp.statusText}`);
+            }
+            
+            const ab = await resp.arrayBuffer();
+            console.log('FastPDFViewer: Fetched ArrayBuffer, size:', ab.byteLength);
+            
+            if (ab.byteLength === 0) {
+              throw new Error('PDF file is empty or corrupted');
+            }
+            
+            doc = await pdfjsLib.getDocument({ 
+              data: ab,
+              cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/',
+              cMapPacked: true
+            }).promise;
+            console.log('FastPDFViewer: PDF loaded with ArrayBuffer method, pages:', doc.numPages);
+          } catch (secondaryErr) {
+            console.error('Secondary PDF load also failed:', secondaryErr);
+            throw new Error(`Failed to load PDF: ${primaryErr.message}. Secondary attempt: ${secondaryErr.message}`);
+          }
         }
 
         if (cancelled) return;
