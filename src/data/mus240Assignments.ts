@@ -47,7 +47,7 @@ export const mus240Assignments: WeekAssignments[] = [
         title: "Week 2 Listening Guide – Spirituals and Vocal Traditions",
         description: "Listening Selections: Fisk Jubilee Singers – \"Swing Low, Sweet Chariot\", Field Holler (archival example), Robert Johnson – \"Cross Road Blues\", Kevin Phillip Johnson's arrangement of \"Children, Go Where I Send Thee\"",
         instructions: "Reflection Prompt (250–300 words)\nRespond to the week's listening by addressing:\n• Which African musical elements are present? (e.g., call-and-response, improvisation, polyrhythm, timbre).\n• How did these forms aid enslaved Africans—practically, spiritually, emotionally?\n• How do we see connections to blues development, especially in Robert Johnson's \"Cross Road Blues\"?\n• Choose one recording that stood out. Describe what you hear, what it communicates, and its cultural significance.\n\nPeer Comment Guidelines\nAfter submitting your journal:\n• Comment on at least two peers, 3–4 sentences each.\n• Acknowledge a specific point they made.\n• Expand the discussion with another insight, example, or question.\n• Connect their ideas back to the listening or course themes.\n• Avoid generic praise. Comments should deepen conversation.",
-        dueDate: "2025-09-05",
+        dueDate: "2025-09-06",
         type: "listening-journal",
         estimatedTime: "45 minutes",
         points: 20
