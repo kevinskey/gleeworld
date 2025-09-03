@@ -229,9 +229,9 @@ export const ExecBoardModulePanel = () => {
                       {Object.entries(execModulesByCategory).map(([category, modules]) => {
                     const IconComponent = getCategoryIcon(category);
                     return <div key={category} className="space-y-3">
-                            <div className="flex items-center gap-2 mb-3">
-                              {IconComponent}
-                              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                        <div className="flex items-center gap-2 mb-3">
+                          <IconComponent className="h-4 w-4 text-primary" />
+                          <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                                 {category}
                               </h4>
                               <div className="flex-1 h-px bg-border" />
