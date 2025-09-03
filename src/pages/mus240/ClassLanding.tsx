@@ -56,7 +56,7 @@ export default function ClassLanding() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
               <Music className="h-6 w-6 text-amber-300" />
-              <span className="text-white/90 font-medium">Spelman College</span>
+              <span className="text-white/90 font-medium text-lg lg:text-xl xl:text-2xl">Spelman College</span>
             </div>
             
             <h1 className="text-5xl md:text-7xl lg:text-9xl xl:text-[12rem] font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
@@ -67,14 +67,14 @@ export default function ClassLanding() {
               Survey of African American Music
             </h2>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-white/80">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-white/80 text-lg lg:text-xl xl:text-2xl">
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
+                <Calendar className="h-4 w-4 lg:h-6 lg:w-6 xl:h-8 xl:w-8" />
                 <span>Fall 2025</span>
               </div>
               <div className="hidden sm:block w-1 h-1 bg-white/60 rounded-full"></div>
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
+                <Users className="h-4 w-4 lg:h-6 lg:w-6 xl:h-8 xl:w-8" />
                 <span>Dr. Kevin Johnson</span>
               </div>
             </div>
@@ -110,7 +110,7 @@ export default function ClassLanding() {
           {/* Course Description */}
           <div className="mt-16 text-center">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
-              <p className="text-white/90 text-lg leading-relaxed">
+              <p className="text-white/90 text-xl lg:text-2xl xl:text-3xl leading-relaxed">
                 Explore the rich tapestry of African American musical traditions, from spirituals and blues to jazz, gospel, R&B, and hip-hop. Discover how music has been a vehicle for cultural expression, social change, and artistic innovation.
               </p>
             </div>
