@@ -146,7 +146,7 @@ export const MusicLibrary = () => {
             <ArrowLeft className="h-4 w-4" />
             <span className="text-sm">Back</span>
           </Button>
-          <h1 className="text-base font-semibold truncate mx-1">Music Library</h1>{/* Reduced margin from mx-2 to mx-1 */}
+          <h1 className="text-base font-semibold truncate mx-1 pt-2">Music Library</h1>{/* Reduced margin from mx-2 to mx-1 */}
           <div className="w-12 flex-shrink-0"></div> {/* Reduced spacer width from w-16 to w-12 */}
         </div>
 
