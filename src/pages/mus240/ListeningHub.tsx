@@ -74,7 +74,7 @@ export default function ListeningHub() {
               MUS 240 Listening
             </h1>
             
-            <p className="text-2xl md:text-3xl lg:text-2xl xl:text-3xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl lg:text-lg xl:text-xl text-white/90 mb-8 max-w-3xl mx-auto leading-loose">
               Explore the rich tapestry of African American music through curated listening experiences, 
               from West African foundations to contemporary innovations.
             </p>
