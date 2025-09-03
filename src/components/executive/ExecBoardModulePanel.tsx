@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Crown, Settings, Users, Calendar, MessageSquare, Music, Home, CheckSquare, Sparkles, DollarSign, Heart } from 'lucide-react';
+import { Crown, Settings, Users, Calendar, MessageSquare, Music, Home, CheckSquare, Sparkles, DollarSign, Heart, Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
@@ -16,6 +16,7 @@ export const ExecBoardModulePanel = () => {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [userModules, setUserModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDayMode, setIsDayMode] = useState(true);
 
   const { getAccessibleModules, loading: accessLoading, hasAccess } = useSimplifiedModuleAccess(user?.id);
 
@@ -171,13 +172,31 @@ export const ExecBoardModulePanel = () => {
         {/* Hero Section for Standard Member Modules */}
         <section aria-label="Member modules" className="animate-fade-in w-full overflow-hidden">
           <Card className="relative overflow-hidden border bg-background/40 w-full">
+            {/* Day/Night Toggle */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="absolute top-4 right-4 z-20 bg-background/80 backdrop-blur-sm"
+              onClick={() => setIsDayMode(!isDayMode)}
+            >
+              {isDayMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </Button>
+            
             <div className="absolute inset-0">
               <img
                 src="/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png"
                 alt="Historic Spelman campus background"
-                className="w-full h-full object-cover brightness-125 contrast-110 saturate-110"
+                className={`w-full h-full object-cover transition-all duration-700 ${
+                  isDayMode 
+                    ? 'brightness-125 contrast-110 saturate-110' 
+                    : 'brightness-50 contrast-125 saturate-75 hue-rotate-180 sepia-[0.3]'
+                }`}
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/15 to-background/30" />
+              <div className={`absolute inset-0 transition-all duration-700 ${
+                isDayMode 
+                  ? 'bg-gradient-to-b from-background/10 via-background/15 to-background/30'
+                  : 'bg-gradient-to-b from-blue-950/40 via-blue-900/50 to-blue-950/70'
+              }`} />
             </div>
             <CardContent className="card-compact relative z-10 h-[320px] sm:h-[360px] md:h-[400px] flex flex-col justify-between pt-8">
               <div className="flex items-center gap-2 md:gap-4 pt-5">
