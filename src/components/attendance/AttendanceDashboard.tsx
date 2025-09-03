@@ -53,7 +53,7 @@ export const AttendanceDashboard = () => {
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
 
-  // Check if user can take attendance (secretary, designate, or super-admin)
+  // Check if user can take attendance (all executive board members or super-admin)
   const checkAttendancePermissions = useCallback(async () => {
     if (!user) {
       setCanTakeAttendance(false);
@@ -63,21 +63,22 @@ export const AttendanceDashboard = () => {
     try {
       const { data: gwProfile, error } = await supabase
         .from('gw_profiles')
-        .select('is_admin, is_super_admin, exec_board_role, special_roles')
+        .select('is_admin, is_super_admin, is_exec_board, exec_board_role, special_roles')
         .eq('user_id', user.id)
         .single();
 
       if (error) throw error;
 
-      // Check if user is super-admin, secretary, or has secretary designation
+      // Check if user is super-admin, any executive board member, or has secretary designation
       const isSuperAdmin = gwProfile?.is_super_admin;
+      const isExecBoard = gwProfile?.is_exec_board;
       const isSecretary = gwProfile?.exec_board_role?.toLowerCase() === 'secretary';
       const hasSecretaryRole = gwProfile?.special_roles?.includes('secretary');
       
-      setCanTakeAttendance(isSuperAdmin || isSecretary || hasSecretaryRole);
+      setCanTakeAttendance(isSuperAdmin || isExecBoard || isSecretary || hasSecretaryRole);
       
-      // Collapse personal attendance section by default for secretaries
-      if (isSecretary || hasSecretaryRole) {
+      // Collapse personal attendance section by default for executive board members
+      if (isExecBoard || isSecretary || hasSecretaryRole) {
         setUserSectionCollapsed(true);
       }
     } catch (error) {
