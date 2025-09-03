@@ -41,16 +41,33 @@ export const ExecBoardModulePanel = () => {
   }, [user?.id, accessLoading]);
 
   const handleModuleClick = (moduleId: string) => {
+    console.log('🎯 Module clicked:', moduleId);
+    console.log('🎯 Has access:', hasAccess(moduleId));
+    console.log('🎯 Current selectedModule:', selectedModule);
+    
     if (hasAccess(moduleId)) {
+      console.log('🎯 Setting selectedModule to:', moduleId);
       setSelectedModule(moduleId);
+    } else {
+      console.log('🎯 No access to module:', moduleId);
     }
   };
 
   const renderModuleComponent = () => {
-    if (!selectedModule) return null;
+    console.log('🔍 renderModuleComponent called, selectedModule:', selectedModule);
+    
+    if (!selectedModule) {
+      console.log('🔍 No selectedModule, returning null');
+      return null;
+    }
     
     const module = UNIFIED_MODULES.find(m => m.id === selectedModule);
-    if (!module) return null;
+    console.log('🔍 Found module:', module);
+    
+    if (!module) {
+      console.log('🔍 Module not found in UNIFIED_MODULES');
+      return null;
+    }
 
     return (
       <div className="mt-4">
@@ -220,8 +237,8 @@ export const ExecBoardModulePanel = () => {
                         onClick={() => handleModuleClick(module.id)}
                       >
                         <div className="flex flex-col items-center justify-center gap-1 text-center w-full">
-                          <IconComponent className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors" />
-                          <span className="text-xs font-medium group-hover:text-primary-foreground transition-colors leading-tight">{module.title}</span>
+                          <IconComponent className="h-5 w-5 text-primary transition-colors" />
+                          <span className="text-xs font-medium transition-colors leading-tight">{module.title}</span>
                         </div>
                       </Card>
                     );
