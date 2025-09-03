@@ -196,15 +196,15 @@ export const ExecBoardModulePanel = () => {
                 })}
                 </div>
                 
-                <Card className="cursor-pointer hover:bg-muted/50 transition-colors bg-background/60 backdrop-blur-sm" onClick={() => handleModuleClick('check-in-check-out')}>
+                {standardModules.length > 4 && <Card className="bg-background/60 backdrop-blur-sm">
                     <CardContent className="p-4">
                       <div className="text-center">
-                        <CheckSquare className="h-8 w-8 text-primary mx-auto mb-2" />
-                        <h3 className="font-medium text-sm mb-1">Check In/Check Out</h3>
-                        <p className="text-xs text-muted-foreground">Track arrival and departure times for events and rehearsals</p>
+                        <Music className="h-8 w-8 text-primary mx-auto mb-2" />
+                        <h3 className="font-medium text-sm mb-1">Additional Modules</h3>
+                        
                       </div>
                     </CardContent>
-                  </Card>
+                  </Card>}
               </div>
             </CardContent>
           </Card>
@@ -230,7 +230,7 @@ export const ExecBoardModulePanel = () => {
                     const IconComponent = getCategoryIcon(category);
                     return <div key={category} className="space-y-3">
                             <div className="flex items-center gap-2 mb-3">
-                              {IconComponent && <IconComponent className="h-4 w-4" />}
+                              {IconComponent}
                               <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                                 {category}
                               </h4>
