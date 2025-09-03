@@ -211,19 +211,21 @@ export const ExecBoardModulePanel = () => {
                   })}
                 </div>
                 
-                {standardModules.length > 4 && (
-                  <Card className="bg-background/60 backdrop-blur-sm h-20">
-                    <CardContent className="p-4 h-full flex items-center justify-center">
-                      <div className="text-center flex flex-col items-center justify-center h-full">
-                        <Music className="h-6 w-6 text-primary mb-1" />
-                        <h3 className="font-medium text-xs mb-0">Additional Modules</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {standardModules.length - 4} more available
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                {/* Check In/Check Out Module */}
+                <Card 
+                  className="bg-background/60 backdrop-blur-sm h-20 cursor-pointer hover:bg-muted/70 hover:scale-105 hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/50 active:scale-95"
+                  onClick={() => handleModuleClick('check-in-check-out')}
+                >
+                  <CardContent className="p-4 h-full flex items-center justify-center">
+                    <div className="text-center flex flex-col items-center justify-center h-full">
+                      <CheckSquare className="h-6 w-6 text-primary mb-1" />
+                      <h3 className="font-medium text-xs mb-0">Check In/Check Out</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Track arrival & departure times
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </CardContent>
           </Card>
