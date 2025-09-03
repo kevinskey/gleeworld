@@ -59,11 +59,11 @@ export default function ClassLanding() {
               <span className="text-white/90 font-medium">Spelman College</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+            <h1 className="text-5xl md:text-7xl lg:text-9xl xl:text-[12rem] font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
               MUS 240
             </h1>
             
-            <h2 className="text-2xl md:text-3xl font-light text-white/95 mb-6 max-w-4xl mx-auto leading-relaxed">
+            <h2 className="text-2xl md:text-3xl lg:text-5xl xl:text-6xl font-light text-white/95 mb-6 max-w-4xl mx-auto leading-relaxed">
               Survey of African American Music
             </h2>
             
@@ -90,14 +90,14 @@ export default function ClassLanding() {
                   to={card.to} 
                   className="group block"
                 >
-                  <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
-                        <IconComponent className="h-5 w-5 text-white" />
+                  <div className="bg-white/95 backdrop-blur-sm rounded-2xl lg:rounded-3xl p-6 lg:p-12 xl:p-16 shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105">
+                    <div className="flex items-center gap-3 lg:gap-6 mb-3 lg:mb-6">
+                      <div className="p-2 lg:p-4 xl:p-6 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg lg:rounded-xl">
+                        <IconComponent className="h-5 w-5 lg:h-10 lg:w-10 xl:h-12 xl:w-12 text-white" />
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-900">{card.title}</h3>
+                      <h3 className="text-xl lg:text-3xl xl:text-4xl font-semibold text-gray-900">{card.title}</h3>
                     </div>
-                    <p className="text-gray-600 leading-relaxed">{card.desc}</p>
+                    <p className="text-gray-600 lg:text-xl xl:text-2xl leading-relaxed">{card.desc}</p>
                   </div>
                 </Link>
               );
