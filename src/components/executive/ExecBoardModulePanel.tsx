@@ -220,7 +220,7 @@ export const ExecBoardModulePanel = () => {
                         onClick={() => handleModuleClick(module.id)}
                       >
                         <CardContent className="p-3 h-full flex items-center justify-center">
-                          <div className="flex flex-col items-center justify-center gap-2">
+                          <div className="flex flex-col items-center justify-center gap-2 h-full w-full">
                             <IconComponent className="h-6 w-6 text-primary group-hover:text-primary-foreground transition-colors" />
                             <span className="text-xs font-medium group-hover:text-primary-foreground transition-colors text-center">{module.title}</span>
                           </div>
