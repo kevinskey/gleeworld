@@ -56,26 +56,26 @@ export default function ClassLanding() {
           <div className="text-center mb-16 flex flex-col items-center justify-center">
             <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
               <Music className="h-6 w-6 md:h-7 md:w-7 text-amber-300" />
-              <span className="text-white/90 font-medium text-xl md:text-2xl lg:text-xl xl:text-2xl">Spelman College</span>
+              <span className="text-white/90 font-medium text-2xl md:text-3xl lg:text-2xl xl:text-3xl">Spelman College</span>
             </div>
             
-            <h1 className="text-7xl md:text-8xl lg:text-9xl xl:text-[12rem] font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+            <h1 className="text-8xl md:text-9xl lg:text-10xl xl:text-[14rem] font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
               MUS 240
             </h1>
             
-            <h2 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light text-white/95 mb-6 mx-auto leading-relaxed">
+            <h2 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-light text-white/95 mb-6 mx-auto leading-relaxed">
               Survey of African American Music
             </h2>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-white/80 text-2xl md:text-3xl lg:text-3xl xl:text-4xl">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-white/80 text-3xl md:text-4xl lg:text-4xl xl:text-5xl">
               <div className="flex items-center gap-3">
-                <Calendar className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 xl:h-10 xl:w-10" />
-                <span className="text-xl md:text-2xl lg:text-2xl xl:text-3xl font-medium">Fall 2025</span>
+                <Calendar className="h-7 w-7 md:h-8 md:w-8 lg:h-9 lg:w-9 xl:h-12 xl:w-12" />
+                <span className="text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-medium">Fall 2025</span>
               </div>
               <div className="hidden sm:block w-2 h-2 bg-white/60 rounded-full"></div>
               <div className="flex items-center gap-3">
-                <Users className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 xl:h-10 xl:w-10" />
-                <span className="text-xl md:text-3xl lg:text-2xl xl:text-4xl font-medium">Dr. Kevin Johnson</span>
+                <Users className="h-7 w-7 md:h-8 md:w-8 lg:h-9 lg:w-9 xl:h-12 xl:w-12" />
+                <span className="text-2xl md:text-4xl lg:text-3xl xl:text-5xl font-medium">Dr. Kevin Johnson</span>
               </div>
             </div>
           </div>
