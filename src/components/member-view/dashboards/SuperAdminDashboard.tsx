@@ -461,6 +461,85 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Quick Action Modules */}
+      <div className="bg-gradient-to-r from-primary/5 via-background to-muted/20 rounded-lg p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Zap className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold">Quick Actions</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {/* Permissions Module */}
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" 
+            onClick={() => setSelectedModule('permissions')}
+          >
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center mx-auto mb-3">
+                <Shield className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+              </div>
+              <h3 className="font-semibold text-sm mb-1">Permissions</h3>
+              <p className="text-xs text-muted-foreground">Manage access control</p>
+            </CardContent>
+          </Card>
+
+          {/* User Management Module */}
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" 
+            onClick={() => setSelectedModule('user-management')}
+          >
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center mx-auto mb-3">
+                <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="font-semibold text-sm mb-1">User Management</h3>
+              <p className="text-xs text-muted-foreground">Manage users & roles</p>
+            </CardContent>
+          </Card>
+
+          {/* Appointments Module */}
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" 
+            onClick={() => setSelectedModule('auditions')}
+          >
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/20 flex items-center justify-center mx-auto mb-3">
+                <Calendar className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="font-semibold text-sm mb-1">Appointments</h3>
+              <p className="text-xs text-muted-foreground">Audition scheduling</p>
+            </CardContent>
+          </Card>
+
+          {/* Bookings Module */}
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" 
+            onClick={() => setSelectedModule('booking-forms')}
+          >
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center mx-auto mb-3">
+                <FileText className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="font-semibold text-sm mb-1">Bookings</h3>
+              <p className="text-xs text-muted-foreground">Event booking forms</p>
+            </CardContent>
+          </Card>
+
+          {/* Notifications Module */}
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" 
+            onClick={() => setSelectedModule('notifications')}
+          >
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-3">
+                <Bell className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="font-semibold text-sm mb-1">Notifications</h3>
+              <p className="text-xs text-muted-foreground">System alerts</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
       {/* Header with Module Toggle */}
       <div className="flex items-center justify-between">
         <div className="border-l-4 border-primary pl-4">
