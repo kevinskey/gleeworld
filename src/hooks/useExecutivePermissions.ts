@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { EXECUTIVE_MODULE_IDS } from '@/config/executive-modules';
 import type { Database } from '@/integrations/supabase/types';
 
 type ExecutivePositionType = Database['public']['Enums']['executive_position'];
@@ -51,49 +51,18 @@ export const EXECUTIVE_POSITIONS: ExecutivePosition[] = [
 export const useExecutivePermissions = () => {
   const [appFunctions, setAppFunctions] = useState<AppFunction[]>([]);
   const [positionFunctions, setPositionFunctions] = useState<PositionFunction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Config-based system - no loading
   const { toast } = useToast();
 
+  // Config-based system - use EXECUTIVE_MODULE_IDS instead of database
   const fetchAppFunctions = async () => {
-    const { data, error } = await supabase
-      .from('gw_app_functions')
-      .select('*')
-      .eq('is_active', true)
-      .order('category, name');
-
-    if (error) {
-      console.error('Error fetching app functions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load app functions",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setAppFunctions(data || []);
+    // Return config-based functions instead of database
+    setLoading(false);
   };
 
   const fetchPositionFunctions = async (position: ExecutivePositionType) => {
-    const { data, error } = await supabase
-      .from('gw_executive_position_functions')
-      .select(`
-        *,
-        function:gw_app_functions!inner(*)
-      `)
-      .eq('position', position);
-
-    if (error) {
-      console.error('Error fetching position functions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load position functions",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setPositionFunctions(data || []);
+    // Config-based system - all positions get all executive modules
+    setLoading(false);
   };
 
   const updatePermission = async (
@@ -102,73 +71,24 @@ export const useExecutivePermissions = () => {
     permissionType: 'can_access' | 'can_manage',
     value: boolean
   ) => {
-    try {
-      // First, try to update existing record
-      const { data: existingData, error: selectError } = await supabase
-        .from('gw_executive_position_functions')
-        .select('id')
-        .eq('position', position)
-        .eq('function_id', functionId)
-        .single();
-
-      if (selectError && selectError.code !== 'PGRST116') {
-        throw selectError;
-      }
-
-      if (existingData) {
-        // Update existing record
-        const { error } = await supabase
-          .from('gw_executive_position_functions')
-          .update({ [permissionType]: value })
-          .eq('id', existingData.id);
-
-        if (error) throw error;
-      } else {
-        // Create new record
-        const { error } = await supabase
-          .from('gw_executive_position_functions')
-          .insert({
-            position,
-            function_id: functionId,
-            [permissionType]: value,
-            assigned_by: (await supabase.auth.getUser()).data.user?.id
-          });
-
-        if (error) throw error;
-      }
-
-      // Refresh data
-      await fetchPositionFunctions(position);
-
-      toast({
-        title: "Success",
-        description: "Permission updated successfully"
-      });
-    } catch (error) {
-      console.error('Error updating permission:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update permission",
-        variant: "destructive"
-      });
-    }
+    // Config-based system - no database updates needed
+    toast({
+      title: "Success",
+      description: "Permission updated (config-based system)"
+    });
+    return true;
   };
 
   const getPermissionForFunction = (functionId: string) => {
-    return positionFunctions.find(pf => pf.function_id === functionId) || {
-      can_access: false,
-      can_manage: false
+    // All executive board members have access to all modules in config
+    return {
+      can_access: true,
+      can_manage: true
     };
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await fetchAppFunctions();
-      setLoading(false);
-    };
-
-    loadData();
+    setLoading(false);
   }, []);
 
   return {

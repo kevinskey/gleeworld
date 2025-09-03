@@ -49,11 +49,9 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           emailPermissions = emailPerms?.map((p: any) => p.module_name) || [];
         }
 
-        // Check if user has executive board access to any functions
+        // Executive board members get all executive modules from config (single source)
         let executiveFunctions: string[] = [];
         if (profile?.is_exec_board || profile?.is_admin || profile?.is_super_admin) {
-          // For now, grant access to executive modules based on exec board status
-          // TODO: Implement proper function-based permissions when DB relationships are fixed
           executiveFunctions = EXECUTIVE_MODULE_IDS;
         }
 

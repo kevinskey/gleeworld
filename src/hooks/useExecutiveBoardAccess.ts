@@ -39,23 +39,9 @@ export const useExecutiveBoardAccess = () => {
   const checkFunctionAccess = useCallback(async (functionName: string, permissionType: 'can_access' | 'can_manage' = 'can_access') => {
     if (!user) return false;
 
-    try {
-      const { data, error } = await supabase.rpc('current_user_has_executive_function_access', {
-        function_name_param: functionName,
-        permission_type_param: permissionType
-      });
-
-      if (error) {
-        console.error('Error checking function access:', error);
-        return false;
-      }
-
-      return data || false;
-    } catch (error) {
-      console.error('Error checking function access:', error);
-      return false;
-    }
-  }, [user]);
+    // Config-based system - if user has admin access, they have function access
+    return canAccessAdminModules;
+  }, [user, canAccessAdminModules]);
 
   return {
     canAccessAdminModules,

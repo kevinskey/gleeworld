@@ -114,26 +114,18 @@ export const useSpecificModulePermissions = (moduleName: string) => {
     }
 
     try {
-      // Check if user has access to the module
-      const { data: accessData, error: accessError } = await supabase
-        .rpc('current_user_has_executive_function_access', {
-          function_name_param: moduleName,
-          permission_type_param: 'can_access'
-        });
+      // Config-based system - check if user is executive board member
+      const { data: profile } = await supabase
+        .from('gw_profiles')
+        .select('is_exec_board, is_admin, is_super_admin')
+        .eq('user_id', user.id)
+        .single();
 
-      // Check if user can manage the module
-      const { data: manageData, error: manageError } = await supabase
-        .rpc('current_user_has_executive_function_access', {
-          function_name_param: moduleName,
-          permission_type_param: 'can_manage'
-        });
+      const canAccess = profile?.is_exec_board || profile?.is_admin || profile?.is_super_admin || false;
+      const canManage = profile?.is_admin || profile?.is_super_admin || false;
 
-      if (accessError || manageError) {
-        console.error('Permission check failed:', accessError || manageError);
-      }
-
-      setCanAccess(accessData || false);
-      setCanManage(manageData || false);
+      setCanAccess(canAccess);
+      setCanManage(canManage);
     } catch (error) {
       console.error('Error checking permissions:', error);
       setCanAccess(false);
