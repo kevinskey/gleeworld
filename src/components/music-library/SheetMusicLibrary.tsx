@@ -401,7 +401,7 @@ export const SheetMusicLibrary = ({
             }}
           >
             <CardContent className={`${isSelected ? 'p-3' : 'py-1 px-3'}`}>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-h-[3rem]">
                 {/* Collapsed/Expanded Thumbnail */}
                 {isSelected ? (
                   <div className="w-12 h-16 bg-muted rounded overflow-hidden flex-shrink-0">
