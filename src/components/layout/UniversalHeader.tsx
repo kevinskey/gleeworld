@@ -69,9 +69,9 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
     <>
       <header className="bg-background/90 backdrop-blur-lg border-b border-border sticky top-0 z-50 shadow-lg">
           <div className="container mx-auto px-2 sm:px-4 lg:px-6 flex justify-center">
-            <div className="flex items-center justify-between w-full max-w-7xl min-h-10 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-3 md:py-4 lg:py-5">
+            <div className="flex items-center justify-between w-full max-w-7xl min-h-10 sm:min-h-12 md:min-h-14 lg:min-h-20 py-2 sm:py-3 md:py-4 lg:py-6">
           {/* Logo and Navigation */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-5 min-w-0 flex-1">
             <EnhancedTooltip 
               content="Go to GleeWorld Home" 
               disabled={isMobile || location.pathname === '/admin'}
@@ -83,15 +83,15 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     <img 
                       src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
                       alt="Spelman College Glee Club" 
-                      className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain flex-shrink-0 drop-shadow-md relative"
+                      className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-18 lg:h-18 object-contain flex-shrink-0 drop-shadow-md relative"
                     />
                     <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 pointer-events-none"></div>
                   </div>
-                  <span className="text-foreground font-bold text-lg sm:text-xl md:text-2xl whitespace-nowrap drop-shadow-sm relative">
+                  <span className="text-foreground font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl whitespace-nowrap drop-shadow-sm relative">
                     GleeWorld
                   </span>
                 </Link>
-                <HeaderClock className="text-sm ml-3 md:mr-8" />
+                <HeaderClock className="text-sm ml-3 md:mr-8 lg:mr-10" />
               </div>
             </EnhancedTooltip>
             
@@ -103,7 +103,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
           <div className="flex-1 md:hidden"></div>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-5">
             <MusicalToolkit />
             
             {user && (
@@ -114,10 +114,10 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                      <Button 
                        variant="ghost" 
                        size="sm" 
-                       className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 p-0 rounded-md hover:bg-accent/20"
+                       className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 p-0 rounded-md hover:bg-accent/20"
                        type="button"
                      >
-                       <LayoutDashboard className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8" />
+                       <LayoutDashboard className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-10 lg:w-10" />
                      </Button>
                    </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 bg-background border border-border shadow-lg z-[200]" align="end">
@@ -218,13 +218,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                           window.dispatchEvent(new CustomEvent('trigger-pr-quick-capture'));
                         }, 500);
                       }}
-                      className="h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 p-0 rounded-full hover:bg-accent/20"
+                      className="h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-15 lg:w-15 p-0 rounded-full hover:bg-accent/20"
                       type="button"
                     >
                       <img 
                         src="/lovable-uploads/a9348c2b-145b-4530-a755-80ee32c5bf6f.png" 
                         alt="Camera" 
-                        className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 filter"
+                        className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 lg:h-9 lg:w-9 filter"
                         style={{ filter: 'brightness(0) saturate(100%) invert(21%) sepia(100%) saturate(4274%) hue-rotate(220deg) brightness(91%) contrast(91%)' }}
                       />
                     </Button>
@@ -234,8 +234,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                  <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="relative h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full p-0" type="button">
-                          <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 border-2 border-border/30">
+                        <Button variant="ghost" className="relative h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-15 lg:w-15 rounded-full p-0" type="button">
+                          <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-11 lg:w-11 border-2 border-border/30">
                             <AvatarImage 
                               src={userProfile?.avatar_url || undefined} 
                               alt={userProfile?.full_name || user?.email || "Your Profile"}
