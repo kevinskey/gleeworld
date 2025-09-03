@@ -252,9 +252,16 @@ export const UserModuleAssignment = () => {
       
       console.log('🔍 Transformed users:', transformedUsers.length, transformedUsers.slice(0, 3));
       
-      // Specifically look for Onnesty
-      const onnesty = transformedUsers.find(u => u.full_name?.toLowerCase().includes('onnesty'));
-      console.log('🔍 Found Onnesty in transformed users:', onnesty);
+      // Specifically look for Ariana
+      const ariana = transformedUsers.find(u => u.email === 'arianaswindell@spelman.edu');
+      console.log('🔍 Found Ariana in transformed users:', ariana);
+      
+      // Also log all users with "ariana" in name or email
+      const arianaMatches = transformedUsers.filter(u => 
+        u.full_name?.toLowerCase().includes('ariana') || 
+        u.email?.toLowerCase().includes('ariana')
+      );
+      console.log('🔍 All Ariana matches:', arianaMatches);
       
       setUsers(transformedUsers);
     } catch (error) {
