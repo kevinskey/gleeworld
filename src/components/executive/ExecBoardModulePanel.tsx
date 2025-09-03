@@ -216,15 +216,13 @@ export const ExecBoardModulePanel = () => {
                     return (
                       <Card 
                         key={module.id} 
-                        className="cursor-pointer hover:bg-muted/70 hover:scale-105 hover:shadow-lg transition-all duration-200 bg-background/60 backdrop-blur-sm border-2 hover:border-primary/50 active:scale-95 h-20"
+                        className="cursor-pointer hover:bg-muted/70 hover:scale-105 hover:shadow-lg transition-all duration-200 bg-background/60 backdrop-blur-sm border-2 hover:border-primary/50 active:scale-95 h-20 flex items-center justify-center"
                         onClick={() => handleModuleClick(module.id)}
                       >
-                        <CardContent className="h-full flex items-center justify-center p-2">
-                          <div className="flex flex-col items-center justify-center gap-1 text-center">
-                            <IconComponent className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors" />
-                            <span className="text-xs font-medium group-hover:text-primary-foreground transition-colors leading-tight">{module.title}</span>
-                          </div>
-                        </CardContent>
+                        <div className="flex flex-col items-center justify-center gap-1 text-center w-full">
+                          <IconComponent className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                          <span className="text-xs font-medium group-hover:text-primary-foreground transition-colors leading-tight">{module.title}</span>
+                        </div>
                       </Card>
                     );
                   })}
