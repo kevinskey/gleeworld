@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shirt, Package, Calendar, User, Camera, Loader2 } from 'lucide-react';
+import { Shirt, Package, Calendar, User, Camera, Loader2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { BackNavigation } from '@/components/shared/BackNavigation';
 import { FittingScheduleDialog } from '@/components/wardrobe/FittingScheduleDialog';
 import { HairNailSubmission } from '@/components/wardrobe/HairNailSubmission';
+import { DressCodeModal } from '@/components/wardrobe/DressCodeModal';
 const WardrobePage = () => {
   const {
     wardrobeItems,
@@ -14,6 +15,7 @@ const WardrobePage = () => {
     getMeasurements
   } = useWardrobeItems();
   const [isFittingDialogOpen, setIsFittingDialogOpen] = useState(false);
+  const [isDressCodeModalOpen, setIsDressCodeModalOpen] = useState(false);
   const [selectedFittingItem, setSelectedFittingItem] = useState<{
     id: string;
     name: string;
@@ -188,9 +190,13 @@ const WardrobePage = () => {
                   <Calendar className="h-4 w-4 mr-3 text-blue-500" />
                   Schedule with us!
                 </Button>
-                <Button variant="outline" className="w-full justify-start h-11 sm:h-12 text-sm">
-                  <User className="h-4 w-4 mr-3 text-green-500" />
-                  Update Measurements
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start h-11 sm:h-12 text-sm"
+                  onClick={() => setIsDressCodeModalOpen(true)}
+                >
+                  <FileText className="h-4 w-4 mr-3 text-green-500" />
+                  Dress Code
                 </Button>
                 <Button variant="outline" className="w-full justify-start h-11 sm:h-12 text-sm">
                   <Camera className="h-4 w-4 mr-3 text-purple-500" />
@@ -283,6 +289,12 @@ const WardrobePage = () => {
         setIsFittingDialogOpen(false);
         setSelectedFittingItem(null);
       }} wardrobeItemId={selectedFittingItem?.id} wardrobeItemName={selectedFittingItem?.name} />
+
+        {/* Dress Code Modal */}
+        <DressCodeModal 
+          isOpen={isDressCodeModalOpen}
+          onClose={() => setIsDressCodeModalOpen(false)}
+        />
       </div>
     </div>;
 };
