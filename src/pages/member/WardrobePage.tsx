@@ -118,7 +118,7 @@ const WardrobePage = () => {
                 setIsFittingDialogOpen(true);
               }}>
                   <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Fitting
+                  Schedule with us!
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <User className="h-4 w-4 mr-2" />
