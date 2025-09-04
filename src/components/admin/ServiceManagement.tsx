@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon, Calendar, Clock, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,8 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useServices, useCreateService, useUpdateService, useDeleteService, Service } from '@/hooks/useServices';
 import { useMediaLibrary, useUploadImage, useDeleteMedia } from '@/hooks/useMediaLibrary';
+import { CalendarViews } from '@/components/calendar/CalendarViews';
+import { AppointmentDashboard } from '@/components/appointments/AppointmentDashboard';
 import { toast } from 'sonner';
 
 interface ServiceFormData {
@@ -68,6 +71,7 @@ const categories = [
 ];
 
 export default function ServiceManagement() {
+  const [activeTab, setActiveTab] = useState('services');
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<ServiceFormData>(initialFormData);
@@ -136,265 +140,321 @@ export default function ServiceManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Service Management</h2>
-        <Button onClick={() => setIsCreating(true)} disabled={isCreating || editingId !== null}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Service
-        </Button>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Service & Schedule Management</h2>
+          <p className="text-muted-foreground">
+            Manage appointment services, schedules, and calendar integration
+          </p>
+        </div>
       </div>
 
-      {/* Create/Edit Form */}
-      {(isCreating || editingId) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingId ? 'Edit Service' : 'Create New Service'}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">Service Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="e.g., Voice Coaching"
-                />
-              </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="services" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Services
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Calendar
+          </TabsTrigger>
+          <TabsTrigger value="appointments" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Appointments
+          </TabsTrigger>
+        </TabsList>
 
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <TabsContent value="services" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-semibold">Appointment Services</h3>
+            <Button onClick={() => setIsCreating(true)} disabled={isCreating || editingId !== null}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Service
+            </Button>
+          </div>
 
-              <div className="md:col-span-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Service description..."
-                />
-              </div>
+          {/* Create/Edit Form */}
+          {(isCreating || editingId) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{editingId ? 'Edit Service' : 'Create New Service'}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Service Name *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      placeholder="e.g., Voice Coaching"
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="duration">Duration (minutes)</Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  value={formData.duration_minutes}
-                  onChange={(e) => handleInputChange('duration_minutes', parseInt(e.target.value))}
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div>
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
-                  placeholder="e.g., Music Room A"
-                />
-              </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      placeholder="Service description..."
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="instructor">Instructor</Label>
-                <Input
-                  id="instructor"
-                  value={formData.instructor}
-                  onChange={(e) => handleInputChange('instructor', e.target.value)}
-                  placeholder="e.g., Dr. Johnson"
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="duration">Duration (minutes)</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      value={formData.duration_minutes}
+                      onChange={(e) => handleInputChange('duration_minutes', parseInt(e.target.value))}
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="price">Price Amount</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price_amount}
-                  onChange={(e) => handleInputChange('price_amount', parseFloat(e.target.value))}
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      placeholder="e.g., Music Room A"
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="price_display">Price Display</Label>
-                <Input
-                  id="price_display"
-                  value={formData.price_display}
-                  onChange={(e) => handleInputChange('price_display', e.target.value)}
-                  placeholder="e.g., $75 or Free"
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="instructor">Instructor</Label>
+                    <Input
+                      id="instructor"
+                      value={formData.instructor}
+                      onChange={(e) => handleInputChange('instructor', e.target.value)}
+                      placeholder="e.g., Dr. Johnson"
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="capacity_min">Min Capacity</Label>
-                <Input
-                  id="capacity_min"
-                  type="number"
-                  value={formData.capacity_min}
-                  onChange={(e) => handleInputChange('capacity_min', parseInt(e.target.value))}
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="price">Price Amount</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      value={formData.price_amount}
+                      onChange={(e) => handleInputChange('price_amount', parseFloat(e.target.value))}
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="capacity_max">Max Capacity</Label>
-                <Input
-                  id="capacity_max"
-                  type="number"
-                  value={formData.capacity_max}
-                  onChange={(e) => handleInputChange('capacity_max', parseInt(e.target.value))}
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="price_display">Price Display</Label>
+                    <Input
+                      id="price_display"
+                      value={formData.price_display}
+                      onChange={(e) => handleInputChange('price_display', e.target.value)}
+                      placeholder="e.g., $75 or Free"
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="badge_text">Badge Text</Label>
-                <Input
-                  id="badge_text"
-                  value={formData.badge_text}
-                  onChange={(e) => handleInputChange('badge_text', e.target.value)}
-                  placeholder="e.g., Popular, New"
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="capacity_min">Min Capacity</Label>
+                    <Input
+                      id="capacity_min"
+                      type="number"
+                      value={formData.capacity_min}
+                      onChange={(e) => handleInputChange('capacity_min', parseInt(e.target.value))}
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="badge_color">Badge Color</Label>
-                <Select value={formData.badge_color} onValueChange={(value) => handleInputChange('badge_color', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {badgeColors.map((color) => (
-                      <SelectItem key={color.value} value={color.value}>
-                        <div className="flex items-center gap-2">
-                          <div className={`w-4 h-4 rounded ${color.value}`}></div>
-                          {color.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div>
+                    <Label htmlFor="capacity_max">Max Capacity</Label>
+                    <Input
+                      id="capacity_max"
+                      type="number"
+                      value={formData.capacity_max}
+                      onChange={(e) => handleInputChange('capacity_max', parseInt(e.target.value))}
+                    />
+                  </div>
 
-              <div className="md:col-span-2">
-                <Label htmlFor="image_url">Image URL</Label>
-                <Input
-                  id="image_url"
-                  value={formData.image_url}
-                  onChange={(e) => handleInputChange('image_url', e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="badge_text">Badge Text</Label>
+                    <Input
+                      id="badge_text"
+                      value={formData.badge_text}
+                      onChange={(e) => handleInputChange('badge_text', e.target.value)}
+                      placeholder="e.g., Popular, New"
+                    />
+                  </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="requires_approval"
-                  checked={formData.requires_approval}
-                  onCheckedChange={(checked) => handleInputChange('requires_approval', checked)}
-                />
-                <Label htmlFor="requires_approval">Requires Approval</Label>
-              </div>
-            </div>
+                  <div>
+                    <Label htmlFor="badge_color">Badge Color</Label>
+                    <Select value={formData.badge_color} onValueChange={(value) => handleInputChange('badge_color', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {badgeColors.map((color) => (
+                          <SelectItem key={color.value} value={color.value}>
+                            <div className="flex items-center gap-2">
+                              <div className={`w-4 h-4 rounded ${color.value}`}></div>
+                              {color.label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={handleCancel}>
-                <X className="h-4 w-4 mr-2" />
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={createService.isPending || updateService.isPending}>
-                <Save className="h-4 w-4 mr-2" />
-                {editingId ? 'Update' : 'Create'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                  <div className="md:col-span-2">
+                    <Label htmlFor="image_url">Image URL</Label>
+                    <Input
+                      id="image_url"
+                      value={formData.image_url}
+                      onChange={(e) => handleInputChange('image_url', e.target.value)}
+                      placeholder="https://example.com/image.jpg"
+                    />
+                  </div>
 
-      {/* Services List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {services?.map((service) => (
-          <Card key={service.id} className="relative">
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-lg">{service.name}</h3>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(service)}
-                    disabled={editingId !== null || isCreating}
-                  >
-                    <Edit className="h-4 w-4" />
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="requires_approval"
+                      checked={formData.requires_approval}
+                      onCheckedChange={(checked) => handleInputChange('requires_approval', checked)}
+                    />
+                    <Label htmlFor="requires_approval">Requires Approval</Label>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={handleCancel}>
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(service.id)}
-                    disabled={deleteService.isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
+                  <Button onClick={handleSave} disabled={createService.isPending || updateService.isPending}>
+                    <Save className="h-4 w-4 mr-2" />
+                    {editingId ? 'Update' : 'Create'}
                   </Button>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+          )}
 
-              <p className="text-sm text-muted-foreground mb-3">{service.description}</p>
+          {/* Services List */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services?.map((service) => (
+              <Card key={service.id} className="relative">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-semibold text-lg">{service.name}</h3>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(service)}
+                        disabled={editingId !== null || isCreating}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDelete(service.id)}
+                        disabled={deleteService.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
 
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Duration:</span>
-                  <span>{service.duration_minutes} min</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Capacity:</span>
-                  <span>{service.capacity_min}-{service.capacity_max}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Price:</span>
-                  <span>{service.price_display}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Location:</span>
-                  <span>{service.location || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Instructor:</span>
-                  <span>{service.instructor || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Category:</span>
-                  <span className="capitalize">{service.category}</span>
-                </div>
-              </div>
+                  <p className="text-sm text-muted-foreground mb-3">{service.description}</p>
 
-              {service.badge_text && (
-                <div className="mt-3">
-                  <Badge className={`${service.badge_color} text-white`}>
-                    {service.badge_text}
-                  </Badge>
-                </div>
-              )}
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Duration:</span>
+                      <span>{service.duration_minutes} min</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Capacity:</span>
+                      <span>{service.capacity_min}-{service.capacity_max}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Price:</span>
+                      <span>{service.price_display}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Location:</span>
+                      <span>{service.location || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Instructor:</span>
+                      <span>{service.instructor || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Category:</span>
+                      <span className="capitalize">{service.category}</span>
+                    </div>
+                  </div>
 
-              {service.requires_approval && (
-                <div className="mt-2">
-                  <Badge variant="secondary">Requires Approval</Badge>
-                </div>
-              )}
+                  {service.badge_text && (
+                    <div className="mt-3">
+                      <Badge className={`${service.badge_color} text-white`}>
+                        {service.badge_text}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {service.requires_approval && (
+                    <div className="mt-2">
+                      <Badge variant="secondary">Requires Approval</Badge>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="calendar" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Schedule Management Calendar</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                View and manage appointments, availability, and scheduling calendar
+              </p>
+            </CardHeader>
+            <CardContent>
+              <CalendarViews />
             </CardContent>
           </Card>
-        ))}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="appointments" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Appointment Management</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Full appointment dashboard with scheduling, availability management, and booking controls
+              </p>
+            </CardHeader>
+            <CardContent>
+              <AppointmentDashboard />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
