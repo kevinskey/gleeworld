@@ -146,3 +146,18 @@ ModuleRegistry.registerModule({
   component: UserModuleAssignment,
   requiredPermissions: ['super-admin']
 });
+
+// Import and register the Enhanced Contract Manager
+import { EnhancedContractManager } from '@/components/contracts/EnhancedContractManager';
+import { FileText } from 'lucide-react';
+
+ModuleRegistry.registerModule({
+  id: 'enhanced-contract-management',
+  title: 'Enhanced Contract Management',
+  description: 'Advanced contract management with integrated testing suite',
+  icon: FileText,
+  iconColor: 'purple',
+  category: 'business',
+  component: EnhancedContractManager,
+  requiredPermissions: ['admin', 'super-admin']
+});
