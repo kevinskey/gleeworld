@@ -26,6 +26,7 @@ import { MakeupTutorials } from "./MakeupTutorials";
 import { GarmentBagDistribution } from "./GarmentBagDistribution";
 import { WardrobeMemberManagement } from "./WardrobeMemberManagement";
 import { UpcomingAppointmentsCard } from "./UpcomingAppointmentsCard";
+import { HairNailApprovalPanel } from "./HairNailApprovalPanel";
 
 export const WardrobeManagementHub = () => {
   const [activeTab, setActiveTab] = useState("inventory");
@@ -134,7 +135,7 @@ export const WardrobeManagementHub = () => {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-8">
           <TabsTrigger value="inventory" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
             <span className="hidden sm:inline">Inventory</span>
@@ -168,6 +169,10 @@ export const WardrobeManagementHub = () => {
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
+          <TabsTrigger value="approvals" className="flex items-center gap-2">
+            <Palette className="h-4 w-4" />
+            <span className="hidden sm:inline">Hair/Nail Approvals</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="inventory" className="space-y-6">
@@ -196,6 +201,10 @@ export const WardrobeManagementHub = () => {
 
         <TabsContent value="members" className="space-y-6">
           <WardrobeMemberManagement />
+        </TabsContent>
+
+        <TabsContent value="approvals" className="space-y-6">
+          <HairNailApprovalPanel />
         </TabsContent>
       </Tabs>
     </div>

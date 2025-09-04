@@ -5849,6 +5849,57 @@ export type Database = {
           },
         ]
       }
+      gw_hair_nail_submissions: {
+        Row: {
+          created_at: string
+          event_date: string | null
+          event_name: string | null
+          id: string
+          image_path: string
+          image_url: string
+          notes: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submission_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_date?: string | null
+          event_name?: string | null
+          id?: string
+          image_path: string
+          image_url: string
+          notes?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submission_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string | null
+          event_name?: string | null
+          id?: string
+          image_path?: string
+          image_url?: string
+          notes?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submission_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_hero_settings: {
         Row: {
           background_image_url: string | null
