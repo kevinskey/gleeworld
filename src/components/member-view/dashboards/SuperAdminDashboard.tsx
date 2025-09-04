@@ -496,10 +496,10 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
             </CardContent>
           </Card>
 
-          {/* Appointment Scheduling Module */}
+          {/* Service Management Module */}
           <Card 
             className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" 
-            onClick={() => setSelectedModule('appointment-scheduling')}
+            onClick={() => setSelectedModule('service-management')}
           >
             <CardContent className="p-4 text-center">
               <div className="w-12 h-12 rounded-lg bg-cyan-100 dark:bg-cyan-900/20 flex items-center justify-center mx-auto mb-3">
