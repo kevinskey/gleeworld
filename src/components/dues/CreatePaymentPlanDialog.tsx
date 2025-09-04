@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +25,7 @@ export const CreatePaymentPlanDialog = ({ open, onOpenChange, onSuccess, duesRec
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [formData, setFormData] = useState({
     dues_record_id: '',
     user_id: '',
@@ -174,21 +179,53 @@ export const CreatePaymentPlanDialog = ({ open, onOpenChange, onSuccess, duesRec
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="dues_record">Dues Record</Label>
-            <Select 
-              value={formData.dues_record_id} 
-              onValueChange={handleDuesRecordChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select dues record" />
-              </SelectTrigger>
-              <SelectContent>
-                {pendingDuesRecords.map(record => (
-                  <SelectItem key={record.id} value={record.id}>
-                    {record.gw_profiles?.full_name || 'Unknown'} - ${record.amount?.toFixed(2)} ({record.semester})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={searchOpen} onOpenChange={setSearchOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={searchOpen}
+                  className="w-full justify-between"
+                >
+                  {formData.dues_record_id ? 
+                    (() => {
+                      const record = pendingDuesRecords.find(r => r.id === formData.dues_record_id);
+                      return record ? `${record.gw_profiles?.full_name || 'Unknown'} - $${record.amount?.toFixed(2)} (${record.semester})` : "Select dues record";
+                    })()
+                    : "Select dues record"
+                  }
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Search dues records..." />
+                  <CommandList>
+                    <CommandEmpty>No dues records found.</CommandEmpty>
+                    <CommandGroup>
+                      {pendingDuesRecords.map((record) => (
+                        <CommandItem
+                          key={record.id}
+                          value={`${record.gw_profiles?.full_name || 'Unknown'} ${record.amount} ${record.semester}`}
+                          onSelect={() => {
+                            handleDuesRecordChange(record.id);
+                            setSearchOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              formData.dues_record_id === record.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {record.gw_profiles?.full_name || 'Unknown'} - ${record.amount?.toFixed(2)} ({record.semester})
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div>
