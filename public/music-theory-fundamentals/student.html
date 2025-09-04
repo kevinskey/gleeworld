@@ -232,6 +232,11 @@
             <p>Music theory polling for students</p>
         </div>
         
+        <div id="loading-screen" class="card" style="text-align: center;">
+            <h3>🎵 Loading Theory Poll...</h3>
+            <p>Please wait while we initialize the application.</p>
+        </div>
+
         <div id="auth-warning" class="auth-warning" style="display: none;">
             <strong>Authentication Required</strong><br>
             Please sign in to GleeWorld to participate in Theory Poll.
@@ -300,7 +305,7 @@
         const waitingArea = document.getElementById('waiting-area');
         const questionTypeDiv = document.getElementById('question-type');
         const notationOutput = document.getElementById('notation-output');
-        const choicesArea = document.getElementById('choices-area');
+        const loadingScreen = document.getElementById('loading-screen');
         
         // Initialize app
         async function init() {
@@ -309,6 +314,10 @@
             try {
                 // Check authentication
                 const { data: { user } } = await supa.auth.getUser();
+                
+                // Hide loading screen
+                loadingScreen.style.display = 'none';
+                
                 if (!user) {
                     console.log('No authenticated user found');
                     authWarning.style.display = 'block';
@@ -331,6 +340,7 @@
                 showStatus('Enter a 4-digit join code to participate.');
             } catch (error) {
                 console.error('Initialization error:', error);
+                loadingScreen.style.display = 'none';
                 authWarning.style.display = 'block';
                 authWarning.innerHTML = `<strong>Error:</strong><br>${error.message}`;
             }
