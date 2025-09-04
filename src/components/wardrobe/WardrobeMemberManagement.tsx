@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { CSVUserImport } from './CSVUserImport';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Member {
   id: string;
@@ -32,48 +34,74 @@ interface Member {
   status: 'active' | 'inactive' | 'on-leave';
 }
 
-// Mock data - replace with actual Supabase data
-const mockMembers: Member[] = [
-  {
-    id: '1',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@spelman.edu',
-    phone: '(404) 555-0123',
-    role: 'Member',
-    voicePart: 'Soprano 1',
-    currentCheckouts: 2,
-    overdueItems: 0,
-    lastCheckout: '2024-01-15',
-    status: 'active'
-  },
-  {
-    id: '2',
-    name: 'Maria Rodriguez',
-    email: 'maria.rodriguez@spelman.edu',
-    role: 'Section Leader',
-    voicePart: 'Alto 2',
-    currentCheckouts: 1,
-    overdueItems: 1,
-    lastCheckout: '2024-01-10',
-    status: 'active'
-  },
-  {
-    id: '3',
-    name: 'Ashley Williams',
-    email: 'ashley.williams@spelman.edu',
-    role: 'Member',
-    voicePart: 'Soprano 2',
-    currentCheckouts: 0,
-    overdueItems: 0,
-    status: 'on-leave'
-  }
-];
-
 export const WardrobeMemberManagement = () => {
-  const [members] = useState<Member[]>(mockMembers);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [showCSVImport, setShowCSVImport] = useState(false);
+  const { toast } = useToast();
+
+  const fetchMembers = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch member profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('gw_profiles')
+        .select('*')
+        .in('role', ['member', 'alumna', 'executive']);
+
+      if (profilesError) throw profilesError;
+
+      // Fetch wardrobe checkouts to get current checkout counts
+      const { data: checkouts, error: checkoutsError } = await supabase
+        .from('wardrobe_checkouts')
+        .select('user_id, status, due_date, checked_out_at')
+        .eq('status', 'checked_out');
+
+      if (checkoutsError) throw checkoutsError;
+
+      // Transform data to match our interface
+      const transformedMembers: Member[] = (profiles || []).map(profile => {
+        const userCheckouts = checkouts?.filter(checkout => checkout.user_id === profile.user_id) || [];
+        const currentCheckouts = userCheckouts.length;
+        const overdueItems = userCheckouts.filter(checkout => 
+          checkout.due_date && new Date(checkout.due_date) < new Date()
+        ).length;
+
+        return {
+          id: profile.user_id,
+          name: profile.full_name || profile.email,
+          email: profile.email,
+          phone: profile.phone,
+          avatar: profile.avatar_url,
+          role: profile.role === 'executive' ? 'Executive Board' : 
+                profile.role === 'alumna' ? 'Alumna' : 'Member',
+          voicePart: profile.voice_part || 'Not Set',
+          currentCheckouts,
+          overdueItems,
+          lastCheckout: userCheckouts[0]?.checked_out_at,
+          status: profile.verified ? 'active' : 'inactive'
+        };
+      });
+
+      setMembers(transformedMembers);
+    } catch (error) {
+      console.error('Error fetching members:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load member data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
 
   const filteredMembers = members.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -209,6 +237,11 @@ export const WardrobeMemberManagement = () => {
         </CardHeader>
         
         <CardContent className="px-6 lg:px-8">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-pulse text-muted-foreground">Loading members...</div>
+            </div>
+          ) : (
           <div className="space-y-4">
             {filteredMembers.map((member) => (
               <div key={member.id} className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
@@ -264,13 +297,14 @@ export const WardrobeMemberManagement = () => {
               </div>
             ))}
             
-            {filteredMembers.length === 0 && (
+            {filteredMembers.length === 0 && !loading && (
               <div className="text-center py-8 text-muted-foreground">
                 <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>No members found matching your criteria.</p>
               </div>
             )}
           </div>
+          )}
         </CardContent>
       </Card>
     </div>
