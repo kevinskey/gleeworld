@@ -30,6 +30,7 @@ import { Checkout } from "@/pages/Checkout";
 import { Success } from "@/pages/shop/Success";
 import { UnifiedDashboard } from "@/components/dashboard/UnifiedDashboard";
 import BookingRequest from "@/pages/BookingRequest";
+import Appointments from "@/pages/Appointments";
 import TourPlanner from "@/pages/TourPlanner";
 import SendNotificationPage from "@/pages/SendNotificationPage";
 
@@ -178,6 +179,10 @@ export const router = createBrowserRouter([
   {
     path: "/booking-request",
     element: <BookingRequest />,
+  },
+  {
+    path: "/booking",
+    element: <Appointments />,
   },
   {
     path: "/voice-assessment",
