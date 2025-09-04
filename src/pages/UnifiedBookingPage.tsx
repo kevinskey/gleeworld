@@ -79,7 +79,7 @@ export default function UnifiedBookingPage() {
     }
   };
 
-  // Generate standard appointment time slots and check availability
+  // Generate time slots based on availability settings and check existing appointments
   useEffect(() => {
     if (!selectedDate) {
       setAllTimeSlots([]);
@@ -90,6 +90,42 @@ export default function UnifiedBookingPage() {
       setLoading(true);
       
       try {
+        // Get availability settings from localStorage (fallback to default)
+        const savedConfig = localStorage.getItem('appointmentAvailabilityConfig');
+        let availabilityConfig = {
+          businessHours: {
+            monday: { start: '09:00', end: '17:00', enabled: true },
+            tuesday: { start: '09:00', end: '17:00', enabled: true },
+            wednesday: { start: '09:00', end: '17:00', enabled: true },
+            thursday: { start: '09:00', end: '17:00', enabled: true },
+            friday: { start: '09:00', end: '17:00', enabled: true },
+            saturday: { start: '10:00', end: '15:00', enabled: false },
+            sunday: { start: '10:00', end: '15:00', enabled: false }
+          },
+          slotDuration: 30,
+          bufferTime: 0
+        };
+
+        if (savedConfig) {
+          try {
+            availabilityConfig = JSON.parse(savedConfig);
+          } catch (error) {
+            console.error('Error parsing availability config:', error);
+          }
+        }
+
+        // Get day of week (0 = Sunday, 1 = Monday, etc.)
+        const dayOfWeek = selectedDate.getDay();
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayConfig = availabilityConfig.businessHours[dayNames[dayOfWeek] as keyof typeof availabilityConfig.businessHours];
+
+        // If day is not enabled, show no time slots
+        if (!dayConfig.enabled) {
+          setAllTimeSlots([]);
+          setLoading(false);
+          return;
+        }
+
         // Get existing appointments for this date
         const startDate = new Date(selectedDate);
         startDate.setHours(0, 0, 0, 0);
@@ -103,10 +139,17 @@ export default function UnifiedBookingPage() {
           .lte('appointment_date', endDate.toISOString())
           .neq('status', 'cancelled');
 
-        // Generate time slots from 9 AM to 5 PM in 30-minute intervals
+        // Parse start and end times
+        const [startHour, startMinute] = dayConfig.start.split(':').map(Number);
+        const [endHour, endMinute] = dayConfig.end.split(':').map(Number);
+        
+        // Generate time slots based on availability settings
         const timeSlots = [];
-        for (let hour = 9; hour < 17; hour++) {
-          for (let minute = 0; minute < 60; minute += 30) {
+        const slotDuration = availabilityConfig.slotDuration;
+        
+        for (let hour = startHour; hour < endHour || (hour === endHour && startMinute < endMinute); hour++) {
+          const maxMinute = hour === endHour ? endMinute : 60;
+          for (let minute = hour === startHour ? startMinute : 0; minute < maxMinute; minute += slotDuration) {
             const slotTime = new Date(selectedDate);
             slotTime.setHours(hour, minute, 0, 0);
             
@@ -118,13 +161,14 @@ export default function UnifiedBookingPage() {
 
             const time12Hour = hour > 12 ? `${hour - 12}:${minute.toString().padStart(2, '0')} PM` 
                              : hour === 12 ? `12:${minute.toString().padStart(2, '0')} PM`
+                             : hour === 0 ? `12:${minute.toString().padStart(2, '0')} AM`
                              : `${hour}:${minute.toString().padStart(2, '0')} AM`;
             
-            // Check if this slot conflicts with existing appointments (30-minute slots)
+            // Check if this slot conflicts with existing appointments
             const isAvailable = !existingAppointments?.some(apt => {
               const aptStart = new Date(apt.appointment_date);
-              const aptEnd = new Date(aptStart.getTime() + (apt.duration_minutes || 30) * 60000);
-              const slotEnd = new Date(slotTime.getTime() + 30 * 60000);
+              const aptEnd = new Date(aptStart.getTime() + (apt.duration_minutes || slotDuration) * 60000);
+              const slotEnd = new Date(slotTime.getTime() + slotDuration * 60000);
               
               // Check for overlap
               return slotTime < aptEnd && slotEnd > aptStart;
