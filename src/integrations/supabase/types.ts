@@ -16735,10 +16735,6 @@ export type Database = {
         }
         Returns: string
       }
-      current_user_can_access_admin_modules: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
       current_user_has_executive_function_access: {
         Args: { function_name_param: string; permission_type_param?: string }
         Returns: boolean
@@ -17088,6 +17084,10 @@ export type Database = {
         Returns: boolean
       }
       is_executive_board_or_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_executive_board_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
