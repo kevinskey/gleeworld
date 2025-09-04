@@ -198,7 +198,7 @@ export const AuditionsManagement = () => {
   const [isCreateSessionExpanded, setIsCreateSessionExpanded] = useState(false);
 
   // Check if user has access to auditions
-  const hasAuditionsAccess = isSuperAdmin() || isAdmin() || isExecutiveBoard() || usernamePermissions.includes('auditions');
+  const hasAuditionsAccess = isSuperAdmin() || isAdmin() || isExecutiveBoard() || (usernamePermissions.includes('auditions') && !permissionsLoading);
 
   useEffect(() => {
     if (hasAuditionsAccess && !permissionsLoading) {
