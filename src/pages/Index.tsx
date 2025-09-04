@@ -7,6 +7,7 @@ import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesColl
 import { RecentContractsTemplatesCollapsible } from "@/components/RecentContractsTemplatesCollapsible";
 import { W9FormsListCollapsible } from "@/components/W9FormsListCollapsible";
 import { ContractsSection } from "@/components/dashboard/ContractsSection";
+import { ContractManagementInterface } from "@/components/contracts/ContractManagementInterface";
 import { Library } from "@/components/Library";
 import { FinanceManagement } from "@/components/finance/FinanceManagement";
 import { ContractViewer } from "@/components/ContractViewer";
@@ -34,7 +35,7 @@ const Index = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   
-  const activeTab = searchParams.get('tab') || 'dashboard';
+  const activeTab = searchParams.get('tab') || 'contracts';
   
   const { contracts, loading, error, deleteContract, refetch } = useContracts();
   const { templates } = useContractTemplates();
@@ -67,7 +68,7 @@ const Index = () => {
 
   const setActiveTab = (tab: string) => {
     const newSearchParams = new URLSearchParams(searchParams);
-    if (tab === 'dashboard') {
+    if (tab === 'contracts') {
       newSearchParams.delete('tab');
     } else {
       newSearchParams.set('tab', tab);
@@ -188,40 +189,15 @@ const Index = () => {
             <FinanceManagement />
           </div>
         );
-      case "dashboard":
+      case "contracts":
       default:
-        console.log('Index: Rendering Dashboard content');
+        console.log('Index: Rendering Contract Management');
         return (
           <div className="space-y-3 sm:space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-              <h1 className="text-xl sm:text-xl lg:text-2xl font-bold text-foreground">Dashboard</h1>
+              <h1 className="text-xl sm:text-xl lg:text-2xl font-bold text-foreground">Contract Management</h1>
             </div>
-            
-            <ConsolidatedStatsCards 
-              totalContracts={totalContracts}
-              completedCount={completedCount}
-              pendingCount={pendingCount}
-              recentContracts={recentContracts}
-              w9FormsCount={w9Forms?.length || 0}
-              templatesCount={templates?.length || 0}
-              onNewContract={handleNewContract}
-              onViewContract={handleViewContractById}
-            />
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-              <div className="space-y-3 sm:space-y-4">
-                <ContractCreationCollapsible onContractCreated={refetch} />
-                <ContractTemplatesCollapsible 
-                  onUseTemplate={handleUseTemplate}
-                  onContractCreated={refetch}
-                />
-              </div>
-              
-              <div className="space-y-3 sm:space-y-4">
-                <ContractsSection onViewContract={handleViewContract} />
-                <W9FormsListCollapsible />
-              </div>
-            </div>
+            <ContractManagementInterface />
           </div>
         );
     }
@@ -300,7 +276,7 @@ const Index = () => {
             <div className="bg-card/60 backdrop-blur-sm rounded-lg p-2 border border-border shadow-md">
               <div className="flex gap-2">
                 {[
-                  { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
+                  { id: 'contracts', label: 'Contracts', icon: '📄' },
                   { id: 'library', label: 'Library', icon: '📚' },
                   { id: 'finance', label: 'Finance', icon: '💰' },
                 ].map((tab) => (
