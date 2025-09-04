@@ -6,27 +6,27 @@ import { Badge } from '@/components/ui/badge';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { BackNavigation } from '@/components/shared/BackNavigation';
 import { FittingScheduleDialog } from '@/components/wardrobe/FittingScheduleDialog';
-
 const WardrobePage = () => {
-  const { wardrobeItems, loading, getMeasurements } = useWardrobeItems();
+  const {
+    wardrobeItems,
+    loading,
+    getMeasurements
+  } = useWardrobeItems();
   const [isFittingDialogOpen, setIsFittingDialogOpen] = useState(false);
-  const [selectedFittingItem, setSelectedFittingItem] = useState<{ id: string; name: string } | null>(null);
-  
+  const [selectedFittingItem, setSelectedFittingItem] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
+    return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+      </div>;
   }
-
   const measurements = getMeasurements();
   const formalCount = wardrobeItems.filter(item => item.category === 'formal').length;
   const costumeCount = wardrobeItems.filter(item => item.category === 'costume').length;
   const needsFittingCount = wardrobeItems.filter(item => item.status === 'needs_fitting').length;
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
+  return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Back Navigation */}
         <BackNavigation />
@@ -43,28 +43,7 @@ const WardrobePage = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="p-4 text-center bg-pink-50 border-pink-200">
-            <Shirt className="h-8 w-8 mx-auto mb-2 text-pink-600" />
-            <h3 className="font-semibold">Request Items</h3>
-            <p className="text-sm text-muted-foreground">{formalCount} assigned</p>
-          </Card>
-          <Card className="p-4 text-center bg-purple-50 border-purple-200">
-            <Package className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-            <h3 className="font-semibold">Total Items</h3>
-            <p className="text-sm text-muted-foreground">{wardrobeItems.length} items</p>
-          </Card>
-          <Card className="p-4 text-center bg-blue-50 border-blue-200">
-            <Calendar className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-            <h3 className="font-semibold">Needs Fitting</h3>
-            <p className="text-sm text-muted-foreground">{needsFittingCount} items</p>
-          </Card>
-          <Card className="p-4 text-center bg-green-50 border-green-200">
-            <User className="h-8 w-8 mx-auto mb-2 text-green-600" />
-            <h3 className="font-semibold">Size Status</h3>
-            <p className="text-sm text-muted-foreground">{measurements ? 'Updated' : 'Not Set'}</p>
-          </Card>
-        </div>
+        
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* My Wardrobe */}
@@ -74,21 +53,12 @@ const WardrobePage = () => {
                 <CardTitle>My Wardrobe Items</CardTitle>
               </CardHeader>
               <CardContent>
-                {wardrobeItems.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
+                {wardrobeItems.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                     No wardrobe items assigned yet.
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                     {wardrobeItems.map((item) => (
-                       <div key={item.id} className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
+                  </div> : <div className="space-y-4">
+                     {wardrobeItems.map(item => <div key={item.id} className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
                          <div className="flex-shrink-0">
-                           <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                             item.category === 'formal' ? 'bg-purple-100 text-purple-600' :
-                             item.category === 'casual' ? 'bg-blue-100 text-blue-600' :
-                             item.category === 'costume' ? 'bg-pink-100 text-pink-600' :
-                             'bg-gray-100 text-gray-600'
-                           }`}>
+                           <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${item.category === 'formal' ? 'bg-purple-100 text-purple-600' : item.category === 'casual' ? 'bg-blue-100 text-blue-600' : item.category === 'costume' ? 'bg-pink-100 text-pink-600' : 'bg-gray-100 text-gray-600'}`}>
                             <Shirt className="h-6 w-6" />
                           </div>
                         </div>
@@ -101,18 +71,11 @@ const WardrobePage = () => {
                                  {item.color && ` • Color: ${item.color}`}
                                </p>
                                <p className="text-xs text-muted-foreground mt-1">
-                                 {item.checked_out_at ? `Checked out: ${new Date(item.checked_out_at).toLocaleDateString()}` : 
-                                  `Added: ${new Date(item.created_at).toLocaleDateString()}`}
+                                 {item.checked_out_at ? `Checked out: ${new Date(item.checked_out_at).toLocaleDateString()}` : `Added: ${new Date(item.created_at).toLocaleDateString()}`}
                                  {item.due_date && ` • Due: ${new Date(item.due_date).toLocaleDateString()}`}
                                </p>
                                <div className="flex items-center gap-2 mt-2">
-                                 <Badge 
-                                   variant={
-                                     item.status === 'checked_out' ? 'default' :
-                                     item.status === 'needs_fitting' ? 'destructive' : 'secondary'
-                                   }
-                                   className="text-xs"
-                                 >
+                                 <Badge variant={item.status === 'checked_out' ? 'default' : item.status === 'needs_fitting' ? 'destructive' : 'secondary'} className="text-xs">
                                    {item.status.replace('_', ' ')}
                                  </Badge>
                                  <Badge variant="outline" className="text-xs capitalize">
@@ -121,28 +84,23 @@ const WardrobePage = () => {
                                </div>
                             </div>
                              <div className="flex gap-2 ml-4">
-                                {item.status === 'needs_fitting' && (
-                                 <Button 
-                                   size="sm" 
-                                   className="text-xs"
-                                   onClick={() => {
-                                     setSelectedFittingItem({ id: item.id, name: item.name });
-                                     setIsFittingDialogOpen(true);
-                                   }}
-                                 >
+                                {item.status === 'needs_fitting' && <Button size="sm" className="text-xs" onClick={() => {
+                          setSelectedFittingItem({
+                            id: item.id,
+                            name: item.name
+                          });
+                          setIsFittingDialogOpen(true);
+                        }}>
                                    Schedule Fitting
-                                 </Button>
-                               )}
+                                 </Button>}
                               <Button size="sm" variant="outline" className="text-xs">
                                 Details
                               </Button>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      </div>)}
+                  </div>}
               </CardContent>
             </Card>
           </div>
@@ -155,14 +113,10 @@ const WardrobePage = () => {
                 <CardTitle className="text-lg">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => {
-                    setSelectedFittingItem(null);
-                    setIsFittingDialogOpen(true);
-                  }}
-                >
+                <Button variant="outline" className="w-full justify-start" onClick={() => {
+                setSelectedFittingItem(null);
+                setIsFittingDialogOpen(true);
+              }}>
                   <Calendar className="h-4 w-4 mr-2" />
                   Schedule Fitting
                 </Button>
@@ -183,8 +137,7 @@ const WardrobePage = () => {
                 <CardTitle className="text-lg">My Measurements</CardTitle>
               </CardHeader>
               <CardContent>
-                {measurements ? (
-                  <div className="space-y-3 text-sm">
+                {measurements ? <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span>Dress Size</span>
                       <span className="font-semibold">{measurements.dressSize}</span>
@@ -201,12 +154,9 @@ const WardrobePage = () => {
                       <span>Last Updated</span>
                       <span className="font-semibold">{measurements.lastUpdated}</span>
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-4 text-muted-foreground">
+                  </div> : <div className="text-center py-4 text-muted-foreground">
                     No measurements recorded yet.
-                  </div>
-                )}
+                  </div>}
                 <Button size="sm" variant="outline" className="w-full mt-4">
                   Update Measurements
                 </Button>
@@ -256,18 +206,11 @@ const WardrobePage = () => {
         </div>
 
         {/* Fitting Schedule Dialog */}
-        <FittingScheduleDialog
-          isOpen={isFittingDialogOpen}
-          onClose={() => {
-            setIsFittingDialogOpen(false);
-            setSelectedFittingItem(null);
-          }}
-          wardrobeItemId={selectedFittingItem?.id}
-          wardrobeItemName={selectedFittingItem?.name}
-        />
+        <FittingScheduleDialog isOpen={isFittingDialogOpen} onClose={() => {
+        setIsFittingDialogOpen(false);
+        setSelectedFittingItem(null);
+      }} wardrobeItemId={selectedFittingItem?.id} wardrobeItemName={selectedFittingItem?.name} />
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default WardrobePage;
