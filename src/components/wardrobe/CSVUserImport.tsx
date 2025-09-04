@@ -19,14 +19,14 @@ import { toast } from 'sonner';
 
 interface CSVRow {
   name: string;
-  email: string;
-  voice_part?: string;
-  formal_dress_size?: string;
-  polo_size?: string;
-  tshirt_size?: string;
-  lipstick_shade?: string;
-  pearl_status?: string;
-  phone?: string;
+  bust?: string;
+  waist?: string;
+  hips?: string;
+  height?: string;
+  shirt?: string;
+  dress?: string;
+  pants?: string;
+  classification?: string;
 }
 
 interface ImportResult {
@@ -43,39 +43,39 @@ export const CSVUserImport = () => {
 
   const downloadTemplate = () => {
     const headers = [
-      'name',
-      'email',
-      'voice_part',
-      'formal_dress_size',
-      'polo_size',
-      'tshirt_size',
-      'lipstick_shade',
-      'pearl_status',
-      'phone'
+      'Name',
+      'Bust',
+      'Waist',
+      'Hips',
+      'Height',
+      'Shirt',
+      'Dress',
+      'Pants',
+      'Classification'
     ];
     
     const sampleData = [
       [
         'Jane Smith',
-        'jane.smith@spelman.edu',
-        'Soprano 1',
+        '36',
+        '28',
+        '38',
+        '5\'6"',
+        'Medium',
         'Size 8',
-        'Medium',
-        'Medium',
-        'Ruby Red',
-        'assigned',
-        '(404) 555-0123'
+        'Size 6',
+        'Senior'
       ],
       [
         'Maria Garcia',
-        'maria.garcia@spelman.edu',
-        'Alto 2',
-        'Size 10',
-        'Large',
-        'Medium',
-        'Classic Red',
-        'unassigned',
-        '(404) 555-0124'
+        '34',
+        '26',
+        '36',
+        '5\'4"',
+        'Small',
+        'Size 6',
+        'Size 4',
+        'Junior'
       ]
     ];
 
@@ -114,7 +114,7 @@ export const CSVUserImport = () => {
       });
 
       // Validate required fields
-      if (row.name && row.email) {
+      if (row.name) {
         data.push(row as CSVRow);
       }
     }
@@ -166,47 +166,23 @@ export const CSVUserImport = () => {
           setProgress((i / csvData.length) * 100);
 
           try {
-            // First, check if user already exists in profiles
-            const { data: existingProfile } = await supabase
-              .from('gw_profiles')
-              .select('user_id')
-              .eq('email', row.email)
-              .single();
-
-            let userId = existingProfile?.user_id;
-
-            // If no profile exists, create one
-            if (!userId) {
-              const { data: newProfile, error: profileError } = await supabase
-                .from('gw_profiles')
-                .insert({
-                  email: row.email,
-                  full_name: row.name,
-                  voice_part: row.voice_part,
-                  role: 'member'
-                })
-                .select('user_id')
-                .single();
-
-              if (profileError) throw profileError;
-              userId = newProfile.user_id;
-            }
-
-            // Create or update wardrobe profile
+            // Create wardrobe measurement record
             const wardrobeData = {
-              user_id: userId,
-              formal_dress_size: row.formal_dress_size,
-              polo_size: row.polo_size,
-              tshirt_size: row.tshirt_size,
-              lipstick_shade: row.lipstick_shade,
-              pearl_status: row.pearl_status || 'unassigned'
+              name: row.name,
+              bust_measurement: row.bust,
+              waist_measurement: row.waist,
+              hips_measurement: row.hips,
+              height_measurement: row.height,
+              shirt_size: row.shirt,
+              dress_size: row.dress,
+              pants_size: row.pants,
+              classification: row.classification,
+              created_at: new Date().toISOString()
             };
 
             const { error: wardrobeError } = await supabase
-              .from('gw_member_wardrobe_profiles')
-              .upsert(wardrobeData, { 
-                onConflict: 'user_id' 
-              });
+              .from('gw_wardrobe_measurements')
+              .insert(wardrobeData);
 
             if (wardrobeError) throw wardrobeError;
 
