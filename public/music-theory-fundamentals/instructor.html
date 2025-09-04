@@ -317,23 +317,32 @@
         async function init() {
             console.log('Initializing Theory Poll Instructor...');
             
-            // Check authentication
-            const { data: { user } } = await supa.auth.getUser();
-            if (!user) {
+            try {
+                // Check authentication
+                const { data: { user } } = await supa.auth.getUser();
+                if (!user) {
+                    authWarning.style.display = 'block';
+                    return;
+                }
+                
+                currentUser = user;
+                appContent.style.display = 'block';
+                console.log('User authenticated:', user.id);
+                
+                // Setup event listeners
+                newCardBtn.addEventListener('click', handleNewCard);
+                joinCodeInput.addEventListener('input', validateJoinCode);
+                
+                showStatus('Ready to start. Enter a 4-digit join code.');
+            } catch (error) {
+                console.error('Initialization error:', error);
                 authWarning.style.display = 'block';
-                return;
+                authWarning.innerHTML = `<strong>Error:</strong><br>${error.message}`;
             }
-            
-            currentUser = user;
-            appContent.style.display = 'block';
-            console.log('User authenticated:', user.id);
-            
-            // Setup event listeners
-            newCardBtn.addEventListener('click', handleNewCard);
-            joinCodeInput.addEventListener('input', validateJoinCode);
-            
-            showStatus('Ready to start. Enter a 4-digit join code.');
         }
+
+        // Start the app when page loads
+        document.addEventListener('DOMContentLoaded', init);
         
         function validateJoinCode() {
             const code = joinCodeInput.value;
