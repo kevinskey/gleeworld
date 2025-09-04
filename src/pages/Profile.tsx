@@ -64,8 +64,7 @@ const profileSchema = z.object({
   can_dance: z.boolean().default(false),
   preferred_payment_method: z.enum(["zelle", "cashapp", "venmo", "apple_pay", "check"]).optional().or(z.literal("")),
   
-  // New Wardrobe & Identity fields
-  dress_size: z.string().optional(),
+  // Appearance & Identity fields
   shoe_size: z.string().optional(),
   hair_color: z.string().optional(),
   has_tattoos: z.boolean().default(false),
@@ -92,6 +91,20 @@ const profileSchema = z.object({
   twitter: z.string().optional(),
   facebook: z.string().optional(),
   youtube: z.string().optional(),
+  
+  // Wardrobe measurements
+  bust_measurement: z.string().optional(),
+  waist_measurement: z.string().optional(),
+  hips_measurement: z.string().optional(),
+  height_measurement: z.string().optional(),
+  
+  // Wardrobe sizes
+  shirt_size: z.string().optional(),
+  dress_size: z.string().optional(),
+  pants_size: z.string().optional(),
+  
+  // Classification
+  classification: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -220,6 +233,16 @@ const Profile = () => {
       setValue("facebook", socialLinks.facebook || "");
       setValue("youtube", socialLinks.youtube || "");
 
+      // Set wardrobe fields
+      setValue("bust_measurement", profile.bust_measurement?.toString() || "");
+      setValue("waist_measurement", profile.waist_measurement?.toString() || "");
+      setValue("hips_measurement", profile.hips_measurement?.toString() || "");
+      setValue("height_measurement", profile.height_measurement?.toString() || "");
+      setValue("shirt_size", profile.shirt_size || "");
+      setValue("dress_size", profile.dress_size || "");
+      setValue("pants_size", profile.pants_size || "");
+      setValue("classification", profile.classification || "");
+
       // Set instruments and dietary restrictions
       setSelectedInstruments(profile.instruments_played || []);
       setSelectedDietaryRestrictions(profile.dietary_restrictions || []);
@@ -299,6 +322,19 @@ const Profile = () => {
         parent_guardian_contact: data.parent_guardian_contact,
         mentor_opt_in: data.mentor_opt_in,
         reunion_rsvp: data.reunion_rsvp,
+        
+        // Wardrobe measurements
+        bust_measurement: data.bust_measurement ? parseFloat(data.bust_measurement) : null,
+        waist_measurement: data.waist_measurement ? parseFloat(data.waist_measurement) : null,
+        hips_measurement: data.hips_measurement ? parseFloat(data.hips_measurement) : null,
+        height_measurement: data.height_measurement ? parseFloat(data.height_measurement) : null,
+        
+        // Wardrobe sizes
+        shirt_size: data.shirt_size || null,
+        pants_size: data.pants_size || null,
+        
+        // Classification
+        classification: data.classification || null,
         
         updated_at: new Date().toISOString(),
       };
@@ -1154,6 +1190,150 @@ const Profile = () => {
                     {paymentMethods.map((method) => (
                       <SelectItem key={method.value} value={method.value}>
                         {method.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Wardrobe & Measurements */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
+                <Shirt className="h-5 w-5" />
+                Wardrobe & Measurements
+              </CardTitle>
+              <CardDescription>Wardrobe sizing and measurement information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Measurements Section */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-foreground">Measurements</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <Label htmlFor="bust_measurement">Bust</Label>
+                    <Input
+                      id="bust_measurement"
+                      {...register("bust_measurement")}
+                      disabled={!isEditing}
+                      className="mt-1"
+                      placeholder="36"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="waist_measurement">Waist</Label>
+                    <Input
+                      id="waist_measurement"
+                      {...register("waist_measurement")}
+                      disabled={!isEditing}
+                      className="mt-1"
+                      placeholder="28"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="hips_measurement">Hips</Label>
+                    <Input
+                      id="hips_measurement"
+                      {...register("hips_measurement")}
+                      disabled={!isEditing}
+                      className="mt-1"
+                      placeholder="38"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="height_measurement">Height</Label>
+                    <Input
+                      id="height_measurement"
+                      {...register("height_measurement")}
+                      disabled={!isEditing}
+                      className="mt-1"
+                      placeholder="5'6&quot;"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sizes Section */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-foreground">Sizes</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="shirt_size">Shirt Size</Label>
+                    <Select
+                      value={watch("shirt_size") || ""}
+                      onValueChange={(value) => setValue("shirt_size", value)}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select shirt size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
+                          <SelectItem key={size} value={size}>
+                            {size}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="dress_size">Dress Size</Label>
+                    <Select
+                      value={watch("dress_size") || ""}
+                      onValueChange={(value) => setValue("dress_size", value)}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select dress size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["Size 2", "Size 4", "Size 6", "Size 8", "Size 10", "Size 12", "Size 14", "Size 16", "Size 18", "Size 20"].map((size) => (
+                          <SelectItem key={size} value={size}>
+                            {size}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="pants_size">Pants Size</Label>
+                    <Select
+                      value={watch("pants_size") || ""}
+                      onValueChange={(value) => setValue("pants_size", value)}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select pants size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["Size 2", "Size 4", "Size 6", "Size 8", "Size 10", "Size 12", "Size 14", "Size 16", "Size 18", "Size 20"].map((size) => (
+                          <SelectItem key={size} value={size}>
+                            {size}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Classification */}
+              <div>
+                <Label htmlFor="classification">Classification</Label>
+                <Select
+                  value={watch("classification") || ""}
+                  onValueChange={(value) => setValue("classification", value)}
+                  disabled={!isEditing}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select classification" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["Freshman", "Sophomore", "Junior", "Senior"].map((classification) => (
+                      <SelectItem key={classification} value={classification}>
+                        {classification}
                       </SelectItem>
                     ))}
                   </SelectContent>

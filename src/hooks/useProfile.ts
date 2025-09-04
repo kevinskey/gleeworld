@@ -29,12 +29,25 @@ export interface ProfileData {
     youtube?: string;
   };
   
-  // New Wardrobe & Identity fields
+  // Wardrobe & Identity fields
   dress_size?: string;
   shoe_size?: string;
   hair_color?: string;
   has_tattoos?: boolean;
   visible_piercings?: boolean;
+  
+  // Wardrobe measurements from CSV import
+  bust_measurement?: number;
+  waist_measurement?: number;
+  hips_measurement?: number;
+  height_measurement?: number;
+  
+  // Additional wardrobe sizes from CSV import
+  shirt_size?: string;
+  pants_size?: string;
+  
+  // Student classification from CSV import
+  classification?: string;
   
   // Academic & Personal fields
   academic_major?: string;
