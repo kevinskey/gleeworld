@@ -79,7 +79,7 @@ export const FittingScheduleDialog = ({
       appointmentDateTime.setHours(hour24, parseInt(minutes));
 
       // Create appointment
-      const { error } = await supabase
+      const { data: appointment, error } = await supabase
         .from('gw_appointments')
         .insert({
           title: `Wardrobe Fitting - ${wardrobeItemName || 'Costume Fitting'}`,
@@ -91,13 +91,32 @@ export const FittingScheduleDialog = ({
           client_email: user.email,
           created_by: user.id,
           status: 'pending_approval'
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
+      // Send approval request SMS to wardrobe managers
+      console.log('Sending approval request for appointment:', appointment.id);
+      const { error: smsError } = await supabase.functions.invoke('send-fitting-approval-request', {
+        body: {
+          appointmentId: appointment.id,
+          clientName: appointment.client_name,
+          appointmentDate: new Date(appointment.appointment_date).toLocaleDateString(),
+          appointmentTime: new Date(appointment.appointment_date).toLocaleTimeString(),
+          notes: appointment.description
+        }
+      });
+
+      if (smsError) {
+        console.error('Failed to send approval request:', smsError);
+        // Don't fail the appointment creation, just log the error
+      }
+
       toast({
-        title: "Success",
-        description: "Your fitting appointment has been scheduled! You will receive a confirmation email.",
+        title: "Request Submitted",
+        description: "Your fitting appointment request has been submitted for approval. You'll receive a text confirmation once it's reviewed.",
       });
 
       // Reset form
