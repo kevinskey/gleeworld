@@ -14,9 +14,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useBookAppointment } from '@/hooks/useAppointments';
 
 interface FittingScheduleDialogProps {
   isOpen: boolean;
@@ -37,6 +37,7 @@ export const FittingScheduleDialog = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const bookAppointment = useBookAppointment();
 
   const timeSlots = [
     '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
@@ -74,49 +75,18 @@ export const FittingScheduleDialog = ({
         hour24 = 0;
       }
 
-      // Create appointment date/time
-      const appointmentDateTime = new Date(selectedDate);
-      appointmentDateTime.setHours(hour24, parseInt(minutes));
+      const timeFormatted = `${hour24.toString().padStart(2, '0')}:${minutes.padStart(2, '0')}:00`;
 
-      // Create appointment
-      const { data: appointment, error } = await supabase
-        .from('gw_appointments')
-        .insert({
-          title: `Wardrobe Fitting - ${wardrobeItemName || 'Costume Fitting'}`,
-          description: notes,
-          appointment_date: appointmentDateTime.toISOString(),
-          duration_minutes: 20,
-          appointment_type: 'Wardrobe Fitting',
-          client_name: user.user_metadata?.full_name || user.email || 'Member',
-          client_email: user.email,
-          created_by: user.id,
-          status: 'pending_approval'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Send approval request SMS to wardrobe managers
-      console.log('Sending approval request for appointment:', appointment.id);
-      const { error: smsError } = await supabase.functions.invoke('send-fitting-approval-request', {
-        body: {
-          appointmentId: appointment.id,
-          clientName: appointment.client_name,
-          appointmentDate: new Date(appointment.appointment_date).toLocaleDateString(),
-          appointmentTime: new Date(appointment.appointment_date).toLocaleTimeString(),
-          notes: appointment.description
-        }
-      });
-
-      if (smsError) {
-        console.error('Failed to send approval request:', smsError);
-        // Don't fail the appointment creation, just log the error
-      }
-
-      toast({
-        title: "Request Submitted",
-        description: "Your fitting appointment request has been submitted for approval. You'll receive a text confirmation once it's reviewed.",
+      // Use the proper booking system with a default service ID for wardrobe fittings
+      await bookAppointment.mutateAsync({
+        service_id: 'wardrobe-fitting', // Default service ID for wardrobe fittings
+        appointment_date: format(selectedDate, 'yyyy-MM-dd'),
+        start_time: timeFormatted,
+        customer_name: user.user_metadata?.full_name || user.email || 'Member',
+        customer_email: user.email || '',
+        customer_phone: user.user_metadata?.phone,
+        attendee_count: 1,
+        special_requests: notes || `Fitting appointment for ${wardrobeItemName || 'Costume Fitting'}`
       });
 
       // Reset form
