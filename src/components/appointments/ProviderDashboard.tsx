@@ -48,6 +48,7 @@ export const ProviderDashboard = () => {
     occupancyChange: 0
   });
   const [recentAppointments, setRecentAppointments] = useState<RecentAppointment[]>([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<RecentAppointment[]>([]);
   const [dailyOccupancy, setDailyOccupancy] = useState<DailyOccupancy[]>([]);
   const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -157,7 +158,16 @@ export const ProviderDashboard = () => {
         customerChange: 0,
         occupancyChange: 0
       });
+      
+      // Get upcoming appointments (future dates only)
+      const now = new Date();
+      const upcomingAppointmentsList = recentAppointments
+        .filter(apt => new Date(apt.date) >= now)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .slice(0, 3); // Get next 3 upcoming appointments
+      
       setRecentAppointments(allRecentAppointments);
+      setUpcomingAppointments(upcomingAppointmentsList);
       setDailyOccupancy(occupancyData);
       setWeeklyData(trendData);
     } catch (error) {
@@ -257,58 +267,56 @@ export const ProviderDashboard = () => {
         </Card>
       </div>
 
-      {/* Second Row Stats */}
+      {/* Upcoming Appointments Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Appointments booked | Cancelled appointments</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.bookedAppointments} | {stats.cancelledAppointments}</div>
-            <div className="flex items-center text-sm">
-              {stats.bookedAppointments + stats.cancelledAppointments > 0 ? <>
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-                  <span className="text-green-500">Current totals</span>
-                </> : <span className="text-gray-500">No data available</span>}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Daily occupancy</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-7 gap-1 mb-4">
-              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => <div key={index} className="text-center text-xs text-gray-500 font-medium">
-                  {day}
-                </div>)}
-            </div>
-            <div className="grid grid-cols-7 gap-1">
-              {dailyOccupancy.map((day, index) => <div key={index} className={`aspect-square rounded ${getOccupancyColor(day.occupancy)} flex items-center justify-center`} title={`${day.occupancy}% occupancy`}>
-                  {day.occupancy > 60 && <div className="w-2 h-2 bg-white rounded-full"></div>}
-                </div>)}
-            </div>
-            <div className="mt-4 space-y-2 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-600 rounded"></div>
-                <span>81% and higher</span>
+        {upcomingAppointments.length === 0 ? (
+          <Card className="md:col-span-3">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold">Upcoming Appointments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <Calendar className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No upcoming appointments</h3>
+                <p className="text-gray-500">Your next scheduled appointments will appear here</p>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-orange-500 rounded"></div>
-                <span>Between 41% and 80%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-orange-300 rounded"></div>
-                <span>Between 21% and 40%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-gray-200 rounded"></div>
-                <span>20% and lower</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          upcomingAppointments.map((appointment, index) => (
+            <Card key={appointment.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <Badge variant="outline" className="text-xs">
+                    {index === 0 ? 'Next' : `${index + 1} of ${upcomingAppointments.length}`}
+                  </Badge>
+                  {getStatusBadge(appointment.status)}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-4 w-4 text-blue-600" />
+                    <span className="font-medium text-sm">{appointment.date}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-4 w-4 text-green-600" />
+                    <span className="text-sm">{appointment.time}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-4 w-4 text-purple-600" />
+                    <span className="text-sm font-medium">{appointment.clientName}</span>
+                  </div>
+                  <div className="pt-2 border-t">
+                    <Badge variant="secondary" className="text-xs">
+                      {appointment.service}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Charts and Recent Appointments */}
