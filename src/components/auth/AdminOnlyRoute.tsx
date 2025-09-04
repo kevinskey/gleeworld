@@ -36,9 +36,9 @@ export const AdminOnlyRoute = ({ children }: AdminOnlyRouteProps) => {
     currentPath: window.location.pathname
   });
   
-  // Simplified: Only executive board members get admin access
-  if (!isExecutiveBoard()) {
-    // Redirect non-executive users to member dashboard
+  // Check if user has admin privileges (admin, super-admin, or executive board)
+  if (!isAdmin() && !isExecutiveBoard()) {
+    // Redirect non-admin users to member dashboard
     return <Navigate to="/dashboard/member" replace />;
   }
   
