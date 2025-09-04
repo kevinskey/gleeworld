@@ -69,15 +69,14 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
 
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="stats">Stats</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>
             <TabsTrigger value="upload">Upload Document</TabsTrigger>
             <TabsTrigger value="create">Create New</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="stats" className="space-y-4">
+          <TabsContent value="overview" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
                 <CardContent className="p-4">
@@ -124,9 +123,6 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-          <TabsContent value="overview" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Contract Overview</CardTitle>
