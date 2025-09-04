@@ -193,11 +193,17 @@ const Index = () => {
       default:
         console.log('Index: Rendering Contract Management');
         return (
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-              <h1 className="text-xl sm:text-xl lg:text-2xl font-bold text-foreground">Contract Management</h1>
+          <div className="space-y-6 p-6">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground">Contract Management</h1>
+                  <p className="text-muted-foreground mt-2">Create, manage, and organize contracts</p>
+                </div>
+              </div>
+              
+              <ContractManagementInterface />
             </div>
-            <ContractManagementInterface />
           </div>
         );
     }
