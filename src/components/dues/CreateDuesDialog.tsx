@@ -125,7 +125,7 @@ export const CreateDuesDialog = ({ open, onOpenChange, onSuccess }: CreateDuesDi
               <SelectTrigger>
                 <SelectValue placeholder={loadingUsers ? "Loading users..." : "Select a member"} />
               </SelectTrigger>
-              <SelectContent className="max-h-[200px] bg-background">
+              <SelectContent className="z-50 max-h-[200px] bg-background border shadow-lg">
                 <ScrollArea className="h-[200px]">
                   {users.map((member) => (
                     <SelectItem 
