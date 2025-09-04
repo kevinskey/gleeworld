@@ -15908,6 +15908,100 @@ export type Database = {
         }
         Relationships: []
       }
+      theory_poll_questions: {
+        Row: {
+          answer_index: number
+          choices: Json
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          payload: Json
+          session_id: string | null
+          type: string
+        }
+        Insert: {
+          answer_index: number
+          choices: Json
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          payload: Json
+          session_id?: string | null
+          type: string
+        }
+        Update: {
+          answer_index?: number
+          choices?: Json
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          payload?: Json
+          session_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theory_poll_questions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "theory_poll_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      theory_poll_responses: {
+        Row: {
+          choice_index: number
+          created_at: string | null
+          id: number
+          question_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          choice_index: number
+          created_at?: string | null
+          id?: number
+          question_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          choice_index?: number
+          created_at?: string | null
+          id?: number
+          question_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theory_poll_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "theory_poll_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      theory_poll_sessions: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          owner_user_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          owner_user_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          owner_user_id?: string | null
+        }
+        Relationships: []
+      }
       track_likes: {
         Row: {
           created_at: string

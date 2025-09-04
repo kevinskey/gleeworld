@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Poll - Student | GleeWorld</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+        
+        input {
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 18px;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+        
+        button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .choice-button {
+            background: #f7fafc;
+            color: #2d3748;
+            border: 2px solid #e2e8f0;
+            text-transform: none;
+            letter-spacing: normal;
+            padding: 20px;
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-align: left;
+            position: relative;
+        }
+        
+        .choice-button:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+        
+        .choice-button:disabled {
+            background: #f7fafc;
+            color: #a0aec0;
+            border-color: #e2e8f0;
+            transform: none;
+        }
+        
+        .choice-button.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .choice-label {
+            font-weight: 700;
+            font-size: 20px;
+            margin-right: 15px;
+            color: #667eea;
+        }
+        
+        .choice-button.selected .choice-label {
+            color: white;
+        }
+        
+        .auth-warning {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .status {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            text-align: center;
+        }
+        
+        .waiting {
+            text-align: center;
+            padding: 40px 20px;
+            color: #718096;
+        }
+        
+        .waiting .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.7;
+        }
+        
+        .notation-area {
+            min-height: 160px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .question-type {
+            background: #edf2f7;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #4a5568;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 0;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            body {
+                padding: 15px;
+            }
+            
+            .choice-button {
+                padding: 18px;
+                font-size: 16px;
+            }
+            
+            .choice-label {
+                font-size: 18px;
+            }
+        }
+        
+        #notation-canvas {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Theory Poll</h1>
+            <p>Music theory polling for students</p>
+        </div>
+        
+        <div id="auth-warning" class="auth-warning" style="display: none;">
+            <strong>Authentication Required</strong><br>
+            Please sign in to GleeWorld to participate in Theory Poll.
+        </div>
+        
+        <div id="app-content" style="display: none;">
+            <div id="join-form" class="card">
+                <div class="form-group">
+                    <label for="joinCode">Enter Join Code</label>
+                    <input type="text" id="joinCode" placeholder="1234" maxlength="4" pattern="[0-9]{4}" autocomplete="off">
+                </div>
+                <button id="joinBtn">Join Session</button>
+            </div>
+            
+            <div id="status" class="status" style="display: none;"></div>
+            
+            <div id="question-area" style="display: none;">
+                <div class="card">
+                    <div id="question-type" class="question-type"></div>
+                    
+                    <div id="notation-area" class="notation-area" role="img" aria-label="Musical notation">
+                        <div id="notation-output"></div>
+                    </div>
+                    
+                    <div id="choices-area">
+                        <!-- Choices will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div id="waiting-area" class="card" style="display: none;">
+                <div class="waiting">
+                    <div class="icon">⏳</div>
+                    <h3>Waiting for next question...</h3>
+                    <p>Your instructor will post the next question shortly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/vexflow/releases/vexflow-debug.js"></script>
+    <script>
+        // Environment configuration
+        const SUPABASE_URL = 'https://oopmlreysjzuxzylyheb.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg';
+        
+        const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Global state
+        let currentUser = null;
+        let currentSession = null;
+        let currentQuestion = null;
+        let questionChannel = null;
+        let selectedChoice = null;
+        let hasVoted = false;
+        
+        // DOM elements
+        const authWarning = document.getElementById('auth-warning');
+        const appContent = document.getElementById('app-content');
+        const joinForm = document.getElementById('join-form');
+        const joinCodeInput = document.getElementById('joinCode');
+        const joinBtn = document.getElementById('joinBtn');
+        const statusDiv = document.getElementById('status');
+        const questionArea = document.getElementById('question-area');
+        const waitingArea = document.getElementById('waiting-area');
+        const questionTypeDiv = document.getElementById('question-type');
+        const notationOutput = document.getElementById('notation-output');
+        const choicesArea = document.getElementById('choices-area');
+        
+        // Initialize app
+        async function init() {
+            console.log('Initializing Theory Poll Student...');
+            
+            // Check authentication
+            const { data: { user } } = await supa.auth.getUser();
+            if (!user) {
+                authWarning.style.display = 'block';
+                return;
+            }
+            
+            currentUser = user;
+            appContent.style.display = 'block';
+            console.log('User authenticated:', user.id);
+            
+            // Setup event listeners
+            joinBtn.addEventListener('click', handleJoin);
+            joinCodeInput.addEventListener('input', validateJoinCode);
+            joinCodeInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !joinBtn.disabled) {
+                    handleJoin();
+                }
+            });
+            
+            showStatus('Enter a 4-digit join code to participate.');
+        }
+        
+        function validateJoinCode() {
+            const code = joinCodeInput.value;
+            joinBtn.disabled = !/^\d{4}$/.test(code);
+        }
+        
+        async function handleJoin() {
+            const code = joinCodeInput.value;
+            console.log('Joining session with code:', code);
+            
+            try {
+                showStatus('Finding session...');
+                
+                // Look up session by code
+                const { data: sessions, error } = await supa
+                    .from('theory_poll_sessions')
+                    .select('*')
+                    .eq('code', code);
+                
+                if (error) throw error;
+                
+                if (!sessions || sessions.length === 0) {
+                    throw new Error('Session not found. Check your join code.');
+                }
+                
+                currentSession = sessions[0];
+                console.log('Found session:', currentSession.id);
+                
+                // Subscribe to questions
+                subscribeToQuestions();
+                
+                // Look for current active question
+                await checkForActiveQuestion();
+                
+                // Hide join form
+                joinForm.style.display = 'none';
+                showStatus(`Connected to session ${code}. Waiting for questions...`);
+                
+            } catch (error) {
+                console.error('Join error:', error);
+                showStatus(`Error joining session: ${error.message}`, 'error');
+            }
+        }
+        
+        function subscribeToQuestions() {
+            console.log('Subscribing to questions for session:', currentSession?.id);
+            
+            if (questionChannel) {
+                questionChannel.unsubscribe();
+            }
+            
+            if (!currentSession) return;
+            
+            questionChannel = supa
+                .channel('questions')
+                .on('postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'theory_poll_questions',
+                        filter: `session_id=eq.${currentSession.id}`
+                    },
+                    (payload) => {
+                        console.log('New question received:', payload);
+                        if (payload.new.is_active) {
+                            displayQuestion(payload.new);
+                        }
+                    }
+                )
+                .on('postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'theory_poll_questions',
+                        filter: `session_id=eq.${currentSession.id}`
+                    },
+                    (payload) => {
+                        console.log('Question updated:', payload);
+                        if (payload.new.is_active) {
+                            displayQuestion(payload.new);
+                        } else {
+                            // Question deactivated
+                            showWaiting();
+                        }
+                    }
+                )
+                .subscribe();
+        }
+        
+        async function checkForActiveQuestion() {
+            if (!currentSession) return;
+            
+            try {
+                const { data: questions, error } = await supa
+                    .from('theory_poll_questions')
+                    .select('*')
+                    .eq('session_id', currentSession.id)
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (questions && questions.length > 0) {
+                    console.log('Found active question:', questions[0].id);
+                    displayQuestion(questions[0]);
+                } else {
+                    console.log('No active questions found');
+                    showWaiting();
+                }
+                
+            } catch (error) {
+                console.error('Error checking for active question:', error);
+                showWaiting();
+            }
+        }
+        
+        function displayQuestion(question) {
+            console.log('Displaying question:', question);
+            
+            currentQuestion = question;
+            hasVoted = false;
+            selectedChoice = null;
+            
+            // Update question type display
+            const typeLabels = {
+                'clef_note': 'Identify the note (mixed clefs)',
+                'key_sig': 'Identify the key signature', 
+                'interval': 'Identify the interval (stacked)'
+            };
+            
+            questionTypeDiv.textContent = typeLabels[question.type] || question.type;
+            
+            // Set aria-label for canvas
+            const notationArea = document.getElementById('notation-area');
+            notationArea.setAttribute('aria-label', `Musical notation for ${typeLabels[question.type]}`);
+            
+            // Render notation
+            renderNotation(question);
+            
+            // Render choices
+            renderChoices(question.choices);
+            
+            // Show question area
+            questionArea.style.display = 'block';
+            waitingArea.style.display = 'none';
+            statusDiv.style.display = 'none';
+        }
+        
+        function renderNotation(question) {
+            console.log('Rendering notation for question:', question);
+            
+            // Clear previous notation
+            notationOutput.innerHTML = '';
+            
+            try {
+                const { Renderer, Stave, StaveNote, Accidental, Voice, Formatter } = Vex.Flow;
+                
+                // Create renderer
+                const renderer = new Renderer(notationOutput, Renderer.Backends.SVG);
+                renderer.resize(480, 160);
+                const context = renderer.getContext();
+                
+                // Create stave
+                const stave = new Stave(10, 20, 460);
+                
+                // Add clef
+                const clef = question.payload.clef;
+                if (clef === 'treble') {
+                    stave.addClef('treble');
+                } else if (clef === 'bass') {
+                    stave.addClef('bass');
+                } else if (clef === 'alto') {
+                    stave.addClef('alto');
+                } else if (clef === 'tenor') {
+                    stave.addClef('tenor');
+                }
+                
+                // Add key signature if present
+                if (question.payload.sharps > 0) {
+                    stave.addKeySignature(`${question.payload.sharps}#`);
+                } else if (question.payload.flats > 0) {
+                    stave.addKeySignature(`${question.payload.flats}b`);
+                }
+                
+                stave.setContext(context).draw();
+                
+                // Add notes based on question type
+                if (question.payload.note) {
+                    // Single note question
+                    const note = new StaveNote({
+                        keys: [question.payload.note],
+                        duration: 'w'
+                    });
+                    
+                    // Add accidental if present
+                    if (question.payload.note.includes('#')) {
+                        note.addAccidental(0, new Accidental('#'));
+                    } else if (question.payload.note.includes('b')) {
+                        note.addAccidental(0, new Accidental('b'));
+                    }
+                    
+                    const voice = new Voice({ num_beats: 4, beat_value: 4 });
+                    voice.addTickables([note]);
+                    
+                    new Formatter().joinVoices([voice]).format([voice], 400);
+                    voice.draw(context, stave);
+                    
+                } else if (question.payload.baseNote && question.payload.semitones) {
+                    // Interval question - draw two stacked notes
+                    const baseNote = question.payload.baseNote;
+                    const semitones = question.payload.semitones;
+                    
+                    // Calculate second note (simplified)
+                    const noteMap = {
+                        'c': 0, 'd': 2, 'e': 4, 'f': 5, 'g': 7, 'a': 9, 'b': 11
+                    };
+                    
+                    const basePitch = noteMap[baseNote.charAt(0)];
+                    const octave = parseInt(baseNote.split('/')[1]);
+                    const targetPitch = (basePitch + semitones) % 12;
+                    const targetOctave = octave + Math.floor((basePitch + semitones) / 12);
+                    
+                    const reverseMap = Object.keys(noteMap).find(key => noteMap[key] === targetPitch);
+                    const topNote = `${reverseMap}/${targetOctave}`;
+                    
+                    const chord = new StaveNote({
+                        keys: [baseNote, topNote],
+                        duration: 'w'
+                    });
+                    
+                    const voice = new Voice({ num_beats: 4, beat_value: 4 });
+                    voice.addTickables([chord]);
+                    
+                    new Formatter().joinVoices([voice]).format([voice], 400);
+                    voice.draw(context, stave);
+                }
+                
+            } catch (error) {
+                console.error('Notation rendering error:', error);
+                notationOutput.innerHTML = '<p style="padding: 20px; text-align: center; color: #e53e3e;">Error rendering notation</p>';
+            }
+        }
+        
+        function renderChoices(choices) {
+            console.log('Rendering choices:', choices);
+            
+            let html = '';
+            choices.forEach((choice, index) => {
+                const letter = String.fromCharCode(65 + index); // A, B, C, D
+                html += `
+                    <button 
+                        class="choice-button" 
+                        data-index="${index}"
+                        aria-pressed="false"
+                        onclick="selectChoice(${index})"
+                        onkeydown="handleChoiceKeydown(event, ${index})"
+                    >
+                        <span class="choice-label">${letter}.</span>
+                        ${choice}
+                    </button>
+                `;
+            });
+            
+            choicesArea.innerHTML = html;
+        }
+        
+        function selectChoice(index) {
+            if (hasVoted) return;
+            
+            console.log('Selected choice:', index);
+            
+            selectedChoice = index;
+            
+            // Update button states
+            const buttons = choicesArea.querySelectorAll('.choice-button');
+            buttons.forEach((btn, i) => {
+                btn.classList.toggle('selected', i === index);
+                btn.setAttribute('aria-pressed', i === index ? 'true' : 'false');
+            });
+            
+            // Submit vote
+            submitVote(index);
+        }
+        
+        function handleChoiceKeydown(event, index) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                selectChoice(index);
+            }
+        }
+        
+        async function submitVote(choiceIndex) {
+            if (!currentQuestion || hasVoted) return;
+            
+            try {
+                console.log('Submitting vote:', choiceIndex);
+                
+                const { error } = await supa
+                    .from('theory_poll_responses')
+                    .insert([{
+                        question_id: currentQuestion.id,
+                        choice_index: choiceIndex
+                    }]);
+                
+                if (error) {
+                    // Check if it's a duplicate vote error
+                    if (error.code === '23505') {
+                        console.log('Duplicate vote detected, ignoring');
+                        hasVoted = true;
+                        disableChoices();
+                        showStatus('Vote recorded! (You can only vote once per question)', 'success');
+                        return;
+                    }
+                    throw error;
+                }
+                
+                hasVoted = true;
+                disableChoices();
+                showStatus('Vote recorded! Waiting for next question...', 'success');
+                console.log('Vote submitted successfully');
+                
+            } catch (error) {
+                console.error('Vote submission error:', error);
+                showStatus(`Error submitting vote: ${error.message}`, 'error');
+            }
+        }
+        
+        function disableChoices() {
+            const buttons = choicesArea.querySelectorAll('.choice-button');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+            });
+        }
+        
+        function showWaiting() {
+            console.log('Showing waiting area');
+            questionArea.style.display = 'none';
+            waitingArea.style.display = 'block';
+            statusDiv.style.display = 'none';
+        }
+        
+        function showStatus(message, type = 'info') {
+            console.log('Status:', message, type);
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            statusDiv.style.borderLeftColor = type === 'error' ? '#e53e3e' : type === 'success' ? '#38a169' : '#667eea';
+            statusDiv.style.background = type === 'error' ? '#fed7d7' : type === 'success' ? '#c6f6d5' : '#f7fafc';
+            statusDiv.style.color = type === 'error' ? '#c53030' : type === 'success' ? '#2f855a' : '#2d3748';
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

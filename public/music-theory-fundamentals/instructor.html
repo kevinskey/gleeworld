@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Poll - Instructor | GleeWorld</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #4a5568;
+        }
+        
+        input, select {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+        
+        button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+        }
+        
+        .notation-panel {
+            min-height: 200px;
+        }
+        
+        .results-panel h3 {
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+        
+        .vote-bar {
+            margin-bottom: 15px;
+        }
+        
+        .vote-label {
+            display: flex;
+            justify-content: between;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .vote-progress {
+            background: #e2e8f0;
+            border-radius: 20px;
+            height: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .vote-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .auth-warning {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .status {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .instructions {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .instructions h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .results-panel {
+                order: -1;
+            }
+        }
+        
+        #notation-canvas {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            width: 100%;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎼 Theory Poll - Instructor</h1>
+            <p>Live music theory polling for your class</p>
+        </div>
+        
+        <div id="auth-warning" class="auth-warning" style="display: none;">
+            <strong>Authentication Required</strong><br>
+            Please sign in to GleeWorld to use the Theory Poll instructor interface.
+        </div>
+        
+        <div id="app-content" style="display: none;">
+            <div class="card instructions">
+                <h3>📋 Quick Start Guide</h3>
+                <ol>
+                    <li><strong>Create Session:</strong> Enter a 4-digit join code and click "Start Session"</li>
+                    <li><strong>Share Code:</strong> Give the join code to your students</li>
+                    <li><strong>Create Questions:</strong> Select question type and click "New Card"</li>
+                    <li><strong>View Results:</strong> Watch live voting results on the right panel</li>
+                    <li><strong>Next Question:</strong> Create new cards as needed - previous questions auto-deactivate</li>
+                </ol>
+            </div>
+            
+            <div class="card">
+                <div class="controls">
+                    <div class="form-group">
+                        <label for="joinCode">Join Code (4 digits)</label>
+                        <input type="text" id="joinCode" placeholder="1234" maxlength="4" pattern="[0-9]{4}">
+                    </div>
+                    <div class="form-group">
+                        <label for="cardType">Question Type</label>
+                        <select id="cardType">
+                            <option value="clef_note">Identify the note (mixed clefs)</option>
+                            <option value="key_sig">Identify the key signature</option>
+                            <option value="interval">Identify the interval (stacked)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button id="newCardBtn">New Card</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="status" class="status" style="display: none;"></div>
+            
+            <div class="main-content">
+                <div class="card notation-panel">
+                    <h3>Musical Notation</h3>
+                    <div id="notation-output"></div>
+                </div>
+                
+                <div class="card results-panel">
+                    <h3>Live Results</h3>
+                    <div id="results-content">
+                        <p style="color: #718096; text-align: center; padding: 40px 0;">
+                            Create a new card to see voting results
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/vexflow/releases/vexflow-debug.js"></script>
+    <script>
+        // Environment configuration
+        const SUPABASE_URL = 'https://oopmlreysjzuxzylyheb.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg';
+        
+        const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Global state
+        let currentUser = null;
+        let currentSession = null;
+        let currentQuestion = null;
+        let responseChannel = null;
+        let responseCounts = { 0: 0, 1: 0, 2: 0, 3: 0 };
+        
+        // DOM elements
+        const authWarning = document.getElementById('auth-warning');
+        const appContent = document.getElementById('app-content');
+        const joinCodeInput = document.getElementById('joinCode');
+        const cardTypeSelect = document.getElementById('cardType');
+        const newCardBtn = document.getElementById('newCardBtn');
+        const statusDiv = document.getElementById('status');
+        const notationOutput = document.getElementById('notation-output');
+        const resultsContent = document.getElementById('results-content');
+        
+        // Initialize app
+        async function init() {
+            console.log('Initializing Theory Poll Instructor...');
+            
+            // Check authentication
+            const { data: { user } } = await supa.auth.getUser();
+            if (!user) {
+                authWarning.style.display = 'block';
+                return;
+            }
+            
+            currentUser = user;
+            appContent.style.display = 'block';
+            console.log('User authenticated:', user.id);
+            
+            // Setup event listeners
+            newCardBtn.addEventListener('click', handleNewCard);
+            joinCodeInput.addEventListener('input', validateJoinCode);
+            
+            showStatus('Ready to start. Enter a 4-digit join code.');
+        }
+        
+        function validateJoinCode() {
+            const code = joinCodeInput.value;
+            newCardBtn.disabled = !/^\d{4}$/.test(code);
+        }
+        
+        async function ensureSession(code) {
+            console.log('Ensuring session with code:', code);
+            
+            try {
+                // Try to find existing session
+                const { data: existingSessions } = await supa
+                    .from('theory_poll_sessions')
+                    .select('*')
+                    .eq('code', code);
+                
+                if (existingSessions && existingSessions.length > 0) {
+                    const session = existingSessions[0];
+                    if (session.owner_user_id !== currentUser.id) {
+                        throw new Error('Session code already exists with different owner');
+                    }
+                    currentSession = session;
+                    console.log('Using existing session:', session.id);
+                } else {
+                    // Create new session
+                    const { data: newSession, error } = await supa
+                        .from('theory_poll_sessions')
+                        .insert([{ code, owner_user_id: currentUser.id }])
+                        .select()
+                        .single();
+                    
+                    if (error) throw error;
+                    currentSession = newSession;
+                    console.log('Created new session:', newSession.id);
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Session error:', error);
+                showStatus(`Session error: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function handleNewCard() {
+            const code = joinCodeInput.value;
+            const cardType = cardTypeSelect.value;
+            
+            console.log('Creating new card:', { code, cardType });
+            
+            if (!await ensureSession(code)) return;
+            
+            try {
+                showStatus('Generating question...');
+                
+                // Generate question data
+                const questionData = generateQuestion(cardType);
+                console.log('Generated question:', questionData);
+                
+                // Deactivate previous questions
+                await supa
+                    .from('theory_poll_questions')
+                    .update({ is_active: false })
+                    .eq('session_id', currentSession.id);
+                
+                // Insert new question
+                const { data: newQuestion, error } = await supa
+                    .from('theory_poll_questions')
+                    .insert([{
+                        session_id: currentSession.id,
+                        type: cardType,
+                        payload: questionData.payload,
+                        choices: questionData.choices,
+                        answer_index: questionData.answer_index,
+                        is_active: true
+                    }])
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                
+                currentQuestion = newQuestion;
+                console.log('Created question:', newQuestion.id);
+                
+                // Render notation
+                renderNotation(questionData);
+                
+                // Reset and subscribe to responses
+                responseCounts = { 0: 0, 1: 0, 2: 0, 3: 0 };
+                subscribeToResponses();
+                updateResults();
+                
+                showStatus(`Live question active. Students can join with code: ${code}`);
+                
+            } catch (error) {
+                console.error('Card creation error:', error);
+                showStatus(`Error creating card: ${error.message}`, 'error');
+            }
+        }
+        
+        function generateQuestion(type) {
+            console.log('Generating question type:', type);
+            
+            if (type === 'clef_note') {
+                return generateClefNoteQuestion();
+            } else if (type === 'key_sig') {
+                return generateKeySignatureQuestion();
+            } else if (type === 'interval') {
+                return generateIntervalQuestion();
+            }
+        }
+        
+        function generateClefNoteQuestion() {
+            const clefs = ['treble', 'bass', 'alto', 'tenor'];
+            const clef = clefs[Math.floor(Math.random() * clefs.length)];
+            
+            // Generate note based on clef range
+            let noteOptions;
+            if (clef === 'treble') {
+                noteOptions = ['c/4', 'd/4', 'e/4', 'f/4', 'g/4', 'a/4', 'b/4', 'c/5', 'd/5', 'e/5'];
+            } else if (clef === 'bass') {
+                noteOptions = ['c/2', 'd/2', 'e/2', 'f/2', 'g/2', 'a/2', 'b/2', 'c/3', 'd/3', 'e/3'];
+            } else if (clef === 'alto') {
+                noteOptions = ['c/3', 'd/3', 'e/3', 'f/3', 'g/3', 'a/3', 'b/3', 'c/4', 'd/4', 'e/4'];
+            } else { // tenor
+                noteOptions = ['c/3', 'd/3', 'e/3', 'f/3', 'g/3', 'a/3', 'b/3', 'c/4', 'd/4'];
+            }
+            
+            const note = noteOptions[Math.floor(Math.random() * noteOptions.length)];
+            
+            // Add occasional accidentals
+            let accidental = '';
+            if (Math.random() < 0.3) {
+                accidental = Math.random() < 0.5 ? '#' : 'b';
+            }
+            
+            const fullNote = note + accidental;
+            const noteLetter = note.charAt(0).toUpperCase();
+            
+            // Generate wrong choices
+            const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+            const wrongChoices = letters.filter(l => l !== noteLetter);
+            const shuffled = wrongChoices.sort(() => Math.random() - 0.5).slice(0, 3);
+            
+            const choices = [...shuffled, noteLetter].sort(() => Math.random() - 0.5);
+            const correctIndex = choices.indexOf(noteLetter);
+            
+            return {
+                payload: { clef, note: fullNote },
+                choices,
+                answer_index: correctIndex
+            };
+        }
+        
+        function generateKeySignatureQuestion() {
+            const keys = [
+                { name: 'C Major', sharps: 0, flats: 0 },
+                { name: 'G Major', sharps: 1, flats: 0 },
+                { name: 'D Major', sharps: 2, flats: 0 },
+                { name: 'A Major', sharps: 3, flats: 0 },
+                { name: 'F Major', sharps: 0, flats: 1 },
+                { name: 'Bb Major', sharps: 0, flats: 2 },
+                { name: 'Eb Major', sharps: 0, flats: 3 },
+                { name: 'A minor', sharps: 0, flats: 0 },
+                { name: 'E minor', sharps: 1, flats: 0 },
+                { name: 'B minor', sharps: 2, flats: 0 },
+                { name: 'D minor', sharps: 0, flats: 1 }
+            ];
+            
+            const correctKey = keys[Math.floor(Math.random() * keys.length)];
+            const wrongKeys = keys.filter(k => k.name !== correctKey.name)
+                                .sort(() => Math.random() - 0.5)
+                                .slice(0, 3);
+            
+            const choices = [correctKey.name, ...wrongKeys.map(k => k.name)]
+                              .sort(() => Math.random() - 0.5);
+            const correctIndex = choices.indexOf(correctKey.name);
+            
+            const clefs = ['treble', 'bass'];
+            const clef = clefs[Math.floor(Math.random() * clefs.length)];
+            
+            return {
+                payload: { 
+                    clef, 
+                    sharps: correctKey.sharps, 
+                    flats: correctKey.flats,
+                    keyName: correctKey.name
+                },
+                choices,
+                answer_index: correctIndex
+            };
+        }
+        
+        function generateIntervalQuestion() {
+            const intervals = [
+                { name: 'm2', semitones: 1 },
+                { name: 'M2', semitones: 2 },
+                { name: 'm3', semitones: 3 },
+                { name: 'M3', semitones: 4 },
+                { name: 'P4', semitones: 5 },
+                { name: 'P5', semitones: 7 },
+                { name: 'm6', semitones: 8 },
+                { name: 'M6', semitones: 9 },
+                { name: 'm7', semitones: 10 },
+                { name: 'M7', semitones: 11 },
+                { name: 'P8', semitones: 12 }
+            ];
+            
+            const correctInterval = intervals[Math.floor(Math.random() * intervals.length)];
+            const wrongIntervals = intervals.filter(i => i.name !== correctInterval.name)
+                                           .sort(() => Math.random() - 0.5)
+                                           .slice(0, 3);
+            
+            const choices = [correctInterval.name, ...wrongIntervals.map(i => i.name)]
+                              .sort(() => Math.random() - 0.5);
+            const correctIndex = choices.indexOf(correctInterval.name);
+            
+            // Generate two notes for the interval
+            const baseNotes = ['c/4', 'd/4', 'e/4', 'f/4', 'g/4'];
+            const baseNote = baseNotes[Math.floor(Math.random() * baseNotes.length)];
+            
+            return {
+                payload: { 
+                    baseNote, 
+                    semitones: correctInterval.semitones,
+                    intervalName: correctInterval.name
+                },
+                choices,
+                answer_index: correctIndex
+            };
+        }
+        
+        function renderNotation(questionData) {
+            console.log('Rendering notation for:', questionData);
+            
+            // Clear previous notation
+            notationOutput.innerHTML = '';
+            
+            try {
+                const { Renderer, Stave, StaveNote, Accidental, Voice, Formatter } = Vex.Flow;
+                
+                // Create renderer
+                const renderer = new Renderer(notationOutput, Renderer.Backends.SVG);
+                renderer.resize(600, 200);
+                const context = renderer.getContext();
+                
+                // Create stave
+                const stave = new Stave(10, 40, 580);
+                
+                if (questionData.payload.clef === 'treble') {
+                    stave.addClef('treble');
+                } else if (questionData.payload.clef === 'bass') {
+                    stave.addClef('bass');
+                } else if (questionData.payload.clef === 'alto') {
+                    stave.addClef('alto');
+                } else if (questionData.payload.clef === 'tenor') {
+                    stave.addClef('tenor');
+                }
+                
+                // Add key signature if present
+                if (questionData.payload.sharps > 0) {
+                    stave.addKeySignature(`${questionData.payload.sharps}#`);
+                } else if (questionData.payload.flats > 0) {
+                    stave.addKeySignature(`${questionData.payload.flats}b`);
+                }
+                
+                stave.setContext(context).draw();
+                
+                // Add notes based on question type
+                if (questionData.payload.note) {
+                    // Single note question
+                    const note = new StaveNote({
+                        keys: [questionData.payload.note],
+                        duration: 'w'
+                    });
+                    
+                    // Add accidental if present
+                    if (questionData.payload.note.includes('#')) {
+                        note.addAccidental(0, new Accidental('#'));
+                    } else if (questionData.payload.note.includes('b')) {
+                        note.addAccidental(0, new Accidental('b'));
+                    }
+                    
+                    const voice = new Voice({ num_beats: 4, beat_value: 4 });
+                    voice.addTickables([note]);
+                    
+                    new Formatter().joinVoices([voice]).format([voice], 500);
+                    voice.draw(context, stave);
+                    
+                } else if (questionData.payload.baseNote && questionData.payload.semitones) {
+                    // Interval question - draw two stacked notes
+                    const baseNote = questionData.payload.baseNote;
+                    const semitones = questionData.payload.semitones;
+                    
+                    // Calculate second note (simplified)
+                    const noteMap = {
+                        'c': 0, 'd': 2, 'e': 4, 'f': 5, 'g': 7, 'a': 9, 'b': 11
+                    };
+                    
+                    const basePitch = noteMap[baseNote.charAt(0)];
+                    const octave = parseInt(baseNote.split('/')[1]);
+                    const targetPitch = (basePitch + semitones) % 12;
+                    const targetOctave = octave + Math.floor((basePitch + semitones) / 12);
+                    
+                    const reverseMap = Object.keys(noteMap).find(key => noteMap[key] === targetPitch);
+                    const topNote = `${reverseMap}/${targetOctave}`;
+                    
+                    const chord = new StaveNote({
+                        keys: [baseNote, topNote],
+                        duration: 'w'
+                    });
+                    
+                    const voice = new Voice({ num_beats: 4, beat_value: 4 });
+                    voice.addTickables([chord]);
+                    
+                    new Formatter().joinVoices([voice]).format([voice], 500);
+                    voice.draw(context, stave);
+                }
+                
+            } catch (error) {
+                console.error('Notation rendering error:', error);
+                notationOutput.innerHTML = '<p style="padding: 20px; text-align: center; color: #e53e3e;">Error rendering notation</p>';
+            }
+        }
+        
+        function subscribeToResponses() {
+            console.log('Subscribing to responses for question:', currentQuestion?.id);
+            
+            if (responseChannel) {
+                responseChannel.unsubscribe();
+            }
+            
+            if (!currentQuestion) return;
+            
+            responseChannel = supa
+                .channel('responses')
+                .on('postgres_changes', 
+                    { 
+                        event: 'INSERT', 
+                        schema: 'public', 
+                        table: 'theory_poll_responses',
+                        filter: `question_id=eq.${currentQuestion.id}`
+                    }, 
+                    (payload) => {
+                        console.log('New response:', payload);
+                        const choiceIndex = payload.new.choice_index;
+                        responseCounts[choiceIndex]++;
+                        updateResults();
+                    }
+                )
+                .subscribe();
+        }
+        
+        function updateResults() {
+            if (!currentQuestion) return;
+            
+            const total = Object.values(responseCounts).reduce((sum, count) => sum + count, 0);
+            console.log('Updating results:', responseCounts, 'total:', total);
+            
+            let html = '';
+            currentQuestion.choices.forEach((choice, index) => {
+                const count = responseCounts[index] || 0;
+                const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                const letter = String.fromCharCode(65 + index); // A, B, C, D
+                
+                html += `
+                    <div class="vote-bar">
+                        <div class="vote-label">
+                            <span>${letter}. ${choice}</span>
+                            <span>${count} votes</span>
+                        </div>
+                        <div class="vote-progress">
+                            <div class="vote-fill" style="width: ${percentage}%">
+                                ${percentage}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            if (total === 0) {
+                html = '<p style="color: #718096; text-align: center; padding: 40px 0;">Waiting for student responses...</p>';
+            }
+            
+            resultsContent.innerHTML = html;
+        }
+        
+        function showStatus(message, type = 'info') {
+            console.log('Status:', message, type);
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            statusDiv.style.borderLeftColor = type === 'error' ? '#e53e3e' : '#667eea';
+            statusDiv.style.background = type === 'error' ? '#fed7d7' : '#f7fafc';
+            statusDiv.style.color = type === 'error' ? '#c53030' : '#2d3748';
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
