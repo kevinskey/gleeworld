@@ -153,8 +153,8 @@ export const ProviderDashboard = () => {
         occupancyRate: avgOccupancy,
         bookedAppointments: bookedCount,
         cancelledAppointments: cancelledCount,
-        revenueChange: totalAppointments > 0 ? 12.5 : 0,
-        customerChange: totalAppointments > 0 ? -5.2 : 0,
+        revenueChange: 0,
+        customerChange: 0,
         occupancyChange: 0
       });
       setRecentAppointments(allRecentAppointments);
