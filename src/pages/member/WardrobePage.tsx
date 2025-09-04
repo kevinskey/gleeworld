@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { BackNavigation } from '@/components/shared/BackNavigation';
 import { FittingScheduleDialog } from '@/components/wardrobe/FittingScheduleDialog';
+import { HairNailSubmission } from '@/components/wardrobe/HairNailSubmission';
 const WardrobePage = () => {
   const {
     wardrobeItems,
@@ -191,7 +192,7 @@ const WardrobePage = () => {
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <Camera className="h-4 w-4 mr-2" />
-                  Photo Reference
+                  Hair & Nail Approval
                 </Button>
               </CardContent>
             </Card>
@@ -269,6 +270,9 @@ const WardrobePage = () => {
             </Card>
           </div>
         </div>
+
+        {/* Hair & Nail Submission */}
+        <HairNailSubmission />
 
         {/* Fitting Schedule Dialog */}
         <FittingScheduleDialog isOpen={isFittingDialogOpen} onClose={() => {
