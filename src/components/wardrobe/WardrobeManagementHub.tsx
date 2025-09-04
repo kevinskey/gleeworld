@@ -25,6 +25,7 @@ import { DressCodeMedia } from "./DressCodeMedia";
 import { MakeupTutorials } from "./MakeupTutorials";
 import { GarmentBagDistribution } from "./GarmentBagDistribution";
 import { WardrobeMemberManagement } from "./WardrobeMemberManagement";
+import { UpcomingAppointmentsCard } from "./UpcomingAppointmentsCard";
 
 export const WardrobeManagementHub = () => {
   const [activeTab, setActiveTab] = useState("inventory");
@@ -69,7 +70,7 @@ export const WardrobeManagementHub = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Items</CardTitle>
@@ -124,6 +125,11 @@ export const WardrobeManagementHub = () => {
             <p className="text-xs text-muted-foreground">Unread alerts</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Upcoming Appointments Card */}
+      <div className="mb-6">
+        <UpcomingAppointmentsCard />
       </div>
 
       {/* Main Content Tabs */}

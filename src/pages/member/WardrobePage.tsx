@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { BackNavigation } from '@/components/shared/BackNavigation';
 import { FittingScheduleDialog } from '@/components/wardrobe/FittingScheduleDialog';
-import { UpcomingAppointmentsCard } from '@/components/wardrobe/UpcomingAppointmentsCard';
 const WardrobePage = () => {
   const {
     wardrobeItems,
@@ -229,8 +228,30 @@ const WardrobePage = () => {
               </CardContent>
             </Card>
 
-            {/* Upcoming Appointments */}
-            <UpcomingAppointmentsCard />
+            {/* Upcoming Fittings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Upcoming Fittings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
+                    <div>
+                      <span className="font-medium">Spring Costume Fitting</span>
+                      <p className="text-muted-foreground">March 8, 3:00 PM</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div>
+                      <span className="font-medium">Uniform Check</span>
+                      <p className="text-muted-foreground">March 12, 4:00 PM</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Care Instructions */}
             <Card>
