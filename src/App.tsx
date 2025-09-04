@@ -166,6 +166,7 @@ import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
 import { Mus240AdminPage } from "./pages/mus240/admin/Mus240AdminPage";
 import { InstructorConsole } from "./pages/mus240/InstructorConsole";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
+import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
 // Preview triggers disabled to prevent accidental email sends during development
@@ -755,14 +756,22 @@ const App = () => {
                          </ProtectedRoute>
                        } 
                       />
-                      <Route 
-                        path="/dues-management" 
-                        element={
-                          <ProtectedRoute>
-                            <DuesManagement />
-                          </ProtectedRoute>
-                        } 
-                      />
+                       <Route 
+                         path="/dues-management" 
+                         element={
+                           <ProtectedRoute>
+                             <DuesManagement />
+                           </ProtectedRoute>
+                         } 
+                       />
+                       <Route 
+                         path="/dues-management/success" 
+                         element={
+                           <ProtectedRoute>
+                             <PaymentSuccess />
+                           </ProtectedRoute>
+                         } 
+                       />
                         <Route 
                           path="/performance" 
                           element={
