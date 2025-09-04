@@ -13,7 +13,7 @@ export interface Contract {
   metadata?: Record<string, any>;
   due_date?: string;
   reminder_sent?: boolean;
-  // Additional fields from actual DB schema
+  // Additional fields from actual DB schema (all optional for compatibility)
   archived?: boolean;
   is_template?: boolean;
   stipend_amount?: number;
@@ -49,14 +49,20 @@ export interface ContractVariable {
 export interface ContractSignature {
   id: string;
   contract_id: string;
-  signer_email: string;
-  signer_name: string;
+  signer_email?: string;
+  signer_name?: string;
   status: 'pending' | 'signed' | 'declined';
   signed_at?: string;
   signature_data?: any;
   embedded_signatures?: any[];
   created_at: string;
   updated_at: string;
+  // Additional fields from actual DB schema
+  admin_signature_data?: string;
+  admin_signed_at?: string;
+  artist_signature_data?: string;
+  artist_signed_at?: string;
+  date_signed?: string;
 }
 
 export interface ContractRecipient {
@@ -69,6 +75,17 @@ export interface ContractRecipient {
   sent_at?: string;
   viewed_at?: string;
   completed_at?: string;
+  // Additional fields from actual DB schema
+  recipient_email?: string;
+  recipient_name?: string;
+  clicked_at?: string;
+  custom_message?: string;
+  delivery_status?: string;
+  email_status?: string;
+  is_resend?: boolean;
+  opened_at?: string;
+  resend_reason?: string;
+  sent_by?: string;
 }
 
 export interface SignatureField {

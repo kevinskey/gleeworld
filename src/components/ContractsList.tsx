@@ -189,7 +189,7 @@ export const ContractsList = ({
                     filterByType={filterByType}
                     filterByDate={filterByDate}
                     onSortChange={handleSortChange}
-                    onFilterChange={handleFilterChange}
+                    onFiltersChange={handleFilterChange}
                     availableTemplates={availableTemplates}
                     availableTypes={availableTypes}
                   />
