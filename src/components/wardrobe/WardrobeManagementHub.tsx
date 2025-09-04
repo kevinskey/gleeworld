@@ -28,6 +28,7 @@ import { GarmentBagDistribution } from "./GarmentBagDistribution";
 import { WardrobeMemberManagement } from "./WardrobeMemberManagement";
 import { UpcomingAppointmentsCard } from "./UpcomingAppointmentsCard";
 import { HairNailApprovalManager } from "./HairNailApprovalManager";
+import { HairNailSubmission } from "./HairNailSubmission";
 
 export const WardrobeManagementHub = () => {
   const [activeTab, setActiveTab] = useState("inventory");
@@ -201,7 +202,16 @@ export const WardrobeManagementHub = () => {
         </TabsContent>
 
         <TabsContent value="hair-nail" className="space-y-6">
-          <HairNailApprovalManager />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Test Submission (Admin View)</h3>
+              <HairNailSubmission />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Manage Approvals</h3>
+              <HairNailApprovalManager />
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="members" className="space-y-6">
