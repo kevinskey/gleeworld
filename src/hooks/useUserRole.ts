@@ -102,6 +102,11 @@ export const useUserRole = () => {
     return profile.is_exec_board || profile.is_admin || profile.is_super_admin;
   };
 
+  const isWardrobeManager = () => {
+    if (!profile) return false;
+    return profile.is_admin || profile.is_super_admin || profile.exec_board_role === 'wardrobe_manager';
+  };
+
   return {
     profile,
     loading,
@@ -110,6 +115,7 @@ export const useUserRole = () => {
     isAdmin,
     isSuperAdmin,
     isExecutiveBoard,
+    isWardrobeManager,
     isVisitor,
     isFan,
     isAuditioner,

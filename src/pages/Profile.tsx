@@ -143,6 +143,7 @@ const Profile = () => {
   const { user } = useAuth();
   const { profile: userRole } = useUserRole();
   const isAdmin = Boolean(userRole?.is_admin || userRole?.is_super_admin);
+  const isWardrobeManager = Boolean(userRole?.is_admin || userRole?.is_super_admin || userRole?.exec_board_role === 'wardrobe_manager');
   const { toast } = useToast();
   const { profile, loading: profileLoading, updateAvatarUrl } = useProfile();
   const [loading, setLoading] = useState(false);
@@ -1211,48 +1212,68 @@ const Profile = () => {
               {/* Measurements Section */}
               <div className="space-y-4">
                 <h4 className="font-medium text-foreground">Measurements</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label htmlFor="bust_measurement">Bust</Label>
-                    <Input
-                      id="bust_measurement"
-                      {...register("bust_measurement")}
-                      disabled={!isEditing}
-                      className="mt-1"
-                      placeholder="36"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="waist_measurement">Waist</Label>
-                    <Input
-                      id="waist_measurement"
-                      {...register("waist_measurement")}
-                      disabled={!isEditing}
-                      className="mt-1"
-                      placeholder="28"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="hips_measurement">Hips</Label>
-                    <Input
-                      id="hips_measurement"
-                      {...register("hips_measurement")}
-                      disabled={!isEditing}
-                      className="mt-1"
-                      placeholder="38"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="height_measurement">Height</Label>
-                    <Input
-                      id="height_measurement"
-                      {...register("height_measurement")}
-                      disabled={!isEditing}
-                      className="mt-1"
-                      placeholder="5'6&quot;"
-                    />
-                  </div>
-                </div>
+                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                   <div>
+                     <Label htmlFor="bust_measurement">Bust {!isWardrobeManager && <span className="text-xs text-muted-foreground">(Wardrobe Manager Only)</span>}</Label>
+                     <div className="relative">
+                       <Input
+                         id="bust_measurement"
+                         {...register("bust_measurement")}
+                         disabled={!isEditing || !isWardrobeManager}
+                         className="mt-1"
+                         placeholder="36"
+                       />
+                       {(!isEditing || !isWardrobeManager) && (
+                         <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                       )}
+                     </div>
+                   </div>
+                   <div>
+                     <Label htmlFor="waist_measurement">Waist {!isWardrobeManager && <span className="text-xs text-muted-foreground">(Wardrobe Manager Only)</span>}</Label>
+                     <div className="relative">
+                       <Input
+                         id="waist_measurement"
+                         {...register("waist_measurement")}
+                         disabled={!isEditing || !isWardrobeManager}
+                         className="mt-1"
+                         placeholder="28"
+                       />
+                       {(!isEditing || !isWardrobeManager) && (
+                         <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                       )}
+                     </div>
+                   </div>
+                   <div>
+                     <Label htmlFor="hips_measurement">Hips {!isWardrobeManager && <span className="text-xs text-muted-foreground">(Wardrobe Manager Only)</span>}</Label>
+                     <div className="relative">
+                       <Input
+                         id="hips_measurement"
+                         {...register("hips_measurement")}
+                         disabled={!isEditing || !isWardrobeManager}
+                         className="mt-1"
+                         placeholder="38"
+                       />
+                       {(!isEditing || !isWardrobeManager) && (
+                         <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                       )}
+                     </div>
+                   </div>
+                   <div>
+                     <Label htmlFor="height_measurement">Height {!isWardrobeManager && <span className="text-xs text-muted-foreground">(Wardrobe Manager Only)</span>}</Label>
+                     <div className="relative">
+                       <Input
+                         id="height_measurement"
+                         {...register("height_measurement")}
+                         disabled={!isEditing || !isWardrobeManager}
+                         className="mt-1"
+                         placeholder="5'6&quot;"
+                       />
+                       {(!isEditing || !isWardrobeManager) && (
+                         <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                       )}
+                     </div>
+                   </div>
+                 </div>
               </div>
 
               {/* Sizes Section */}
