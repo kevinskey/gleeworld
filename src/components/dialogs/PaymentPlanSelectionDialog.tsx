@@ -8,20 +8,11 @@ import { useState } from "react";
 interface PaymentPlanSelectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectPlan: (planType: 'full_payment' | 'two_installments' | 'three_installments') => void;
+  onSelectPlan: (planType: 'two_installments' | 'five_installments' | 'ten_installments') => void;
   duesAmount: number;
 }
 
 const paymentOptions = [
-  {
-    id: 'full_payment',
-    label: 'Pay in Full',
-    description: 'Pay the complete amount by September 15, 2025',
-    icon: DollarSign,
-    installments: 1,
-    schedule: 'Single payment due September 15, 2025',
-    benefits: ['No payment plan fees', 'One simple payment'],
-  },
   {
     id: 'two_installments',
     label: '2-Payment Plan',
@@ -32,13 +23,22 @@ const paymentOptions = [
     benefits: ['Split into 2 payments', 'More manageable amounts'],
   },
   {
-    id: 'three_installments',
-    label: '3-Payment Plan',
-    description: 'Split payment into 3 equal installments',
+    id: 'five_installments',
+    label: '5-Payment Plan',
+    description: 'Split payment into 5 equal installments',
     icon: Clock,
-    installments: 3,
-    schedule: '1st: July 15 | 2nd: August 15 | 3rd: September 15, 2025',
-    benefits: ['Smallest monthly payments', 'Extended payment period'],
+    installments: 5,
+    schedule: 'Monthly payments: May 15 - September 15, 2025',
+    benefits: ['Smaller monthly payments', 'Extended payment period'],
+  },
+  {
+    id: 'ten_installments',
+    label: '10-Payment Plan',
+    description: 'Split payment into 10 equal installments',
+    icon: DollarSign,
+    installments: 10,
+    schedule: 'Bi-weekly payments throughout the semester',
+    benefits: ['Smallest payment amounts', 'Maximum flexibility'],
   },
 ];
 
@@ -60,12 +60,12 @@ export const PaymentPlanSelectionDialog = ({
 
   const calculateInstallmentAmount = (planType: string) => {
     switch (planType) {
-      case 'full_payment':
-        return duesAmount;
       case 'two_installments':
         return duesAmount / 2;
-      case 'three_installments':
-        return duesAmount / 3;
+      case 'five_installments':
+        return duesAmount / 5;
+      case 'ten_installments':
+        return duesAmount / 10;
       default:
         return duesAmount;
     }

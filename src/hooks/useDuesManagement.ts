@@ -214,7 +214,7 @@ export const useDuesManagement = () => {
 
   const createPaymentPlan = async (
     duesRecordId: string,
-    planType: 'full_payment' | 'two_installments' | 'three_installments'
+    planType: 'two_installments' | 'five_installments' | 'ten_installments'
   ) => {
     try {
       // Get the dues record to get the amount
@@ -226,8 +226,21 @@ export const useDuesManagement = () => {
 
       if (duesError) throw duesError;
 
-      const installmentCount = planType === 'full_payment' ? 1 : planType === 'two_installments' ? 2 : 3;
+      const installmentCount = planType === 'two_installments' ? 2 : planType === 'five_installments' ? 5 : 10;
       const installmentAmount = duesRecord.amount / installmentCount;
+
+      // Determine frequency and dates based on plan type
+      let frequency, startDate;
+      if (planType === 'two_installments') {
+        frequency = 'monthly';
+        startDate = '2025-08-15';
+      } else if (planType === 'five_installments') {
+        frequency = 'monthly';
+        startDate = '2025-05-15';
+      } else { // ten_installments
+        frequency = 'bi_weekly';
+        startDate = '2025-03-15';
+      }
 
       // Create the payment plan
       const { data: paymentPlan, error: planError } = await supabase
@@ -238,8 +251,8 @@ export const useDuesManagement = () => {
           total_amount: duesRecord.amount,
           installments: installmentCount,
           installment_amount: installmentAmount,
-          frequency: planType === 'full_payment' ? 'one_time' : 'monthly',
-          start_date: planType === 'full_payment' ? '2025-09-15' : '2025-07-15',
+          frequency: frequency,
+          start_date: startDate,
           end_date: '2025-09-15',
           status: 'active',
           auto_debit: false

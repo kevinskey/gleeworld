@@ -36,7 +36,7 @@ export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModulePro
     setShowPaymentPlanDialog(true);
   };
 
-  const handlePaymentPlanSelect = async (planType: 'full_payment' | 'two_installments' | 'three_installments') => {
+  const handlePaymentPlanSelect = async (planType: 'two_installments' | 'five_installments' | 'ten_installments') => {
     if (selectedDuesRecord) {
       await createPaymentPlan(selectedDuesRecord.id, planType);
       setSelectedDuesRecord(null);
