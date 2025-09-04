@@ -1,10 +1,12 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, User } from 'lucide-react';
+import { Calendar, Clock, User, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 
 interface WardrobeAppointment {
   id: string;
@@ -17,6 +19,7 @@ interface WardrobeAppointment {
 }
 
 export const UpcomingAppointmentsCard = () => {
+  const navigate = useNavigate();
   const { data: appointments, isLoading } = useQuery({
     queryKey: ['wardrobe-appointments'],
     queryFn: async () => {
@@ -100,6 +103,17 @@ export const UpcomingAppointmentsCard = () => {
             ))}
           </div>
         )}
+        <div className="mt-4 pt-3 border-t border-border/50">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/appointments')}
+            className="w-full"
+          >
+            View All Appointments
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
