@@ -1362,6 +1362,41 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_members: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          contract_id: string
+          id: string
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          contract_id: string
+          id?: string
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          contract_id?: string
+          id?: string
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_members_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_recipients: {
         Row: {
           contract_id: string
@@ -1665,6 +1700,7 @@ export type Database = {
           event_id: string | null
           file_url: string | null
           id: string
+          notes: string | null
           priority: string | null
           status: string
           tags: string[] | null
@@ -1684,6 +1720,7 @@ export type Database = {
           event_id?: string | null
           file_url?: string | null
           id?: string
+          notes?: string | null
           priority?: string | null
           status?: string
           tags?: string[] | null
@@ -1703,6 +1740,7 @@ export type Database = {
           event_id?: string | null
           file_url?: string | null
           id?: string
+          notes?: string | null
           priority?: string | null
           status?: string
           tags?: string[] | null

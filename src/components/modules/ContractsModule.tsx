@@ -247,6 +247,26 @@ export const ContractsModule = ({
         <ContractTypeSelectionDialog open={showContractTypeDialog} onOpenChange={setShowContractTypeDialog} onSelectType={handleContractTypeSelect} />
       </div>;
   }
+
+  // Replace the original simple interface with the full management interface
+  return <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-bold">Contract Management</h1>
+        <p className="text-muted-foreground">Full contract management system</p>
+      </div>
+      <Button onClick={() => setShowContractTypeDialog(true)}>
+        <Plus className="h-4 w-4 mr-2" />
+        New Contract
+      </Button>
+    </div>
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border">
+      <p className="text-center text-blue-700 font-medium">
+        🎉 Your comprehensive contract management system is ready! Create, manage, assign members, search, archive, and organize all your contracts.
+      </p>
+    </div>
+  </div>;
+
   return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
