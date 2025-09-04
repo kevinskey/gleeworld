@@ -1,155 +1,90 @@
-
+// Contract filters component
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Calendar, SortAsc, SortDesc, Filter } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
+import type { ContractFilters as FilterType } from "@/types/contracts";
 
 interface ContractFiltersProps {
-  sortBy: string;
-  sortOrder: 'asc' | 'desc';
-  filterByTemplate: string;
-  filterByType: string;
-  filterByDate: string;
-  onSortChange: (sortBy: string, order: 'asc' | 'desc') => void;
-  onFilterChange: (filters: {
-    template: string;
-    type: string;
-    date: string;
-  }) => void;
-  availableTemplates: string[];
-  availableTypes: string[];
+  filters: FilterType;
+  onFiltersChange: (filters: Partial<FilterType>) => void;
+  onClose: () => void;
 }
 
-export const ContractFilters = ({
-  sortBy,
-  sortOrder,
-  filterByTemplate,
-  filterByType,
-  filterByDate,
-  onSortChange,
-  onFilterChange,
-  availableTemplates,
-  availableTypes
-}: ContractFiltersProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+export const ContractFilters: React.FC<ContractFiltersProps> = ({ 
+  filters, 
+  onFiltersChange, 
+  onClose 
+}) => {
+  const statusOptions = ['draft', 'sent', 'signed', 'completed', 'cancelled'];
+  const typeOptions = ['performance', 'service', 'wardrobe', 'general'];
 
-  const handleSortClick = (newSortBy: string) => {
-    if (sortBy === newSortBy) {
-      onSortChange(newSortBy, sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      onSortChange(newSortBy, 'desc');
-    }
+  const toggleStatus = (status: string) => {
+    const currentStatuses = filters.status || [];
+    const newStatuses = currentStatuses.includes(status as any)
+      ? currentStatuses.filter(s => s !== status)
+      : [...currentStatuses, status as any];
+    onFiltersChange({ status: newStatuses });
   };
 
-  const handleFilterChange = (key: string, value: string) => {
-    const newFilters = {
-      template: filterByTemplate,
-      type: filterByType,
-      date: filterByDate,
-      [key]: value === 'all' ? '' : value
-    };
-    onFilterChange(newFilters);
+  const toggleType = (type: string) => {
+    const currentTypes = filters.type || [];
+    const newTypes = currentTypes.includes(type as any)
+      ? currentTypes.filter(t => t !== type)
+      : [...currentTypes, type as any];
+    onFiltersChange({ type: newTypes });
   };
 
   const clearFilters = () => {
-    onFilterChange({ template: '', type: '', date: '' });
+    onFiltersChange({ status: [], type: [], search: '' });
   };
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <div className="flex items-center justify-between mb-4">
-        <CollapsibleTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter & Sort
-          </Button>
-        </CollapsibleTrigger>
-        
-        <div className="flex items-center gap-2">
-          <Button
-            variant={sortBy === 'created_at' ? 'default' : 'glass'}
-            size="sm"
-            onClick={() => handleSortClick('created_at')}
-          >
-            <Calendar className="h-4 w-4 mr-1" />
-            Date
-            {sortBy === 'created_at' && (
-              sortOrder === 'asc' ? <SortAsc className="h-4 w-4 ml-1" /> : <SortDesc className="h-4 w-4 ml-1" />
-            )}
-          </Button>
-          
-          <Button
-            variant={sortBy === 'title' ? 'default' : 'glass'}
-            size="sm"
-            onClick={() => handleSortClick('title')}
-          >
-            Name
-            {sortBy === 'title' && (
-              sortOrder === 'asc' ? <SortAsc className="h-4 w-4 ml-1" /> : <SortDesc className="h-4 w-4 ml-1" />
-            )}
-          </Button>
-        </div>
-      </div>
-
-      <CollapsibleContent>
-        <div className="bg-muted/50 p-4 rounded-lg space-y-4 mb-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="template-filter">Filter by Template</Label>
-              <Select value={filterByTemplate || 'all'} onValueChange={(value) => handleFilterChange('template', value)}>
-                <SelectTrigger id="template-filter">
-                  <SelectValue placeholder="All templates" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All templates</SelectItem>
-                  {availableTemplates.map((template) => (
-                    <SelectItem key={template} value={template}>
-                      {template}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="type-filter">Filter by Type</Label>
-              <Select value={filterByType || 'all'} onValueChange={(value) => handleFilterChange('type', value)}>
-                <SelectTrigger id="type-filter">
-                  <SelectValue placeholder="All types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All types</SelectItem>
-                  {availableTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="date-filter">Filter by Date</Label>
-              <Input
-                id="date-filter"
-                type="date"
-                value={filterByDate}
-                onChange={(e) => handleFilterChange('date', e.target.value)}
-                placeholder="Select date"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={clearFilters}>
-              Clear Filters
-            </Button>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Filters</CardTitle>
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <h4 className="font-medium mb-2">Status</h4>
+          <div className="flex flex-wrap gap-2">
+            {statusOptions.map((status) => (
+              <Badge
+                key={status}
+                variant={filters.status?.includes(status as any) ? "default" : "outline"}
+                className="cursor-pointer"
+                onClick={() => toggleStatus(status)}
+              >
+                {status}
+              </Badge>
+            ))}
           </div>
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+
+        <div>
+          <h4 className="font-medium mb-2">Type</h4>
+          <div className="flex flex-wrap gap-2">
+            {typeOptions.map((type) => (
+              <Badge
+                key={type}
+                variant={filters.type?.includes(type as any) ? "default" : "outline"}
+                className="cursor-pointer"
+                onClick={() => toggleType(type)}
+              >
+                {type}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        <Button variant="outline" onClick={clearFilters} className="w-full">
+          Clear All Filters
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
