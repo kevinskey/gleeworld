@@ -123,7 +123,7 @@ export const CreatePaymentPlanDialog = ({ open, onOpenChange, onSuccess, duesRec
         .from('gw_dues_payment_plans')
         .insert([{
           dues_record_id: formData.dues_record_id,
-          user_id: formData.user_id,
+          user_id: user.id, // Use the authenticated user's ID for RLS compliance
           total_amount: parseFloat(formData.total_amount),
           installments: parseInt(formData.installments),
           installment_amount: installmentAmount,
