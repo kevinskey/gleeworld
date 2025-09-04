@@ -190,7 +190,9 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
       console.log(`🔍 Checking module ${module.name}:`, {
         isAdmin: userPermissions.isAdmin,
         hasModulePermission: userPermissions.modulePermissions.includes(module.name),
+        hasModulePermissionById: userPermissions.modulePermissions.includes(module.id),
         hasUsernamePermission: userPermissions.usernamePermissions.includes(module.name),
+        hasUsernamePermissionById: userPermissions.usernamePermissions.includes(module.id),
         requiredRoles: module.requiredRoles,
         isExecBoard: userPermissions.isExecBoard
       });
@@ -201,11 +203,13 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
         return true;
       }
 
-      // Check if user has specific module permission
-      if (userPermissions.modulePermissions.includes(module.name)) return true;
+      // Check if user has specific module permission (both by name and id)
+      if (userPermissions.modulePermissions.includes(module.name) || 
+          userPermissions.modulePermissions.includes(module.id)) return true;
 
-      // Check username-based permissions
-      if (userPermissions.usernamePermissions.includes(module.name)) return true;
+      // Check username-based permissions (both by name and id)
+      if (userPermissions.usernamePermissions.includes(module.name) || 
+          userPermissions.usernamePermissions.includes(module.id)) return true;
 
       // Check role-based access
       if (module.requiredRoles?.includes('executive') && userPermissions.isExecBoard) return true;
