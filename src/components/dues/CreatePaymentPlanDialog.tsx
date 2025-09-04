@@ -25,7 +25,7 @@ export const CreatePaymentPlanDialog = ({ open, onOpenChange, onSuccess, duesRec
     dues_record_id: '',
     user_id: '',
     total_amount: '',
-    installments: '3',
+    installments: '2',
     frequency: 'monthly',
     start_date: format(new Date(), 'yyyy-MM-dd'),
     auto_debit: false,
@@ -142,7 +142,7 @@ export const CreatePaymentPlanDialog = ({ open, onOpenChange, onSuccess, duesRec
         dues_record_id: '',
         user_id: '',
         total_amount: '',
-        installments: '3',
+        installments: '2',
         frequency: 'monthly',
         start_date: format(new Date(), 'yyyy-MM-dd'),
         auto_debit: false,
@@ -216,10 +216,8 @@ export const CreatePaymentPlanDialog = ({ open, onOpenChange, onSuccess, duesRec
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="2">2 installments</SelectItem>
-                <SelectItem value="3">3 installments</SelectItem>
-                <SelectItem value="4">4 installments</SelectItem>
-                <SelectItem value="6">6 installments</SelectItem>
-                <SelectItem value="12">12 installments</SelectItem>
+                <SelectItem value="5">5 installments</SelectItem>
+                <SelectItem value="10">10 installments</SelectItem>
               </SelectContent>
             </Select>
           </div>
