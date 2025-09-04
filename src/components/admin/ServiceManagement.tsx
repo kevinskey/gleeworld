@@ -86,7 +86,7 @@ const categories = [{
   label: 'Education'
 }];
 export default function ServiceManagement() {
-  const [activeTab, setActiveTab] = useState('services');
+  const [activeTab, setActiveTab] = useState('appointments');
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<ServiceFormData>(initialFormData);
@@ -170,6 +170,10 @@ export default function ServiceManagement() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="appointments" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Appointments
+          </TabsTrigger>
           <TabsTrigger value="services" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Services
@@ -177,10 +181,6 @@ export default function ServiceManagement() {
           <TabsTrigger value="calendar" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Calendar
-          </TabsTrigger>
-          <TabsTrigger value="appointments" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Appointments
           </TabsTrigger>
         </TabsList>
 
