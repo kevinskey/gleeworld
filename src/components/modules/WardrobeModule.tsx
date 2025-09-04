@@ -11,9 +11,12 @@ export const WardrobeModule = ({ user, isFullPage = false }: ModuleProps) => {
   const { user: authUser } = useAuth();
   const { userProfile } = useUserProfile(authUser);
   
-  // Force member view for testing - members should only see HairNailSubmission
-  const isInMemberView = true; // Force member view
-  const isWardrobeStaff = false; // Force non-staff view
+  // Check URL for member view - only show member interface on /member/ routes
+  const isInMemberView = window.location.pathname.includes('/member/');
+  
+  // Check if user is wardrobe staff (admin, super admin, or executive board)
+  // But if we're in member view, always show member interface
+  const isWardrobeStaff = !isInMemberView && (userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.role === 'executive');
   
   console.log('WardrobeModule Debug:', {
     userProfile: userProfile,
