@@ -1653,29 +1653,59 @@ export type Database = {
       }
       contracts: {
         Row: {
+          amount: number | null
+          archived: boolean | null
+          assigned_to: string[] | null
           content: string
+          contract_type: string | null
           created_at: string
           created_by: string
+          description: string | null
+          due_date: string | null
+          event_id: string | null
+          file_url: string | null
           id: string
+          priority: string | null
           status: string
+          tags: string[] | null
           title: string
           updated_at: string
         }
         Insert: {
+          amount?: number | null
+          archived?: boolean | null
+          assigned_to?: string[] | null
           content: string
+          contract_type?: string | null
           created_at?: string
           created_by: string
+          description?: string | null
+          due_date?: string | null
+          event_id?: string | null
+          file_url?: string | null
           id?: string
+          priority?: string | null
           status?: string
+          tags?: string[] | null
           title: string
           updated_at?: string
         }
         Update: {
+          amount?: number | null
+          archived?: boolean | null
+          assigned_to?: string[] | null
           content?: string
+          contract_type?: string | null
           created_at?: string
           created_by?: string
+          description?: string | null
+          due_date?: string | null
+          event_id?: string | null
+          file_url?: string | null
           id?: string
+          priority?: string | null
           status?: string
+          tags?: string[] | null
           title?: string
           updated_at?: string
         }
