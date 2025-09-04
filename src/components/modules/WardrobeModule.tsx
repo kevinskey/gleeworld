@@ -13,6 +13,14 @@ export const WardrobeModule = ({ user, isFullPage = false }: ModuleProps) => {
   
   // Check if user is wardrobe staff (admin, super admin, or executive board)
   const isWardrobeStaff = userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.role === 'executive';
+  
+  console.log('WardrobeModule Debug:', {
+    userProfile: userProfile,
+    isWardrobeStaff,
+    role: userProfile?.role,
+    isAdmin: userProfile?.is_admin,
+    isSuperAdmin: userProfile?.is_super_admin
+  });
 
   return (
     <ModuleWrapper
@@ -27,6 +35,10 @@ export const WardrobeModule = ({ user, isFullPage = false }: ModuleProps) => {
         <WardrobeManagementHub />
       ) : (
         <div className="space-y-6">
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-700 mb-2">Debug: Showing member view (not wardrobe staff)</p>
+            <p className="text-xs text-blue-600">Role: {userProfile?.role || 'No role'}</p>
+          </div>
           <HairNailSubmission />
         </div>
       )}
