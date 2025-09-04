@@ -1319,6 +1319,45 @@ const Profile = () => {
                 </div>
               </div>
 
+              {/* Physical Appearance */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-foreground">Physical Appearance</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="hair_color">Hair Color</Label>
+                    <Input
+                      id="hair_color"
+                      {...register("hair_color")}
+                      disabled={!isEditing}
+                      className="mt-1"
+                      placeholder="Brown, Black, etc."
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2 pt-6">
+                    <Checkbox
+                      id="has_tattoos"
+                      checked={watch("has_tattoos")}
+                      onCheckedChange={(checked) => setValue("has_tattoos", Boolean(checked))}
+                      disabled={!isEditing}
+                    />
+                    <Label htmlFor="has_tattoos" className="text-sm font-normal cursor-pointer">
+                      Has Tattoos
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 pt-6">
+                    <Checkbox
+                      id="visible_piercings"
+                      checked={watch("visible_piercings")}
+                      onCheckedChange={(checked) => setValue("visible_piercings", Boolean(checked))}
+                      disabled={!isEditing}
+                    />
+                    <Label htmlFor="visible_piercings" className="text-sm font-normal cursor-pointer">
+                      Has Visible Piercings
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
               {/* Classification */}
               <div>
                 <Label htmlFor="classification">Classification</Label>
