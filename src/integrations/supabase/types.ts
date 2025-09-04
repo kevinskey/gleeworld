@@ -16928,7 +16928,7 @@ export type Database = {
         }[]
       }
       get_user_admin_status: {
-        Args: { user_id_param: string }
+        Args: Record<PropertyKey, never> | { user_id_param: string }
         Returns: Json
       }
       get_user_executive_position: {
