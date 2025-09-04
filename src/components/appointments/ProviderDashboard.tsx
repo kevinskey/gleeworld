@@ -155,8 +155,8 @@ export const ProviderDashboard = () => {
         occupancyRate: avgOccupancy,
         bookedAppointments: bookedCount,
         cancelledAppointments: cancelledCount,
-        revenueChange: 12.5,
-        customerChange: -5.2,
+        revenueChange: totalAppointments > 0 ? 12.5 : 0,
+        customerChange: totalAppointments > 0 ? -5.2 : 0,
         occupancyChange: 0
       });
 
@@ -259,8 +259,14 @@ export const ProviderDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.bookedAppointments}</div>
             <div className="flex items-center text-sm">
-              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-              <span className="text-green-500">84.7% Increase</span>
+              {stats.bookedAppointments > 0 ? (
+                <>
+                  <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                  <span className="text-green-500">Active</span>
+                </>
+              ) : (
+                <span className="text-gray-500">No appointments yet</span>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -275,8 +281,14 @@ export const ProviderDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.bookedAppointments} | {stats.cancelledAppointments}</div>
             <div className="flex items-center text-sm">
-              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-              <span className="text-green-500">200% Increase</span>
+              {(stats.bookedAppointments + stats.cancelledAppointments) > 0 ? (
+                <>
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+                  <span className="text-green-500">Current totals</span>
+                </>
+              ) : (
+                <span className="text-gray-500">No data available</span>
+              )}
             </div>
           </CardContent>
         </Card>
