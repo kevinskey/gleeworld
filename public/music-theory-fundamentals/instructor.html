@@ -230,8 +230,8 @@
         </div>
         
         <div id="auth-warning" class="auth-warning" style="display: none;">
-            <strong>Authentication Required</strong><br>
-            Please sign in to GleeWorld to use the Theory Poll instructor interface.
+            <strong>Superadmin Access Required</strong><br>
+            Theory Poll instructor interface requires superadmin privileges. Please contact an administrator.
         </div>
         
         <div id="app-content" style="display: none;">
@@ -325,9 +325,22 @@
                     return;
                 }
                 
+                // Check superadmin status
+                const { data: profile } = await supa
+                    .from('gw_profiles')
+                    .select('is_super_admin, is_admin')
+                    .eq('user_id', user.id)
+                    .single();
+                
+                if (!profile?.is_super_admin && !profile?.is_admin) {
+                    console.log('User lacks superadmin privileges');
+                    authWarning.style.display = 'block';
+                    return;
+                }
+                
                 currentUser = user;
                 appContent.style.display = 'block';
-                console.log('User authenticated:', user.id);
+                console.log('Superadmin authenticated:', user.id);
                 
                 // Setup event listeners
                 newCardBtn.addEventListener('click', handleNewCard);
