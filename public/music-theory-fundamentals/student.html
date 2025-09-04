@@ -306,27 +306,34 @@
         async function init() {
             console.log('Initializing Theory Poll Student...');
             
-            // Check authentication
-            const { data: { user } } = await supa.auth.getUser();
-            if (!user) {
-                authWarning.style.display = 'block';
-                return;
-            }
-            
-            currentUser = user;
-            appContent.style.display = 'block';
-            console.log('User authenticated:', user.id);
-            
-            // Setup event listeners
-            joinBtn.addEventListener('click', handleJoin);
-            joinCodeInput.addEventListener('input', validateJoinCode);
-            joinCodeInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !joinBtn.disabled) {
-                    handleJoin();
+            try {
+                // Check authentication
+                const { data: { user } } = await supa.auth.getUser();
+                if (!user) {
+                    console.log('No authenticated user found');
+                    authWarning.style.display = 'block';
+                    return;
                 }
-            });
-            
-            showStatus('Enter a 4-digit join code to participate.');
+                
+                currentUser = user;
+                appContent.style.display = 'block';
+                console.log('User authenticated:', user.id);
+                
+                // Setup event listeners
+                joinBtn.addEventListener('click', handleJoin);
+                joinCodeInput.addEventListener('input', validateJoinCode);
+                joinCodeInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !joinBtn.disabled) {
+                        handleJoin();
+                    }
+                });
+                
+                showStatus('Enter a 4-digit join code to participate.');
+            } catch (error) {
+                console.error('Initialization error:', error);
+                authWarning.style.display = 'block';
+                authWarning.innerHTML = `<strong>Error:</strong><br>${error.message}`;
+            }
         }
         
         function validateJoinCode() {
