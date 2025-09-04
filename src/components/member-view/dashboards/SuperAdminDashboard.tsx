@@ -572,7 +572,25 @@ export const SuperAdminDashboard = ({
                     </Button>
                     
                     {allModules.filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id)).slice(0, 4) // Reduced from 5 to 4 to accommodate Music Library
-                .map(module => {})}
+                .map(module => (
+                  <Button 
+                    key={module.id}
+                    variant="outline" 
+                    className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-purple-200 hover:border-purple-300" 
+                    onClick={() => setSelectedModule(module.id)}
+                  >
+                    <div className="w-full">
+                      <div className="flex items-center gap-2 mb-2">
+                        <module.icon className="h-5 w-5 text-purple-600" />
+                        <Badge variant="secondary" className="text-xs">Admin</Badge>
+                      </div>
+                      <h3 className="font-semibold text-base lg:text-lg text-purple-700">{module.title}</h3>
+                      <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
+                        {module.description}
+                      </p>
+                    </div>
+                  </Button>
+                ))}
                   </div>
                 </CardContent>
               </CollapsibleContent>
