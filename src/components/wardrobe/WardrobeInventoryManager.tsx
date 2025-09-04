@@ -143,6 +143,49 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
     return { status: "In Stock", color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
   };
 
+  const exportToCSV = () => {
+    const csvData = filteredItems
+      .filter(item => ['dresses', 'pearls', 'lipstick'].includes(item.category))
+      .map(item => ({
+        dresses: item.category === 'dresses' ? item.quantity_available : 0,
+        pearls: item.category === 'pearls' ? item.quantity_available : 0,
+        lipsticks: item.category === 'lipstick' ? item.quantity_available : 0,
+      }));
+
+    // Aggregate the totals
+    const totals = csvData.reduce(
+      (acc, row) => ({
+        dresses: acc.dresses + row.dresses,
+        pearls: acc.pearls + row.pearls,
+        lipsticks: acc.lipsticks + row.lipsticks,
+      }),
+      { dresses: 0, pearls: 0, lipsticks: 0 }
+    );
+
+    const headers = ['dresses', 'pearls', 'lipsticks'];
+    const csvContent = [
+      headers.join(','),
+      `${totals.dresses},${totals.pearls},${totals.lipsticks}`
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `wardrobe-inventory-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    toast({
+      title: "Success",
+      description: "Inventory CSV exported successfully",
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -323,9 +366,13 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
               <span className="hidden sm:inline">Import CSV</span>
               <span className="sm:hidden">Import</span>
             </Button>
-            <Button variant="outline" className="shadow-sm text-sm lg:text-base">
+            <Button 
+              variant="outline" 
+              className="shadow-sm text-sm lg:text-base"
+              onClick={exportToCSV}
+            >
               <Download className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Export Data</span>
+              <span className="hidden sm:inline">Export CSV</span>
               <span className="sm:hidden">Export</span>
             </Button>
           </div>
