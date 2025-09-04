@@ -46,7 +46,7 @@ const WardrobePage = () => {
         <div className="grid gap-4 md:grid-cols-4">
           <Card className="p-4 text-center bg-pink-50 border-pink-200">
             <Shirt className="h-8 w-8 mx-auto mb-2 text-pink-600" />
-            <h3 className="font-semibold">Formal Items</h3>
+            <h3 className="font-semibold">Request Items</h3>
             <p className="text-sm text-muted-foreground">{formalCount} assigned</p>
           </Card>
           <Card className="p-4 text-center bg-purple-50 border-purple-200">
