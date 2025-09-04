@@ -13,7 +13,8 @@ import {
   FileText,
   AlertCircle,
   Calendar,
-  Search
+  Search,
+  Camera
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ import { MakeupTutorials } from "./MakeupTutorials";
 import { GarmentBagDistribution } from "./GarmentBagDistribution";
 import { WardrobeMemberManagement } from "./WardrobeMemberManagement";
 import { UpcomingAppointmentsCard } from "./UpcomingAppointmentsCard";
-import { HairNailApprovalPanel } from "./HairNailApprovalPanel";
+import { HairNailApprovalManager } from "./HairNailApprovalManager";
 
 export const WardrobeManagementHub = () => {
   const [activeTab, setActiveTab] = useState("inventory");
@@ -165,13 +166,13 @@ export const WardrobeManagementHub = () => {
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Garment Bags</span>
           </TabsTrigger>
+          <TabsTrigger value="hair-nail" className="flex items-center gap-2">
+            <Camera className="h-4 w-4" />
+            <span className="hidden sm:inline">Hair/Nail</span>
+          </TabsTrigger>
           <TabsTrigger value="members" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Members</span>
-          </TabsTrigger>
-          <TabsTrigger value="approvals" className="flex items-center gap-2">
-            <Palette className="h-4 w-4" />
-            <span className="hidden sm:inline">Hair/Nail Approvals</span>
           </TabsTrigger>
         </TabsList>
 
@@ -199,12 +200,12 @@ export const WardrobeManagementHub = () => {
           <GarmentBagDistribution />
         </TabsContent>
 
-        <TabsContent value="members" className="space-y-6">
-          <WardrobeMemberManagement />
+        <TabsContent value="hair-nail" className="space-y-6">
+          <HairNailApprovalManager />
         </TabsContent>
 
-        <TabsContent value="approvals" className="space-y-6">
-          <HairNailApprovalPanel />
+        <TabsContent value="members" className="space-y-6">
+          <WardrobeMemberManagement />
         </TabsContent>
       </Tabs>
     </div>
