@@ -17091,10 +17091,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
-      is_executive_board_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
       is_fy_coordinator: {
         Args: Record<PropertyKey, never>
         Returns: boolean
