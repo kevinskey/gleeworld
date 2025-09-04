@@ -63,6 +63,8 @@ export const CreatePaymentPlanDialog = ({ open, onOpenChange, onSuccess, duesRec
     
     if (formData.frequency === 'weekly') {
       return addWeeks(startDate, installments - 1);
+    } else if (formData.frequency === 'bi_weekly') {
+      return addWeeks(startDate, (installments - 1) * 2);
     } else if (formData.frequency === 'monthly') {
       return addMonths(startDate, installments - 1);
     } else if (formData.frequency === 'quarterly') {
@@ -84,6 +86,8 @@ export const CreatePaymentPlanDialog = ({ open, onOpenChange, onSuccess, duesRec
       
       if (formData.frequency === 'weekly') {
         dueDate = addWeeks(startDate, i);
+      } else if (formData.frequency === 'bi_weekly') {
+        dueDate = addWeeks(startDate, i * 2);
       } else if (formData.frequency === 'monthly') {
         dueDate = addMonths(startDate, i);
       } else if (formData.frequency === 'quarterly') {
@@ -270,6 +274,7 @@ export const CreatePaymentPlanDialog = ({ open, onOpenChange, onSuccess, duesRec
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="bi_weekly">Bi-weekly</SelectItem>
                 <SelectItem value="monthly">Monthly</SelectItem>
                 <SelectItem value="quarterly">Quarterly</SelectItem>
               </SelectContent>
