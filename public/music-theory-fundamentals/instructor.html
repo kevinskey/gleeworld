@@ -288,7 +288,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+    <script src="https://unpkg.com/vexflow@4.2.2/build/vexflow.js"></script>
     <script>
         // Environment configuration
         const SUPABASE_URL = 'https://oopmlreysjzuxzylyheb.supabase.co';
@@ -582,89 +582,96 @@
             notationOutput.innerHTML = '';
             
             try {
-                const VF = Vex.Flow;
+                // Wait a bit for VexFlow to load if needed
+                if (typeof Vex === 'undefined') {
+                    setTimeout(() => renderNotation(questionData), 100);
+                    return;
+                }
+
+                const { Renderer, Stave, StaveNote, Accidental, Voice, Formatter } = Vex.Flow;
                 
                 // Create renderer
-                const renderer = new VF.Renderer(notationOutput, VF.Renderer.Backends.SVG);
+                const renderer = new Renderer(notationOutput, Renderer.Backends.SVG);
                 renderer.resize(600, 200);
                 const context = renderer.getContext();
                 
                 // Create stave
-                const stave = new VF.Stave(10, 40, 580);
+                const stave = new Stave(10, 40, 580);
                 
-                if (questionData.payload.clef === 'treble') {
-                    stave.addClef('treble');
-                } else if (questionData.payload.clef === 'bass') {
-                    stave.addClef('bass');
-                } else if (questionData.payload.clef === 'alto') {
-                    stave.addClef('alto');
-                } else if (questionData.payload.clef === 'tenor') {
-                    stave.addClef('tenor');
+                // Add clef
+                if (questionData.payload.clef) {
+                    stave.addClef(questionData.payload.clef);
                 }
                 
                 // Add key signature if present
                 if (questionData.payload.sharps > 0) {
-                    stave.addKeySignature(`${questionData.payload.sharps}#`);
+                    const sharpSig = '#'.repeat(questionData.payload.sharps);
+                    stave.addKeySignature(sharpSig);
                 } else if (questionData.payload.flats > 0) {
-                    stave.addKeySignature(`${questionData.payload.flats}b`);
+                    const flatSig = 'b'.repeat(questionData.payload.flats);
+                    stave.addKeySignature(flatSig);
                 }
                 
                 stave.setContext(context).draw();
                 
                 // Add notes based on question type
                 if (questionData.payload.note) {
-                    // Single note question
-                    const note = new VF.StaveNote({
-                        keys: [questionData.payload.note],
+                    // Single note question - clean the note first
+                    let noteKey = questionData.payload.note.replace('#', '').replace('b', '');
+                    const note = new StaveNote({
+                        keys: [noteKey],
                         duration: 'w'
                     });
                     
                     // Add accidental if present
                     if (questionData.payload.note.includes('#')) {
-                        note.addAccidental(0, new VF.Accidental('#'));
+                        note.addAccidental(0, new Accidental('#'));
                     } else if (questionData.payload.note.includes('b')) {
-                        note.addAccidental(0, new VF.Accidental('b'));
+                        note.addAccidental(0, new Accidental('b'));
                     }
                     
-                    const voice = new VF.Voice({ num_beats: 4, beat_value: 4 });
+                    const voice = new Voice({ num_beats: 4, beat_value: 4 });
                     voice.addTickables([note]);
                     
-                    new VF.Formatter().joinVoices([voice]).format([voice], 500);
+                    new Formatter().joinVoices([voice]).format([voice], 500);
                     voice.draw(context, stave);
                     
                 } else if (questionData.payload.baseNote && questionData.payload.semitones) {
-                    // Interval question - draw two stacked notes
+                    // Interval question - simplified approach
                     const baseNote = questionData.payload.baseNote;
-                    const semitones = questionData.payload.semitones;
                     
-                    // Calculate second note (simplified)
-                    const noteMap = {
-                        'c': 0, 'd': 2, 'e': 4, 'f': 5, 'g': 7, 'a': 9, 'b': 11
-                    };
+                    // Simple interval calculation
+                    const noteNames = ['c', 'd', 'e', 'f', 'g', 'a', 'b'];
+                    const baseName = baseNote.charAt(0);
+                    const baseOctave = parseInt(baseNote.split('/')[1]);
                     
-                    const basePitch = noteMap[baseNote.charAt(0)];
-                    const octave = parseInt(baseNote.split('/')[1]);
-                    const targetPitch = (basePitch + semitones) % 12;
-                    const targetOctave = octave + Math.floor((basePitch + semitones) / 12);
+                    // Calculate target note (simplified - just go up the scale)
+                    const baseIndex = noteNames.indexOf(baseName);
+                    const targetIndex = (baseIndex + Math.floor(questionData.payload.semitones / 2)) % 7;
+                    const targetOctave = baseOctave + Math.floor((baseIndex + Math.floor(questionData.payload.semitones / 2)) / 7);
+                    const topNote = `${noteNames[targetIndex]}/${targetOctave}`;
                     
-                    const reverseMap = Object.keys(noteMap).find(key => noteMap[key] === targetPitch);
-                    const topNote = `${reverseMap}/${targetOctave}`;
-                    
-                    const chord = new VF.StaveNote({
+                    const chord = new StaveNote({
                         keys: [baseNote, topNote],
                         duration: 'w'
                     });
                     
-                    const voice = new VF.Voice({ num_beats: 4, beat_value: 4 });
+                    const voice = new Voice({ num_beats: 4, beat_value: 4 });
                     voice.addTickables([chord]);
                     
-                    new VF.Formatter().joinVoices([voice]).format([voice], 500);
+                    new Formatter().joinVoices([voice]).format([voice], 500);
                     voice.draw(context, stave);
                 }
                 
             } catch (error) {
                 console.error('Notation rendering error:', error);
-                notationOutput.innerHTML = '<p style="padding: 20px; text-align: center; color: #e53e3e;">Error rendering notation</p>';
+                notationOutput.innerHTML = `
+                    <div style="padding: 20px; text-align: center; border: 2px dashed #e2e8f0; border-radius: 8px; background: #f7fafc;">
+                        <p style="color: #4a5568; margin-bottom: 10px;">🎼 Musical Notation</p>
+                        <p style="color: #718096; font-size: 14px;">Question Type: ${questionData.payload.clef || 'interval'}</p>
+                        <p style="color: #718096; font-size: 14px;">Note: ${questionData.payload.note || questionData.payload.intervalName || 'N/A'}</p>
+                    </div>
+                `;
             }
         }
         
