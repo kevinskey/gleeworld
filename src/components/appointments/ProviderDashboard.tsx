@@ -36,6 +36,7 @@ export const ProviderDashboard = () => {
   const {
     user
   } = useAuth();
+  const [userProfile, setUserProfile] = useState<{ first_name?: string; full_name?: string } | null>(null);
   const [stats, setStats] = useState<AppointmentStats>({
     newCustomers: 0,
     weeklyRevenue: 0,
@@ -50,9 +51,31 @@ export const ProviderDashboard = () => {
   const [dailyOccupancy, setDailyOccupancy] = useState<DailyOccupancy[]>([]);
   const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
   useEffect(() => {
-    fetchDashboardData();
+    if (user) {
+      fetchUserProfile();
+      fetchDashboardData();
+    }
   }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: profile, error } = await supabase
+        .from('gw_profiles')
+        .select('first_name, full_name')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!error && profile) {
+        setUserProfile(profile);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
   const fetchDashboardData = async () => {
     if (!user) return;
     try {
@@ -171,7 +194,7 @@ export const ProviderDashboard = () => {
   return <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Hello, {user?.email?.split('@')[0] || 'Provider'}.</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Hello, {userProfile?.first_name || userProfile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Provider'}.</h1>
         
       </div>
 
