@@ -3381,6 +3381,8 @@ export type Database = {
         Row: {
           appointment_date: string
           appointment_type: string
+          approved_at: string | null
+          approved_by: string | null
           assigned_to: string | null
           client_email: string | null
           client_name: string
@@ -3398,6 +3400,8 @@ export type Database = {
         Insert: {
           appointment_date: string
           appointment_type?: string
+          approved_at?: string | null
+          approved_by?: string | null
           assigned_to?: string | null
           client_email?: string | null
           client_name: string
@@ -3415,6 +3419,8 @@ export type Database = {
         Update: {
           appointment_date?: string
           appointment_type?: string
+          approved_at?: string | null
+          approved_by?: string | null
           assigned_to?: string | null
           client_email?: string | null
           client_name?: string
