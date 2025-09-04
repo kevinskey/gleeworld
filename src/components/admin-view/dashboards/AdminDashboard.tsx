@@ -57,6 +57,7 @@ import { CalendarControlsAdmin } from "@/components/admin/CalendarControlsAdmin"
 import { SystemSettings } from "@/components/admin/SystemSettings";
 import { PermissionManagement } from "@/components/admin/PermissionManagement";
 import { AuditionsManagement } from "@/components/admin/AuditionsManagement";
+import { AppointmentSchedulingModule } from "@/components/modules/AppointmentSchedulingModule";
 import { WardrobeManagementHub } from "@/components/wardrobe/WardrobeManagementHub";
 import { StudentIntakeProcessor } from "@/components/admin/StudentIntakeProcessor";
 
@@ -120,7 +121,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         { id: "buckets-of-love", title: "Buckets of Love", icon: Heart, color: "pink" },
         { id: "glee-writing", title: "Glee Writing Widget", icon: Edit3, color: "indigo", isNew: true },
         
-        { id: "scheduling-module", title: "Scheduling Module", icon: Clock, color: "cyan" },
+        { id: "appointment-scheduling", title: "Appointment Scheduling", icon: Clock, color: "cyan" },
         { id: "calendar-management", title: "Calendar Management", icon: Calendar, color: "purple" }
       ]
     },
@@ -316,6 +317,8 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         return <PermissionManagement />;
       case "auditions":
         return <AuditionsManagement />;
+      case "appointment-scheduling":
+        return <AppointmentSchedulingModule user={user} isFullPage={true} />;
       case "wardrobe-management":
         return <WardrobeManagementHub />;
       case "student-intake":
