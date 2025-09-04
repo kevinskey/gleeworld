@@ -160,9 +160,13 @@ export const DuesManagement = () => {
       const { data: members, error: membersError } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email')
-        .eq('role', 'member');
+        .eq('role', 'member')
+        .not('user_id', 'is', null); // Ensure user_id is not null
 
-      if (membersError) throw membersError;
+      if (membersError) {
+        console.error('Error fetching members:', membersError);
+        throw membersError;
+      }
 
       if (!members || members.length === 0) {
         toast({
@@ -173,18 +177,45 @@ export const DuesManagement = () => {
         return;
       }
 
+      console.log('Found members:', members.length);
+
+      // Filter out any members with null or undefined user_id
+      const validMembers = members.filter(member => 
+        member.user_id && 
+        typeof member.user_id === 'string' && 
+        member.user_id.trim() !== ''
+      );
+
+      console.log('Valid members after filtering:', validMembers.length);
+
+      if (validMembers.length === 0) {
+        toast({
+          title: "No Valid Members",
+          description: "No members with valid user IDs found.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Check if dues records already exist for the current semester
       const currentSemester = "Fall 2025";
       const academicYear = "2025-2026";
 
-      const { data: existingRecords } = await supabase
+      const { data: existingRecords, error: existingError } = await supabase
         .from('gw_dues_records')
         .select('user_id')
         .eq('semester', currentSemester)
         .eq('academic_year', academicYear);
 
+      if (existingError) {
+        console.error('Error checking existing records:', existingError);
+        throw existingError;
+      }
+
       const existingUserIds = new Set(existingRecords?.map(r => r.user_id) || []);
-      const membersToCreate = members.filter(member => !existingUserIds.has(member.user_id));
+      const membersToCreate = validMembers.filter(member => !existingUserIds.has(member.user_id));
+
+      console.log('Members to create dues for:', membersToCreate.length);
 
       if (membersToCreate.length === 0) {
         toast({
@@ -196,24 +227,48 @@ export const DuesManagement = () => {
       }
 
       // Create dues records for members who don't have them
-      const duesRecords = membersToCreate.map(member => ({
-        user_id: member.user_id,
-        amount: 100.00,
-        due_date: '2025-09-15',
-        semester: currentSemester,
-        academic_year: academicYear,
-        status: 'pending'
-      }));
+      const duesRecords = membersToCreate.map(member => {
+        const record = {
+          user_id: member.user_id,
+          amount: 100.00,
+          due_date: '2025-09-15',
+          semester: currentSemester,
+          academic_year: academicYear,
+          status: 'pending'
+        };
+        
+        // Validate the record before including it
+        if (!record.user_id) {
+          console.error('Invalid record - missing user_id:', member);
+          return null;
+        }
+        
+        return record;
+      }).filter(record => record !== null); // Remove any null records
+
+      console.log('Dues records to insert:', duesRecords.length);
+
+      if (duesRecords.length === 0) {
+        toast({
+          title: "No Valid Records",
+          description: "No valid dues records could be created.",
+          variant: "destructive"
+        });
+        return;
+      }
 
       const { error: insertError } = await supabase
         .from('gw_dues_records')
         .insert(duesRecords);
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Error inserting dues records:', insertError);
+        throw insertError;
+      }
 
       toast({
         title: "Success",
-        description: `Created dues records for ${membersToCreate.length} members.`,
+        description: `Created dues records for ${duesRecords.length} members.`,
         variant: "default"
       });
 
