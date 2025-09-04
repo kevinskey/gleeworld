@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
 import { BackNavigation } from '@/components/shared/BackNavigation';
 import { FittingScheduleDialog } from '@/components/wardrobe/FittingScheduleDialog';
+import { UpcomingAppointmentsCard } from '@/components/wardrobe/UpcomingAppointmentsCard';
 const WardrobePage = () => {
   const {
     wardrobeItems,
@@ -43,7 +44,72 @@ const WardrobePage = () => {
         </div>
 
         {/* Quick Stats */}
-        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Total Items</p>
+                  <p className="text-2xl font-bold">{wardrobeItems.length}</p>
+                  <p className="text-xs text-muted-foreground">Active inventory</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Checked Out</p>
+                  <p className="text-2xl font-bold">{wardrobeItems.filter(item => item.status === 'checked_out').length}</p>
+                  <p className="text-xs text-muted-foreground">Currently borrowed</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-destructive" />
+                <div>
+                  <p className="text-sm font-medium">Overdue</p>
+                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-xs text-muted-foreground">Past return date</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4 text-warning" />
+                <div>
+                  <p className="text-sm font-medium">Low Stock</p>
+                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-xs text-muted-foreground">Need restocking</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Shirt className="h-4 w-4 text-info" />
+                <div>
+                  <p className="text-sm font-medium">Notifications</p>
+                  <p className="text-2xl font-bold">{needsFittingCount}</p>
+                  <p className="text-xs text-muted-foreground">Unread alerts</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* My Wardrobe */}
@@ -163,30 +229,8 @@ const WardrobePage = () => {
               </CardContent>
             </Card>
 
-            {/* Upcoming Fittings */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Upcoming Fittings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
-                    <div>
-                      <span className="font-medium">Spring Costume Fitting</span>
-                      <p className="text-muted-foreground">March 8, 3:00 PM</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <div>
-                      <span className="font-medium">Uniform Check</span>
-                      <p className="text-muted-foreground">March 12, 4:00 PM</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Upcoming Appointments */}
+            <UpcomingAppointmentsCard />
 
             {/* Care Instructions */}
             <Card>
