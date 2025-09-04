@@ -288,7 +288,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/vexflow/releases/vexflow-debug.js"></script>
+    <script src="https://unpkg.com/vexflow@4.2.2/build/cjs/vexflow.js"></script>
     <script>
         // Environment configuration
         const SUPABASE_URL = 'https://oopmlreysjzuxzylyheb.supabase.co';
@@ -582,15 +582,15 @@
             notationOutput.innerHTML = '';
             
             try {
-                const { Renderer, Stave, StaveNote, Accidental, Voice, Formatter } = Vex.Flow;
+                const VF = Vex.Flow;
                 
                 // Create renderer
-                const renderer = new Renderer(notationOutput, Renderer.Backends.SVG);
+                const renderer = new VF.Renderer(notationOutput, VF.Renderer.Backends.SVG);
                 renderer.resize(600, 200);
                 const context = renderer.getContext();
                 
                 // Create stave
-                const stave = new Stave(10, 40, 580);
+                const stave = new VF.Stave(10, 40, 580);
                 
                 if (questionData.payload.clef === 'treble') {
                     stave.addClef('treble');
@@ -614,22 +614,22 @@
                 // Add notes based on question type
                 if (questionData.payload.note) {
                     // Single note question
-                    const note = new StaveNote({
+                    const note = new VF.StaveNote({
                         keys: [questionData.payload.note],
                         duration: 'w'
                     });
                     
                     // Add accidental if present
                     if (questionData.payload.note.includes('#')) {
-                        note.addAccidental(0, new Accidental('#'));
+                        note.addAccidental(0, new VF.Accidental('#'));
                     } else if (questionData.payload.note.includes('b')) {
-                        note.addAccidental(0, new Accidental('b'));
+                        note.addAccidental(0, new VF.Accidental('b'));
                     }
                     
-                    const voice = new Voice({ num_beats: 4, beat_value: 4 });
+                    const voice = new VF.Voice({ num_beats: 4, beat_value: 4 });
                     voice.addTickables([note]);
                     
-                    new Formatter().joinVoices([voice]).format([voice], 500);
+                    new VF.Formatter().joinVoices([voice]).format([voice], 500);
                     voice.draw(context, stave);
                     
                 } else if (questionData.payload.baseNote && questionData.payload.semitones) {
@@ -650,15 +650,15 @@
                     const reverseMap = Object.keys(noteMap).find(key => noteMap[key] === targetPitch);
                     const topNote = `${reverseMap}/${targetOctave}`;
                     
-                    const chord = new StaveNote({
+                    const chord = new VF.StaveNote({
                         keys: [baseNote, topNote],
                         duration: 'w'
                     });
                     
-                    const voice = new Voice({ num_beats: 4, beat_value: 4 });
+                    const voice = new VF.Voice({ num_beats: 4, beat_value: 4 });
                     voice.addTickables([chord]);
                     
-                    new Formatter().joinVoices([voice]).format([voice], 500);
+                    new VF.Formatter().joinVoices([voice]).format([voice], 500);
                     voice.draw(context, stave);
                 }
                 
