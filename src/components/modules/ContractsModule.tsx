@@ -67,52 +67,7 @@ export const ContractsModule = ({
   if (isFullPage) {
     return <div className="space-y-6">
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold">{contracts.length}</div>
-                  
-                </div>
-                <FileCheck className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                 <div>
-                   <div className="text-2xl font-bold">{contracts.filter(c => c.status === 'draft').length}</div>
-                   <div className="text-sm text-muted-foreground">Draft Contracts</div>
-                 </div>
-                 <DollarSign className="h-8 w-8 text-green-500" />
-               </div>
-             </CardContent>
-           </Card>
-           <Card>
-             <CardContent className="p-4">
-               <div className="flex items-center justify-between">
-                 <div>
-                   <div className="text-2xl font-bold">{signedValue}</div>
-                   <div className="text-sm text-muted-foreground">Completed</div>
-                 </div>
-                <Calendar className="h-8 w-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold">{contracts.filter(c => c.status === 'pending').length}</div>
-                  <div className="text-sm text-muted-foreground">Pending Review</div>
-                </div>
-                <Clock className="h-8 w-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
@@ -128,52 +83,6 @@ export const ContractsModule = ({
                 <CardTitle>Contract Overview</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-2xl font-bold">{contracts.length}</div>
-                          
-                        </div>
-                        <FileCheck className="h-8 w-8 text-blue-500" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                         <div>
-                           <div className="text-2xl font-bold">{contracts.filter(c => c.status === 'draft').length}</div>
-                           <div className="text-sm text-muted-foreground">Draft Contracts</div>
-                         </div>
-                         <DollarSign className="h-8 w-8 text-green-500" />
-                       </div>
-                     </CardContent>
-                   </Card>
-                   <Card>
-                     <CardContent className="p-4">
-                       <div className="flex items-center justify-between">
-                         <div>
-                           <div className="text-2xl font-bold">{signedValue}</div>
-                           <div className="text-sm text-muted-foreground">Completed</div>
-                         </div>
-                         <Calendar className="h-8 w-8 text-purple-500" />
-                       </div>
-                     </CardContent>
-                   </Card>
-                   <Card>
-                     <CardContent className="p-4">
-                       <div className="flex items-center justify-between">
-                         <div>
-                           <div className="text-2xl font-bold">{contracts.filter(c => c.status === 'pending').length}</div>
-                           <div className="text-sm text-muted-foreground">Pending Review</div>
-                         </div>
-                         <Clock className="h-8 w-8 text-orange-500" />
-                       </div>
-                     </CardContent>
-                   </Card>
-                 </div>
                 <div className="space-y-4">
                   {contracts.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                       No contracts found. Create your first contract to get started.
