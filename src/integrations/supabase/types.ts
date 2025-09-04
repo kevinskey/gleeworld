@@ -16735,6 +16735,10 @@ export type Database = {
         }
         Returns: string
       }
+      current_user_can_access_admin_modules: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       current_user_has_executive_function_access: {
         Args: { function_name_param: string; permission_type_param?: string }
         Returns: boolean
