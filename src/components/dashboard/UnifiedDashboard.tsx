@@ -272,7 +272,7 @@ export const UnifiedDashboard = () => {
   if ((profile?.is_super_admin || profile?.role === 'super-admin') && viewMode === 'default') {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         
-        <div className="py-4">
+        <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4">
           <SuperAdminDashboard user={{
           id: profile.user_id,
           email: profile.email || '',
