@@ -7,7 +7,7 @@ import { ModuleProps } from "@/types/unified-modules";
 import { useContracts } from "@/hooks/useContracts";
 import { ContractTypeSelectionDialog } from "@/components/dialogs/ContractTypeSelectionDialog";
 import { ContractTemplates } from "@/components/ContractTemplates";
-import { DocumentUpload } from "@/components/DocumentUpload";
+import { RefinedContractCreator } from "@/components/contracts/RefinedContractCreator";
 import { useState } from "react";
 
 export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
@@ -182,55 +182,13 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <DocumentUpload onContractCreated={handleContractCreated} />
+                <RefinedContractCreator onContractCreated={handleContractCreated} />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="create" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5" />
-                  Create New Contract
-                </CardTitle>
-                <CardDescription>
-                  Start with a blank contract or choose from predefined types
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[
-                    { id: "tour", label: "SCGC Tour Contract", description: "For performances and tours outside of Atlanta", icon: FileCheck },
-                    { id: "in-town", label: "SCGC In-Town Contract", description: "For local performances in Atlanta area", icon: Calendar },
-                    { id: "stipend", label: "Singer Stipend Contract", description: "For individual singer compensation agreements", icon: DollarSign },
-                    { id: "nda", label: "SCGC NDA Agreement", description: "Non-disclosure agreement for sensitive materials", icon: User },
-                    { id: "custom", label: "Custom Contract", description: "Create a custom contract from scratch", icon: FileText },
-                  ].map((type) => {
-                    const Icon = type.icon;
-                    return (
-                      <Card 
-                        key={type.id} 
-                        className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => handleContractTypeSelect(type.id)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <Icon className="h-6 w-6 text-primary mt-1" />
-                            <div className="flex-1">
-                              <h3 className="font-medium mb-1">{type.label}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {type.description}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+            <RefinedContractCreator onContractCreated={handleContractCreated} />
           </TabsContent>
         </Tabs>
 
