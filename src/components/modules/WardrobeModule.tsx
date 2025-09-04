@@ -15,6 +15,7 @@ export const WardrobeModule = ({ user, isFullPage = false }: ModuleProps) => {
   const currentPath = window.location.pathname;
   const isInMemberView = currentPath.includes('/member/');
   
+  console.log('🔥 WARDROBE MODULE LOADED - Current URL:', window.location.href);
   console.log('🔍 URL DEBUG:', {
     currentPath,
     isInMemberView,
