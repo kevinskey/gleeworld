@@ -379,6 +379,22 @@ export const SuperAdminDashboard = ({
     }
   }
   return <div className="space-y-6">
+      {/* Header with Module Toggle */}
+      <div className="flex items-center justify-between">
+        <div className="border-l-4 border-primary pl-4">
+          <h1 className="text-3xl lg:text-4xl font-bold flex items-center gap-3">
+            <Crown className="h-8 w-8 text-purple-600" />
+            Super Admin Dashboard
+          </h1>
+          <p className="text-base lg:text-lg text-muted-foreground mt-2">
+            Complete system administration and module management
+          </p>
+        </div>
+        <Button onClick={() => setShowAllModules(!showAllModules)} variant={showAllModules ? "default" : "outline"} className="flex items-center gap-2 h-12 px-6 text-base">
+          <Grid3X3 className="h-5 w-5" />
+          {showAllModules ? "Show Overview" : "Show All Modules"}
+        </Button>
+      </div>
       {/* Quick Action Modules */}
       <div className="bg-gradient-to-r from-primary/5 via-background to-muted/20 rounded-lg p-6">
         <div className="flex items-center gap-3 mb-4">
@@ -443,22 +459,6 @@ export const SuperAdminDashboard = ({
         </div>
       </div>
 
-      {/* Header with Module Toggle */}
-      <div className="flex items-center justify-between">
-        <div className="border-l-4 border-primary pl-4">
-          <h1 className="text-3xl lg:text-4xl font-bold flex items-center gap-3">
-            <Crown className="h-8 w-8 text-purple-600" />
-            Super Admin Dashboard
-          </h1>
-          <p className="text-base lg:text-lg text-muted-foreground mt-2">
-            Complete system administration and module management
-          </p>
-        </div>
-        <Button onClick={() => setShowAllModules(!showAllModules)} variant={showAllModules ? "default" : "outline"} className="flex items-center gap-2 h-12 px-6 text-base">
-          <Grid3X3 className="h-5 w-5" />
-          {showAllModules ? "Show Overview" : "Show All Modules"}
-        </Button>
-      </div>
 
       {showAllModules ? (/* All Modules View */
     <div className="space-y-8">
