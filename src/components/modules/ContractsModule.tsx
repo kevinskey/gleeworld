@@ -7,30 +7,35 @@ import { ModuleProps } from "@/types/unified-modules";
 import { useContracts } from "@/hooks/useContracts";
 import { ContractTypeSelectionDialog } from "@/components/dialogs/ContractTypeSelectionDialog";
 import { ContractTemplates } from "@/components/ContractTemplates";
-import { RefinedContractCreator } from "@/components/contracts/RefinedContractCreator";
+import { DocumentUpload } from "@/components/DocumentUpload";
 import { useState } from "react";
-
-export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
-  const { contracts, loading } = useContracts();
+export const ContractsModule = ({
+  user,
+  isFullPage,
+  onNavigate
+}: ModuleProps) => {
+  const {
+    contracts,
+    loading
+  } = useContracts();
   const [showContractTypeDialog, setShowContractTypeDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-
   const handleContractTypeSelect = (type: string) => {
     console.log("Selected contract type:", type);
     // TODO: Implement contract creation logic for each type
   };
-
   const handleContractCreated = () => {
     console.log("Contract created");
     // Refresh contracts or update state as needed
   };
-
   const handleUseTemplate = (templateContent: string, templateName: string, headerImageUrl?: string, contractType?: string) => {
-    console.log("Using template:", { templateName, contractType });
-    
+    console.log("Using template:", {
+      templateName,
+      contractType
+    });
+
     // Route to appropriate module based on contract type and name
     let targetUrl = '';
-    
     switch (contractType) {
       case 'performance':
       case 'service':
@@ -51,22 +56,63 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
         // Default to general contracts
         targetUrl = `/contracts?template=${encodeURIComponent(templateName)}`;
     }
-    
     console.log('🚀 ContractsModule: Navigating to:', targetUrl);
     window.location.href = targetUrl;
   };
-
   const totalValue = contracts.length;
   const signedValue = contracts.filter(c => c.status === 'completed').length;
-
   if (loading) {
     return <div className="p-6">Loading contracts...</div>;
   }
-
   if (isFullPage) {
-    return (
-      <div className="space-y-6">
+    return <div className="space-y-6">
 
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-2xl font-bold">{contracts.length}</div>
+                  
+                </div>
+                <FileCheck className="h-8 w-8 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                 <div>
+                   <div className="text-2xl font-bold">{contracts.filter(c => c.status === 'draft').length}</div>
+                   <div className="text-sm text-muted-foreground">Draft Contracts</div>
+                 </div>
+                 <DollarSign className="h-8 w-8 text-green-500" />
+               </div>
+             </CardContent>
+           </Card>
+           <Card>
+             <CardContent className="p-4">
+               <div className="flex items-center justify-between">
+                 <div>
+                   <div className="text-2xl font-bold">{signedValue}</div>
+                   <div className="text-sm text-muted-foreground">Completed</div>
+                 </div>
+                <Calendar className="h-8 w-8 text-purple-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-2xl font-bold">{contracts.filter(c => c.status === 'pending').length}</div>
+                  <div className="text-sm text-muted-foreground">Pending Review</div>
+                </div>
+                <Clock className="h-8 w-8 text-orange-500" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
@@ -77,65 +123,15 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-2xl font-bold">{contracts.length}</div>
-                      <div className="text-sm text-muted-foreground">Total Contracts</div>
-                    </div>
-                    <FileCheck className="h-8 w-8 text-blue-500" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                     <div>
-                       <div className="text-2xl font-bold">{contracts.filter(c => c.status === 'draft').length}</div>
-                       <div className="text-sm text-muted-foreground">Draft Contracts</div>
-                     </div>
-                     <DollarSign className="h-8 w-8 text-green-500" />
-                   </div>
-                 </CardContent>
-               </Card>
-               <Card>
-                 <CardContent className="p-4">
-                   <div className="flex items-center justify-between">
-                     <div>
-                       <div className="text-2xl font-bold">{signedValue}</div>
-                       <div className="text-sm text-muted-foreground">Completed</div>
-                     </div>
-                    <Calendar className="h-8 w-8 text-purple-500" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-2xl font-bold">{contracts.filter(c => c.status === 'pending').length}</div>
-                      <div className="text-sm text-muted-foreground">Pending Review</div>
-                    </div>
-                    <Clock className="h-8 w-8 text-orange-500" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
             <Card>
               <CardHeader>
                 <CardTitle>Contract Overview</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {contracts.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
+                  {contracts.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                       No contracts found. Create your first contract to get started.
-                    </div>
-                  ) : (
-                    contracts.map((contract) => (
-                      <div key={contract.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    </div> : contracts.map(contract => <div key={contract.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center gap-4">
                           <FileCheck className="h-5 w-5 text-blue-500" />
                           <div>
@@ -146,28 +142,19 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
-                          <Badge variant={
-                            contract.status === 'signed' ? 'default' : 
-                            contract.status === 'pending' ? 'secondary' : 
-                            contract.status === 'published' ? 'outline' : 'destructive'
-                          }>
+                          <Badge variant={contract.status === 'signed' ? 'default' : contract.status === 'pending' ? 'secondary' : contract.status === 'published' ? 'outline' : 'destructive'}>
                             {contract.status}
                           </Badge>
                           <Button variant="ghost" size="sm">View</Button>
                         </div>
-                      </div>
-                    ))
-                  )}
+                      </div>)}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="templates" className="space-y-4">
-            <ContractTemplates 
-              onUseTemplate={handleUseTemplate}
-              onContractCreated={handleContractCreated}
-            />
+            <ContractTemplates onUseTemplate={handleUseTemplate} onContractCreated={handleContractCreated} />
           </TabsContent>
 
           <TabsContent value="upload" className="space-y-4">
@@ -182,27 +169,75 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <RefinedContractCreator onContractCreated={handleContractCreated} />
+                <DocumentUpload onContractCreated={handleContractCreated} />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="create" className="space-y-4">
-            <RefinedContractCreator onContractCreated={handleContractCreated} />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  Create New Contract
+                </CardTitle>
+                <CardDescription>
+                  Start with a blank contract or choose from predefined types
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[{
+                  id: "tour",
+                  label: "SCGC Tour Contract",
+                  description: "For performances and tours outside of Atlanta",
+                  icon: FileCheck
+                }, {
+                  id: "in-town",
+                  label: "SCGC In-Town Contract",
+                  description: "For local performances in Atlanta area",
+                  icon: Calendar
+                }, {
+                  id: "stipend",
+                  label: "Singer Stipend Contract",
+                  description: "For individual singer compensation agreements",
+                  icon: DollarSign
+                }, {
+                  id: "nda",
+                  label: "SCGC NDA Agreement",
+                  description: "Non-disclosure agreement for sensitive materials",
+                  icon: User
+                }, {
+                  id: "custom",
+                  label: "Custom Contract",
+                  description: "Create a custom contract from scratch",
+                  icon: FileText
+                }].map(type => {
+                  const Icon = type.icon;
+                  return <Card key={type.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleContractTypeSelect(type.id)}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Icon className="h-6 w-6 text-primary mt-1" />
+                            <div className="flex-1">
+                              <h3 className="font-medium mb-1">{type.label}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {type.description}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>;
+                })}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 
-        <ContractTypeSelectionDialog
-          open={showContractTypeDialog}
-          onOpenChange={setShowContractTypeDialog}
-          onSelectType={handleContractTypeSelect}
-        />
-      </div>
-    );
+        <ContractTypeSelectionDialog open={showContractTypeDialog} onOpenChange={setShowContractTypeDialog} onSelectType={handleContractTypeSelect} />
+      </div>;
   }
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileCheck className="h-5 w-5" />
@@ -217,6 +252,5 @@ export const ContractsModule = ({ user, isFullPage, onNavigate }: ModuleProps) =
           <div className="text-sm">{contracts.filter(c => c.status === 'pending').length} pending review</div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
