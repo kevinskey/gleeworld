@@ -356,7 +356,7 @@ export const UnifiedDashboard = () => {
         <div className="px-6 pt-4">
           <IncompleteProfileBanner userProfile={profile} />
         </div>
-        <div className="px-6 py-4">
+        <div className="py-4">
           <SuperAdminDashboard user={{
             id: profile.user_id,
             email: profile.email || '',
