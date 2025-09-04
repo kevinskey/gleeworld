@@ -11,12 +11,20 @@ export const WardrobeModule = ({ user, isFullPage = false }: ModuleProps) => {
   const { user: authUser } = useAuth();
   const { userProfile } = useUserProfile(authUser);
   
+  // Check URL for member view or check if we should force member view
+  const isInMemberView = window.location.pathname.includes('/member/') || 
+                        window.location.pathname.includes('member-view') ||
+                        window.location.search.includes('view=member');
+  
   // Check if user is wardrobe staff (admin, super admin, or executive board)
-  const isWardrobeStaff = userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.role === 'executive';
+  // But if we're in member view, always show member interface
+  const isWardrobeStaff = !isInMemberView && (userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.role === 'executive');
   
   console.log('WardrobeModule Debug:', {
     userProfile: userProfile,
     isWardrobeStaff,
+    isInMemberView,
+    currentPath: window.location.pathname,
     role: userProfile?.role,
     isAdmin: userProfile?.is_admin,
     isSuperAdmin: userProfile?.is_super_admin
