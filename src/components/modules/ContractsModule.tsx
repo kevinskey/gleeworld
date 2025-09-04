@@ -20,9 +20,12 @@ export const ContractsModule = ({
   } = useContracts();
   const [showContractTypeDialog, setShowContractTypeDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedContractType, setSelectedContractType] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const handleContractTypeSelect = (type: string) => {
     console.log("Selected contract type:", type);
-    // TODO: Implement contract creation logic for each type
+    setSelectedContractType(type);
+    setShowCreateForm(true);
   };
   const handleContractCreated = () => {
     console.log("Contract created");
@@ -130,62 +133,114 @@ export const ContractsModule = ({
           </TabsContent>
 
           <TabsContent value="create" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5" />
-                  Create New Contract
-                </CardTitle>
-                <CardDescription>
-                  Start with a blank contract or choose from predefined types
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[{
-                  id: "tour",
-                  label: "SCGC Tour Contract",
-                  description: "For performances and tours outside of Atlanta",
-                  icon: FileCheck
-                }, {
-                  id: "in-town",
-                  label: "SCGC In-Town Contract",
-                  description: "For local performances in Atlanta area",
-                  icon: Calendar
-                }, {
-                  id: "stipend",
-                  label: "Singer Stipend Contract",
-                  description: "For individual singer compensation agreements",
-                  icon: DollarSign
-                }, {
-                  id: "nda",
-                  label: "SCGC NDA Agreement",
-                  description: "Non-disclosure agreement for sensitive materials",
-                  icon: User
-                }, {
-                  id: "custom",
-                  label: "Custom Contract",
-                  description: "Create a custom contract from scratch",
-                  icon: FileText
-                }].map(type => {
-                  const Icon = type.icon;
-                  return <Card key={type.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleContractTypeSelect(type.id)}>
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <Icon className="h-6 w-6 text-primary mt-1" />
-                            <div className="flex-1">
-                              <h3 className="font-medium mb-1">{type.label}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {type.description}
-                              </p>
+            {!showCreateForm ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plus className="h-5 w-5" />
+                    Create New Contract
+                  </CardTitle>
+                  <CardDescription>
+                    Start with a blank contract or choose from predefined types
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[{
+                    id: "tour",
+                    label: "SCGC Tour Contract",
+                    description: "For performances and tours outside of Atlanta",
+                    icon: FileCheck
+                  }, {
+                    id: "in-town",
+                    label: "SCGC In-Town Contract",
+                    description: "For local performances in Atlanta area",
+                    icon: Calendar
+                  }, {
+                    id: "stipend",
+                    label: "Singer Stipend Contract",
+                    description: "For individual singer compensation agreements",
+                    icon: DollarSign
+                  }, {
+                    id: "nda",
+                    label: "SCGC NDA Agreement",
+                    description: "Non-disclosure agreement for sensitive materials",
+                    icon: User
+                  }, {
+                    id: "custom",
+                    label: "Custom Contract",
+                    description: "Create a custom contract from scratch",
+                    icon: FileText
+                  }].map(type => {
+                    const Icon = type.icon;
+                    return <Card key={type.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleContractTypeSelect(type.id)}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <Icon className="h-6 w-6 text-primary mt-1" />
+                              <div className="flex-1">
+                                <h3 className="font-medium mb-1">{type.label}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {type.description}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>;
-                })}
-                </div>
-              </CardContent>
-            </Card>
+                          </CardContent>
+                        </Card>;
+                  })}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Create {selectedContractType && selectedContractType.charAt(0).toUpperCase() + selectedContractType.slice(1)} Contract
+                  </CardTitle>
+                  <CardDescription>
+                    Fill in the details for your new contract
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex gap-2 mb-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowCreateForm(false);
+                        setSelectedContractType(null);
+                      }}
+                    >
+                      ← Back
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Contract Title</label>
+                      <input 
+                        type="text" 
+                        className="w-full mt-1 px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="Enter contract title..."
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Contract Content</label>
+                      <textarea 
+                        className="w-full mt-1 px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary min-h-[200px]"
+                        placeholder="Enter contract content..."
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={handleContractCreated}>
+                        Create Contract
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
 
