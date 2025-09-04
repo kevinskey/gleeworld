@@ -107,10 +107,10 @@ export const UpcomingAppointmentsCard = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => navigate('/appointments')}
+            onClick={() => navigate('/admin/appointments')}
             className="w-full"
           >
-            View All Appointments
+            Manage Appointments
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
