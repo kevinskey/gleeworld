@@ -79,7 +79,7 @@ export default function UnifiedBookingPage() {
     }
   };
 
-  // Generate time slots based on availability settings and check existing appointments
+  // Generate time slots based on database availability settings and check existing appointments
   useEffect(() => {
     if (!selectedDate) {
       setAllTimeSlots([]);
@@ -90,41 +90,39 @@ export default function UnifiedBookingPage() {
       setLoading(true);
       
       try {
-        // Get availability settings from localStorage (fallback to default)
-        const savedConfig = localStorage.getItem('appointmentAvailabilityConfig');
-        let availabilityConfig = {
-          businessHours: {
-            monday: { start: '09:00', end: '17:00', enabled: true },
-            tuesday: { start: '09:00', end: '17:00', enabled: true },
-            wednesday: { start: '09:00', end: '17:00', enabled: true },
-            thursday: { start: '09:00', end: '17:00', enabled: true },
-            friday: { start: '09:00', end: '17:00', enabled: true },
-            saturday: { start: '10:00', end: '15:00', enabled: false },
-            sunday: { start: '10:00', end: '15:00', enabled: false }
-          },
-          slotDuration: 30,
-          bufferTime: 0
-        };
-
-        if (savedConfig) {
-          try {
-            availabilityConfig = JSON.parse(savedConfig);
-          } catch (error) {
-            console.error('Error parsing availability config:', error);
-          }
-        }
-
         // Get day of week (0 = Sunday, 1 = Monday, etc.)
         const dayOfWeek = selectedDate.getDay();
-        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        const dayConfig = availabilityConfig.businessHours[dayNames[dayOfWeek] as keyof typeof availabilityConfig.businessHours];
 
-        // If day is not enabled, show no time slots
-        if (!dayConfig.enabled) {
+        // Fetch availability slots for this day from database
+        const { data: availabilitySlots, error: availabilityError } = await supabase
+          .from('gw_appointment_availability')
+          .select('*')
+          .eq('day_of_week', dayOfWeek)
+          .eq('is_available', true)
+          .order('start_time', { ascending: true });
+
+        if (availabilityError) {
+          console.error('Error fetching availability:', availabilityError);
           setAllTimeSlots([]);
           setLoading(false);
           return;
         }
+
+        // If no availability slots for this day, show no time slots
+        if (!availabilitySlots || availabilitySlots.length === 0) {
+          setAllTimeSlots([]);
+          setLoading(false);
+          return;
+        }
+
+        // Get user preferences for slot duration and buffer time
+        const { data: userPrefs } = await supabase
+          .from('gw_user_appointment_preferences')
+          .select('buffer_time_minutes')
+          .single();
+
+        const slotDuration = 30; // Default 30 minutes
+        const bufferTime = userPrefs?.buffer_time_minutes || 0;
 
         // Get existing appointments for this date
         const startDate = new Date(selectedDate);
@@ -139,48 +137,67 @@ export default function UnifiedBookingPage() {
           .lte('appointment_date', endDate.toISOString())
           .neq('status', 'cancelled');
 
-        // Parse start and end times
-        const [startHour, startMinute] = dayConfig.start.split(':').map(Number);
-        const [endHour, endMinute] = dayConfig.end.split(':').map(Number);
-        
-        // Generate time slots based on availability settings
+        // Generate time slots from availability slots
         const timeSlots = [];
-        const slotDuration = availabilityConfig.slotDuration;
         
-        for (let hour = startHour; hour < endHour || (hour === endHour && startMinute < endMinute); hour++) {
-          const maxMinute = hour === endHour ? endMinute : 60;
-          for (let minute = hour === startHour ? startMinute : 0; minute < maxMinute; minute += slotDuration) {
-            const slotTime = new Date(selectedDate);
-            slotTime.setHours(hour, minute, 0, 0);
-            
-            // Don't show past time slots for today
-            const now = new Date();
-            if (selectedDate.toDateString() === now.toDateString() && slotTime <= now) {
-              continue;
-            }
-
-            const time12Hour = hour > 12 ? `${hour - 12}:${minute.toString().padStart(2, '0')} PM` 
-                             : hour === 12 ? `12:${minute.toString().padStart(2, '0')} PM`
-                             : hour === 0 ? `12:${minute.toString().padStart(2, '0')} AM`
-                             : `${hour}:${minute.toString().padStart(2, '0')} AM`;
-            
-            // Check if this slot conflicts with existing appointments
-            const isAvailable = !existingAppointments?.some(apt => {
-              const aptStart = new Date(apt.appointment_date);
-              const aptEnd = new Date(aptStart.getTime() + (apt.duration_minutes || slotDuration) * 60000);
-              const slotEnd = new Date(slotTime.getTime() + slotDuration * 60000);
+        for (const availabilitySlot of availabilitySlots) {
+          // Parse start and end times from availability slot
+          const [startHour, startMinute] = availabilitySlot.start_time.split(':').map(Number);
+          const [endHour, endMinute] = availabilitySlot.end_time.split(':').map(Number);
+          
+          // Generate slots within this availability window
+          for (let hour = startHour; hour < endHour || (hour === endHour && startMinute < endMinute); hour++) {
+            const maxMinute = hour === endHour ? endMinute : 60;
+            for (let minute = hour === startHour ? startMinute : 0; minute < maxMinute; minute += slotDuration) {
+              const slotTime = new Date(selectedDate);
+              slotTime.setHours(hour, minute, 0, 0);
               
-              // Check for overlap
-              return slotTime < aptEnd && slotEnd > aptStart;
-            });
-            
-            timeSlots.push({
-              time: time12Hour,
-              isAvailable,
-              auditionerName: null
-            });
+              // Don't show past time slots for today
+              const now = new Date();
+              if (selectedDate.toDateString() === now.toDateString() && slotTime <= now) {
+                continue;
+              }
+
+              const time12Hour = hour > 12 ? `${hour - 12}:${minute.toString().padStart(2, '0')} PM` 
+                               : hour === 12 ? `12:${minute.toString().padStart(2, '0')} PM`
+                               : hour === 0 ? `12:${minute.toString().padStart(2, '0')} AM`
+                               : `${hour}:${minute.toString().padStart(2, '0')} AM`;
+              
+              // Check if this slot conflicts with existing appointments
+              const isAvailable = !existingAppointments?.some(apt => {
+                const aptStart = new Date(apt.appointment_date);
+                const aptEnd = new Date(aptStart.getTime() + (apt.duration_minutes || slotDuration) * 60000);
+                const slotEnd = new Date(slotTime.getTime() + slotDuration * 60000);
+                
+                // Check for overlap
+                return slotTime < aptEnd && slotEnd > aptStart;
+              });
+              
+              // Check if we already have this time slot (to avoid duplicates)
+              const existingSlot = timeSlots.find(slot => slot.time === time12Hour);
+              if (!existingSlot) {
+                timeSlots.push({
+                  time: time12Hour,
+                  isAvailable,
+                  auditionerName: null
+                });
+              }
+            }
           }
         }
+        
+        // Sort time slots by time
+        timeSlots.sort((a, b) => {
+          const parseTime = (timeStr: string) => {
+            const [time, ampm] = timeStr.split(' ');
+            const [hours, minutes] = time.split(':').map(Number);
+            let hour24 = hours;
+            if (ampm === 'PM' && hours !== 12) hour24 += 12;
+            if (ampm === 'AM' && hours === 12) hour24 = 0;
+            return hour24 * 60 + minutes;
+          };
+          return parseTime(a.time) - parseTime(b.time);
+        });
         
         setAllTimeSlots(timeSlots);
       } catch (error) {
