@@ -25,6 +25,8 @@ export const WardrobeModule = ({ user, isFullPage = false }: ModuleProps) => {
     isSuperAdmin: userProfile?.is_super_admin
   });
 
+  console.log('RENDERING DECISION:', { isWardrobeStaff, isInMemberView });
+
   return (
     <ModuleWrapper
       id="wardrobe-management"
@@ -35,15 +37,23 @@ export const WardrobeModule = ({ user, isFullPage = false }: ModuleProps) => {
       fullPage={isFullPage}
     >
       {isWardrobeStaff ? (
-        <WardrobeManagementHub />
+        <>
+          {console.log('RENDERING: WardrobeManagementHub')}
+          <WardrobeManagementHub />
+        </>
       ) : (
-        <div className="space-y-6">
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-700 mb-2">Debug: Showing member view (not wardrobe staff)</p>
-            <p className="text-xs text-blue-600">Role: {userProfile?.role || 'No role'}</p>
+        <>
+          {console.log('RENDERING: Member View with HairNailSubmission')}
+          <div className="space-y-6">
+            <div className="bg-red-500 text-white p-4 rounded-lg border">
+              <p className="text-sm font-bold mb-2">🚨 MEMBER VIEW ACTIVE 🚨</p>
+              <p className="text-xs">This should show Hair & Nail Submission only</p>
+              <p className="text-xs">isWardrobeStaff: {String(isWardrobeStaff)}</p>
+              <p className="text-xs">isInMemberView: {String(isInMemberView)}</p>
+            </div>
+            <HairNailSubmission />
           </div>
-          <HairNailSubmission />
-        </div>
+        </>
       )}
     </ModuleWrapper>
   );
