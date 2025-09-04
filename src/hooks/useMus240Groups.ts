@@ -112,6 +112,20 @@ export const useMus240Groups = (semester: string = 'Fall 2024') => {
         .single();
 
       if (error) throw error;
+
+      // Add the leader as a member of the group
+      const { error: membershipError } = await supabase
+        .from('mus240_group_memberships')
+        .insert({
+          group_id: data.id,
+          member_id: user?.id,
+          role: 'leader'
+        });
+
+      if (membershipError) {
+        console.error('Error adding leader membership:', membershipError);
+      }
+
       await fetchGroups();
       return data;
     } catch (err) {
