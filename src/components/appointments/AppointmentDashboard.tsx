@@ -13,7 +13,7 @@ import { AppointmentCalendarSync } from './AppointmentCalendarSync';
 import { ProviderDashboard } from './ProviderDashboard';
 import { DayScheduleView } from './DayScheduleView';
 import { AppointmentsTableView } from './AppointmentsTableView';
-import { AppointmentSystemTest } from './AppointmentSystemTest';
+
 import { AdminCalendarView } from './AdminCalendarView';
 import { AdminTimeView } from './AdminTimeView';
 import { ClientsList } from './ClientsList';
