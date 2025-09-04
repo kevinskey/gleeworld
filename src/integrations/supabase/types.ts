@@ -11964,6 +11964,54 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_wardrobe_measurements: {
+        Row: {
+          bust_measurement: string | null
+          classification: string | null
+          created_at: string
+          created_by: string | null
+          dress_size: string | null
+          height_measurement: string | null
+          hips_measurement: string | null
+          id: string
+          name: string
+          pants_size: string | null
+          shirt_size: string | null
+          updated_at: string
+          waist_measurement: string | null
+        }
+        Insert: {
+          bust_measurement?: string | null
+          classification?: string | null
+          created_at?: string
+          created_by?: string | null
+          dress_size?: string | null
+          height_measurement?: string | null
+          hips_measurement?: string | null
+          id?: string
+          name: string
+          pants_size?: string | null
+          shirt_size?: string | null
+          updated_at?: string
+          waist_measurement?: string | null
+        }
+        Update: {
+          bust_measurement?: string | null
+          classification?: string | null
+          created_at?: string
+          created_by?: string | null
+          dress_size?: string | null
+          height_measurement?: string | null
+          hips_measurement?: string | null
+          id?: string
+          name?: string
+          pants_size?: string | null
+          shirt_size?: string | null
+          updated_at?: string
+          waist_measurement?: string | null
+        }
+        Relationships: []
+      }
       gw_wardrobe_orders: {
         Row: {
           actual_delivery_date: string | null

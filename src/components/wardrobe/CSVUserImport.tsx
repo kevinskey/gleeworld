@@ -15,6 +15,7 @@ import {
   Loader2 
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface CSVRow {
@@ -35,6 +36,7 @@ interface ImportResult {
 }
 
 export const CSVUserImport = () => {
+  const { user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -177,7 +179,7 @@ export const CSVUserImport = () => {
               dress_size: row.dress,
               pants_size: row.pants,
               classification: row.classification,
-              created_at: new Date().toISOString()
+              created_by: user?.id
             };
 
             const { error: wardrobeError } = await supabase
@@ -269,20 +271,28 @@ export const CSVUserImport = () => {
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="p-2 text-left">Name</th>
-                        <th className="p-2 text-left">Email</th>
-                        <th className="p-2 text-left">Voice Part</th>
-                        <th className="p-2 text-left">Dress Size</th>
-                        <th className="p-2 text-left">Pearl Status</th>
+                        <th className="p-2 text-left">Bust</th>
+                        <th className="p-2 text-left">Waist</th>
+                        <th className="p-2 text-left">Hips</th>
+                        <th className="p-2 text-left">Height</th>
+                        <th className="p-2 text-left">Shirt</th>
+                        <th className="p-2 text-left">Dress</th>
+                        <th className="p-2 text-left">Pants</th>
+                        <th className="p-2 text-left">Classification</th>
                       </tr>
                     </thead>
                     <tbody>
                       {previewData.map((row, index) => (
                         <tr key={index} className="border-t">
                           <td className="p-2">{row.name}</td>
-                          <td className="p-2">{row.email}</td>
-                          <td className="p-2">{row.voice_part}</td>
-                          <td className="p-2">{row.formal_dress_size}</td>
-                          <td className="p-2">{row.pearl_status}</td>
+                          <td className="p-2">{row.bust}</td>
+                          <td className="p-2">{row.waist}</td>
+                          <td className="p-2">{row.hips}</td>
+                          <td className="p-2">{row.height}</td>
+                          <td className="p-2">{row.shirt}</td>
+                          <td className="p-2">{row.dress}</td>
+                          <td className="p-2">{row.pants}</td>
+                          <td className="p-2">{row.classification}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -362,10 +372,11 @@ export const CSVUserImport = () => {
             <AlertDescription>
               <strong>CSV Format Requirements:</strong>
               <ul className="mt-2 space-y-1 text-sm">
-                <li>• Required columns: name, email</li>
-                <li>• Optional: voice_part, formal_dress_size, polo_size, tshirt_size, lipstick_shade, pearl_status, phone</li>
-                <li>• Pearl status values: unassigned, assigned, lost, replaced</li>
-                <li>• Voice parts: Soprano 1, Soprano 2, Alto 1, Alto 2</li>
+                <li>• Required columns: Name</li>
+                <li>• Optional measurements: Bust, Waist, Hips, Height</li>
+                <li>• Optional sizes: Shirt, Dress, Pants</li>
+                <li>• Classification: Senior, Junior, Sophomore, Freshman</li>
+                <li>• All measurements should be in standard format (e.g., "36", "5'6"")</li>
               </ul>
             </AlertDescription>
           </Alert>
