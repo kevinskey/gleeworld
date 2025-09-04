@@ -12,7 +12,15 @@ export const WardrobeModule = ({ user, isFullPage = false }: ModuleProps) => {
   const { userProfile } = useUserProfile(authUser);
   
   // Check URL for member view - only show member interface on /member/ routes
-  const isInMemberView = window.location.pathname.includes('/member/');
+  const currentPath = window.location.pathname;
+  const isInMemberView = currentPath.includes('/member/');
+  
+  console.log('🔍 URL DEBUG:', {
+    currentPath,
+    isInMemberView,
+    includes_member: currentPath.includes('/member/'),
+    full_location: window.location.href
+  });
   
   // Check if user is wardrobe staff (admin, super admin, or executive board)
   // But if we're in member view, always show member interface
