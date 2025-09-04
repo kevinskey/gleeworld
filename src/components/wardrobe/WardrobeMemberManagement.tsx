@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Users, 
   Search, 
@@ -40,6 +41,7 @@ export const WardrobeMemberManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [showCSVImport, setShowCSVImport] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const { toast } = useToast();
 
   const fetchMembers = async () => {
@@ -290,7 +292,11 @@ export const WardrobeMemberManagement = () => {
                     )}
                   </div>
                   
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedMember(member)}
+                  >
                     View Details
                   </Button>
                 </div>
@@ -307,6 +313,113 @@ export const WardrobeMemberManagement = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Member Details Modal */}
+      <Dialog open={selectedMember !== null} onOpenChange={() => setSelectedMember(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Member Details
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedMember && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={selectedMember.avatar} alt={selectedMember.name} />
+                  <AvatarFallback>{getInitials(selectedMember.name)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="text-xl font-semibold">{selectedMember.name}</h3>
+                  <p className="text-muted-foreground">{selectedMember.email}</p>
+                  <Badge className={getStatusColor(selectedMember.status)}>
+                    {selectedMember.status}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium">Contact Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{selectedMember.email}</span>
+                    </div>
+                    {selectedMember.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{selectedMember.phone}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium">Glee Club Info</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="text-sm">
+                      <span className="font-medium">Role:</span> {selectedMember.role}
+                    </div>
+                    <div className="text-sm">
+                      <span className="font-medium">Voice Part:</span> {selectedMember.voicePart}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium">Wardrobe Status</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Shirt className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">
+                        <span className="font-medium">{selectedMember.currentCheckouts}</span> items checked out
+                      </span>
+                    </div>
+                    {selectedMember.overdueItems > 0 && (
+                      <div className="flex items-center gap-2 text-red-600">
+                        <AlertCircle className="h-4 w-4" />
+                        <span className="text-sm">
+                          <span className="font-medium">{selectedMember.overdueItems}</span> overdue items
+                        </span>
+                      </div>
+                    )}
+                    {selectedMember.lastCheckout && (
+                      <div className="text-sm">
+                        <span className="font-medium">Last Checkout:</span> {new Date(selectedMember.lastCheckout).toLocaleDateString()}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Package className="h-4 w-4 mr-2" />
+                      View Checkouts
+                    </Button>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Shirt className="h-4 w-4 mr-2" />
+                      New Checkout
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
