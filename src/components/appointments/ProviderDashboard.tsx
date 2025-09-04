@@ -3,18 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Calendar, 
-  Clock, 
-  Users, 
-  DollarSign, 
-  TrendingUp, 
-  TrendingDown,
-  CheckCircle,
-  XCircle,
-  MoreHorizontal,
-  Filter
-} from 'lucide-react';
+import { Calendar, Clock, Users, DollarSign, TrendingUp, TrendingDown, CheckCircle, XCircle, MoreHorizontal, Filter } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, parse, parseISO } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,7 +19,6 @@ interface AppointmentStats {
   customerChange: number;
   occupancyChange: number;
 }
-
 interface RecentAppointment {
   id: string;
   date: string;
@@ -40,14 +28,14 @@ interface RecentAppointment {
   status: string;
   avatar?: string;
 }
-
 interface DailyOccupancy {
   date: string;
   occupancy: number;
 }
-
 export const ProviderDashboard = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [stats, setStats] = useState<AppointmentStats>({
     newCustomers: 0,
     weeklyRevenue: 0,
@@ -62,32 +50,25 @@ export const ProviderDashboard = () => {
   const [dailyOccupancy, setDailyOccupancy] = useState<DailyOccupancy[]>([]);
   const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetchDashboardData();
   }, [user]);
-
   const fetchDashboardData = async () => {
     if (!user) return;
-    
     try {
       // Expand date range to get more data (last 30 days to next 30 days)
       const monthStart = new Date();
       monthStart.setDate(monthStart.getDate() - 30);
       const monthEnd = new Date();
       monthEnd.setDate(monthEnd.getDate() + 30);
-      
       console.log('Fetching appointments from:', monthStart.toISOString(), 'to:', monthEnd.toISOString());
 
       // Fetch appointments
-      const { data: appointments, error } = await supabase
-        .from('gw_appointments')
-        .select('*')
-        .gte('appointment_date', monthStart.toISOString())
-        .lte('appointment_date', monthEnd.toISOString());
-
+      const {
+        data: appointments,
+        error
+      } = await supabase.from('gw_appointments').select('*').gte('appointment_date', monthStart.toISOString()).lte('appointment_date', monthEnd.toISOString());
       if (error) throw error;
-
       console.log('Found appointments:', appointments?.length || 0);
 
       // Transform appointments  
@@ -105,20 +86,20 @@ export const ProviderDashboard = () => {
       const totalAppointments = appointments?.length || 0;
       const cancelledCount = appointments?.filter(apt => apt.status === 'cancelled').length || 0;
       const bookedCount = totalAppointments - cancelledCount;
-      
+
       // Generate daily occupancy data (use current week for display)
       const weekStart = startOfWeek(new Date());
       const weekEnd = endOfWeek(new Date());
-      const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
+      const daysInWeek = eachDayOfInterval({
+        start: weekStart,
+        end: weekEnd
+      });
       const occupancyData = daysInWeek.map(day => {
-        const dayAppointments = appointments?.filter(apt => 
-          isSameDay(new Date(apt.appointment_date), day)
-        ) || [];
-        
+        const dayAppointments = appointments?.filter(apt => isSameDay(new Date(apt.appointment_date), day)) || [];
+
         // Assuming 8 hours per day, 30-minute slots = 16 possible slots
         const maxSlots = 16;
-        const occupancy = Math.min((dayAppointments.length / maxSlots) * 100, 100);
-        
+        const occupancy = Math.min(dayAppointments.length / maxSlots * 100, 100);
         return {
           date: format(day, 'yyyy-MM-dd'),
           occupancy: Math.round(occupancy)
@@ -127,10 +108,7 @@ export const ProviderDashboard = () => {
 
       // Generate weekly trend data
       const trendData = daysInWeek.map(day => {
-        const dayAppointments = appointments?.filter(apt => 
-          isSameDay(new Date(apt.appointment_date), day)
-        ) || [];
-        
+        const dayAppointments = appointments?.filter(apt => isSameDay(new Date(apt.appointment_date), day)) || [];
         return {
           day: format(day, 'EEE'),
           appointments: dayAppointments.length,
@@ -139,18 +117,15 @@ export const ProviderDashboard = () => {
       });
 
       // Sort appointments by date
-      const allRecentAppointments = recentAppointments
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 8);
-
+      const allRecentAppointments = recentAppointments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 8);
       console.log('Total appointments found:', totalAppointments);
       console.log('Recent appointments:', allRecentAppointments);
-
       const avgOccupancy = Math.round(occupancyData.reduce((sum, day) => sum + day.occupancy, 0) / occupancyData.length);
       const estimatedRevenue = bookedCount * 100; // $100 per appointment estimate
 
       setStats({
-        newCustomers: Math.floor(totalAppointments * 0.3), // 30% of appointments are new customers
+        newCustomers: Math.floor(totalAppointments * 0.3),
+        // 30% of appointments are new customers
         weeklyRevenue: estimatedRevenue,
         occupancyRate: avgOccupancy,
         bookedAppointments: bookedCount,
@@ -159,25 +134,21 @@ export const ProviderDashboard = () => {
         customerChange: totalAppointments > 0 ? -5.2 : 0,
         occupancyChange: 0
       });
-
       setRecentAppointments(allRecentAppointments);
       setDailyOccupancy(occupancyData);
       setWeeklyData(trendData);
-      
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
-
   const getOccupancyColor = (occupancy: number) => {
     if (occupancy >= 81) return 'bg-red-600';
     if (occupancy >= 41) return 'bg-orange-500';
     if (occupancy >= 21) return 'bg-orange-300';
     return 'bg-gray-200';
   };
-
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case 'confirmed':
@@ -192,21 +163,16 @@ export const ProviderDashboard = () => {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
-
   if (loading) {
-    return (
-      <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
+    return <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
         <div className="text-center py-8">Loading dashboard data...</div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
+  return <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Hello, {user?.email?.split('@')[0] || 'Provider'}.</h1>
-        <p className="text-gray-600">Welcome to your Well-Launched dashboard.</p>
+        
       </div>
 
       {/* Top Stats Cards */}
@@ -259,14 +225,10 @@ export const ProviderDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.bookedAppointments}</div>
             <div className="flex items-center text-sm">
-              {stats.bookedAppointments > 0 ? (
-                <>
+              {stats.bookedAppointments > 0 ? <>
                   <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                   <span className="text-green-500">Active</span>
-                </>
-              ) : (
-                <span className="text-gray-500">No appointments yet</span>
-              )}
+                </> : <span className="text-gray-500">No appointments yet</span>}
             </div>
           </CardContent>
         </Card>
@@ -281,14 +243,10 @@ export const ProviderDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.bookedAppointments} | {stats.cancelledAppointments}</div>
             <div className="flex items-center text-sm">
-              {(stats.bookedAppointments + stats.cancelledAppointments) > 0 ? (
-                <>
+              {stats.bookedAppointments + stats.cancelledAppointments > 0 ? <>
                   <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
                   <span className="text-green-500">Current totals</span>
-                </>
-              ) : (
-                <span className="text-gray-500">No data available</span>
-              )}
+                </> : <span className="text-gray-500">No data available</span>}
             </div>
           </CardContent>
         </Card>
@@ -299,24 +257,14 @@ export const ProviderDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-7 gap-1 mb-4">
-              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => (
-                <div key={index} className="text-center text-xs text-gray-500 font-medium">
+              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => <div key={index} className="text-center text-xs text-gray-500 font-medium">
                   {day}
-                </div>
-              ))}
+                </div>)}
             </div>
             <div className="grid grid-cols-7 gap-1">
-              {dailyOccupancy.map((day, index) => (
-                <div
-                  key={index}
-                  className={`aspect-square rounded ${getOccupancyColor(day.occupancy)} flex items-center justify-center`}
-                  title={`${day.occupancy}% occupancy`}
-                >
-                  {day.occupancy > 60 && (
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  )}
-                </div>
-              ))}
+              {dailyOccupancy.map((day, index) => <div key={index} className={`aspect-square rounded ${getOccupancyColor(day.occupancy)} flex items-center justify-center`} title={`${day.occupancy}% occupancy`}>
+                  {day.occupancy > 60 && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                </div>)}
             </div>
             <div className="mt-4 space-y-2 text-xs">
               <div className="flex items-center gap-2">
@@ -354,15 +302,11 @@ export const ProviderDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentAppointments.length === 0 ? (
-                <div className="text-center py-8">
+              {recentAppointments.length === 0 ? <div className="text-center py-8">
                   <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                   <p className="text-gray-500 font-medium">No appointments found</p>
                   <p className="text-sm text-gray-400">Recent appointments will appear here</p>
-                </div>
-              ) : (
-                recentAppointments.map((appointment) => (
-                  <div key={appointment.id} className="flex items-center justify-between">
+                </div> : recentAppointments.map(appointment => <div key={appointment.id} className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="text-sm">
                         <div className="font-medium">{appointment.date}</div>
@@ -383,9 +327,7 @@ export const ProviderDashboard = () => {
                         </AvatarFallback>
                       </Avatar>
                     </div>
-                  </div>
-                ))
-              )}
+                  </div>)}
             </div>
           </CardContent>
         </Card>
@@ -406,6 +348,5 @@ export const ProviderDashboard = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };

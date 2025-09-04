@@ -13,24 +13,21 @@ import { AppointmentCalendarSync } from './AppointmentCalendarSync';
 import { ProviderDashboard } from './ProviderDashboard';
 import { DayScheduleView } from './DayScheduleView';
 import { AppointmentsTableView } from './AppointmentsTableView';
-
+import { AppointmentSystemTest } from './AppointmentSystemTest';
 import { AdminCalendarView } from './AdminCalendarView';
 import { AdminTimeView } from './AdminTimeView';
 import { ClientsList } from './ClientsList';
 import { useAuth } from '@/contexts/AuthContext';
-
 export const AppointmentDashboard = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Appointment Management</h1>
-          <p className="text-muted-foreground">
-            Manage appointments, availability, and calendar synchronization
-          </p>
+          
         </div>
       </div>
 
@@ -153,6 +150,5 @@ export const AppointmentDashboard = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };

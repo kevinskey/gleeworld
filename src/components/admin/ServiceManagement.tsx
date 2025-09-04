@@ -14,7 +14,6 @@ import { useMediaLibrary, useUploadImage, useDeleteMedia } from '@/hooks/useMedi
 import { CalendarViews } from '@/components/calendar/CalendarViews';
 import { AppointmentDashboard } from '@/components/appointments/AppointmentDashboard';
 import { toast } from 'sonner';
-
 interface ServiceFormData {
   name: string;
   description: string;
@@ -33,7 +32,6 @@ interface ServiceFormData {
   booking_buffer_minutes: number;
   advance_booking_days: number;
 }
-
 const initialFormData: ServiceFormData = {
   name: '',
   description: '',
@@ -50,37 +48,55 @@ const initialFormData: ServiceFormData = {
   category: 'general',
   requires_approval: false,
   booking_buffer_minutes: 15,
-  advance_booking_days: 30,
+  advance_booking_days: 30
 };
-
-const badgeColors = [
-  { value: 'bg-blue-500', label: 'Blue' },
-  { value: 'bg-green-500', label: 'Green' },
-  { value: 'bg-yellow-500', label: 'Yellow' },
-  { value: 'bg-red-500', label: 'Red' },
-  { value: 'bg-purple-500', label: 'Purple' },
-  { value: 'bg-orange-500', label: 'Orange' },
-];
-
-const categories = [
-  { value: 'general', label: 'General' },
-  { value: 'coaching', label: 'Coaching' },
-  { value: 'rehearsal', label: 'Rehearsal' },
-  { value: 'accompaniment', label: 'Accompaniment' },
-  { value: 'education', label: 'Education' },
-];
-
+const badgeColors = [{
+  value: 'bg-blue-500',
+  label: 'Blue'
+}, {
+  value: 'bg-green-500',
+  label: 'Green'
+}, {
+  value: 'bg-yellow-500',
+  label: 'Yellow'
+}, {
+  value: 'bg-red-500',
+  label: 'Red'
+}, {
+  value: 'bg-purple-500',
+  label: 'Purple'
+}, {
+  value: 'bg-orange-500',
+  label: 'Orange'
+}];
+const categories = [{
+  value: 'general',
+  label: 'General'
+}, {
+  value: 'coaching',
+  label: 'Coaching'
+}, {
+  value: 'rehearsal',
+  label: 'Rehearsal'
+}, {
+  value: 'accompaniment',
+  label: 'Accompaniment'
+}, {
+  value: 'education',
+  label: 'Education'
+}];
 export default function ServiceManagement() {
   const [activeTab, setActiveTab] = useState('services');
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<ServiceFormData>(initialFormData);
-
-  const { data: services, isLoading } = useServices();
+  const {
+    data: services,
+    isLoading
+  } = useServices();
   const createService = useCreateService();
   const updateService = useUpdateService();
   const deleteService = useDeleteService();
-
   const handleEdit = (service: Service) => {
     setEditingId(service.id);
     setFormData({
@@ -99,17 +115,23 @@ export default function ServiceManagement() {
       category: service.category,
       requires_approval: service.requires_approval,
       booking_buffer_minutes: service.booking_buffer_minutes,
-      advance_booking_days: service.advance_booking_days,
+      advance_booking_days: service.advance_booking_days
     });
   };
-
   const handleSave = async () => {
     try {
       if (editingId) {
-        await updateService.mutateAsync({ id: editingId, ...formData, is_active: true });
+        await updateService.mutateAsync({
+          id: editingId,
+          ...formData,
+          is_active: true
+        });
         setEditingId(null);
       } else {
-        await createService.mutateAsync({ ...formData, is_active: true });
+        await createService.mutateAsync({
+          ...formData,
+          is_active: true
+        });
         setIsCreating(false);
       }
       setFormData(initialFormData);
@@ -117,29 +139,26 @@ export default function ServiceManagement() {
       toast.error('Failed to save service');
     }
   };
-
   const handleCancel = () => {
     setIsCreating(false);
     setEditingId(null);
     setFormData(initialFormData);
   };
-
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to deactivate this service?')) {
       await deleteService.mutateAsync(id);
     }
   };
-
   const handleInputChange = (field: keyof ServiceFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
-
   if (isLoading) {
     return <div>Loading services...</div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Service & Schedule Management</h2>
@@ -175,8 +194,7 @@ export default function ServiceManagement() {
           </div>
 
           {/* Create/Edit Form */}
-          {(isCreating || editingId) && (
-            <Card>
+          {(isCreating || editingId) && <Card>
               <CardHeader>
                 <CardTitle>{editingId ? 'Edit Service' : 'Create New Service'}</CardTitle>
               </CardHeader>
@@ -184,156 +202,92 @@ export default function ServiceManagement() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">Service Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder="e.g., Voice Coaching"
-                    />
+                    <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="e.g., Voice Coaching" />
                   </div>
 
                   <div>
                     <Label htmlFor="category">Category</Label>
-                    <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                    <Select value={formData.category} onValueChange={value => handleInputChange('category', value)}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.value} value={cat.value}>
+                        {categories.map(cat => <SelectItem key={cat.value} value={cat.value}>
                             {cat.label}
-                          </SelectItem>
-                        ))}
+                          </SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="md:col-span-2">
                     <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
-                      placeholder="Service description..."
-                    />
+                    <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="Service description..." />
                   </div>
 
                   <div>
                     <Label htmlFor="duration">Duration (minutes)</Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      value={formData.duration_minutes}
-                      onChange={(e) => handleInputChange('duration_minutes', parseInt(e.target.value))}
-                    />
+                    <Input id="duration" type="number" value={formData.duration_minutes} onChange={e => handleInputChange('duration_minutes', parseInt(e.target.value))} />
                   </div>
 
                   <div>
                     <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      value={formData.location}
-                      onChange={(e) => handleInputChange('location', e.target.value)}
-                      placeholder="e.g., Music Room A"
-                    />
+                    <Input id="location" value={formData.location} onChange={e => handleInputChange('location', e.target.value)} placeholder="e.g., Music Room A" />
                   </div>
 
                   <div>
                     <Label htmlFor="instructor">Instructor</Label>
-                    <Input
-                      id="instructor"
-                      value={formData.instructor}
-                      onChange={(e) => handleInputChange('instructor', e.target.value)}
-                      placeholder="e.g., Dr. Johnson"
-                    />
+                    <Input id="instructor" value={formData.instructor} onChange={e => handleInputChange('instructor', e.target.value)} placeholder="e.g., Dr. Johnson" />
                   </div>
 
                   <div>
                     <Label htmlFor="price">Price Amount</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      value={formData.price_amount}
-                      onChange={(e) => handleInputChange('price_amount', parseFloat(e.target.value))}
-                    />
+                    <Input id="price" type="number" step="0.01" value={formData.price_amount} onChange={e => handleInputChange('price_amount', parseFloat(e.target.value))} />
                   </div>
 
                   <div>
                     <Label htmlFor="price_display">Price Display</Label>
-                    <Input
-                      id="price_display"
-                      value={formData.price_display}
-                      onChange={(e) => handleInputChange('price_display', e.target.value)}
-                      placeholder="e.g., $75 or Free"
-                    />
+                    <Input id="price_display" value={formData.price_display} onChange={e => handleInputChange('price_display', e.target.value)} placeholder="e.g., $75 or Free" />
                   </div>
 
                   <div>
                     <Label htmlFor="capacity_min">Min Capacity</Label>
-                    <Input
-                      id="capacity_min"
-                      type="number"
-                      value={formData.capacity_min}
-                      onChange={(e) => handleInputChange('capacity_min', parseInt(e.target.value))}
-                    />
+                    <Input id="capacity_min" type="number" value={formData.capacity_min} onChange={e => handleInputChange('capacity_min', parseInt(e.target.value))} />
                   </div>
 
                   <div>
                     <Label htmlFor="capacity_max">Max Capacity</Label>
-                    <Input
-                      id="capacity_max"
-                      type="number"
-                      value={formData.capacity_max}
-                      onChange={(e) => handleInputChange('capacity_max', parseInt(e.target.value))}
-                    />
+                    <Input id="capacity_max" type="number" value={formData.capacity_max} onChange={e => handleInputChange('capacity_max', parseInt(e.target.value))} />
                   </div>
 
                   <div>
                     <Label htmlFor="badge_text">Badge Text</Label>
-                    <Input
-                      id="badge_text"
-                      value={formData.badge_text}
-                      onChange={(e) => handleInputChange('badge_text', e.target.value)}
-                      placeholder="e.g., Popular, New"
-                    />
+                    <Input id="badge_text" value={formData.badge_text} onChange={e => handleInputChange('badge_text', e.target.value)} placeholder="e.g., Popular, New" />
                   </div>
 
                   <div>
                     <Label htmlFor="badge_color">Badge Color</Label>
-                    <Select value={formData.badge_color} onValueChange={(value) => handleInputChange('badge_color', value)}>
+                    <Select value={formData.badge_color} onValueChange={value => handleInputChange('badge_color', value)}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {badgeColors.map((color) => (
-                          <SelectItem key={color.value} value={color.value}>
+                        {badgeColors.map(color => <SelectItem key={color.value} value={color.value}>
                             <div className="flex items-center gap-2">
                               <div className={`w-4 h-4 rounded ${color.value}`}></div>
                               {color.label}
                             </div>
-                          </SelectItem>
-                        ))}
+                          </SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="md:col-span-2">
                     <Label htmlFor="image_url">Image URL</Label>
-                    <Input
-                      id="image_url"
-                      value={formData.image_url}
-                      onChange={(e) => handleInputChange('image_url', e.target.value)}
-                      placeholder="https://example.com/image.jpg"
-                    />
+                    <Input id="image_url" value={formData.image_url} onChange={e => handleInputChange('image_url', e.target.value)} placeholder="https://example.com/image.jpg" />
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    <Switch
-                      id="requires_approval"
-                      checked={formData.requires_approval}
-                      onCheckedChange={(checked) => handleInputChange('requires_approval', checked)}
-                    />
+                    <Switch id="requires_approval" checked={formData.requires_approval} onCheckedChange={checked => handleInputChange('requires_approval', checked)} />
                     <Label htmlFor="requires_approval">Requires Approval</Label>
                   </div>
                 </div>
@@ -349,31 +303,19 @@ export default function ServiceManagement() {
                   </Button>
                 </div>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
 
           {/* Services List */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services?.map((service) => (
-              <Card key={service.id} className="relative">
+            {services?.map(service => <Card key={service.id} className="relative">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-lg">{service.name}</h3>
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(service)}
-                        disabled={editingId !== null || isCreating}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(service)} disabled={editingId !== null || isCreating}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDelete(service.id)}
-                        disabled={deleteService.isPending}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => handleDelete(service.id)} disabled={deleteService.isPending}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -408,22 +350,17 @@ export default function ServiceManagement() {
                     </div>
                   </div>
 
-                  {service.badge_text && (
-                    <div className="mt-3">
+                  {service.badge_text && <div className="mt-3">
                       <Badge className={`${service.badge_color} text-white`}>
                         {service.badge_text}
                       </Badge>
-                    </div>
-                  )}
+                    </div>}
 
-                  {service.requires_approval && (
-                    <div className="mt-2">
+                  {service.requires_approval && <div className="mt-2">
                       <Badge variant="secondary">Requires Approval</Badge>
-                    </div>
-                  )}
+                    </div>}
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </TabsContent>
 
@@ -444,10 +381,8 @@ export default function ServiceManagement() {
         <TabsContent value="appointments" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Appointment Management</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Full appointment dashboard with scheduling, availability management, and booking controls
-              </p>
+              
+              
             </CardHeader>
             <CardContent>
               <AppointmentDashboard />
@@ -455,6 +390,5 @@ export default function ServiceManagement() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 }
