@@ -2,24 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { useModuleOrdering } from "@/hooks/useModuleOrdering";
 import { ModuleRegistry } from '@/utils/moduleRegistry';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
-  useSortable,
-} from '@dnd-kit/sortable';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,40 +21,10 @@ import { useState as reactUseState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ModuleCard } from '@/components/shared/ModuleWrapper';
 import { UNIFIED_MODULE_CATEGORIES } from '@/config/unified-modules';
-import { 
-  Calendar, 
-  CheckCircle, 
-  DollarSign, 
-  Bell, 
-  Music, 
-  BookOpen,
-  Clock,
-  Award,
-  Users,
-  TrendingUp,
-  Settings,
-  Star,
-  Shield,
-  Database,
-  BarChart3,
-  FileText,
-  AlertCircle,
-  Crown,
-  Server,
-  Activity,
-  Lock,
-  GraduationCap,
-  Grid3X3,
-  ChevronDown,
-  ChevronUp,
-  GripVertical,
-  Globe,
-  Zap,
-  Heart,
-  Eye
-} from "lucide-react";
-
-const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(module => ({ default: module.CalendarViews })));
+import { Calendar, CheckCircle, DollarSign, Bell, Music, BookOpen, Clock, Award, Users, TrendingUp, Settings, Star, Shield, Database, BarChart3, FileText, AlertCircle, Crown, Server, Activity, Lock, GraduationCap, Grid3X3, ChevronDown, ChevronUp, GripVertical, Globe, Zap, Heart, Eye } from "lucide-react";
+const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(module => ({
+  default: module.CalendarViews
+})));
 
 // Sortable Module Card Component
 interface SortableModuleCardProps {
@@ -77,46 +32,38 @@ interface SortableModuleCardProps {
   onModuleClick: (moduleId: string) => void;
   isDragging?: boolean;
 }
-
-const SortableModuleCard = ({ module, onModuleClick, isDragging }: SortableModuleCardProps) => {
+const SortableModuleCard = ({
+  module,
+  onModuleClick,
+  isDragging
+}: SortableModuleCardProps) => {
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
-    isDragging: isSortableDragging,
-  } = useSortable({ id: module.id });
-
+    isDragging: isSortableDragging
+  } = useSortable({
+    id: module.id
+  });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isSortableDragging ? 0.5 : 1,
+    opacity: isSortableDragging ? 0.5 : 1
   };
-
   const IconComponent = module.icon;
-
-  return (
-    <div ref={setNodeRef} style={style} {...attributes}>
-      <Card 
-        className={`cursor-pointer hover:shadow-md transition-all duration-200 ${
-          isSortableDragging ? 'shadow-lg ring-2 ring-primary/20' : ''
-        }`}
-      >
+  return <div ref={setNodeRef} style={style} {...attributes}>
+      <Card className={`cursor-pointer hover:shadow-md transition-all duration-200 ${isSortableDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}`}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3 flex-1">
-              <div 
-                {...listeners}
-                className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
-              >
+              <div {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
               </div>
-              {IconComponent && (
-                <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
+              {IconComponent && <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
                   <IconComponent className={`h-4 w-4 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
-                </div>
-              )}
+                </div>}
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-sm font-medium leading-tight line-clamp-2">
                   {module.title}
@@ -126,28 +73,19 @@ const SortableModuleCard = ({ module, onModuleClick, isDragging }: SortableModul
                 </CardDescription>
               </div>
             </div>
-            {module.isNew && (
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 ml-2">
+            {module.isNew && <Badge variant="secondary" className="text-xs px-2 py-0.5 ml-2">
                 New
-              </Badge>
-            )}
+              </Badge>}
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full"
-            onClick={() => onModuleClick(module.id)}
-          >
+          <Button variant="outline" size="sm" className="w-full" onClick={() => onModuleClick(module.id)}>
             Open Module
           </Button>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 interface SuperAdminDashboardProps {
   user: {
     id: string;
@@ -159,24 +97,28 @@ interface SuperAdminDashboardProps {
     created_at: string;
   };
 }
-
-export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
+export const SuperAdminDashboard = ({
+  user
+}: SuperAdminDashboardProps) => {
   console.log('SuperAdminDashboard: Component loaded with user:', user);
   const navigate = useNavigate();
-  const { events: upcomingEvents } = usePublicGleeWorldEvents();
-  
+  const {
+    events: upcomingEvents
+  } = usePublicGleeWorldEvents();
+
   // Get all modules available to super admin
-  const { 
-    modules: allModules, 
-    categories, 
+  const {
+    modules: allModules,
+    categories,
     loading: modulesLoading,
     getModulesByCategory
   } = useUnifiedModules({
     userRole: 'super-admin',
     isAdmin: true
   });
-
-  const { saveCategoryOrder } = useModuleOrdering(user.id);
+  const {
+    saveCategoryOrder
+  } = useModuleOrdering(user.id);
 
   // Create modulesByCategory object from the function, enhanced with component data
   const modulesByCategory = useMemo(() => {
@@ -184,28 +126,26 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
       const result: Record<string, any[]> = {};
       categories.forEach(category => {
         try {
-          const modules = getModulesByCategory(category)
-            .map(module => {
-              try {
-                // Get the full module config from registry
-                const moduleConfig = ModuleRegistry.getModule(module.id);
-                if (!moduleConfig) {
-                  console.warn(`Module config not found for: ${module.id}`);
-                  return null;
-                }
-                return {
-                  ...module,
-                  icon: moduleConfig.icon,
-                  iconColor: moduleConfig.iconColor || 'blue',
-                  component: moduleConfig.component,
-                  isNew: moduleConfig.isNew || false
-                };
-              } catch (error) {
-                console.error(`Error processing module ${module.id}:`, error);
+          const modules = getModulesByCategory(category).map(module => {
+            try {
+              // Get the full module config from registry
+              const moduleConfig = ModuleRegistry.getModule(module.id);
+              if (!moduleConfig) {
+                console.warn(`Module config not found for: ${module.id}`);
                 return null;
               }
-            })
-            .filter(module => module !== null && module.component !== undefined); // Filter out null modules and modules without components
+              return {
+                ...module,
+                icon: moduleConfig.icon,
+                iconColor: moduleConfig.iconColor || 'blue',
+                component: moduleConfig.component,
+                isNew: moduleConfig.isNew || false
+              };
+            } catch (error) {
+              console.error(`Error processing module ${module.id}:`, error);
+              return null;
+            }
+          }).filter(module => module !== null && module.component !== undefined); // Filter out null modules and modules without components
           result[category] = modules;
         } catch (error) {
           console.error(`Error processing category ${category}:`, error);
@@ -218,14 +158,9 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
       return {};
     }
   }, [categories, getModulesByCategory]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
+  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
+    coordinateGetter: sortableKeyboardCoordinates
+  }));
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [showAllModules, setShowAllModules] = useState(false);
   const [overviewCollapsed, setOverviewCollapsed] = useState(true);
@@ -242,7 +177,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
   // Sort modules within categories based on custom ordering
   const sortedModulesByCategory = useMemo(() => {
     const result: Record<string, any[]> = {};
-    
+
     // Add null check to prevent Object.entries error
     if (modulesByCategory && typeof modulesByCategory === 'object') {
       Object.entries(modulesByCategory).forEach(([category, categoryModules]) => {
@@ -250,29 +185,24 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
         result[category] = categoryModules ? [...categoryModules] : [];
       });
     }
-    
     return result;
   }, [modulesByCategory]);
 
   // Format events for AnnouncementsEventsSection
-  const formattedUpcomingEvents = upcomingEvents
-    .filter(event => {
-      // Filter out events with invalid dates
-      const isValidDate = event.start_date && !isNaN(new Date(event.start_date).getTime());
-      if (!isValidDate) {
-        console.warn('Invalid date found in event:', event.id, event.start_date);
-      }
-      return isValidDate;
-    })
-    .slice(0, 6)
-    .map(event => ({
-      id: event.id,
-      title: event.title,
-      date: event.start_date,
-      location: event.location || event.venue_name || undefined,
-      type: event.event_type || undefined
-    }));
-  
+  const formattedUpcomingEvents = upcomingEvents.filter(event => {
+    // Filter out events with invalid dates
+    const isValidDate = event.start_date && !isNaN(new Date(event.start_date).getTime());
+    if (!isValidDate) {
+      console.warn('Invalid date found in event:', event.id, event.start_date);
+    }
+    return isValidDate;
+  }).slice(0, 6).map(event => ({
+    id: event.id,
+    title: event.title,
+    date: event.start_date,
+    location: event.location || event.venue_name || undefined,
+    type: event.event_type || undefined
+  }));
   const [superAdminData, setSuperAdminData] = useState({
     systemOverview: {
       totalUsers: 0,
@@ -302,22 +232,21 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
     criticalTasks: [],
     recentActions: []
   });
-
   const [calendarCollapsed, setCalendarCollapsed] = useState(true);
   const [quickAccessCollapsed, setQuickAccessCollapsed] = useState(true);
-
   const handleDragEnd = (event: DragEndEvent, category: string) => {
-    const { active, over } = event;
-
+    const {
+      active,
+      over
+    } = event;
     if (over && active.id !== over.id) {
       const categoryModules = sortedModulesByCategory[category];
       const oldIndex = categoryModules.findIndex(module => module.id === active.id);
       const newIndex = categoryModules.findIndex(module => module.id === over.id);
-
       if (oldIndex !== -1 && newIndex !== -1) {
         const newOrder = arrayMove(categoryModules, oldIndex, newIndex);
         const orderedModuleKeys = newOrder.map(module => module.id);
-        
+
         // Save the new order
         saveCategoryOrder(category, orderedModuleKeys);
       }
@@ -331,81 +260,86 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
       [sectionName]: !prev[sectionName]
     }));
   };
-
   useEffect(() => {
     const fetchSuperAdminData = async () => {
       try {
         // Fetch user statistics
-        const { count: totalUsers } = await supabase
-          .from('gw_profiles')
-          .select('*', { count: 'exact', head: true });
-
-        const { count: activeUsers } = await supabase
-          .from('gw_profiles')
-          .select('*', { count: 'exact', head: true })
-          .not('last_sign_in_at', 'is', null);
-
-        const { count: totalAdmins } = await supabase
-          .from('gw_profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_admin', true);
-
-        const { count: superAdmins } = await supabase
-          .from('gw_profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_super_admin', true);
+        const {
+          count: totalUsers
+        } = await supabase.from('gw_profiles').select('*', {
+          count: 'exact',
+          head: true
+        });
+        const {
+          count: activeUsers
+        } = await supabase.from('gw_profiles').select('*', {
+          count: 'exact',
+          head: true
+        }).not('last_sign_in_at', 'is', null);
+        const {
+          count: totalAdmins
+        } = await supabase.from('gw_profiles').select('*', {
+          count: 'exact',
+          head: true
+        }).eq('is_admin', true);
+        const {
+          count: superAdmins
+        } = await supabase.from('gw_profiles').select('*', {
+          count: 'exact',
+          head: true
+        }).eq('is_super_admin', true);
 
         // Fetch global metrics
-        const { count: totalEvents } = await supabase
-          .from('gw_events')
-          .select('*', { count: 'exact', head: true });
-
-        const { count: totalContracts } = await supabase
-          .from('contracts_v2')
-          .select('*', { count: 'exact', head: true });
+        const {
+          count: totalEvents
+        } = await supabase.from('gw_events').select('*', {
+          count: 'exact',
+          head: true
+        });
+        const {
+          count: totalContracts
+        } = await supabase.from('contracts_v2').select('*', {
+          count: 'exact',
+          head: true
+        });
 
         // Fetch security events
-        const { data: securityEvents } = await supabase
-          .from('gw_security_audit_log')
-          .select('action_type, created_at')
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        const failedLogins = securityEvents?.filter(e => 
-          e.action_type.includes('failed') || e.action_type.includes('unauthorized')
-        ).length || 0;
+        const {
+          data: securityEvents
+        } = await supabase.from('gw_security_audit_log').select('action_type, created_at').order('created_at', {
+          ascending: false
+        }).limit(10);
+        const failedLogins = securityEvents?.filter(e => e.action_type.includes('failed') || e.action_type.includes('unauthorized')).length || 0;
 
         // Fetch recent admin actions
-        const { data: adminActions } = await supabase
-          .from('activity_logs')
-          .select('action_type, created_at, user_id')
-          .in('action_type', ['role_changed', 'user_created', 'user_deleted', 'admin_action'])
-          .order('created_at', { ascending: false })
-          .limit(5);
-
+        const {
+          data: adminActions
+        } = await supabase.from('activity_logs').select('action_type, created_at, user_id').in('action_type', ['role_changed', 'user_created', 'user_deleted', 'admin_action']).order('created_at', {
+          ascending: false
+        }).limit(5);
         setSuperAdminData(prev => ({
           ...prev,
           systemOverview: {
             ...prev.systemOverview,
             totalUsers: totalUsers || 0,
             activeUsers: activeUsers || 0,
-            usedStorage: Math.round((totalUsers || 0) * 0.5), // Rough calculation
+            usedStorage: Math.round((totalUsers || 0) * 0.5) // Rough calculation
           },
           securityMetrics: {
             ...prev.securityMetrics,
             activeLogins: activeUsers || 0,
-            failedLoginAttempts: failedLogins,
+            failedLoginAttempts: failedLogins
           },
           administrativeStats: {
             ...prev.administrativeStats,
             totalAdmins: totalAdmins || 0,
-            superAdmins: superAdmins || 0,
+            superAdmins: superAdmins || 0
           },
           globalMetrics: {
             ...prev.globalMetrics,
             totalEvents: totalEvents || 0,
             totalContracts: totalContracts || 0,
-            membershipGrowth: 12.5, // TODO: Calculate real growth
+            membershipGrowth: 12.5 // TODO: Calculate real growth
           },
           recentActions: adminActions?.map((action, index) => ({
             id: String(index + 1),
@@ -419,48 +353,32 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
         console.error('Error fetching super admin data:', error);
       }
     };
-
     fetchSuperAdminData();
   }, []);
 
   // If a specific module is selected, show it full page
   if (selectedModule) {
     const moduleConfig = ModuleRegistry.getModule(selectedModule);
-    
     if (moduleConfig && moduleConfig.component) {
       const ModuleComponent = moduleConfig.component;
-      return (
-        <div className="min-h-screen p-6">
+      return <div className="min-h-screen p-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedModule(null)}
-              className="p-0 h-auto"
-            >
+            <Button variant="ghost" size="sm" onClick={() => setSelectedModule(null)} className="p-0 h-auto">
               Super Admin Dashboard
             </Button>
             <span>/</span>
             <span className="text-foreground font-medium">{moduleConfig.title}</span>
           </div>
           
-          <ModuleComponent 
-            user={{
-              ...user,
-              is_admin: true,
-              is_super_admin: true
-            }} 
-            isFullPage={true}
-            onNavigate={(moduleId: string) => setSelectedModule(moduleId)}
-          />
-        </div>
-      );
+          <ModuleComponent user={{
+          ...user,
+          is_admin: true,
+          is_super_admin: true
+        }} isFullPage={true} onNavigate={(moduleId: string) => setSelectedModule(moduleId)} />
+        </div>;
     }
   }
-
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Quick Action Modules */}
       <div className="bg-gradient-to-r from-primary/5 via-background to-muted/20 rounded-lg p-6">
         <div className="flex items-center gap-3 mb-4">
@@ -469,10 +387,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {/* Permissions Module */}
-          <Card 
-            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" 
-            onClick={() => setSelectedModule('permissions')}
-          >
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedModule('permissions')}>
             <CardContent className="p-4 text-center">
               <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center mx-auto mb-3">
                 <Shield className="h-6 w-6 text-orange-600 dark:text-orange-400" />
@@ -483,10 +398,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
           </Card>
 
           {/* User Management Module */}
-          <Card 
-            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" 
-            onClick={() => setSelectedModule('user-management')}
-          >
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedModule('user-management')}>
             <CardContent className="p-4 text-center">
               <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center mx-auto mb-3">
                 <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -497,10 +409,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
           </Card>
 
           {/* Service Management Module */}
-          <Card 
-            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" 
-            onClick={() => setSelectedModule('service-management')}
-          >
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedModule('service-management')}>
             <CardContent className="p-4 text-center">
               <div className="w-12 h-12 rounded-lg bg-cyan-100 dark:bg-cyan-900/20 flex items-center justify-center mx-auto mb-3">
                 <Clock className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />
@@ -511,10 +420,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
           </Card>
 
           {/* Bookings Module */}
-          <Card 
-            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" 
-            onClick={() => setSelectedModule('booking-forms')}
-          >
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedModule('booking-forms')}>
             <CardContent className="p-4 text-center">
               <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center mx-auto mb-3">
                 <FileText className="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -525,10 +431,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
           </Card>
 
           {/* Notifications Module */}
-          <Card 
-            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" 
-            onClick={() => setSelectedModule('notifications')}
-          >
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedModule('notifications')}>
             <CardContent className="p-4 text-center">
               <div className="w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-3">
                 <Bell className="h-6 w-6 text-red-600 dark:text-red-400" />
@@ -551,48 +454,31 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
             Complete system administration and module management
           </p>
         </div>
-        <Button
-          onClick={() => setShowAllModules(!showAllModules)}
-          variant={showAllModules ? "default" : "outline"}
-          className="flex items-center gap-2 h-12 px-6 text-base"
-        >
+        <Button onClick={() => setShowAllModules(!showAllModules)} variant={showAllModules ? "default" : "outline"} className="flex items-center gap-2 h-12 px-6 text-base">
           <Grid3X3 className="h-5 w-5" />
           {showAllModules ? "Show Overview" : "Show All Modules"}
         </Button>
       </div>
 
-      {showAllModules ? (
-        /* All Modules View */
-        <div className="space-y-8">
-          {modulesLoading ? (
-            <div className="text-center py-8 text-lg">Loading modules...</div>
-          ) : (
-            Object.entries(sortedModulesByCategory).map(([categoryName, categoryModules]) => {
-              const categoryConfig = UNIFIED_MODULE_CATEGORIES.find(c => c.id === categoryName);
-              const IconComponent = categoryConfig?.icon || Users;
-              const isCollapsed = collapsedSections[categoryName];
-              const isSingleModule = categoryModules.length === 1;
-              
-              if (categoryModules.length === 0) return null;
-              
-              return (
-                <div key={categoryName} className="space-y-3">
+      {showAllModules ? (/* All Modules View */
+    <div className="space-y-8">
+          {modulesLoading ? <div className="text-center py-8 text-lg">Loading modules...</div> : Object.entries(sortedModulesByCategory).map(([categoryName, categoryModules]) => {
+        const categoryConfig = UNIFIED_MODULE_CATEGORIES.find(c => c.id === categoryName);
+        const IconComponent = categoryConfig?.icon || Users;
+        const isCollapsed = collapsedSections[categoryName];
+        const isSingleModule = categoryModules.length === 1;
+        if (categoryModules.length === 0) return null;
+        return <div key={categoryName} className="space-y-3">
                   {/* Category Header */}
-                  <Collapsible 
-                    open={!isCollapsed}
-                    onOpenChange={(open) => {
-                      if (!isSingleModule) {
-                        setCollapsedSections(prev => ({
-                          ...prev,
-                          [categoryName]: !open
-                        }));
-                      }
-                    }}
-                  >
-                    <CollapsibleTrigger 
-                      className={`w-full ${isSingleModule ? 'cursor-default' : 'cursor-pointer'}`}
-                      disabled={isSingleModule}
-                    >
+                  <Collapsible open={!isCollapsed} onOpenChange={open => {
+            if (!isSingleModule) {
+              setCollapsedSections(prev => ({
+                ...prev,
+                [categoryName]: !open
+              }));
+            }
+          }}>
+                    <CollapsibleTrigger className={`w-full ${isSingleModule ? 'cursor-default' : 'cursor-pointer'}`} disabled={isSingleModule}>
                       <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors">
                         <div className="flex items-center gap-3">
                           <IconComponent className="h-5 w-5 text-primary" />
@@ -609,41 +495,25 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                           <Badge variant="outline" className="font-medium">
                             {categoryModules.length} module{categoryModules.length !== 1 ? 's' : ''}
                           </Badge>
-                          {!isSingleModule && (
-                            isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />
-                          )}
+                          {!isSingleModule && (isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />)}
                         </div>
                       </div>
                     </CollapsibleTrigger>
                     
                     <CollapsibleContent className="space-y-3">
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={(event) => handleDragEnd(event, categoryName)}
-                      >
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={event => handleDragEnd(event, categoryName)}>
                         <SortableContext items={categoryModules.map(m => m.id)} strategy={verticalListSortingStrategy}>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
-                            {categoryModules.map((module) => (
-                              <SortableModuleCard
-                                key={module.id}
-                                module={module}
-                                onModuleClick={(moduleId) => setSelectedModule(moduleId)}
-                              />
-                            ))}
+                            {categoryModules.map(module => <SortableModuleCard key={module.id} module={module} onModuleClick={moduleId => setSelectedModule(moduleId)} />)}
                           </div>
                         </SortableContext>
                       </DndContext>
                     </CollapsibleContent>
                   </Collapsible>
-                </div>
-              );
-            })
-          )}
-        </div>
-      ) : (
-        /* Dashboard Overview */
-        <div className="space-y-6">
+                </div>;
+      })}
+        </div>) : (/* Dashboard Overview */
+    <div className="space-y-6">
           {/* Quick Access Modules Section */}
           <Card>
             <CardHeader>
@@ -657,17 +527,8 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                     Most frequently used administrative modules
                   </CardDescription>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setQuickAccessCollapsed(!quickAccessCollapsed)}
-                  className="flex items-center gap-2"
-                >
-                  {quickAccessCollapsed ? (
-                    <ChevronDown className="h-4 w-4" />
-                  ) : (
-                    <ChevronUp className="h-4 w-4" />
-                  )}
+                <Button variant="ghost" size="sm" onClick={() => setQuickAccessCollapsed(!quickAccessCollapsed)} className="flex items-center gap-2">
+                  {quickAccessCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                   {quickAccessCollapsed ? 'Expand' : 'Collapse'}
                 </Button>
               </div>
@@ -677,14 +538,10 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Module Assignment - Only for Super Admin */}
-                    <Button
-                      variant="outline"
-                      className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-blue-200 hover:border-blue-300"
-                      onClick={() => {
-                        console.log('Module Assignment button clicked, setting selectedModule to user-module-assignment');
-                        setSelectedModule('user-module-assignment');
-                      }}
-                    >
+                    <Button variant="outline" className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-blue-200 hover:border-blue-300" onClick={() => {
+                  console.log('Module Assignment button clicked, setting selectedModule to user-module-assignment');
+                  setSelectedModule('user-module-assignment');
+                }}>
                       <div className="w-full">
                         <div className="flex items-center gap-2 mb-2">
                           <Settings className="h-5 w-5 text-blue-600" />
@@ -698,29 +555,10 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                     </Button>
 
                     {/* Executive Board Monitor - Only for Super Admin */}
-                    <Button
-                      variant="outline"
-                      className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-purple-200 hover:border-purple-300"
-                      onClick={() => navigate('/admin/exec-board-monitor')}
-                    >
-                      <div className="w-full">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Eye className="h-5 w-5 text-purple-600" />
-                          <Badge variant="secondary" className="text-xs">Super Admin Only</Badge>
-                        </div>
-                        <h3 className="font-semibold text-base lg:text-lg text-purple-700">Executive Board Monitor</h3>
-                        <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
-                          Monitor and oversee executive board member dashboards and activities
-                        </p>
-                      </div>
-                    </Button>
+                    
                     
                     {/* Music Library Quick Access */}
-                    <Button
-                      variant="outline"
-                      className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-green-200 hover:border-green-300"
-                      onClick={() => navigate('/music-library')}
-                    >
+                    <Button variant="outline" className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-green-200 hover:border-green-300" onClick={() => navigate('/music-library')}>
                       <div className="w-full">
                         <div className="flex items-center gap-2 mb-2">
                           <Music className="h-5 w-5 text-green-600" />
@@ -733,24 +571,8 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                       </div>
                     </Button>
                     
-                    {allModules
-                      .filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id))
-                      .slice(0, 4) // Reduced from 5 to 4 to accommodate Music Library
-                      .map((module) => (
-                         <Button
-                           key={module.id}
-                           variant="outline"
-                           className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent"
-                           onClick={() => setSelectedModule(module.id)}
-                         >
-                           <div className="w-full">
-                             <h3 className="font-semibold text-base lg:text-lg">{module.title}</h3>
-                             <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
-                               {module.description}
-                             </p>
-                           </div>
-                         </Button>
-                      ))}
+                    {allModules.filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id)).slice(0, 4) // Reduced from 5 to 4 to accommodate Music Library
+                .map(module => {})}
                   </div>
                 </CardContent>
               </CollapsibleContent>
@@ -761,23 +583,13 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl lg:text-2xl font-semibold">System Overview</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setOverviewCollapsed(!overviewCollapsed)}
-                className="flex items-center gap-2"
-              >
-                {overviewCollapsed ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronUp className="h-4 w-4" />
-                )}
+              <Button variant="ghost" size="sm" onClick={() => setOverviewCollapsed(!overviewCollapsed)} className="flex items-center gap-2">
+                {overviewCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                 {overviewCollapsed ? 'Expand' : 'Collapse'}
               </Button>
             </div>
             
-            {!overviewCollapsed && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {!overviewCollapsed && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* System Overview Card */}
                 <Card className="border-2 border-purple-200">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
@@ -855,10 +667,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                     <p className="text-xs text-muted-foreground">
                       of {superAdminData.systemOverview.totalStorage}GB used
                     </p>
-                    <Progress 
-                      value={(superAdminData.systemOverview.usedStorage / superAdminData.systemOverview.totalStorage) * 100} 
-                      className="mt-2" 
-                    />
+                    <Progress value={superAdminData.systemOverview.usedStorage / superAdminData.systemOverview.totalStorage * 100} className="mt-2" />
                   </CardContent>
                 </Card>
 
@@ -894,14 +703,12 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                     <div className="text-2xl font-bold">{superAdminData.criticalTasks.length}</div>
                     <p className="text-xs text-muted-foreground">Requires immediate attention</p>
                     <div className="mt-2 space-y-2">
-                      {superAdminData.criticalTasks.map((task) => (
-                        <div key={task.id} className="flex items-center justify-between text-xs">
+                      {superAdminData.criticalTasks.map(task => <div key={task.id} className="flex items-center justify-between text-xs">
                           <span className="font-medium truncate">{task.title}</span>
                           <Badge variant={task.priority === 'critical' ? 'destructive' : 'secondary'}>
                             {task.priority}
                           </Badge>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
                   </CardContent>
                 </Card>
@@ -914,8 +721,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {superAdminData.recentActions.map((action) => (
-                        <div key={action.id} className="flex items-center gap-3">
+                      {superAdminData.recentActions.map(action => <div key={action.id} className="flex items-center gap-3">
                           <Crown className="h-5 w-5 text-purple-500" />
                           <div className="flex-1">
                             <p className="text-sm font-medium">{action.action}</p>
@@ -926,8 +732,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                           <Badge variant="outline" className="text-xs">
                             {action.type}
                           </Badge>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
                   </CardContent>
                 </Card>
@@ -942,32 +747,22 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                   <div className="mt-6">
                     <div className="flex items-center justify-between mb-2">
                       <CardTitle className="text-base">Glee Calendar</CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        aria-controls="superadmin-glee-calendar"
-                        aria-expanded={!calendarCollapsed}
-                        onClick={() => setCalendarCollapsed((v) => !v)}
-                      >
+                      <Button variant="ghost" size="sm" aria-controls="superadmin-glee-calendar" aria-expanded={!calendarCollapsed} onClick={() => setCalendarCollapsed(v => !v)}>
                         {calendarCollapsed ? 'Expand' : 'Collapse'}
                       </Button>
                     </div>
-                    {!calendarCollapsed && (
-                      <Suspense fallback={
-                        <Card className="glass-dashboard-card">
+                    {!calendarCollapsed && <Suspense fallback={<Card className="glass-dashboard-card">
                           <CardHeader>
                             <CardTitle>Glee Calendar</CardTitle>
                           </CardHeader>
                           <CardContent>
                             <div className="py-6">Loading calendar…</div>
                           </CardContent>
-                        </Card>
-                      }>
+                        </Card>}>
                         <div id="superadmin-glee-calendar">
                           <CalendarViewsLazy />
                         </div>
-                      </Suspense>
-                    )}
+                      </Suspense>}
                   </div>
                 </div>
 
@@ -1111,12 +906,7 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                           <CardContent>
                             <p className="text-xs text-muted-foreground mb-3">Critical system administration actions</p>
                             <div className="space-y-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="w-full justify-start text-xs" 
-                                onClick={() => navigate('/admin/alumnae')}
-                              >
+                              <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => navigate('/admin/alumnae')}>
                                 <GraduationCap className="mr-2 h-3 w-3" />
                                 Alumnae Portal
                               </Button>
@@ -1127,11 +917,8 @@ export const SuperAdminDashboard = ({ user }: SuperAdminDashboardProps) => {
                     </CardContent>
                   </Card>
                 </div>
-              </div>
-            )}
+              </div>}
           </div>
-        </div>
-      )}
-    </div>
-  );
+        </div>)}
+    </div>;
 };
