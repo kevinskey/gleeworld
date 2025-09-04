@@ -16,7 +16,9 @@ import {
   User,
   Calendar,
   DollarSign,
-  MoreHorizontal
+  MoreHorizontal,
+  CreditCard,
+  XCircle
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -31,22 +33,28 @@ export const DuesRecordsList = ({ duesRecords, onRefresh }: DuesRecordsListProps
   const [statusFilter, setStatusFilter] = useState("all");
   const [semesterFilter, setSemesterFilter] = useState("all");
 
-  const handleMarkPaid = async (recordId: string) => {
+  const handleStatusUpdate = async (recordId: string, newStatus: string) => {
     try {
+      const updateData: any = { status: newStatus };
+      
+      if (newStatus === 'paid') {
+        updateData.paid_date = new Date().toISOString();
+        updateData.payment_method = 'manual';
+      } else if (newStatus === 'pending') {
+        updateData.paid_date = null;
+        updateData.payment_method = null;
+      }
+
       const { error } = await supabase
         .from('gw_dues_records')
-        .update({ 
-          status: 'paid',
-          paid_date: new Date().toISOString(),
-          payment_method: 'manual'
-        })
+        .update(updateData)
         .eq('id', recordId);
 
       if (error) throw error;
       
       toast({
         title: "Success",
-        description: "Dues marked as paid successfully"
+        description: `Dues status updated to ${newStatus} successfully`
       });
       
       onRefresh();
@@ -60,12 +68,18 @@ export const DuesRecordsList = ({ duesRecords, onRefresh }: DuesRecordsListProps
     }
   };
 
+  const handleMarkPaid = (recordId: string) => handleStatusUpdate(recordId, 'paid');
+  const handleMarkOverdue = (recordId: string) => handleStatusUpdate(recordId, 'overdue');
+  const handleMarkPending = (recordId: string) => handleStatusUpdate(recordId, 'pending');
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'paid':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'overdue':
         return <AlertCircle className="h-4 w-4 text-red-600" />;
+      case 'payment_plan':
+        return <CreditCard className="h-4 w-4 text-blue-600" />;
       default:
         return <Clock className="h-4 w-4 text-orange-600" />;
     }
@@ -77,6 +91,8 @@ export const DuesRecordsList = ({ duesRecords, onRefresh }: DuesRecordsListProps
         return 'default';
       case 'overdue':
         return 'destructive';
+      case 'payment_plan':
+        return 'secondary';
       default:
         return 'secondary';
     }
@@ -118,12 +134,13 @@ export const DuesRecordsList = ({ duesRecords, onRefresh }: DuesRecordsListProps
             <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="overdue">Overdue</SelectItem>
-            </SelectContent>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="payment_plan">Payment Plan</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+              </SelectContent>
           </Select>
           
           <Select value={semesterFilter} onValueChange={setSemesterFilter}>
@@ -219,19 +236,91 @@ export const DuesRecordsList = ({ duesRecords, onRefresh }: DuesRecordsListProps
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {record.status === 'pending' && (
+                          <>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleMarkPaid(record.id)}
+                              className="text-green-600 border-green-200 hover:bg-green-50"
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Mark Paid
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleStatusUpdate(record.id, 'payment_plan')}
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            >
+                              <CreditCard className="h-3 w-3 mr-1" />
+                              Payment Plan
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleMarkOverdue(record.id)}
+                              className="text-red-600 border-red-200 hover:bg-red-50"
+                            >
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                              Mark Overdue
+                            </Button>
+                          </>
+                        )}
+                        {record.status === 'overdue' && (
+                          <>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleMarkPaid(record.id)}
+                              className="text-green-600 border-green-200 hover:bg-green-50"
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Mark Paid
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleMarkPending(record.id)}
+                              className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                            >
+                              <Clock className="h-3 w-3 mr-1" />
+                              Mark Pending
+                            </Button>
+                          </>
+                        )}
+                        {record.status === 'payment_plan' && (
+                          <>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleMarkPaid(record.id)}
+                              className="text-green-600 border-green-200 hover:bg-green-50"
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Mark Paid
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleMarkOverdue(record.id)}
+                              className="text-red-600 border-red-200 hover:bg-red-50"
+                            >
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                              Mark Overdue
+                            </Button>
+                          </>
+                        )}
+                        {record.status === 'paid' && (
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => handleMarkPaid(record.id)}
-                            className="text-green-600 border-green-200 hover:bg-green-50"
+                            onClick={() => handleMarkPending(record.id)}
+                            className="text-orange-600 border-orange-200 hover:bg-orange-50"
                           >
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Mark Paid
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Revert to Pending
                           </Button>
                         )}
-                        <Button size="sm" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

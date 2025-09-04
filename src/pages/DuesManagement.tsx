@@ -152,6 +152,84 @@ export const DuesManagement = () => {
     }
   };
 
+  const handleBulkCreateDues = async () => {
+    try {
+      setLoading(true);
+      
+      // Get all members (profiles with role 'member')
+      const { data: members, error: membersError } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
+        .eq('role', 'member');
+
+      if (membersError) throw membersError;
+
+      if (!members || members.length === 0) {
+        toast({
+          title: "No Members Found",
+          description: "No members found to create dues records for.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check if dues records already exist for the current semester
+      const currentSemester = "Fall 2025";
+      const academicYear = "2025-2026";
+
+      const { data: existingRecords } = await supabase
+        .from('gw_dues_records')
+        .select('user_id')
+        .eq('semester', currentSemester)
+        .eq('academic_year', academicYear);
+
+      const existingUserIds = new Set(existingRecords?.map(r => r.user_id) || []);
+      const membersToCreate = members.filter(member => !existingUserIds.has(member.user_id));
+
+      if (membersToCreate.length === 0) {
+        toast({
+          title: "Records Already Exist",
+          description: "Dues records already exist for all members in Fall 2025.",
+          variant: "default"
+        });
+        return;
+      }
+
+      // Create dues records for members who don't have them
+      const duesRecords = membersToCreate.map(member => ({
+        user_id: member.user_id,
+        amount: 100.00,
+        due_date: '2025-09-15',
+        semester: currentSemester,
+        academic_year: academicYear,
+        status: 'pending'
+      }));
+
+      const { error: insertError } = await supabase
+        .from('gw_dues_records')
+        .insert(duesRecords);
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: "Success",
+        description: `Created dues records for ${membersToCreate.length} members.`,
+        variant: "default"
+      });
+
+      fetchDuesRecords();
+    } catch (error: any) {
+      console.error('Error creating bulk dues records:', error);
+      toast({
+        title: "Error",
+        description: `Failed to create dues records: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSuccess = () => {
     fetchAllData();
     setCreateDuesOpen(false);
@@ -194,9 +272,13 @@ export const DuesManagement = () => {
         </div>
         
         <div className="flex gap-2">
+          <Button onClick={handleBulkCreateDues} className="bg-gradient-to-r from-brand-gold to-brand-accent hover:from-brand-gold/90 hover:to-brand-accent/90">
+            <Users className="h-4 w-4 mr-2" />
+            Populate All Members
+          </Button>
           <Button onClick={() => setCreateDuesOpen(true)} className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90">
             <Plus className="h-4 w-4 mr-2" />
-            Add Dues
+            Add Individual Dues
           </Button>
           <Button variant="outline" onClick={() => setCreatePlanOpen(true)}>
             <CreditCard className="h-4 w-4 mr-2" />
