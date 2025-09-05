@@ -13266,6 +13266,7 @@ export type Database = {
           created_at: string
           id: string
           is_published: boolean
+          published_at: string | null
           student_id: string
           submitted_at: string | null
           updated_at: string
@@ -13278,6 +13279,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_published?: boolean
+          published_at?: string | null
           student_id: string
           submitted_at?: string | null
           updated_at?: string
@@ -13290,6 +13292,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_published?: boolean
+          published_at?: string | null
           student_id?: string
           submitted_at?: string | null
           updated_at?: string
