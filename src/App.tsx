@@ -185,7 +185,17 @@ const queryClient = new QueryClient({
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
+  console.log('🔒 ProtectedRoute DEBUG:', {
+    user: !!user,
+    userEmail: user?.email,
+    userId: user?.id,
+    loading,
+    pathname: window.location.pathname,
+    timestamp: new Date().toISOString()
+  });
+  
   if (loading) {
+    console.log('🔒 ProtectedRoute: Still loading auth...');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <LoadingSpinner size="lg" text="Loading..." />
@@ -194,6 +204,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!user) {
+    console.log('🔒 ProtectedRoute: No user found, redirecting to auth');
     // Store the current path to redirect back after login, but only if it's not the root path
     const currentPath = window.location.pathname + window.location.search;
     if (currentPath !== '/auth' && currentPath !== '/' && !currentPath.startsWith('/auth')) {
@@ -203,6 +214,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/auth" replace />;
   }
   
+  console.log('🔒 ProtectedRoute: User authenticated, rendering children');
   return <>{children}</>;
 };
 
