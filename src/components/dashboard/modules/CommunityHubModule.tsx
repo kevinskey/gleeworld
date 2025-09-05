@@ -18,6 +18,7 @@ import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
 import PostItGrid from '@/components/buckets-of-love/PostItGrid';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { format } from 'date-fns';
+import PhoneNumberStatus from '@/components/notifications/PhoneNumberStatus';
 export const CommunityHubModule = () => {
   const [activeTab, setActiveTab] = useState('announcements');
   const { user } = useAuth();
@@ -40,6 +41,7 @@ export const CommunityHubModule = () => {
   // Mini quick sender state
   const [miniMode, setMiniMode] = useState<'note' | 'email' | 'sms'>('note');
   const [recipientType, setRecipientType] = useState<'me' | 'email' | 'individual' | 'group'>('me');
+  const [selectedGroup, setSelectedGroup] = useState('');
   const [recipientEmail, setRecipientEmail] = useState('');
   const [miniMessage, setMiniMessage] = useState('');
   const canMiniSend = miniMessage.trim().length > 0 && (recipientType === 'me' || recipientType === 'individual' || recipientType === 'group' || (recipientType === 'email' && /.+@.+\..+/.test(recipientEmail)));
@@ -243,7 +245,7 @@ export const CommunityHubModule = () => {
                   <SelectContent>
                     <SelectItem value="note">Note (in-app)</SelectItem>
                     <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="sms">SMS</SelectItem>
+                    <SelectItem value="sms">SMS ⚠️ (requires phone numbers)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -281,7 +283,7 @@ export const CommunityHubModule = () => {
             {recipientType === 'group' && (
               <div className="space-y-1.5">
                 <Label htmlFor="group-select">Select Group</Label>
-                <Select>
+                <Select value={selectedGroup} onValueChange={setSelectedGroup}>
                   <SelectTrigger id="group-select" className="h-9">
                     <SelectValue placeholder="Choose group" />
                   </SelectTrigger>
@@ -296,6 +298,13 @@ export const CommunityHubModule = () => {
                     <SelectItem value="all_alumnae">All Alumnae</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                {/* Show SMS coverage for selected group */}
+                {miniMode === 'sms' && selectedGroup && (
+                  <div className="mt-2 p-2 bg-muted/50 rounded-md">
+                    <PhoneNumberStatus groupType={selectedGroup} />
+                  </div>
+                )}
               </div>
             )}
 
@@ -329,15 +338,42 @@ export const CommunityHubModule = () => {
               </div>
             )}
 
+            {/* SMS Mode Warning */}
+            {miniMode === 'sms' && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <div className="flex items-start gap-2">
+                  <div className="text-amber-600 mt-0.5">⚠️</div>
+                  <div className="text-sm text-amber-800">
+                    <p className="font-medium">SMS Requires Phone Numbers</p>
+                    <p className="text-xs mt-1">
+                      Members need to have phone numbers in their profiles. If phone numbers are missing, 
+                      SMS delivery will fail. Members can add their phone number by visiting their 
+                      <a href="/profile" className="underline font-medium hover:text-amber-900"> Profile page</a>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label htmlFor="mini-message">Message</Label>
               <Input
                 id="mini-message"
                 value={miniMessage}
                 onChange={(e) => setMiniMessage(e.target.value)}
-                placeholder="Type a quick message..."
+                placeholder={
+                  miniMode === 'sms' 
+                    ? "SMS message (160 chars max)..." 
+                    : "Type a quick message..."
+                }
                 className="h-9"
+                maxLength={miniMode === 'sms' ? 160 : undefined}
               />
+              {miniMode === 'sms' && (
+                <p className="text-xs text-muted-foreground">
+                  {miniMessage.length}/160 characters
+                </p>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
