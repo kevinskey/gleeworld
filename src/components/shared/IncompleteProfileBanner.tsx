@@ -37,16 +37,35 @@ export const IncompleteProfileBanner = ({ userProfile }: IncompleteProfileBanner
     isProfileIncomplete = true;
   } else if (requiresMeasurements) {
     // Check measurements only for roles that need them
-    const hasMeasurements = !!(
-      userProfile?.measurements?.height_feet &&
-      userProfile?.measurements?.height_inches &&
-      userProfile?.measurements?.chest &&
-      userProfile?.measurements?.waist &&
-      userProfile?.measurements?.hips &&
-      userProfile?.measurements?.shoe_size
+    const hasMeasurements = userProfile?.measurements ? (
+      userProfile.measurements.height_feet &&
+      userProfile.measurements.height_inches &&
+      userProfile.measurements.chest &&
+      userProfile.measurements.waist &&
+      userProfile.measurements.hips &&
+      userProfile.measurements.shoe_size
+    ) : (
+      // Also check legacy measurement fields
+      userProfile?.bust_measurement &&
+      userProfile?.waist_measurement &&
+      userProfile?.hips_measurement &&
+      userProfile?.height_measurement
     );
     
     const hasConsents = !!(userProfile?.photo_consent && userProfile?.media_release_signed_at);
+    
+    console.log('IncompleteProfileBanner: Profile check for', userProfile?.email, {
+      requiresMeasurements,
+      hasMeasurements,
+      hasConsents,
+      measurements: userProfile?.measurements,
+      legacyMeasurements: {
+        bust: userProfile?.bust_measurement,
+        waist: userProfile?.waist_measurement,
+        hips: userProfile?.hips_measurement,
+        height: userProfile?.height_measurement
+      }
+    });
     
     isProfileIncomplete = !hasMeasurements || !hasConsents;
   }
