@@ -462,7 +462,27 @@ export const SuperAdminDashboard = ({
 
       {showAllModules ? (/* All Modules View */
     <div className="space-y-8">
-          {modulesLoading ? <div className="text-center py-8 text-lg">Loading modules...</div> : Object.entries(sortedModulesByCategory).map(([categoryName, categoryModules]) => {
+          {modulesLoading ? <div className="text-center py-8 text-lg">Loading modules...</div> : (() => {
+            // Sort categories to prioritize important ones at the top
+            const sortedEntries = Object.entries(sortedModulesByCategory).sort(([categoryA], [categoryB]) => {
+              // Define priority order - put most important categories first
+              const priorityOrder = ['administrative', 'financial', 'events', 'user-management', 'communications'];
+              const priorityA = priorityOrder.indexOf(categoryA);
+              const priorityB = priorityOrder.indexOf(categoryB);
+              
+              // If both are in priority list, sort by priority order
+              if (priorityA !== -1 && priorityB !== -1) {
+                return priorityA - priorityB;
+              }
+              // If only A is in priority list, A comes first
+              if (priorityA !== -1) return -1;
+              // If only B is in priority list, B comes first  
+              if (priorityB !== -1) return 1;
+              // If neither is in priority list, sort alphabetically
+              return categoryA.localeCompare(categoryB);
+            });
+            
+            return sortedEntries.map(([categoryName, categoryModules]) => {
         const categoryConfig = UNIFIED_MODULE_CATEGORIES.find(c => c.id === categoryName);
         const IconComponent = categoryConfig?.icon || Users;
         const isCollapsed = collapsedSections[categoryName];
@@ -511,7 +531,8 @@ export const SuperAdminDashboard = ({
                     </CollapsibleContent>
                   </Collapsible>
                 </div>;
-      })}
+            });
+          })()}
         </div>) : (/* Dashboard Overview */
     <div className="space-y-6">
           {/* Quick Access Modules Section */}
