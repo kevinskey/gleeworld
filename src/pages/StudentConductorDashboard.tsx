@@ -9,6 +9,7 @@ import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useNavigate } from "react-router-dom";
 import { useSectionalPlans } from "@/hooks/useSectionalPlans";
 import { useSRFAssignments } from "@/hooks/useSRFAssignments";
+import { useSectionLeaders } from "@/hooks/useSectionLeaders";
 import { useAuditionManagement } from "@/hooks/useAuditionManagement";
 import { useSubmissionReview } from "@/hooks/useSubmissionReview";
 import { AuditionDialog } from "@/components/audition/AuditionDialog";
@@ -54,6 +55,7 @@ export const StudentConductorDashboard = () => {
   const { assignments: srfAssignments, loading: srfLoading, createAssignment, sendReminder } = useSRFAssignments();
   const { auditions, loading: auditionsLoading, updateAuditionStatus, addNotes, rescheduleAudition, addAudition, deleteAudition, updateAudition } = useAuditionManagement();
   const { submissions, loading: submissionsLoading, updateSubmissionStatus, forwardToDirector } = useSubmissionReview();
+  const { sectionLeaders, stats: sectionStats, loading: sectionLeadersLoading } = useSectionLeaders();
 
   // Calculate metrics from real data
   const pendingPlansCount = sectionalPlans.filter(plan => plan.status === 'Pending Review').length;
@@ -148,7 +150,7 @@ export const StudentConductorDashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl md:text-4xl font-bold">4</div>
+                  <div className="text-3xl md:text-4xl font-bold">{sectionStats.totalSectionLeaders}</div>
                   <p className="text-base md:text-lg text-muted-foreground">Active section leaders</p>
                   <Button size="sm" className="mt-3" onClick={() => setActiveTab("section-leaders")}>
                     Manage Leaders
@@ -190,7 +192,118 @@ export const StudentConductorDashboard = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="section-leaders" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Section Leader Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Dynamic Section Leaders */}
+                  {sectionLeadersLoading ? (
+                    <div className="col-span-2 flex justify-center py-8">
+                      <div className="text-muted-foreground">Loading section leaders...</div>
+                    </div>
+                  ) : sectionLeaders.length === 0 ? (
+                    <div className="col-span-2 text-center py-8 text-muted-foreground">
+                      No section leaders found
+                    </div>
+                  ) : (
+                    sectionLeaders.map((leader) => (
+                      <Card key={leader.id}>
+                        <CardHeader>
+                          <CardTitle className="text-lg">
+                            {leader.voice_part === 'S1' || leader.voice_part === 'S2' || leader.voice_part === 'Soprano' 
+                              ? 'Soprano Section' 
+                              : leader.voice_part === 'A1' || leader.voice_part === 'A2' || leader.voice_part === 'Alto'
+                              ? 'Alto Section'
+                              : `${leader.voice_part} Section`}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">{leader.full_name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {leader.exec_board_role ? leader.exec_board_role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Section Leader'}
+                              </p>
+                            </div>
+                            <Badge>Active</Badge>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Members:</span>
+                              <span>{leader.section_members_count}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span>Attendance:</span>
+                              <span>{leader.attendance_rate}%</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span>Last Sectional:</span>
+                              <span>{leader.last_sectional_date}</span>
+                            </div>
+                          </div>
+                          <Button size="sm" className="w-full">
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Message {leader.full_name?.split(' ')[0]}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
 
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-4">Sectional Coordination</h3>
+                  <div className="space-y-4">
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold">Soprano Sectional - Breath Support</h4>
+                            <p className="text-sm text-muted-foreground">Scheduled: Jan 28, 2024 at 3:00 PM</p>
+                          </div>
+                          <Badge variant="outline">Upcoming</Badge>
+                        </div>
+                        <p className="text-sm mb-3">Focus on breathing techniques for high notes in "Lift Every Voice"</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Reschedule
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Plan
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold">Alto Sectional - Harmony Practice</h4>
+                            <p className="text-sm text-muted-foreground">Completed: Jan 23, 2024</p>
+                          </div>
+                          <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                        </div>
+                        <p className="text-sm mb-3">Worked on harmony parts for "Amazing Grace" arrangement</p>
+                        <Button size="sm" variant="outline">
+                          <FileText className="h-4 w-4 mr-2" />
+                          View Notes
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
           <TabsContent value="auditions" className="mt-6">
             <Card>
               <CardHeader className="flex items-center justify-between">
