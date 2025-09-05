@@ -846,8 +846,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             <div className="w-full h-auto" ref={containerRef}>
               <canvas
                 ref={canvasRef}
-                className="w-full block bg-white"
-                style={{ height: 'auto', minHeight: '100%' }}
+                className="w-full max-w-full block bg-white"
+                style={{ height: 'auto', minHeight: '100%', width: '100%' }}
               />
             </div>
           )}
