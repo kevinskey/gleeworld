@@ -3460,7 +3460,14 @@ export type Database = {
           description: string | null
           duration_minutes: number
           id: string
+          is_recurring: boolean | null
+          max_occurrences: number | null
           notes: string | null
+          parent_appointment_id: string | null
+          recurrence_days_of_week: number[] | null
+          recurrence_end_date: string | null
+          recurrence_interval: number | null
+          recurrence_type: string | null
           status: string
           title: string
           updated_at: string
@@ -3479,7 +3486,14 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           id?: string
+          is_recurring?: boolean | null
+          max_occurrences?: number | null
           notes?: string | null
+          parent_appointment_id?: string | null
+          recurrence_days_of_week?: number[] | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_type?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -3498,7 +3512,14 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           id?: string
+          is_recurring?: boolean | null
+          max_occurrences?: number | null
           notes?: string | null
+          parent_appointment_id?: string | null
+          recurrence_days_of_week?: number[] | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_type?: string | null
           status?: string
           title?: string
           updated_at?: string

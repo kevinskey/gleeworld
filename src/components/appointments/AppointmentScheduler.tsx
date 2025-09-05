@@ -24,6 +24,12 @@ const appointmentSchema = z.object({
   client_phone: z.string().min(10, "Valid phone number is required"),
   appointment_type: z.string(),
   duration_minutes: z.number().min(15).max(120), // 15 minutes to 2 hours
+  is_recurring: z.boolean().default(false),
+  recurrence_type: z.enum(["daily", "weekly", "monthly", "yearly"]).optional(),
+  recurrence_interval: z.number().min(1).max(52).default(1),
+  recurrence_days_of_week: z.array(z.number().min(0).max(6)).optional(),
+  recurrence_end_date: z.string().optional(),
+  max_occurrences: z.number().min(1).max(100).optional(),
 });
 
 type AppointmentForm = z.infer<typeof appointmentSchema>;
@@ -52,6 +58,12 @@ export const AppointmentScheduler = () => {
       client_phone: "",
       appointment_type: "general",
       duration_minutes: 30,
+      is_recurring: false,
+      recurrence_type: "weekly",
+      recurrence_interval: 1,
+      recurrence_days_of_week: [],
+      recurrence_end_date: "",
+      max_occurrences: 10,
     },
   });
 
@@ -186,43 +198,57 @@ export const AppointmentScheduler = () => {
         ...(user?.id && { created_by: user.id }),
       };
 
-      const { data: appointment, error } = await supabase
-        .from('gw_appointments')
-        .insert(appointmentData)
-        .select()
-        .single();
+        const appointmentData = {
+          title: data.title,
+          description: data.description,
+          appointment_date: appointmentDateTime.toISOString(),
+          duration_minutes: data.duration_minutes,
+          appointment_type: data.appointment_type,
+          client_name: data.client_name,
+          client_email: data.client_email,
+          client_phone: data.client_phone,
+          status: 'pending_approval',
+          ...(user?.id && { created_by: user.id }),
+        };
 
-      if (error) throw error;
+        const { data: appointment, error } = await supabase
+          .from('gw_appointments')
+          .insert(appointmentData)
+          .select()
+          .single();
 
-      // Send SMS notifications to both parties
-      try {
-        // Send confirmation SMS to client
-        await supabase.functions.invoke('gw-send-sms', {
-          body: {
-            to: data.client_phone,
-            message: `Your appointment request for ${format(appointmentDateTime, 'PPP')} at ${selectedTime} has been submitted. You'll receive confirmation once approved.`
-          }
+        if (error) throw error;
+
+        // Send SMS notifications to both parties
+        try {
+          // Send confirmation SMS to client
+          await supabase.functions.invoke('gw-send-sms', {
+            body: {
+              to: data.client_phone,
+              message: `Your appointment request for ${format(appointmentDateTime, 'PPP')} at ${selectedTime} has been submitted. You'll receive confirmation once approved.`
+            }
+          });
+
+          // Send approval SMS to your specific number for approval
+          const adminPhone = '+14706221392';
+
+          // Send approval SMS to admin/receiver
+          await supabase.functions.invoke('gw-send-sms', {
+            body: {
+              to: adminPhone,
+              message: `New appointment request from ${data.client_name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Type: ${data.appointment_type}. Reply APPROVE ${appointment.id} or DENY ${appointment.id}`
+            }
+          });
+        } catch (smsError) {
+          console.error('SMS sending failed:', smsError);
+          // Don't fail the appointment creation if SMS fails
+        }
+
+        toast({
+          title: "Success",
+          description: "Appointment scheduled successfully!",
         });
-
-        // Send approval SMS to your specific number for approval
-        const adminPhone = '+14706221392';
-
-        // Send approval SMS to admin/receiver
-        await supabase.functions.invoke('gw-send-sms', {
-          body: {
-            to: adminPhone,
-            message: `New appointment request from ${data.client_name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Type: ${data.appointment_type}. Reply APPROVE ${appointment.id} or DENY ${appointment.id}`
-          }
-        });
-      } catch (smsError) {
-        console.error('SMS sending failed:', smsError);
-        // Don't fail the appointment creation if SMS fails
       }
-
-      toast({
-        title: "Success",
-        description: "Appointment scheduled successfully!",
-      });
 
       setOpen(false);
       form.reset();
@@ -453,6 +479,158 @@ export const AppointmentScheduler = () => {
                     </FormItem>
                   )}
                 />
+
+                {/* Recurring Appointment Options */}
+                <FormField
+                  control={form.control}
+                  name="is_recurring"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          Recurring Appointment
+                        </FormLabel>
+                        <div className="text-[0.8rem] text-muted-foreground">
+                          Create multiple appointments with this schedule
+                        </div>
+                      </div>
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="h-4 w-4"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                {form.watch("is_recurring") && (
+                  <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
+                    <h4 className="font-medium">Recurrence Settings</h4>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="recurrence_type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Repeat Every</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select frequency" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="daily">Day(s)</SelectItem>
+                                <SelectItem value="weekly">Week(s)</SelectItem>
+                                <SelectItem value="monthly">Month(s)</SelectItem>
+                                <SelectItem value="yearly">Year(s)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="recurrence_interval"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Every</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min="1" 
+                                max="52" 
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {form.watch("recurrence_type") === "weekly" && (
+                      <FormField
+                        control={form.control}
+                        name="recurrence_days_of_week"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Days of the Week</FormLabel>
+                            <div className="flex flex-wrap gap-2">
+                              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, index) => (
+                                <label key={day} className="flex items-center space-x-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={field.value?.includes(index) || false}
+                                    onChange={(e) => {
+                                      const current = field.value || [];
+                                      if (e.target.checked) {
+                                        field.onChange([...current, index]);
+                                      } else {
+                                        field.onChange(current.filter(d => d !== index));
+                                      }
+                                    }}
+                                    className="h-4 w-4"
+                                  />
+                                  <span className="text-sm">{day}</span>
+                                </label>
+                              ))}
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="recurrence_end_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>End Date (Optional)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="date" 
+                                {...field}
+                                min={format(new Date(), 'yyyy-MM-dd')}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="max_occurrences"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Max Occurrences</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min="1" 
+                                max="100" 
+                                placeholder="10"
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-2">
                   <Button 
