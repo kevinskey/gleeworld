@@ -38,16 +38,19 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
     return <Navigate to="/auth/mus240" replace />;
   }
   
+  const adminAccess = isAdmin();
+  const superAdminAccess = isSuperAdmin();
+  
   console.log('Mus240EnrollmentRoute: User role check', {
     user: !!user,
-    isAdmin: isAdmin(),
-    isSuperAdmin: isSuperAdmin(),
+    isAdmin: adminAccess,
+    isSuperAdmin: superAdminAccess,
     roleLoading,
     enrollmentLoading
   });
   
   // Allow admins and super admins access regardless of enrollment
-  if (isAdmin() || isSuperAdmin()) {
+  if (adminAccess || superAdminAccess) {
     console.log('Mus240EnrollmentRoute: Admin access granted');
     return <>{children}</>;
   }
