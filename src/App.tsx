@@ -346,7 +346,7 @@ const App = () => {
               />
               {/* MUS 240 Poll System */}
               <Route 
-                path="/poll" 
+                path="/mus240-polls" 
                 element={
                   <ProtectedRoute>
                     <Mus240PollPage />
