@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, Users, Settings, Shield, Search, KeyRound, Trash2 } from 'lucide-react';
+import { UserPlus, Users, Settings, Shield, Search, KeyRound, Trash2, BookOpen } from 'lucide-react';
 import { useAutoEnrollUser } from '@/hooks/useAutoEnrollUser';
 import { useUsers } from '@/hooks/useUsers';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResetPasswordDialog } from '@/components/admin/ResetPasswordDialog';
 import { DeleteUserDialog } from '@/components/admin/DeleteUserDialog';
 import { PasswordResetTool } from '@/components/admin/PasswordResetTool';
+import { useUsernamePermissionsAdmin } from '@/hooks/useUsernamePermissions';
 
 export const UserManagementModule = () => {
   const [email, setEmail] = useState('');
@@ -23,6 +24,7 @@ export const UserManagementModule = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { autoEnrollUser, enrolling } = useAutoEnrollUser();
   const { users, loading: usersLoading } = useUsers();
+  const { grantPermission } = useUsernamePermissionsAdmin();
 
   const handleAutoEnroll = async () => {
     if (!email || !role) return;
@@ -167,28 +169,38 @@ export const UserManagementModule = () => {
                         {user.is_super_admin && (
                           <Badge variant="destructive">Super Admin</Badge>
                         )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowResetDialog(true);
-                          }}
-                        >
-                          <KeyRound className="w-4 h-4 mr-1" />
-                          Reset Password
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowDeleteDialog(true);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 mr-1" />
-                          Delete
-                        </Button>
+                         <Button
+                           size="sm"
+                           variant="outline"
+                           onClick={async () => {
+                             await grantPermission(user.email, 'librarian');
+                           }}
+                         >
+                           <BookOpen className="w-4 h-4 mr-1" />
+                           Grant Librarian
+                         </Button>
+                         <Button
+                           size="sm"
+                           variant="outline"
+                           onClick={() => {
+                             setSelectedUser(user);
+                             setShowResetDialog(true);
+                           }}
+                         >
+                           <KeyRound className="w-4 h-4 mr-1" />
+                           Reset Password
+                         </Button>
+                         <Button
+                           size="sm"
+                           variant="destructive"
+                           onClick={() => {
+                             setSelectedUser(user);
+                             setShowDeleteDialog(true);
+                           }}
+                         >
+                           <Trash2 className="w-4 h-4 mr-1" />
+                           Delete
+                         </Button>
                       </div>
                     </div>
                   ))}
