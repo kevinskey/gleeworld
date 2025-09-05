@@ -187,10 +187,10 @@ export const Mus240PollSystem = () => {
 
   if (!hasAdminAccess) {
     return (
-      <div className="space-y-6 bg-white p-6 rounded-lg shadow-lg">
+      <div className="space-y-6 bg-card p-6 rounded-lg shadow-lg border">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">MUS 240 Live Poll</h2>
-          <p className="text-gray-600">Join the live poll session</p>
+          <h2 className="text-2xl font-bold text-card-foreground mb-2">MUS 240 Live Poll</h2>
+          <p className="text-muted-foreground">Join the live poll session</p>
         </div>
         <StudentPollInterface />
       </div>
@@ -198,7 +198,7 @@ export const Mus240PollSystem = () => {
   }
 
   return (
-    <div className="space-y-6 bg-white p-6 rounded-lg shadow-lg">
+    <div className="space-y-6 bg-card p-6 rounded-lg shadow-lg border">
       <Tabs defaultValue="manage" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="manage">Manage Polls</TabsTrigger>
