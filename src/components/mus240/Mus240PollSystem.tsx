@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { LivePollResults } from './LivePollResults';
 import { StudentPollInterface } from './StudentPollInterface';
+import { LiveQuestionController } from './LiveQuestionController';
+import { LiveStudentInterface } from './LiveStudentInterface';
 
 interface Poll {
   id: string;
@@ -204,7 +206,7 @@ export const Mus240PollSystem = () => {
           <h2 className="text-3xl font-bold text-gray-900 mb-3">MUS 240 Live Poll</h2>
           <p className="text-lg text-gray-600">Join the live poll session</p>
         </div>
-        <StudentPollInterface />
+        <LiveStudentInterface />
       </div>
     );
   }
@@ -391,7 +393,18 @@ export const Mus240PollSystem = () => {
 
         <TabsContent value="results">
           <div className="bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-white/30">
-            <LivePollResults />
+            {polls.find(p => p.is_active) ? (
+              <LiveQuestionController 
+                poll={polls.find(p => p.is_active)! as any} 
+                onPollUpdate={(updatedPoll) => {
+                  setPolls(prev => prev.map(p => p.id === updatedPoll.id ? { ...p, ...updatedPoll } : p));
+                }}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-600">
+                No active poll for live control
+              </div>
+            )}
           </div>
         </TabsContent>
 

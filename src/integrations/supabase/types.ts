@@ -13481,33 +13481,42 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          current_question_index: number | null
           description: string | null
           expires_at: string | null
           id: string
           is_active: boolean
+          is_live_session: boolean | null
           questions: Json
+          show_results: boolean | null
           title: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          current_question_index?: number | null
           description?: string | null
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          is_live_session?: boolean | null
           questions?: Json
+          show_results?: boolean | null
           title: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          current_question_index?: number | null
           description?: string | null
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          is_live_session?: boolean | null
           questions?: Json
+          show_results?: boolean | null
           title?: string
           updated_at?: string
         }
