@@ -199,9 +199,10 @@ export const Mus240PollSystem = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="manage" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="manage">Manage Polls</TabsTrigger>
           <TabsTrigger value="results">Live Results</TabsTrigger>
+          <TabsTrigger value="student">Student View</TabsTrigger>
         </TabsList>
 
         <TabsContent value="manage" className="space-y-6">
@@ -344,6 +345,16 @@ export const Mus240PollSystem = () => {
 
         <TabsContent value="results">
           <LivePollResults />
+        </TabsContent>
+
+        <TabsContent value="student">
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Student Experience Preview</h2>
+              <p className="text-gray-600">This is what students see when they join polls</p>
+            </div>
+            <StudentPollInterface />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
