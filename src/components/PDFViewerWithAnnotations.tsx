@@ -684,7 +684,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     <Card className={cn("w-full", className)}>
       {/* Annotation Toolbar */}
         {annotationMode && (
-          <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded-t-lg border-b">
+          <div className="flex flex-wrap items-center gap-3 p-4 sm:gap-2 sm:p-3 bg-muted/50 rounded-t-lg border-b">
             {/* Annotation Toggle */}
             <Button
               variant={annotationMode ? "default" : "outline"}
@@ -706,7 +706,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </Button>
 
             {/* Tool Selection */}
-            <div className="flex gap-1">
+            <div className="flex gap-2 sm:gap-1">
               <Button
                 variant={activeTool === "select" ? "default" : "outline"}
                 size="sm"
@@ -731,7 +731,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
 
             {/* Colors */}
-            <div className="flex gap-1">
+            <div className="flex gap-2 sm:gap-1">
               {colors.map((color) => (
                 <Button
                   key={color}
@@ -762,7 +762,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
 
             {/* Actions */}
-            <div className="flex gap-1 ml-auto">
+            <div className="flex gap-2 sm:gap-1 ml-auto">
               <Button
                 variant="outline"
                 size="sm"
