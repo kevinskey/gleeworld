@@ -182,7 +182,7 @@ export const MusicLibrary = () => {
         {/* Desktop responsive layout - 40/60 split when PDF is open */}
         <div className="flex flex-col lg:grid lg:grid-cols-12 card-spacing min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">
           {/* Left column - Library sections with collapse toggle */}
-          <div className={`${selectedPdf && leftColumnCollapsed ? 'hidden lg:block lg:col-span-1' : selectedPdf ? 'lg:col-span-2' : 'lg:col-span-4'} section-spacing lg:h-full lg:overflow-y-auto lg:pr-1 order-2 lg:order-1 w-full overflow-hidden transition-all duration-300`}>
+          <div className={`${selectedPdf && leftColumnCollapsed ? 'lg:hidden' : selectedPdf ? 'lg:col-span-2' : 'lg:col-span-4'} section-spacing lg:h-full lg:overflow-y-auto lg:pr-1 order-2 lg:order-1 w-full overflow-hidden transition-all duration-300`}>
             {/* Study Scores */}
             <div className="w-full overflow-hidden border rounded">
               <div className="flex items-center justify-between card-compact">
@@ -247,7 +247,7 @@ export const MusicLibrary = () => {
           </div>
 
           {/* Right column - PDF viewer with collapse toggle */}
-          <div className={`${selectedPdf && leftColumnCollapsed ? 'lg:col-span-11' : selectedPdf ? 'lg:col-span-10' : 'lg:col-span-8'} flex flex-col min-h-[60vh] lg:h-full overflow-hidden lg:pl-1 order-1 lg:order-2 w-full transition-all duration-300`}>
+          <div className={`${selectedPdf && leftColumnCollapsed ? 'lg:col-span-12' : selectedPdf ? 'lg:col-span-10' : 'lg:col-span-8'} flex flex-col min-h-[60vh] lg:h-full overflow-hidden lg:pl-1 order-1 lg:order-2 w-full transition-all duration-300`}>
             <div className="flex items-center justify-between mb-1 md:mb-4 px-1 lg:px-0">
               <h2 className="page-header">PDF Viewer</h2>
               <div className="flex items-center gap-2">
