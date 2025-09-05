@@ -843,18 +843,18 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           
           {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
-            <div className="w-full h-auto" ref={containerRef}>
+            <div className="w-full" ref={containerRef}>
               <canvas
                 ref={canvasRef}
                 className="w-full max-w-full block bg-white"
-                style={{ height: 'auto', minHeight: '100%', width: '100%' }}
+                style={{ height: 'auto', minHeight: '100%', width: '100%', maxWidth: '100%' }}
               />
             </div>
           )}
 
           {/* Annotation Mode: PDF + Overlay Canvas */}
           {annotationMode && (
-            <div className="w-full h-auto" ref={containerRef}>
+            <div className="w-full" ref={containerRef}>
               <div className="relative w-full h-full">
                   <canvas
                     ref={canvasRef}
