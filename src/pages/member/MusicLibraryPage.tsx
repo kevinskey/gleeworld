@@ -24,10 +24,7 @@ export const MusicLibraryPage: React.FC = () => {
   } = useSetlists();
   const [activeView, setActiveView] = useState<'library' | 'practice-recordings' | 'study-scores' | 'setlists'>('library');
   return <div className="min-h-screen bg-gradient-subtle">
-      <div className="container mx-auto" style={{
-      width: '90vw',
-      maxWidth: '90vw'
-    }}>
+        <div className="w-full p-2 sm:p-4 lg:p-8 lg:max-w-7xl lg:mx-auto">
         {/* Header Section */}
         <div className="mb-8 sm:mb-10 lg:mb-12">
           <div className="flex items-center gap-4 mb-6">
@@ -35,7 +32,9 @@ export const MusicLibraryPage: React.FC = () => {
               <Grid className="h-6 w-6 sm:h-7 sm:w-7" />
             </div>
             <div className="space-y-1">
-              
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">
+                Music Library
+              </h1>
               <p className="text-sm sm:text-base text-muted-foreground">
                 Access your sheet music and performance materials
               </p>
