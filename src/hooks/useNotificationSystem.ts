@@ -140,7 +140,17 @@ export const useNotificationSystem = () => {
             body: {
               to: profile?.email || (await supabase.auth.getUser()).data.user?.email,
               subject: params.title,
-              message: params.message,
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <div style="background: linear-gradient(135deg, #8B2635, #6B1E29); padding: 20px; text-align: center;">
+                    <h1 style="color: white; margin: 0;">Spelman College Glee Club</h1>
+                  </div>
+                  <div style="padding: 30px; background: white;">
+                    <h2 style="color: #8B2635; margin-top: 0;">${params.title}</h2>
+                    <p style="color: #333; line-height: 1.6; font-size: 16px;">${params.message}</p>
+                  </div>
+                </div>
+              `,
               notificationId: notification.id
             }
           });

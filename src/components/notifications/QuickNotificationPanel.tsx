@@ -99,9 +99,21 @@ export const QuickNotificationPanel: React.FC = () => {
       if (formData.type === 'email') {
         response = await supabase.functions.invoke('gw-send-email', {
           body: {
-            type: formData.recipientType,
-            target: formData.recipientType === 'group' ? formData.selectedGroup : formData.selectedIndividual,
+            to: formData.recipientType === 'individual' 
+              ? users.find(u => u.user_id === formData.selectedIndividual)?.email 
+              : ['admin@gleeworld.com'], // Replace with actual group emails
             subject: formData.subject || 'Notification from Glee Club',
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #8B2635, #6B1E29); padding: 20px; text-align: center;">
+                  <h1 style="color: white; margin: 0;">Spelman College Glee Club</h1>
+                </div>
+                <div style="padding: 30px; background: white;">
+                  <h2 style="color: #8B2635; margin-top: 0;">${formData.subject || 'Notification'}</h2>
+                  <p style="color: #333; line-height: 1.6; font-size: 16px;">${formData.message}</p>
+                </div>
+              </div>
+            `,
             message: formData.message
           }
         });
