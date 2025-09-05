@@ -4,12 +4,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUsernamePermissions } from '@/hooks/useUsernamePermissions';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Shield } from 'lucide-react';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 const LibrarianDashboardPage = () => {
   console.log('🔍 LibrarianDashboardPage rendering');
   
   const { user } = useAuth();
-  const { permissions, loading } = useUsernamePermissions(user?.email);
+  const { permissions, loading: permissionsLoading } = useUsernamePermissions(user?.email);
+  const { userProfile, loading: profileLoading } = useUserProfile(user);
+  
+  const loading = permissionsLoading || profileLoading;
   
   if (loading) {
     return (
@@ -19,7 +23,14 @@ const LibrarianDashboardPage = () => {
     );
   }
   
-  const hasLibrarianAccess = permissions.includes('librarian');
+  // Check if user has librarian access via username permissions OR is admin/super admin
+  const hasLibrarianAccess = permissions.includes('librarian') || 
+                            permissions.includes('librarian_dashboard') ||
+                            userProfile?.is_admin || 
+                            userProfile?.is_super_admin ||
+                            userProfile?.role === 'admin' ||
+                            userProfile?.role === 'super-admin' ||
+                            userProfile?.role === 'librarian';
   
   if (!hasLibrarianAccess) {
     return (
