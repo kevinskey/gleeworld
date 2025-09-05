@@ -114,16 +114,25 @@ export const PostItGrid: React.FC = () => {
   const { buckets, loading, deleteBucket } = useBucketsOfLove();
   const { user } = useAuth();
   const slots = useGridSlots();
+  const [viewAll, setViewAll] = useState(false);
 
   const items = useMemo(() => {
-    const visible = buckets.slice(0, slots);
-    const placeholders = Math.max(0, slots - visible.length);
+    const maxToShow = viewAll ? buckets.length : slots;
+    const visible = buckets.slice(0, maxToShow);
+    const placeholders = viewAll ? 1 : Math.max(0, slots - visible.length); // Always show at least one placeholder when viewing all
     return { visible, placeholders };
-  }, [buckets, slots]);
+  }, [buckets, slots, viewAll]);
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => setViewAll(!viewAll)}
+          className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+        >
+          {viewAll ? 'Show Grid View' : `View All (${buckets.length})`}
+        </button>
+        
         {/* Fallback add button when grid is full */}
         {items.placeholders === 0 && (
           <SendBucketOfLove
