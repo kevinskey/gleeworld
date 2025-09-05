@@ -28,6 +28,7 @@ import {
   Settings,
   ClipboardCheck,
   Route,
+  BarChart,
   Music,
   Eye,
   Megaphone,
@@ -75,6 +76,7 @@ import { LibrarianModule } from '@/components/modules/LibrarianModule';
 import ServiceManagement from '@/components/admin/ServiceManagement';
 import MediaLibrary from '@/pages/admin/MediaLibrary';
 import { RadioManagement } from '@/components/admin/RadioManagement';
+import { TheoryPollModule } from '@/components/modules/TheoryPollModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -691,6 +693,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: ExecutiveModule,
     dbFunctionName: "executive-functions"
+  },
+  {
+    id: "theory-poll",
+    name: "theory-poll",
+    title: "Theory Poll System",
+    description: "Interactive music theory polling and education system",
+    icon: BarChart,
+    iconColor: "purple",
+    category: "musical-leadership",
+    isActive: true,
+    component: TheoryPollModule,
+    dbFunctionName: "theory-poll",
+    requiredRoles: ["super-admin", "admin"]
   },
   {
     id: "internal-communications",
