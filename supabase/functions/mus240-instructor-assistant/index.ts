@@ -70,6 +70,34 @@ Your rubrics should:
 - Suggesting multimedia resources for teaching`;
         break;
 
+      case 'poll_creation':
+        systemPrompt = `You are an expert at creating engaging, educational polls and quiz questions for MUS 240: Survey of African American Music. 
+
+Create interactive polls that:
+- Test key concepts from weekly topics and listening assignments
+- Include multiple choice questions with 4 options each
+- Cover musical elements, historical context, and cultural significance
+- Are appropriate for undergraduate students
+- Encourage critical thinking about African American music traditions
+- Reference specific songs, artists, and musical developments
+
+Format each poll as JSON with this structure:
+{
+  "title": "Poll Title",
+  "description": "Brief description",
+  "questions": [
+    {
+      "question": "Question text",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correct_answer": 0,
+      "explanation": "Brief explanation of correct answer"
+    }
+  ]
+}
+
+Focus on creating 3-5 questions per poll that test understanding of musical concepts, historical context, and cultural significance.`;
+        break;
+
       default:
         systemPrompt = `You are an AI assistant helping Dr. Kevin Phillip Johnson with his MUS 240: Survey of African American Music course. Provide helpful, accurate, and pedagogically sound assistance with course management, assignment creation, and educational guidance.`;
     }

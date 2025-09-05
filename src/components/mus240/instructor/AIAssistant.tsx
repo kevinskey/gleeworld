@@ -17,7 +17,8 @@ export const AIAssistant = () => {
     { value: 'assignment_ideas', label: 'Assignment Ideas', icon: Lightbulb },
     { value: 'rubric_creation', label: 'Rubric Creation', icon: FileText },
     { value: 'grading_assistance', label: 'Grading Assistance', icon: BarChart3 },
-    { value: 'research_assistance', label: 'Research Assistance', icon: Search }
+    { value: 'research_assistance', label: 'Research Assistance', icon: Search },
+    { value: 'poll_creation', label: 'Create Polls', icon: BarChart3 }
   ];
 
   const quickPrompts = {
@@ -40,6 +41,12 @@ export const AIAssistant = () => {
       "Find sources on African American music's influence on American culture",
       "Suggest multimedia resources for teaching about the Harlem Renaissance",
       "Research connections between spirituals and civil rights movement"
+    ],
+    poll_creation: [
+      "Create polls for Week 1: West African Foundations",
+      "Generate polls for Week 5: Blues Development",
+      "Create polls for Week 10: Hip-Hop Culture",
+      "Generate multiple choice questions about this week's listening assignments"
     ]
   };
 
@@ -251,6 +258,20 @@ export const AIAssistant = () => {
           <CardContent>
             <p className="text-sm text-gray-600">
               Find scholarly sources, historical contexts, and multimedia resources for teaching African American music.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-indigo-600" />
+              Poll Creation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600">
+              Generate interactive polls and quiz questions based on weekly topics and listening assignments.
             </p>
           </CardContent>
         </Card>
