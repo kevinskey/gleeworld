@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { getNoteClasses } from './notePalette';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 // Responsive slots limited to 3 rows max
 const useGridSlots = () => {
   const [slots, setSlots] = useState(12); // 4 cols x 3 rows = 12 slots
@@ -51,17 +50,37 @@ const NoteCard: React.FC<{
   isOwner?: boolean;
   onDelete?: () => void;
   noteColor?: string;
-}> = ({ message, sender, isPlaceholder, isOwner, onDelete, noteColor }) => {
+  cardId?: string;
+}> = ({ message, sender, isPlaceholder, isOwner, onDelete, noteColor, cardId }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const handleClick = (e: React.MouseEvent) => {
+    if (isOwner && onDelete && !isExpanded) {
+      // Check for modifier keys to expand instead of delete
+      if (e.shiftKey || e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        setIsExpanded(true);
+        return;
+      }
+      onDelete();
+    } else if (!isPlaceholder) {
+      setIsExpanded(!isExpanded);
+    }
+  };
+
   const card = (
     <div
       className={cn(
-        'relative aspect-square rounded-md shadow-sm transition-all duration-300 ease-out',
-        'scale-75 hover:scale-100 hover:z-10',
+        'relative aspect-square rounded-md shadow-sm transition-all duration-300 ease-out cursor-pointer',
+        'scale-75 hover:scale-100',
         getNoteClasses(noteColor || 'pink').container,
         'hover:shadow-lg',
-        isPlaceholder && 'border-dashed bg-secondary/40'
+        isPlaceholder && 'border-dashed bg-secondary/40',
+        isExpanded && 'scale-110 z-20 shadow-2xl'
       )}
-      title={!isPlaceholder ? 'Tap to delete this bucket of love' : undefined}
+      onClick={handleClick}
+      onMouseEnter={() => !isPlaceholder && setIsExpanded(true)}
+      onMouseLeave={() => setIsExpanded(false)}
+      title={!isPlaceholder ? 'Click to expand/collapse this bucket of love' : undefined}
     >
       {/* tape strip */}
       <div className={`absolute -top-1 left-1/2 -translate-x-1/2 h-2.5 w-8 rounded-sm shadow ${getNoteClasses(noteColor || 'pink').tape}`} />
@@ -76,18 +95,12 @@ const NoteCard: React.FC<{
           </div>
         ) : (
           <>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <p className="text-sm leading-tight line-clamp-4 overflow-hidden cursor-help">
-                    {message}
-                  </p>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs p-3 text-sm">
-                  <p>{message}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <p className={cn(
+              "text-sm leading-tight transition-all duration-300",
+              isExpanded ? "line-clamp-none" : "line-clamp-4 overflow-hidden"
+            )}>
+              {message}
+            </p>
             <div className={cn("mt-auto pt-2 text-[9px] flex items-center gap-1", getNoteClasses(noteColor || 'pink').meta)}>
               <Heart className={cn("h-3 w-3", getNoteClasses(noteColor || 'pink').heart)} />
               <span>{sender || 'Anonymous'}</span>
@@ -211,6 +224,7 @@ export const PostItGrid: React.FC = () => {
             {items.visible.map((b) => (
               <NoteCard
                 key={b.id}
+                cardId={b.id}
                 message={b.message}
                 sender={b.is_anonymous ? 'Anonymous' : b.sender_name || null}
                 noteColor={b.note_color}
