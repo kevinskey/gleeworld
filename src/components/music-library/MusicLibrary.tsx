@@ -281,7 +281,7 @@ export const MusicLibrary = () => {
             {selectedPdf ? <div className="flex-1 overflow-hidden rounded-lg lg:rounded-xl">
                 <PDFViewerWithAnnotations key={selectedPdf.url} pdfUrl={selectedPdf.url} musicTitle={selectedPdf.title} musicId={selectedPdf.id} className="w-full h-full" />
               </div> : <div className="flex-1 relative rounded-lg lg:rounded-xl overflow-hidden bg-background shadow-lg lg:shadow-xl ring-1 ring-border mx-1 lg:mx-0">
-                <img src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png" alt="Glee World Music Library landing image" className="absolute inset-0 w-full h-full object-cover object-top" loading="lazy" />
+                <img src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png" alt="Glee World Music Library landing image" className="absolute inset-0 w-full h-full object-contain object-top" loading="lazy" />
               </div>}
           </Panel>
         </PanelGroup>
