@@ -46,8 +46,17 @@ export const useSheetMusicUrl = (pdfUrl: string | null) => {
               });
               
               if (now >= exp) {
-                console.log('useSheetMusicUrl: Token is expired, need to regenerate');
-                setError('PDF access token has expired. Please refresh the page to get a new link.');
+                console.log('useSheetMusicUrl: Token is expired, regenerating fresh signed URL');
+                // Extract the original path and bucket to generate a fresh signed URL
+                const afterBase = pdfUrl.split('/storage/v1/object/sign/')[1];
+                const segments = afterBase.split('/');
+                const bucket = segments[0];
+                const path = segments.slice(1).join('/').split('?')[0];
+                
+                console.log('useSheetMusicUrl: Regenerating for bucket:', bucket, 'path:', path);
+                const freshUrl = await getFileUrl(bucket, path);
+                console.log('useSheetMusicUrl: Generated fresh URL:', freshUrl);
+                setSignedUrl(freshUrl);
                 return;
               }
               

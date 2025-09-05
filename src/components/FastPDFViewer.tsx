@@ -74,6 +74,11 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
 
         console.log('FastPDFViewer: Loading PDF document:', signedUrl);
         console.log('FastPDFViewer: Original pdfUrl:', pdfUrl);
+        console.log('FastPDFViewer: URL timestamp check:', {
+          isSignedUrl: signedUrl.includes('token='),
+          urlLength: signedUrl.length,
+          containsExp: signedUrl.includes('exp')
+        });
 
         let doc;
         try {
@@ -86,7 +91,13 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
           }).promise;
           console.log('FastPDFViewer: PDF loaded with direct method, pages:', doc.numPages);
         } catch (primaryErr) {
-          console.warn('Primary PDF load failed, retrying with ArrayBuffer', primaryErr);
+          console.error('Primary PDF load failed with details:', {
+            error: primaryErr,
+            message: primaryErr.message,
+            name: primaryErr.name,
+            url: signedUrl,
+            originalPdfUrl: pdfUrl
+          });
           try {
             // Method 2: ArrayBuffer with better headers and token refresh on auth errors
             let fetchUrl = signedUrl;
