@@ -162,7 +162,7 @@ export const MusicLibrary = () => {
 
   // Mobile layout - simple fullscreen
   if (isMobile) {
-    return <div className="min-h-screen bg-background w-full overflow-hidden">{/* Removed max-w-full as it's redundant */}
+    return <div className="bg-background w-full overflow-hidden">{/* Removed max-w-full as it's redundant */}
         {/* Simple Header with Back Button */}
         
 
