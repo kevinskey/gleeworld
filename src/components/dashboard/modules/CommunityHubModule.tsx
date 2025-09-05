@@ -89,8 +89,8 @@ export const CommunityHubModule = () => {
             </Button>
             <Button
               size="sm"
-              variant="outline"
-              onClick={() => navigate('/notifications/send')}
+              variant={activeTab === 'notifications' ? 'secondary' : 'outline'}
+              onClick={() => handleTabToggle('notifications')}
               className="hover-scale"
             >
               <Bell className="h-4 w-4 mr-1" /> Notifications
