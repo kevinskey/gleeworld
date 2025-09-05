@@ -7,6 +7,7 @@ import { useSetlists } from '@/hooks/useSetlists';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { MusicLibrary } from '@/components/music-library/MusicLibrary';
+import { MusicLibraryHeader } from '@/components/music-library/MusicLibraryHeader';
 import { PracticeRecordingsPanel } from '@/components/music-library/PracticeRecordingsPanel';
 import { SetlistManagement } from '@/components/setlist/SetlistManagement';
 export const MusicLibraryPage: React.FC = () => {
@@ -25,6 +26,9 @@ export const MusicLibraryPage: React.FC = () => {
   const [activeView, setActiveView] = useState<'library' | 'practice-recordings' | 'study-scores' | 'setlists'>('library');
   return <div className="bg-gradient-subtle">
         <div className="w-full p-2 sm:p-4 lg:p-8 lg:max-w-7xl lg:mx-auto">
+        {/* Mobile Back Navigation */}
+        <MusicLibraryHeader />
+        
         {/* Header Section */}
         <div className="mb-8 sm:mb-10 lg:mb-12">
           <div className="flex items-center gap-4 mb-6">
