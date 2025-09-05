@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 interface SMSNotificationRequest {
-  groupId: string;
+  groupId?: string | null;
   message: string;
   senderName: string;
   phoneNumbers?: string[];
@@ -42,34 +42,56 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Twilio credentials not configured');
     }
 
-    // Get group details
-    const { data: group, error: groupError } = await supabase
-      .from('gw_message_groups')
-      .select('name')
-      .eq('id', groupId)
-      .single();
+    let targetPhoneNumbers = phoneNumbers;
+    let groupName = 'Glee Club';
 
-    if (groupError) {
-      throw new Error(`Failed to get group details: ${groupError.message}`);
+    // If groupId is provided and valid, get group details and member phone numbers
+    if (groupId && groupId !== 'null') {
+      const { data: group, error: groupError } = await supabase
+        .from('gw_message_groups')
+        .select('name')
+        .eq('id', groupId)
+        .single();
+
+      if (!groupError && group) {
+        groupName = group.name;
+        
+        // Get phone numbers from group members if not provided
+        if (!targetPhoneNumbers || targetPhoneNumbers.length === 0) {
+          const { data: members, error: membersError } = await supabase
+            .from('gw_group_members')
+            .select(`
+              gw_profiles!fk_gw_group_members_user_profile(phone_number)
+            `)
+            .eq('group_id', groupId)
+            .not('gw_profiles.phone_number', 'is', null);
+
+          if (!membersError && members) {
+            targetPhoneNumbers = members
+              .map(member => member.gw_profiles?.phone_number)
+              .filter(phone => phone) as string[];
+          }
+        }
+      }
     }
 
-    // Get phone numbers from group members if not provided
-    let targetPhoneNumbers = phoneNumbers;
-    if (!targetPhoneNumbers || targetPhoneNumbers.length === 0) {
-      const { data: members, error: membersError } = await supabase
-        .from('gw_group_members')
-        .select(`
-          gw_profiles!fk_gw_group_members_user_profile(phone_number)
-        `)
-        .eq('group_id', groupId)
-        .not('gw_profiles.phone_number', 'is', null);
+    // If phoneNumbers are provided as user IDs, convert them to actual phone numbers
+    if (targetPhoneNumbers && targetPhoneNumbers.length > 0) {
+      // Check if the first item looks like a UUID (user ID)
+      const firstNumber = targetPhoneNumbers[0];
+      if (firstNumber.includes('-') && firstNumber.length === 36) {
+        // These are user IDs, fetch phone numbers
+        const { data: profiles, error: profilesError } = await supabase
+          .from('gw_profiles')
+          .select('phone_number')
+          .in('user_id', targetPhoneNumbers)
+          .not('phone_number', 'is', null);
 
-      if (membersError) {
-        console.error('Error fetching member phone numbers:', membersError);
-      } else {
-        targetPhoneNumbers = members
-          .map(member => member.gw_profiles?.phone_number)
-          .filter(phone => phone) as string[];
+        if (!profilesError && profiles) {
+          targetPhoneNumbers = profiles
+            .map(profile => profile.phone_number)
+            .filter(phone => phone) as string[];
+        }
       }
     }
 
@@ -81,7 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Format SMS message
-    const smsText = `${group.name}: ${senderName}: ${message}`;
+    const smsText = `${groupName}: ${senderName}: ${message}`;
     const truncatedMessage = smsText.length > 160 ? smsText.substring(0, 157) + '...' : smsText;
 
     // Send SMS notifications using Twilio API

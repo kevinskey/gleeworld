@@ -27,10 +27,11 @@ interface SocialMediaPayload {
 }
 
 interface NotificationPayload {
-  userId: string;
+  type: string;
+  target: string;
   title: string;
   message: string;
-  type?: string;
+  sender_id?: string;
   category?: string;
   actionUrl?: string;
   actionLabel?: string;
@@ -60,20 +61,22 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Create the notification in the database
     const { data: notification, error: notificationError } = await supabase
-      .rpc('create_notification_with_delivery', {
-        p_user_id: payload.userId,
-        p_title: payload.title,
-        p_message: payload.message,
-        p_type: payload.type || 'info',
-        p_category: payload.category || 'general',
-        p_action_url: payload.actionUrl || null,
-        p_action_label: payload.actionLabel || null,
-        p_metadata: payload.metadata || {},
-        p_priority: payload.priority || 0,
-        p_expires_at: null,
-        p_send_email: payload.sendEmail || false,
-        p_send_sms: payload.sendSms || false
-      });
+      .from('gw_notifications')
+      .insert({
+        user_id: payload.target,
+        title: payload.title,
+        message: payload.message,
+        type: payload.type || 'info',
+        category: payload.category || 'general',
+        action_url: payload.actionUrl || null,
+        action_label: payload.actionLabel || null,
+        metadata: payload.metadata || {},
+        priority: payload.priority || 0,
+        expires_at: null,
+        sender_id: payload.sender_id || null
+      })
+      .select()
+      .single();
 
     if (notificationError) {
       console.error('Error creating notification:', notificationError);
@@ -87,7 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
       const { data: userProfile } = await supabase
         .from('gw_profiles')
         .select('email, full_name')
-        .eq('user_id', payload.userId)
+        .eq('user_id', payload.target)
         .single();
 
       if (userProfile?.email) {
