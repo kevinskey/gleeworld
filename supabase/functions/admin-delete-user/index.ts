@@ -1,116 +1,214 @@
-// Admin Delete User Edge Function
-// Deletes a user from Auth and cleans up primary profile links.
-// Requires caller to be admin/super-admin.
-
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
-Deno.serve(async (req) => {
-  // CORS preflight
+serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
-
-  const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-  const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
-  });
 
   try {
-    const authHeader = req.headers.get('Authorization') || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
-    if (!token) {
-      return new Response(JSON.stringify({ error: 'Missing bearer token' }), { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    const authHeader = req.headers.get('Authorization')!
+    const token = authHeader.replace('Bearer ', '')
+
+    // Verify the user is authenticated and is an admin
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    // Verify caller
-    const { data: userData, error: getUserError } = await supabase.auth.getUser(token);
-    if (getUserError || !userData?.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
-    }
-
-    const callerId = userData.user.id;
-    const { data: profile, error: profileErr } = await supabase
+    // Check if user is admin or super admin
+    const { data: profile } = await supabaseClient
       .from('gw_profiles')
-      .select('is_admin, is_super_admin, role')
-      .eq('user_id', callerId)
-      .maybeSingle();
+      .select('is_admin, is_super_admin, email')
+      .eq('user_id', user.id)
+      .single()
 
-    if (profileErr) {
-      console.error('Profile fetch error:', profileErr);
-      return new Response(JSON.stringify({ error: 'Profile lookup failed' }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    if (!profile?.is_admin && !profile?.is_super_admin) {
+      return new Response(
+        JSON.stringify({ error: 'Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    const isAdmin = !!(profile?.is_admin || profile?.is_super_admin || profile?.role === 'admin' || profile?.role === 'super-admin');
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    const { userId, userEmail, confirmText } = await req.json()
+
+    if (!userId || !userEmail) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: userId, userEmail' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    const { target_user_id } = await req.json().catch(() => ({ target_user_id: undefined }));
-    if (!target_user_id) {
-      return new Response(JSON.stringify({ error: 'target_user_id is required' }), { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    // Verify confirmation text matches
+    const expectedText = `DELETE ${userEmail}`
+    if (confirmText !== expectedText) {
+      return new Response(
+        JSON.stringify({ error: 'Confirmation text does not match. Please type exactly: ' + expectedText }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    if (target_user_id === callerId) {
-      return new Response(JSON.stringify({ error: 'Cannot delete your own account' }), { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    // Prevent deletion of other super admins
+    const { data: targetProfile } = await supabaseClient
+      .from('gw_profiles')
+      .select('is_super_admin, email')
+      .eq('user_id', userId)
+      .single()
+
+    if (targetProfile?.is_super_admin && !profile?.is_super_admin) {
+      return new Response(
+        JSON.stringify({ error: 'Only super admins can delete other super admin accounts' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    // 1) Try deleting from Auth (treat 404 as OK)
-    let authDeleted = false;
-    try {
-      const { error: delErr } = await supabase.auth.admin.deleteUser(target_user_id);
-      if (delErr) {
-        // If the user is already gone, continue cleanup
-        if ((delErr as any)?.status === 404 || (delErr as any)?.message?.includes('user_not_found')) {
-          authDeleted = false;
-        } else {
-          console.warn('Auth delete returned error, proceeding with cleanup anyway:', delErr);
+    // Log the deletion attempt before starting
+    await supabaseClient
+      .from('gw_security_audit_log')
+      .insert({
+        user_id: user.id,
+        action_type: 'admin_user_deletion_attempt',
+        resource_type: 'user_account',
+        resource_id: userId,
+        details: {
+          target_email: userEmail,
+          deleted_by_admin: profile.email,
+          timestamp: new Date().toISOString()
         }
-      } else {
-        authDeleted = true;
-      }
-    } catch (e) {
-      console.warn('Auth delete threw, proceeding with cleanup:', e);
+      })
+
+    // Step 1: Delete/cleanup related data first (in order of dependencies)
+    console.log('Starting user deletion process for:', userEmail)
+
+    // Delete user module permissions
+    await supabaseClient
+      .from('gw_user_module_permissions')
+      .delete()
+      .eq('user_id', userId)
+
+    // Delete username permissions
+    await supabaseClient
+      .from('username_permissions')
+      .delete()
+      .eq('user_email', userEmail)
+
+    // Delete executive board memberships
+    await supabaseClient
+      .from('gw_executive_board_members')
+      .delete()
+      .eq('user_id', userId)
+
+    // Delete user preferences
+    await supabaseClient
+      .from('user_preferences')
+      .delete()
+      .eq('user_id', userId)
+
+    // Delete notification preferences
+    await supabaseClient
+      .from('gw_notification_preferences')
+      .delete()
+      .eq('user_id', userId)
+
+    // Delete user module orders
+    await supabaseClient
+      .from('gw_user_module_orders')
+      .delete()
+      .eq('user_id', userId)
+
+    // Delete payment records (mark as deleted rather than hard delete)
+    await supabaseClient
+      .from('payments')
+      .update({ notes: 'User account deleted', updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+
+    // Delete contract assignments
+    await supabaseClient
+      .from('contract_user_assignments')
+      .delete()
+      .eq('user_id', userId)
+
+    await supabaseClient
+      .from('singer_contract_assignments')
+      .delete()
+      .eq('singer_id', userId)
+
+    // Delete attendance records (keep for historical purposes but anonymize)
+    await supabaseClient
+      .from('gw_attendance')
+      .update({ 
+        notes: 'User deleted',
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId)
+
+    // Step 2: Delete the profile record
+    const { error: profileError } = await supabaseClient
+      .from('gw_profiles')
+      .delete()
+      .eq('user_id', userId)
+
+    if (profileError) {
+      console.error('Error deleting profile:', profileError)
+      throw new Error(`Failed to delete user profile: ${profileError.message}`)
     }
 
-    // 2) Clean up key app records (service role bypasses RLS)
-    const deletes = [] as Promise<any>[];
+    // Step 3: Delete the auth user (this must be last)
+    const { error: authDeleteError } = await supabaseClient.auth.admin.deleteUser(userId)
 
-    // Executive board entries
-    deletes.push(
-      supabase.from('gw_executive_board_members').delete().eq('user_id', target_user_id)
-    );
+    if (authDeleteError) {
+      console.error('Error deleting auth user:', authDeleteError)
+      throw new Error(`Failed to delete auth user: ${authDeleteError.message}`)
+    }
 
-    // Profiles
-    deletes.push(
-      supabase.from('gw_profiles').delete().eq('user_id', target_user_id)
-    );
+    // Log successful deletion
+    await supabaseClient
+      .from('gw_security_audit_log')
+      .insert({
+        user_id: user.id,
+        action_type: 'admin_user_deletion_success',
+        resource_type: 'user_account',
+        resource_id: userId,
+        details: {
+          target_email: userEmail,
+          deleted_by_admin: profile.email,
+          deletion_completed_at: new Date().toISOString()
+        }
+      })
 
-    // Optional: activity logs (non-blocking)
-    deletes.push(
-      supabase.from('activity_logs').delete().eq('user_id', target_user_id)
-    );
+    console.log('User deletion completed successfully for:', userEmail)
 
-    const results = await Promise.allSettled(deletes);
-    const cleanupErrors = results.filter(r => r.status === 'rejected');
-
-    // 3) Return summary
     return new Response(
-      JSON.stringify({
-        success: true,
-        authDeleted,
-        cleanupErrors: cleanupErrors.length > 0 ? cleanupErrors : undefined,
+      JSON.stringify({ 
+        success: true, 
+        message: `User ${userEmail} has been permanently deleted` 
       }),
-      { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-    );
-  } catch (err) {
-    console.error('admin-delete-user error:', err);
-    return new Response(JSON.stringify({ error: (err as Error).message || 'Unexpected error' }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error in admin-delete-user function:', error)
+    
+    return new Response(
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Internal server error during user deletion' 
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
-});
+})

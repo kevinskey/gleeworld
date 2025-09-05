@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, Users, Settings, Shield, Search, KeyRound } from 'lucide-react';
+import { UserPlus, Users, Settings, Shield, Search, KeyRound, Trash2 } from 'lucide-react';
 import { useAutoEnrollUser } from '@/hooks/useAutoEnrollUser';
 import { useUsers } from '@/hooks/useUsers';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResetPasswordDialog } from '@/components/admin/ResetPasswordDialog';
+import { DeleteUserDialog } from '@/components/admin/DeleteUserDialog';
 import { PasswordResetTool } from '@/components/admin/PasswordResetTool';
 
 export const UserManagementModule = () => {
@@ -19,6 +20,7 @@ export const UserManagementModule = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { autoEnrollUser, enrolling } = useAutoEnrollUser();
   const { users, loading: usersLoading } = useUsers();
 
@@ -31,6 +33,11 @@ export const UserManagementModule = () => {
     setEmail('');
     setFullName('');
     setRole('');
+  };
+
+  const handleUserDeleted = () => {
+    setSelectedUser(null);
+    // Refetch users if needed
   };
 
   const filteredUsers = users?.filter(user =>
@@ -51,7 +58,7 @@ export const UserManagementModule = () => {
       default:
         return 'outline';
     }
-  };
+    };
 
   return (
     <div className="space-y-6">
@@ -171,6 +178,17 @@ export const UserManagementModule = () => {
                           <KeyRound className="w-4 h-4 mr-1" />
                           Reset Password
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowDeleteDialog(true);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Delete
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -280,6 +298,13 @@ export const UserManagementModule = () => {
         user={selectedUser}
         open={showResetDialog}
         onOpenChange={setShowResetDialog}
+      />
+
+      <DeleteUserDialog 
+        user={selectedUser}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onUserDeleted={handleUserDeleted}
       />
     </div>
   );
