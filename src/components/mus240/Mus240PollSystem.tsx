@@ -23,7 +23,7 @@ interface Poll {
 }
 
 export const Mus240PollSystem = () => {
-  const { isAdmin: isUserAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
+  const { isAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(false);
   const [newPollTitle, setNewPollTitle] = useState('');
@@ -32,7 +32,7 @@ export const Mus240PollSystem = () => {
   const [numQuestions, setNumQuestions] = useState(3);
   const [generatingPoll, setGeneratingPoll] = useState(false);
 
-  const isAdmin = isUserAdmin() || isSuperAdmin();
+  const hasAdminAccess = isAdmin() || isSuperAdmin();
 
   useEffect(() => {
     if (!roleLoading) {
@@ -45,7 +45,7 @@ export const Mus240PollSystem = () => {
     try {
       let query = supabase.from('mus240_polls').select('*');
       
-      if (!isAdmin) {
+      if (!hasAdminAccess) {
         query = query.eq('is_active', true);
       }
       
@@ -185,7 +185,7 @@ export const Mus240PollSystem = () => {
     return <div className="text-center py-8">Loading...</div>;
   }
 
-  if (!isAdmin) {
+  if (!hasAdminAccess) {
     return (
       <div className="space-y-6">
         <div className="text-center">
