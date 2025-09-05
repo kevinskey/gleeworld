@@ -14,7 +14,6 @@ export interface JournalEntry {
   updated_at: string;
   submitted_at: string;
   author_name?: string;
-  published_at?: string;
 }
 
 export interface JournalComment {
@@ -79,7 +78,7 @@ export const useMus240Journals = () => {
 
   const fetchPublishedJournals = async (assignmentId: string): Promise<JournalEntry[]> => {
     try {
-      const response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&is_published=eq.true&order=published_at.desc`);
+      const response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&is_published=eq.true&order=created_at.desc`);
       if (!response.ok) throw new Error('Failed to fetch published journals');
       
       const journals = await response.json();
@@ -218,7 +217,7 @@ export const useMus240Journals = () => {
         },
         body: JSON.stringify({
           is_published: true,
-          published_at: new Date().toISOString()
+          submitted_at: new Date().toISOString()
         })
       });
 

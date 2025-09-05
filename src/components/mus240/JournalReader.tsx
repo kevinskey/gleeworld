@@ -206,7 +206,7 @@ export const JournalReader: React.FC<JournalReaderProps> = ({ assignment }) => {
 
               <div className="flex items-center justify-between pt-4 border-t">
                 <span className="text-sm text-muted-foreground">
-                  Published {new Date(journal.published_at).toLocaleDateString()}
+                  Published {new Date(journal.submitted_at || journal.created_at).toLocaleDateString()}
                 </span>
                 <Button 
                   onClick={() => loadComments(journal.id)}
