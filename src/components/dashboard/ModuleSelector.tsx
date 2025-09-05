@@ -101,6 +101,14 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
       category: 'Administration'
     },
     {
+      id: 'user-management',
+      name: 'User Management',
+      icon: Users,
+      description: 'Manage member accounts, roles, and permissions',
+      notifications: 0,
+      category: 'Administration'
+    },
+    {
       id: 'settings',
       name: 'Settings',
       icon: Settings,
