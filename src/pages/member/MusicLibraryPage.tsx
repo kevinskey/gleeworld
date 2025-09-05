@@ -79,12 +79,12 @@ export const MusicLibraryPage: React.FC = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid gap-6 lg:gap-8 lg:grid-cols-4">
+        <div className="w-full">
           {/* Main Content Area */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="w-full space-y-6">
             {activeView === 'library' ? (
               <Card className="animate-fade-in bg-card/95 backdrop-blur-sm border-border/50 shadow-lg">
-                <CardContent className="space-y-4 pt-6">
+                <CardContent className="space-y-4 pt-6 w-full">
                   <MusicLibrary />
                 </CardContent>
               </Card>
