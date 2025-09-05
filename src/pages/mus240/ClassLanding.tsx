@@ -1,11 +1,46 @@
 import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { Music, Calendar, BookOpen, Users, TrendingUp, Brain } from 'lucide-react';
+import { Music, Calendar, BookOpen, Users, TrendingUp, Brain, BarChart } from 'lucide-react';
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { AdminGradesCard } from '@/components/mus240/admin/AdminGradesCard';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ClassLanding() {
+  const [hasActivePoll, setHasActivePoll] = useState(false);
+
+  // Check for active polls
+  useEffect(() => {
+    const checkActivePoll = async () => {
+      const { data } = await supabase
+        .from('mus240_polls')
+        .select('id')
+        .eq('is_active', true)
+        .limit(1);
+      
+      setHasActivePoll(data && data.length > 0);
+    };
+
+    checkActivePoll();
+
+    // Listen for poll changes
+    const subscription = supabase
+      .channel('poll-status')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'mus240_polls'
+      }, () => {
+        checkActivePoll();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   const cards = [
     { 
       title: 'Syllabus', 
@@ -88,6 +123,20 @@ export default function ClassLanding() {
 
           {/* Navigation Cards */}
           <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Active Poll Card - Only show when there's an active poll */}
+            {hasActivePoll && (
+              <Link to="/mus240-polls" className="group block">
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl lg:rounded-3xl px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6 shadow-xl border border-green-400/30 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 animate-pulse">
+                  <div className="flex items-center gap-4 sm:gap-3 lg:gap-6 mb-4 sm:mb-3 lg:mb-6">
+                    <div className="p-3 sm:p-2 md:p-5 lg:p-4 xl:p-6 bg-white/20 rounded-lg lg:rounded-xl">
+                      <BarChart className="h-6 w-6 sm:h-5 sm:w-5 md:h-8 md:w-8 lg:h-10 lg:w-10 xl:h-12 xl:w-12 text-white" />
+                    </div>
+                    <h3 className="text-5xl sm:text-2xl md:text-4xl lg:text-3xl xl:text-4xl font-semibold text-white">🔴 Live Poll</h3>
+                  </div>
+                  <p className="text-white/90 text-xl sm:text-sm md:text-lg lg:text-base xl:text-lg leading-relaxed">Answer the current class poll</p>
+                </div>
+              </Link>
+            )}
             {cards.map((card) => {
               const IconComponent = card.icon;
               return (
