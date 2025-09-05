@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { getNoteClasses } from './notePalette';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 // Responsive slots limited to 3 rows max
 const useGridSlots = () => {
   const [slots, setSlots] = useState(12); // 4 cols x 3 rows = 12 slots
@@ -75,9 +76,18 @@ const NoteCard: React.FC<{
           </div>
         ) : (
           <>
-            <p className="text-sm leading-tight line-clamp-4 overflow-hidden">
-              {message}
-            </p>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-sm leading-tight line-clamp-4 overflow-hidden cursor-help">
+                    {message}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs p-3 text-sm">
+                  <p>{message}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <div className={cn("mt-auto pt-2 text-[9px] flex items-center gap-1", getNoteClasses(noteColor || 'pink').meta)}>
               <Heart className={cn("h-3 w-3", getNoteClasses(noteColor || 'pink').heart)} />
               <span>{sender || 'Anonymous'}</span>
