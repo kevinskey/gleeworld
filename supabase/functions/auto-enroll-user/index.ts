@@ -11,6 +11,7 @@ interface AutoEnrollRequest {
   email: string;
   full_name?: string;
   contract_id?: string;
+  role?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -80,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, full_name, contract_id }: AutoEnrollRequest = await req.json();
+    const { email, full_name, contract_id, role }: AutoEnrollRequest = await req.json();
 
     console.log("Admin", user.id, "auto-enrolling user:", email);
 
@@ -94,7 +95,8 @@ const handler = async (req: Request): Promise<Response> => {
         details: { 
           target_email: email,
           full_name: full_name,
-          contract_id: contract_id 
+          contract_id: contract_id,
+          role: role
         }
       });
 
@@ -148,7 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
         user_id: authUser.user!.id,
         email: email,
         full_name: full_name || email.split('@')[0],
-        role: 'auditioner'
+        role: role || 'auditioner'
       })
       .select()
       .single();
@@ -174,6 +176,7 @@ const handler = async (req: Request): Promise<Response> => {
           email: email,
           full_name: full_name || email.split('@')[0],
           contract_id: contract_id,
+          role: role || 'auditioner',
           method: 'invite_email'
         }
       });

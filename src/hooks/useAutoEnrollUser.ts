@@ -20,7 +20,8 @@ export const useAutoEnrollUser = () => {
   const autoEnrollUser = async (
     email: string, 
     full_name?: string, 
-    contract_id?: string
+    contract_id?: string,
+    role?: string
   ): Promise<AutoEnrollResult> => {
     setEnrolling(true);
     
@@ -31,7 +32,8 @@ export const useAutoEnrollUser = () => {
         body: {
           email,
           full_name,
-          contract_id
+          contract_id,
+          role
         }
       });
 
