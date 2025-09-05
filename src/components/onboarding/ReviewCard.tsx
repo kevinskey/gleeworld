@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, User, Mail, Phone, Ruler, FileCheck } from 'lucide-react';
+import { CheckCircle, XCircle, User, Mail, Phone, Ruler, FileCheck, Camera } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { OnboardingProfile } from '@/hooks/useOnboardingProfile';
 
 interface ReviewCardProps {
@@ -24,7 +25,7 @@ export const ReviewCard = ({ profile, onComplete, saving }: ReviewCardProps) => 
   };
 
   const getCompletionStatus = () => {
-    const profileComplete = !!(profile.first_name && profile.last_name && profile.email);
+    const profileComplete = !!(profile.first_name && profile.last_name && profile.email && profile.headshot_url);
     const uniformComplete = !!(profile.measurements?.height_feet && profile.measurements?.height_inches && profile.measurements?.chest && profile.measurements?.waist && profile.measurements?.hips && profile.measurements?.shoe_size);
     const agreementsComplete = !!(profile.photo_consent && profile.media_release_signed_at);
     
@@ -96,37 +97,46 @@ export const ReviewCard = ({ profile, onComplete, saving }: ReviewCardProps) => 
             Profile Summary
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Name:</span>
-              <p className="font-medium">
-                {profile.preferred_name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Not provided'}
-              </p>
-            </div>
+          <div className="flex items-start gap-6">
+            <Avatar className="w-20 h-20">
+              <AvatarImage src={profile.headshot_url || ''} />
+              <AvatarFallback className="text-lg">
+                {profile.first_name?.[0] || profile.email?.[0] || '?'}
+              </AvatarFallback>
+            </Avatar>
             
-            <div>
-              <span className="text-muted-foreground">Pronouns:</span>
-              <p className="font-medium">{profile.pronouns || 'Not provided'}</p>
-            </div>
-            
-            <div>
-              <span className="text-muted-foreground">Email:</span>
-              <p className="font-medium">{profile.email || 'Not provided'}</p>
-            </div>
-            
-            <div>
-              <span className="text-muted-foreground">Phone:</span>
-              <p className="font-medium">{profile.phone || 'Not provided'}</p>
-            </div>
-            
-            <div>
-              <span className="text-muted-foreground">Voice Part:</span>
-              <p className="font-medium">{profile.voice_part || 'Not selected'}</p>
-            </div>
-            
-            <div>
-              <span className="text-muted-foreground">Graduation Year:</span>
-              <p className="font-medium">{profile.graduation_year || 'Not provided'}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm flex-1">
+              <div>
+                <span className="text-muted-foreground">Name:</span>
+                <p className="font-medium">
+                  {profile.preferred_name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Not provided'}
+                </p>
+              </div>
+              
+              <div>
+                <span className="text-muted-foreground">Pronouns:</span>
+                <p className="font-medium">{profile.pronouns || 'Not provided'}</p>
+              </div>
+              
+              <div>
+                <span className="text-muted-foreground">Email:</span>
+                <p className="font-medium">{profile.email || 'Not provided'}</p>
+              </div>
+              
+              <div>
+                <span className="text-muted-foreground">Phone:</span>
+                <p className="font-medium">{profile.phone || 'Not provided'}</p>
+              </div>
+              
+              <div>
+                <span className="text-muted-foreground">Voice Part:</span>
+                <p className="font-medium">{profile.voice_part || 'Not selected'}</p>
+              </div>
+              
+              <div>
+                <span className="text-muted-foreground">Graduation Year:</span>
+                <p className="font-medium">{profile.graduation_year || 'Not provided'}</p>
+              </div>
             </div>
           </div>
         </div>

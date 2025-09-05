@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Camera, Upload, X } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { OnboardingProfile } from '@/hooks/useOnboardingProfile';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProfileFormProps {
   profile: OnboardingProfile;
@@ -12,6 +18,59 @@ interface ProfileFormProps {
 }
 
 export const ProfileForm = ({ profile, onUpdate, saving }: ProfileFormProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      setUploading(true);
+      
+      // Create file path
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/headshot.${fileExt}`;
+      
+      // Upload to Supabase storage
+      const { data, error } = await supabase.storage
+        .from('user-files')
+        .upload(fileName, file, { 
+          upsert: true 
+        });
+
+      if (error) throw error;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-files')
+        .getPublicUrl(fileName);
+
+      // Update profile with the headshot URL
+      onUpdate('headshot_url', publicUrl);
+      
+      toast({
+        title: "Profile picture uploaded!",
+        description: "Your headshot has been saved successfully.",
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your profile picture. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    onUpdate('headshot_url', null);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -22,6 +81,56 @@ export const ProfileForm = ({ profile, onUpdate, saving }: ProfileFormProps) => 
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        
+        {/* Profile Picture Section */}
+        <div className="space-y-4">
+          <Label className="text-base font-medium">Profile Picture</Label>
+          <div className="flex items-center gap-6">
+            <Avatar className="w-24 h-24">
+              <AvatarImage src={profile.headshot_url || ''} />
+              <AvatarFallback className="text-2xl">
+                {profile.first_name?.[0] || profile.email?.[0] || '?'}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex flex-col gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="w-full"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {uploading ? 'Uploading...' : profile.headshot_url ? 'Change Photo' : 'Upload Photo'}
+              </Button>
+              
+              {profile.headshot_url && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={removeImage}
+                  disabled={uploading}
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Remove
+                </Button>
+              )}
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Upload a clear headshot photo that shows your face. This will be used in your profile and for identification purposes.
+          </p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="first_name">First Name</Label>

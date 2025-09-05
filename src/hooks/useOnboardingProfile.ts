@@ -21,6 +21,7 @@ export interface OnboardingProfile {
   graduation_year?: number;
   academic_year?: string;
   academic_major?: string;
+  headshot_url?: string;
   // Measurements (stored as JSON in existing measurements field)
   measurements?: {
     height_feet?: number;
@@ -171,7 +172,7 @@ export const useOnboardingProfile = () => {
   // Get completion status for each step
   const getStepCompletion = useCallback(() => {
     return {
-      profile: !!(profile.first_name && profile.last_name && profile.email),
+      profile: !!(profile.first_name && profile.last_name && profile.email && profile.headshot_url),
       uniform: !!(profile.measurements?.height_feet && profile.measurements?.height_inches && profile.measurements?.chest && profile.measurements?.waist && profile.measurements?.hips && profile.measurements?.shoe_size),
       agreements: !!(profile.photo_consent && profile.media_release_signed_at),
     };
