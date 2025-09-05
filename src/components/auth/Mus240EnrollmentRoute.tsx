@@ -11,7 +11,7 @@ interface Mus240EnrollmentRouteProps {
 
 export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) => {
   const { user, loading: authLoading } = useAuth();
-  const { isAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
+  const { isAdmin, isSuperAdmin, loading: roleLoading, profile } = useUserRole();
   const { isEnrolled, loading: enrollmentLoading } = useMus240Enrollment();
   
   console.log('Mus240EnrollmentRoute: Component rendering', {
@@ -49,7 +49,7 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
     isSuperAdmin: superAdminAccess,
     roleLoading,
     enrollmentLoading,
-    profile: useUserRole().profile // Add profile data for debugging
+    profile: profile // Use profile from existing hook
   });
   
   // Allow admins and super admins access regardless of enrollment
