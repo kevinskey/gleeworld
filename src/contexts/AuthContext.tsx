@@ -73,13 +73,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
         
         const session = data?.session || null;
-        console.log('AuthContext: Initial session retrieved:', session?.user?.id || 'no user');
+        console.log('AuthContext: Initial session retrieved:', {
+          hasSession: !!session,
+          userId: session?.user?.id || 'no user',
+          userEmail: session?.user?.email,
+          sessionExpiry: session?.expires_at
+        });
         
         if (mountedRef.current) {
           setSession(session);
           setUser(session?.user ?? null);
           // Set loading to false immediately to prevent white screen
           setLoading(false);
+          console.log('AuthContext: State updated - user:', session?.user?.email || 'none');
         }
 
         // Set up auth state listener AFTER initial session check
