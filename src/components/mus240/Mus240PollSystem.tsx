@@ -1,165 +1,132 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Brain, Plus, Play, Square, BarChart3, Users, Trash2 } from 'lucide-react';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
-import { 
-  BarChart3, 
-  Users, 
-  Clock, 
-  CheckCircle, 
-  Plus,
-  BarChart,
-  Vote,
-  TrendingUp,
-  Eye
-} from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { LivePollResults } from './LivePollResults';
+import { StudentPollInterface } from './StudentPollInterface';
 
 interface Poll {
   id: string;
-  question: string;
-  options: string[];
-  responses: { [key: string]: number };
-  isActive: boolean;
-  createdBy: string;
-  createdAt: string;
-  totalResponses: number;
-  userResponse?: string;
+  title: string;
+  description: string;
+  questions: any; // Using any to handle Supabase Json type
+  is_active: boolean;
+  created_at: string;
+  expires_at: string | null;
 }
 
 export const Mus240PollSystem = () => {
-  const { user } = useAuth();
+  const { isAdmin: isUserAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
   const [polls, setPolls] = useState<Poll[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [newPoll, setNewPoll] = useState({
-    question: '',
-    options: ['', '']
-  });
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [newPollTitle, setNewPollTitle] = useState('');
+  const [newPollDescription, setNewPollDescription] = useState('');
+  const [aiPollPrompt, setAiPollPrompt] = useState('');
+
+  const isAdmin = isUserAdmin() || isSuperAdmin();
 
   useEffect(() => {
-    if (user) {
-      checkAdminStatus();
-      loadPolls();
+    if (!roleLoading) {
+      fetchPolls();
     }
-  }, [user]);
+  }, [roleLoading]);
 
-  const checkAdminStatus = async () => {
+  const fetchPolls = async () => {
+    setLoading(true);
     try {
-      const { data: profile } = await supabase
-        .from('gw_profiles')
-        .select('is_admin, is_super_admin, role')
-        .eq('user_id', user?.id)
-        .single();
+      let query = supabase.from('mus240_polls').select('*');
+      
+      if (!isAdmin) {
+        query = query.eq('is_active', true);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
-      setIsAdmin(
-        profile?.is_admin || 
-        profile?.is_super_admin || 
-        ['admin', 'super-admin'].includes(profile?.role)
-      );
+      if (error) throw error;
+      setPolls(data || []);
     } catch (error) {
-      console.error('Error checking admin status:', error);
-    }
-  };
-
-  const loadPolls = async () => {
-    try {
-      // Mock data for now - replace with actual database calls
-      const mockPolls: Poll[] = [
-        {
-          id: '1',
-          question: 'Which time signature is most challenging for sight-reading?',
-          options: ['4/4', '3/4', '6/8', '2/4', '5/4'],
-          responses: { '4/4': 2, '3/4': 5, '6/8': 12, '2/4': 1, '5/4': 8 },
-          isActive: true,
-          createdBy: 'Dr. Johnson',
-          createdAt: new Date().toISOString(),
-          totalResponses: 28
-        },
-        {
-          id: '2', 
-          question: 'What interval do you find most difficult to identify by ear?',
-          options: ['Perfect 4th', 'Major 7th', 'Minor 2nd', 'Tritone', 'Perfect 5th'],
-          responses: { 'Perfect 4th': 3, 'Major 7th': 15, 'Minor 2nd': 4, 'Tritone': 9, 'Perfect 5th': 1 },
-          isActive: true,
-          createdBy: 'Dr. Johnson',
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          totalResponses: 32
-        },
-        {
-          id: '3',
-          question: 'Which mode would you like to study more in depth?',
-          options: ['Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian'],
-          responses: { 'Dorian': 8, 'Phrygian': 12, 'Lydian': 6, 'Mixolydian': 10, 'Locrian': 4 },
-          isActive: false,
-          createdBy: 'Dr. Johnson', 
-          createdAt: new Date(Date.now() - 172800000).toISOString(),
-          totalResponses: 40
-        }
-      ];
-
-      setPolls(mockPolls);
-    } catch (error) {
-      console.error('Error loading polls:', error);
-      toast.error('Failed to load polls');
+      console.error('Error fetching polls:', error);
+      toast.error('Failed to fetch polls');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVote = async (pollId: string, selectedOption: string) => {
-    try {
-      // Update local state immediately for better UX
-      setPolls(prev => prev.map(poll => {
-        if (poll.id === pollId) {
-          const newResponses = { ...poll.responses };
-          newResponses[selectedOption] = (newResponses[selectedOption] || 0) + 1;
-          return {
-            ...poll,
-            responses: newResponses,
-            totalResponses: poll.totalResponses + 1,
-            userResponse: selectedOption
-          };
-        }
-        return poll;
-      }));
+  const generatePollWithAI = async () => {
+    if (!aiPollPrompt.trim()) {
+      toast.error('Please enter a prompt for AI poll generation');
+      return;
+    }
 
-      toast.success('Vote recorded successfully!');
+    setGeneratingPoll(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('mus240-instructor-assistant', {
+        body: { 
+          task: 'poll_creation', 
+          prompt: aiPollPrompt.trim()
+        }
+      });
+
+      if (error) throw error;
+
+      // Parse the AI response to extract poll data
+      const response = data.response;
+      let pollData;
+      
+      try {
+        // Try to extract JSON from the response
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          pollData = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('No valid JSON found in response');
+        }
+      } catch (parseError) {
+        toast.error('Failed to parse AI response. Please try again.');
+        return;
+      }
+
+      // Create the poll
+      await createPoll(pollData.title, pollData.description || '', pollData.questions);
+      setAiPollPrompt('');
+      toast.success('AI-generated poll created successfully!');
     } catch (error) {
-      console.error('Error submitting vote:', error);
-      toast.error('Failed to submit vote');
+      console.error('Error generating poll with AI:', error);
+      toast.error('Failed to generate poll with AI');
+    } finally {
+      setGeneratingPoll(false);
     }
   };
 
-  const createPoll = async () => {
-    if (!newPoll.question.trim() || newPoll.options.some(opt => !opt.trim())) {
-      toast.error('Please fill in all poll fields');
+  const createPoll = async (title: string, description: string, questions: any[] = []) => {
+    if (!title.trim()) {
+      toast.error('Please enter a poll title');
       return;
     }
 
     try {
-      const poll: Poll = {
-        id: Date.now().toString(),
-        question: newPoll.question,
-        options: newPoll.options.filter(opt => opt.trim()),
-        responses: {},
-        isActive: true,
-        createdBy: user?.email || 'Unknown',
-        createdAt: new Date().toISOString(),
-        totalResponses: 0
-      };
+      const { data, error } = await supabase
+        .from('mus240_polls')
+        .insert({
+          title: title.trim(),
+          description: description.trim(),
+          questions: questions,
+          is_active: false
+        })
+        .select()
+        .single();
 
-      setPolls(prev => [poll, ...prev]);
-      setNewPoll({ question: '', options: ['', ''] });
-      setShowCreateForm(false);
+      if (error) throw error;
+      setPolls(prev => [data, ...prev]);
+      setNewPollTitle('');
+      setNewPollDescription('');
       toast.success('Poll created successfully!');
     } catch (error) {
       console.error('Error creating poll:', error);
@@ -167,282 +134,217 @@ export const Mus240PollSystem = () => {
     }
   };
 
-  const addOption = () => {
-    setNewPoll(prev => ({
-      ...prev,
-      options: [...prev.options, '']
-    }));
-  };
+  const togglePoll = async (pollId: string, isActive: boolean) => {
+    try {
+      // First, deactivate all other polls
+      await supabase
+        .from('mus240_polls')
+        .update({ is_active: false })
+        .neq('id', pollId);
 
-  const updateOption = (index: number, value: string) => {
-    setNewPoll(prev => ({
-      ...prev,
-      options: prev.options.map((opt, i) => i === index ? value : opt)
-    }));
-  };
+      // Then toggle the selected poll
+      const { error } = await supabase
+        .from('mus240_polls')
+        .update({ is_active: !isActive })
+        .eq('id', pollId);
 
-  const removeOption = (index: number) => {
-    if (newPoll.options.length > 2) {
-      setNewPoll(prev => ({
-        ...prev,
-        options: prev.options.filter((_, i) => i !== index)
-      }));
+      if (error) throw error;
+      
+      await fetchPolls();
+      toast.success(isActive ? 'Poll stopped' : 'Poll started');
+    } catch (error) {
+      console.error('Error toggling poll:', error);
+      toast.error('Failed to toggle poll');
     }
   };
 
-  if (loading) {
+  const deletePoll = async (pollId: string) => {
+    if (!confirm('Are you sure you want to delete this poll? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('mus240_polls')
+        .delete()
+        .eq('id', pollId);
+
+      if (error) throw error;
+      
+      setPolls(prev => prev.filter(poll => poll.id !== pollId));
+      toast.success('Poll deleted successfully');
+    } catch (error) {
+      console.error('Error deleting poll:', error);
+      toast.error('Failed to delete poll');
+    }
+  };
+
+  if (roleLoading) {
+    return <div className="text-center py-8">Loading...</div>;
+  }
+
+  if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="space-y-6">
         <div className="text-center">
-          <BarChart className="h-12 w-12 text-primary mx-auto mb-4 animate-pulse" />
-          <p className="text-lg">Loading polls...</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">MUS 240 Live Poll</h2>
+          <p className="text-gray-600">Join the live poll session</p>
         </div>
+        <StudentPollInterface />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <BarChart3 className="h-8 w-8 text-blue-500" />
-              <div>
-                <p className="text-2xl font-bold">{polls.length}</p>
-                <p className="text-sm text-gray-600">Total Polls</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <Vote className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-2xl font-bold">{polls.filter(p => p.isActive).length}</p>
-                <p className="text-sm text-gray-600">Active Polls</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="manage" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="manage">Manage Polls</TabsTrigger>
+          <TabsTrigger value="results">Live Results</TabsTrigger>
+        </TabsList>
 
-        <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <Users className="h-8 w-8 text-purple-500" />
-              <div>
-                <p className="text-2xl font-bold">{polls.reduce((sum, poll) => sum + poll.totalResponses, 0)}</p>
-                <p className="text-sm text-gray-600">Total Responses</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <TrendingUp className="h-8 w-8 text-orange-500" />
-              <div>
-                <p className="text-2xl font-bold">{Math.round(polls.reduce((sum, poll) => sum + poll.totalResponses, 0) / Math.max(polls.length, 1))}</p>
-                <p className="text-sm text-gray-600">Avg Response Rate</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Admin Controls */}
-      {isAdmin && (
-        <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-gray-900">
-              <Plus className="h-5 w-5" />
-              Instructor Controls
-            </CardTitle>
-            <CardDescription>
-              Create and manage polls for your MUS 240 students
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!showCreateForm ? (
-              <Button onClick={() => setShowCreateForm(true)} className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Create New Poll
-              </Button>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="question">Poll Question</Label>
-                  <Textarea
-                    id="question"
-                    placeholder="Enter your poll question..."
-                    value={newPoll.question}
-                    onChange={(e) => setNewPoll(prev => ({ ...prev, question: e.target.value }))}
-                  />
-                </div>
-                
-                <div>
-                  <Label>Answer Options</Label>
-                  {newPoll.options.map((option, index) => (
-                    <div key={index} className="flex gap-2 mt-2">
-                      <Input
-                        placeholder={`Option ${index + 1}`}
-                        value={option}
-                        onChange={(e) => updateOption(index, e.target.value)}
-                      />
-                      {newPoll.options.length > 2 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeOption(index)}
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={addOption}
-                    className="mt-2"
-                  >
-                    Add Option
-                  </Button>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button onClick={createPoll}>Create Poll</Button>
-                  <Button variant="outline" onClick={() => setShowCreateForm(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Polls List */}
-      <div className="space-y-6">
-        {polls.map(poll => (
-          <Card key={poll.id} className="bg-white/95 backdrop-blur-sm border border-white/30">
+        <TabsContent value="manage" className="space-y-6">
+          {/* AI Poll Generator */}
+          <Card>
             <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-xl mb-2 text-gray-900">{poll.question}</CardTitle>
-                  <CardDescription className="flex items-center gap-4">
-                    <span>By {poll.createdBy}</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {new Date(poll.createdAt).toLocaleDateString()}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      {poll.totalResponses} responses
-                    </span>
-                  </CardDescription>
-                </div>
-                <Badge variant={poll.isActive ? "default" : "secondary"}>
-                  {poll.isActive ? "Active" : "Closed"}
-                </Badge>
-              </div>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-purple-600" />
+                AI Poll Generator
+              </CardTitle>
             </CardHeader>
-            
+            <CardContent className="space-y-4">
+              <Textarea
+                placeholder="Describe the poll you want to create (e.g., 'Create a poll about Week 5 blues development with questions about B.B. King and Chicago blues')"
+                value={aiPollPrompt}
+                onChange={(e) => setAiPollPrompt(e.target.value)}
+                rows={3}
+              />
+              <Button 
+                onClick={generatePollWithAI}
+                disabled={generatingPoll || !aiPollPrompt.trim()}
+                className="w-full"
+              >
+                {generatingPoll ? (
+                  <>
+                    <Brain className="h-4 w-4 mr-2 animate-pulse" />
+                    Generating Poll...
+                  </>
+                ) : (
+                  <>
+                    <Brain className="h-4 w-4 mr-2" />
+                    Generate Poll with AI
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Manual Poll Creation */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5 text-blue-600" />
+                Create New Poll
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input
+                placeholder="Poll title..."
+                value={newPollTitle}
+                onChange={(e) => setNewPollTitle(e.target.value)}
+              />
+              <Textarea
+                placeholder="Poll description (optional)..."
+                value={newPollDescription}
+                onChange={(e) => setNewPollDescription(e.target.value)}
+                rows={2}
+              />
+              <Button 
+                onClick={() => createPoll(newPollTitle, newPollDescription)}
+                disabled={!newPollTitle.trim()}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Poll
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Existing Polls */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-green-600" />
+                Your Polls
+              </CardTitle>
+            </CardHeader>
             <CardContent>
-              {poll.userResponse ? (
-                // Show results if user has already voted
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-green-600 mb-4">
-                    <CheckCircle className="h-5 w-5" />
-                    <span>You voted for: {poll.userResponse}</span>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {poll.options.map(option => {
-                      const count = poll.responses[option] || 0;
-                      const percentage = poll.totalResponses > 0 ? (count / poll.totalResponses) * 100 : 0;
-                      
-                      return (
-                        <div key={option} className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className={option === poll.userResponse ? "font-semibold text-green-600" : ""}>
-                              {option}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              {count} votes ({Math.round(percentage)}%)
-                            </span>
-                          </div>
-                          <Progress value={percentage} className="h-2" />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : poll.isActive ? (
-                // Show voting interface if poll is active and user hasn't voted
-                <div className="space-y-4">
-                  <RadioGroup onValueChange={(value) => handleVote(poll.id, value)}>
-                    {poll.options.map(option => (
-                      <div key={option} className="flex items-center space-x-2">
-                        <RadioGroupItem value={option} id={`${poll.id}-${option}`} />
-                        <Label htmlFor={`${poll.id}-${option}`} className="cursor-pointer">
-                          {option}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
+              {loading ? (
+                <div className="text-center py-8">Loading polls...</div>
+              ) : polls.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No polls created yet. Create your first poll above!
                 </div>
               ) : (
-                // Show results for closed polls
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-gray-500 mb-4">
-                    <Eye className="h-5 w-5" />
-                    <span>Poll Results (Closed)</span>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {poll.options.map(option => {
-                      const count = poll.responses[option] || 0;
-                      const percentage = poll.totalResponses > 0 ? (count / poll.totalResponses) * 100 : 0;
-                      
-                      return (
-                        <div key={option} className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span>{option}</span>
-                            <span className="text-sm text-gray-500">
-                              {count} votes ({Math.round(percentage)}%)
-                            </span>
+                  {polls.map((poll) => (
+                    <div key={poll.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold">{poll.title}</h3>
+                            <Badge variant={poll.is_active ? "default" : "secondary"}>
+                              {poll.is_active ? 'Active' : 'Inactive'}
+                            </Badge>
                           </div>
-                          <Progress value={percentage} className="h-2" />
+                          {poll.description && (
+                            <p className="text-gray-600 text-sm mb-2">{poll.description}</p>
+                          )}
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span>{Array.isArray(poll.questions) ? poll.questions.length : 0} questions</span>
+                            <span>Created {new Date(poll.created_at).toLocaleDateString()}</span>
+                          </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={() => togglePoll(poll.id, poll.is_active)}
+                            variant={poll.is_active ? "destructive" : "default"}
+                            size="sm"
+                          >
+                            {poll.is_active ? (
+                              <>
+                                <Square className="h-4 w-4 mr-1" />
+                                Stop
+                              </>
+                            ) : (
+                              <>
+                                <Play className="h-4 w-4 mr-1" />
+                                Start
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            onClick={() => deletePoll(poll.id)}
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>
           </Card>
-        ))}
-      </div>
+        </TabsContent>
 
-      {polls.length === 0 && (
-        <Card className="text-center py-12 bg-white/95 backdrop-blur-sm border border-white/30">
-          <CardContent>
-            <BarChart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Polls Available</h3>
-            <p className="text-gray-500">
-              {isAdmin 
-                ? "Create your first poll to get started with interactive learning!"
-                : "Check back later when your instructor creates new polls."
-              }
-            </p>
-          </CardContent>
-        </Card>
-      )}
+        <TabsContent value="results">
+          <LivePollResults />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

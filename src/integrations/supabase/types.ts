@@ -13442,6 +13442,77 @@ export type Database = {
           },
         ]
       }
+      mus240_poll_responses: {
+        Row: {
+          id: string
+          poll_id: string
+          question_index: number
+          response_time: string
+          selected_option: number
+          student_id: string
+        }
+        Insert: {
+          id?: string
+          poll_id: string
+          question_index: number
+          response_time?: string
+          selected_option: number
+          student_id: string
+        }
+        Update: {
+          id?: string
+          poll_id?: string
+          question_index?: number
+          response_time?: string
+          selected_option?: number
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_poll_responses_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mus240_polls: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          questions: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          questions?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          questions?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mus240_project_groups: {
         Row: {
           created_at: string
