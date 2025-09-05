@@ -231,7 +231,7 @@ export const CommunityHubModule = () => {
           <PostItGrid />
         </TabsContent>
         
-        <TabsContent value="notifications" className="flex-1 p-4 max-h-[50vh] overflow-auto">
+        <TabsContent value="notifications" className="flex-1 p-4 w-full overflow-auto">
           <div className="max-w-xl mx-auto space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1.5">
