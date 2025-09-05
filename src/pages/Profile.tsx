@@ -251,6 +251,7 @@ const Profile = () => {
 
   const onSubmit = async (data: ProfileFormData) => {
     console.log("🚀 Form submitted with data:", data);
+    console.log("🚀 Form data keys:", Object.keys(data));
     console.log("🚀 Form errors:", errors);
     console.log("🚀 Is editing:", isEditing);
     console.log("🚀 Loading state:", loading);
@@ -345,6 +346,9 @@ const Profile = () => {
       };
 
       const updatePayload = isAdmin ? { ...baseUpdates, ...adminOnlyUpdates } : baseUpdates;
+
+      console.log("🔍 Final updatePayload being sent to Supabase:", updatePayload);
+      console.log("🔍 Payload keys:", Object.keys(updatePayload));
 
       const { error } = await supabase
         .from("gw_profiles")
