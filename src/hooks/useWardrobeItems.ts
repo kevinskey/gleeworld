@@ -124,14 +124,26 @@ export const useWardrobeItems = () => {
       dressSize: 'Not set',
       shoeSize: 'Not set', 
       height: 'Not set',
-      lastUpdated: 'Never'
+      bust: 'Not set',
+      waist: 'Not set',
+      hips: 'Not set',
+      inseam: 'Not set',
+      lastUpdated: 'Never',
+      takenBy: 'Not recorded'
     };
     
     return {
       dressSize: wardrobeProfile.formal_dress_size || 'Not set',
-      shoeSize: 'Not set', // Not in current schema
+      poloSize: wardrobeProfile.polo_size || 'Not set',
+      tshirtSize: wardrobeProfile.tshirt_size || 'Not set',
+      shoeSize: 'Not available', // Not in current schema
       height: wardrobeProfile.height_measurement ? `${wardrobeProfile.height_measurement}"` : 'Not set',
-      lastUpdated: wardrobeProfile.measurements_taken_date || 'Never'
+      bust: wardrobeProfile.bust_measurement ? `${wardrobeProfile.bust_measurement}"` : 'Not set',
+      waist: wardrobeProfile.waist_measurement ? `${wardrobeProfile.waist_measurement}"` : 'Not set',
+      hips: wardrobeProfile.hips_measurement ? `${wardrobeProfile.hips_measurement}"` : 'Not set',
+      inseam: wardrobeProfile.inseam_measurement ? `${wardrobeProfile.inseam_measurement}"` : 'Not set',
+      lastUpdated: wardrobeProfile.measurements_taken_date ? new Date(wardrobeProfile.measurements_taken_date).toLocaleDateString() : 'Never',
+      takenBy: wardrobeProfile.measurements_taken_by ? 'Wardrobe Mistress' : 'Not recorded'
     };
   };
 

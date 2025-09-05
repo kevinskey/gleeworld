@@ -213,23 +213,47 @@ const WardrobePage = () => {
               <CardContent className="pt-0">
                 {measurements ? <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span>Dress Size</span>
+                      <span>Formal Dress</span>
                       <span className="font-semibold">{measurements.dressSize}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Shoe Size</span>
-                      <span className="font-semibold">{measurements.shoeSize}</span>
+                      <span>Polo Size</span>
+                      <span className="font-semibold">{measurements.poloSize}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>T-Shirt Size</span>
+                      <span className="font-semibold">{measurements.tshirtSize}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Height</span>
                       <span className="font-semibold">{measurements.height}</span>
                     </div>
                     <div className="flex justify-between">
+                      <span>Bust</span>
+                      <span className="font-semibold">{measurements.bust}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Waist</span>
+                      <span className="font-semibold">{measurements.waist}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Hips</span>
+                      <span className="font-semibold">{measurements.hips}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Inseam</span>
+                      <span className="font-semibold">{measurements.inseam}</span>
+                    </div>
+                    <div className="flex justify-between border-t pt-3 mt-3">
                       <span>Last Updated</span>
                       <span className="font-semibold">{measurements.lastUpdated}</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span>Taken By</span>
+                      <span className="font-semibold text-xs">{measurements.takenBy}</span>
+                    </div>
                   </div> : <div className="text-center py-4 text-muted-foreground">
-                    No measurements recorded yet.
+                    No measurements recorded yet by wardrobe mistresses.
                   </div>}
                 <Button size="sm" variant="outline" className="w-full mt-4 h-10">
                   Update Measurements
