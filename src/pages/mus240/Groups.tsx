@@ -13,12 +13,15 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useMus240Groups } from '@/hooks/useMus240Groups';
-import { Users, Plus, Clock, CheckCircle, XCircle, UserCheck, Trash2, ArrowLeft } from 'lucide-react';
+import { Users, Plus, Clock, CheckCircle, XCircle, UserCheck, Trash2, ArrowLeft, Shuffle, AlertTriangle } from 'lucide-react';
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
+import { supabase } from '@/integrations/supabase/client';
+import { useUserRole } from '@/hooks/useUserRole';
 
 export default function Groups() {
   const { user } = useAuth();
+  const { isAdmin, isSuperAdmin } = useUserRole();
   const {
     groups,
     loading,
@@ -30,12 +33,43 @@ export default function Groups() {
     getAvailableGroups,
     getUserGroup,
     getUserApplications,
-    getGroupApplications
+    getGroupApplications,
+    refetch
   } = useMus240Groups();
 
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
+  const [autoAssigning, setAutoAssigning] = useState(false);
+
+  const PROJECT_TYPES = [
+    {
+      name: "Podcast Group",
+      description: "Record and curate conversations about music and culture. Deliverable: Podcast archive hosted on GleeWorld Radio."
+    },
+    {
+      name: "Merchandise/Commodification Group", 
+      description: "Explore how ideas become commodities. Deliverable: Mockups for GleeWorld e-commerce store, commission models, design drafts."
+    },
+    {
+      name: "Video/Documentary Group",
+      description: "Collect oral histories, interviews, and rehearsal footage. Deliverable: Video archive and short documentaries on GleeWorld."
+    },
+    {
+      name: "Slideshows/Visual History Group",
+      description: "Build timeline and image narratives. Deliverable: Curated slideshows with captions published to the GleeWorld library."
+    },
+    {
+      name: "Audio Archive Group",
+      description: "Gather clips, performances, and samples. Deliverable: Audio archive, categorized and searchable on GleeWorld."
+    },
+    {
+      name: "Digital Exhibits/Interactive Group",
+      description: "Create interactive showcases linking text, image, and sound. Deliverable: Online exhibits embedded in the GleeWorld portal."
+    }
+  ];
+
+  const hasAdminAccess = isAdmin() || isSuperAdmin();
 
   const handleCreateGroup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -91,6 +125,138 @@ export default function Groups() {
       } catch (err) {
         toast.error('Failed to delete group');
       }
+    }
+  };
+
+  const handleAutoAssignGroups = async () => {
+    if (!confirm('This will clear all existing groups and create new ones with the project types. Are you sure?')) {
+      return;
+    }
+
+    setAutoAssigning(true);
+    try {
+      // 1. Delete all existing groups and memberships
+      const { error: deleteGroupsError } = await supabase
+        .from('mus240_project_groups')
+        .delete()
+        .eq('semester', 'Fall 2024');
+
+      if (deleteGroupsError) throw deleteGroupsError;
+
+      // 2. Delete all existing applications
+      const { error: deleteAppsError } = await supabase
+        .from('mus240_group_applications')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+
+      if (deleteAppsError) throw deleteAppsError;
+
+      // 3. Get all enrolled students
+      const { data: enrollments, error: enrollmentError } = await supabase
+        .from('mus240_enrollments')
+        .select(`
+          student_id,
+          gw_profiles!student_id(
+            user_id,
+            full_name,
+            email
+          )
+        `)
+        .eq('semester', 'Fall 2024')
+        .eq('enrollment_status', 'enrolled');
+
+      if (enrollmentError) throw enrollmentError;
+
+      const students = enrollments?.filter(e => e.gw_profiles)
+        .map(e => ({
+          user_id: e.student_id,
+          full_name: e.gw_profiles.full_name,
+          email: e.gw_profiles.email
+        })) || [];
+
+      if (students.length === 0) {
+        toast.error('No enrolled students found');
+        return;
+      }
+
+      // 4. Shuffle students for random assignment
+      const shuffledStudents = [...students].sort(() => Math.random() - 0.5);
+
+      // 5. Create groups for each project type
+      const createdGroups = [];
+      for (const projectType of PROJECT_TYPES) {
+        const { data: newGroup, error: groupError } = await supabase
+          .from('mus240_project_groups')
+          .insert({
+            name: projectType.name,
+            description: projectType.description,
+            leader_id: null, // Will be set when we assign the first student
+            semester: 'Fall 2024',
+            max_members: 4,
+            is_official: false
+          })
+          .select()
+          .single();
+
+        if (groupError) throw groupError;
+        createdGroups.push(newGroup);
+      }
+
+      // 6. Assign students to groups (max 4 per group)
+      let studentIndex = 0;
+      for (let groupIndex = 0; groupIndex < createdGroups.length; groupIndex++) {
+        const group = createdGroups[groupIndex];
+        const membersForThisGroup = [];
+
+        // Assign up to 4 students to each group
+        for (let memberCount = 0; memberCount < 4 && studentIndex < shuffledStudents.length; memberCount++) {
+          const student = shuffledStudents[studentIndex];
+          const isLeader = memberCount === 0; // First student is the leader
+
+          // Insert group membership
+          const { error: membershipError } = await supabase
+            .from('mus240_group_memberships')
+            .insert({
+              group_id: group.id,
+              member_id: student.user_id,
+              role: isLeader ? 'leader' : 'member'
+            });
+
+          if (membershipError) throw membershipError;
+
+          // Update group leader_id for the first student
+          if (isLeader) {
+            const { error: updateLeaderError } = await supabase
+              .from('mus240_project_groups')
+              .update({ leader_id: student.user_id })
+              .eq('id', group.id);
+
+            if (updateLeaderError) throw updateLeaderError;
+          }
+
+          membersForThisGroup.push(student);
+          studentIndex++;
+        }
+
+        // Update member count
+        const { error: updateCountError } = await supabase
+          .from('mus240_project_groups')
+          .update({ 
+            member_count: membersForThisGroup.length,
+            is_official: membersForThisGroup.length >= 3
+          })
+          .eq('id', group.id);
+
+        if (updateCountError) throw updateCountError;
+      }
+
+      toast.success(`Successfully created ${PROJECT_TYPES.length} groups and assigned ${studentIndex} students!`);
+      refetch();
+    } catch (err) {
+      console.error('Auto-assignment error:', err);
+      toast.error('Failed to auto-assign groups');
+    } finally {
+      setAutoAssigning(false);
     }
   };
 
@@ -152,7 +318,15 @@ export default function Groups() {
             <h2 className="font-semibold text-white mb-4 text-xl">📋 Assignment Instructions</h2>
             <div className="text-white/90 space-y-3">
               <p className="font-medium">This is a graded assignment. You must participate in a group to receive credit.</p>
-              <ul className="list-disc list-inside space-y-2">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+                {PROJECT_TYPES.map((project, index) => (
+                  <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                    <h3 className="font-semibold text-amber-300 mb-2">{project.name}</h3>
+                    <p className="text-sm text-white/80">{project.description}</p>
+                  </div>
+                ))}
+              </div>
+              <ul className="list-disc list-inside space-y-2 mt-4">
                 <li><strong>Have an idea?</strong> Create your own group and recruit members</li>
                 <li><strong>Looking to join?</strong> Browse existing groups and apply to ones that interest you</li>
                 <li><strong>Can't decide?</strong> You can do both - create a group AND apply to others</li>
@@ -161,18 +335,49 @@ export default function Groups() {
             </div>
           </div>
 
-          {/* Status badges */}
-          <div className="flex gap-4 mb-8 justify-center">
-            <Badge 
-              variant={totalGroupsCount < maxGroups ? "default" : "destructive"}
-              className="text-lg px-4 py-2"
-            >
-              {totalGroupsCount}/{maxGroups} Groups Available
-            </Badge>
-            {userGroup && (
-              <Badge variant="secondary" className="text-lg px-4 py-2">
-                You're in: {userGroup.name}
+          {/* Status badges and Admin Controls */}
+          <div className="flex flex-col items-center gap-4 mb-8">
+            <div className="flex gap-4 justify-center">
+              <Badge 
+                variant={totalGroupsCount < maxGroups ? "default" : "destructive"}
+                className="text-lg px-4 py-2"
+              >
+                {totalGroupsCount}/{maxGroups} Groups Available
               </Badge>
+              {userGroup && (
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  You're in: {userGroup.name}
+                </Badge>
+              )}
+            </div>
+            
+            {hasAdminAccess && (
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-300" />
+                  <span className="text-white font-medium">Admin Controls</span>
+                </div>
+                <Button
+                  onClick={handleAutoAssignGroups}
+                  disabled={autoAssigning}
+                  className="bg-red-500 hover:bg-red-600 text-white font-medium px-6 py-2"
+                >
+                  {autoAssigning ? (
+                    <>
+                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                      Auto-Assigning...
+                    </>
+                  ) : (
+                    <>
+                      <Shuffle className="h-4 w-4 mr-2" />
+                      Auto-Assign All Students to Project Groups
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-white/70 mt-2">
+                  This will clear existing groups and randomly assign all enrolled students to the 6 project types (max 4 per group)
+                </p>
+              </div>
             )}
           </div>
 
