@@ -75,7 +75,7 @@ const NoteCard: React.FC<{
           </div>
         ) : (
           <>
-            <p className="text-xs leading-snug">
+            <p className="text-sm leading-relaxed">
               {message}
             </p>
             <div className={cn("mt-auto pt-2 text-[9px] flex items-center gap-1", getNoteClasses(noteColor || 'pink').meta)}>
