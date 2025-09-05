@@ -4,17 +4,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, Users, Settings, Shield, Search } from 'lucide-react';
+import { UserPlus, Users, Settings, Shield, Search, KeyRound } from 'lucide-react';
 import { useAutoEnrollUser } from '@/hooks/useAutoEnrollUser';
 import { useUsers } from '@/hooks/useUsers';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ResetPasswordDialog } from '@/components/admin/ResetPasswordDialog';
+import { PasswordResetTool } from '@/components/admin/PasswordResetTool';
 
 export const UserManagementModule = () => {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showResetDialog, setShowResetDialog] = useState(false);
   const { autoEnrollUser, enrolling } = useAutoEnrollUser();
   const { users, loading: usersLoading } = useUsers();
 
@@ -59,10 +63,11 @@ export const UserManagementModule = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">All Users</TabsTrigger>
           <TabsTrigger value="enroll">Enroll User</TabsTrigger>
+          <TabsTrigger value="passwords">Reset Passwords</TabsTrigger>
           <TabsTrigger value="permissions">Permissions</TabsTrigger>
         </TabsList>
 
@@ -155,6 +160,17 @@ export const UserManagementModule = () => {
                         {user.is_super_admin && (
                           <Badge variant="destructive">Super Admin</Badge>
                         )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowResetDialog(true);
+                          }}
+                        >
+                          <KeyRound className="w-4 h-4 mr-1" />
+                          Reset Password
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -234,6 +250,10 @@ export const UserManagementModule = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="passwords" className="space-y-6">
+          <PasswordResetTool />
+        </TabsContent>
+
         <TabsContent value="permissions" className="space-y-6">
           <Card>
             <CardHeader>
@@ -255,6 +275,12 @@ export const UserManagementModule = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ResetPasswordDialog 
+        user={selectedUser}
+        open={showResetDialog}
+        onOpenChange={setShowResetDialog}
+      />
     </div>
   );
 };

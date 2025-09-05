@@ -1,86 +1,152 @@
-// Deno deploy target (Supabase Edge Functions)
-// Resets passwords for users by app role (default: 'member') to 'Spelman'.
-// Auth: requires a logged-in admin (profiles.role === 'admin') OR an x-admin-key header.
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ADMIN_EDGE_KEY = Deno.env.get("ADMIN_EDGE_KEY") ?? ""; // optional backdoor for CI
-
-type ReqBody = {
-  role?: string;          // default "member"
-  newPassword?: string;   // default "Spelman"
-  dryRun?: boolean;       // default false
-  limit?: number;         // optional batch limit
-};
-
-function ok(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json" } });
-}
-function bad(msg: string, status = 400) {
-  return ok({ error: msg }, status);
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-async function getAuthedUser(req: Request) {
-  const supa = createClient(SUPABASE_URL, ANON_KEY, { global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } } });
-  const { data, error } = await supa.auth.getUser();
-  if (error || !data.user) return null;
-  return { supa, user: data.user };
-}
-
-async function isAdminByProfile(userId: string) {
-  const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE);
-  const { data, error } = await adminClient.from("gw_profiles").select("role").eq("user_id", userId).single();
-  if (error) return false;
-  return data?.role === "admin";
-}
-
-Deno.serve(async (req) => {
-  if (req.method !== "POST") return bad("Use POST", 405);
-
-  // Auth: allow either x-admin-key or an authenticated admin user
-  const headerKey = req.headers.get("x-admin-key");
-  let adminAuthOK = !!(ADMIN_EDGE_KEY && headerKey && ADMIN_EDGE_KEY === headerKey);
-
-  if (!adminAuthOK) {
-    const authed = await getAuthedUser(req);
-    if (!authed) return bad("Unauthorized", 401);
-    const isAdmin = await isAdminByProfile(authed.user.id);
-    if (!isAdmin) return bad("Forbidden", 403);
-    adminAuthOK = true;
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
-  const body = (await req.json().catch(() => ({}))) as ReqBody;
-  const targetRole = body.role ?? "member";
-  const newPassword = body.newPassword ?? "Spelman"; // Capital S
-  const dryRun = !!body.dryRun;
-  const limit = body.limit && body.limit > 0 ? body.limit : undefined;
+  try {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
-  if (newPassword.length < 6) return bad("Password too short per Supabase min length");
+    const authHeader = req.headers.get('Authorization')!
+    const token = authHeader.replace('Bearer ', '')
 
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    // Verify the user is authenticated and is an admin
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-  // Fetch target user ids by app role from gw_profiles
-  let q = admin.from("gw_profiles").select("user_id").eq("role", targetRole);
-  if (limit) q = q.limit(limit);
-  const { data: rows, error: qErr } = await q;
-  if (qErr) return bad(`Query error: ${qErr.message}`, 500);
-  if (!rows?.length) return ok({ message: `No users with role '${targetRole}'` });
+    // Check if user is admin
+    const { data: profile } = await supabaseClient
+      .from('gw_profiles')
+      .select('is_admin, is_super_admin')
+      .eq('user_id', user.id)
+      .single()
 
-  if (dryRun) {
-    return ok({ dryRun: true, count: rows.length, sample: rows.slice(0, 10) });
+    if (!profile?.is_admin && !profile?.is_super_admin) {
+      return new Response(
+        JSON.stringify({ error: 'Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const { targetRole, newPassword, batchLimit } = await req.json()
+
+    if (!targetRole || !newPassword) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: targetRole, newPassword' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validate password strength
+    if (newPassword.length < 8) {
+      return new Response(
+        JSON.stringify({ error: 'Password must be at least 8 characters long' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Get users with the target role
+    let query = supabaseClient
+      .from('gw_profiles')
+      .select('user_id, email, full_name')
+      .eq('role', targetRole)
+
+    if (batchLimit && batchLimit > 0) {
+      query = query.limit(batchLimit)
+    }
+
+    const { data: targetUsers, error: fetchError } = await query
+
+    if (fetchError) {
+      return new Response(
+        JSON.stringify({ error: `Failed to fetch users: ${fetchError.message}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!targetUsers || targetUsers.length === 0) {
+      return new Response(
+        JSON.stringify({ error: `No users found with role: ${targetRole}` }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    let successCount = 0
+    let failedCount = 0
+    const errors: string[] = []
+
+    // Update passwords for each user
+    for (const targetUser of targetUsers) {
+      try {
+        const { error: updateError } = await supabaseClient.auth.admin.updateUserById(
+          targetUser.user_id,
+          { password: newPassword }
+        )
+
+        if (updateError) {
+          console.error(`Failed to update password for ${targetUser.email}:`, updateError)
+          errors.push(`${targetUser.email}: ${updateError.message}`)
+          failedCount++
+        } else {
+          successCount++
+        }
+      } catch (error) {
+        console.error(`Error updating ${targetUser.email}:`, error)
+        errors.push(`${targetUser.email}: ${error.message}`)
+        failedCount++
+      }
+    }
+
+    // Log the bulk admin action
+    await supabaseClient
+      .from('gw_security_audit_log')
+      .insert({
+        user_id: user.id,
+        action_type: 'bulk_password_reset',
+        resource_type: 'user_accounts',
+        details: {
+          target_role: targetRole,
+          users_targeted: targetUsers.length,
+          successful_resets: successCount,
+          failed_resets: failedCount,
+          reset_by_admin: user.email,
+          batch_limit: batchLimit || null
+        }
+      })
+
+    return new Response(
+      JSON.stringify({ 
+        success: successCount,
+        failed: failedCount,
+        total: targetUsers.length,
+        errors: errors.length > 0 ? errors : undefined,
+        message: `Password reset complete: ${successCount} successful, ${failedCount} failed`
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error in reset-member-passwords function:', error)
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
-
-  let success = 0;
-  const failures: Array<{ user_id: string; error: string }> = [];
-
-  for (const r of rows) {
-    const { error: updErr } = await admin.auth.admin.updateUserById(r.user_id, { password: newPassword });
-    if (updErr) failures.push({ user_id: r.user_id, error: updErr.message });
-    else success++;
-  }
-
-  return ok({ role: targetRole, setTo: newPassword, success, failed: failures.length, failures });
-});
+})
