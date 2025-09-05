@@ -54,6 +54,7 @@ export const ResetPasswordDialog = ({ user, open, onOpenChange }: ResetPasswordD
       const { data, error } = await supabase.functions.invoke('admin-reset-password', {
         body: {
           userId: user.id,
+          email: user.email,
           newPassword: newPassword
         },
         headers: {
