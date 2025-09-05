@@ -233,7 +233,7 @@ export const CommunityHubModule = () => {
         
         <TabsContent value="notifications" className="flex-1 p-4 w-full overflow-auto">
           <div className="max-w-xl mx-auto space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="mini-mode">Mode</Label>
                 <Select value={miniMode} onValueChange={(v) => setMiniMode(v as 'note' | 'email' | 'sms')}>
