@@ -54,11 +54,11 @@ export const MyCollectionsPanel: React.FC<MyCollectionsPanelProps> = ({ currentS
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <CardTitle className="text-base">My Collections</CardTitle>
-          <div className="flex items-center gap-2">
-            <Input placeholder="New collection name" value={newName} onChange={(e) => setNewName(e.target.value)} className="h-8 w-40" />
-            <Button size="sm" onClick={async () => { if (!newName.trim()) return; await createCollection(newName.trim()); setNewName(''); }}>Create</Button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Input placeholder="New collection name" value={newName} onChange={(e) => setNewName(e.target.value)} className="h-8 flex-1 sm:w-40" />
+            <Button size="sm" onClick={async () => { if (!newName.trim()) return; await createCollection(newName.trim()); setNewName(''); }} className="flex-shrink-0">Create</Button>
           </div>
         </div>
       </CardHeader>
