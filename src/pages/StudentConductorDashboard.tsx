@@ -115,29 +115,27 @@ export const StudentConductorDashboard = () => {
               className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
-              Exit Assistant Conductor Hub
+              Exit Student Conductor Hub
             </Button>
           </div>
           
           <div className="flex items-center gap-3">
             <Music className="h-8 w-8 text-primary" />
             <div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">Assistant Conductor Hub</h1>
-              <p className="text-base md:text-lg lg:text-xl text-muted-foreground">Manage sections, auditions, and rehearsal coordination</p>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">Student Conductor</h1>
+              <p className="text-base md:text-lg lg:text-xl text-muted-foreground">Manage section leaders, sight singing, sheet music annotations, and sectional coordination</p>
             </div>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="auditions">Auditions</TabsTrigger>
-            <TabsTrigger value="solos">Solos</TabsTrigger>
-            <TabsTrigger value="srf">SRF</TabsTrigger>
-            <TabsTrigger value="submissions">Submissions</TabsTrigger>
-            <TabsTrigger value="setup">Setup</TabsTrigger>
-            <TabsTrigger value="communication">Messages</TabsTrigger>
-            <TabsTrigger value="journal">Journal</TabsTrigger>
+            <TabsTrigger value="section-leaders">Section Leaders</TabsTrigger>
+            <TabsTrigger value="sight-singing">Sight Singing</TabsTrigger>
+            <TabsTrigger value="sheet-music">Sheet Music</TabsTrigger>
+            <TabsTrigger value="communications">Communications</TabsTrigger>
+            <TabsTrigger value="meetings">Schedule Meeting</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -146,14 +144,14 @@ export const StudentConductorDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <UserCheck className="h-5 w-5" />
-                    Section Leadership
+                    Section Leaders
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl md:text-4xl font-bold">{pendingPlansCount}</div>
-                  <p className="text-base md:text-lg text-muted-foreground">Plans awaiting review</p>
-                  <Button size="sm" className="mt-3" onClick={() => navigate('/sectional-management')}>
-                    Review Plans
+                  <div className="text-3xl md:text-4xl font-bold">4</div>
+                  <p className="text-base md:text-lg text-muted-foreground">Active section leaders</p>
+                  <Button size="sm" className="mt-3" onClick={() => setActiveTab("section-leaders")}>
+                    Manage Leaders
                   </Button>
                 </CardContent>
               </Card>
@@ -162,14 +160,14 @@ export const StudentConductorDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BookOpen className="h-5 w-5" />
-                    Sight Reading
+                    Sight Reading Progress
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl md:text-4xl font-bold">{averageCompletionRate}%</div>
                   <p className="text-base md:text-lg text-muted-foreground">Average completion rate</p>
-                  <Button size="sm" className="mt-3" onClick={() => navigate('/srf-management')}>
-                    Manage SRF
+                  <Button size="sm" className="mt-3" onClick={() => setActiveTab("sight-singing")}>
+                    View Progress
                   </Button>
                 </CardContent>
               </Card>
@@ -177,15 +175,15 @@ export const StudentConductorDashboard = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Upcoming Auditions
+                    <Music className="h-5 w-5" />
+                    Sheet Music Annotations
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl md:text-4xl font-bold">{upcomingAuditionsCount}</div>
-                  <p className="text-base md:text-lg text-muted-foreground">Scheduled upcoming auditions</p>
-                  <Button size="sm" className="mt-3" onClick={() => setActiveTab("auditions")}>
-                    View Schedule
+                  <div className="text-3xl md:text-4xl font-bold">12</div>
+                  <p className="text-base md:text-lg text-muted-foreground">Recent annotations</p>
+                  <Button size="sm" className="mt-3" onClick={() => setActiveTab("sheet-music")}>
+                    Manage Annotations
                   </Button>
                 </CardContent>
               </Card>
