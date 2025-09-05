@@ -39,10 +39,10 @@ export const CommunityHubModule = () => {
 
   // Mini quick sender state
   const [miniMode, setMiniMode] = useState<'note' | 'email' | 'sms'>('note');
-  const [recipientType, setRecipientType] = useState<'me' | 'email'>('me');
+  const [recipientType, setRecipientType] = useState<'me' | 'email' | 'individual' | 'group'>('me');
   const [recipientEmail, setRecipientEmail] = useState('');
   const [miniMessage, setMiniMessage] = useState('');
-  const canMiniSend = miniMessage.trim().length > 0 && (recipientType === 'me' || (recipientType === 'email' && /.+@.+\..+/.test(recipientEmail)));
+  const canMiniSend = miniMessage.trim().length > 0 && (recipientType === 'me' || recipientType === 'individual' || recipientType === 'group' || (recipientType === 'email' && /.+@.+\..+/.test(recipientEmail)));
   const handleMiniSend = () => {
     console.log({ mode: miniMode, recipientType, recipientEmail, message: miniMessage });
     setMiniMessage('');
@@ -233,6 +233,60 @@ export const CommunityHubModule = () => {
         
         <TabsContent value="notifications" className="flex-1 p-4 w-full overflow-auto">
           <div className="max-w-xl mx-auto space-y-3">
+            {/* Recipient Type Selection */}
+            <div className="space-y-1.5">
+              <Label htmlFor="recipient-type">Send To</Label>
+              <Select value={recipientType} onValueChange={(v) => setRecipientType(v as 'me' | 'email' | 'individual' | 'group')}>
+                <SelectTrigger id="recipient-type" className="h-9">
+                  <SelectValue placeholder="Select recipients" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="me">Me</SelectItem>
+                  <SelectItem value="individual">Individual Member</SelectItem>
+                  <SelectItem value="group">Group/Section</SelectItem>
+                  <SelectItem value="email">By Email</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Group Selection for group recipient type */}
+            {recipientType === 'group' && (
+              <div className="space-y-1.5">
+                <Label htmlFor="group-select">Select Group</Label>
+                <Select>
+                  <SelectTrigger id="group-select" className="h-9">
+                    <SelectValue placeholder="Choose group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="executive_board">Executive Board</SelectItem>
+                    <SelectItem value="section_leaders">Section Leaders</SelectItem>
+                    <SelectItem value="soprano_1">Soprano 1</SelectItem>
+                    <SelectItem value="soprano_2">Soprano 2</SelectItem>
+                    <SelectItem value="alto_1">Alto 1</SelectItem>
+                    <SelectItem value="alto_2">Alto 2</SelectItem>
+                    <SelectItem value="all_members">All Members</SelectItem>
+                    <SelectItem value="all_alumnae">All Alumnae</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Individual Selection for individual recipient type */}
+            {recipientType === 'individual' && (
+              <div className="space-y-1.5">
+                <Label htmlFor="individual-select">Select Member</Label>
+                <Select>
+                  <SelectTrigger id="individual-select" className="h-9">
+                    <SelectValue placeholder="Choose member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* This would be populated with actual member data */}
+                    <SelectItem value="loading">Loading members...</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="mini-mode">Mode</Label>
