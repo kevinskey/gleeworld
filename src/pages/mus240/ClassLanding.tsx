@@ -123,20 +123,34 @@ export default function ClassLanding() {
 
           {/* Navigation Cards */}
           <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Active Poll Card - Only show when there's an active poll */}
-            {hasActivePoll && (
-              <Link to="/mus240-polls" className="group block">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl lg:rounded-3xl px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6 shadow-xl border border-green-400/30 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 animate-pulse">
-                  <div className="flex items-center gap-4 sm:gap-3 lg:gap-6 mb-4 sm:mb-3 lg:mb-6">
-                    <div className="p-3 sm:p-2 md:p-5 lg:p-4 xl:p-6 bg-white/20 rounded-lg lg:rounded-xl">
-                      <BarChart className="h-6 w-6 sm:h-5 sm:w-5 md:h-8 md:w-8 lg:h-10 lg:w-10 xl:h-12 xl:w-12 text-white" />
-                    </div>
-                    <h3 className="text-5xl sm:text-2xl md:text-4xl lg:text-3xl xl:text-4xl font-semibold text-white">🔴 Live Poll</h3>
+            {/* Poll Card - Always visible to logged in users */}
+            <Link to="/mus240-polls" className="group block">
+              <div className={`rounded-2xl lg:rounded-3xl px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6 shadow-xl border transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 ${
+                hasActivePoll 
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 border-green-400/30 animate-pulse hover:shadow-2xl' 
+                  : 'bg-white/95 backdrop-blur-sm border-white/30 hover:bg-white hover:shadow-2xl'
+              }`}>
+                <div className="flex items-center gap-4 sm:gap-3 lg:gap-6 mb-4 sm:mb-3 lg:mb-6">
+                  <div className={`p-3 sm:p-2 md:p-5 lg:p-4 xl:p-6 rounded-lg lg:rounded-xl ${
+                    hasActivePoll ? 'bg-white/20' : 'bg-gradient-to-br from-amber-500 to-orange-600'
+                  }`}>
+                    <BarChart className={`h-6 w-6 sm:h-5 sm:w-5 md:h-8 md:w-8 lg:h-10 lg:w-10 xl:h-12 xl:w-12 ${
+                      hasActivePoll ? 'text-white' : 'text-white'
+                    }`} />
                   </div>
-                  <p className="text-white/90 text-xl sm:text-sm md:text-lg lg:text-base xl:text-lg leading-relaxed">Answer the current class poll</p>
+                  <h3 className={`text-5xl sm:text-2xl md:text-4xl lg:text-3xl xl:text-4xl font-semibold ${
+                    hasActivePoll ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {hasActivePoll ? '🔴 Live Poll' : 'Polling System'}
+                  </h3>
                 </div>
-              </Link>
-            )}
+                <p className={`text-xl sm:text-sm md:text-lg lg:text-base xl:text-lg leading-relaxed ${
+                  hasActivePoll ? 'text-white/90' : 'text-gray-600'
+                }`}>
+                  {hasActivePoll ? 'Answer the current class poll' : 'View polls and results'}
+                </p>
+              </div>
+            </Link>
             {cards.map((card) => {
               const IconComponent = card.icon;
               return (
