@@ -14,7 +14,16 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
   const { isAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
   const { isEnrolled, loading: enrollmentLoading } = useMus240Enrollment();
   
+  console.log('Mus240EnrollmentRoute: Component rendering', {
+    user: !!user,
+    authLoading,
+    roleLoading,
+    enrollmentLoading,
+    isEnrolled: typeof isEnrolled === 'function' ? isEnrolled() : isEnrolled
+  });
+  
   if (authLoading || roleLoading || enrollmentLoading) {
+    console.log('Mus240EnrollmentRoute: Still loading...');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <LoadingSpinner size="lg" text="Checking course access..." />
@@ -23,6 +32,7 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
   }
   
   if (!user) {
+    console.log('Mus240EnrollmentRoute: No user, redirecting to auth');
     // Store the current path for redirect after auth and use dedicated MUS 240 auth page
     sessionStorage.setItem('redirectAfterAuth', window.location.pathname);
     return <Navigate to="/auth/mus240" replace />;
@@ -43,7 +53,7 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
   }
   
   // Check if user is enrolled in MUS 240
-  if (!isEnrolled) {
+  if (!isEnrolled()) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center">
         <div className="max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg text-center">
