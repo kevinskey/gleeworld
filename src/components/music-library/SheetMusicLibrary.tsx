@@ -429,7 +429,7 @@ export const SheetMusicLibrary = ({
                 <div className="flex-1 min-w-0 max-w-full">
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0 max-w-full">
-                      <h3 className={`${isSelected ? 'text-sm md:text-base' : 'text-sm'} font-medium truncate leading-snug`}>{item.title}</h3>
+                      <h3 className={`${isSelected ? 'text-xs sm:text-sm md:text-base' : 'text-xs sm:text-sm'} font-medium truncate leading-snug`}>{item.title}</h3>
                       {(item.composer || item.arranger) && (
                         <p className="text-xs text-muted-foreground truncate leading-none">
                           {item.composer ? `by ${item.composer}` : `arr. ${item.arranger}`}
