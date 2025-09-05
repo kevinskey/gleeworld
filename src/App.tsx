@@ -169,6 +169,7 @@ import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
 import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
+import { Mus240PollPage } from "./pages/Mus240PollPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -341,6 +342,15 @@ const App = () => {
                   <PublicRoute>
                     <WritingGraderPage />
                   </PublicRoute>
+                } 
+              />
+              {/* MUS 240 Poll System */}
+              <Route 
+                path="/poll" 
+                element={
+                  <ProtectedRoute>
+                    <Mus240PollPage />
+                  </ProtectedRoute>
                 } 
               />
               {/* Contract signing should be accessible without authentication */}
