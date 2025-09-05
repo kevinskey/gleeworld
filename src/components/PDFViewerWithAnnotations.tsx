@@ -811,7 +811,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       {/* PDF Content */}
       <CardContent className="p-0">
         <div 
-          className="relative w-full h-[calc(100dvh-10rem)] min-h-[70vh] md:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-8rem)]"
+          className="relative w-full h-auto"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -843,7 +843,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           
           {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
-            <div className="w-full h-full overflow-auto" ref={containerRef}>
+            <div className="w-full h-auto" ref={containerRef}>
               <canvas
                 ref={canvasRef}
                 className="w-full block bg-white"
@@ -854,7 +854,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
           {/* Annotation Mode: PDF + Overlay Canvas */}
           {annotationMode && (
-            <div className="w-full h-full overflow-auto" ref={containerRef}>
+            <div className="w-full h-auto" ref={containerRef}>
               <div className="relative w-full h-full">
                   <canvas
                     ref={canvasRef}
