@@ -234,15 +234,14 @@ const Profile = () => {
       setValue("facebook", socialLinks.facebook || "");
       setValue("youtube", socialLinks.youtube || "");
 
-      // Set wardrobe fields
-      setValue("bust_measurement", profile.bust_measurement?.toString() || "");
-      setValue("waist_measurement", profile.waist_measurement?.toString() || "");
-      setValue("hips_measurement", profile.hips_measurement?.toString() || "");
-      setValue("height_measurement", profile.height_measurement?.toString() || "");
-      setValue("shirt_size", profile.shirt_size || "");
+      // Set wardrobe fields from measurements JSONB
+      const measurements = profile.measurements as any || {};
+      setValue("bust_measurement", measurements.bust?.toString() || "");
+      setValue("waist_measurement", measurements.waist?.toString() || "");
+      setValue("hips_measurement", measurements.hips?.toString() || "");
+      setValue("height_measurement", measurements.height_cm?.toString() || "");
+      setValue("shoe_size", measurements.shoe_size?.toString() || profile.shoe_size || "");
       setValue("dress_size", profile.dress_size || "");
-      setValue("pants_size", profile.pants_size || "");
-      setValue("classification", profile.classification || "");
 
       // Set instruments and dietary restrictions
       setSelectedInstruments(profile.instruments_played || []);
@@ -292,6 +291,14 @@ const Profile = () => {
       const fullName = [data.first_name, data.middle_name, data.last_name].filter(Boolean).join(' ');
 
       // Build update payloads; lock admin-only fields for non-admin users
+      const measurementsData = {
+        bust: data.bust_measurement ? parseFloat(data.bust_measurement) : null,
+        waist: data.waist_measurement ? parseFloat(data.waist_measurement) : null,
+        hips: data.hips_measurement ? parseFloat(data.hips_measurement) : null,
+        height_cm: data.height_measurement ? parseFloat(data.height_measurement) : null,
+        shoe_size: data.shoe_size ? parseFloat(data.shoe_size) : null,
+      };
+
       const baseUpdates: any = {
         first_name: data.first_name,
         middle_name: data.middle_name,
@@ -324,18 +331,8 @@ const Profile = () => {
         mentor_opt_in: data.mentor_opt_in,
         reunion_rsvp: data.reunion_rsvp,
         
-        // Wardrobe measurements
-        bust_measurement: data.bust_measurement ? parseFloat(data.bust_measurement) : null,
-        waist_measurement: data.waist_measurement ? parseFloat(data.waist_measurement) : null,
-        hips_measurement: data.hips_measurement ? parseFloat(data.hips_measurement) : null,
-        height_measurement: data.height_measurement ? parseFloat(data.height_measurement) : null,
-        
-        // Wardrobe sizes
-        shirt_size: data.shirt_size || null,
-        pants_size: data.pants_size || null,
-        
-        // Classification
-        classification: data.classification || null,
+        // Store measurements in JSONB column
+        measurements: measurementsData,
         
         updated_at: new Date().toISOString(),
       };
@@ -357,62 +354,6 @@ const Profile = () => {
       if (error) {
         console.error("Supabase error:", error);
         throw error;
-      }
-
-      // Also sync with gw_profiles table to keep data consistent
-      const baseGwUpdates: any = {
-        first_name: data.first_name,
-        middle_name: data.middle_name,
-        last_name: data.last_name,
-        full_name: fullName,
-        phone: data.phone_number,
-        bio: data.bio,
-        website_url: data.website_url,
-        phone_number: data.phone_number,
-        workplace: data.workplace,
-        school_address: data.school_address,
-        home_address: data.home_address,
-        can_dance: data.can_dance,
-        preferred_payment_method: data.preferred_payment_method === "" ? null : data.preferred_payment_method,
-        instruments_played: selectedInstruments,
-        social_media_links: socialMediaLinks,
-        
-        // New fields (user-editable)
-        dress_size: data.dress_size,
-        shoe_size: data.shoe_size,
-        hair_color: data.hair_color,
-        has_tattoos: data.has_tattoos,
-        visible_piercings: data.visible_piercings,
-        academic_major: data.academic_major,
-        pronouns: data.pronouns,
-        class_year: data.class_year === "" ? null : Number(data.class_year),
-        emergency_contact: data.emergency_contact,
-        dietary_restrictions: selectedDietaryRestrictions,
-        allergies: data.allergies,
-        parent_guardian_contact: data.parent_guardian_contact,
-        mentor_opt_in: data.mentor_opt_in,
-        reunion_rsvp: data.reunion_rsvp,
-        
-        updated_at: new Date().toISOString(),
-      };
-
-      const adminOnlyGwUpdates = {
-        student_number: data.student_number,
-        voice_part: data.voice_part === "" ? null : data.voice_part,
-        graduation_year: data.graduation_year === "" ? null : Number(data.graduation_year),
-        join_date: data.join_date === "" ? null : data.join_date,
-      };
-
-      const gwUpdatePayload = isAdmin ? { ...baseGwUpdates, ...adminOnlyGwUpdates } : baseGwUpdates;
-
-      const { error: gwError } = await supabase
-        .from("gw_profiles")
-        .update(gwUpdatePayload)
-        .eq("user_id", user.id);
-
-      if (gwError) {
-        console.warn("Error syncing with gw_profiles:", gwError);
-        // Don't throw error since main profiles update succeeded
       }
 
       console.log("Profile updated successfully");

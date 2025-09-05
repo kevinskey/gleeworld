@@ -36,7 +36,19 @@ export interface ProfileData {
   has_tattoos?: boolean;
   visible_piercings?: boolean;
   
-  // Wardrobe measurements from CSV import
+  // Wardrobe measurements (stored in JSONB column in database)
+  measurements?: {
+    bust?: number;
+    waist?: number;
+    hips?: number;
+    height_cm?: number;
+    shoe_size?: number;
+    height_feet?: number;
+    height_inches?: number;
+    chest?: number;
+  };
+  
+  // Legacy fields for backward compatibility
   bust_measurement?: number;
   waist_measurement?: number;
   hips_measurement?: number;
@@ -99,7 +111,8 @@ export const useProfile = () => {
         id: data.user_id, // Map user_id to id for interface compatibility
         voice_part: data.voice_part as "S1" | "S2" | "A1" | "A2" | "T1" | "T2" | "B1" | "B2" | null,
         social_media_links: (data.social_media_links as any) || {},
-        preferred_payment_method: data.preferred_payment_method as "zelle" | "cashapp" | "venmo" | "apple_pay" | "check" | null
+        preferred_payment_method: data.preferred_payment_method as "zelle" | "cashapp" | "venmo" | "apple_pay" | "check" | null,
+        measurements: (data.measurements as any) || {}
       });
     } catch (error) {
       toast({
