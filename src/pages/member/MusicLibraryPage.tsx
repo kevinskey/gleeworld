@@ -50,7 +50,7 @@ export const MusicLibraryPage: React.FC = () => {
           {/* Main Content Area */}
           <div className="w-full space-y-6">
             {activeView === 'library' ? <Card className="animate-fade-in bg-card/95 backdrop-blur-sm border-border/50 shadow-lg">
-                <CardContent className="space-y-4 pt-6 w-full">
+                <CardContent className="space-y-4 pt-6 w-full max-h-[80vh] overflow-y-auto">
                   <MusicLibrary />
                 </CardContent>
               </Card> : activeView === 'study-scores' ? <Card className="animate-fade-in bg-card/95 backdrop-blur-sm border-border/50 shadow-lg">
