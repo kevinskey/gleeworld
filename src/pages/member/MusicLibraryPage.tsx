@@ -23,7 +23,7 @@ export const MusicLibraryPage: React.FC = () => {
     setlists
   } = useSetlists();
   const [activeView, setActiveView] = useState<'library' | 'practice-recordings' | 'study-scores' | 'setlists'>('library');
-  return <div className="min-h-screen bg-gradient-subtle">
+  return <div className="bg-gradient-subtle">
         <div className="w-full p-2 sm:p-4 lg:p-8 lg:max-w-7xl lg:mx-auto">
         {/* Header Section */}
         <div className="mb-8 sm:mb-10 lg:mb-12">
