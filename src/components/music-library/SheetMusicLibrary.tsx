@@ -400,8 +400,8 @@ export const SheetMusicLibrary = ({
               }
             }}
           >
-            <CardContent className={`${isSelected ? 'p-3' : 'py-0.5 px-3'}`}>
-              <div className="flex items-center gap-2 min-h-[2rem]">
+            <CardContent className={`${isSelected ? 'p-3' : 'py-1 px-3'}`}>
+              <div className="flex items-center gap-2 min-h-[2.5rem]">
                 {/* Collapsed/Expanded Thumbnail */}
                 {isSelected ? (
                   <div className="w-12 h-16 bg-muted rounded overflow-hidden flex-shrink-0">
@@ -429,7 +429,7 @@ export const SheetMusicLibrary = ({
                 <div className="flex-1 min-w-0 max-w-full">
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0 max-w-full">
-                      <h3 className={`${isSelected ? 'text-sm md:text-base' : 'text-xs md:text-sm'} font-medium truncate leading-snug`}>{item.title}</h3>
+                      <h3 className={`${isSelected ? 'text-sm md:text-base' : 'text-sm'} font-medium truncate leading-snug`}>{item.title}</h3>
                       {(item.composer || item.arranger) && (
                         <p className="text-xs text-muted-foreground truncate leading-none">
                           {item.composer ? `by ${item.composer}` : `arr. ${item.arranger}`}
