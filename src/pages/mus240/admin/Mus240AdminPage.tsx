@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 import backgroundImage from '@/assets/mus240-background.jpg';
 
 export const Mus240AdminPage = () => {
-  const [activeTab, setActiveTab] = useState('enrollments');
+  const [activeTab, setActiveTab] = useState('polls');
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
