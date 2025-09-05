@@ -16,6 +16,7 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
   
   console.log('Mus240EnrollmentRoute: Component rendering', {
     user: !!user,
+    userEmail: user?.email,
     authLoading,
     roleLoading,
     enrollmentLoading,
@@ -43,15 +44,17 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
   
   console.log('Mus240EnrollmentRoute: User role check', {
     user: !!user,
+    userEmail: user?.email,
     isAdmin: adminAccess,
     isSuperAdmin: superAdminAccess,
     roleLoading,
-    enrollmentLoading
+    enrollmentLoading,
+    profile: useUserRole().profile // Add profile data for debugging
   });
   
   // Allow admins and super admins access regardless of enrollment
   if (adminAccess || superAdminAccess) {
-    console.log('Mus240EnrollmentRoute: Admin access granted');
+    console.log('Mus240EnrollmentRoute: Admin access granted for', user?.email);
     return <>{children}</>;
   }
   
