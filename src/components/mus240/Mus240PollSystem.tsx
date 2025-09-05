@@ -31,6 +31,7 @@ export const Mus240PollSystem = () => {
   const [aiPollPrompt, setAiPollPrompt] = useState('');
   const [numQuestions, setNumQuestions] = useState(3);
   const [generatingPoll, setGeneratingPoll] = useState(false);
+  const [viewMode, setViewMode] = useState<'student' | 'admin'>('student');
 
   const hasAdminAccess = isAdmin() || isSuperAdmin();
 
@@ -185,9 +186,21 @@ export const Mus240PollSystem = () => {
     return <div className="text-center py-8">Loading...</div>;
   }
 
-  if (!hasAdminAccess) {
+  // Show student view for non-admins or when admin chooses student view
+  if (!hasAdminAccess || viewMode === 'student') {
     return (
       <div className="space-y-6 bg-card p-6 rounded-lg shadow-lg border">
+        {hasAdminAccess && (
+          <div className="flex justify-end mb-4">
+            <Button
+              onClick={() => setViewMode('admin')}
+              variant="outline"
+              size="sm"
+            >
+              Switch to Admin View
+            </Button>
+          </div>
+        )}
         <div className="text-center">
           <h2 className="text-2xl font-bold text-card-foreground mb-2">MUS 240 Live Poll</h2>
           <p className="text-muted-foreground">Join the live poll session</p>
@@ -199,6 +212,16 @@ export const Mus240PollSystem = () => {
 
   return (
     <div className="space-y-6 bg-card p-6 rounded-lg shadow-lg border">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-card-foreground">Admin Poll Management</h2>
+        <Button
+          onClick={() => setViewMode('student')}
+          variant="outline"
+          size="sm"
+        >
+          Switch to Student View
+        </Button>
+      </div>
       <Tabs defaultValue="manage" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="manage">Manage Polls</TabsTrigger>
