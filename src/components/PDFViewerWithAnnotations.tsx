@@ -562,10 +562,12 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Fit page to container width
+        // Render at full scale to show complete score length
         const baseViewport = page.getViewport({ scale: 1 });
         const containerWidth = containerRef.current?.clientWidth || baseViewport.width;
-        const fitScale = Math.max(0.1, containerWidth / baseViewport.width);
+        
+        // Use a scale that maintains readability while showing full height
+        const fitScale = Math.max(0.8, Math.min(2.0, containerWidth / baseViewport.width));
         const viewport = page.getViewport({ scale: fitScale });
         canvas.width = viewport.width;
         canvas.height = viewport.height;
@@ -841,10 +843,11 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           
           {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
-            <div className="w-full h-full" ref={containerRef}>
+            <div className="w-full h-full overflow-auto" ref={containerRef}>
               <canvas
                 ref={canvasRef}
-                className="w-full h-auto block bg-white"
+                className="w-full block bg-white"
+                style={{ height: 'auto', minHeight: '100%' }}
               />
             </div>
           )}
@@ -855,7 +858,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               <div className="relative w-full h-full">
                   <canvas
                     ref={canvasRef}
-                    className="w-full h-auto bg-white block"
+                    className="w-full bg-white block"
+                    style={{ height: 'auto', minHeight: '100%' }}
                   />
                   <canvas
                     ref={drawingCanvasRef}
