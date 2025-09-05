@@ -25,6 +25,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Validate required fields
     if (!conversationId) {
+      console.error('Missing conversationId in request body');
       throw new Error('Missing conversationId');
     }
     

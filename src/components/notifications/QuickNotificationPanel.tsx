@@ -118,12 +118,12 @@ export const QuickNotificationPanel: React.FC = () => {
           }
         });
       } else if (formData.type === 'sms') {
-        response = await supabase.functions.invoke('send-group-sms', {
+        // Use send-sms-notification for group/individual SMS
+        response = await supabase.functions.invoke('send-sms-notification', {
           body: {
-            groupType: formData.recipientType === 'group' ? formData.selectedGroup : 'individual',
-            recipientId: formData.selectedIndividual,
+            groupId: formData.recipientType === 'group' ? formData.selectedGroup : null,
+            phoneNumbers: formData.recipientType === 'individual' ? [formData.selectedIndividual] : undefined,
             message: formData.message,
-            senderUserId: user?.id,
             senderName: user?.user_metadata?.full_name || 'Glee Club'
           }
         });
