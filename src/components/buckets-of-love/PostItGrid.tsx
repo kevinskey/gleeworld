@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useBucketsOfLove } from '@/hooks/useBucketsOfLove';
 import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
-import { Heart, Plus } from 'lucide-react';
+import { Heart, Plus, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { getNoteClasses } from './notePalette';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 // Responsive slots limited to 3 rows max
 const useGridSlots = () => {
   const [slots, setSlots] = useState(12); // 4 cols x 3 rows = 12 slots
@@ -115,23 +116,65 @@ export const PostItGrid: React.FC = () => {
   const { user } = useAuth();
   const slots = useGridSlots();
   const [viewAll, setViewAll] = useState(false);
+  const [viewFilter, setViewFilter] = useState<string>('all');
+
+  const viewOptions = [
+    { value: 'all', label: 'All Buckets', description: 'Show all buckets of love' },
+    { value: 'to_me', label: 'For Me', description: 'Show buckets sent to me' },
+    { value: 'from_me', label: 'From Me', description: 'Show buckets I sent' },
+    { value: 'executive_board', label: 'Exec Board', description: 'Show buckets for executive board' },
+    { value: 'soprano_1', label: 'Soprano 1', description: 'Show buckets for Soprano 1' },
+    { value: 'soprano_2', label: 'Soprano 2', description: 'Show buckets for Soprano 2' },
+    { value: 'alto_1', label: 'Alto 1', description: 'Show buckets for Alto 1' },
+    { value: 'alto_2', label: 'Alto 2', description: 'Show buckets for Alto 2' },
+    { value: 'directors', label: 'Directors', description: 'Show buckets for directors/staff' },
+    { value: 'alumnae', label: 'Alumnae', description: 'Show buckets for alumnae' },
+  ];
+
+  const filteredBuckets = useMemo(() => {
+    if (viewFilter === 'all') return buckets;
+    if (viewFilter === 'to_me') return buckets.filter(b => b.recipient_user_id === user?.id);
+    if (viewFilter === 'from_me') return buckets.filter(b => b.user_id === user?.id);
+    // For group filters, we'd need to check against group type or recipient info
+    // This would require additional database fields or logic
+    return buckets;
+  }, [buckets, viewFilter, user?.id]);
 
   const items = useMemo(() => {
-    const maxToShow = viewAll ? buckets.length : slots;
-    const visible = buckets.slice(0, maxToShow);
+    const maxToShow = viewAll ? filteredBuckets.length : slots;
+    const visible = filteredBuckets.slice(0, maxToShow);
     const placeholders = viewAll ? 1 : Math.max(0, slots - visible.length); // Always show at least one placeholder when viewing all
     return { visible, placeholders };
-  }, [buckets, slots, viewAll]);
+  }, [filteredBuckets, slots, viewAll]);
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => setViewAll(!viewAll)}
-          className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-        >
-          {viewAll ? 'Show Grid View' : `View All (${buckets.length})`}
-        </button>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewAll(!viewAll)}
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+          >
+            {viewAll ? 'Show Grid View' : `View All (${filteredBuckets.length})`}
+          </button>
+          
+          <Select value={viewFilter} onValueChange={setViewFilter}>
+            <SelectTrigger className="w-48">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filter buckets" />
+            </SelectTrigger>
+            <SelectContent>
+              {viewOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  <div>
+                    <div className="font-medium">{option.label}</div>
+                    <div className="text-xs text-muted-foreground">{option.description}</div>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         
         {/* Fallback add button when grid is full */}
         {items.placeholders === 0 && (
