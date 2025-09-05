@@ -70,7 +70,7 @@ serve(async (req) => {
       .select(`
         id,
         content,
-        created_by,
+        commenter_id,
         journal_id,
         created_at,
         mus240_journal_entries!inner (
@@ -79,7 +79,7 @@ serve(async (req) => {
           student_id
         )
       `)
-      .eq('created_by', student_id)
+      .eq('commenter_id', student_id)
       .eq('mus240_journal_entries.assignment_id', assignment_id)
       .neq('mus240_journal_entries.student_id', student_id); // Exclude own journal
 
