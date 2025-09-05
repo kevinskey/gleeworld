@@ -8,9 +8,9 @@ import { UserPlus, Users } from 'lucide-react';
 import { useAutoEnrollUser } from '@/hooks/useAutoEnrollUser';
 
 export const UserManagementModule = () => {
-  const [email, setEmail] = useState('ALEXANDRAWILLIAMS@spelman.edu');
-  const [fullName, setFullName] = useState('Alexandra Williams');
-  const [role, setRole] = useState('librarian');
+  const [email, setEmail] = useState('allanawalker@spelman.edu');
+  const [fullName, setFullName] = useState('Allana Walker');
+  const [role, setRole] = useState('crew-manager');
   const { autoEnrollUser, enrolling } = useAutoEnrollUser();
 
   const handleAutoEnroll = async () => {
@@ -80,6 +80,7 @@ export const UserManagementModule = () => {
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="crew-manager">Crew Manager</SelectItem>
                 <SelectItem value="librarian">Librarian</SelectItem>
                 <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="auditioner">Auditioner</SelectItem>
