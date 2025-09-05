@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { SheetMusicLibrary } from './SheetMusicLibrary';
@@ -18,6 +19,7 @@ import { MusicLibraryHeader } from '@/components/music-library/MusicLibraryHeade
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
+
 export const MusicLibrary = () => {
   const [leftColumnCollapsed, setLeftColumnCollapsed] = useState(false);
   const navigate = useNavigate();
@@ -174,80 +176,87 @@ export const MusicLibrary = () => {
       </div>;
   }
 
-  // Desktop layout - keep existing design
+  // Desktop layout with resizable panels
   return <>
       <MusicLibraryHeader />
       <div className="w-full overflow-hidden page-container">
-
-        {/* Desktop responsive layout - 40/60 split when PDF is open */}
-        <div className="flex flex-col lg:grid lg:grid-cols-12 card-spacing min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">
-          {/* Left column - Library sections with collapse toggle */}
-          <div className={`${selectedPdf && leftColumnCollapsed ? 'lg:hidden' : selectedPdf ? 'lg:col-span-2' : 'lg:col-span-4'} section-spacing lg:h-full lg:overflow-y-auto lg:pr-1 order-2 lg:order-1 w-full overflow-hidden transition-all duration-300`}>
-            {/* Study Scores */}
-            <div className="w-full overflow-hidden border rounded">
-              <div className="flex items-center justify-between card-compact">
-                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => {
-                console.log('Study Scores button clicked, current state:', studyOpen);
-                setStudyOpen(o => !o);
-              }}>
-                  {studyOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Study Scores
-                </button>
-              </div>
-              {studyOpen && <div className="card-compact">
-                  <StudyScoresPanel currentSelected={selectedPdf} onOpenScore={handlePdfSelect} />
-                </div>}
-            </div>
-
-            {/* My Collections */}
-            <div className="w-full overflow-hidden border rounded">
-              <div className="flex items-center justify-between card-compact">
-                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setCollectionsOpen(o => !o)}>
-                  {collectionsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} My Collections
-                </button>
-              </div>
-              {collectionsOpen && <div className="card-compact">
-                  <MyCollectionsPanel currentSelected={selectedPdf} onOpenScore={handlePdfSelect} />
-                </div>}
-            </div>
-
-            {/* Setlists */}
-            <div className="w-full overflow-hidden border rounded">
-              <div className="flex items-center justify-between card-compact">
-                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setSetlistOpen(o => !o)}>
-                  {setlistOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Setlists
-                </button>
-              </div>
-              {setlistOpen && <div className="card-compact">
-                  <SetlistBuilder onPdfSelect={handlePdfSelect} onOpenPlayer={handleOpenSetlistPlayer} />
-                </div>}
-            </div>
-
-            {/* Music Library list */}
-            <div className="w-full overflow-hidden border rounded">
-              <div className="flex items-center justify-between card-compact">
-                <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setLibraryOpen(o => !o)}>
-                  {libraryOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Music Library
-                </button>
-              </div>
-              {libraryOpen && <div className="section-spacing">
-                  {/* Search field for Music Library */}
-                  <div className="card-compact">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input placeholder="Search music library..." value={librarySearchQuery} onChange={e => setLibrarySearchQuery(e.target.value)} className="pl-10 h-8 mobile-text-lg" />
+        {/* Desktop resizable layout */}
+        <PanelGroup direction="horizontal" className="min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">
+          {/* Left column - Library sections */}
+          {!leftColumnCollapsed && (
+            <>
+              <Panel defaultSize={selectedPdf ? 20 : 35} minSize={15} maxSize={50} className="section-spacing lg:h-full lg:overflow-y-auto">
+                <div className="space-y-4">
+                  {/* Study Scores */}
+                  <div className="w-full overflow-hidden border rounded">
+                    <div className="flex items-center justify-between card-compact">
+                      <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => {
+                      console.log('Study Scores button clicked, current state:', studyOpen);
+                      setStudyOpen(o => !o);
+                    }}>
+                        {studyOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Study Scores
+                      </button>
                     </div>
+                    {studyOpen && <div className="card-compact">
+                        <StudyScoresPanel currentSelected={selectedPdf} onOpenScore={handlePdfSelect} />
+                      </div>}
                   </div>
-                  
-                  {/* Sheet Music Library */}
-                  <div className="card-compact">
-                    <SheetMusicLibrary searchQuery={librarySearchQuery} selectedCategory="all" sortBy="title" sortOrder="asc" viewMode="list" onPdfSelect={(url: string, title: string, id?: string) => handlePdfSelect(url, title, id)} />
-                  </div>
-                </div>}
-            </div>
-          </div>
 
-          {/* Right column - PDF viewer with collapse toggle */}
-          <div className={`${selectedPdf && leftColumnCollapsed ? 'lg:col-span-12' : selectedPdf ? 'lg:col-span-10' : 'lg:col-span-8'} flex flex-col min-h-[60vh] lg:h-full overflow-hidden lg:pl-1 order-1 lg:order-2 w-full transition-all duration-300`}>
+                  {/* My Collections */}
+                  <div className="w-full overflow-hidden border rounded">
+                    <div className="flex items-center justify-between card-compact">
+                      <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setCollectionsOpen(o => !o)}>
+                        {collectionsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} My Collections
+                      </button>
+                    </div>
+                    {collectionsOpen && <div className="card-compact">
+                        <MyCollectionsPanel currentSelected={selectedPdf} onOpenScore={handlePdfSelect} />
+                      </div>}
+                  </div>
+
+                  {/* Setlists */}
+                  <div className="w-full overflow-hidden border rounded">
+                    <div className="flex items-center justify-between card-compact">
+                      <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setSetlistOpen(o => !o)}>
+                        {setlistOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Setlists
+                      </button>
+                    </div>
+                    {setlistOpen && <div className="card-compact">
+                        <SetlistBuilder onPdfSelect={handlePdfSelect} onOpenPlayer={handleOpenSetlistPlayer} />
+                      </div>}
+                  </div>
+
+                  {/* Music Library list */}
+                  <div className="w-full overflow-hidden border rounded">
+                    <div className="flex items-center justify-between card-compact">
+                      <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setLibraryOpen(o => !o)}>
+                        {libraryOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Music Library
+                      </button>
+                    </div>
+                    {libraryOpen && <div className="section-spacing">
+                        {/* Search field for Music Library */}
+                        <div className="card-compact">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                            <Input placeholder="Search music library..." value={librarySearchQuery} onChange={e => setLibrarySearchQuery(e.target.value)} className="pl-10 h-8 mobile-text-lg" />
+                          </div>
+                        </div>
+                        
+                        {/* Sheet Music Library */}
+                        <div className="card-compact">
+                          <SheetMusicLibrary searchQuery={librarySearchQuery} selectedCategory="all" sortBy="title" sortOrder="asc" viewMode="list" onPdfSelect={(url: string, title: string, id?: string) => handlePdfSelect(url, title, id)} />
+                        </div>
+                      </div>}
+                  </div>
+                </div>
+              </Panel>
+              
+              <PanelResizeHandle className="w-2 bg-border hover:bg-muted transition-colors cursor-col-resize" />
+            </>
+          )}
+
+          {/* Right column - PDF viewer */}
+          <Panel defaultSize={leftColumnCollapsed ? 100 : selectedPdf ? 80 : 65} className="flex flex-col min-h-[60vh] lg:h-full overflow-hidden">
             <div className="flex items-center justify-between mb-1 md:mb-4 px-1 lg:px-0">
               <h2 className="page-header">PDF Viewer</h2>
               <div className="flex items-center gap-2">
@@ -274,8 +283,8 @@ export const MusicLibrary = () => {
               </div> : <div className="flex-1 relative rounded-lg lg:rounded-xl overflow-hidden bg-background shadow-lg lg:shadow-xl ring-1 ring-border mx-1 lg:mx-0">
                 <img src="/lovable-uploads/7dee05e5-4f0d-4fa1-9260-b97fd383d709.png" alt="Glee World Music Library landing image" className="absolute inset-0 w-full h-full object-contain p-2 md:p-4 lg:p-6" loading="lazy" />
               </div>}
-          </div>
-        </div>
+          </Panel>
+        </PanelGroup>
       </div>
 
       {/* Study Mode Dialog for desktop */}
