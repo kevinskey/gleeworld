@@ -3,9 +3,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import ResourcesAdmin from '@/pages/mus240/admin/ResourcesAdmin';
 import { EnrollmentManager } from '@/components/mus240/admin/EnrollmentManager';
+import { Mus240PollSystem } from '@/components/mus240/Mus240PollSystem';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Users, FileText, Settings, ExternalLink } from 'lucide-react';
+import { GraduationCap, Users, FileText, Settings, ExternalLink, BarChart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import backgroundImage from '@/assets/mus240-background.jpg';
 
@@ -58,7 +59,7 @@ export const Mus240AdminPage = () => {
           {/* Main Content */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-6 bg-white/20 backdrop-blur-sm">
+              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 mb-6 bg-white/20 backdrop-blur-sm">
                 <TabsTrigger value="enrollments" className="flex items-center gap-2 text-xs sm:text-sm">
                   <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden sm:inline">Enrollments</span>
@@ -67,6 +68,10 @@ export const Mus240AdminPage = () => {
                 <TabsTrigger value="resources" className="flex items-center gap-2 text-xs sm:text-sm">
                   <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
                   Resources
+                </TabsTrigger>
+                <TabsTrigger value="polls" className="flex items-center gap-2 text-xs sm:text-sm">
+                  <BarChart className="h-3 w-3 sm:h-4 sm:w-4" />
+                  Polls
                 </TabsTrigger>
                 <TabsTrigger value="settings" className="flex items-center gap-2 text-xs sm:text-sm">
                   <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -80,6 +85,10 @@ export const Mus240AdminPage = () => {
               
               <TabsContent value="resources" className="mt-6">
                 <ResourcesAdmin />
+              </TabsContent>
+              
+              <TabsContent value="polls" className="mt-6">
+                <Mus240PollSystem />
               </TabsContent>
               
               <TabsContent value="settings" className="mt-6">
