@@ -61,8 +61,8 @@ export const GroupMessageInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex gap-4">
-      <div className="w-1/3 min-w-[250px]">
+    <div className="h-full flex flex-col lg:flex-row gap-4">
+      <div className="lg:w-1/3 lg:min-w-[280px]">
         <Card className="h-full">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -80,7 +80,7 @@ export const GroupMessageInterface: React.FC = () => {
         </Card>
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 min-h-[400px] lg:min-h-0">
         {selectedConversation ? (
           <Card className="h-full flex flex-col">
             <CardHeader className="pb-3 border-b">

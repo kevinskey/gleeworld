@@ -34,7 +34,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
   return (
     <div className={cn(
-      'flex items-end gap-3 p-3 rounded-lg border transition-colors',
+      'flex items-end gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border transition-colors',
       isFocused ? 'border-primary/50 bg-primary/5' : 'border-border bg-background'
     )}>
       <div className="flex-1 relative">
@@ -62,7 +62,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         />
         
         {/* Character count for SMS */}
-        <div className="absolute bottom-1 right-2 text-xs text-muted-foreground">
+        <div className="absolute bottom-1 right-1 sm:right-2 text-xs text-muted-foreground">
           {message.length}/160
         </div>
       </div>
@@ -71,7 +71,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       <Button
         variant="ghost"
         size="sm"
-        className="h-8 w-8 p-0 flex-shrink-0"
+        className="h-8 w-8 p-0 flex-shrink-0 hidden sm:flex"
         disabled={disabled}
       >
         <Smile className="h-4 w-4" />
@@ -82,9 +82,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         onClick={handleSend}
         disabled={!canSend}
         size="sm"
-        className="h-8 flex-shrink-0"
+        className="h-8 px-2 sm:px-3 flex-shrink-0"
       >
-        <Send className="h-4 w-4" />
+        <Send className="h-3 w-3 sm:h-4 sm:w-4" />
       </Button>
     </div>
   );

@@ -26,23 +26,23 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   onSelectConversation
 }) => {
   return (
-    <ScrollArea className="h-[calc(100vh-200px)]">
+    <ScrollArea className="h-[200px] lg:h-[calc(100vh-200px)]">
       <div className="space-y-1 p-2">
         {conversations.map((conversation) => (
           <button
             key={conversation.id}
             onClick={() => onSelectConversation(conversation)}
             className={cn(
-              'w-full p-3 rounded-lg text-left transition-colors',
+              'w-full p-2 sm:p-3 rounded-lg text-left transition-colors',
               'hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20',
               selectedConversation?.id === conversation.id 
                 ? 'bg-primary/10 border border-primary/20' 
                 : 'border border-transparent'
             )}
           >
-            <div className="flex items-start gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 flex-shrink-0">
-                <Users className="h-5 w-5 text-primary" />
+            <div className="flex items-start gap-2 sm:gap-3">
+              <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex-shrink-0">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </div>
               
               <div className="flex-1 min-w-0">
