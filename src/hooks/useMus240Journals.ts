@@ -173,21 +173,63 @@ export const useMus240Journals = () => {
     try {
       const wordCount = content.trim().split(/\s+/).filter(word => word.length > 0).length;
 
-      const response = await apiCall('mus240_journal_entries', {
-        method: 'POST',
-        headers: {
-          'Prefer': 'return=minimal,resolution=merge-duplicates'
-        },
-        body: JSON.stringify({
-          assignment_id: assignmentId,
-          student_id: user.id,
-          content,
-          word_count: wordCount,
-          is_published: false
-        })
-      });
+      // First check if an entry already exists
+      const existingResponse = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}&select=id`);
+      
+      let response;
+      if (existingResponse.ok) {
+        const existingEntries = await existingResponse.json();
+        
+        if (existingEntries && existingEntries.length > 0) {
+          // Update existing entry
+          response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+              content,
+              word_count: wordCount,
+              updated_at: new Date().toISOString()
+            })
+          });
+        } else {
+          // Create new entry
+          response = await apiCall('mus240_journal_entries', {
+            method: 'POST',
+            headers: {
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+              assignment_id: assignmentId,
+              student_id: user.id,
+              content,
+              word_count: wordCount,
+              is_published: false
+            })
+          });
+        }
+      } else {
+        // Create new entry if we can't check for existing
+        response = await apiCall('mus240_journal_entries', {
+          method: 'POST',
+          headers: {
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            assignment_id: assignmentId,
+            student_id: user.id,
+            content,
+            word_count: wordCount,
+            is_published: false
+          })
+        });
+      }
 
-      if (!response.ok) throw new Error('Failed to save journal');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to save journal: ${errorText}`);
+      }
 
       toast({
         title: "Journal Saved",
