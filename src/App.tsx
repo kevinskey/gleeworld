@@ -1432,14 +1432,31 @@ const App = () => {
                                   </Mus240EnrollmentRoute>
                                 } 
                               />
-                              <Route 
-                                path="/classes/mus240" 
-                                element={
-                                  <Mus240EnrollmentRoute>
-                                    <ClassLanding />
-                                  </Mus240EnrollmentRoute>
-                                } 
-                              />
+                               <Route 
+                                   path="/classes/mus240/admin" 
+                                   element={
+                                     <div>
+                                       {(() => {
+                                         console.log('Route matched: /classes/mus240/admin');
+                                         return (
+                                           <Mus240EnrollmentRoute>
+                                             <AdminOnlyRoute>
+                                               <Mus240AdminPage />
+                                             </AdminOnlyRoute>
+                                           </Mus240EnrollmentRoute>
+                                         );
+                                       })()}
+                                     </div>
+                                   } 
+                                  />
+                               <Route 
+                                 path="/classes/mus240" 
+                                 element={
+                                   <Mus240EnrollmentRoute>
+                                     <ClassLanding />
+                                   </Mus240EnrollmentRoute>
+                                 } 
+                               />
                              <Route 
                                path="/classes/mus240/syllabus" 
                                element={
@@ -1515,32 +1532,15 @@ const App = () => {
                                  } 
                                 />
                                  <Route 
-                                   path="/classes/mus240/admin" 
+                                   path="/classes/mus240/instructor" 
                                    element={
-                                     <div>
-                                       {(() => {
-                                         console.log('Route matched: /classes/mus240/admin');
-                                         return (
-                                           <Mus240EnrollmentRoute>
-                                             <AdminOnlyRoute>
-                                               <Mus240AdminPage />
-                                             </AdminOnlyRoute>
-                                           </Mus240EnrollmentRoute>
-                                         );
-                                       })()}
-                                     </div>
+                                     <ProtectedRoute>
+                                       <AdminOnlyRoute>
+                                         <InstructorConsole />
+                                       </AdminOnlyRoute>
+                                     </ProtectedRoute>
                                    } 
-                                  />
-                                <Route 
-                                  path="/classes/mus240/instructor" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <AdminOnlyRoute>
-                                        <InstructorConsole />
-                                      </AdminOnlyRoute>
-                                    </ProtectedRoute>
-                                  } 
-                                />
+                                 />
                            </Routes>
                     </Suspense>
                    <GlobalMusicPlayer />
