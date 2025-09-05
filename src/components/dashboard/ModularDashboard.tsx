@@ -185,6 +185,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
   const filterAvailableModules = () => {
     console.log('🔍 Filtering modules with permissions:', userPermissions);
     console.log('🔍 Available unified modules:', UNIFIED_MODULES.map(m => ({ id: m.id, name: m.name })));
+    console.log('🔍 Looking for user-management module:', UNIFIED_MODULES.find(m => m.id === 'user-management' || m.name === 'user-management'));
     
     const filtered = UNIFIED_MODULES.filter(module => {
       console.log(`🔍 Checking module ${module.name}:`, {
