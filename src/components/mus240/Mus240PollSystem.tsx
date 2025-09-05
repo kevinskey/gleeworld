@@ -29,6 +29,7 @@ export const Mus240PollSystem = () => {
   const [newPollTitle, setNewPollTitle] = useState('');
   const [newPollDescription, setNewPollDescription] = useState('');
   const [aiPollPrompt, setAiPollPrompt] = useState('');
+  const [generatingPoll, setGeneratingPoll] = useState(false);
 
   const isAdmin = isUserAdmin() || isSuperAdmin();
 
