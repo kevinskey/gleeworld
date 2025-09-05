@@ -69,28 +69,28 @@ export const SectionLeaderDashboard = ({ user }: SectionLeaderDashboardProps) =>
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-start">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">{userSection} Section Leader Dashboard</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-lg font-bold text-foreground">{userSection} Section Leader Dashboard</h2>
+          <p className="text-sm text-muted-foreground">
             Manage your section members, plan sectionals, and coordinate activities
           </p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button size="sm">
+          <Plus className="h-4 w-4 mr-1" />
           New Sectional
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="roster">Section Roster</TabsTrigger>
-          <TabsTrigger value="sectionals">Sectional Planning</TabsTrigger>
-          <TabsTrigger value="communications">Communications</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
-          <TabsTrigger value="setlists">Setlists</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-6 h-8">
+          <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+          <TabsTrigger value="roster" className="text-xs">Section Roster</TabsTrigger>
+          <TabsTrigger value="sectionals" className="text-xs">Sectional Planning</TabsTrigger>
+          <TabsTrigger value="communications" className="text-xs">Communications</TabsTrigger>
+          <TabsTrigger value="notes" className="text-xs">Notes</TabsTrigger>
+          <TabsTrigger value="setlists" className="text-xs">Setlists</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">

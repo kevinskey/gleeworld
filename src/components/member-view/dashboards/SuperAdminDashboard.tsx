@@ -378,20 +378,20 @@ export const SuperAdminDashboard = ({
         </div>;
     }
   }
-  return <div className="space-y-6">
+  return <div className="space-y-4">
       {/* Header with Module Toggle */}
       <div className="flex items-center justify-between">
         <div className="border-l-4 border-primary pl-4">
-          <h1 className="text-3xl lg:text-4xl font-bold flex items-center gap-3">
-            <Crown className="h-8 w-8 text-purple-600" />
+          <h1 className="text-xl lg:text-2xl font-bold flex items-center gap-2">
+            <Crown className="h-6 w-6 text-purple-600" />
             Super Admin Dashboard
           </h1>
-          <p className="text-base lg:text-lg text-muted-foreground mt-2">
+          <p className="text-sm lg:text-base text-muted-foreground mt-1">
             Complete system administration and module management
           </p>
         </div>
-        <Button onClick={() => setShowAllModules(!showAllModules)} variant={showAllModules ? "default" : "outline"} className="flex items-center gap-2 h-12 px-6 text-base">
-          <Grid3X3 className="h-5 w-5" />
+        <Button onClick={() => setShowAllModules(!showAllModules)} variant={showAllModules ? "default" : "outline"} className="flex items-center gap-2 h-8 px-4 text-sm">
+          <Grid3X3 className="h-4 w-4" />
           {showAllModules ? "Show Overview" : "Show All Modules"}
         </Button>
       </div>
