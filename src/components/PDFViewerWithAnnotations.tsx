@@ -863,7 +863,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   />
                   <canvas
                     ref={drawingCanvasRef}
-                    className={`absolute inset-0 w-full h-full pointer-events-auto z-20 ${
+                    className={`absolute inset-0 w-full h-full pt-5 pointer-events-auto z-20 ${
                       activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
                     }`}
                     onMouseDown={handleStart}
