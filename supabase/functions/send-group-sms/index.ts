@@ -23,6 +23,19 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('Processing group SMS:', { conversationId, senderUserId, senderName });
 
+    // Validate required fields
+    if (!conversationId) {
+      throw new Error('Missing conversationId');
+    }
+    
+    if (!message) {
+      throw new Error('Missing message');
+    }
+
+    if (!senderUserId) {
+      throw new Error('Missing senderUserId');
+    }
+
     // Initialize Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -48,7 +61,8 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (convError || !conversation) {
-      throw new Error('Conversation not found');
+      console.error('Conversation query error:', convError);
+      throw new Error(`Conversation not found for ID: ${conversationId}`);
     }
 
     // Get sender's phone number
