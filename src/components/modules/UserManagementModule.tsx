@@ -182,6 +182,16 @@ export const UserManagementModule = () => {
                          <Button
                            size="sm"
                            variant="outline"
+                           onClick={async () => {
+                             await grantPermission(user.email, 'fanpage');
+                           }}
+                         >
+                           <Users className="w-4 h-4 mr-1" />
+                           Grant Fanpage
+                         </Button>
+                         <Button
+                           size="sm"
+                           variant="outline"
                            onClick={() => {
                              setSelectedUser(user);
                              setShowResetDialog(true);
