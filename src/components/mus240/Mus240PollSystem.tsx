@@ -29,6 +29,7 @@ export const Mus240PollSystem = () => {
   const [newPollTitle, setNewPollTitle] = useState('');
   const [newPollDescription, setNewPollDescription] = useState('');
   const [aiPollPrompt, setAiPollPrompt] = useState('');
+  const [numQuestions, setNumQuestions] = useState(3);
   const [generatingPoll, setGeneratingPoll] = useState(false);
 
   const isAdmin = isUserAdmin() || isSuperAdmin();
@@ -71,7 +72,7 @@ export const Mus240PollSystem = () => {
       const { data, error } = await supabase.functions.invoke('mus240-instructor-assistant', {
         body: { 
           task: 'poll_creation', 
-          prompt: aiPollPrompt.trim()
+          prompt: `${aiPollPrompt.trim()}. Create exactly ${numQuestions} questions.`
         }
       });
 
@@ -215,12 +216,28 @@ export const Mus240PollSystem = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Textarea
-                placeholder="Describe the poll you want to create (e.g., 'Create a poll about Week 5 blues development with questions about B.B. King and Chicago blues')"
-                value={aiPollPrompt}
-                onChange={(e) => setAiPollPrompt(e.target.value)}
-                rows={3}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="md:col-span-3">
+                  <Textarea
+                    placeholder="Describe the poll you want to create (e.g., 'Create a poll about Week 5 blues development with questions about B.B. King and Chicago blues')"
+                    value={aiPollPrompt}
+                    onChange={(e) => setAiPollPrompt(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Questions</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={numQuestions}
+                    onChange={(e) => setNumQuestions(parseInt(e.target.value) || 3)}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-gray-500">Number of questions (1-10)</p>
+                </div>
+              </div>
               <Button 
                 onClick={generatePollWithAI}
                 disabled={generatingPoll || !aiPollPrompt.trim()}
