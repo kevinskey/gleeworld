@@ -1435,18 +1435,11 @@ const App = () => {
                                <Route 
                                    path="/classes/mus240/admin" 
                                    element={
-                                     <div>
-                                       {(() => {
-                                         console.log('Route matched: /classes/mus240/admin');
-                                         return (
-                                           <Mus240EnrollmentRoute>
-                                             <AdminOnlyRoute>
-                                               <Mus240AdminPage />
-                                             </AdminOnlyRoute>
-                                           </Mus240EnrollmentRoute>
-                                         );
-                                       })()}
-                                     </div>
+                                     <Mus240EnrollmentRoute>
+                                       <AdminOnlyRoute>
+                                         <Mus240AdminPage />
+                                       </AdminOnlyRoute>
+                                     </Mus240EnrollmentRoute>
                                    } 
                                   />
                                <Route 
