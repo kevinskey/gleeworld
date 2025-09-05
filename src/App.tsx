@@ -349,7 +349,9 @@ const App = () => {
                 path="/mus240-polls" 
                 element={
                   <ProtectedRoute>
-                    <Mus240PollPage />
+                    <Mus240EnrollmentRoute>
+                      <Mus240PollPage />
+                    </Mus240EnrollmentRoute>
                   </ProtectedRoute>
                 } 
               />
