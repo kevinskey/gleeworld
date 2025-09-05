@@ -81,6 +81,12 @@ Create interactive polls that:
 - Encourage critical thinking about African American music traditions
 - Reference specific songs, artists, and musical developments
 
+You can create two types of questions:
+1. TEXT-BASED: Regular questions with text and multiple choice options
+2. AUDIO-BASED: Questions that require listening to audio clips (when you specify an audio_url)
+
+For audio questions, you can reference existing recordings or suggest where instructors should add audio clips.
+
 Format each poll as JSON with this structure:
 {
   "title": "Poll Title",
@@ -88,6 +94,7 @@ Format each poll as JSON with this structure:
   "questions": [
     {
       "question": "Question text",
+      "audio_url": "optional - URL to audio clip or instruction like 'Add audio clip of B.B. King - The Thrill is Gone (0:30-1:00)'",
       "options": ["Option A", "Option B", "Option C", "Option D"],
       "correct_answer": 0,
       "explanation": "Brief explanation of correct answer"

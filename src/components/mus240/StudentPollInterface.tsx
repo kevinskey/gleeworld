@@ -202,6 +202,29 @@ export const StudentPollInterface: React.FC<StudentPollInterfaceProps> = ({ stud
               {currentQuestionData.question}
             </h3>
 
+            {/* Audio Player for Audio Questions */}
+            {currentQuestionData.audio_url && (
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-3 w-3 bg-blue-600 rounded-full animate-pulse"></div>
+                  <span className="text-blue-800 font-medium">Audio Question - Listen carefully</span>
+                </div>
+                <audio 
+                  controls 
+                  className="w-full"
+                  preload="metadata"
+                >
+                  <source src={currentQuestionData.audio_url} type="audio/mpeg" />
+                  <source src={currentQuestionData.audio_url} type="audio/wav" />
+                  <source src={currentQuestionData.audio_url} type="audio/ogg" />
+                  Your browser does not support the audio element.
+                </audio>
+                <p className="text-sm text-blue-700 mt-2">
+                  💡 You can replay the audio as many times as needed
+                </p>
+              </div>
+            )}
+
             {/* Answer Options */}
             <RadioGroup
               value={selectedAnswer?.toString()}

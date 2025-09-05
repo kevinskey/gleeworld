@@ -298,9 +298,35 @@ export const LivePollResults = () => {
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <span>{currentStats.totalResponses} total responses</span>
             <span>{currentStats.responseRate.toFixed(1)}% response rate</span>
+            {currentQuestionData.audio_url && (
+              <span className="flex items-center gap-1 text-blue-600">
+                🎵 Audio Question
+              </span>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Audio Player for Instructor Display */}
+          {currentQuestionData.audio_url && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-3 w-3 bg-blue-600 rounded-full"></div>
+                <span className="text-blue-800 font-medium">Audio Being Played to Students</span>
+              </div>
+              <audio 
+                controls 
+                className="w-full"
+                preload="metadata"
+              >
+                <source src={currentQuestionData.audio_url} type="audio/mpeg" />
+                <source src={currentQuestionData.audio_url} type="audio/wav" />
+                <source src={currentQuestionData.audio_url} type="audio/ogg" />
+                Your browser does not support the audio element.
+              </audio>
+            </div>
+          )}
+
+          {/* Response Results */}
           {currentQuestionData.options.map((option, index) => {
             const count = currentStats.optionCounts[index] || 0;
             const percentage = currentStats.totalResponses > 0 

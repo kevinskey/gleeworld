@@ -1,0 +1,12 @@
+-- Add audio support to poll questions
+-- The questions JSONB field will now support this structure:
+-- {
+--   "question": "What blues scale is being used in this recording?",
+--   "audio_url": "https://example.com/audio.mp3", 
+--   "options": ["Major pentatonic", "Minor pentatonic", "Dorian", "Mixolydian"],
+--   "correct_answer": 1,
+--   "explanation": "This is the minor pentatonic scale..."
+-- }
+
+-- No schema changes needed - JSONB can already handle the audio_url field
+-- Just documenting the enhanced structure for audio-enabled questions
