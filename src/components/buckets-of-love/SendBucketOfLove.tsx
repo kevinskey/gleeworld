@@ -96,6 +96,10 @@ const SendBucketOfLove: React.FC<SendBucketOfLoveProps> = ({ trigger }) => {
     // Prevent multiple submissions
     if (loading) return;
     
+    // Generate a unique request ID to prevent duplicates
+    const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log('Sending bucket of love with request ID:', requestId);
+    
     if (!message.trim()) {
       toast({
         title: "Error",
@@ -151,7 +155,8 @@ const SendBucketOfLove: React.FC<SendBucketOfLoveProps> = ({ trigger }) => {
             note_color: noteColor,
             is_anonymous: isAnonymous,
             decorations: decorations.trim(),
-            group_type: selectedGroup
+            group_type: selectedGroup,
+            request_id: requestId
           }
         });
 
