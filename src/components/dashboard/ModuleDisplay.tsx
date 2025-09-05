@@ -25,6 +25,7 @@ import { FanEngagementModule } from '../modules/FanEngagementModule';
 import { SchedulingModule } from '../modules/SchedulingModule';
 import { CheckInCheckOutModule } from '../modules/CheckInCheckOutModule';
 import { GleeWritingWidget } from '../writing/GleeWritingWidget';
+import { FirstYearConsoleModule } from '../modules/FirstYearConsoleModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -96,6 +97,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <SchedulingModule />;
       case 'service-management':
         return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Service Management</h2><p>Service management module coming soon!</p></div>;
+      case 'first-year-console':
+        return <FirstYearConsoleModule />;
       default:
         return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2><p>This module is being developed. Stay tuned!</p></div>;
     }
