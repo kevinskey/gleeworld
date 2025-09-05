@@ -24,7 +24,7 @@ export const MusicLibraryPage: React.FC = () => {
   } = useSetlists();
   const [activeView, setActiveView] = useState<'library' | 'practice-recordings' | 'study-scores' | 'setlists'>('library');
   return <div className="min-h-screen bg-gradient-subtle">
-      <div className="container mx-auto p-4 sm:p-6 lg:p-8" style={{
+      <div className="container mx-auto" style={{
       width: '90vw',
       maxWidth: '90vw'
     }}>
