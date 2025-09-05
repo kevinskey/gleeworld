@@ -24,10 +24,7 @@ export const MusicLibraryPage: React.FC = () => {
   } = useSetlists();
   const [activeView, setActiveView] = useState<'library' | 'practice-recordings' | 'study-scores' | 'setlists'>('library');
   return <div className="min-h-screen bg-gradient-subtle">
-      <div className="container mx-auto p-4 sm:p-6 lg:p-8" style={{
-      width: '90vw',
-      maxWidth: '90vw'
-    }}>
+        <div className="w-full p-2 sm:p-4 lg:p-8 lg:max-w-7xl lg:mx-auto">
         {/* Header Section */}
         <div className="mb-8 sm:mb-10 lg:mb-12">
           <div className="flex items-center gap-4 mb-6">
