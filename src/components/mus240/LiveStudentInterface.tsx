@@ -122,7 +122,7 @@ export const LiveStudentInterface: React.FC = () => {
       if (data) {
         const poll = {
           ...data,
-          questions: Array.isArray(data.questions) ? data.questions : JSON.parse(data.questions || '[]')
+          questions: Array.isArray(data.questions) ? data.questions : JSON.parse(typeof data.questions === 'string' ? data.questions : '[]')
         } as Poll;
         setActivePoll(poll);
       }
@@ -141,7 +141,7 @@ export const LiveStudentInterface: React.FC = () => {
         .from('mus240_poll_responses')
         .select('selected_option')
         .eq('poll_id', pollId)
-        .eq('student_id', user?.id || '')
+        .eq('student_id', user?.id ?? '')
         .eq('question_index', questionIndex)
         .single();
 
@@ -181,7 +181,7 @@ export const LiveStudentInterface: React.FC = () => {
         .from('mus240_poll_responses')
         .upsert({
           poll_id: activePoll.id,
-          student_id: user?.id || '',
+          student_id: user?.id ?? '',
           question_index: activePoll.current_question_index,
           selected_option: selectedAnswer,
           response_time: new Date().toISOString()
