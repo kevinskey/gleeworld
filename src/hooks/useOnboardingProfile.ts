@@ -131,15 +131,23 @@ export const useOnboardingProfile = () => {
       try {
         setSaving(true);
 
+        console.log('Onboarding profile update attempt:', {
+          userId: user.id,
+          userEmail: user.email,
+          updates
+        });
+
         const { error } = await supabase
           .from('gw_profiles')
           .update(updates)
           .eq('user_id', user.id);
 
         if (error) {
-          console.error('Error updating profile:', error);
+          console.error('Onboarding profile update error:', error);
           throw error;
         }
+        
+        console.log('Onboarding profile update successful for user:', user.id);
       } catch (error) {
         toast({
           title: "Save Error",
