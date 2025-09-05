@@ -84,13 +84,13 @@ export const SectionLeaderDashboard = ({ user }: SectionLeaderDashboardProps) =>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6 h-8">
-          <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
-          <TabsTrigger value="roster" className="text-xs">Section Roster</TabsTrigger>
-          <TabsTrigger value="sectionals" className="text-xs">Sectional Planning</TabsTrigger>
-          <TabsTrigger value="communications" className="text-xs">Communications</TabsTrigger>
-          <TabsTrigger value="notes" className="text-xs">Notes</TabsTrigger>
-          <TabsTrigger value="setlists" className="text-xs">Setlists</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-6 h-12 md:h-10">
+          <TabsTrigger value="overview" className="text-xs md:text-sm touch-target">Overview</TabsTrigger>
+          <TabsTrigger value="roster" className="text-xs md:text-sm touch-target">Section Roster</TabsTrigger>
+          <TabsTrigger value="sectionals" className="text-xs md:text-sm touch-target">Sectional Planning</TabsTrigger>
+          <TabsTrigger value="communications" className="text-xs md:text-sm touch-target">Communications</TabsTrigger>
+          <TabsTrigger value="notes" className="text-xs md:text-sm touch-target">Notes</TabsTrigger>
+          <TabsTrigger value="setlists" className="text-xs md:text-sm touch-target">Setlists</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">

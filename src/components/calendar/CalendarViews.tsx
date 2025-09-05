@@ -111,7 +111,7 @@ export const CalendarViews = () => {
           </CardHeader>
         <CardContent className="px-1.5 pt-2">
           <Tabs value={activeView} onValueChange={setActiveView}>
-            <TabsList className="grid w-full grid-cols-3 h-8 md:h-10 gap-1">
+            <TabsList className="grid w-full grid-cols-3 h-12 md:h-10 gap-1">
               <TabsTrigger value="month" className="flex items-center justify-center gap-1 text-xs md:text-sm px-1 md:px-2">
                 <span className="hidden sm:inline">Month</span>
                 <span className="sm:hidden">Mo</span>
