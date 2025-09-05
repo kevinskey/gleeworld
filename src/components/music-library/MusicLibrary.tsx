@@ -256,7 +256,7 @@ export const MusicLibrary = () => {
           )}
 
           {/* Right column - PDF viewer */}
-          <Panel defaultSize={leftColumnCollapsed ? 100 : selectedPdf ? 80 : 65} className="flex flex-col min-h-[60vh] lg:h-full overflow-hidden">
+          <Panel defaultSize={leftColumnCollapsed ? 100 : selectedPdf ? 80 : 65} className="flex flex-col items-start min-h-[60vh] lg:h-full overflow-hidden">
             <div className="flex items-center justify-between mb-1 md:mb-4 px-1 lg:px-0">
               <h2 className="page-header">PDF Viewer</h2>
               <div className="flex items-center gap-2">
