@@ -83,9 +83,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (mountedRef.current) {
           setSession(session);
           setUser(session?.user ?? null);
-          // Set loading to false immediately to prevent white screen
-          setLoading(false);
           console.log('AuthContext: State updated - user:', session?.user?.email || 'none');
+          // Set loading to false AFTER setting state
+          setLoading(false);
         }
 
         // Set up auth state listener AFTER initial session check

@@ -23,21 +23,30 @@ const Auth = () => {
   });
 
   useEffect(() => {
+    console.log('🔄 Auth redirect check:', {
+      hasUser: !!user,
+      loading,
+      profileLoading,
+      userEmail: user?.email,
+      pathname: window.location.pathname
+    });
+
     if (!loading && !profileLoading && user) {
-      console.log('🚀 Auth redirect logic - User authenticated');
+      console.log('🚀 Auth redirect logic - User authenticated, redirecting...');
       
-      // Single redirect path - avoid loops
+      // Clear any stored redirect path first
       const redirectPath = sessionStorage.getItem('redirectAfterAuth');
       if (redirectPath) {
         console.log('Auth: Redirecting to stored path:', redirectPath);
         sessionStorage.removeItem('redirectAfterAuth');
         navigate(redirectPath, { replace: true });
-      } else {
-        // Simple redirect based on admin status
-        const defaultPath = isAdmin() ? '/admin' : '/dashboard';
-        console.log('Auth: Redirecting to default path:', defaultPath);
-        navigate(defaultPath, { replace: true });
+        return;
       }
+      
+      // Default redirect based on admin status
+      const defaultPath = isAdmin() ? '/dashboard' : '/dashboard';
+      console.log('Auth: Redirecting to default path:', defaultPath);
+      navigate(defaultPath, { replace: true });
     }
   }, [user, loading, profileLoading, navigate, isAdmin]);
 
