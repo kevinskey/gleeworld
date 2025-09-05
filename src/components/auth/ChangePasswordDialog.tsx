@@ -67,35 +67,36 @@ export const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialo
       return;
     }
 
-    if (currentPassword === newPassword) {
-      setError("New password must be different from current password");
-      setLoading(false);
-      return;
-    }
+    // Remove check for current password vs new password since we're not requiring current password
+    // if (currentPassword === newPassword) {
+    //   setError("New password must be different from current password");
+    //   setLoading(false);
+    //   return;
+    // }
 
     try {
-      // First verify current password by attempting to sign in
+      console.log('Starting password change process...');
+      
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user?.email);
+      
       if (!user?.email) {
         throw new Error("No user found");
       }
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword
-      });
-
-      if (signInError) {
-        throw new Error("Current password is incorrect");
-      }
-
-      // Update to new password
+      console.log('Updating password...');
+      // Update to new password - Supabase handles authentication internally
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword
       });
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Password update failed:', updateError);
+        throw updateError;
+      }
       
+      console.log('Password updated successfully');
       toast.success("Password updated successfully!");
       onOpenChange(false);
       
@@ -106,6 +107,7 @@ export const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialo
       setError("");
       
     } catch (error: any) {
+      console.error('Password change error:', error);
       setError(error.message || "Failed to update password");
     } finally {
       setLoading(false);
@@ -126,7 +128,7 @@ export const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialo
         <DialogHeader>
           <DialogTitle>Change Password</DialogTitle>
           <DialogDescription>
-            Enter your current password and choose a new one.
+            Choose a new secure password for your account.
           </DialogDescription>
         </DialogHeader>
 
@@ -136,33 +138,6 @@ export const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialo
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
-          <div className="space-y-2">
-            <Label htmlFor="current-password">Current Password</Label>
-            <div className="relative">
-              <Input
-                id="current-password"
-                type={showCurrentPassword ? "text" : "password"}
-                placeholder="Enter current password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-              >
-                {showCurrentPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
           
           <div className="space-y-2">
             <Label htmlFor="new-password">New Password</Label>
