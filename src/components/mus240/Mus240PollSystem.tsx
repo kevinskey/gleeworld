@@ -33,31 +33,48 @@ export const Mus240PollSystem = () => {
   const [generatingPoll, setGeneratingPoll] = useState(false);
 
   const hasAdminAccess = isAdmin() || isSuperAdmin();
+  
+  console.log('Mus240PollSystem: Component mounted');
+  console.log('Mus240PollSystem: roleLoading =', roleLoading);
+  console.log('Mus240PollSystem: isAdmin() =', isAdmin());
+  console.log('Mus240PollSystem: isSuperAdmin() =', isSuperAdmin());
+  console.log('Mus240PollSystem: hasAdminAccess =', hasAdminAccess);
+  console.log('Mus240PollSystem: loading =', loading);
 
   useEffect(() => {
+    console.log('Mus240PollSystem: useEffect triggered, roleLoading =', roleLoading);
     if (!roleLoading) {
+      console.log('Mus240PollSystem: Calling fetchPolls');
       fetchPolls();
     }
   }, [roleLoading]);
 
   const fetchPolls = async () => {
+    console.log('Mus240PollSystem: fetchPolls started');
     setLoading(true);
     try {
       let query = supabase.from('mus240_polls').select('*');
       
       if (!hasAdminAccess) {
+        console.log('Mus240PollSystem: User is not admin, filtering for active polls only');
         query = query.eq('is_active', true);
+      } else {
+        console.log('Mus240PollSystem: User is admin, fetching all polls');
       }
       
       const { data, error } = await query.order('created_at', { ascending: false });
+      
+      console.log('Mus240PollSystem: Query response - data:', data, 'error:', error);
 
       if (error) throw error;
       setPolls(data || []);
+      console.log('Mus240PollSystem: Polls set to:', data || []);
     } catch (error) {
-      console.error('Error fetching polls:', error);
+      console.error('Mus240PollSystem: Error fetching polls:', error);
       toast.error('Failed to fetch polls');
     } finally {
       setLoading(false);
+      console.log('Mus240PollSystem: fetchPolls completed, loading set to false');
     }
   };
 
@@ -182,10 +199,12 @@ export const Mus240PollSystem = () => {
   };
 
   if (roleLoading) {
+    console.log('Mus240PollSystem: Rendering loading state - roleLoading =', roleLoading);
     return <div className="text-center py-8">Loading...</div>;
   }
 
   if (!hasAdminAccess) {
+    console.log('Mus240PollSystem: Rendering student interface - hasAdminAccess =', hasAdminAccess);
     return (
       <div className="space-y-6">
         <div className="text-center">
@@ -196,6 +215,9 @@ export const Mus240PollSystem = () => {
       </div>
     );
   }
+
+  console.log('Mus240PollSystem: Rendering admin interface');
+  console.log('Mus240PollSystem: Current state - loading:', loading, 'polls.length:', polls.length);
 
   return (
     <div className="space-y-6">
