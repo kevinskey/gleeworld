@@ -189,21 +189,20 @@ export const Mus240PollSystem = () => {
   // Show student view for non-admins or when admin chooses student view
   if (!hasAdminAccess || viewMode === 'student') {
     return (
-      <div className="space-y-6 bg-card p-6 rounded-lg shadow-lg border">
+      <div className="space-y-6 bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-white/30">
         {hasAdminAccess && (
           <div className="flex justify-end mb-4">
-            <Button
+            <button
               onClick={() => setViewMode('admin')}
-              variant="outline"
-              size="sm"
+              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all duration-300 font-medium shadow-lg"
             >
               Switch to Admin View
-            </Button>
+            </button>
           </div>
         )}
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-card-foreground mb-2">MUS 240 Live Poll</h2>
-          <p className="text-muted-foreground">Join the live poll session</p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-3">MUS 240 Live Poll</h2>
+          <p className="text-lg text-gray-600">Join the live poll session</p>
         </div>
         <StudentPollInterface />
       </div>
@@ -211,16 +210,15 @@ export const Mus240PollSystem = () => {
   }
 
   return (
-    <div className="space-y-6 bg-card p-6 rounded-lg shadow-lg border">
+    <div className="space-y-6 bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-white/30">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-card-foreground">Admin Poll Management</h2>
-        <Button
+        <h2 className="text-3xl font-bold text-gray-900">Admin Poll Management</h2>
+        <button
           onClick={() => setViewMode('student')}
-          variant="outline"
-          size="sm"
+          className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all duration-300 font-medium shadow-lg"
         >
           Switch to Student View
-        </Button>
+        </button>
       </div>
       <Tabs defaultValue="manage" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -231,14 +229,14 @@ export const Mus240PollSystem = () => {
 
         <TabsContent value="manage" className="space-y-6">
           {/* AI Poll Generator */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-purple-600" />
-                AI Poll Generator
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-6 rounded-2xl border border-purple-200 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl">
+                <Brain className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">AI Poll Generator</h3>
+            </div>
+            <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="md:col-span-3">
                   <Textarea
@@ -246,6 +244,7 @@ export const Mus240PollSystem = () => {
                     value={aiPollPrompt}
                     onChange={(e) => setAiPollPrompt(e.target.value)}
                     rows={3}
+                    className="border-purple-200 focus:border-purple-400 rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
@@ -256,142 +255,151 @@ export const Mus240PollSystem = () => {
                     max="10"
                     value={numQuestions}
                     onChange={(e) => setNumQuestions(parseInt(e.target.value) || 3)}
-                    className="w-full"
+                    className="w-full border-purple-200 focus:border-purple-400 rounded-xl"
                   />
                   <p className="text-xs text-gray-500">Number of questions (1-10)</p>
                 </div>
               </div>
-              <Button 
+              <button 
                 onClick={generatePollWithAI}
                 disabled={generatingPoll || !aiPollPrompt.trim()}
-                className="w-full"
+                className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {generatingPoll ? (
                   <>
-                    <Brain className="h-4 w-4 mr-2 animate-pulse" />
+                    <Brain className="h-5 w-5 animate-pulse" />
                     Generating Poll...
                   </>
                 ) : (
                   <>
-                    <Brain className="h-4 w-4 mr-2" />
+                    <Brain className="h-5 w-5" />
                     Generate Poll with AI
                   </>
                 )}
-              </Button>
-            </CardContent>
-          </Card>
+              </button>
+            </div>
+          </div>
 
           {/* Manual Poll Creation */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plus className="h-5 w-5 text-blue-600" />
-                Create New Poll
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-2xl border border-blue-200 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl">
+                <Plus className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">Create New Poll</h3>
+            </div>
+            <div className="space-y-4">
               <Input
                 placeholder="Poll title..."
                 value={newPollTitle}
                 onChange={(e) => setNewPollTitle(e.target.value)}
+                className="border-blue-200 focus:border-blue-400 rounded-xl"
               />
               <Textarea
                 placeholder="Poll description (optional)..."
                 value={newPollDescription}
                 onChange={(e) => setNewPollDescription(e.target.value)}
                 rows={2}
+                className="border-blue-200 focus:border-blue-400 rounded-xl"
               />
-              <Button 
+              <button 
                 onClick={() => createPoll(newPollTitle, newPollDescription)}
                 disabled={!newPollTitle.trim()}
-                className="w-full"
+                className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl hover:from-blue-600 hover:to-cyan-700 transition-all duration-300 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-5 w-5" />
                 Create Poll
-              </Button>
-            </CardContent>
-          </Card>
+              </button>
+            </div>
+          </div>
 
           {/* Existing Polls */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-green-600" />
-                Your Polls
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border border-green-200 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl">
+                <BarChart3 className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">Your Polls</h3>
+            </div>
+            <div>
               {loading ? (
-                <div className="text-center py-8">Loading polls...</div>
+                <div className="text-center py-8 text-gray-600">Loading polls...</div>
               ) : polls.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 bg-white/50 rounded-xl border-2 border-dashed border-gray-300">
                   No polls created yet. Create your first poll above!
                 </div>
               ) : (
                 <div className="space-y-4">
                   {polls.map((poll) => (
-                    <div key={poll.id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={poll.id} className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold">{poll.title}</h3>
-                            <Badge variant={poll.is_active ? "default" : "secondary"}>
+                          <div className="flex items-center gap-3 mb-3">
+                            <h4 className="text-xl font-semibold text-gray-900">{poll.title}</h4>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              poll.is_active 
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white animate-pulse' 
+                                : 'bg-gray-200 text-gray-700'
+                            }`}>
                               {poll.is_active ? 'Active' : 'Inactive'}
-                            </Badge>
+                            </span>
                           </div>
                           {poll.description && (
-                            <p className="text-gray-600 text-sm mb-2">{poll.description}</p>
+                            <p className="text-gray-600 text-sm mb-3">{poll.description}</p>
                           )}
                           <div className="flex items-center gap-4 text-sm text-gray-500">
                             <span>{Array.isArray(poll.questions) ? poll.questions.length : 0} questions</span>
                             <span>Created {new Date(poll.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
+                        <div className="flex items-center gap-3">
+                          <button
                             onClick={() => togglePoll(poll.id, poll.is_active)}
-                            variant={poll.is_active ? "destructive" : "default"}
-                            size="sm"
+                            className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 shadow-lg flex items-center gap-2 ${
+                              poll.is_active 
+                                ? 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700' 
+                                : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700'
+                            }`}
                           >
                             {poll.is_active ? (
                               <>
-                                <Square className="h-4 w-4 mr-1" />
+                                <Square className="h-4 w-4" />
                                 Stop
                               </>
                             ) : (
                               <>
-                                <Play className="h-4 w-4 mr-1" />
+                                <Play className="h-4 w-4" />
                                 Start
                               </>
                             )}
-                          </Button>
-                          <Button
+                          </button>
+                          <button
                             onClick={() => deletePoll(poll.id)}
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700"
+                            className="px-3 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl transition-all duration-300 shadow-sm"
                           >
                             <Trash2 className="h-4 w-4" />
-                          </Button>
+                          </button>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="results">
-          <LivePollResults />
+          <div className="bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-white/30">
+            <LivePollResults />
+          </div>
         </TabsContent>
 
         <TabsContent value="student">
-          <div className="space-y-6">
+          <div className="space-y-6 bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-white/30">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Student Experience Preview</h2>
-              <p className="text-gray-600">This is what students see when they join polls</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">Student Experience Preview</h2>
+              <p className="text-lg text-gray-600">This is what students see when they join polls</p>
             </div>
             <StudentPollInterface />
           </div>
