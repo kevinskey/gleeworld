@@ -233,6 +233,34 @@ export const CommunityHubModule = () => {
         
         <TabsContent value="notifications" className="flex-1 p-4 w-full overflow-auto">
           <div className="max-w-xl mx-auto space-y-3">
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="mini-mode">Mode</Label>
+                <Select value={miniMode} onValueChange={(v) => setMiniMode(v as 'note' | 'email' | 'sms')}>
+                  <SelectTrigger id="mini-mode" className="h-9">
+                    <SelectValue placeholder="Choose mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="note">Note (in-app)</SelectItem>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="sms">SMS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="mini-recipient">Recipient</Label>
+                <Select value={recipientType} onValueChange={(v) => setRecipientType(v as 'me' | 'email' | 'individual' | 'group')}>
+                  <SelectTrigger id="mini-recipient" className="h-9">
+                    <SelectValue placeholder="Select recipient" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="me">Me</SelectItem>
+                    <SelectItem value="email">By Email</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
             {/* Recipient Type Selection */}
             <div className="space-y-1.5">
               <Label htmlFor="recipient-type">Send To</Label>
@@ -286,34 +314,6 @@ export const CommunityHubModule = () => {
                 </Select>
               </div>
             )}
-
-            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="mini-mode">Mode</Label>
-                <Select value={miniMode} onValueChange={(v) => setMiniMode(v as 'note' | 'email' | 'sms')}>
-                  <SelectTrigger id="mini-mode" className="h-9">
-                    <SelectValue placeholder="Choose mode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="note">Note (in-app)</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="sms">SMS</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="mini-recipient">Recipient</Label>
-                <Select value={recipientType} onValueChange={(v) => setRecipientType(v as 'me' | 'email')}>
-                  <SelectTrigger id="mini-recipient" className="h-9">
-                    <SelectValue placeholder="Select recipient" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="me">Me</SelectItem>
-                    <SelectItem value="email">By Email</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
             {recipientType === 'email' && (
               <div className="space-y-1.5">
