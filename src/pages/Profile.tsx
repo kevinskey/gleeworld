@@ -256,6 +256,10 @@ const Profile = () => {
     console.log("🚀 Is editing:", isEditing);
     console.log("🚀 Loading state:", loading);
     
+    // Check if any measurement fields are in the form data
+    const measurementFields = Object.keys(data).filter(key => key.includes('measurement'));
+    console.log("🚀 Measurement fields in form data:", measurementFields);
+    
     if (!user) {
       console.log("❌ No user found, cannot save profile");
       return;
