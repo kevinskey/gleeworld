@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
 export const MusicLibrary = () => {
+  const [leftColumnCollapsed, setLeftColumnCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -180,8 +181,8 @@ export const MusicLibrary = () => {
 
         {/* Desktop responsive layout - 40/60 split when PDF is open */}
         <div className="flex flex-col lg:grid lg:grid-cols-12 card-spacing min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">
-          {/* Left column - Library sections */}
-          <div className={`${selectedPdf ? 'lg:col-span-2' : 'lg:col-span-4'} section-spacing lg:h-full lg:overflow-y-auto lg:pr-1 order-2 lg:order-1 w-full overflow-hidden`}>
+          {/* Left column - Library sections with collapse toggle */}
+          <div className={`${selectedPdf && leftColumnCollapsed ? 'hidden lg:block lg:col-span-1' : selectedPdf ? 'lg:col-span-2' : 'lg:col-span-4'} section-spacing lg:h-full lg:overflow-y-auto lg:pr-1 order-2 lg:order-1 w-full overflow-hidden transition-all duration-300`}>
             {/* Study Scores */}
             <div className="w-full overflow-hidden border rounded">
               <div className="flex items-center justify-between card-compact">
@@ -245,15 +246,28 @@ export const MusicLibrary = () => {
             </div>
           </div>
 
-          {/* Right column - PDF viewer */}
-          <div className={`${selectedPdf ? 'lg:col-span-10' : 'lg:col-span-8'} flex flex-col min-h-[60vh] lg:h-full overflow-hidden lg:pl-1 order-1 lg:order-2 w-full`}>
+          {/* Right column - PDF viewer with collapse toggle */}
+          <div className={`${selectedPdf && leftColumnCollapsed ? 'lg:col-span-11' : selectedPdf ? 'lg:col-span-10' : 'lg:col-span-8'} flex flex-col min-h-[60vh] lg:h-full overflow-hidden lg:pl-1 order-1 lg:order-2 w-full transition-all duration-300`}>
             <div className="flex items-center justify-between mb-1 md:mb-4 px-1 lg:px-0">
               <h2 className="page-header">PDF Viewer</h2>
-              <Button size="sm" variant="outline" className="gap-1 md:gap-2 touch-target px-2 lg:px-3" aria-label="Study Mode" title="Study Mode" onClick={openStudyMode}>
-                <Eye className="h-3 w-3 lg:h-4 lg:w-4" />
-                <span className="hidden sm:inline mobile-text-lg">Study Mode</span>
-                <span className="sm:hidden text-xs">Study</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                {selectedPdf && (
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => setLeftColumnCollapsed(!leftColumnCollapsed)}
+                    className="gap-1 touch-target px-2"
+                    aria-label={leftColumnCollapsed ? "Show sidebar" : "Hide sidebar"}
+                  >
+                    {leftColumnCollapsed ? "Show" : "Hide"} Sidebar
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" className="gap-1 md:gap-2 touch-target px-2 lg:px-3" aria-label="Study Mode" title="Study Mode" onClick={openStudyMode}>
+                  <Eye className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline mobile-text-lg">Study Mode</span>
+                  <span className="sm:hidden text-xs">Study</span>
+                </Button>
+              </div>
             </div>
             {selectedPdf ? <div className="flex-1 overflow-hidden rounded-lg lg:rounded-xl">
                 <PDFViewerWithAnnotations key={selectedPdf.url} pdfUrl={selectedPdf.url} musicTitle={selectedPdf.title} musicId={selectedPdf.id} className="w-full h-full" />
