@@ -184,7 +184,7 @@ export const AppointmentScheduler = () => {
         return;
       }
 
-      // Create appointment with pending approval status
+      // Create appointment data object
       const appointmentData = {
         title: data.title,
         description: data.description,
@@ -198,19 +198,29 @@ export const AppointmentScheduler = () => {
         ...(user?.id && { created_by: user.id }),
       };
 
-        const appointmentData = {
-          title: data.title,
-          description: data.description,
-          appointment_date: appointmentDateTime.toISOString(),
-          duration_minutes: data.duration_minutes,
-          appointment_type: data.appointment_type,
-          client_name: data.client_name,
-          client_email: data.client_email,
-          client_phone: data.client_phone,
-          status: 'pending_approval',
-          ...(user?.id && { created_by: user.id }),
-        };
+      // Check if this is a recurring appointment
+      if (data.is_recurring) {
+        // Use the edge function for recurring appointments
+        const { data: result, error } = await supabase.functions.invoke('create-recurring-appointment', {
+          body: {
+            ...appointmentData,
+            is_recurring: true,
+            recurrence_type: data.recurrence_type,
+            recurrence_interval: data.recurrence_interval,
+            recurrence_days_of_week: data.recurrence_days_of_week,
+            recurrence_end_date: data.recurrence_end_date,
+            max_occurrences: data.max_occurrences,
+          }
+        });
 
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: `Created ${result.created_count} recurring appointments successfully!`,
+        });
+      } else {
+        // Create single appointment
         const { data: appointment, error } = await supabase
           .from('gw_appointments')
           .insert(appointmentData)
