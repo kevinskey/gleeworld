@@ -250,6 +250,9 @@ const Profile = () => {
   }, [profile, setValue]);
 
   const onSubmit = async (data: ProfileFormData) => {
+    console.log("🎯 Save Profile button clicked! isEditing:", isEditing, "loading:", loading);
+    console.log("🎯 Form errors before submit:", errors);
+    console.log("🎯 Current form values:", data);
     console.log("🚀 Form submitted with data:", data);
     console.log("🚀 Form data keys:", Object.keys(data));
     console.log("🚀 Form errors:", errors);
@@ -370,6 +373,7 @@ const Profile = () => {
         tshirt_size: updatePayload.tshirt_size
       });
 
+      console.log("🔍 About to make PATCH request to gw_profiles...");
       const { error } = await supabase
         .from("gw_profiles")
         .update(updatePayload)
@@ -388,13 +392,20 @@ const Profile = () => {
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating profile:", error);
+      console.error("Error details:", {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint
+      });
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: `Failed to update profile: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+      console.log("🎯 Form submission result:", loading);
     }
   };
 
@@ -1482,10 +1493,33 @@ const Profile = () => {
                   console.log("🎯 Save Profile button clicked! isEditing:", isEditing, "loading:", loading);
                   console.log("🎯 Form errors before submit:", errors);
                   console.log("🎯 Current form values:", watch());
+                  console.log("🎯 Form is valid:", Object.keys(errors).length === 0);
+                  console.log("🎯 All form errors:", errors);
                   
-                  // Trigger form submission manually
-                  const result = await handleSubmit(onSubmit)();
-                  console.log("🎯 Form submission result:", result);
+                  // Check if user is logged in
+                  if (!user) {
+                    console.error("🎯 No user found!");
+                    toast({
+                      title: "Error",
+                      description: "You must be logged in to save your profile",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  
+                  try {
+                    console.log("🎯 About to trigger form submission...");
+                    // Trigger form submission manually
+                    const result = await handleSubmit(onSubmit)();
+                    console.log("🎯 Form submission result:", result);
+                  } catch (submitError) {
+                    console.error("🎯 Form submission error:", submitError);
+                    toast({
+                      title: "Form Error",
+                      description: `Form submission failed: ${submitError?.message || 'Unknown error'}`,
+                      variant: "destructive",
+                    });
+                  }
                 }}
               >
                 {loading ? "Saving..." : "Save Profile"}
