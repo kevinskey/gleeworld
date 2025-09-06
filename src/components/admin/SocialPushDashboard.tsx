@@ -160,7 +160,7 @@ export const SocialPushDashboard = () => {
           }, [])
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 

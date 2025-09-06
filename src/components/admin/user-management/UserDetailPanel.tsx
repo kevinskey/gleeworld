@@ -164,7 +164,7 @@ export const UserDetailPanel = ({
         .from("gw_profiles")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (profileData) {
         setFullName(profileData.full_name || "");

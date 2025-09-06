@@ -86,7 +86,7 @@ export const CreateEventWithBudgetDialog = ({ onSuccess, triggerButton }: Create
         .from('gw_calendars')
         .select('id')
         .eq('is_default', true)
-        .single();
+        .maybeSingle();
 
       if (!defaultCalendar) {
         throw new Error('No default calendar found');
@@ -108,7 +108,7 @@ export const CreateEventWithBudgetDialog = ({ onSuccess, triggerButton }: Create
           status: 'scheduled'
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (eventError) throw eventError;
 

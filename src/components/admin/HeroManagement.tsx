@@ -101,7 +101,7 @@ export const HeroManagement = () => {
           .from('gw_hero_settings')
           .select('*')
           .limit(1)
-          .single();
+          .maybeSingle();
 
         if (settingsData) {
           const settings = settingsData as any;

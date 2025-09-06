@@ -206,7 +206,7 @@ export const MusicManagement = () => {
           .from('gw_profiles')
           .select('role')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
         
         setUserRole(data?.role || null);
       } catch (error) {

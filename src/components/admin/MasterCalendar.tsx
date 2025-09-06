@@ -63,7 +63,7 @@ export const MasterCalendar = () => {
       .from('gw_calendars')
       .select('id')
       .eq('is_default', true)
-      .single();
+      .maybeSingle();
     
     return data?.id || '';
   };

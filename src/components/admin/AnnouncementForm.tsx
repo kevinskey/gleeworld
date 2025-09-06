@@ -51,7 +51,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ mode }) => {
         .from('gw_announcements')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       
@@ -88,14 +88,14 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ mode }) => {
           .from('gw_announcements')
           .insert(announcementData)
           .select()
-          .single();
+          .maybeSingle();
       } else {
         result = await supabase
           .from('gw_announcements')
           .update(announcementData)
           .eq('id', id!)
           .select()
-          .single();
+          .maybeSingle();
       }
 
       if (result.error) throw result.error;

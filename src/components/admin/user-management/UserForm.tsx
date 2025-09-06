@@ -200,7 +200,7 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
           .from('gw_executive_board_members')
           .select('id')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (existingExecMember) {
           // Update existing entry

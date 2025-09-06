@@ -126,7 +126,7 @@ export const UserFinancialRecords = () => {
                 .select('id')
                 .eq('user_id', user.user_id)
                 .eq('reference', `Contract ID: ${contract.id}`)
-                .single();
+                .maybeSingle();
 
               if (!existingRecord) {
                 const recordDate = new Date(contract.created_at).toISOString().split('T')[0];

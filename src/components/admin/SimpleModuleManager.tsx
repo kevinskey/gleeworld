@@ -80,14 +80,14 @@ export function SimpleModuleManager() {
             .from('gw_profiles')
             .select('email, full_name')
             .eq('user_id', assignment.user_id)
-            .single();
+            .maybeSingle();
           
           // Get module info
           const { data: moduleInfo } = await supabase
             .from('gw_modules')
             .select('key, name')
             .eq('id', assignment.module_id)
-            .single();
+            .maybeSingle();
           
           if (userProfile && moduleInfo) {
             transformedAssignments.push({
@@ -132,7 +132,7 @@ export function SimpleModuleManager() {
         .from('gw_profiles')
         .select('user_id')
         .eq('email', selectedUser)
-        .single();
+        .maybeSingle();
 
       if (userError) throw userError;
 
@@ -141,7 +141,7 @@ export function SimpleModuleManager() {
         .from('gw_modules')
         .select('id')
         .eq('key', selectedModule)
-        .single();
+        .maybeSingle();
 
       if (moduleError) throw moduleError;
 
