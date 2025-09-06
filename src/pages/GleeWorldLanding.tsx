@@ -308,7 +308,7 @@ export const GleeWorldLanding = () => {
       <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
-            <div className="h-[350px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] 2xl:h-[900px] relative overflow-hidden">
+            <div className="h-[420px] sm:h-[400px] md:h-[420px] lg:h-[420px] xl:h-[420px] 2xl:h-[420px] relative overflow-hidden">
               {heroSlides.length > 0 ? (
                 <>
                   {/* Desktop Image */}
