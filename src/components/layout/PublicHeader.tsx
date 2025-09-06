@@ -61,11 +61,16 @@ export const PublicHeader = () => {
 
             {/* Right side actions */}
             <div className="flex items-center gap-2 lg:gap-3">
-              {/* Auth Button */}
+              {/* Fan Auth Buttons */}
               {!user && (
-                <Button asChild className="hidden md:flex lg:text-base lg:px-6 lg:py-2">
-                  <Link to="/auth">Sign In</Link>
-                </Button>
+                <div className="hidden md:flex items-center gap-2">
+                  <Button variant="outline" asChild className="lg:text-base lg:px-4 lg:py-2">
+                    <Link to="/auth">Sign In</Link>
+                  </Button>
+                  <Button asChild className="lg:text-base lg:px-4 lg:py-2 bg-primary hover:bg-primary/90">
+                    <Link to="/auth?mode=signup&role=fan">Join as Fan</Link>
+                  </Button>
+                </div>
               )}
             
             {/* Friendly Mobile Menu - Shows below lg breakpoint */}
@@ -102,6 +107,16 @@ export const PublicHeader = () => {
                 </div>
                 <nav className="flex flex-col gap-1 pt-3">
                   <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
+                  {!user && (
+                    <div className="flex flex-col gap-2 pt-3 mt-3 border-t border-border">
+                      <Button variant="outline" asChild className="w-full" onClick={() => setIsOpen(false)}>
+                        <Link to="/auth">Sign In</Link>
+                      </Button>
+                      <Button asChild className="w-full bg-primary hover:bg-primary/90" onClick={() => setIsOpen(false)}>
+                        <Link to="/auth?mode=signup&role=fan">Join as Fan</Link>
+                      </Button>
+                    </div>
+                  )}
                 </nav>
               </DropdownMenuContent>
             </DropdownMenu>
