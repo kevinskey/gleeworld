@@ -336,8 +336,16 @@ const Profile = () => {
         mentor_opt_in: data.mentor_opt_in,
         reunion_rsvp: data.reunion_rsvp,
         
-        // Store measurements in JSONB column
+        // Store measurements in both JSONB column and individual columns for wardrobe sync
         measurements: measurementsData,
+        bust_measurement: data.bust_measurement ? parseFloat(data.bust_measurement) : null,
+        waist_measurement: data.waist_measurement ? parseFloat(data.waist_measurement) : null,
+        hips_measurement: data.hips_measurement ? parseFloat(data.hips_measurement) : null,
+        height_measurement: data.height_measurement ? parseFloat(data.height_measurement) : null,
+        
+        // Map form fields to database columns for wardrobe sync
+        formal_dress_size: data.dress_size || null, // map dress_size to formal_dress_size
+        tshirt_size: data.shirt_size || null, // map shirt_size to tshirt_size
         
         updated_at: new Date().toISOString(),
       };
@@ -353,6 +361,14 @@ const Profile = () => {
 
       console.log("🔍 Final updatePayload being sent to Supabase:", updatePayload);
       console.log("🔍 Payload keys:", Object.keys(updatePayload));
+      console.log("🔍 Measurement columns in payload:", {
+        bust_measurement: updatePayload.bust_measurement,
+        waist_measurement: updatePayload.waist_measurement,
+        hips_measurement: updatePayload.hips_measurement,
+        height_measurement: updatePayload.height_measurement,
+        formal_dress_size: updatePayload.formal_dress_size,
+        tshirt_size: updatePayload.tshirt_size
+      });
 
       const { error } = await supabase
         .from("gw_profiles")
