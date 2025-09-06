@@ -450,7 +450,7 @@ export const GleeWorldLanding = () => {
                       }}
                     >
                       {events.map((event) => (
-                        <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 h-[580px] relative group bg-card border-2 border-border hover:border-accent flex-shrink-0 w-72 lg:w-80 flex flex-col">
+                        <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 h-[420px] relative group bg-card border-2 border-border hover:border-accent flex-shrink-0 w-72 lg:w-80 flex flex-col">
                           {/* Hover overlay button */}
                           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg font-semibold border border-white/30" asChild>
@@ -499,7 +499,7 @@ export const GleeWorldLanding = () => {
                   {/* Mobile/Tablet view - Carousel */}
                   <div className="md:hidden">
                     <Carousel className="w-full">
-                      <CarouselContent className="-ml-2 sm:-ml-4 h-[600px] sm:h-[650px]">
+                      <CarouselContent className="-ml-2 sm:-ml-4 h-[450px] sm:h-[480px]">
                         {events.map((event) => (
                           <CarouselItem key={event.id} className="pl-2 sm:pl-4 basis-full h-full">
                             <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 flex flex-col">
