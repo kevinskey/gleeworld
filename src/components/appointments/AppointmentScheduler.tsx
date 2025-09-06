@@ -129,7 +129,7 @@ export const AppointmentScheduler = () => {
             break;
           }
           
-          const timeString = format(currentTime, 'HH:mm');
+          const timeString = format(currentTime, 'h:mm a');
           
           // Check if this slot conflicts with existing appointments
           const isAvailable = !existingAppointments?.some(apt => {

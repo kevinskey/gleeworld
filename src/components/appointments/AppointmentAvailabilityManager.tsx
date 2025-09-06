@@ -9,6 +9,7 @@ import { Clock, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { format, parse } from 'date-fns';
 
 interface AvailabilitySlot {
   id: string;
@@ -225,7 +226,7 @@ export const AppointmentAvailabilityManager = () => {
                     {daysOfWeek[slot.day_of_week]}
                   </Badge>
                   <span className="text-sm">
-                    {slot.start_time} - {slot.end_time}
+                    {format(parse(slot.start_time, 'HH:mm', new Date()), 'h:mm a')} - {format(parse(slot.end_time, 'HH:mm', new Date()), 'h:mm a')}
                   </span>
                   <Switch
                     checked={slot.is_available}

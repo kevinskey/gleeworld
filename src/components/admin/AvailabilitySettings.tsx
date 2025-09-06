@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { format, parse } from 'date-fns';
 
 interface BusinessHours {
   start: string;
@@ -70,6 +71,15 @@ export const AvailabilitySettings = () => {
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [newBlockedDate, setNewBlockedDate] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Helper function to convert 24-hour time to 12-hour format
+  const formatTo12Hour = (time24: string) => {
+    try {
+      return format(parse(time24, 'HH:mm', new Date()), 'h:mm a');
+    } catch {
+      return time24;
+    }
+  };
 
   const updateBusinessHours = (day: string, field: keyof BusinessHours, value: string | boolean) => {
     setConfig(prev => ({
@@ -252,21 +262,31 @@ export const AvailabilitySettings = () => {
               </div>
               <div className="w-20 text-sm font-medium">{label}</div>
               <div className="flex items-center gap-2">
-                <Input
-                  type="time"
-                  value={config.businessHours[key as keyof typeof config.businessHours].start}
-                  onChange={(e) => updateBusinessHours(key, 'start', e.target.value)}
-                  disabled={!config.businessHours[key as keyof typeof config.businessHours].enabled}
-                  className="w-32"
-                />
+                <div className="flex flex-col gap-1">
+                  <Input
+                    type="time"
+                    value={config.businessHours[key as keyof typeof config.businessHours].start}
+                    onChange={(e) => updateBusinessHours(key, 'start', e.target.value)}
+                    disabled={!config.businessHours[key as keyof typeof config.businessHours].enabled}
+                    className="w-32"
+                  />
+                  <span className="text-xs text-muted-foreground text-center">
+                    {formatTo12Hour(config.businessHours[key as keyof typeof config.businessHours].start)}
+                  </span>
+                </div>
                 <span>to</span>
-                <Input
-                  type="time"
-                  value={config.businessHours[key as keyof typeof config.businessHours].end}
-                  onChange={(e) => updateBusinessHours(key, 'end', e.target.value)}
-                  disabled={!config.businessHours[key as keyof typeof config.businessHours].enabled}
-                  className="w-32"
-                />
+                <div className="flex flex-col gap-1">
+                  <Input
+                    type="time"
+                    value={config.businessHours[key as keyof typeof config.businessHours].end}
+                    onChange={(e) => updateBusinessHours(key, 'end', e.target.value)}
+                    disabled={!config.businessHours[key as keyof typeof config.businessHours].enabled}
+                    className="w-32"
+                  />
+                  <span className="text-xs text-muted-foreground text-center">
+                    {formatTo12Hour(config.businessHours[key as keyof typeof config.businessHours].end)}
+                  </span>
+                </div>
               </div>
             </div>
           ))}
