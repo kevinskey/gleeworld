@@ -77,6 +77,7 @@ import ServiceManagement from '@/components/admin/ServiceManagement';
 import MediaLibrary from '@/pages/admin/MediaLibrary';
 import { RadioManagement } from '@/components/admin/RadioManagement';
 import { TheoryPollModule } from '@/components/modules/TheoryPollModule';
+import { ProductManagement } from '@/pages/ProductManagement';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -491,12 +492,12 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     id: "merch-store",
     name: "merch-store",
     title: "Glee Merch Store",
-    description: "Manage merchandise sales and inventory",
+    description: "Manage merchandise sales, inventory, and orders",
     icon: ShoppingCart,
     iconColor: "yellow",
     category: "finances",
     isActive: true,
-    component: UserManagementModule, // Placeholder
+    component: ProductManagement,
     dbFunctionName: "merch-store"
   },
   {
