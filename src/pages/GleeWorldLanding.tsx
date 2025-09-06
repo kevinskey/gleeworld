@@ -267,81 +267,101 @@ export const GleeWorldLanding = () => {
       <PublicLayout>
 
 
-      {/* Hero Section */}
-      <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
-        <div className="w-full max-w-screen-2xl mx-auto">
-          <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
-            <div className="h-[350px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] 2xl:h-[900px] relative overflow-hidden">
-              {heroSlides.length > 0 ? <>
-                  {/* Desktop Image */}
-                  <img src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="hidden md:block w-full h-full object-contain transition-opacity duration-500 brightness-95 contrast-100" onError={e => {
-                  console.log('Hero image failed to load, using fallback');
-                  // Only fallback if the current src is not already the fallback
-                  if (!e.currentTarget.src.includes('unsplash.com')) {
-                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-                  }
-                }} />
-                  
-                  {/* iPad Image */}
-                  <img src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="hidden sm:block md:hidden w-full h-full object-contain transition-opacity duration-500 brightness-95 contrast-100" onError={e => {
-                  console.log('iPad hero image failed to load, using fallback');
-                  if (!e.currentTarget.src.includes('unsplash.com')) {
-                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-                  }
-                }} />
-                  
-                  {/* Mobile Image */}
-                  <img src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="block sm:hidden w-full h-full object-contain object-center transition-opacity duration-500 brightness-95 contrast-100" onError={e => {
-                  console.log('Mobile hero image failed to load, using fallback');
-                  if (!e.currentTarget.src.includes('unsplash.com')) {
-                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-                  }
-                }} />
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-primary/20"></div>
-                  
-                  {/* Content overlay - positioned elements */}
-                  <div className="absolute inset-0">
-                    {/* Title Section */}
-                    {currentHeroSlide?.title && <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.title_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.title_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none`}>
-                        <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold text-white max-w-5xl pointer-events-auto drop-shadow-2xl text-center sm:text-left leading-tight`}>
-                          {currentHeroSlide.title}
-                        </h1>
-                      </div>}
-                    
-                    {/* Description Section */}
-                     {currentHeroSlide?.description && <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.description_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.description_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none`}>
-                         <p className={`${getDescriptionSize(currentHeroSlide.description_size)} text-white/90 max-w-3xl pointer-events-auto drop-shadow-lg text-center sm:text-left leading-relaxed`}>
-                           {currentHeroSlide.description}
-                         </p>
-                       </div>}
-                    
-                     {/* Action Button Section */}
-                     {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && currentHeroSlide?.action_button_url && <div className="absolute inset-0 flex justify-center items-end pb-6 sm:pb-8 md:pb-10 lg:pb-12 xl:pb-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none">
-                         <Button size="lg" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-white/20 text-sm sm:text-base md:text-lg px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5" asChild>
-                           <a href={currentHeroSlide.action_button_url} target="_blank" rel="noopener noreferrer">
-                             {currentHeroSlide.action_button_text}
-                           </a>
-                         </Button>
-                       </div>}
-                     
-                     {/* Legacy button support */}
-                     {!currentHeroSlide?.action_button_enabled && currentHeroSlide?.button_text && currentHeroSlide?.link_url && <div className="absolute inset-0 flex justify-center items-end pb-6 sm:pb-8 md:pb-10 lg:pb-12 xl:pb-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none">
-                         <Button size="lg" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-white/20 text-sm sm:text-base md:text-lg px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5" asChild>
-                           <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
-                             {currentHeroSlide.button_text}
-                           </a>
-                         </Button>
-                       </div>}
-                  </div>
-                  
-                </> : <div className="w-full h-full bg-muted flex items-center justify-center">
-                  <div className="text-center p-4">
-                    <Calendar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 text-muted-foreground mx-auto mb-3 sm:mb-4" />
-                    <p className="text-muted-foreground text-sm sm:text-base">No hero slides configured</p>
-                  </div>
-                </div>}
-            </div>
-          </Card>
+      {/* Custom Hero Section */}
+      <section className="hero relative min-h-[72vh] grid place-items-center text-white" style={{
+        background: `
+          linear-gradient(to bottom, rgba(0,0,0,.25), rgba(0,0,0,.55)),
+          url('https://files.gleeworld.org/media/glee-hero-stage.jpg') center/cover no-repeat
+        `
+      }}>
+        <div className="hero__overlay absolute inset-0 pointer-events-none" style={{
+          background: 'linear-gradient(180deg, rgba(29,78,137,.6) 0%, rgba(22,58,102,.85) 100%)'
+        }}></div>
+        
+        <div className="hero__content relative w-full max-w-[1120px] text-center px-4 py-16 sm:py-20">
+          <h1 className="text-white text-center font-bold tracking-wide mb-2" style={{
+            fontFamily: '"Bebas Neue", Impact, system-ui, sans-serif',
+            fontSize: 'clamp(2rem, 4vw + 1rem, 4rem)',
+            letterSpacing: '.5px'
+          }}>
+            Become a Fan of the Spelman College Glee Club
+          </h1>
+          
+          <p className="hero__subtext text-white/95 text-center max-w-[60ch] mx-auto mb-6 leading-relaxed" style={{
+            fontFamily: 'Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif',
+            fontSize: 'clamp(1rem, .6vw + .9rem, 1.25rem)',
+            lineHeight: '1.55'
+          }}>
+            Celebrate 100 years of tradition, excellence, and innovation in choral music. Join a global community of alumnae, supporters, and friends who keep the legacy alive.
+          </p>
+          
+          <Link 
+            to="/fan/signup" 
+            className="hero__cta inline-block text-gray-900 px-5 py-3.5 rounded-full font-semibold no-underline transition-all duration-150 shadow-lg hover:transform hover:-translate-y-0.5 active:transform active:translate-y-0" 
+            style={{
+              background: '#C9A857',
+              boxShadow: '0 8px 24px rgba(0,0,0,.22)'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#a78841'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#C9A857'}
+          >
+            Join the Fan Community
+          </Link>
+
+          <ul className="hero__benefits grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5 list-none p-0 mt-7 mx-auto max-w-[80ch] text-left text-white" style={{
+            fontFamily: 'Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif',
+            fontSize: 'clamp(.98rem, .5vw + .85rem, 1.05rem)'
+          }}>
+            <li className="pl-7 relative leading-6">
+              <span className="absolute left-1 top-2.5 w-2.5 h-2.5 rounded-full" style={{
+                background: '#C9A857',
+                boxShadow: '0 0 0 3px rgba(201,168,87,.22)'
+              }}></span>
+              <strong>Exclusive Updates:</strong> Early access to news, concerts, and Centennial events.
+            </li>
+            <li className="pl-7 relative leading-6">
+              <span className="absolute left-1 top-2.5 w-2.5 h-2.5 rounded-full" style={{
+                background: '#C9A857',
+                boxShadow: '0 0 0 3px rgba(201,168,87,.22)'
+              }}></span>
+              <strong>Behind-the-Scenes Content:</strong> Rehearsal clips, interviews, and student features.
+            </li>
+            <li className="pl-7 relative leading-6">
+              <span className="absolute left-1 top-2.5 w-2.5 h-2.5 rounded-full" style={{
+                background: '#C9A857',
+                boxShadow: '0 0 0 3px rgba(201,168,87,.22)'
+              }}></span>
+              <strong>Digital Perks:</strong> Access to the GleeWorld radio stream, archives, and fan-only downloads.
+            </li>
+            <li className="pl-7 relative leading-6">
+              <span className="absolute left-1 top-2.5 w-2.5 h-2.5 rounded-full" style={{
+                background: '#C9A857',
+                boxShadow: '0 0 0 3px rgba(201,168,87,.22)'
+              }}></span>
+              <strong>Community Recognition:</strong> Name listed in the <em>GleeWorld Honor Roll of Fans</em>.
+            </li>
+            <li className="pl-7 relative leading-6">
+              <span className="absolute left-1 top-2.5 w-2.5 h-2.5 rounded-full" style={{
+                background: '#C9A857',
+                boxShadow: '0 0 0 3px rgba(201,168,87,.22)'
+              }}></span>
+              <strong>Merch Discounts:</strong> Special pricing on Centennial apparel and music releases.
+            </li>
+            <li className="pl-7 relative leading-6">
+              <span className="absolute left-1 top-2.5 w-2.5 h-2.5 rounded-full" style={{
+                background: '#C9A857',
+                boxShadow: '0 0 0 3px rgba(201,168,87,.22)'
+              }}></span>
+              <strong>VIP Invitations:</strong> Priority registration for concerts, livestreams, and tours.
+            </li>
+            <li className="pl-7 relative leading-6 sm:col-span-2 sm:text-center">
+              <span className="absolute left-1 top-2.5 w-2.5 h-2.5 rounded-full sm:relative sm:inline-block sm:mr-2 sm:top-0.5" style={{
+                background: '#C9A857',
+                boxShadow: '0 0 0 3px rgba(201,168,87,.22)'
+              }}></span>
+              <strong>Support Student Success:</strong> Contributions uplift scholarships and learning experiences.
+            </li>
+          </ul>
         </div>
       </section>
 
