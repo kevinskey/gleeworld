@@ -252,7 +252,7 @@ export const FeaturedProducts = ({
               
               <CardContent className="p-4 space-y-3">
                 <div className="space-y-1">
-                  <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
+                  <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors pt-2.5">
                     {product.name}
                   </h3>
                   {(product.short_description || product.description) && (
