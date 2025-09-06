@@ -661,7 +661,7 @@ export const GleeWorldLanding = () => {
                           </div>
                         </div>
                         <CardContent className="p-3 sm:p-4">
-                          <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1 text-sm sm:text-base">{album.title}</h3>
+                          <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">{album.title}</h3>
                           <p className="text-xs sm:text-sm text-gray-600 line-clamp-1">{album.artist}</p>
                           {album.tracks && album.tracks.length > 0 && (
                             <p className="text-xs text-gray-500 mt-1">{album.tracks.length} track{album.tracks.length !== 1 ? 's' : ''}</p>
