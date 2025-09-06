@@ -55,7 +55,7 @@ export const PublicHeader = () => {
             </Link>
             
             {/* Center Navigation */}
-            <div className="hidden md:flex">
+            <div className="hidden lg:flex">
               <ResponsiveNavigation />
             </div>
 
@@ -64,10 +64,10 @@ export const PublicHeader = () => {
               {/* Fan Auth Buttons */}
               {!user && (
                 <div className="hidden md:flex items-center gap-2">
-                  <Button variant="outline" asChild className="lg:text-base lg:px-4 lg:py-2">
+                  <Button variant="outline" asChild className="text-sm lg:text-base px-3 lg:px-4 py-1.5 lg:py-2">
                     <Link to="/auth">Sign In</Link>
                   </Button>
-                  <Button asChild className="lg:text-base lg:px-4 lg:py-2 bg-primary hover:bg-primary/90">
+                  <Button asChild className="text-sm lg:text-base px-3 lg:px-4 py-1.5 lg:py-2 bg-primary hover:bg-primary/90 whitespace-nowrap">
                     <Link to="/auth?mode=signup&role=fan">Join as Fan</Link>
                   </Button>
                 </div>
