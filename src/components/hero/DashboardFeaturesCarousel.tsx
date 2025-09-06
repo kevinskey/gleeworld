@@ -101,7 +101,7 @@ export const DashboardFeaturesCarousel: React.FC = () => {
                           <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-white drop-shadow-2xl">
                             Your Musical Journey Starts Here
                           </h3>
-                          <p className="text-sm md:text-base text-white/95 max-w-lg mx-auto drop-shadow-lg">
+                          <p className="text-base md:text-lg text-white/95 max-w-lg mx-auto drop-shadow-lg">
                             Join 100+ years of excellence. Complete your profile and become part of our legacy.
                           </p>
                         </div>
