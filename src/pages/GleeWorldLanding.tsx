@@ -537,7 +537,7 @@ export const GleeWorldLanding = () => {
                                     </div>
                                   )}
                                 </div>
-                                <div className="flex-1">
+                                <div className="flex-1 max-h-[50%]">
                                   {event.description && (
                                     <p className="text-gray-600 mt-3 sm:mt-4 line-clamp-3 text-sm sm:text-base lg:text-lg">{event.description}</p>
                                   )}
