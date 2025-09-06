@@ -115,7 +115,7 @@ export const UnifiedDashboard = () => {
           {/* Glee Academy Hero Section */}
           <div className="relative bg-gradient-to-r from-primary/90 to-primary rounded-xl overflow-hidden cursor-pointer shadow-lg" onClick={() => window.location.href = '/glee-academy'}>
             <div className="absolute inset-0 bg-black/20"></div>
-            <div className="relative z-10 p-8 text-white">
+            <div className="relative z-10 p-[30px] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold mb-2 text-white">Welcome to Glee Academy</h1>
