@@ -450,7 +450,7 @@ export const GleeWorldLanding = () => {
                       }}
                     >
                       {events.map((event) => (
-                        <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 h-full relative group bg-card border-2 border-border hover:border-accent flex-shrink-0 w-72 lg:w-80">
+                        <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 h-full relative group bg-card border-2 border-border hover:border-accent flex-shrink-0 w-72 lg:w-80 flex flex-col">
                           {/* Hover overlay button */}
                           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg font-semibold border border-white/30" asChild>
@@ -471,7 +471,7 @@ export const GleeWorldLanding = () => {
                               }}
                             />
                           </div>
-                          <CardContent className="p-4 lg:p-6">
+                          <CardContent className="p-4 lg:p-6 flex-1 flex flex-col">
                             <h3 className="text-lg lg:text-xl font-semibold text-card-foreground mb-3 lg:mb-4 line-clamp-2">{event.title}</h3>
                             <div className="space-y-2 text-muted-foreground">
                               <div className="flex items-center">
@@ -485,9 +485,11 @@ export const GleeWorldLanding = () => {
                                 </div>
                               )}
                             </div>
-                            {event.description && (
-                              <p className="text-muted-foreground mt-3 line-clamp-2 text-sm">{event.description}</p>
-                            )}
+                            <div className="flex-1">
+                              {event.description && (
+                                <p className="text-muted-foreground mt-3 line-clamp-2 text-sm">{event.description}</p>
+                              )}
+                            </div>
                           </CardContent>
                         </Card>
                       ))}
