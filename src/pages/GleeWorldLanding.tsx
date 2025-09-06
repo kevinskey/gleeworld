@@ -267,6 +267,107 @@ export const GleeWorldLanding = () => {
       <PublicLayout>
 
 
+      {/* Original Hero Section with Carousel */}
+      {heroSlides.length > 0 ? (
+        <section className="relative z-20 h-[70vh] sm:h-[75vh] md:h-[80vh] lg:h-[85vh] w-full overflow-hidden">
+          <div className="relative w-full h-full">
+            {/* Current slide background */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ease-in-out"
+              style={{
+                backgroundImage: `url(${
+                  currentHeroSlide?.mobile_image_url && window.innerWidth < 768 
+                    ? currentHeroSlide.mobile_image_url
+                    : currentHeroSlide?.ipad_image_url && window.innerWidth < 1024
+                    ? currentHeroSlide.ipad_image_url
+                    : currentHeroSlide?.image_url
+                })`
+              }}
+            />
+            
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/40" />
+            
+            {/* Content */}
+            <div className={`
+              relative z-10 h-full flex flex-col
+              ${getVerticalAlignment(currentHeroSlide?.title_position_vertical)}
+              ${getHorizontalAlignment(currentHeroSlide?.title_position_horizontal)}
+              px-4 sm:px-6 md:px-8 lg:px-12
+            `}>
+              <div className="max-w-4xl">
+                {currentHeroSlide?.title && (
+                  <h1 className={`
+                    ${getTitleSize(currentHeroSlide.title_size)}
+                    font-bold text-white mb-4 sm:mb-6
+                    drop-shadow-lg
+                  `}>
+                    {currentHeroSlide.title}
+                  </h1>
+                )}
+                
+                {currentHeroSlide?.description && (
+                  <p className={`
+                    ${getDescriptionSize(currentHeroSlide.description_size)}
+                    text-white/90 mb-6 sm:mb-8
+                    drop-shadow-md
+                  `}>
+                    {currentHeroSlide.description}
+                  </p>
+                )}
+                
+                {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && (
+                  <Button 
+                    size="lg" 
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl border border-white/30"
+                    asChild
+                  >
+                    <Link to={currentHeroSlide.action_button_url || '#'}>
+                      {currentHeroSlide.action_button_text}
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            {/* Slide indicators */}
+            {heroSlides.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
+                {heroSlides.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`
+                      w-3 h-3 rounded-full transition-all duration-300
+                      ${index === currentSlide 
+                        ? 'bg-white shadow-lg' 
+                        : 'bg-white/50 hover:bg-white/75'
+                      }
+                    `}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      ) : (
+        <section className="relative z-20 h-[70vh] sm:h-[75vh] md:h-[80vh] lg:h-[85vh] w-full overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-accent">
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="relative z-10 h-full flex flex-col justify-center items-center text-center px-4 sm:px-6 md:px-8 lg:px-12">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 drop-shadow-lg">
+              Welcome to GleeWorld
+            </h1>
+            <p className="text-xl sm:text-2xl md:text-3xl text-white/90 mb-8 max-w-4xl drop-shadow-md">
+              Experience the legacy of the Spelman College Glee Club
+            </p>
+            <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-xl">
+              Explore Our Music
+            </Button>
+          </div>
+        </section>
+      )}
+
       {/* Custom Hero Section */}
       <section className="hero relative min-h-[72vh] grid place-items-center text-white" style={{
         background: `
