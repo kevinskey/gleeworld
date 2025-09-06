@@ -78,8 +78,12 @@ export const CalendarControlsAdmin = () => {
     try {
       const { error } = await supabase
         .from('user_preferences')
-        .update({ calendar_controls_enabled: enabled })
-        .eq('user_id', userId);
+        .upsert({ 
+          user_id: userId,
+          calendar_controls_enabled: enabled 
+        }, { 
+          onConflict: 'user_id' 
+        });
 
       if (error) throw error;
 

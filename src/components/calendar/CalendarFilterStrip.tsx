@@ -127,6 +127,8 @@ export const CalendarFilterStrip = ({ onCalendarsChange }: CalendarFilterStripPr
           user_id: user.id,
           selected_calendars: newSelectedIds,
           calendar_controls_enabled: calendarControlsEnabled
+        }, { 
+          onConflict: 'user_id' 
         });
 
       if (error) throw error;

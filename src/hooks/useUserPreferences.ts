@@ -36,10 +36,16 @@ export const useUserPreferences = () => {
         .from('user_preferences')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+      if (error) {
+        console.error('Error fetching user preferences:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load user preferences",
+          variant: "destructive",
+        });
+        return;
       }
 
       if (data) {
@@ -53,12 +59,7 @@ export const useUserPreferences = () => {
         await createDefaultPreferences();
       }
     } catch (error) {
-      console.error('Error fetching user preferences:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load user preferences",
-        variant: "destructive",
-      });
+      console.error('Unexpected error in fetchPreferences:', error);
     } finally {
       setLoading(false);
     }
@@ -70,23 +71,30 @@ export const useUserPreferences = () => {
     try {
       const { data, error } = await supabase
         .from('user_preferences')
-        .insert({
+        .upsert({
           user_id: user.id,
           tooltips_enabled: defaultPreferences.tooltips_enabled,
           tooltip_delay: defaultPreferences.tooltip_delay,
+        }, { 
+          onConflict: 'user_id' 
         })
         .select()
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating default preferences:', error);
+        return;
+      }
 
-      setPreferences({
-        id: data.id,
-        tooltips_enabled: data.tooltips_enabled,
-        tooltip_delay: data.tooltip_delay,
-      });
+      if (data) {
+        setPreferences({
+          id: data.id,
+          tooltips_enabled: data.tooltips_enabled,
+          tooltip_delay: data.tooltip_delay,
+        });
+      }
     } catch (error) {
-      console.error('Error creating default preferences:', error);
+      console.error('Unexpected error in createDefaultPreferences:', error);
     }
   };
 
