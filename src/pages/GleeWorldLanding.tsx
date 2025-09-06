@@ -290,7 +290,7 @@ export const GleeWorldLanding = () => {
             
             {/* Content */}
             <div className={`
-              relative z-10 h-full flex flex-col rounded-lg
+              relative z-10 h-full flex flex-col rounded-lg contain-layout
               ${getVerticalAlignment(currentHeroSlide?.title_position_vertical)}
               ${getHorizontalAlignment(currentHeroSlide?.title_position_horizontal)}
               px-4 sm:px-6 md:px-8 lg:px-12
