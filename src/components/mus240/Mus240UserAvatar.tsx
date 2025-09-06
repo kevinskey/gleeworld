@@ -12,7 +12,7 @@ export const Mus240UserAvatar: React.FC = () => {
       if (!user?.id) return;
       const {
         data
-      } = await supabase.from('gw_profiles').select('full_name, avatar_url').eq('user_id', user.id).single();
+      } = await supabase.from('gw_profiles').select('full_name, avatar_url').eq('user_id', user.id).maybeSingle();
       setProfile(data);
     };
     fetchProfile();

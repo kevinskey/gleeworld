@@ -89,7 +89,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
         .from('gw_profiles')
         .select('is_admin, is_super_admin, is_exec_board, email')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       console.log('🔍 Profile data:', profile);
 

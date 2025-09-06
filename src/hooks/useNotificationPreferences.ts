@@ -49,7 +49,7 @@ export const useNotificationPreferences = () => {
     try {
       const { data, error } = await supabase
         .from('gw_notification_preferences')
-        .insert({
+        .upsert({
           user_id: user.id,
           email_enabled: true,
           sms_enabled: false,
@@ -61,16 +61,20 @@ export const useNotificationPreferences = () => {
           attendance_alerts: true,
           financial_updates: false,
           marketing_emails: false
+        }, { 
+          onConflict: 'user_id' 
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error creating default preferences:', error);
         return;
       }
 
-      setPreferences(data);
+      if (data) {
+        setPreferences(data);
+      }
     } catch (error) {
       console.error('Error creating default preferences:', error);
     }
@@ -86,7 +90,7 @@ export const useNotificationPreferences = () => {
         .update(updates)
         .eq('user_id', user.id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error updating preferences:', error);
@@ -94,8 +98,10 @@ export const useNotificationPreferences = () => {
         return false;
       }
 
-      setPreferences(data);
-      toast.success('Notification preferences updated');
+      if (data) {
+        setPreferences(data);
+        toast.success('Notification preferences updated');
+      }
       return true;
     } catch (error) {
       console.error('Error updating preferences:', error);
