@@ -8160,8 +8160,10 @@ export type Database = {
           allergies: string | null
           avatar_url: string | null
           bio: string | null
+          bust_measurement: number | null
           calendar_feed_token: string | null
           can_dance: boolean | null
+          chest_measurement: number | null
           class_year: number | null
           created_at: string | null
           current_cart_id: string | null
@@ -8178,14 +8180,18 @@ export type Database = {
           emergency_contact: string | null
           exec_board_role: string | null
           first_name: string | null
+          formal_dress_size: string | null
           full_name: string | null
           gpa: number | null
           graduation_year: number | null
           hair_color: string | null
           has_tattoos: boolean | null
           headshot_url: string | null
+          height_measurement: number | null
+          hips_measurement: number | null
           home_address: string | null
           id: string
+          inseam_measurement: number | null
           instruments_played: string[] | null
           is_admin: boolean | null
           is_exec_board: boolean | null
@@ -8194,8 +8200,11 @@ export type Database = {
           join_date: string | null
           last_name: string | null
           last_sign_in_at: string | null
+          lipstick_shade: string | null
           major: string | null
           measurements: Json | null
+          measurements_taken_by: string | null
+          measurements_taken_date: string | null
           media_consent: boolean | null
           media_release_signed_at: string | null
           mentor_opt_in: boolean | null
@@ -8205,9 +8214,11 @@ export type Database = {
           notes: string | null
           org: string | null
           parent_guardian_contact: string | null
+          pearl_status: string | null
           phone: string | null
           phone_number: string | null
           photo_consent: boolean | null
+          polo_size: string | null
           preferred_payment_method: string | null
           pronouns: string | null
           reunion_rsvp: boolean | null
@@ -8221,12 +8232,14 @@ export type Database = {
           student_id: string | null
           student_number: string | null
           title: string | null
+          tshirt_size: string | null
           updated_at: string | null
           user_id: string | null
           verified: boolean | null
           visible_piercings: boolean | null
           voice_part: string | null
           voice_part_preference: string | null
+          waist_measurement: number | null
           wardrobe_assignments: Json | null
           website_url: string | null
           workplace: string | null
@@ -8239,8 +8252,10 @@ export type Database = {
           allergies?: string | null
           avatar_url?: string | null
           bio?: string | null
+          bust_measurement?: number | null
           calendar_feed_token?: string | null
           can_dance?: boolean | null
+          chest_measurement?: number | null
           class_year?: number | null
           created_at?: string | null
           current_cart_id?: string | null
@@ -8257,14 +8272,18 @@ export type Database = {
           emergency_contact?: string | null
           exec_board_role?: string | null
           first_name?: string | null
+          formal_dress_size?: string | null
           full_name?: string | null
           gpa?: number | null
           graduation_year?: number | null
           hair_color?: string | null
           has_tattoos?: boolean | null
           headshot_url?: string | null
+          height_measurement?: number | null
+          hips_measurement?: number | null
           home_address?: string | null
           id?: string
+          inseam_measurement?: number | null
           instruments_played?: string[] | null
           is_admin?: boolean | null
           is_exec_board?: boolean | null
@@ -8273,8 +8292,11 @@ export type Database = {
           join_date?: string | null
           last_name?: string | null
           last_sign_in_at?: string | null
+          lipstick_shade?: string | null
           major?: string | null
           measurements?: Json | null
+          measurements_taken_by?: string | null
+          measurements_taken_date?: string | null
           media_consent?: boolean | null
           media_release_signed_at?: string | null
           mentor_opt_in?: boolean | null
@@ -8284,9 +8306,11 @@ export type Database = {
           notes?: string | null
           org?: string | null
           parent_guardian_contact?: string | null
+          pearl_status?: string | null
           phone?: string | null
           phone_number?: string | null
           photo_consent?: boolean | null
+          polo_size?: string | null
           preferred_payment_method?: string | null
           pronouns?: string | null
           reunion_rsvp?: boolean | null
@@ -8300,12 +8324,14 @@ export type Database = {
           student_id?: string | null
           student_number?: string | null
           title?: string | null
+          tshirt_size?: string | null
           updated_at?: string | null
           user_id?: string | null
           verified?: boolean | null
           visible_piercings?: boolean | null
           voice_part?: string | null
           voice_part_preference?: string | null
+          waist_measurement?: number | null
           wardrobe_assignments?: Json | null
           website_url?: string | null
           workplace?: string | null
@@ -8318,8 +8344,10 @@ export type Database = {
           allergies?: string | null
           avatar_url?: string | null
           bio?: string | null
+          bust_measurement?: number | null
           calendar_feed_token?: string | null
           can_dance?: boolean | null
+          chest_measurement?: number | null
           class_year?: number | null
           created_at?: string | null
           current_cart_id?: string | null
@@ -8336,14 +8364,18 @@ export type Database = {
           emergency_contact?: string | null
           exec_board_role?: string | null
           first_name?: string | null
+          formal_dress_size?: string | null
           full_name?: string | null
           gpa?: number | null
           graduation_year?: number | null
           hair_color?: string | null
           has_tattoos?: boolean | null
           headshot_url?: string | null
+          height_measurement?: number | null
+          hips_measurement?: number | null
           home_address?: string | null
           id?: string
+          inseam_measurement?: number | null
           instruments_played?: string[] | null
           is_admin?: boolean | null
           is_exec_board?: boolean | null
@@ -8352,8 +8384,11 @@ export type Database = {
           join_date?: string | null
           last_name?: string | null
           last_sign_in_at?: string | null
+          lipstick_shade?: string | null
           major?: string | null
           measurements?: Json | null
+          measurements_taken_by?: string | null
+          measurements_taken_date?: string | null
           media_consent?: boolean | null
           media_release_signed_at?: string | null
           mentor_opt_in?: boolean | null
@@ -8363,9 +8398,11 @@ export type Database = {
           notes?: string | null
           org?: string | null
           parent_guardian_contact?: string | null
+          pearl_status?: string | null
           phone?: string | null
           phone_number?: string | null
           photo_consent?: boolean | null
+          polo_size?: string | null
           preferred_payment_method?: string | null
           pronouns?: string | null
           reunion_rsvp?: boolean | null
@@ -8379,12 +8416,14 @@ export type Database = {
           student_id?: string | null
           student_number?: string | null
           title?: string | null
+          tshirt_size?: string | null
           updated_at?: string | null
           user_id?: string | null
           verified?: boolean | null
           visible_piercings?: boolean | null
           voice_part?: string | null
           voice_part_preference?: string | null
+          waist_measurement?: number | null
           wardrobe_assignments?: Json | null
           website_url?: string | null
           workplace?: string | null
