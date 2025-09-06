@@ -502,7 +502,7 @@ export const GleeWorldLanding = () => {
                       <CarouselContent className="-ml-2 sm:-ml-4">
                         {events.map((event) => (
                           <CarouselItem key={event.id} className="pl-2 sm:pl-4 basis-full">
-                            <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
+                            <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 flex flex-col">
                               {/* Hover overlay button */}
                               <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30" asChild>
@@ -523,7 +523,7 @@ export const GleeWorldLanding = () => {
                                   }}
                                 />
                               </div>
-                              <CardContent className="p-4 sm:p-6">
+                              <CardContent className="p-4 sm:p-6 flex-1 flex flex-col">
                                 <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4 line-clamp-2">{event.title}</h3>
                                 <div className="space-y-2 text-gray-600">
                                   <div className="flex items-center">
@@ -537,9 +537,11 @@ export const GleeWorldLanding = () => {
                                     </div>
                                   )}
                                 </div>
-                                {event.description && (
-                                  <p className="text-gray-600 mt-3 sm:mt-4 line-clamp-3 text-sm sm:text-base lg:text-lg">{event.description}</p>
-                                )}
+                                <div className="flex-1">
+                                  {event.description && (
+                                    <p className="text-gray-600 mt-3 sm:mt-4 line-clamp-3 text-sm sm:text-base lg:text-lg">{event.description}</p>
+                                  )}
+                                </div>
                               </CardContent>
                             </Card>
                           </CarouselItem>
