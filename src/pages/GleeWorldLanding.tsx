@@ -443,7 +443,7 @@ export const GleeWorldLanding = () => {
                   {/* Desktop view - Single horizontal scrolling row */}
                   <div className="hidden md:block">
                     <div 
-                      className="flex gap-4 lg:gap-6 overflow-x-scroll pb-4 scrollbar-hide"
+                      className="flex gap-4 lg:gap-6 overflow-x-scroll pb-4 scrollbar-hide items-stretch"
                       style={{ 
                         scrollBehavior: 'smooth',
                         WebkitOverflowScrolling: 'touch'
