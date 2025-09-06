@@ -274,7 +274,7 @@ export const FeaturedProducts = ({
                         </span>
                       </div>
                     ) : (
-                      <div className="text-2xl font-bold text-primary">
+                      <div className="text-xl font-bold text-primary">
                         {formatPrice(getCurrentPrice(product))}
                       </div>
                     )}
