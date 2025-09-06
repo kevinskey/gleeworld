@@ -31,7 +31,6 @@ export const useUserPreferences = () => {
   const fetchPreferences = async () => {
     if (!user) return;
 
-    console.log('🔍 Fetching user preferences for user:', user.id);
     try {
       const { data, error } = await supabase
         .from('user_preferences')
@@ -40,7 +39,7 @@ export const useUserPreferences = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('❌ Error fetching user preferences:', error);
+        console.error('Error fetching user preferences:', error);
         toast({
           title: "Error",
           description: "Failed to load user preferences",
@@ -48,8 +47,6 @@ export const useUserPreferences = () => {
         });
         return;
       }
-
-      console.log('✅ User preferences data:', data);
 
       if (data) {
         setPreferences({
@@ -71,7 +68,6 @@ export const useUserPreferences = () => {
   const createDefaultPreferences = async () => {
     if (!user) return;
 
-    console.log('🔍 Creating default preferences for user:', user.id);
     try {
       const { data, error } = await supabase
         .from('user_preferences')

@@ -29,7 +29,7 @@ export const StipendManagement = () => {
             .from('gw_profiles')
             .select('user_id')
             .eq('email', stipend.user_email)
-            .single()).data?.user_id,
+            .maybeSingle()).data?.user_id,
           amount: stipend.amount,
           payment_date: new Date().toISOString().split('T')[0],
           payment_method: 'manual',
