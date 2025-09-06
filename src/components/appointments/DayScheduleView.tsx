@@ -322,7 +322,15 @@ export const DayScheduleView = () => {
           {timeSlots.map(timeSlot => (
             <React.Fragment key={timeSlot}>
               <div className="bg-white p-2 text-xs text-gray-600 font-medium border-r min-h-[30px]">
-                {timeFormat === '24h' ? format(parse(timeSlot, 'h:mm a', new Date()), 'HH:mm') : timeSlot}
+                {timeFormat === '24h' ? 
+                  ((() => {
+                    try {
+                      return format(parse(timeSlot, 'h:mm a', new Date()), 'HH:mm');
+                    } catch {
+                      return timeSlot;
+                    }
+                  })()) : timeSlot
+                }
               </div>
               {days.map(day => {
                 const dayEvents = filteredEvents.filter(event => {
@@ -382,7 +390,15 @@ export const DayScheduleView = () => {
                       </div>
                       <div className="text-xs text-gray-600">
                         {timeFormat === '24h' 
-                          ? `${format(parse(appointment.startTime, 'h:mm a', new Date()), 'HH:mm')} - ${format(parse(appointment.endTime, 'h:mm a', new Date()), 'HH:mm')}`
+                          ? (() => {
+                              try {
+                                const start = format(parse(appointment.startTime, 'h:mm a', new Date()), 'HH:mm');
+                                const end = format(parse(appointment.endTime, 'h:mm a', new Date()), 'HH:mm');
+                                return `${start} - ${end}`;
+                              } catch {
+                                return `${appointment.startTime} - ${appointment.endTime}`;
+                              }
+                            })()
                           : `${appointment.startTime} - ${appointment.endTime}`
                         }
                       </div>

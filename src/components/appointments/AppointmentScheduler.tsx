@@ -647,7 +647,7 @@ export const AppointmentScheduler = () => {
                               <Input 
                                 type="date" 
                                 {...field}
-                                min={format(new Date(), 'yyyy-MM-dd')}
+                                min={new Date().toISOString().split('T')[0]}
                               />
                             </FormControl>
                             <FormMessage />

@@ -75,9 +75,16 @@ export const AvailabilitySettings = () => {
   // Helper function to convert 24-hour time to 12-hour format
   const formatTo12Hour = (time24: string) => {
     try {
-      return format(parse(time24, 'HH:mm', new Date()), 'h:mm a');
+      if (!time24 || typeof time24 !== 'string' || !time24.includes(':')) {
+        return time24 || '';
+      }
+      const parsed = parse(time24, 'HH:mm', new Date());
+      if (isNaN(parsed.getTime())) {
+        return time24;
+      }
+      return format(parsed, 'h:mm a');
     } catch {
-      return time24;
+      return time24 || '';
     }
   };
 

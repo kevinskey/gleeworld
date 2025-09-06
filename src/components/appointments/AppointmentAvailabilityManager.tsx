@@ -50,6 +50,22 @@ export const AppointmentAvailabilityManager = () => {
     'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
   ];
 
+  // Helper function to safely convert 24-hour time to 12-hour format
+  const formatTo12Hour = (time24: string) => {
+    try {
+      if (!time24 || typeof time24 !== 'string' || !time24.includes(':')) {
+        return time24 || '';
+      }
+      const parsed = parse(time24, 'HH:mm', new Date());
+      if (isNaN(parsed.getTime())) {
+        return time24;
+      }
+      return format(parsed, 'h:mm a');
+    } catch {
+      return time24 || '';
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchAvailability();
@@ -226,7 +242,10 @@ export const AppointmentAvailabilityManager = () => {
                     {daysOfWeek[slot.day_of_week]}
                   </Badge>
                   <span className="text-sm">
-                    {format(parse(slot.start_time, 'HH:mm', new Date()), 'h:mm a')} - {format(parse(slot.end_time, 'HH:mm', new Date()), 'h:mm a')}
+                    {slot.start_time && slot.end_time ? 
+                      `${formatTo12Hour(slot.start_time)} - ${formatTo12Hour(slot.end_time)}` : 
+                      `${slot.start_time} - ${slot.end_time}`
+                    }
                   </span>
                   <Switch
                     checked={slot.is_available}
