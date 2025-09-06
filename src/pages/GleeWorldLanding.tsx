@@ -411,7 +411,7 @@ export const GleeWorldLanding = () => {
 
 
       {/* Upcoming Events Section */}
-      <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-4 sm:py-6 md:py-8 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
