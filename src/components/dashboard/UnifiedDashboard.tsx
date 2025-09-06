@@ -113,7 +113,7 @@ export const UnifiedDashboard = () => {
         {/* Member Dashboard Content */}
         <div className="px-0 sm:px-6 py-4 space-y-6">
           {/* Glee Academy Hero Section */}
-          <div className="relative bg-gradient-to-r from-primary/90 to-primary rounded-xl overflow-hidden cursor-pointer transform transition-transform duration-300 hover:scale-[1.02] shadow-lg" onClick={() => window.location.href = '/glee-academy'}>
+          <div className="relative bg-gradient-to-r from-primary/90 to-primary rounded-xl overflow-hidden cursor-pointer shadow-lg" onClick={() => window.location.href = '/glee-academy'}>
             <div className="absolute inset-0 bg-black/20"></div>
             <div className="relative z-10 p-8 text-white">
               <div className="flex items-center justify-between">
