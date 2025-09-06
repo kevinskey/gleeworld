@@ -67,64 +67,101 @@ export const AppointmentScheduler = () => {
     },
   });
 
-  // Generate time slots for selected date with duration consideration
+  // Generate time slots for selected date based on availability settings
   const generateTimeSlots = async (date: Date, durationMinutes: number = 30) => {
     if (!date) return;
 
-    // Check for existing appointments for this date
-    const { data: existingAppointments } = await supabase
-      .from('gw_appointments')
-      .select('appointment_date, duration_minutes')
-      .gte('appointment_date', startOfDay(date).toISOString())
-      .lte('appointment_date', endOfDay(date).toISOString())
-      .neq('status', 'cancelled');
+    // Get day of week (0 = Sunday, 1 = Monday, etc.)
+    const dayOfWeek = date.getDay();
 
-    const slots: TimeSlot[] = [];
-    
-    // Generate time slots for business hours (9 AM to 5 PM)
-    const startHour = 9;
-    const endHour = 17;
-    
-    for (let hour = startHour; hour < endHour; hour++) {
-      for (let minute = 0; minute < 60; minute += durationMinutes) {
-        const currentTime = new Date(date);
-        currentTime.setHours(hour, minute, 0, 0);
+    try {
+      // Fetch availability slots for this day from database
+      const { data: availabilitySlots, error: availabilityError } = await supabase
+        .from('gw_appointment_availability')
+        .select('*')
+        .eq('day_of_week', dayOfWeek)
+        .eq('is_available', true)
+        .order('start_time', { ascending: true });
+
+      if (availabilityError) {
+        console.error('Error fetching availability:', availabilityError);
+        setAvailableSlots([]);
+        return;
+      }
+
+      // If no availability slots for this day, show no time slots
+      if (!availabilitySlots || availabilitySlots.length === 0) {
+        setAvailableSlots([]);
+        return;
+      }
+
+      // Check for existing appointments for this date
+      const { data: existingAppointments } = await supabase
+        .from('gw_appointments')
+        .select('appointment_date, duration_minutes')
+        .gte('appointment_date', startOfDay(date).toISOString())
+        .lte('appointment_date', endOfDay(date).toISOString())
+        .neq('status', 'cancelled');
+
+      const slots: TimeSlot[] = [];
+      const now = new Date();
+      const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+
+      // Generate slots for each availability period
+      for (const availability of availabilitySlots) {
+        const [startHour, startMinute] = availability.start_time.split(':').map(Number);
+        const [endHour, endMinute] = availability.end_time.split(':').map(Number);
         
-        const slotEndTime = new Date(currentTime.getTime() + durationMinutes * 60000);
+        const periodStart = new Date(date);
+        periodStart.setHours(startHour, startMinute, 0, 0);
         
-        // Don't show slots that extend past business hours
-        if (slotEndTime.getHours() >= endHour) {
-          continue;
-        }
+        const periodEnd = new Date(date);
+        periodEnd.setHours(endHour, endMinute, 0, 0);
+
+        // Generate time slots within this availability period
+        let currentTime = new Date(periodStart);
         
-        const timeString = format(currentTime, 'HH:mm');
-        
-        // Check if this slot conflicts with existing appointments
-        const isAvailable = !existingAppointments?.some(apt => {
-          const aptStart = new Date(apt.appointment_date);
-          const aptEnd = new Date(aptStart.getTime() + apt.duration_minutes * 60000);
-          const newSlotEnd = new Date(currentTime.getTime() + durationMinutes * 60000);
+        while (currentTime < periodEnd) {
+          const slotEndTime = new Date(currentTime.getTime() + durationMinutes * 60000);
           
-          // Check for any overlap
-          return (
-            (currentTime < aptEnd && newSlotEnd > aptStart) ||
-            (aptStart < newSlotEnd && aptEnd > currentTime)
-          );
-        });
-
-        // Only show future slots (at least 1 hour from now)
-        const now = new Date();
-        const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-        if (currentTime > oneHourFromNow) {
-          slots.push({
-            time: timeString,
-            available: isAvailable,
+          // Don't show slots that extend past the availability period
+          if (slotEndTime > periodEnd) {
+            break;
+          }
+          
+          const timeString = format(currentTime, 'HH:mm');
+          
+          // Check if this slot conflicts with existing appointments
+          const isAvailable = !existingAppointments?.some(apt => {
+            const aptStart = new Date(apt.appointment_date);
+            const aptEnd = new Date(aptStart.getTime() + apt.duration_minutes * 60000);
+            const newSlotEnd = new Date(currentTime.getTime() + durationMinutes * 60000);
+            
+            // Check for any overlap
+            return (
+              (currentTime < aptEnd && newSlotEnd > aptStart) ||
+              (aptStart < newSlotEnd && aptEnd > currentTime)
+            );
           });
+
+          // Only show future slots (at least 1 hour from now)
+          if (currentTime > oneHourFromNow) {
+            slots.push({
+              time: timeString,
+              available: isAvailable,
+            });
+          }
+
+          // Move to next slot
+          currentTime = new Date(currentTime.getTime() + durationMinutes * 60000);
         }
       }
-    }
 
-    setAvailableSlots(slots);
+      setAvailableSlots(slots);
+    } catch (error) {
+      console.error('Error generating time slots:', error);
+      setAvailableSlots([]);
+    }
   };
 
   useEffect(() => {

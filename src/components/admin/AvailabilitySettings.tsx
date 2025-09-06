@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface BusinessHours {
   start: string;
@@ -48,6 +50,7 @@ const TIMEZONES = [
 ];
 
 export const AvailabilitySettings = () => {
+  const { user } = useAuth();
   const [config, setConfig] = useState<AvailabilityConfig>({
     businessHours: {
       monday: { start: '09:00', end: '17:00', enabled: true },
@@ -66,6 +69,7 @@ export const AvailabilitySettings = () => {
 
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [newBlockedDate, setNewBlockedDate] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const updateBusinessHours = (day: string, field: keyof BusinessHours, value: string | boolean) => {
     setConfig(prev => ({
@@ -91,35 +95,141 @@ export const AvailabilitySettings = () => {
     setBlockedDates(prev => prev.filter(d => d !== date));
   };
 
-  const handleSave = () => {
-    // In a real implementation, this would save to the database
-    // For now, we'll save to localStorage
-    localStorage.setItem('appointmentAvailabilityConfig', JSON.stringify(config));
-    localStorage.setItem('appointmentBlockedDates', JSON.stringify(blockedDates));
-    toast.success('Availability settings saved successfully!');
+  const handleSave = async () => {
+    if (!user) {
+      toast.error('You must be logged in to save availability settings');
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      // First, clear existing availability slots for this user
+      await supabase
+        .from('gw_appointment_availability')
+        .delete()
+        .eq('user_id', user.id);
+
+      // Convert business hours to availability slots
+      const availabilitySlots = [];
+      
+      Object.entries(config.businessHours).forEach(([dayName, hours], index) => {
+        if (hours.enabled) {
+          // Get day of week index (0 = Sunday, 1 = Monday, etc.)
+          const dayMapping: { [key: string]: number } = {
+            sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
+            thursday: 4, friday: 5, saturday: 6
+          };
+          
+          availabilitySlots.push({
+            user_id: user.id,
+            day_of_week: dayMapping[dayName],
+            start_time: hours.start,
+            end_time: hours.end,
+            is_available: true
+          });
+        }
+      });
+
+      // Insert new availability slots
+      if (availabilitySlots.length > 0) {
+        const { error: slotsError } = await supabase
+          .from('gw_appointment_availability')
+          .insert(availabilitySlots);
+
+        if (slotsError) throw slotsError;
+      }
+
+      // Save user preferences
+      const { error: prefsError } = await supabase
+        .from('gw_user_appointment_preferences')
+        .upsert([{
+          user_id: user.id,
+          buffer_time_minutes: config.bufferTime,
+          advance_booking_days: config.advanceBookingDays,
+          max_daily_appointments: 20,
+          allow_same_day_booking: true,
+          google_calendar_sync: false,
+          apple_calendar_sync: false
+        }]);
+
+      if (prefsError) throw prefsError;
+
+      toast.success('Availability settings saved successfully!');
+    } catch (error) {
+      console.error('Error saving availability settings:', error);
+      toast.error('Failed to save availability settings');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Load from localStorage on component mount
+  // Load availability settings from database on component mount
   React.useEffect(() => {
-    const savedConfig = localStorage.getItem('appointmentAvailabilityConfig');
-    const savedBlockedDates = localStorage.getItem('appointmentBlockedDates');
-    
-    if (savedConfig) {
-      try {
-        setConfig(JSON.parse(savedConfig));
-      } catch (error) {
-        console.error('Error loading saved config:', error);
-      }
+    if (user) {
+      loadAvailabilitySettings();
     }
-    
-    if (savedBlockedDates) {
-      try {
-        setBlockedDates(JSON.parse(savedBlockedDates));
-      } catch (error) {
-        console.error('Error loading blocked dates:', error);
+  }, [user]);
+
+  const loadAvailabilitySettings = async () => {
+    if (!user) return;
+
+    try {
+      // Load availability slots
+      const { data: slots, error: slotsError } = await supabase
+        .from('gw_appointment_availability')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (slotsError) throw slotsError;
+
+      // Load user preferences
+      const { data: prefs, error: prefsError } = await supabase
+        .from('gw_user_appointment_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (prefsError && prefsError.code !== 'PGRST116') {
+        console.error('Error loading preferences:', prefsError);
       }
+
+      // Convert slots back to business hours format
+      if (slots && slots.length > 0) {
+        const newBusinessHours = { ...config.businessHours };
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        
+        // Reset all days to disabled first
+        Object.keys(newBusinessHours).forEach(day => {
+          newBusinessHours[day as keyof typeof newBusinessHours].enabled = false;
+        });
+
+        // Enable days that have availability slots
+        slots.forEach(slot => {
+          const dayName = dayNames[slot.day_of_week];
+          if (dayName && newBusinessHours[dayName as keyof typeof newBusinessHours]) {
+            newBusinessHours[dayName as keyof typeof newBusinessHours] = {
+              start: slot.start_time,
+              end: slot.end_time,
+              enabled: slot.is_available
+            };
+          }
+        });
+
+        setConfig(prev => ({
+          ...prev,
+          businessHours: newBusinessHours,
+          ...(prefs && {
+            bufferTime: prefs.buffer_time_minutes || 0,
+            advanceBookingDays: prefs.advance_booking_days || 30
+          })
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading availability settings:', error);
+      toast.error('Failed to load availability settings');
     }
-  }, []);
+  };
 
   return (
     <div className="space-y-6">
@@ -285,9 +395,9 @@ export const AvailabilitySettings = () => {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <Button onClick={handleSave} className="flex items-center gap-2">
+        <Button onClick={handleSave} disabled={loading} className="flex items-center gap-2">
           <Save className="h-4 w-4" />
-          Save Settings
+          {loading ? 'Saving...' : 'Save Settings'}
         </Button>
       </div>
     </div>
