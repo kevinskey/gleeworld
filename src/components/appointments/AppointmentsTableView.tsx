@@ -83,8 +83,8 @@ export const AppointmentsTableView = () => {
 
       // Transform auditions to table format
       const auditionRows: AppointmentRow[] = (auditions || []).map(audition => {
-        // Calculate duration from audition time if available, default to 30 min
-        const duration = 30; // Standard audition duration
+        // Get duration from audition time blocks or default to configured appointment type duration
+        const duration = 15; // Auditions are typically shorter
         
         return {
           id: audition.id,

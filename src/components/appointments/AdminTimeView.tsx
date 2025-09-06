@@ -106,7 +106,7 @@ export const AdminTimeView = () => {
 
     return appointments.filter(apt => {
       const aptDate = new Date(apt.appointment_date);
-      return Math.abs(aptDate.getTime() - slotTime.getTime()) < 30 * 60 * 1000; // Within 30 minutes
+      return Math.abs(aptDate.getTime() - slotTime.getTime()) < 15 * 60 * 1000; // Within 15 minutes for more precise matching
     });
   };
 

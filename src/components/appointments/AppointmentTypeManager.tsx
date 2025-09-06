@@ -27,7 +27,7 @@ export const AppointmentTypeManager = () => {
     name: '',
     description: '',
     default_duration_minutes: 30,
-    color: '#3B82F6'
+    color: '#6366F1' // Use a more neutral default color
   });
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export const AppointmentTypeManager = () => {
         name: '',
         description: '',
         default_duration_minutes: 30,
-        color: '#3B82F6'
+        color: '#6366F1' // Use a more neutral default color
       });
       fetchAppointmentTypes();
     } catch (error) {
@@ -111,9 +111,10 @@ export const AppointmentTypeManager = () => {
     }
   };
 
+  // Professional color palette for appointment types
   const colors = [
-    '#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', 
-    '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1'
+    '#6366F1', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', 
+    '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#3B82F6'
   ];
 
   return (

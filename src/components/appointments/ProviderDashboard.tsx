@@ -121,8 +121,10 @@ export const ProviderDashboard = () => {
       const occupancyData = daysInWeek.map(day => {
         const dayAppointments = appointments?.filter(apt => isSameDay(new Date(apt.appointment_date), day)) || [];
 
-        // Assuming 8 hours per day, 30-minute slots = 16 possible slots
-        const maxSlots = 16;
+        // Calculate actual max slots based on business hours and appointment duration
+        const businessHours = 8; // Configurable business hours per day
+        const averageSlotDuration = 30; // Average appointment duration in minutes
+        const maxSlots = (businessHours * 60) / averageSlotDuration;
         const occupancy = Math.min(dayAppointments.length / maxSlots * 100, 100);
         return {
           date: format(day, 'yyyy-MM-dd'),

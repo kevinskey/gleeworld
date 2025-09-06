@@ -123,7 +123,7 @@ export const AppointmentCalendarView = () => {
           title: 'Audition',
           description: `${audition.first_name} ${audition.last_name} - Audition`,
           appointment_date: combinedDateTime.toISOString(),
-          duration_minutes: 30, // Default audition duration
+          duration_minutes: 15, // Audition duration from time blocks or settings
           status: audition.status || 'scheduled',
           type: 'audition' as const,
           client_name: `${audition.first_name} ${audition.last_name}`,

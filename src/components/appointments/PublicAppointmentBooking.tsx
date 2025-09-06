@@ -65,9 +65,10 @@ export const PublicAppointmentBooking = () => {
       .neq('status', 'cancelled');
 
     const slots: TimeSlot[] = [];
-    const duration = 30; // 30-minute slots
+    const duration = 30; // Default slot duration - should be configurable
     
-    // Business hours: 9 AM to 5 PM
+    // Business hours should be configurable from availability settings
+    // For now using default business hours until connected to availability manager
     for (let hour = 9; hour < 17; hour++) {
       for (let minute = 0; minute < 60; minute += duration) {
         const currentTime = new Date(date);
@@ -272,8 +273,8 @@ export const PublicAppointmentBooking = () => {
                 <div className="flex items-center space-x-3">
                   <User className="w-8 h-8 text-primary" />
                   <div>
-                    <div className="font-semibold">Office Hour</div>
-                    <div className="text-sm text-muted-foreground">One-on-one consultation session (30 min)</div>
+                    <div className="font-semibold">Consultation</div>
+                    <div className="text-sm text-muted-foreground">Schedule a consultation session</div>
                   </div>
                 </div>
               </Button>
@@ -378,7 +379,7 @@ export const PublicAppointmentBooking = () => {
                       <FormItem>
                         <FormLabel>Email Address</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="your.email@example.com" {...field} />
+                          <Input type="email" placeholder="your.email@domain.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

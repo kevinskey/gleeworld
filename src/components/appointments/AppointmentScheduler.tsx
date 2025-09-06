@@ -506,7 +506,7 @@ export const AppointmentScheduler = () => {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="your.email@example.com" {...field} />
+                        <Input placeholder="your.email@domain.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
