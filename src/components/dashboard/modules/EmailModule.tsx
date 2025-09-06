@@ -127,7 +127,7 @@ export const EmailModule = () => {
           .from('gw_email_drafts')
           .insert(draftData)
           .select()
-          .single();
+          .maybeSingle();
         
         if (result.data) {
           setCurrentDraftId(result.data.id);
