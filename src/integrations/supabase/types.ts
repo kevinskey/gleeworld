@@ -3412,35 +3412,74 @@ export type Database = {
           },
         ]
       }
-      gw_appointment_types: {
+      gw_appointment_services: {
         Row: {
+          advance_booking_days: number | null
+          badge_color: string | null
+          badge_text: string | null
+          booking_buffer_minutes: number | null
+          capacity_max: number | null
+          capacity_min: number | null
+          category: string | null
           color: string | null
           created_at: string
           default_duration_minutes: number
           description: string | null
           id: string
+          image_url: string | null
+          instructor: string | null
           is_active: boolean
+          location: string | null
           name: string
+          price_amount: number | null
+          price_display: string | null
+          requires_approval: boolean | null
           updated_at: string
         }
         Insert: {
+          advance_booking_days?: number | null
+          badge_color?: string | null
+          badge_text?: string | null
+          booking_buffer_minutes?: number | null
+          capacity_max?: number | null
+          capacity_min?: number | null
+          category?: string | null
           color?: string | null
           created_at?: string
           default_duration_minutes?: number
           description?: string | null
           id?: string
+          image_url?: string | null
+          instructor?: string | null
           is_active?: boolean
+          location?: string | null
           name: string
+          price_amount?: number | null
+          price_display?: string | null
+          requires_approval?: boolean | null
           updated_at?: string
         }
         Update: {
+          advance_booking_days?: number | null
+          badge_color?: string | null
+          badge_text?: string | null
+          booking_buffer_minutes?: number | null
+          capacity_max?: number | null
+          capacity_min?: number | null
+          category?: string | null
           color?: string | null
           created_at?: string
           default_duration_minutes?: number
           description?: string | null
           id?: string
+          image_url?: string | null
+          instructor?: string | null
           is_active?: boolean
+          location?: string | null
           name?: string
+          price_amount?: number | null
+          price_display?: string | null
+          requires_approval?: boolean | null
           updated_at?: string
         }
         Relationships: []
@@ -11693,7 +11732,7 @@ export type Database = {
             foreignKeyName: "gw_user_appointment_preferences_appointment_type_id_fkey"
             columns: ["appointment_type_id"]
             isOneToOne: false
-            referencedRelation: "gw_appointment_types"
+            referencedRelation: "gw_appointment_services"
             referencedColumns: ["id"]
           },
         ]

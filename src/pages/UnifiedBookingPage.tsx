@@ -67,7 +67,7 @@ export default function UnifiedBookingPage() {
   const fetchAppointmentTypes = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_appointment_types')
+        .from('gw_appointment_services')
         .select('*')
         .eq('is_active', true)
         .order('name');

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, Settings, List, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AppointmentTypesManager } from './AppointmentTypesManager';
+import { AppointmentServiceManager } from '../appointments/AppointmentServiceManager';
 import { AvailabilitySettings } from './AvailabilitySettings';
 import { AppointmentsOverview } from './AppointmentsOverview';
 
@@ -27,7 +27,7 @@ export const AppointmentAdminDashboard = () => {
           </TabsTrigger>
           <TabsTrigger value="types" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            Appointment Types
+            Appointment Services
           </TabsTrigger>
           <TabsTrigger value="availability" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -40,7 +40,7 @@ export const AppointmentAdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="types" className="mt-6">
-          <AppointmentTypesManager />
+          <AppointmentServiceManager />
         </TabsContent>
 
         <TabsContent value="availability" className="mt-6">

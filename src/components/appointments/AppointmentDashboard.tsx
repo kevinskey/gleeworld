@@ -6,7 +6,7 @@ import { Calendar, Clock, Users, Settings, History, RotateCcw, Plus } from 'luci
 import { AppointmentsList } from './AppointmentsList';
 import { AppointmentScheduler } from './AppointmentScheduler';
 import { AppointmentCalendarView } from './AppointmentCalendarView';
-import { AppointmentTypeManager } from './AppointmentTypeManager';
+import { AppointmentServiceManager } from './AppointmentServiceManager';
 import { AppointmentAvailabilityManager } from './AppointmentAvailabilityManager';
 import { AppointmentHistory } from './AppointmentHistory';
 import { AppointmentCalendarSync } from './AppointmentCalendarSync';
@@ -117,7 +117,7 @@ export const AppointmentDashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <AppointmentTypeManager />
+              <AppointmentServiceManager />
             </CardContent>
           </Card>
         </TabsContent>

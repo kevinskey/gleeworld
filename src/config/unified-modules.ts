@@ -73,7 +73,7 @@ import { PressKitsModule } from '@/components/modules/PressKitsModule';
 import { FirstYearConsoleModule } from '@/components/modules/FirstYearConsoleModule';
 import { AIToolsModule } from '@/components/modules/AIToolsModule';
 import { LibrarianModule } from '@/components/modules/LibrarianModule';
-import ServiceManagement from '@/components/admin/ServiceManagement';
+import { AppointmentServiceManager } from '@/components/appointments/AppointmentServiceManager';
 import MediaLibrary from '@/pages/admin/MediaLibrary';
 import { RadioManagement } from '@/components/admin/RadioManagement';
 import { TheoryPollModule } from '@/components/modules/TheoryPollModule';
@@ -225,7 +225,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "blue",
     category: "communications",
     isActive: true,
-    component: ServiceManagement,
+    component: AppointmentServiceManager,
     dbFunctionName: "service-management"
   },
   {

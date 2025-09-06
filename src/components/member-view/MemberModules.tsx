@@ -39,7 +39,7 @@ import { GleeWritingWidget } from '@/components/writing/GleeWritingWidget';
 import { RadioManagement } from '@/components/admin/RadioManagement';
 import { ReceiptsModule } from '@/components/receipts/ReceiptsModule';
 import { ReimbursementsManager } from '@/components/reimbursements/ReimbursementsManager';
-import ServiceManagement from '@/components/admin/ServiceManagement';
+import { AppointmentServiceManager } from '@/components/appointments/AppointmentServiceManager';
 import { StudentConductorModule } from '@/components/modules/StudentConductorModule';
 import { WellnessModule } from '@/components/modules/WellnessModule';
 import { MonthlyStatements } from '@/components/admin/financial/MonthlyStatements';
@@ -120,7 +120,7 @@ const getModuleComponent = (moduleName: string) => {
     'radio-management': RadioManagement,
     'receipts-records': ReceiptsModule,
     'check-requests': ReimbursementsManager,
-    'service-management': ServiceManagement,
+    'service-management': AppointmentServiceManager,
     'student-conductor': StudentConductorModule,
     'wellness': WellnessModule,
     'monthly-statements': MonthlyStatements,
