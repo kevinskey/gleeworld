@@ -104,9 +104,9 @@ export default function ClassLanding() {
               MUS 240
             </h1>
             
-            <h2 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-light text-white/95 mb-6 mx-auto leading-relaxed">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-light text-white/95 mb-6 mx-auto leading-relaxed">
               Survey of African American Music
-            </h2>
+            </h1>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-white/80 text-3xl md:text-4xl lg:text-4xl xl:text-5xl">
               <div className="flex items-center gap-3">
