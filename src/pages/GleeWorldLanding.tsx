@@ -443,14 +443,14 @@ export const GleeWorldLanding = () => {
                   {/* Desktop view - Single horizontal scrolling row */}
                   <div className="hidden md:block">
                     <div 
-                      className="flex gap-4 lg:gap-6 overflow-x-scroll pb-4 scrollbar-hide items-stretch"
+                      className="flex gap-4 lg:gap-6 overflow-x-scroll pb-4 scrollbar-hide"
                       style={{ 
                         scrollBehavior: 'smooth',
                         WebkitOverflowScrolling: 'touch'
                       }}
                     >
                       {events.map((event) => (
-                        <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 h-full max-h-[500px] relative group bg-card border-2 border-border hover:border-accent flex-shrink-0 w-72 lg:w-80 flex flex-col">
+                        <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 h-[580px] relative group bg-card border-2 border-border hover:border-accent flex-shrink-0 w-72 lg:w-80 flex flex-col">
                           {/* Hover overlay button */}
                           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg font-semibold border border-white/30" asChild>
