@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useUsers } from '@/hooks/useUsers';
 import { useServiceProviders } from '@/hooks/useServiceProviders';
+import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -40,6 +41,7 @@ export const ProviderManagement = () => {
 
   const { users = [], loading } = useUsers();
   const { data: providers = [] } = useServiceProviders();
+  const { isSuperAdmin } = useUserRole();
   const queryClient = useQueryClient();
 
   // Filter users who are not yet providers
@@ -149,13 +151,14 @@ export const ProviderManagement = () => {
           <p className="text-muted-foreground">Manage service providers and assign users as providers</p>
         </div>
         
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Provider
-            </Button>
-          </DialogTrigger>
+        {isSuperAdmin() && (
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Provider
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Provider</DialogTitle>
@@ -264,6 +267,7 @@ export const ProviderManagement = () => {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {/* Search */}
