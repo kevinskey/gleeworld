@@ -47,7 +47,7 @@ export const ExecutiveBoardDropdown: React.FC = () => {
           <ChevronDown className="h-4 w-4" />
         </DropdownMenuItem>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64 bg-background border border-border shadow-lg" side="right" align="start">
+      <DropdownMenuContent className="w-64 bg-background border border-border shadow-2xl z-[1200]" side="right" align="start">
         {/* Overview Dashboard */}
         <DropdownMenuItem 
           onClick={() => navigate('/admin/executive-board')}
