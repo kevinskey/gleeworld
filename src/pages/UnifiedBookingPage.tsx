@@ -42,7 +42,6 @@ interface AppointmentType {
 
 export default function UnifiedBookingPage() {
   const { user, loading: authLoading } = useAuth();
-  console.log('🔍 UnifiedBookingPage component loading...');
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string; displayDate: string; displayTime: string } | null>(null);
@@ -453,9 +452,13 @@ export default function UnifiedBookingPage() {
           : "Your appointment has been confirmed. You'll receive an SMS confirmation shortly.",
       });
 
-      // Force a refresh of the page to update the available slots
+      // Reset form and go back to calendar view
       setTimeout(() => {
-        window.location.reload();
+        setShowContactForm(false);
+        setSelectedSlot(null);
+        setSelectedDate(null);
+        setContactInfo({ name: '', email: '', phone: '' });
+        setSelectedAppointmentType(null);
       }, 2000);
 
     } catch (error) {
