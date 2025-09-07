@@ -315,40 +315,55 @@ export default function UnifiedBookingPage() {
         // Process payment with Stripe
         console.log('Creating Stripe payment session...');
         
-        const { data: paymentResponse, error: paymentError } = await supabase.functions.invoke('create-appointment-payment', {
-          body: {
-            appointmentDetails: {
-              date: selectedSlot.date,
-              time: selectedSlot.time,
-              appointmentType: selectedAppointmentType.name,
-              duration: selectedAppointmentType.default_duration_minutes,
-              provider: selectedProvider?.provider_name || 'Dr. Johnson'
-            },
-            paymentType: 'lesson',
-            clientName: contactInfo.name,
-            clientEmail: contactInfo.email
-          }
-        });
-
-        if (paymentError) {
-          console.error('Payment error:', paymentError);
-          toast({
-            title: "Payment Error",
-            description: "There was an issue creating the payment session. Please try again.",
-            variant: "destructive"
+        try {
+          const { data: paymentResponse, error: paymentError } = await supabase.functions.invoke('create-appointment-payment', {
+            body: {
+              appointmentDetails: {
+                date: selectedSlot.date,
+                time: selectedSlot.time,
+                appointmentType: selectedAppointmentType.name,
+                duration: selectedAppointmentType.default_duration_minutes,
+                provider: selectedProvider?.provider_name || 'Dr. Johnson'
+              },
+              paymentType: 'lesson',
+              clientName: contactInfo.name,
+              clientEmail: contactInfo.email
+            }
           });
-          setIsSubmitting(false);
-          return;
-        }
 
-        if (paymentResponse?.url) {
-          // Redirect to Stripe Checkout
-          window.location.href = paymentResponse.url;
-          return;
-        } else {
+          console.log('Payment function response:', { paymentResponse, paymentError });
+
+          if (paymentError) {
+            console.error('Payment error:', paymentError);
+            toast({
+              title: "Payment Error",
+              description: `Payment function error: ${paymentError.message || 'Unknown error'}`,
+              variant: "destructive"
+            });
+            setIsSubmitting(false);
+            return;
+          }
+
+          if (paymentResponse?.url) {
+            console.log('Redirecting to Stripe:', paymentResponse.url);
+            // Redirect to Stripe Checkout
+            window.location.href = paymentResponse.url;
+            return;
+          } else {
+            console.error('No URL in payment response:', paymentResponse);
+            toast({
+              title: "Payment Error",
+              description: "Unable to create payment session. Please try again.",
+              variant: "destructive"
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Payment function call failed:', error);
           toast({
             title: "Payment Error",
-            description: "Unable to create payment session. Please try again.",
+            description: `Failed to call payment function: ${error.message}`,
             variant: "destructive"
           });
           setIsSubmitting(false);
