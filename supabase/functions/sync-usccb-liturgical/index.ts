@@ -65,41 +65,66 @@ serve(async (req) => {
     const day = String(dateObj.getDate()).padStart(2, '0');
     const formattedDate = `${year}${month}${day}`;
 
-    // Fetch liturgical data from USCCB
-    // Note: USCCB doesn't have a direct public API, so we'll provide a fallback response
+    // Fetch liturgical data from USCCB website
     console.log(`Attempting to fetch liturgical data for date: ${targetDate}`);
 
-    // Create a basic liturgical data response as USCCB API access is limited
-    const transformedData: USCCBLiturgicalData = {
-      date: targetDate,
-      season: 'Ordinary Time',
-      week: '',
-      title: `Daily Readings for ${new Date(targetDate).toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      })}`,
-      readings: {
-        first_reading: {
-          title: 'First Reading',
-          citation: 'Please visit USCCB.org for complete daily readings',
-          content: `Visit https://bible.usccb.org/bible/readings/${formattedDate}.cfm for the complete liturgical readings for ${new Date(targetDate).toLocaleDateString()}.`
-        },
-        responsorial_psalm: {
-          title: 'Responsorial Psalm',
-          citation: 'Please visit USCCB.org for complete daily readings',
-          content: 'Visit USCCB.org for the complete responsorial psalm.'
-        },
-        gospel: {
-          title: 'Gospel',
-          citation: 'Please visit USCCB.org for complete daily readings',
-          content: `Visit https://bible.usccb.org/bible/readings/${formattedDate}.cfm for the complete Gospel reading for ${new Date(targetDate).toLocaleDateString()}.`
+    let transformedData: USCCBLiturgicalData;
+
+    try {
+      // Try to scrape USCCB website for readings
+      const usccbUrl = `https://bible.usccb.org/bible/readings/${formattedDate}.cfm`;
+      console.log(`Fetching from USCCB URL: ${usccbUrl}`);
+      
+      const response = await fetch(usccbUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; GleeWorld/1.0)',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
         }
-      },
-      saint_of_day: 'Visit USCCB.org for saint information',
-      liturgical_color: 'Green'
-    };
+      });
+
+      if (response.ok) {
+        const htmlContent = await response.text();
+        console.log('Successfully fetched USCCB page');
+        transformedData = parseUSCCBHTML(htmlContent, targetDate);
+      } else {
+        console.log(`Failed to fetch USCCB page: ${response.status} ${response.statusText}`);
+        throw new Error('Failed to fetch USCCB page');
+      }
+    } catch (fetchError) {
+      console.log('Error fetching from USCCB, using fallback:', fetchError);
+      
+      // Fallback response when USCCB site is unavailable
+      transformedData = {
+        date: targetDate,
+        season: 'Ordinary Time',
+        week: '',
+        title: `Daily Readings for ${new Date(targetDate).toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })}`,
+        readings: {
+          first_reading: {
+            title: 'First Reading',
+            citation: 'USCCB readings temporarily unavailable',
+            content: `Please visit https://bible.usccb.org/bible/readings/${formattedDate}.cfm for the complete liturgical readings for ${new Date(targetDate).toLocaleDateString()}.`
+          },
+          responsorial_psalm: {
+            title: 'Responsorial Psalm',
+            citation: 'USCCB readings temporarily unavailable',
+            content: 'Please visit USCCB.org for the complete responsorial psalm.'
+          },
+          gospel: {
+            title: 'Gospel',
+            citation: 'USCCB readings temporarily unavailable',
+            content: `Please visit https://bible.usccb.org/bible/readings/${formattedDate}.cfm for the complete Gospel reading for ${new Date(targetDate).toLocaleDateString()}.`
+          }
+        },
+        saint_of_day: 'Visit USCCB.org for saint information',
+        liturgical_color: 'Green'
+      };
+    }
 
     console.log('Successfully created liturgical data response');
 
@@ -125,10 +150,9 @@ serve(async (req) => {
   }
 });
 
-// Helper function to parse HTML when API is not available
+// Helper function to parse HTML from USCCB website
 function parseUSCCBHTML(html: string, date: string): USCCBLiturgicalData {
-  // Basic HTML parsing fallback - in a real implementation, you'd use a proper HTML parser
-  // This is a simplified version
+  console.log('Parsing USCCB HTML content...');
   
   const getTextBetween = (str: string, start: string, end: string): string => {
     const startIndex = str.indexOf(start);
@@ -138,27 +162,111 @@ function parseUSCCBHTML(html: string, date: string): USCCBLiturgicalData {
     return str.substring(startIndex + start.length, endIndex).trim();
   };
 
-  // Extract basic information
-  const title = getTextBetween(html, '<title>', '</title>') || 'Daily Readings';
+  const cleanText = (text: string): string => {
+    return text
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+      .replace(/&amp;/g, '&') // Replace HTML entities
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .trim();
+  };
+
+  // Extract title from page
+  let title = getTextBetween(html, '<title>', '</title>');
+  title = cleanText(title) || `Daily Readings for ${new Date(date).toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })}`;
+
+  // Extract liturgical season and color
+  let season = 'Ordinary Time';
+  let liturgical_color = 'Green';
   
+  // Look for season indicators in the HTML
+  const seasonMatch = html.match(/(?:Season|Time)\s*[^<]*(?:Advent|Christmas|Lent|Easter|Ordinary)/i);
+  if (seasonMatch) {
+    season = cleanText(seasonMatch[0]);
+  }
+
+  // Extract saint of the day
+  let saint_of_day = '';
+  const saintMatch = html.match(/<[^>]*saint[^>]*>([^<]+)/i) || 
+                    html.match(/Saint\s+[^<,]+/i) ||
+                    html.match(/St\.\s+[^<,]+/i);
+  if (saintMatch) {
+    saint_of_day = cleanText(saintMatch[0]);
+  }
+
+  // Try to extract readings - USCCB structure may vary
+  const readings: any = {};
+
+  // Look for reading sections
+  const readingPatterns = [
+    { key: 'first_reading', pattern: /(?:First Reading|Reading 1)[\s\S]*?(?=(?:Responsorial Psalm|Reading 2|Gospel|$))/i },
+    { key: 'responsorial_psalm', pattern: /(?:Responsorial Psalm|Psalm)[\s\S]*?(?=(?:Reading 2|Second Reading|Gospel|$))/i },
+    { key: 'second_reading', pattern: /(?:Second Reading|Reading 2)[\s\S]*?(?=(?:Gospel|$))/i },
+    { key: 'gospel', pattern: /Gospel[\s\S]*?(?=(?:Reflection|Commentary|$))/i }
+  ];
+
+  readingPatterns.forEach(({ key, pattern }) => {
+    const match = html.match(pattern);
+    if (match) {
+      const section = match[0];
+      
+      // Extract citation
+      const citationMatch = section.match(/(?:cf\.|see|from)\s*([^<\n]+)/i) ||
+                           section.match(/\b[0-9]+:[0-9]+-?[0-9]*\b/);
+      const citation = citationMatch ? cleanText(citationMatch[0]) : 'See USCCB.org';
+      
+      // Extract content (first substantial paragraph)
+      const contentMatch = section.match(/<p[^>]*>([^<]+(?:<[^>]*>[^<]*)*)<\/p>/i) ||
+                          section.match(/\n\s*([A-Z][^.\n]{50,})/);
+      let content = contentMatch ? cleanText(contentMatch[1]) : 'Please visit USCCB.org for complete reading';
+      
+      // Limit content length
+      if (content.length > 300) {
+        content = content.substring(0, 300) + '... (Visit USCCB.org for complete reading)';
+      }
+
+      readings[key] = {
+        title: key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        citation,
+        content
+      };
+    }
+  });
+
+  // Ensure we have at least basic readings
+  if (!readings.first_reading) {
+    readings.first_reading = {
+      title: 'First Reading',
+      citation: 'Available at USCCB.org',
+      content: 'Visit USCCB.org for the complete First Reading'
+    };
+  }
+
+  if (!readings.gospel) {
+    readings.gospel = {
+      title: 'Gospel',
+      citation: 'Available at USCCB.org',
+      content: 'Visit USCCB.org for the complete Gospel reading'
+    };
+  }
+
+  console.log('Successfully parsed USCCB content');
+
   return {
     date,
-    season: 'Ordinary Time', // Default fallback
+    season,
     week: '',
     title,
-    readings: {
-      first_reading: {
-        title: 'First Reading',
-        citation: 'See USCCB.org',
-        content: 'Please visit USCCB.org for complete daily readings'
-      },
-      gospel: {
-        title: 'Gospel',
-        citation: 'See USCCB.org',
-        content: 'Please visit USCCB.org for complete daily readings'
-      }
-    },
-    saint_of_day: '',
-    liturgical_color: 'Green'
+    readings,
+    saint_of_day: saint_of_day || 'Visit USCCB.org for saint information',
+    liturgical_color
   };
 }

@@ -47,6 +47,7 @@ export const useUSCCBSync = () => {
       });
 
       console.log('Function response:', { data, functionError });
+      console.log('Function data details:', JSON.stringify(data, null, 2));
 
       if (functionError) {
         console.error('Function error details:', functionError);
