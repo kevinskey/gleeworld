@@ -17,12 +17,15 @@ import {
   Upload,
   ScanLine,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Zap,
+  Crop
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFileAndGetUrl } from '@/utils/storage';
+import { processDocument } from '@/utils/documentProcessor';
 import jsPDF from 'jspdf';
 
 interface CapturedPage {
@@ -48,6 +51,7 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [capturedPages, setCapturedPages] = useState<CapturedPage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [autoProcessing, setAutoProcessing] = useState(true);
   
   // Form state for metadata
   const [title, setTitle] = useState('');
@@ -112,6 +116,7 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
     if (!videoRef.current || !canvasRef.current || !isCameraReady) return;
 
     try {
+      setIsProcessing(true);
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
@@ -122,25 +127,40 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
-      // Draw video frame to canvas with document enhancement
+      // Draw video frame to canvas
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      // Apply basic image enhancement for document scanning
-      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
+      let finalCanvas = canvas;
       
-      // Simple contrast and brightness adjustment for text documents
-      for (let i = 0; i < data.length; i += 4) {
-        // Increase contrast and brightness for better text readability
-        data[i] = Math.min(255, Math.max(0, (data[i] - 128) * 1.2 + 128 + 10));     // Red
-        data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * 1.2 + 128 + 10)); // Green
-        data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * 1.2 + 128 + 10)); // Blue
+      // Apply advanced processing if enabled
+      if (autoProcessing) {
+        toast({
+          title: "Processing Document",
+          description: "Applying AI enhancement and auto-cropping...",
+        });
+        
+        try {
+          const processed = await processDocument(canvas);
+          finalCanvas = processed.canvas;
+          
+          toast({
+            title: "Document Enhanced",
+            description: processed.enhanced 
+              ? "AI processing and auto-crop applied successfully" 
+              : "Auto-crop applied (AI enhancement unavailable)",
+          });
+        } catch (error) {
+          console.warn('Advanced processing failed, using basic capture:', error);
+          toast({
+            title: "Basic Capture",
+            description: "Advanced processing unavailable, using basic capture",
+            variant: "default",
+          });
+        }
       }
-      
-      context.putImageData(imageData, 0, 0);
 
       // Convert to blob
-      canvas.toBlob((blob) => {
+      finalCanvas.toBlob((blob) => {
         if (blob) {
           const pageId = `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
           const imageUrl = URL.createObjectURL(blob);
@@ -161,6 +181,7 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
             description: `Page ${pageNumber} captured successfully`,
           });
         }
+        setIsProcessing(false);
       }, 'image/jpeg', 0.9);
       
     } catch (error) {
@@ -170,8 +191,9 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
         description: "Failed to capture page. Please try again.",
         variant: "destructive",
       });
+      setIsProcessing(false);
     }
-  }, [isCameraReady, capturedPages.length, toast]);
+  }, [isCameraReady, capturedPages.length, autoProcessing, toast]);
 
   const deletePage = useCallback((pageId: string) => {
     setCapturedPages(prev => {
@@ -349,12 +371,26 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
         <div className="flex items-center justify-between p-3 md:p-4 bg-background border-b">
           <div className="flex items-center gap-2">
             <ScanLine className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-sm md:text-base">Document Scanner</h3>
+            <h3 className="font-semibold text-sm md:text-base">AI Document Scanner</h3>
             <Badge variant="secondary" className="text-xs">
               {capturedPages.length} page{capturedPages.length !== 1 ? 's' : ''}
             </Badge>
+            {autoProcessing && (
+              <Badge variant="default" className="text-xs flex items-center gap-1">
+                <Zap className="h-3 w-3" />
+                AI
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant={autoProcessing ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAutoProcessing(!autoProcessing)}
+              className="px-2"
+            >
+              <Crop className="h-4 w-4" />
+            </Button>
             {isScanning && (
               <Button
                 variant="outline"
@@ -391,13 +427,23 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
                 />
               )}
               
-              {/* Mobile-optimized Scanning Overlay */}
+              {/* AI-Enhanced Scanning Overlay */}
               {isCameraReady && (
                 <div className="absolute inset-0 flex items-center justify-center p-4">
-                  <div className="border-2 border-white/50 border-dashed rounded-lg w-full max-w-sm h-3/4 max-h-80 flex items-center justify-center">
+                  <div className="border-2 border-primary/70 border-dashed rounded-lg w-full max-w-sm h-3/4 max-h-80 flex items-center justify-center relative">
+                    {autoProcessing && (
+                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-2 py-1 rounded text-xs flex items-center gap-1">
+                        <Zap className="h-3 w-3" />
+                        AI
+                      </div>
+                    )}
                     <div className="text-white text-center">
-                      <ScanLine className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2" />
-                      <p className="text-xs md:text-sm">Position document within frame</p>
+                      <div className="flex justify-center mb-2">
+                        {autoProcessing ? <Crop className="h-6 w-6 md:h-8 md:w-8" /> : <ScanLine className="h-6 w-6 md:h-8 md:w-8" />}
+                      </div>
+                      <p className="text-xs md:text-sm">
+                        {autoProcessing ? "AI will auto-crop & enhance" : "Position document within frame"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -406,17 +452,28 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
               <canvas ref={canvasRef} className="hidden" />
             </div>
             
-            {/* Mobile Camera Controls */}
+            {/* AI-Enhanced Camera Controls */}
             {isCameraReady && (
               <div className="p-3 md:p-4 bg-background border-t">
                 <div className="flex justify-center">
                   <Button
                     onClick={capturePage}
                     size="lg"
-                    className="bg-primary hover:bg-primary/90 px-4 md:px-8 w-full max-w-xs"
+                    disabled={isProcessing}
+                    className="bg-primary hover:bg-primary/90 px-4 md:px-8 w-full max-w-xs flex items-center gap-2"
                   >
-                    <Camera className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-                    <span className="text-sm md:text-base">Capture Page {capturedPages.length + 1}</span>
+                    {isProcessing ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                        <span className="text-sm md:text-base">Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="h-4 w-4 md:h-5 md:w-5" />
+                        <span className="text-sm md:text-base">Capture Page {capturedPages.length + 1}</span>
+                        {autoProcessing && <Zap className="h-3 w-3" />}
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import { UniversalDocumentViewer } from "./UniversalDocumentViewer";
-import { formatDocumentWithSignatures } from "@/utils/documentProcessor";
+import { formatDocumentWithSignatures } from "@/utils/documentFormatter";
 
 interface EmbeddedSignature {
   fieldId: number;
