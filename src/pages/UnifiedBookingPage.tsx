@@ -311,6 +311,12 @@ export default function UnifiedBookingPage() {
       // Check if this service requires payment (only lessons require payment)
       const requiresPayment = selectedAppointmentType.name.toLowerCase().includes('lesson');
       
+      console.log('Payment check:', {
+        appointmentType: selectedAppointmentType.name,
+        requiresPayment: requiresPayment,
+        lowerCaseName: selectedAppointmentType.name.toLowerCase()
+      });
+      
       if (requiresPayment) {
         // Process payment with Stripe
         console.log('Creating Stripe payment session...');
