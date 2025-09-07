@@ -512,6 +512,114 @@ export const SuperAdminDashboard = ({
         </Card>
       )}
 
+      {/* All Modules Display */}
+      {showAllModules && (
+        <div className="space-y-6">
+          {/* Display filtered results when search/filter is active */}
+          {(searchQuery || filterCategory !== 'all') ? (
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Search className="h-5 w-5" />
+                  Search Results
+                </CardTitle>
+                <CardDescription>
+                  {filteredAndSortedModules.length} modules found
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredAndSortedModules.map(module => (
+                    <SortableModuleCard
+                      key={module.id}
+                      module={module}
+                      onModuleClick={(moduleId) => setSelectedModule(moduleId)}
+                    />
+                  ))}
+                </div>
+                {filteredAndSortedModules.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No modules found matching your criteria.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            // Show modules by category when no search/filter is active
+            categories.map(category => {
+              const categoryModules = sortedModulesByCategory[category];
+              if (!categoryModules || categoryModules.length === 0) return null;
+              
+              const categoryData = UNIFIED_MODULE_CATEGORIES.find(c => c.id === category);
+              const IconComponent = categoryData?.icon || Settings;
+              const isCollapsed = collapsedSections[category];
+              
+              return (
+                <Card key={category} className="overflow-hidden">
+                  <Collapsible
+                    open={!isCollapsed}
+                    onOpenChange={() => toggleSectionCollapse(category)}
+                  >
+                    <CollapsibleTrigger className="w-full">
+                      <CardHeader className="hover:bg-muted/50 transition-colors cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg bg-${categoryData?.color || 'blue'}-100 dark:bg-${categoryData?.color || 'blue'}-900/20`}>
+                              <IconComponent className={`h-5 w-5 text-${categoryData?.color || 'blue'}-600 dark:text-${categoryData?.color || 'blue'}-400`} />
+                            </div>
+                            <div className="text-left">
+                              <CardTitle className="text-lg">{categoryData?.title || category}</CardTitle>
+                              <CardDescription>
+                                {categoryData?.description || `${categoryModules.length} modules available`}
+                              </CardDescription>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {categoryModules.length} modules
+                            </Badge>
+                            {isCollapsed ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronUp className="h-4 w-4" />
+                            )}
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    
+                    <CollapsibleContent>
+                      <CardContent>
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={(event) => handleDragEnd(event, category)}
+                        >
+                          <SortableContext 
+                            items={categoryModules.map(m => m.id)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {categoryModules.map(module => (
+                                <SortableModuleCard
+                                  key={module.id}
+                                  module={module}
+                                  onModuleClick={(moduleId) => setSelectedModule(moduleId)}
+                                />
+                              ))}
+                            </div>
+                          </SortableContext>
+                        </DndContext>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </Card>
+              );
+            })
+          )}
+        </div>
+      )}
+
       {/* Quick Action Modules */}
       <div className="bg-gradient-to-r from-primary/5 via-background to-muted/20 rounded-lg p-6">
         <div className="flex items-center gap-3 mb-4">
