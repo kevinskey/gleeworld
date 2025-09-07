@@ -578,7 +578,7 @@ export default function UnifiedBookingPage() {
               <CalendarIcon className="h-6 w-6 text-primary-foreground" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent mb-2 leading-tight font-dancing">
-              Book an Appointment with Doc
+              Schedule an Appointment
             </h1>
             <div className="max-w-2xl mx-auto">
               <p className="text-lg text-muted-foreground leading-relaxed mb-6">
