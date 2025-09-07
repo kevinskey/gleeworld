@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, Clock, Users, TrendingUp, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AppointmentCalendar } from './AppointmentCalendar';
 import { AppointmentManager } from './AppointmentManager';
 import { AppointmentServiceManager } from './AppointmentServiceManager';
@@ -256,6 +257,33 @@ export const ComprehensiveAppointmentSystem = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Appointment Dialog */}
+      <Dialog open={!!selectedAppointment} onOpenChange={() => setSelectedAppointment(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Appointment - {selectedAppointment.title}</DialogTitle>
+          </DialogHeader>
+          {selectedAppointment && (
+            <div className="mt-4">
+              <AppointmentManager
+                appointments={[selectedAppointment]} // Only show the selected appointment
+                onAppointmentCreate={handleAppointmentCreate}
+                onAppointmentUpdate={(id: string, updates: Partial<Appointment>) => {
+                  handleAppointmentUpdate(id, updates);
+                  setSelectedAppointment(null); // Close dialog after update
+                }}
+                onAppointmentDelete={(id: string) => {
+                  handleAppointmentDelete(id);
+                  setSelectedAppointment(null); // Close dialog after delete
+                }}
+                editingAppointmentId={selectedAppointment.id}
+                onEditingAppointmentIdChange={setEditingAppointmentId}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
