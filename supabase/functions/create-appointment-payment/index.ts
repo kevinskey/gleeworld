@@ -26,12 +26,13 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    logStep("Function started");
+    logStep("Function started", { method: req.method, url: req.url });
 
     // Check for required environment variables first
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
