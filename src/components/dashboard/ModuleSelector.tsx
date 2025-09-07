@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Music, Calendar, Shirt, DollarSign, UserCheck, Settings, BookOpen, Users, Camera, Radio, Briefcase, ScanLine, Crown } from 'lucide-react';
+import { Mail, Music, Calendar, Shirt, DollarSign, UserCheck, Settings, BookOpen, Users, Camera, Radio, Briefcase, ScanLine, Crown, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -131,6 +131,14 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
       description: 'Simplified executive board module hub - works immediately',
       notifications: 0,
       category: 'Executive'
+    },
+    {
+      id: 'bowman-scholars',
+      name: 'Bowman Scholars',
+      icon: GraduationCap,
+      description: 'Academic excellence program for distinguished students',
+      notifications: 0,
+      category: 'Academic'
     }
   ];
 

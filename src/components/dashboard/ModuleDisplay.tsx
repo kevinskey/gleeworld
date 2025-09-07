@@ -27,6 +27,7 @@ import { CheckInCheckOutModule } from '../modules/CheckInCheckOutModule';
 import { GleeWritingWidget } from '../writing/GleeWritingWidget';
 import { FirstYearConsoleModule } from '../modules/FirstYearConsoleModule';
 import { UserManagementModule } from '../modules/UserManagementModule';
+import { BowmanScholarsModule } from '../modules/BowmanScholarsModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -102,6 +103,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <FirstYearConsoleModule />;
       case 'user-management':
         return <UserManagementModule />;
+      case 'bowman-scholars':
+        return <BowmanScholarsModule />;
       default:
         return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2><p>This module is being developed. Stay tuned!</p></div>;
     }
