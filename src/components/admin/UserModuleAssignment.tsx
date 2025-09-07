@@ -50,6 +50,8 @@ const AssignModulesDialog = ({
   const fetchModules = async () => {
     try {
       setLoadingModules(true);
+      console.log('🔍 fetchModules: Starting to fetch modules from database...');
+      
       const { data, error } = await supabase
         .from('gw_modules')
         .select('key, name, description, category, is_active')
@@ -57,14 +59,14 @@ const AssignModulesDialog = ({
         .order('name');
 
       if (error) {
-        console.error('Error fetching modules:', error);
+        console.error('🔍 fetchModules: Error fetching modules:', error);
         return;
       }
 
-      console.log('🔍 Fetched modules from database:', data);
+      console.log('🔍 fetchModules: Successfully fetched modules from database:', data?.length || 0, data);
       setDbModules(data || []);
     } catch (error) {
-      console.error('Error in fetchModules:', error);
+      console.error('🔍 fetchModules: Exception in fetchModules:', error);
     } finally {
       setLoadingModules(false);
     }
@@ -72,14 +74,22 @@ const AssignModulesDialog = ({
 
   // Convert database modules to UI format for compatibility
   const activeModules = useMemo(() => {
+    console.log('🔍 activeModules useMemo: dbModules.length =', dbModules.length);
+    
+    if (dbModules.length === 0) {
+      console.log('🔍 activeModules useMemo: No dbModules, returning empty array');
+      return [];
+    }
+    
     const configModules = getActiveModules();
+    console.log('🔍 activeModules useMemo: configModules.length =', configModules.length);
     
     // Create modules from database with fallback to config
     const combinedModules = dbModules.map(dbModule => {
       // Find matching config module for icon and other UI properties
       const configModule = configModules.find(cm => cm.id === dbModule.key || cm.name === dbModule.key);
       
-      return {
+      const combined = {
         id: dbModule.key,
         name: dbModule.key,
         title: dbModule.name,
@@ -91,9 +101,12 @@ const AssignModulesDialog = ({
         component: configModule?.component || (() => null),
         dbFunctionName: dbModule.key
       };
+      
+      console.log('🔍 activeModules useMemo: Combined module:', dbModule.key, combined.title);
+      return combined;
     });
     
-    console.log('🔍 Combined modules (DB + Config):', combinedModules.length);
+    console.log('🔍 activeModules useMemo: Combined modules (DB + Config):', combinedModules.length);
     return combinedModules;
   }, [dbModules]);
 
@@ -298,12 +311,24 @@ export const UserModuleAssignment = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [dbModulesForCards, setDbModulesForCards] = useState<DbModule[]>([]);
   const { getAllUsersWithPermissions } = useUserModulePermissions();
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       console.log('🔍 Starting to fetch users...');
+      
+      // Also fetch modules for the card display
+      const { data: modulesData } = await supabase
+        .from('gw_modules')
+        .select('key, name, description, category, is_active')
+        .eq('is_active', true)
+        .order('name');
+      
+      console.log('🔍 Fetched modules for cards:', modulesData?.length || 0);
+      setDbModulesForCards(modulesData || []);
+      
       const usersWithPerms = await getAllUsersWithPermissions();
       console.log('🔍 Raw users from getAllUsersWithPermissions:', usersWithPerms.length, usersWithPerms.slice(0, 3));
       
@@ -453,41 +478,51 @@ export const UserModuleAssignment = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">
-                    Active Modules ({user.modules.filter(moduleId => 
-                      getActiveModules().some(m => m.id === moduleId)
-                    ).length} of {user.modules.length} total assigned)
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {user.modules.length === 0 ? (
-                      <span className="text-sm text-muted-foreground">No modules assigned</span>
-                    ) : (
-                      user.modules.map(moduleId => {
-                        const module = getActiveModules().find(m => m.id === moduleId);
-                        return module ? (
-                          <Badge
-                            key={moduleId}
-                            variant="secondary"
-                            className="flex items-center gap-1"
-                          >
-                            <module.icon className="w-3 h-3" />
-                            {module.title}
-                          </Badge>
-                        ) : (
-                          <Badge key={moduleId} variant="outline" className="opacity-50">
-                            {moduleId} (inactive)
-                          </Badge>
-                        );
-                      })
-                    )}
-                  </div>
-                   {user.modules.length > getActiveModules().filter(m => user.modules.includes(m.id)).length && (
-                     <div className="text-xs text-muted-foreground">
-                       Some assigned modules are no longer active and will be cleaned up when you save changes.
-                     </div>
-                   )}
-                 </div>
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">
+                      Active Modules ({user.modules.filter(moduleId => 
+                        dbModulesForCards.some(m => m.key === moduleId)
+                      ).length} of {user.modules.length} total assigned)
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {user.modules.length === 0 ? (
+                        <span className="text-sm text-muted-foreground">No modules assigned</span>
+                      ) : (
+                        user.modules.map(moduleId => {
+                          const dbModule = dbModulesForCards.find(m => m.key === moduleId);
+                          const configModule = getActiveModules().find(m => m.id === moduleId);
+                          
+                          if (dbModule) {
+                            return (
+                              <Badge
+                                key={moduleId}
+                                variant="secondary"
+                                className="flex items-center gap-1"
+                              >
+                                {configModule?.icon ? (
+                                  <configModule.icon className="w-3 h-3" />
+                                ) : (
+                                  <Settings className="w-3 h-3" />
+                                )}
+                                {dbModule.name}
+                              </Badge>
+                            );
+                          } else {
+                            return (
+                              <Badge key={moduleId} variant="outline" className="opacity-50">
+                                {moduleId} (inactive)
+                              </Badge>
+                            );
+                          }
+                        })
+                      )}
+                    </div>
+                     {user.modules.length > dbModulesForCards.filter(m => user.modules.includes(m.key)).length && (
+                        <div className="text-xs text-muted-foreground">
+                          Some assigned modules are no longer active and will be cleaned up when you save changes.
+                        </div>
+                      )}
+                    </div>
                </CardContent>
             </Card>
           ))
