@@ -26,7 +26,7 @@ import { Navigate, Link } from "react-router-dom";
 import { UniversalHeader } from "@/components/layout/UniversalHeader";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { toast } from "sonner";
-import { IncompleteProfileBanner } from "@/components/shared/IncompleteProfileBanner";
+
 
 interface AlumnaeStats {
   classYear: number | null;
@@ -219,8 +219,6 @@ export default function AlumnaeLanding() {
       <UniversalHeader />
       
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Incomplete Profile Banner */}
-        <IncompleteProfileBanner userProfile={userProfile} />
         
         {/* Welcome Hero Section */}
         <div className="text-center space-y-4 py-8 relative animate-fade-in">

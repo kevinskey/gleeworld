@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon, Eye, Music } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
-import { IncompleteProfileBanner } from '@/components/shared/IncompleteProfileBanner';
+
 import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
 import { PublicDashboardMonitor } from '@/components/admin/PublicDashboardMonitor';
 import { FanDashboardMonitor } from '@/components/admin/FanDashboardMonitor';
@@ -106,9 +106,6 @@ export const UnifiedDashboard = () => {
   if (viewMode === 'member') {
     // Show member perspective regardless of actual user role
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-        <div className="px-6 pt-4">
-          <IncompleteProfileBanner userProfile={profile} />
-        </div>
         
         {/* Member Dashboard Content */}
         <div className="px-0 sm:px-6 py-4 space-y-6">
@@ -201,9 +198,6 @@ export const UnifiedDashboard = () => {
     // Show monitoring interface for admins viewing fan dashboard
     if (profile?.role === 'super-admin' || profile?.role === 'admin') {
       return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-          <div className="px-6 pt-4">
-            <IncompleteProfileBanner userProfile={profile} />
-          </div>
           <div className="px-6 py-4">
             <div className="mb-6">
               <div className="flex items-center gap-4 mb-4">
@@ -230,9 +224,6 @@ export const UnifiedDashboard = () => {
     // Show monitoring interface for admins viewing alumnae dashboard
     if (profile?.role === 'super-admin' || profile?.role === 'admin') {
       return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-          <div className="px-6 pt-4">
-            <IncompleteProfileBanner userProfile={profile} />
-          </div>
           <div className="px-6 py-4">
             <div className="mb-6">
               <div className="flex items-center gap-4 mb-4">
@@ -257,9 +248,6 @@ export const UnifiedDashboard = () => {
   }
   if (viewMode === 'mus240') {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-        <div className="px-6 pt-4">
-          <IncompleteProfileBanner userProfile={profile} />
-        </div>
         <div className="px-6 py-4">
           <div className="text-center py-8">
             <h1 className="text-3xl font-bold text-primary mb-4">MUS 240 Class Dashboard</h1>
@@ -276,9 +264,6 @@ export const UnifiedDashboard = () => {
     // Show monitoring interface for admins viewing public dashboard
     if (profile?.role === 'super-admin' || profile?.role === 'admin') {
       return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-          <div className="px-6 pt-4">
-            <IncompleteProfileBanner userProfile={profile} />
-          </div>
           <div className="px-6 py-4">
             <div className="mb-6">
               <div className="flex items-center gap-4 mb-4">
@@ -324,9 +309,6 @@ export const UnifiedDashboard = () => {
   if (profile?.is_exec_board && viewMode === 'default') {
     console.log('🎯 UnifiedDashboard: Showing executive board dashboard for user:', profile.user_id);
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 overflow-auto">
-        <div className="px-6 pt-4">
-          <IncompleteProfileBanner userProfile={profile} />
-        </div>
         <div className="px-6 py-4 pb-8">
           <ExecBoardModulePanel />
         </div>
@@ -334,10 +316,6 @@ export const UnifiedDashboard = () => {
   }
   return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
       
-      {/* Incomplete Profile Banner */}
-      <div className="px-6 pt-4">
-        <IncompleteProfileBanner userProfile={profile} />
-      </div>
 
       {/* Row 1: Hero + Features side-by-side */}
       <div className="px-6 py-4">
