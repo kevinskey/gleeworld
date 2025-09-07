@@ -78,6 +78,7 @@ import MediaLibrary from '@/pages/admin/MediaLibrary';
 import { RadioManagement } from '@/components/admin/RadioManagement';
 import { TheoryPollModule } from '@/components/modules/TheoryPollModule';
 import { ProductManagement } from '@/pages/ProductManagement';
+import { BowmanScholarsModule } from '@/components/modules/BowmanScholarsModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -277,6 +278,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: AlumnaePortalModule,
     dbFunctionName: "alumnae-portal"
+  },
+  {
+    id: "bowman-scholars",
+    name: "bowman-scholars",
+    title: "Bowman Scholars",
+    description: "Academic excellence program for distinguished students",
+    icon: GraduationCap,
+    iconColor: "gold",
+    category: "member-management",
+    isActive: true,
+    component: BowmanScholarsModule,
+    dbFunctionName: "bowman-scholars"
   },
   {
     id: "auditions",
