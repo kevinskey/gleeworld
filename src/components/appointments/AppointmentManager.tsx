@@ -63,7 +63,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
     if (editingAppointmentId) {
       const appointmentToEdit = appointments.find(apt => apt.id === editingAppointmentId);
       if (appointmentToEdit) {
-        setEditingAppointment(appointmentToEdit);
+        handleEdit(appointmentToEdit); // This sets both editingAppointment and populates form
         onEditingAppointmentIdChange?.(null); // Clear the external ID
       }
     }
