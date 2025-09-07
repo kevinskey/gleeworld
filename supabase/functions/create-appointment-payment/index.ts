@@ -33,13 +33,28 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // Check for required environment variables first
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    
+    logStep("Environment check", { 
+      hasStripeKey: !!stripeKey, 
+      hasSupabaseUrl: !!supabaseUrl, 
+      hasSupabaseAnonKey: !!supabaseAnonKey 
+    });
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY environment variable is not configured");
+    }
+    if (!supabaseUrl) {
+      throw new Error("SUPABASE_URL environment variable is not configured");
+    }
+    if (!supabaseAnonKey) {
+      throw new Error("SUPABASE_ANON_KEY environment variable is not configured");
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
     const requestData: PaymentRequest = await req.json();
     logStep("Request received", { 
