@@ -100,21 +100,21 @@ export const BowmanScholarsModule = () => {
       </div>
 
       <Tabs defaultValue="directory" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="directory" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Scholar Directory
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+          <TabsTrigger value="directory" className="flex items-center gap-1 text-xs sm:text-sm">
+            <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Scholar </span>Directory
           </TabsTrigger>
-          <TabsTrigger value="profile" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            My Profile
+          <TabsTrigger value="profile" className="flex items-center gap-1 text-xs sm:text-sm">
+            <User className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">My </span>Profile
           </TabsTrigger>
-          <TabsTrigger value="liturgical" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Liturgical Planning
+          <TabsTrigger value="liturgical" className="flex items-center gap-1 text-xs sm:text-sm">
+            <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Liturgical </span>Planning
           </TabsTrigger>
-          <TabsTrigger value="resources" className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
+          <TabsTrigger value="resources" className="flex items-center gap-1 text-xs sm:text-sm">
+            <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
             Resources
           </TabsTrigger>
         </TabsList>
@@ -123,23 +123,23 @@ export const BowmanScholarsModule = () => {
           {/* Lyke House Bowman Scholar Program Landing */}
           <Card className="mb-6">
             <CardContent className="p-6">
-              <div className="grid md:grid-cols-2 gap-8 items-start">
+              <div className="grid lg:grid-cols-2 gap-4 lg:gap-8 items-start">
                 {/* Left column - Sister Thea Bowman Image */}
-                <div className="flex justify-center md:justify-start">
+                <div className="flex justify-center lg:justify-start order-2 lg:order-1">
                   <img 
                     src="/lovable-uploads/eef8650c-760f-4cc7-9e94-d1da279feeca.png"
                     alt="Sister Thea Bowman speaking at a podium"
-                    className="rounded-lg shadow-lg max-w-full h-auto"
+                    className="rounded-lg shadow-lg w-full max-w-sm lg:max-w-full h-auto"
                   />
                 </div>
                 
                 {/* Right column - Program Information */}
-                <div className="space-y-4">
-                  <h2 className="text-3xl font-bold text-primary leading-tight py-4 px-2">
+                <div className="space-y-4 order-1 lg:order-2">
+                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-primary leading-tight py-2 lg:py-4 px-2">
                     Lyke House Bowman Scholar Program
                   </h2>
                   
-                  <div className="space-y-4 text-muted-foreground leading-relaxed">
+                  <div className="space-y-3 lg:space-y-4 text-muted-foreground leading-relaxed text-sm lg:text-base">
                     <p>
                       This program is named in honor of Sister Thea Bowman. It is a group of music majors who are invited to help develop the music program at the Catholic Center in the spirit of Sr. Thea Bowman.
                     </p>
@@ -152,15 +152,15 @@ export const BowmanScholarsModule = () => {
                       Sr. Thea Bowman was an African American Franciscan Sister of Perpetual Adoration. Born in Yazoo City, Mississippi, Thea expressed early on to her Methodist parents that she desired to become Catholic. Soon after she was enrolled in a school served by the Franciscan Sisters, and at age 15 in 1952 she entered their convent in LaCrosse, Wisconsin.
                     </p>
                     
-                    <p>
+                    <p className="hidden lg:block">
                       Through music, dance, poetry and other expressive art forms, Sr. Thea's message of Black Catholic identity reached the masses. She understood the need for the Black American experience to be embedded within the Catholic tradition of Christian expression, and sought to eliminate the barriers of racism, misunderstanding, and unilateralism that would hinder the Catholic Church in the U.S. from being fully catholic or universal.
                     </p>
                     
-                    <div className="bg-muted/50 p-4 rounded-lg">
-                      <p className="text-sm">
+                    <div className="bg-muted/50 p-3 lg:p-4 rounded-lg">
+                      <p className="text-xs lg:text-sm">
                         <strong>For more information about the Bowman Scholar program, please contact:</strong><br />
                         Dr. Kevin Johnson, Director of Worship and Liturgy<br />
-                        <a href="mailto:kevinskey@mac.com" className="text-primary hover:underline">
+                        <a href="mailto:kevinskey@mac.com" className="text-primary hover:underline break-all">
                           kevinskey@mac.com
                         </a>
                       </p>
@@ -187,36 +187,36 @@ export const BowmanScholarsModule = () => {
                       <p className="text-muted-foreground">No scholars found</p>
                     </div>
                   ) : (
-                    scholars.map((scholar) => (
-                      <Card key={scholar.user_id} className="p-4">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-16 w-16">
-                            <AvatarImage src={scholar.headshot_url} />
-                            <AvatarFallback>
-                              <GraduationCap className="h-8 w-8" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge variant="secondary" className="bg-gold/20 text-gold">
-                                Bowman Scholar
-                              </Badge>
-                              {scholar.grad_year && (
-                                <Badge variant="outline">
-                                  Class of {scholar.grad_year}
-                                </Badge>
-                              )}
-                            </div>
-                            {scholar.major && (
-                              <p className="text-sm font-medium mb-1">{scholar.major}</p>
-                            )}
-                            {scholar.bio && (
-                              <p className="text-sm text-muted-foreground">{scholar.bio}</p>
-                            )}
-                          </div>
-                        </div>
-                      </Card>
-                    ))
+                     scholars.map((scholar) => (
+                       <Card key={scholar.user_id} className="p-3 lg:p-4">
+                         <div className="flex items-start gap-3 lg:gap-4">
+                           <Avatar className="h-12 w-12 lg:h-16 lg:w-16 flex-shrink-0">
+                             <AvatarImage src={scholar.headshot_url} />
+                             <AvatarFallback>
+                               <GraduationCap className="h-6 w-6 lg:h-8 lg:w-8" />
+                             </AvatarFallback>
+                           </Avatar>
+                           <div className="flex-1 min-w-0">
+                             <div className="flex flex-wrap items-center gap-1 lg:gap-2 mb-2">
+                               <Badge variant="secondary" className="bg-gold/20 text-gold text-xs">
+                                 Bowman Scholar
+                               </Badge>
+                               {scholar.grad_year && (
+                                 <Badge variant="outline" className="text-xs">
+                                   Class of {scholar.grad_year}
+                                 </Badge>
+                               )}
+                             </div>
+                             {scholar.major && (
+                               <p className="text-xs lg:text-sm font-medium mb-1 truncate">{scholar.major}</p>
+                             )}
+                             {scholar.bio && (
+                               <p className="text-xs lg:text-sm text-muted-foreground line-clamp-2">{scholar.bio}</p>
+                             )}
+                           </div>
+                         </div>
+                       </Card>
+                     ))
                   )}
                 </div>
               </ScrollArea>
@@ -257,27 +257,27 @@ export const BowmanScholarsModule = () => {
                   </Button>
                 </div>
               ) : editMode ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="major">Major</Label>
-                      <Input
-                        id="major"
-                        value={formData.major}
-                        onChange={(e) => handleInputChange('major', e.target.value)}
-                        placeholder="Your major"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="grad_year">Graduation Year</Label>
-                      <Input
-                        id="grad_year"
-                        type="number"
-                        value={formData.grad_year}
-                        onChange={(e) => handleInputChange('grad_year', parseInt(e.target.value))}
-                      />
-                    </div>
-                  </div>
+                 <div className="space-y-4">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     <div>
+                       <Label htmlFor="major">Major</Label>
+                       <Input
+                         id="major"
+                         value={formData.major}
+                         onChange={(e) => handleInputChange('major', e.target.value)}
+                         placeholder="Your major"
+                       />
+                     </div>
+                     <div>
+                       <Label htmlFor="grad_year">Graduation Year</Label>
+                       <Input
+                         id="grad_year"
+                         type="number"
+                         value={formData.grad_year}
+                         onChange={(e) => handleInputChange('grad_year', parseInt(e.target.value))}
+                       />
+                     </div>
+                   </div>
                   
                   <div>
                     <Label htmlFor="headshot_url">Headshot URL</Label>
@@ -308,34 +308,34 @@ export const BowmanScholarsModule = () => {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-20 w-20">
-                      <AvatarImage src={currentScholar?.headshot_url} />
-                      <AvatarFallback>
-                        <GraduationCap className="h-10 w-10" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge className="bg-gold/20 text-gold">
-                          Bowman Scholar
-                        </Badge>
-                        {currentScholar?.grad_year && (
-                          <Badge variant="outline">
-                            Class of {currentScholar.grad_year}
-                          </Badge>
-                        )}
-                      </div>
-                      {currentScholar?.major && (
-                        <p className="font-medium mb-2">{currentScholar.major}</p>
-                      )}
-                      {currentScholar?.bio && (
-                        <p className="text-muted-foreground">{currentScholar.bio}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                 <div className="space-y-4">
+                   <div className="flex items-start gap-3 lg:gap-4">
+                     <Avatar className="h-16 w-16 lg:h-20 lg:w-20 flex-shrink-0">
+                       <AvatarImage src={currentScholar?.headshot_url} />
+                       <AvatarFallback>
+                         <GraduationCap className="h-8 w-8 lg:h-10 lg:w-10" />
+                       </AvatarFallback>
+                     </Avatar>
+                     <div className="flex-1 min-w-0">
+                       <div className="flex flex-wrap items-center gap-1 lg:gap-2 mb-2">
+                         <Badge className="bg-gold/20 text-gold text-xs lg:text-sm">
+                           Bowman Scholar
+                         </Badge>
+                         {currentScholar?.grad_year && (
+                           <Badge variant="outline" className="text-xs lg:text-sm">
+                             Class of {currentScholar.grad_year}
+                           </Badge>
+                         )}
+                       </div>
+                       {currentScholar?.major && (
+                         <p className="font-medium mb-2 text-sm lg:text-base">{currentScholar.major}</p>
+                       )}
+                       {currentScholar?.bio && (
+                         <p className="text-muted-foreground text-sm lg:text-base">{currentScholar.bio}</p>
+                       )}
+                     </div>
+                   </div>
+                 </div>
               )}
             </CardContent>
           </Card>
@@ -453,26 +453,26 @@ export const BowmanScholarsModule = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4">
-                <Card className="p-4">
-                  <h3 className="font-medium mb-2">Study Groups</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Connect with fellow scholars for collaborative learning sessions.
-                  </p>
-                </Card>
-                
-                <Card className="p-4">
-                  <h3 className="font-medium mb-2">Academic Calendar</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Important academic dates and Bowman Scholar events.
-                  </p>
-                </Card>
-                
-                <Card className="p-4">
-                  <h3 className="font-medium mb-2">Scholarship Opportunities</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Information about additional scholarships and academic grants.
-                  </p>
-                </Card>
+                 <Card className="p-3 lg:p-4">
+                   <h3 className="font-medium mb-2 text-sm lg:text-base">Study Groups</h3>
+                   <p className="text-xs lg:text-sm text-muted-foreground">
+                     Connect with fellow scholars for collaborative learning sessions.
+                   </p>
+                 </Card>
+                 
+                 <Card className="p-3 lg:p-4">
+                   <h3 className="font-medium mb-2 text-sm lg:text-base">Academic Calendar</h3>
+                   <p className="text-xs lg:text-sm text-muted-foreground">
+                     Important academic dates and Bowman Scholar events.
+                   </p>
+                 </Card>
+                 
+                 <Card className="p-3 lg:p-4">
+                   <h3 className="font-medium mb-2 text-sm lg:text-base">Scholarship Opportunities</h3>
+                   <p className="text-xs lg:text-sm text-muted-foreground">
+                     Information about additional scholarships and academic grants.
+                   </p>
+                 </Card>
               </div>
             </CardContent>
           </Card>
