@@ -506,7 +506,18 @@ export default function UnifiedBookingPage() {
     }
   };
 
-  const isFormValid = contactInfo.name && contactInfo.email && contactInfo.phone && selectedAppointmentType;
+  const isFormValid = contactInfo.name && contactInfo.email && selectedAppointmentType;
+  
+  // Debug form validation
+  console.log('Form validation:', {
+    hasName: !!contactInfo.name,
+    hasEmail: !!contactInfo.email,
+    hasPhone: !!contactInfo.phone,
+    hasAppointmentType: !!selectedAppointmentType,
+    isFormValid,
+    contactInfo,
+    selectedAppointmentType
+  });
 
   if (isConfirmed && selectedSlot && selectedAppointmentType) {
     return (
