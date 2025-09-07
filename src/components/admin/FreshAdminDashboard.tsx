@@ -47,7 +47,7 @@ const adminModules = [
   { id: 'inventory-products', name: 'Inventory & Products', icon: Package, description: 'Admin product management', route: '/admin/products' },
   { id: 'scholarships', name: 'Scholarships', icon: GraduationCap, description: 'Manage scholarships', route: '/admin/scholarships' },
   { id: 'contracts', name: 'Contracts', icon: FileText, description: 'Contracts and signatures', route: '/contracts' },
-  { id: 'booking', name: 'Appointments / Booking', icon: Calendar, description: 'Service booking and scheduling', route: '/booking' },
+  { id: 'booking', name: 'Appointments / Booking', icon: Calendar, description: 'Service booking and scheduling', route: '/appointments' },
   { id: 'radio', name: 'Radio', icon: Radio, description: 'Manage radio and streams', route: '/radio' },
   { id: 'music-library', name: 'Music Library', icon: Music, description: 'Scores and recordings', route: '/music-library' },
   { id: 'media-library', name: 'Media Library', icon: Music, description: 'Photos, audio, video', route: '/admin/media' },
