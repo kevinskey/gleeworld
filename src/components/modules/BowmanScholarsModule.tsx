@@ -135,7 +135,7 @@ export const BowmanScholarsModule = () => {
                 
                 {/* Right column - Program Information */}
                 <div className="space-y-4">
-                  <h2 className="text-3xl font-bold text-primary">
+                  <h2 className="text-3xl font-bold text-primary leading-relaxed py-4 px-2">
                     Lyke House Bowman Scholar Program
                   </h2>
                   
