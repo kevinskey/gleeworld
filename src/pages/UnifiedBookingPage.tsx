@@ -292,18 +292,10 @@ export default function UnifiedBookingPage() {
       displayTime: time
     };
 
-    // Store selected time slot in localStorage for persistence across auth flow
+    // Store selected time slot in localStorage for persistence
     localStorage.setItem('selectedAuditionTimeSlot', JSON.stringify(timeSlotData));
     
-    // Check if user is authenticated
-    if (!user) {
-      // Redirect to auth page with return URL
-      const returnUrl = encodeURIComponent('/booking');
-      window.location.href = `/auth?returnTo=${returnUrl}&timeSlot=true`;
-      return;
-    }
-    
-    // User is authenticated, proceed with normal booking
+    // Proceed with booking (authentication not required for public booking)
     setSelectedSlot(timeSlotData);
     setShowContactForm(true);
   };
