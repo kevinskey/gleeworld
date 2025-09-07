@@ -3503,6 +3503,7 @@ export type Database = {
           max_occurrences: number | null
           notes: string | null
           parent_appointment_id: string | null
+          provider_id: string | null
           recurrence_days_of_week: number[] | null
           recurrence_end_date: string | null
           recurrence_interval: number | null
@@ -3529,6 +3530,7 @@ export type Database = {
           max_occurrences?: number | null
           notes?: string | null
           parent_appointment_id?: string | null
+          provider_id?: string | null
           recurrence_days_of_week?: number[] | null
           recurrence_end_date?: string | null
           recurrence_interval?: number | null
@@ -3555,6 +3557,7 @@ export type Database = {
           max_occurrences?: number | null
           notes?: string | null
           parent_appointment_id?: string | null
+          provider_id?: string | null
           recurrence_days_of_week?: number[] | null
           recurrence_end_date?: string | null
           recurrence_interval?: number | null
@@ -3563,7 +3566,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gw_appointments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "gw_service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_assignment_submissions: {
         Row: {
@@ -8469,6 +8480,103 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_provider_availability: {
+        Row: {
+          break_between_slots_minutes: number
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_available: boolean
+          provider_id: string
+          slot_duration_minutes: number
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          break_between_slots_minutes?: number
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_available?: boolean
+          provider_id: string
+          slot_duration_minutes?: number
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          break_between_slots_minutes?: number
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_available?: boolean
+          provider_id?: string
+          slot_duration_minutes?: number
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_provider_availability_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "gw_service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_provider_time_off: {
+        Row: {
+          created_at: string
+          end_date: string
+          end_time: string | null
+          id: string
+          is_recurring: boolean
+          provider_id: string
+          reason: string | null
+          recurrence_type: string | null
+          start_date: string
+          start_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          end_time?: string | null
+          id?: string
+          is_recurring?: boolean
+          provider_id: string
+          reason?: string | null
+          recurrence_type?: string | null
+          start_date: string
+          start_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          end_time?: string | null
+          id?: string
+          is_recurring?: boolean
+          provider_id?: string
+          reason?: string | null
+          recurrence_type?: string | null
+          start_date?: string
+          start_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_provider_time_off_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "gw_service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_public_form_submissions: {
         Row: {
           budget_range: string | null
@@ -9671,6 +9779,65 @@ export type Database = {
           },
         ]
       }
+      gw_service_providers: {
+        Row: {
+          bio: string | null
+          created_at: string
+          default_calendar_id: string | null
+          department: string | null
+          email: string
+          id: string
+          is_active: boolean
+          phone: string | null
+          profile_image_url: string | null
+          provider_name: string
+          services_offered: string[] | null
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          default_calendar_id?: string | null
+          department?: string | null
+          email: string
+          id?: string
+          is_active?: boolean
+          phone?: string | null
+          profile_image_url?: string | null
+          provider_name: string
+          services_offered?: string[] | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          default_calendar_id?: string | null
+          department?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean
+          phone?: string | null
+          profile_image_url?: string | null
+          provider_name?: string
+          services_offered?: string[] | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_service_providers_default_calendar_id_fkey"
+            columns: ["default_calendar_id"]
+            isOneToOne: false
+            referencedRelation: "gw_calendars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_services: {
         Row: {
           advance_booking_days: number | null
@@ -9692,6 +9859,7 @@ export type Database = {
           name: string
           price_amount: number | null
           price_display: string | null
+          provider_id: string | null
           requires_approval: boolean | null
           updated_at: string
         }
@@ -9715,6 +9883,7 @@ export type Database = {
           name: string
           price_amount?: number | null
           price_display?: string | null
+          provider_id?: string | null
           requires_approval?: boolean | null
           updated_at?: string
         }
@@ -9738,10 +9907,19 @@ export type Database = {
           name?: string
           price_amount?: number | null
           price_display?: string | null
+          provider_id?: string | null
           requires_approval?: boolean | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gw_services_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "gw_service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_setlist_items: {
         Row: {
