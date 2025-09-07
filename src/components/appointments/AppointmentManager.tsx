@@ -36,12 +36,7 @@ interface AppointmentManagerProps {
   onEditingAppointmentIdChange?: (id: string | null) => void;
 }
 
-const MOCK_SERVICES = [
-  { id: '1', name: 'General Consultation', duration: 60, price: 75 },
-  { id: '2', name: 'Strategy Session', duration: 90, price: 125 },
-  { id: '3', name: 'Quick Check-in', duration: 30, price: 50 },
-  { id: '4', name: 'Team Workshop', duration: 120, price: 200 },
-];
+import { useServices } from '@/hooks/useServices';
 
 const TIME_SLOTS = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -61,6 +56,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const { data: calendars = [] } = useCalendars();
+  const { data: services = [] } = useServices();
 
   // Handle external editing request from calendar
   React.useEffect(() => {
@@ -119,7 +115,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       return;
     }
 
-    const serviceName = MOCK_SERVICES.find(s => s.id === formData.service)?.name || formData.service;
+    const serviceName = services.find(s => s.id === formData.service)?.name || formData.service;
     
     const newAppointment: Omit<Appointment, 'id'> = {
       title: formData.title || `${serviceName} with ${formData.clientName}`,
@@ -144,7 +140,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
   const handleUpdate = () => {
     if (!editingAppointment) return;
 
-    const serviceName = MOCK_SERVICES.find(s => s.id === formData.service)?.name || formData.service;
+    const serviceName = services.find(s => s.id === formData.service)?.name || formData.service;
     
     const updates: Partial<Appointment> = {
       title: formData.title || `${serviceName} with ${formData.clientName}`,
@@ -217,9 +213,9 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
               <SelectValue placeholder="Select service" />
             </SelectTrigger>
             <SelectContent>
-              {MOCK_SERVICES.map(service => (
+              {services.map(service => (
                 <SelectItem key={service.id} value={service.id}>
-                  {service.name} - {service.duration}min - ${service.price}
+                  {service.name} - {service.duration_minutes}min - {service.price_display}
                 </SelectItem>
               ))}
             </SelectContent>
