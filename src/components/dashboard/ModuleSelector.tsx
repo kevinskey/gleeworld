@@ -143,10 +143,6 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
   ];
 
   const categories = [...new Set(modules.map(m => m.category))];
-  
-  console.log('ModuleSelector - All modules:', modules);
-  console.log('ModuleSelector - All categories:', categories);
-  console.log('ModuleSelector - Bowman Scholars module:', modules.find(m => m.id === 'bowman-scholars'));
 
   return (
     <div className="h-full flex flex-col">
@@ -165,13 +161,7 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
               
               <div className="space-y-2">
                 {modules
-                  .filter(module => {
-                    const filtered = module.category === category;
-                    if (category === 'Reference') {
-                      console.log(`Reference modules:`, modules.filter(m => m.category === 'Reference'));
-                    }
-                    return filtered;
-                  })
+                  .filter(module => module.category === category)
                   .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
                   .map((module) => {
                     const Icon = module.icon;
