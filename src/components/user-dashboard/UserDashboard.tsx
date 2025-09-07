@@ -13,6 +13,7 @@ import { PRCoordinatorHub } from "@/components/pr-coordinator/PRCoordinatorHub";
 import AlumnaeLanding from "@/pages/AlumnaeLanding";
 import { WelcomeCard } from "./WelcomeCard";
 import { QuickActionsSection } from "./sections/QuickActionsSection";
+import { QuickActions } from "@/components/community/QuickActions";
 import { GleeClubSpotlightSection } from "./sections/GleeClubSpotlightSection";
 
 
@@ -322,13 +323,8 @@ const UserDashboard = React.memo(() => {
 
         {/* Community Hub and Quick Actions */}
         <div className="w-full">
-          {/* Add Quick Actions Section */}
-          <QuickActionsSection 
-            actionFilter="community"
-            isAdmin={isAdmin}
-            userRole={userRole}
-            execPosition={profile?.exec_board_role}
-          />
+          {/* Direct QuickActions Component */}
+          <QuickActions />
         </div>
 
         {/* Executive Board Dashboard Section */}
