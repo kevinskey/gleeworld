@@ -262,7 +262,7 @@ export const ComprehensiveAppointmentSystem = () => {
       <Dialog open={!!selectedAppointment} onOpenChange={() => setSelectedAppointment(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Appointment - {selectedAppointment.title}</DialogTitle>
+            <DialogTitle>Edit Appointment - {selectedAppointment?.title || 'Unknown'}</DialogTitle>
           </DialogHeader>
           {selectedAppointment && (
             <div className="mt-4">
