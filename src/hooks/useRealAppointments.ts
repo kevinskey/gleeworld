@@ -6,6 +6,8 @@ import type { Database } from '@/integrations/supabase/types';
 type DbAppointment = Database['public']['Tables']['gw_appointments']['Row'];
 type DbAppointmentInsert = Database['public']['Tables']['gw_appointments']['Insert'];
 type DbAppointmentUpdate = Database['public']['Tables']['gw_appointments']['Update'];
+type DbEvent = Database['public']['Tables']['gw_events']['Row'];
+type DbEventInsert = Database['public']['Tables']['gw_events']['Insert'];
 
 export interface Appointment {
   id: string;
@@ -21,6 +23,22 @@ export interface Appointment {
   notes?: string;
   calendarId?: string;
 }
+
+// Get the Appointments calendar ID
+const getAppointmentsCalendarId = async (): Promise<string | null> => {
+  const { data, error } = await supabase
+    .from('gw_calendars')
+    .select('id')
+    .eq('name', 'Appointments')
+    .single();
+    
+  if (error) {
+    console.error('Error fetching Appointments calendar:', error);
+    return null;
+  }
+  
+  return data?.id || null;
+};
 
 // Convert database format to component format
 const convertDbToAppointment = (dbAppt: DbAppointment): Appointment => {
@@ -66,6 +84,86 @@ const convertAppointmentToDb = (appt: Omit<Appointment, 'id'>): DbAppointmentIns
   };
 };
 
+// Create calendar event for appointment
+const createCalendarEvent = async (appointment: Appointment, calendarId: string): Promise<void> => {
+  const [hours, minutes] = appointment.time.split(':').map(Number);
+  const startDateTime = new Date(appointment.date);
+  startDateTime.setHours(hours, minutes, 0, 0);
+  
+  const endDateTime = new Date(startDateTime);
+  endDateTime.setMinutes(endDateTime.getMinutes() + appointment.duration);
+
+  const eventData: DbEventInsert = {
+    title: appointment.title,
+    description: `Appointment with ${appointment.clientName}\nService: ${appointment.service}\nEmail: ${appointment.clientEmail}${appointment.clientPhone ? `\nPhone: ${appointment.clientPhone}` : ''}${appointment.notes ? `\nNotes: ${appointment.notes}` : ''}`,
+    start_date: startDateTime.toISOString().split('T')[0],
+    end_date: startDateTime.toISOString().split('T')[0],
+    location: null,
+    event_type: 'appointment',
+    is_public: false,
+    calendar_id: calendarId
+  };
+
+  const { error } = await supabase
+    .from('gw_events')
+    .insert(eventData);
+
+  if (error) {
+    console.error('Error creating calendar event:', error);
+    throw error;
+  }
+};
+
+// Update calendar event for appointment
+const updateCalendarEvent = async (appointment: Appointment, calendarId: string): Promise<void> => {
+  const [hours, minutes] = appointment.time.split(':').map(Number);
+  const startDateTime = new Date(appointment.date);
+  startDateTime.setHours(hours, minutes, 0, 0);
+  
+  const endDateTime = new Date(startDateTime);
+  endDateTime.setMinutes(endDateTime.getMinutes() + appointment.duration);
+
+  // Find existing event by title and type
+  const { data: existingEvents } = await supabase
+    .from('gw_events')
+    .select('id')
+    .eq('event_type', 'appointment')
+    .ilike('title', `%${appointment.clientName}%`)
+    .eq('calendar_id', calendarId);
+
+  if (existingEvents && existingEvents.length > 0) {
+    const { error } = await supabase
+      .from('gw_events')
+      .update({
+        title: appointment.title,
+        description: `Appointment with ${appointment.clientName}\nService: ${appointment.service}\nEmail: ${appointment.clientEmail}${appointment.clientPhone ? `\nPhone: ${appointment.clientPhone}` : ''}${appointment.notes ? `\nNotes: ${appointment.notes}` : ''}`,
+        start_date: startDateTime.toISOString().split('T')[0],
+        end_date: startDateTime.toISOString().split('T')[0]
+      })
+      .eq('id', existingEvents[0].id);
+
+    if (error) {
+      console.error('Error updating calendar event:', error);
+      throw error;
+    }
+  }
+};
+
+// Delete calendar event for appointment
+const deleteCalendarEvent = async (appointment: Appointment, calendarId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('gw_events')
+    .delete()
+    .eq('event_type', 'appointment')
+    .ilike('title', `%${appointment.clientName}%`)
+    .eq('calendar_id', calendarId);
+
+  if (error) {
+    console.error('Error deleting calendar event:', error);
+    throw error;
+  }
+};
+
 export const useRealAppointments = () => {
   return useQuery({
     queryKey: ['real-appointments'],
@@ -103,11 +201,25 @@ export const useCreateRealAppointment = () => {
         throw error;
       }
 
-      return convertDbToAppointment(data);
+      const createdAppointment = convertDbToAppointment(data);
+
+      // Create corresponding calendar event
+      const calendarId = await getAppointmentsCalendarId();
+      if (calendarId) {
+        try {
+          await createCalendarEvent(createdAppointment, calendarId);
+        } catch (calendarError) {
+          console.error('Error creating calendar event:', calendarError);
+          // Don't fail the appointment creation if calendar fails
+        }
+      }
+
+      return createdAppointment;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['real-appointments'] });
-      toast.success('Appointment created successfully!');
+      queryClient.invalidateQueries({ queryKey: ['events'] }); // Refresh calendar
+      toast.success('Appointment created and added to calendar!');
     },
     onError: (error: any) => {
       console.error('Failed to create appointment:', error);
@@ -171,11 +283,25 @@ export const useUpdateRealAppointment = () => {
         throw error;
       }
 
-      return convertDbToAppointment(data);
+      const updatedAppointment = convertDbToAppointment(data);
+
+      // Update corresponding calendar event
+      const calendarId = await getAppointmentsCalendarId();
+      if (calendarId) {
+        try {
+          await updateCalendarEvent(updatedAppointment, calendarId);
+        } catch (calendarError) {
+          console.error('Error updating calendar event:', calendarError);
+          // Don't fail the appointment update if calendar fails
+        }
+      }
+
+      return updatedAppointment;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['real-appointments'] });
-      toast.success('Appointment updated successfully!');
+      queryClient.invalidateQueries({ queryKey: ['events'] }); // Refresh calendar
+      toast.success('Appointment updated and calendar synchronized!');
     },
     onError: (error: any) => {
       console.error('Failed to update appointment:', error);
@@ -189,6 +315,13 @@ export const useDeleteRealAppointment = () => {
 
   return useMutation({
     mutationFn: async (id: string): Promise<void> => {
+      // Get appointment details before deletion for calendar cleanup
+      const { data: appointment } = await supabase
+        .from('gw_appointments')
+        .select('*')
+        .eq('id', id)
+        .single();
+
       const { error } = await supabase
         .from('gw_appointments')
         .delete()
@@ -198,10 +331,25 @@ export const useDeleteRealAppointment = () => {
         console.error('Error deleting appointment:', error);
         throw error;
       }
+
+      // Delete corresponding calendar event
+      if (appointment) {
+        const calendarId = await getAppointmentsCalendarId();
+        if (calendarId) {
+          try {
+            const apptData = convertDbToAppointment(appointment);
+            await deleteCalendarEvent(apptData, calendarId);
+          } catch (calendarError) {
+            console.error('Error deleting calendar event:', calendarError);
+            // Don't fail the appointment deletion if calendar fails
+          }
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['real-appointments'] });
-      toast.success('Appointment deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['events'] }); // Refresh calendar
+      toast.success('Appointment deleted and removed from calendar!');
     },
     onError: (error: any) => {
       console.error('Failed to delete appointment:', error);

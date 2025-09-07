@@ -215,25 +215,26 @@ export const ComprehensiveAppointmentSystem = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Popular Services</CardTitle>
-                <CardDescription>Most booked services</CardDescription>
+                <CardTitle>Calendar Integration</CardTitle>
+                <CardDescription>Automatic calendar synchronization</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {Object.entries(
-                    appointments.reduce((acc, apt) => {
-                      acc[apt.service] = (acc[apt.service] || 0) + 1;
-                      return acc;
-                    }, {} as Record<string, number>)
-                  )
-                    .sort(([,a], [,b]) => b - a)
-                    .slice(0, 5)
-                    .map(([service, count]) => (
-                      <div key={service} className="flex items-center justify-between">
-                        <span>{service}</span>
-                        <span className="font-medium">{count}</span>
-                      </div>
-                    ))}
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 rounded-full bg-indigo-500"></div>
+                    <div>
+                      <p className="font-medium">Appointments Calendar</p>
+                      <p className="text-sm text-muted-foreground">
+                        All appointments auto-sync to calendar
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <p>✅ Auto-create calendar events</p>
+                    <p>✅ Sync updates in real-time</p>
+                    <p>✅ Include client details</p>
+                    <p>✅ Remove deleted appointments</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
