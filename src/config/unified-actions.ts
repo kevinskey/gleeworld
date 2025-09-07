@@ -163,12 +163,6 @@ export const UNIFIED_ACTIONS: UnifiedAction[] = [
     isActive: true,
     dbFunctionName: 'scheduling_management'
   },
-    category: 'events',
-    type: 'modal',
-    isActive: true,
-    dbFunctionName: 'scheduling_management'
-  },
-
   // Members Actions (alphabetized)
   {
     id: 'attendance-policy',
