@@ -86,18 +86,19 @@ export const BowmanScholarsModule = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-gradient-to-br from-gold/20 to-blue/20 rounded-lg">
-          <GraduationCap className="h-6 w-6 text-gold" />
+    <div className="w-full min-h-screen">
+      <div className="px-2 sm:px-4 lg:px-6 py-4 lg:py-6 space-y-4 lg:space-y-6 w-full">
+        <div className="flex items-center gap-2 lg:gap-3 mb-4 lg:mb-6">
+          <div className="p-1.5 lg:p-2 bg-gradient-to-br from-gold/20 to-blue/20 rounded-lg">
+            <GraduationCap className="h-5 w-5 lg:h-6 lg:w-6 text-gold" />
+          </div>
+          <div>
+            <h1 className="text-xl lg:text-2xl font-bold">Bowman Scholars</h1>
+            <p className="text-xs lg:text-sm text-muted-foreground">
+              Celebrating academic excellence in the Glee Club community
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold">Bowman Scholars</h1>
-          <p className="text-sm text-muted-foreground">
-            Celebrating academic excellence in the Glee Club community
-          </p>
-        </div>
-      </div>
 
       <Tabs defaultValue="directory" className="w-full">
         <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
@@ -121,8 +122,8 @@ export const BowmanScholarsModule = () => {
 
         <TabsContent value="directory" className="space-y-4">
           {/* Lyke House Bowman Scholar Program Landing */}
-          <Card className="mb-6">
-            <CardContent className="p-6">
+          <Card className="mb-4 lg:mb-6">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="grid lg:grid-cols-2 gap-4 lg:gap-8 items-start">
                 {/* Left column - Sister Thea Bowman Image */}
                 <div className="flex justify-center lg:justify-start order-2 lg:order-1">
@@ -179,7 +180,7 @@ export const BowmanScholarsModule = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-96">
+              <ScrollArea className="h-64 sm:h-80 lg:h-96">
                 <div className="grid gap-4">
                   {scholars.length === 0 ? (
                     <div className="text-center py-8">
@@ -478,6 +479,7 @@ export const BowmanScholarsModule = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 };
