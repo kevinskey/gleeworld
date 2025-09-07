@@ -529,7 +529,7 @@ export const GleeWorldLanding = () => {
               
               {/* Horizontal Scroll for All Devices */}
               <Carousel className="w-full">
-                <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
+              <CarouselContent className="w-full -ml-2 sm:-ml-4 md:-ml-6 lg:-ml-8">
                   {albums.map(album => <CarouselItem key={album.id} className="pl-1 sm:pl-2 md:pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
                       <Card className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-card border-2 border-border hover:border-accent group cursor-pointer h-full" onClick={() => handleAlbumClick(album)}>
                         <div className="aspect-square bg-muted rounded-t-lg flex items-center justify-center relative overflow-hidden">
