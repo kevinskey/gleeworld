@@ -9,6 +9,7 @@ import { AppointmentServiceManager } from './AppointmentServiceManager';
 import { ProviderProfileSelector } from './ProviderProfileSelector';
 import { ProviderManagement } from '@/components/admin/ProviderManagement';
 import { format, addDays, startOfWeek, addWeeks } from 'date-fns';
+import { useUserRole } from '@/hooks/useUserRole';
 import { 
   useRealAppointments, 
   useCreateRealAppointment, 
@@ -22,6 +23,9 @@ import { useServiceProviders } from '@/hooks/useServiceProviders';
 export const ComprehensiveAppointmentSystem = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null);
+  
+  // Use user role hook
+  const { isSuperAdmin } = useUserRole();
   
   // Use real appointments data
   const { data: appointments = [], isLoading, error } = useRealAppointments();
@@ -185,13 +189,17 @@ export const ComprehensiveAppointmentSystem = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="calendar" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 gap-1">
+        <TabsList className={`grid w-full gap-1 ${isSuperAdmin() ? 'grid-cols-2 md:grid-cols-6' : 'grid-cols-2 md:grid-cols-4'}`}>
           <TabsTrigger value="calendar" className="text-xs md:text-sm">Calendar</TabsTrigger>
           <TabsTrigger value="management" className="text-xs md:text-sm">Management</TabsTrigger>
           <TabsTrigger value="my-profile" className="text-xs md:text-sm">My Profile</TabsTrigger>
           <TabsTrigger value="services" className="text-xs md:text-sm">Services</TabsTrigger>
-          <TabsTrigger value="providers" className="text-xs md:text-sm">Providers</TabsTrigger>
-          <TabsTrigger value="admin" className="text-xs md:text-sm">Admin</TabsTrigger>
+          {isSuperAdmin() && (
+            <>
+              <TabsTrigger value="providers" className="text-xs md:text-sm">Providers</TabsTrigger>
+              <TabsTrigger value="admin" className="text-xs md:text-sm">Admin</TabsTrigger>
+            </>
+          )}
         </TabsList>
 
         <TabsContent value="calendar" className="space-y-6">
@@ -220,49 +228,53 @@ export const ComprehensiveAppointmentSystem = () => {
           <AppointmentServiceManager />
         </TabsContent>
 
-        <TabsContent value="providers" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {providers.map(provider => (
-              <Card key={provider.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    {provider.profile_image_url ? (
-                      <img 
-                        src={provider.profile_image_url} 
-                        alt={provider.provider_name}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Users className="w-6 h-6 text-primary" />
+        {isSuperAdmin() && (
+          <TabsContent value="providers" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {providers.map(provider => (
+                <Card key={provider.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      {provider.profile_image_url ? (
+                        <img 
+                          src={provider.profile_image_url} 
+                          alt={provider.provider_name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Users className="w-6 h-6 text-primary" />
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-medium">{provider.title} {provider.provider_name}</h3>
+                        <p className="text-sm text-muted-foreground">{provider.department}</p>
                       </div>
-                    )}
-                    <div>
-                      <h3 className="font-medium">{provider.title} {provider.provider_name}</h3>
-                      <p className="text-sm text-muted-foreground">{provider.department}</p>
                     </div>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">Email:</span> {provider.email}</p>
-                    {provider.phone && <p><span className="font-medium">Phone:</span> {provider.phone}</p>}
-                    <p><span className="font-medium">Services:</span> {provider.services_offered.join(', ')}</p>
-                    <p><span className="font-medium">Status:</span> 
-                      <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
-                        provider.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {provider.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
+                    <div className="space-y-2 text-sm">
+                      <p><span className="font-medium">Email:</span> {provider.email}</p>
+                      {provider.phone && <p><span className="font-medium">Phone:</span> {provider.phone}</p>}
+                      <p><span className="font-medium">Services:</span> {provider.services_offered.join(', ')}</p>
+                      <p><span className="font-medium">Status:</span> 
+                        <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
+                          provider.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {provider.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+        )}
 
-        <TabsContent value="admin" className="space-y-6">
-          <ProviderManagement />
-        </TabsContent>
+        {isSuperAdmin() && (
+          <TabsContent value="admin" className="space-y-6">
+            <ProviderManagement />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Edit Appointment Dialog */}
