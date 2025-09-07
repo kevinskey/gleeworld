@@ -1,0 +1,563 @@
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Camera, 
+  X, 
+  RotateCw, 
+  Trash2, 
+  FileText, 
+  Plus,
+  Download,
+  Upload,
+  ScanLine,
+  CheckCircle,
+  AlertCircle
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { uploadFileAndGetUrl } from '@/utils/storage';
+import jsPDF from 'jspdf';
+
+interface CapturedPage {
+  id: string;
+  imageUrl: string;
+  blob: Blob;
+  pageNumber: number;
+  timestamp: Date;
+}
+
+interface DocumentScannerProps {
+  onClose: () => void;
+  onComplete?: (pdfUrl: string, metadata: any) => void;
+}
+
+export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  // Camera and capture state
+  const [isScanning, setIsScanning] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [capturedPages, setCapturedPages] = useState<CapturedPage[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Form state for metadata
+  const [title, setTitle] = useState('');
+  const [composer, setComposer] = useState('');
+  const [arranger, setArranger] = useState('');
+  const [voicing, setVoicing] = useState('');
+  const [notes, setNotes] = useState('');
+  
+  // Refs
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const startCamera = useCallback(async () => {
+    try {
+      setIsScanning(true);
+      
+      const constraints = {
+        video: {
+          facingMode,
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      };
+      
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (error) {
+        // Fallback for devices without environment camera
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+      
+      streamRef.current = stream;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        setIsCameraReady(true);
+      }
+    } catch (error) {
+      console.error('Error starting camera:', error);
+      toast({
+        title: "Camera Error",
+        description: "Unable to access camera. Please check permissions.",
+        variant: "destructive",
+      });
+      setIsScanning(false);
+    }
+  }, [facingMode, toast]);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setIsScanning(false);
+    setIsCameraReady(false);
+  }, []);
+
+  const capturePage = useCallback(async () => {
+    if (!videoRef.current || !canvasRef.current || !isCameraReady) return;
+
+    try {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      
+      if (!context) return;
+
+      // Set canvas size to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Draw video frame to canvas with document enhancement
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Apply basic image enhancement for document scanning
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      // Simple contrast and brightness adjustment for text documents
+      for (let i = 0; i < data.length; i += 4) {
+        // Increase contrast and brightness for better text readability
+        data[i] = Math.min(255, Math.max(0, (data[i] - 128) * 1.2 + 128 + 10));     // Red
+        data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * 1.2 + 128 + 10)); // Green
+        data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * 1.2 + 128 + 10)); // Blue
+      }
+      
+      context.putImageData(imageData, 0, 0);
+
+      // Convert to blob
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const pageId = `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          const imageUrl = URL.createObjectURL(blob);
+          const pageNumber = capturedPages.length + 1;
+          
+          const newPage: CapturedPage = {
+            id: pageId,
+            imageUrl,
+            blob,
+            pageNumber,
+            timestamp: new Date()
+          };
+          
+          setCapturedPages(prev => [...prev, newPage]);
+          
+          toast({
+            title: "Page Captured",
+            description: `Page ${pageNumber} captured successfully`,
+          });
+        }
+      }, 'image/jpeg', 0.9);
+      
+    } catch (error) {
+      console.error('Error capturing page:', error);
+      toast({
+        title: "Capture Error",
+        description: "Failed to capture page. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [isCameraReady, capturedPages.length, toast]);
+
+  const deletePage = useCallback((pageId: string) => {
+    setCapturedPages(prev => {
+      const filtered = prev.filter(page => page.id !== pageId);
+      // Renumber remaining pages
+      return filtered.map((page, index) => ({
+        ...page,
+        pageNumber: index + 1
+      }));
+    });
+  }, []);
+
+  const switchCamera = useCallback(async () => {
+    if (isScanning) {
+      stopCamera();
+      await new Promise(resolve => setTimeout(resolve, 100));
+      setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+      await startCamera();
+    } else {
+      setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+    }
+  }, [isScanning, stopCamera, startCamera]);
+
+  const generatePDF = useCallback(async () => {
+    if (capturedPages.length === 0) {
+      toast({
+        title: "No Pages",
+        description: "Please capture at least one page before generating PDF.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!title.trim()) {
+      toast({
+        title: "Title Required",
+        description: "Please enter a title for the document.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      
+      // Create PDF with captured pages
+      const pdf = new jsPDF();
+      
+      for (let i = 0; i < capturedPages.length; i++) {
+        const page = capturedPages[i];
+        
+        if (i > 0) {
+          pdf.addPage();
+        }
+        
+        // Create image from blob
+        const imageDataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(page.blob);
+        });
+        
+        // Add image to PDF page
+        const img = new Image();
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => {
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            
+            // Calculate aspect ratio and fit to page
+            const imgAspectRatio = img.width / img.height;
+            const pageAspectRatio = pageWidth / pageHeight;
+            
+            let imgWidth, imgHeight;
+            if (imgAspectRatio > pageAspectRatio) {
+              imgWidth = pageWidth - 20; // 10mm margin on each side
+              imgHeight = imgWidth / imgAspectRatio;
+            } else {
+              imgHeight = pageHeight - 20; // 10mm margin on top/bottom
+              imgWidth = imgHeight * imgAspectRatio;
+            }
+            
+            const x = (pageWidth - imgWidth) / 2;
+            const y = (pageHeight - imgHeight) / 2;
+            
+            pdf.addImage(imageDataUrl, 'JPEG', x, y, imgWidth, imgHeight);
+            resolve();
+          };
+          img.onerror = reject;
+          img.src = imageDataUrl;
+        });
+      }
+      
+      // Convert PDF to blob
+      const pdfBlob = pdf.output('blob');
+      
+      // Generate filename
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      const cleanTitle = title.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+      const filename = `scanned_score_${cleanTitle}_${timestamp}.pdf`;
+      
+      // Create File object
+      const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+      
+      // Upload to storage
+      const uploadResult = await uploadFileAndGetUrl(pdfFile, 'sheet-music', 'pdfs');
+      
+      if (!uploadResult) {
+        throw new Error('Failed to upload PDF');
+      }
+      
+      // Save to database
+      const { error } = await supabase
+        .from('gw_sheet_music')
+        .insert({
+          title: title.trim(),
+          composer: composer.trim() || null,
+          arranger: arranger.trim() || null,
+          voicing: voicing || null,
+          notes: notes.trim() || `Scanned document with ${capturedPages.length} pages`,
+          pdf_url: uploadResult.url,
+          is_public: true,
+          created_by: user?.id,
+          scan_metadata: {
+            pages_scanned: capturedPages.length,
+            scan_method: 'camera',
+            scanned_at: new Date().toISOString(),
+            camera_mode: facingMode
+          }
+        });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: `Document "${title}" scanned and saved successfully!`,
+      });
+      
+      // Call completion callback
+      onComplete?.(uploadResult.url, {
+        title,
+        composer,
+        arranger,
+        voicing,
+        pages: capturedPages.length
+      });
+      
+      // Clean up and close
+      capturedPages.forEach(page => URL.revokeObjectURL(page.imageUrl));
+      stopCamera();
+      onClose();
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [capturedPages, title, composer, arranger, voicing, notes, user?.id, facingMode, toast, onComplete, stopCamera, onClose]);
+
+  // Auto-start camera on mount
+  useEffect(() => {
+    startCamera();
+    return () => stopCamera();
+  }, [startCamera, stopCamera]);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl h-full max-h-[90vh] bg-background rounded-lg overflow-hidden">
+        <div className="flex h-full">
+          {/* Left Panel - Camera */}
+          <div className="flex-1 flex flex-col bg-black">
+            <div className="flex items-center justify-between p-4 bg-background">
+              <div className="flex items-center gap-2">
+                <ScanLine className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold">Document Scanner</h3>
+                <Badge variant="secondary">
+                  {capturedPages.length} page{capturedPages.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                {isScanning && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={switchCamera}
+                    disabled={!isCameraReady}
+                  >
+                    <RotateCw className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={() => {
+                  stopCamera();
+                  onClose();
+                }}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            {/* Camera View */}
+            <div className="flex-1 relative bg-gray-900">
+              {isScanning && (
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                />
+              )}
+              
+              {/* Scanning Overlay */}
+              {isCameraReady && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="border-2 border-white/50 border-dashed rounded-lg w-3/4 h-3/4 flex items-center justify-center">
+                    <div className="text-white text-center">
+                      <ScanLine className="h-8 w-8 mx-auto mb-2" />
+                      <p className="text-sm">Position document within frame</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <canvas ref={canvasRef} className="hidden" />
+            </div>
+            
+            {/* Camera Controls */}
+            {isCameraReady && (
+              <div className="p-4 bg-background border-t">
+                <div className="flex justify-center">
+                  <Button
+                    onClick={capturePage}
+                    size="lg"
+                    className="bg-primary hover:bg-primary/90 px-8"
+                  >
+                    <Camera className="h-5 w-5 mr-2" />
+                    Capture Page {capturedPages.length + 1}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Right Panel - Captured Pages & Metadata */}
+          <div className="w-80 border-l bg-background overflow-y-auto">
+            <div className="p-4 space-y-4">
+              {/* Document Metadata Form */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Document Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <Label htmlFor="doc-title" className="text-xs">Title *</Label>
+                    <Input
+                      id="doc-title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Enter document title"
+                      className="h-8"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="doc-composer" className="text-xs">Composer</Label>
+                    <Input
+                      id="doc-composer"
+                      value={composer}
+                      onChange={(e) => setComposer(e.target.value)}
+                      placeholder="Composer name"
+                      className="h-8"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="doc-arranger" className="text-xs">Arranger</Label>
+                    <Input
+                      id="doc-arranger"
+                      value={arranger}
+                      onChange={(e) => setArranger(e.target.value)}
+                      placeholder="Arranger name"
+                      className="h-8"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="doc-voicing" className="text-xs">Voicing</Label>
+                    <Select value={voicing} onValueChange={setVoicing}>
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder="Select voicing" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SATB">SATB</SelectItem>
+                        <SelectItem value="SSA">SSA</SelectItem>
+                        <SelectItem value="SAB">SAB</SelectItem>
+                        <SelectItem value="TTB">TTB</SelectItem>
+                        <SelectItem value="SSAA">SSAA</SelectItem>
+                        <SelectItem value="TTBB">TTBB</SelectItem>
+                        <SelectItem value="Solo">Solo</SelectItem>
+                        <SelectItem value="Unison">Unison</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="doc-notes" className="text-xs">Notes</Label>
+                    <Textarea
+                      id="doc-notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Additional notes..."
+                      rows={2}
+                      className="resize-none"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Captured Pages */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center justify-between">
+                    Captured Pages
+                    <Badge variant="outline">{capturedPages.length}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {capturedPages.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-8">
+                      <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-xs">No pages captured yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {capturedPages.map((page) => (
+                        <div key={page.id} className="flex items-center gap-2 p-2 border rounded">
+                          <img
+                            src={page.imageUrl}
+                            alt={`Page ${page.pageNumber}`}
+                            className="w-12 h-16 object-cover rounded border"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium">Page {page.pageNumber}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {page.timestamp.toLocaleTimeString()}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deletePage(page.id)}
+                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Generate PDF Button */}
+              <Button
+                onClick={generatePDF}
+                disabled={capturedPages.length === 0 || !title.trim() || isProcessing}
+                className="w-full"
+                size="lg"
+              >
+                {isProcessing ? (
+                  <>
+                    <Upload className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Generate PDF ({capturedPages.length} page{capturedPages.length !== 1 ? 's' : ''})
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { uploadFileAndGetUrl } from '@/utils/storage';
+import { DocumentScanner } from './DocumentScanner';
 
 interface PDFImportForm {
   title: string;
@@ -34,6 +35,7 @@ export const PDFImportManager = () => {
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importMethod, setImportMethod] = useState<'file' | 'scan'>('file');
+  const [showScanner, setShowScanner] = useState(false);
   
   const [form, setForm] = useState<PDFImportForm>({
     title: '',
@@ -169,7 +171,10 @@ export const PDFImportManager = () => {
         </Button>
         <Button
           variant={importMethod === 'scan' ? 'default' : 'outline'}
-          onClick={() => setImportMethod('scan')}
+          onClick={() => {
+            setImportMethod('scan');
+            setShowScanner(true);
+          }}
           className="flex-1"
         >
           <Camera className="h-4 w-4 mr-2" />
@@ -200,6 +205,21 @@ export const PDFImportManager = () => {
                   Selected: {selectedFile.name}
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Scanning Mode */}
+          {importMethod === 'scan' && !showScanner && (
+            <div className="text-center py-8">
+              <Camera className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-semibold mb-2">Multi-Page Document Scanner</h3>
+              <p className="text-muted-foreground mb-4">
+                Use your device camera to scan multiple pages and create a PDF
+              </p>
+              <Button onClick={() => setShowScanner(true)} size="lg">
+                <Camera className="h-4 w-4 mr-2" />
+                Start Scanning
+              </Button>
             </div>
           )}
 
@@ -379,6 +399,34 @@ export const PDFImportManager = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Document Scanner Modal */}
+      {showScanner && (
+        <DocumentScanner
+          onClose={() => {
+            setShowScanner(false);
+            setImportMethod('file');
+          }}
+          onComplete={(pdfUrl, metadata) => {
+            // Update form with scanned document data
+            setForm(prev => ({
+              ...prev,
+              title: metadata.title || '',
+              composer: metadata.composer || '',
+              arranger: metadata.arranger || '',
+              voicing: metadata.voicing || '',
+              notes: prev.notes + (prev.notes ? '\n\n' : '') + `Scanned document with ${metadata.pages} pages.`
+            }));
+            setShowScanner(false);
+            setImportMethod('file');
+            
+            toast({
+              title: "Document Scanned",
+              description: `Successfully scanned and saved "${metadata.title}" to the music library.`,
+            });
+          }}
+        />
+      )}
     </div>
   );
 };

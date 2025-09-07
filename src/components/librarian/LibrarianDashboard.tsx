@@ -18,14 +18,18 @@ import {
   Home
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import { PDFImportManager } from './PDFImportManager';
 import { PhysicalInventoryManager } from './PhysicalInventoryManager';
 import { LibrarianStats } from './LibrarianStats';
 import { CSVImportExport } from './CSVImportExport';
+import { DocumentScanner } from './DocumentScanner';
 
 export const LibrarianDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [showScanner, setShowScanner] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   console.log('🔍 LibrarianDashboard component rendering');
 
@@ -160,7 +164,7 @@ export const LibrarianDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button size="sm" className="w-full" onClick={() => setActiveTab('pdf-import')}>
+                <Button size="sm" className="w-full" onClick={() => setShowScanner(true)}>
                   <Camera className="h-4 w-4 mr-2" />
                   Scan New Score
                 </Button>
@@ -189,6 +193,22 @@ export const LibrarianDashboard = () => {
           <CSVImportExport />
         </TabsContent>
       </Tabs>
+
+      {/* Document Scanner Modal */}
+      {showScanner && (
+        <DocumentScanner
+          onClose={() => setShowScanner(false)}
+          onComplete={(pdfUrl, metadata) => {
+            setShowScanner(false);
+            toast({
+              title: "Document Scanned Successfully",
+              description: `"${metadata.title}" has been scanned and saved to the music library.`,
+            });
+            // Optionally switch to PDF import tab to show the completed upload
+            setActiveTab('pdf-import');
+          }}
+        />
+      )}
     </div>
   );
 };
