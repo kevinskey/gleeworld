@@ -684,6 +684,14 @@ const App = () => {
                 <Route 
                   path="/calendar" 
                   element={
+                    <ProtectedRoute>
+                      <Calendar />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/public-calendar" 
+                  element={
                     <PublicRoute>
                       <PublicCalendar />
                     </PublicRoute>
