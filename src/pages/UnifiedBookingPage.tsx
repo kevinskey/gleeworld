@@ -178,14 +178,17 @@ export default function UnifiedBookingPage() {
                 return slotTime < aptEnd && slotEnd > aptStart;
               });
               
-              // Check if we already have this time slot (to avoid duplicates)
-              const existingSlot = timeSlots.find(slot => slot.time === time12Hour);
-              if (!existingSlot) {
-                timeSlots.push({
-                  time: time12Hour,
-                  isAvailable,
-                  auditionerName: null
-                });
+              // Only add available time slots
+              if (isAvailable) {
+                // Check if we already have this time slot (to avoid duplicates)
+                const existingSlot = timeSlots.find(slot => slot.time === time12Hour);
+                if (!existingSlot) {
+                  timeSlots.push({
+                    time: time12Hour,
+                    isAvailable: true,
+                    auditionerName: null
+                  });
+                }
               }
             }
           }
@@ -643,24 +646,15 @@ export default function UnifiedBookingPage() {
                           {allTimeSlots.map((slot, index) => (
                             <Button
                               key={index}
-                              variant={slot.isAvailable ? "outline" : "destructive"}
-                              onClick={() => slot.isAvailable && selectTimeSlot(slot.time)}
-                              disabled={!slot.isAvailable}
+                              variant="outline"
+                              onClick={() => selectTimeSlot(slot.time)}
                               className={cn(
                                 "h-16 flex flex-col items-center justify-center space-y-1 transition-all duration-300 rounded-xl text-sm font-medium",
-                                slot.isAvailable 
-                                  ? "hover:bg-gradient-to-br hover:from-primary hover:to-primary/80 hover:text-primary-foreground hover:scale-105 hover:shadow-lg border-2 border-primary/20 bg-gradient-to-br from-background to-muted/30" 
-                                  : "bg-gradient-to-br from-destructive/10 to-destructive/5 text-destructive/70 border-2 border-destructive/20 cursor-not-allowed"
+                                "hover:bg-gradient-to-br hover:from-primary hover:to-primary/80 hover:text-primary-foreground hover:scale-105 hover:shadow-lg border-2 border-primary/20 bg-gradient-to-br from-background to-muted/30"
                               )}
                             >
                               <span className="font-bold">{slot.time}</span>
-                              {slot.isAvailable ? (
-                                <span className="text-xs text-primary/80">Available</span>
-                              ) : (
-                                <span className="text-xs font-medium">
-                                  Booked
-                                </span>
-                              )}
+                              <span className="text-xs text-primary/80">Available</span>
                             </Button>
                           ))}
                         </div>
@@ -668,11 +662,7 @@ export default function UnifiedBookingPage() {
                           <div className="flex items-center justify-center space-x-8 text-sm">
                             <div className="flex items-center space-x-3">
                               <div className="w-4 h-4 bg-gradient-to-br from-primary to-primary/80 rounded-md shadow-sm"></div>
-                              <span className="font-medium">Available</span>
-                            </div>
-                            <div className="flex items-center space-x-3">
-                              <div className="w-4 h-4 bg-gradient-to-br from-destructive/20 to-destructive/10 border-2 border-destructive/30 rounded-md"></div>
-                              <span className="font-medium text-destructive/80">Booked</span>
+                              <span className="font-medium">Available Times</span>
                             </div>
                           </div>
                         </div>
