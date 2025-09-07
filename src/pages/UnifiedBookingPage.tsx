@@ -308,7 +308,7 @@ export default function UnifiedBookingPage() {
     setIsSubmitting(true);
     
     try {
-      // Check if this service requires payment (lessons)
+      // Check if this service requires payment (only lessons require payment)
       const requiresPayment = selectedAppointmentType.name.toLowerCase().includes('lesson');
       
       if (requiresPayment) {
