@@ -34,15 +34,35 @@ serve(async (req) => {
       });
     }
 
-    // Create a fake checkout URL for now to test the flow
-    const fakeCheckoutUrl = `https://checkout.stripe.com/pay/fake-session#${Date.now()}`;
-    
-    console.log("Returning fake checkout URL:", fakeCheckoutUrl);
+    // Initialize Stripe
+    const stripe = new (await import("https://esm.sh/stripe@14.21.0")).default(stripeKey, {
+      apiVersion: "2023-10-16",
+    });
+
+    // Create Stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items: [
+        {
+          price: 'price_1S4arYDuBK8b4VkcEoTDvHOq', // Your lesson price
+          quantity: 1,
+        },
+      ],
+      success_url: `${req.headers.get("origin")}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get("origin")}/booking`,
+      metadata: {
+        appointment_details: JSON.stringify(appointmentDetails),
+        payment_type: paymentType,
+        client_name: clientName,
+        client_email: clientEmail,
+      },
+    });
+
+    console.log("Stripe session created:", session.id);
 
     return new Response(JSON.stringify({ 
-      url: fakeCheckoutUrl,
-      sessionId: `fake_session_${Date.now()}`,
-      message: "Test mode - using fake Stripe session"
+      url: session.url,
+      sessionId: session.id
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
