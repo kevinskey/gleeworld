@@ -16,6 +16,8 @@ import {
 
 export const QuickActions: React.FC = () => {
   const navigate = useNavigate();
+  
+  console.log('🚀 QuickActions component is rendering!');
 
   const actions = [
     {
