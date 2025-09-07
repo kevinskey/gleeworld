@@ -85,7 +85,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
     duration: 60,
     status: 'pending' as 'pending' | 'confirmed' | 'completed' | 'cancelled',
     notes: '',
-    calendarId: ''
+    calendarId: 'none'
   });
 
   // Generate next 30 days for date picker
@@ -109,7 +109,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       duration: 60,
       status: 'pending' as 'pending' | 'confirmed' | 'completed' | 'cancelled',
       notes: '',
-      calendarId: ''
+      calendarId: 'none'
     });
   };
 
@@ -132,7 +132,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       duration: formData.duration,
       status: formData.status,
       notes: formData.notes,
-      calendarId: formData.calendarId
+      calendarId: formData.calendarId === 'none' ? '' : formData.calendarId
     };
 
     onAppointmentCreate?.(newAppointment);
@@ -157,7 +157,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       duration: formData.duration,
       status: formData.status,
       notes: formData.notes,
-      calendarId: formData.calendarId
+      calendarId: formData.calendarId === 'none' ? '' : formData.calendarId
     };
 
     onAppointmentUpdate?.(editingAppointment.id, updates);
@@ -179,7 +179,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       duration: appointment.duration,
       status: appointment.status,
       notes: appointment.notes || '',
-      calendarId: appointment.calendarId || ''
+      calendarId: appointment.calendarId || 'none'
     });
   };
 
@@ -265,7 +265,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
               <SelectValue placeholder="Select calendar (optional)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">No specific calendar</SelectItem>
+              <SelectItem value="none">No specific calendar</SelectItem>
               {calendars.map(calendar => (
                 <SelectItem key={calendar.id} value={calendar.id}>
                   <div className="flex items-center gap-2">
