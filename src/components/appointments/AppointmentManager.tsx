@@ -243,7 +243,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
               setSelectedProvider(provider);
               setFormData(prev => ({ ...prev, providerId: provider.id }));
             }}
-            serviceType={formData.service ? services.find(s => s.id === formData.service)?.category : undefined}
+            serviceId={formData.service}
           />
         </div>
 

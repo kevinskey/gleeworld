@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ServiceProvider, useUpdateProviderProfile } from '@/hooks/useServiceProviders';
+import { ProviderServiceManager } from './ProviderServiceManager';
 
 interface ProviderSettingsProps {
   provider: ServiceProvider;
@@ -198,6 +199,9 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Service Management */}
+      <ProviderServiceManager provider={provider} />
     </div>
   );
 };

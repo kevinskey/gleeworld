@@ -8527,6 +8527,48 @@ export type Database = {
           },
         ]
       }
+      gw_provider_services: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          provider_id: string
+          service_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          provider_id: string
+          service_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          provider_id?: string
+          service_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_provider_services_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "gw_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_provider_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "gw_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_provider_time_off: {
         Row: {
           created_at: string
