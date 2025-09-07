@@ -438,15 +438,15 @@ const App = () => {
                     </ProtectedRoute>
                    } 
                  />
-                <Route 
-                  path="/dashboard/member" 
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout>
-                        <UnifiedDashboard />
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                   } 
+                 <Route 
+                   path="/dashboard/member" 
+                   element={
+                     <ProtectedRoute>
+                       <UniversalLayout containerized={false}>
+                         <UnifiedDashboard />
+                       </UniversalLayout>
+                     </ProtectedRoute>
+                    }
                  />
                  <Route 
                   path="/dashboard/fan" 

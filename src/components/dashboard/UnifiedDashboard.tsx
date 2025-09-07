@@ -108,7 +108,7 @@ export const UnifiedDashboard = () => {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         
         {/* Member Dashboard Content */}
-        <div className="px-0 sm:px-6 py-4 space-y-6">
+        <div className="max-w-full mx-auto px-2 lg:px-6 py-4 space-y-6">
           {/* Glee Academy Hero Section */}
           <div className="relative bg-gradient-to-r from-primary/90 to-primary rounded-xl overflow-hidden cursor-pointer shadow-lg" onClick={() => window.location.href = '/glee-academy'}>
             <div className="absolute inset-0 bg-black/20"></div>
