@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Clock, CalendarIcon, User, CheckCircle, ArrowRight } from "lucide-react";
+import { Clock, CalendarIcon, User, CheckCircle, ArrowRight, Users } from "lucide-react";
 import { format, addDays, startOfDay, endOfDay, isSameDay, parseISO } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,11 +16,16 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useServices } from "@/hooks/useServices";
+import { useServiceProviders } from "@/hooks/useProviderServices";
+import { useServiceProviders as useProviders } from "@/hooks/useServiceProviders";
 
 const bookingSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Valid email is required"),
   phone: z.string().min(10, "Valid phone number is required"),
+  service: z.string().min(1, "Service is required"),
+  provider: z.string().optional(),
   purpose: z.string().min(1, "Purpose is required"),
   notes: z.string().optional(),
 });
@@ -33,7 +38,7 @@ interface TimeSlot {
 }
 
 export const PublicAppointmentBooking = () => {
-  const [currentStep, setCurrentStep] = useState<'type' | 'calendar' | 'details' | 'auth' | 'confirmation'>('type');
+  const [currentStep, setCurrentStep] = useState<'service' | 'calendar' | 'details' | 'auth' | 'confirmation'>('service');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
@@ -42,12 +47,20 @@ export const PublicAppointmentBooking = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  const { data: services = [], isLoading: servicesLoading } = useServices();
+  const { data: providers = [], isLoading: providersLoading } = useProviders();
+  const [selectedService, setSelectedService] = useState<string>("");
+  const [selectedProvider, setSelectedProvider] = useState<string>("");
+  const { data: serviceProviders = [] } = useServiceProviders(selectedService || undefined);
+
   const form = useForm<BookingForm>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
       name: "",
       email: "",
       phone: "",
+      service: "",
+      provider: "",
       purpose: "",
       notes: "",
     },
@@ -107,7 +120,19 @@ export const PublicAppointmentBooking = () => {
     }
   }, [selectedDate]);
 
-  const handleTypeSelection = () => {
+  const handleServiceSelection = () => {
+    if (!selectedService) {
+      toast({
+        title: "Service Required",
+        description: "Please select a service",
+        variant: "destructive"
+      });
+      return;
+    }
+    form.setValue('service', selectedService);
+    if (selectedProvider) {
+      form.setValue('provider', selectedProvider);
+    }
     setCurrentStep('calendar');
   };
 
@@ -148,11 +173,13 @@ export const PublicAppointmentBooking = () => {
       );
 
       const appointmentData = {
-        title: 'Office Hour Appointment',
+        title: 'Service Appointment',
         description: data.purpose,
         appointment_date: appointmentDateTime.toISOString(),
         duration_minutes: 30,
-        appointment_type: 'Office Hour',
+        appointment_type: 'Service',
+        service_id: data.service,
+        provider_id: data.provider || null,
         client_name: data.name,
         client_email: data.email,
         client_phone: data.phone,
@@ -219,9 +246,11 @@ export const PublicAppointmentBooking = () => {
   };
 
   const resetFlow = () => {
-    setCurrentStep('type');
+    setCurrentStep('service');
     setSelectedDate(undefined);
     setSelectedTime("");
+    setSelectedService("");
+    setSelectedProvider("");
     setAvailableSlots([]);
     form.reset();
     setAppointmentId("");
@@ -239,14 +268,14 @@ export const PublicAppointmentBooking = () => {
         {/* Progress Steps */}
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center space-x-4">
-            {['type', 'calendar', 'details', currentStep === 'auth' ? 'auth' : 'confirmation'].map((step, index) => (
+            {['service', 'calendar', 'details', currentStep === 'auth' ? 'auth' : 'confirmation'].map((step, index) => (
               <div key={step} className="flex items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  ['type', 'calendar', 'details'].indexOf(currentStep) >= index || currentStep === 'confirmation'
+                  ['service', 'calendar', 'details'].indexOf(currentStep) >= index || currentStep === 'confirmation'
                     ? 'bg-primary text-primary-foreground' 
                     : 'bg-muted text-muted-foreground'
                 }`}>
-                  {['type', 'calendar', 'details'].indexOf(currentStep) > index || currentStep === 'confirmation' ? (
+                  {['service', 'calendar', 'details'].indexOf(currentStep) > index || currentStep === 'confirmation' ? (
                     <CheckCircle className="w-4 h-4" />
                   ) : (
                     index + 1
@@ -258,26 +287,78 @@ export const PublicAppointmentBooking = () => {
           </div>
         </div>
 
-        {/* Step 1: Appointment Type */}
-        {currentStep === 'type' && (
-          <Card className="max-w-md mx-auto">
+        {/* Step 1: Service & Provider Selection */}
+        {currentStep === 'service' && (
+          <Card className="max-w-2xl mx-auto">
             <CardHeader className="text-center">
-              <CardTitle>Select Appointment Type</CardTitle>
+              <CardTitle>Select Service & Provider</CardTitle>
             </CardHeader>
             <CardContent>
-              <Button 
-                onClick={handleTypeSelection}
-                className="w-full h-16 text-left"
-                variant="outline"
-              >
-                <div className="flex items-center space-x-3">
-                  <User className="w-8 h-8 text-primary" />
-                  <div>
-                    <div className="font-semibold">Consultation</div>
-                    <div className="text-sm text-muted-foreground">Schedule a consultation session</div>
-                  </div>
+              <div className="space-y-6">
+                {/* Service Selection */}
+                <div>
+                  <label className="text-sm font-medium mb-3 block">Choose a Service</label>
+                  {servicesLoading ? (
+                    <div className="text-center py-4">
+                      <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+                    </div>
+                  ) : (
+                    <div className="grid gap-3">
+                      {services.map((service) => (
+                        <Button
+                          key={service.id}
+                          variant={selectedService === service.id ? "default" : "outline"}
+                          onClick={() => setSelectedService(service.id)}
+                          className="h-auto p-4 text-left justify-start"
+                        >
+                          <div className="w-full">
+                            <div className="font-semibold">{service.name}</div>
+                            <div className="text-sm opacity-70 mt-1">{service.description}</div>
+                            <div className="flex items-center gap-4 text-xs mt-2">
+                              <span>{service.duration_minutes} minutes</span>
+                              <span>{service.price_display}</span>
+                              <span className="capitalize">{service.category}</span>
+                            </div>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </Button>
+
+                {/* Provider Selection */}
+                {selectedService && serviceProviders.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium mb-3 block">Choose a Provider (Optional)</label>
+                    <div className="grid gap-3">
+                      {serviceProviders.map((sp) => (
+                        <Button
+                          key={sp.provider?.id}
+                          variant={selectedProvider === sp.provider?.id ? "default" : "outline"}
+                          onClick={() => setSelectedProvider(sp.provider?.id || "")}
+                          className="h-auto p-4 text-left justify-start"
+                        >
+                          <div className="flex items-center space-x-3 w-full">
+                            <Users className="w-6 h-6" />
+                            <div>
+                              <div className="font-semibold">
+                                {sp.provider?.title} {sp.provider?.provider_name}
+                              </div>
+                              <div className="text-sm opacity-70">{sp.provider?.department}</div>
+                            </div>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <Button onClick={handleServiceSelection} disabled={!selectedService}>
+                  Continue
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -338,7 +419,7 @@ export const PublicAppointmentBooking = () => {
               </div>
 
               <div className="flex justify-between mt-6">
-                <Button variant="outline" onClick={() => setCurrentStep('type')}>
+                <Button variant="outline" onClick={() => setCurrentStep('service')}>
                   Back
                 </Button>
                 <Button onClick={handleDateTimeSelection}>
@@ -444,6 +525,19 @@ export const PublicAppointmentBooking = () => {
                       </FormItem>
                     )}
                   />
+
+                  {/* Service and Provider Summary */}
+                  <div className="bg-muted p-4 rounded-lg space-y-2">
+                    <h4 className="font-medium">Booking Summary</h4>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <div>Service: {services.find(s => s.id === selectedService)?.name}</div>
+                      {selectedProvider && (
+                        <div>Provider: {serviceProviders.find(sp => sp.provider?.id === selectedProvider)?.provider?.provider_name}</div>
+                      )}
+                      <div>Date: {selectedDate ? format(selectedDate, 'PPP') : 'Not selected'}</div>
+                      <div>Time: {selectedTime}</div>
+                    </div>
+                  </div>
 
                   <div className="flex justify-between pt-4">
                     <Button variant="outline" onClick={() => setCurrentStep('calendar')}>
