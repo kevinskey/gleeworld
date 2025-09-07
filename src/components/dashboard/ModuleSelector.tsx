@@ -138,7 +138,7 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
       icon: GraduationCap,
       description: 'Academic excellence program for distinguished students',
       notifications: 0,
-      category: 'Academic'
+      category: 'Reference'
     }
   ];
 
