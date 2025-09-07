@@ -64,7 +64,15 @@ export const QuickActions: React.FC = () => {
       icon: <CalendarClock className="h-4 w-4" />,
       label: 'Appointments',
       description: 'Book & manage',
-      action: () => navigate('/appointments'),
+      action: () => {
+        console.log('🗓️ Appointments button clicked, navigating to /appointments');
+        try {
+          navigate('/appointments');
+          console.log('✅ Navigation to /appointments completed');
+        } catch (error) {
+          console.error('❌ Navigation error:', error);
+        }
+      },
       variant: 'outline' as const
     }
   ];
