@@ -17669,6 +17669,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_current_user_admin_or_provider: {
+        Args: { provider_user_id: string }
+        Returns: boolean
+      }
       is_current_user_admin_or_super_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -17683,6 +17687,10 @@ export type Database = {
       }
       is_current_user_gw_admin_safe: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_current_user_provider: {
+        Args: { provider_user_id: string }
         Returns: boolean
       }
       is_current_user_super_admin_safe: {
