@@ -17,6 +17,7 @@ import { useCalendars } from '@/hooks/useCalendars';
 
 export const ComprehensiveAppointmentSystem = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null);
   
   // Use real appointments data
   const { data: appointments = [], isLoading, error } = useRealAppointments();
@@ -53,6 +54,18 @@ export const ComprehensiveAppointmentSystem = () => {
   const handleAppointmentDelete = (id: string) => {
     deleteMutation.mutate(id);
   };
+
+  // Listen for appointment edit requests from calendar
+  React.useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'OPEN_APPOINTMENT_EDIT') {
+        setEditingAppointmentId(event.data.appointmentId);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   // Show loading state
   if (isLoading) {
@@ -179,6 +192,8 @@ export const ComprehensiveAppointmentSystem = () => {
             onAppointmentCreate={handleAppointmentCreate}
             onAppointmentUpdate={handleAppointmentUpdate}
             onAppointmentDelete={handleAppointmentDelete}
+            editingAppointmentId={editingAppointmentId}
+            onEditingAppointmentIdChange={setEditingAppointmentId}
           />
         </TabsContent>
 

@@ -18,6 +18,7 @@ export interface GleeWorldEvent {
   registration_required: boolean | null;
   is_public: boolean | null;
   status: string | null;
+  is_appointment?: boolean;
   image_url?: string | null;
   calendar_id: string;
   created_by: string | null;
@@ -103,6 +104,7 @@ export const useGleeWorldEvents = () => {
         description: appointment.description,
         event_type: appointment.appointment_type,
         start_date: appointment.appointment_date,
+        is_appointment: true, // Flag to identify appointments
         end_date: new Date(new Date(appointment.appointment_date).getTime() + appointment.duration_minutes * 60000).toISOString(),
         location: null,
         venue_name: null,

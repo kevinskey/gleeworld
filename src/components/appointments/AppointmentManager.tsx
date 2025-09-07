@@ -32,6 +32,8 @@ interface AppointmentManagerProps {
   onAppointmentCreate?: (appointment: Omit<Appointment, 'id'>) => void;
   onAppointmentUpdate?: (id: string, appointment: Partial<Appointment>) => void;
   onAppointmentDelete?: (id: string) => void;
+  editingAppointmentId?: string | null;
+  onEditingAppointmentIdChange?: (id: string | null) => void;
 }
 
 const MOCK_SERVICES = [
@@ -48,6 +50,8 @@ const TIME_SLOTS = [
 
 export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
   appointments = [],
+  editingAppointmentId,
+  onEditingAppointmentIdChange,
   onAppointmentCreate,
   onAppointmentUpdate,
   onAppointmentDelete
@@ -57,6 +61,17 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const { data: calendars = [] } = useCalendars();
+
+  // Handle external editing request from calendar
+  React.useEffect(() => {
+    if (editingAppointmentId) {
+      const appointmentToEdit = appointments.find(apt => apt.id === editingAppointmentId);
+      if (appointmentToEdit) {
+        setEditingAppointment(appointmentToEdit);
+        onEditingAppointmentIdChange?.(null); // Clear the external ID
+      }
+    }
+  }, [editingAppointmentId, appointments, onEditingAppointmentIdChange]);
   
   // Form state
   const [formData, setFormData] = useState({

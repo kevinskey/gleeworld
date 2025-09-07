@@ -114,7 +114,17 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
       return;
     }
 
-    // Check user permissions from gw_profiles
+    // If this is an appointment, open the appointment edit dialog
+    if (event.is_appointment) {
+      // Use window.postMessage to communicate with the appointments page
+      window.parent.postMessage({
+        type: 'OPEN_APPOINTMENT_EDIT',
+        appointmentId: event.id
+      }, '*');
+      return;
+    }
+
+    // Check user permissions from gw_profiles for regular events
     const { data: userProfile } = await supabase
       .from('gw_profiles')
       .select('is_admin, is_super_admin, role')
