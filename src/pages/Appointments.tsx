@@ -1,11 +1,11 @@
 import React from 'react';
-import { SimpleAppointmentScheduler } from '@/components/appointments/SimpleAppointmentScheduler';
+import { ComprehensiveAppointmentSystem } from '@/components/appointments/ComprehensiveAppointmentSystem';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const Appointments = () => {
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
-      <SimpleAppointmentScheduler />
+      <ComprehensiveAppointmentSystem />
     </UniversalLayout>
   );
 };
