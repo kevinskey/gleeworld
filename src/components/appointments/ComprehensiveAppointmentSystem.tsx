@@ -21,48 +21,8 @@ interface Appointment {
   notes?: string;
 }
 
-// Mock data for demonstration
-const generateMockAppointments = (): Appointment[] => {
-  const appointments: Appointment[] = [];
-  const services = ['General Consultation', 'Strategy Session', 'Quick Check-in', 'Team Workshop'];
-  const clients = [
-    { name: 'Sarah Johnson', email: 'sarah.j@email.com', phone: '(555) 123-4567' },
-    { name: 'Mike Chen', email: 'mike.chen@email.com', phone: '(555) 234-5678' },
-    { name: 'Emily Davis', email: 'emily.d@email.com', phone: '(555) 345-6789' },
-    { name: 'Alex Rodriguez', email: 'alex.r@email.com', phone: '(555) 456-7890' },
-    { name: 'Jessica Wilson', email: 'jessica.w@email.com', phone: '(555) 567-8901' },
-  ];
-  const times = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
-  const statuses: Array<'pending' | 'confirmed' | 'completed' | 'cancelled'> = ['pending', 'confirmed', 'completed', 'cancelled'];
-
-  // Generate appointments for the next 30 days
-  for (let i = 0; i < 25; i++) {
-    const client = clients[Math.floor(Math.random() * clients.length)];
-    const service = services[Math.floor(Math.random() * services.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const date = addDays(new Date(), Math.floor(Math.random() * 30));
-    const time = times[Math.floor(Math.random() * times.length)];
-    
-    appointments.push({
-      id: `apt-${i + 1}`,
-      title: `${service} with ${client.name}`,
-      clientName: client.name,
-      clientEmail: client.email,
-      clientPhone: client.phone,
-      service,
-      date,
-      time,
-      duration: service === 'Quick Check-in' ? 30 : service === 'Team Workshop' ? 120 : 60,
-      status,
-      notes: Math.random() > 0.7 ? 'Follow-up required' : undefined
-    });
-  }
-
-  return appointments.sort((a, b) => a.date.getTime() - b.date.getTime());
-};
-
 export const ComprehensiveAppointmentSystem = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>(generateMockAppointments());
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
   // Stats calculations
