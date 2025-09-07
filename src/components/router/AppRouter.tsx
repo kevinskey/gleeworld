@@ -101,6 +101,10 @@ export const router = createBrowserRouter([
     element: <PublicCalendar />,
   },
   {
+    path: "/public-calendar",
+    element: <PublicCalendar />,
+  },
+  {
     path: "/attendance",
     element: <AttendancePage />,
   },
