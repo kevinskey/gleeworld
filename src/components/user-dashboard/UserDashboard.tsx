@@ -320,9 +320,15 @@ const UserDashboard = React.memo(() => {
         {/* Add spacing between WelcomeCard and Community Hub */}
         <div className="mb-4 sm:mb-8 md:mb-12"></div>
 
-        {/* Community Hub */}
+        {/* Community Hub and Quick Actions */}
         <div className="w-full">
-          {/* Content removed - Community Hub section deleted */}
+          {/* Add Quick Actions Section */}
+          <QuickActionsSection 
+            actionFilter="community"
+            isAdmin={isAdmin}
+            userRole={userRole}
+            execPosition={profile?.exec_board_role}
+          />
         </div>
 
         {/* Executive Board Dashboard Section */}
