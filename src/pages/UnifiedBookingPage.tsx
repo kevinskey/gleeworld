@@ -312,16 +312,48 @@ export default function UnifiedBookingPage() {
       const requiresPayment = selectedAppointmentType.name.toLowerCase().includes('lesson');
       
       if (requiresPayment) {
-        console.log('Payment required for lesson - temporarily bypassing for testing');
+        // Process payment with Stripe
+        console.log('Creating Stripe payment session...');
         
-        // Show a message about payment bypass
-        toast({
-          title: "Payment Temporarily Bypassed",
-          description: "Payment functionality is being set up. Proceeding with free booking for testing.",
-          variant: "default"
+        const { data: paymentResponse, error: paymentError } = await supabase.functions.invoke('create-appointment-payment', {
+          body: {
+            appointmentDetails: {
+              date: selectedSlot.date,
+              time: selectedSlot.time,
+              appointmentType: selectedAppointmentType.name,
+              duration: selectedAppointmentType.default_duration_minutes,
+              provider: selectedProvider?.provider_name || 'Dr. Johnson'
+            },
+            paymentType: 'lesson',
+            clientName: contactInfo.name,
+            clientEmail: contactInfo.email
+          }
         });
-        
-        // Continue with the regular booking flow below instead of trying payment
+
+        if (paymentError) {
+          console.error('Payment error:', paymentError);
+          toast({
+            title: "Payment Error",
+            description: "There was an issue creating the payment session. Please try again.",
+            variant: "destructive"
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (paymentResponse?.url) {
+          // Redirect to Stripe Checkout
+          window.location.href = paymentResponse.url;
+          return;
+        } else {
+          toast({
+            title: "Payment Error",
+            description: "Unable to create payment session. Please try again.",
+            variant: "destructive"
+          });
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       // For free services or if payment is not required, proceed with direct booking
