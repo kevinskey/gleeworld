@@ -6,24 +6,22 @@ import { AppointmentCalendar } from './AppointmentCalendar';
 import { AppointmentManager } from './AppointmentManager';
 import { AppointmentServiceManager } from './AppointmentServiceManager';
 import { format, addDays, startOfWeek, addWeeks } from 'date-fns';
-
-interface Appointment {
-  id: string;
-  title: string;
-  clientName: string;
-  clientEmail: string;
-  clientPhone?: string;
-  service: string;
-  date: Date;
-  time: string;
-  duration: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  notes?: string;
-}
+import { 
+  useRealAppointments, 
+  useCreateRealAppointment, 
+  useUpdateRealAppointment, 
+  useDeleteRealAppointment,
+  type Appointment 
+} from '@/hooks/useRealAppointments';
 
 export const ComprehensiveAppointmentSystem = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  
+  // Use real appointments data
+  const { data: appointments = [], isLoading, error } = useRealAppointments();
+  const createMutation = useCreateRealAppointment();
+  const updateMutation = useUpdateRealAppointment();
+  const deleteMutation = useDeleteRealAppointment();
 
   // Stats calculations
   const todayAppointments = appointments.filter(apt => {
@@ -41,23 +39,49 @@ export const ComprehensiveAppointmentSystem = () => {
   const pendingAppointments = appointments.filter(apt => apt.status === 'pending').length;
   const confirmedAppointments = appointments.filter(apt => apt.status === 'confirmed').length;
 
+  // Event handlers using mutations
   const handleAppointmentCreate = (newAppointment: Omit<Appointment, 'id'>) => {
-    const appointment: Appointment = {
-      ...newAppointment,
-      id: `apt-${Date.now()}`
-    };
-    setAppointments(prev => [...prev, appointment]);
+    createMutation.mutate(newAppointment);
   };
 
   const handleAppointmentUpdate = (id: string, updates: Partial<Appointment>) => {
-    setAppointments(prev => 
-      prev.map(apt => apt.id === id ? { ...apt, ...updates } : apt)
-    );
+    updateMutation.mutate({ id, updates });
   };
 
   const handleAppointmentDelete = (id: string) => {
-    setAppointments(prev => prev.filter(apt => apt.id !== id));
+    deleteMutation.mutate(id);
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading appointments...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="text-center py-12">
+          <p className="text-destructive mb-4">Error loading appointments: {error.message}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="text-primary hover:underline"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
