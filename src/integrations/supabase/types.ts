@@ -17757,6 +17757,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      is_wardrobe_manager: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       kpi_first_year_vs_overall: {
         Args: {
           cohort_param: string
