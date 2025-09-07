@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export interface USCCBReading {
   title: string;
@@ -40,13 +40,16 @@ export const useUSCCBSync = () => {
 
     try {
       console.log('Syncing liturgical data for date:', date);
+      console.log('About to call sync-usccb-liturgical function...');
 
       const { data, error: functionError } = await supabase.functions.invoke('sync-usccb-liturgical', {
         body: { date }
       });
 
+      console.log('Function response:', { data, functionError });
+
       if (functionError) {
-        console.error('Function error:', functionError);
+        console.error('Function error details:', functionError);
         throw new Error(functionError.message || 'Failed to sync liturgical data');
       }
 
