@@ -515,31 +515,48 @@ export const SuperAdminDashboard = ({
       {/* All Modules Display */}
       {showAllModules && (
         <div className="space-y-6">
-          {/* Display filtered results when search/filter is active */}
-          {(searchQuery || filterCategory !== 'all') ? (
+          {/* Always show search results when there's a search query or filter */}
+          {searchQuery.trim() || filterCategory !== 'all' ? (
             <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Search className="h-5 w-5" />
-                  Search Results
+                  {searchQuery.trim() ? 'Search Results' : 'Filtered Results'}
                 </CardTitle>
                 <CardDescription>
                   {filteredAndSortedModules.length} modules found
+                  {searchQuery.trim() && ` for "${searchQuery}"`}
+                  {filterCategory !== 'all' && ` in ${filterCategory.replace('_', ' ')}`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredAndSortedModules.map(module => (
-                    <SortableModuleCard
-                      key={module.id}
-                      module={module}
-                      onModuleClick={(moduleId) => setSelectedModule(moduleId)}
-                    />
-                  ))}
-                </div>
-                {filteredAndSortedModules.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No modules found matching your criteria.
+                {filteredAndSortedModules.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredAndSortedModules.map(module => (
+                      <SortableModuleCard
+                        key={module.id}
+                        module={module}
+                        onModuleClick={(moduleId) => setSelectedModule(moduleId)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">No modules found</h3>
+                    <p className="text-sm">
+                      Try adjusting your search criteria or clearing the filters
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setFilterCategory('all');
+                      }}
+                    >
+                      Clear Search
+                    </Button>
                   </div>
                 )}
               </CardContent>
