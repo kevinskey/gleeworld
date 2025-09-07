@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,24 +21,83 @@ serve(async (req) => {
   try {
     logStep("Function started", { method: req.method, url: req.url });
 
-    // Test environment variables
+    // Get request body
+    const { appointmentDetails, paymentType, clientName, clientEmail } = await req.json();
+    logStep("Request data received", { appointmentDetails, paymentType, clientName, clientEmail });
+
+    // Validate required environment variables
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
     
-    logStep("Environment check", { 
-      hasStripeKey: !!stripeKey, 
-      hasSupabaseUrl: !!supabaseUrl, 
-      hasSupabaseAnonKey: !!supabaseAnonKey,
-      stripeKeyLength: stripeKey?.length || 0
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY is not set");
+    }
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("Supabase environment variables are not set");
+    }
+
+    logStep("Environment variables validated");
+
+    // Initialize Stripe
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: "2023-10-16",
     });
 
-    // Return a test response to confirm the function is working
+    logStep("Stripe initialized");
+
+    // Create or get Stripe customer
+    const customers = await stripe.customers.list({ 
+      email: clientEmail, 
+      limit: 1 
+    });
+    
+    let customerId;
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+      logStep("Found existing customer", { customerId });
+    } else {
+      const customer = await stripe.customers.create({
+        email: clientEmail,
+        name: clientName,
+      });
+      customerId = customer.id;
+      logStep("Created new customer", { customerId });
+    }
+
+    // Create checkout session for one-time payment
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `${appointmentDetails.service} Appointment`,
+              description: `Appointment on ${appointmentDetails.date} at ${appointmentDetails.time}`,
+            },
+            unit_amount: 5000, // $50.00 in cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${req.headers.get("origin")}/booking-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get("origin")}/booking`,
+      metadata: {
+        appointment_service: appointmentDetails.service,
+        appointment_date: appointmentDetails.date,
+        appointment_time: appointmentDetails.time,
+        client_name: clientName,
+        client_email: clientEmail,
+      },
+    });
+
+    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+
     return new Response(JSON.stringify({ 
-      status: "test_mode",
-      message: "Function is running in test mode",
-      hasStripeKey: !!stripeKey,
-      stripeKeyPreview: stripeKey?.substring(0, 7) + "..." || "not_found"
+      url: session.url,
+      sessionId: session.id 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
@@ -44,7 +105,7 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
+    logStep("ERROR", { message: errorMessage, stack: error instanceof Error ? error.stack : undefined });
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
