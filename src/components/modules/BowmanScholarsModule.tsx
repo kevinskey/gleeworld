@@ -120,6 +120,57 @@ export const BowmanScholarsModule = () => {
         </TabsList>
 
         <TabsContent value="directory" className="space-y-4">
+          {/* Lyke House Bowman Scholar Program Landing */}
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <div className="grid md:grid-cols-2 gap-8 items-start">
+                {/* Left column - Sister Thea Bowman Image */}
+                <div className="flex justify-center md:justify-start">
+                  <img 
+                    src="/lovable-uploads/eef8650c-760f-4cc7-9e94-d1da279feeca.png"
+                    alt="Sister Thea Bowman speaking at a podium"
+                    className="rounded-lg shadow-lg max-w-full h-auto"
+                  />
+                </div>
+                
+                {/* Right column - Program Information */}
+                <div className="space-y-4">
+                  <h2 className="text-3xl font-bold text-primary">
+                    Lyke House Bowman Scholar Program
+                  </h2>
+                  
+                  <div className="space-y-4 text-muted-foreground leading-relaxed">
+                    <p>
+                      This program is named in honor of Sister Thea Bowman. It is a group of music majors who are invited to help develop the music program at the Catholic Center in the spirit of Sr. Thea Bowman.
+                    </p>
+                    
+                    <p>
+                      One of the main goals of the Bowman Scholar program is to create the foundation for training musicians and artists to serve Catholic parishes, especially predominantly Black congregations, across the nation and around the world.
+                    </p>
+                    
+                    <p>
+                      Sr. Thea Bowman was an African American Franciscan Sister of Perpetual Adoration. Born in Yazoo City, Mississippi, Thea expressed early on to her Methodist parents that she desired to become Catholic. Soon after she was enrolled in a school served by the Franciscan Sisters, and at age 15 in 1952 she entered their convent in LaCrosse, Wisconsin.
+                    </p>
+                    
+                    <p>
+                      Through music, dance, poetry and other expressive art forms, Sr. Thea's message of Black Catholic identity reached the masses. She understood the need for the Black American experience to be embedded within the Catholic tradition of Christian expression, and sought to eliminate the barriers of racism, misunderstanding, and unilateralism that would hinder the Catholic Church in the U.S. from being fully catholic or universal.
+                    </p>
+                    
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <p className="text-sm">
+                        <strong>For more information about the Bowman Scholar program, please contact:</strong><br />
+                        Dr. Kevin Johnson, Director of Worship and Liturgy<br />
+                        <a href="mailto:kevinskey@mac.com" className="text-primary hover:underline">
+                          kevinskey@mac.com
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
