@@ -19,6 +19,7 @@ import PostItGrid from '@/components/buckets-of-love/PostItGrid';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { format } from 'date-fns';
 import NotificationsInterface from '@/components/notifications/NotificationsInterface';
+import { QuickActions } from '@/components/community/QuickActions';
 export const CommunityHubModule = () => {
   const [activeTab, setActiveTab] = useState('announcements');
   const { user } = useAuth();
@@ -43,6 +44,10 @@ export const CommunityHubModule = () => {
   // Buckets of Love tab removed from Community Hub per request
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/10">
+      {/* Add QuickActions at the top */}
+      <div className="p-4 border-b">
+        <QuickActions />
+      </div>
       <div className="p-4 md:p-6 border-b border-border bg-gradient-to-r from-primary/15 via-accent/10 to-secondary/15">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
