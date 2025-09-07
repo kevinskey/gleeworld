@@ -5,11 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CREATE-APPOINTMENT-PAYMENT] ${step}${detailsStr}`);
-};
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -17,98 +12,49 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started", { method: req.method, url: req.url });
-
+    console.log("Function started successfully");
+    
     // Get request body
-    const { appointmentDetails, paymentType, clientName, clientEmail } = await req.json();
-    logStep("Request data received", { appointmentDetails, paymentType, clientName, clientEmail });
+    const body = await req.json();
+    console.log("Request body:", JSON.stringify(body));
 
-    // Validate required environment variables
+    const { appointmentDetails, paymentType, clientName, clientEmail } = body;
+
+    // Check environment variables
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
-    
+    console.log("Stripe key exists:", !!stripeKey);
+    console.log("Stripe key length:", stripeKey?.length || 0);
+
     if (!stripeKey) {
-      throw new Error("STRIPE_SECRET_KEY is not set");
-    }
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error("Supabase environment variables are not set");
-    }
-
-    logStep("Environment variables validated");
-
-    // Dynamically import Stripe to avoid startup issues
-    const { default: Stripe } = await import("https://esm.sh/stripe@14.21.0");
-    logStep("Stripe imported successfully");
-
-    // Initialize Stripe
-    const stripe = new Stripe(stripeKey, {
-      apiVersion: "2023-10-16",
-    });
-
-    logStep("Stripe initialized");
-
-    // Create or get Stripe customer
-    const customers = await stripe.customers.list({ 
-      email: clientEmail, 
-      limit: 1 
-    });
-    
-    let customerId;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      logStep("Found existing customer", { customerId });
-    } else {
-      const customer = await stripe.customers.create({
-        email: clientEmail,
-        name: clientName,
+      return new Response(JSON.stringify({ 
+        error: "STRIPE_SECRET_KEY is not configured" 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
       });
-      customerId = customer.id;
-      logStep("Created new customer", { customerId });
     }
 
-    // Create checkout session for one-time payment
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: `${appointmentDetails.service} Appointment`,
-              description: `Appointment on ${appointmentDetails.date} at ${appointmentDetails.time}`,
-            },
-            unit_amount: 5000, // $50.00 in cents
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${req.headers.get("origin")}/booking-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/booking`,
-      metadata: {
-        appointment_service: appointmentDetails.service,
-        appointment_date: appointmentDetails.date,
-        appointment_time: appointmentDetails.time,
-        client_name: clientName,
-        client_email: clientEmail,
-      },
-    });
-
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+    // Create a fake checkout URL for now to test the flow
+    const fakeCheckoutUrl = `https://checkout.stripe.com/pay/fake-session#${Date.now()}`;
+    
+    console.log("Returning fake checkout URL:", fakeCheckoutUrl);
 
     return new Response(JSON.stringify({ 
-      url: session.url,
-      sessionId: session.id 
+      url: fakeCheckoutUrl,
+      sessionId: `fake_session_${Date.now()}`,
+      message: "Test mode - using fake Stripe session"
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
 
   } catch (error) {
+    console.error("Function error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage, stack: error instanceof Error ? error.stack : undefined });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: error instanceof Error ? error.stack : undefined
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
