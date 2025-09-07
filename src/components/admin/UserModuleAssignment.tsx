@@ -11,6 +11,7 @@ import { Search, Users, Plus, X, Settings } from 'lucide-react';
 import { useUserModulePermissions } from '@/hooks/useUserModulePermissions';
 import { getActiveModules } from '@/config/unified-modules';
 import { EXECUTIVE_MODULE_IDS, STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
+import { supabase } from '@/integrations/supabase/client';
 
 interface User {
   id: string;
@@ -18,6 +19,14 @@ interface User {
   full_name: string | null;
   role: string;
   modules: string[];
+}
+
+interface DbModule {
+  key: string;
+  name: string;
+  description: string;
+  category: string;
+  is_active: boolean;
 }
 
 const AssignModulesDialog = ({
@@ -34,13 +43,65 @@ const AssignModulesDialog = ({
   const { grantModuleAccess, revokeModuleAccess } = useUserModulePermissions();
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [dbModules, setDbModules] = useState<DbModule[]>([]);
+  const [loadingModules, setLoadingModules] = useState(true);
 
-  // Memoize activeModules to prevent re-render loop
+  // Fetch modules from database instead of hardcoded config
+  const fetchModules = async () => {
+    try {
+      setLoadingModules(true);
+      const { data, error } = await supabase
+        .from('gw_modules')
+        .select('key, name, description, category, is_active')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching modules:', error);
+        return;
+      }
+
+      console.log('🔍 Fetched modules from database:', data);
+      setDbModules(data || []);
+    } catch (error) {
+      console.error('Error in fetchModules:', error);
+    } finally {
+      setLoadingModules(false);
+    }
+  };
+
+  // Convert database modules to UI format for compatibility
   const activeModules = useMemo(() => {
-    const modules = getActiveModules();
-    console.log('🔍 AssignModulesDialog: Memoized activeModules =', modules.length);
-    return modules;
-  }, []);
+    const configModules = getActiveModules();
+    
+    // Create modules from database with fallback to config
+    const combinedModules = dbModules.map(dbModule => {
+      // Find matching config module for icon and other UI properties
+      const configModule = configModules.find(cm => cm.id === dbModule.key || cm.name === dbModule.key);
+      
+      return {
+        id: dbModule.key,
+        name: dbModule.key,
+        title: dbModule.name,
+        description: dbModule.description || '',
+        icon: configModule?.icon || Settings, // Default icon
+        iconColor: configModule?.iconColor || 'blue',
+        category: dbModule.category,
+        isActive: dbModule.is_active,
+        component: configModule?.component || (() => null),
+        dbFunctionName: dbModule.key
+      };
+    });
+    
+    console.log('🔍 Combined modules (DB + Config):', combinedModules.length);
+    return combinedModules;
+  }, [dbModules]);
+
+  useEffect(() => {
+    if (open) {
+      fetchModules();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (user) {
@@ -168,7 +229,11 @@ const AssignModulesDialog = ({
             <Label>Available Modules ({activeModules.length} total)</Label>
             <ScrollArea className="h-64 border rounded-md p-4 bg-background">
               <div className="grid grid-cols-1 gap-2">
-                {activeModules.length === 0 ? (
+                {loadingModules ? (
+                  <div className="text-center py-4 text-muted-foreground">
+                    Loading modules...
+                  </div>
+                ) : activeModules.length === 0 ? (
                   <div className="text-center py-4 text-muted-foreground">
                     No modules available
                   </div>
