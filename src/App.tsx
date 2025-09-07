@@ -1,5 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
+import { FanRoute } from "@/components/routes/FanRoute";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipContext";
@@ -760,9 +761,9 @@ const App = () => {
                    <Route 
                      path="/music-library" 
                      element={
-                       <ProtectedRoute>
+                       <FanRoute>
                          <MusicLibraryPageLegacy />
-                       </ProtectedRoute>
+                       </FanRoute>
                      } 
                     />
                       <Route 
@@ -1369,11 +1370,11 @@ const App = () => {
                            <Route 
                              path="/member/music-library" 
                              element={
-                               <ProtectedRoute>
+                               <FanRoute>
                                  <UniversalLayout>
                                    <MusicLibraryPage />
                                  </UniversalLayout>
-                               </ProtectedRoute>
+                               </FanRoute>
                              } 
                            />
                            <Route 
