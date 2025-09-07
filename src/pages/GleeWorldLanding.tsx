@@ -393,7 +393,7 @@ export const GleeWorldLanding = () => {
                         e.currentTarget.src = getDefaultEventImage(event.id);
                       }} />
                           </div>
-                          <CardContent className="p-4 lg:p-6 flex-1 flex flex-col">
+                          <CardContent className="p-2 lg:p-3 flex-1 flex flex-col">
                             <h3 className="text-lg lg:text-xl font-semibold text-card-foreground mb-3 lg:mb-4 line-clamp-2">{event.title}</h3>
                             <div className="space-y-2 text-muted-foreground">
                               <div className="flex items-center">
