@@ -130,16 +130,18 @@ export const ComprehensiveAppointmentSystem = () => {
           </div>
         </div>
         
-        <div className="flex gap-2">
-          <select className="px-3 py-2 border rounded-md text-sm">
-            <option value="">All Providers</option>
-            {providers.map(provider => (
-              <option key={provider.id} value={provider.id}>
-                {provider.title} {provider.provider_name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {isSuperAdmin() && (
+          <div className="flex gap-2">
+            <select className="px-3 py-2 border rounded-md text-sm">
+              <option value="">All Providers</option>
+              {providers.map(provider => (
+                <option key={provider.id} value={provider.id}>
+                  {provider.title} {provider.provider_name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Stats Dashboard */}
