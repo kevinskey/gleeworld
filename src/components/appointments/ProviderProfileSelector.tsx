@@ -17,6 +17,7 @@ import { useCurrentProvider, useUpdateProviderProfile } from '@/hooks/useService
 import { useRealAppointments } from '@/hooks/useRealAppointments';
 import { ProviderAvailabilityManager } from '@/components/providers/ProviderAvailabilityManager';
 import { ProviderServiceManager } from '@/components/providers/ProviderServiceManager';
+import { RecurringPaymentManager } from './RecurringPaymentManager';
 import { supabase } from '@/integrations/supabase/client';
 
 const providerProfileSchema = z.object({

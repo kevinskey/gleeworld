@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Clock, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Clock, Trash2, Edit2, RefreshCw, Calendar } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   ServiceProvider, 
   useProviderAvailability, 
@@ -39,6 +41,9 @@ export const ProviderAvailabilityManager: React.FC<ProviderAvailabilityManagerPr
   const deleteMutation = useDeleteProviderAvailability();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSyncDialogOpen, setIsSyncDialogOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [googleCalendarId, setGoogleCalendarId] = useState('');
   const [editingAvailability, setEditingAvailability] = useState<ProviderAvailability | null>(null);
   const [formData, setFormData] = useState({
     day_of_week: 1,
@@ -116,6 +121,46 @@ export const ProviderAvailabilityManager: React.FC<ProviderAvailabilityManagerPr
     }
   };
 
+  const handleGoogleCalendarSync = async () => {
+    if (!googleCalendarId.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a Google Calendar ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-google-calendar', {
+        body: { calendarId: googleCalendarId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Google Calendar synced successfully! Your availability will be updated based on your calendar events.",
+      });
+
+      setIsSyncDialogOpen(false);
+      setGoogleCalendarId('');
+      
+      // Refresh availability data
+      window.location.reload();
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast({
+        title: "Sync Error",
+        description: error.message || "Failed to sync Google Calendar",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const getDayName = (dayNum: number) => {
     return DAYS_OF_WEEK.find(d => d.value === dayNum)?.label || 'Unknown';
   };
@@ -127,108 +172,161 @@ export const ProviderAvailabilityManager: React.FC<ProviderAvailabilityManagerPr
 
   return (
     <div className="space-y-6">
+      {/* Header with Sync Button */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Availability Management</h2>
-          <p className="text-muted-foreground">Set your working hours and availability</p>
+          <p className="text-muted-foreground">Set your working hours and sync with Google Calendar</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Availability
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingAvailability ? 'Edit' : 'Add'} Availability
-              </DialogTitle>
-              <DialogDescription>
-                Set your working hours for a specific day of the week
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div>
-                <Label>Day of Week</Label>
-                <Select
-                  value={formData.day_of_week.toString()}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, day_of_week: parseInt(value) }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DAYS_OF_WEEK.map(day => (
-                      <SelectItem key={day.value} value={day.value.toString()}>
-                        {day.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+        <div className="flex gap-2">
+          {/* Google Calendar Sync Dialog */}
+          <Dialog open={isSyncDialogOpen} onOpenChange={setIsSyncDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Sync Google Calendar
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Sync Google Calendar</DialogTitle>
+                <DialogDescription>
+                  Import your calendar events to automatically update your availability
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
                 <div>
-                  <Label>Start Time</Label>
+                  <Label>Google Calendar ID</Label>
                   <Input
-                    type="time"
-                    value={formData.start_time}
-                    onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
+                    placeholder="your-calendar@gmail.com or calendar-id"
+                    value={googleCalendarId}
+                    onChange={(e) => setGoogleCalendarId(e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Find your Calendar ID in Google Calendar settings → Calendar settings → Integrate calendar
+                  </p>
                 </div>
-                <div>
-                  <Label>End Time</Label>
-                  <Input
-                    type="time"
-                    value={formData.end_time}
-                    onChange={(e) => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
-                  />
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsSyncDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleGoogleCalendarSync} 
+                    disabled={isSyncing}
+                    className="flex items-center gap-2"
+                  >
+                    {isSyncing ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Calendar className="h-4 w-4" />
+                    )}
+                    {isSyncing ? 'Syncing...' : 'Sync Calendar'}
+                  </Button>
                 </div>
               </div>
+            </DialogContent>
+          </Dialog>
 
-              <div className="grid grid-cols-2 gap-4">
+          {/* Add Manual Availability Dialog */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Availability
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingAvailability ? 'Edit' : 'Add'} Availability
+                </DialogTitle>
+                <DialogDescription>
+                  Set your working hours for a specific day of the week
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
                 <div>
-                  <Label>Slot Duration (minutes)</Label>
-                  <Input
-                    type="number"
-                    value={formData.slot_duration_minutes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, slot_duration_minutes: parseInt(e.target.value) }))}
-                  />
+                  <Label>Day of Week</Label>
+                  <Select
+                    value={formData.day_of_week.toString()}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, day_of_week: parseInt(value) }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DAYS_OF_WEEK.map(day => (
+                        <SelectItem key={day.value} value={day.value.toString()}>
+                          {day.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <Label>Break Between Slots (minutes)</Label>
-                  <Input
-                    type="number"
-                    value={formData.break_between_slots_minutes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, break_between_slots_minutes: parseInt(e.target.value) }))}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Start Time</Label>
+                    <Input
+                      type="time"
+                      value={formData.start_time}
+                      onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>End Time</Label>
+                    <Input
+                      type="time"
+                      value={formData.end_time}
+                      onChange={(e) => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Slot Duration (minutes)</Label>
+                    <Input
+                      type="number"
+                      value={formData.slot_duration_minutes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, slot_duration_minutes: parseInt(e.target.value) }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Break Between Slots (minutes)</Label>
+                    <Input
+                      type="number"
+                      value={formData.break_between_slots_minutes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, break_between_slots_minutes: parseInt(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={formData.is_available}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_available: checked }))}
                   />
+                  <Label>Available for appointments</Label>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSubmit} disabled={updateMutation.isPending}>
+                    {editingAvailability ? 'Update' : 'Add'} Availability
+                  </Button>
                 </div>
               </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={formData.is_available}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_available: checked }))}
-                />
-                <Label>Available for appointments</Label>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmit} disabled={updateMutation.isPending}>
-                  {editingAvailability ? 'Update' : 'Add'} Availability
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
+      {/* Availability Grid */}
       <div className="grid gap-4">
         {groupedAvailability.map(day => (
           <Card key={day.value}>
@@ -258,9 +356,9 @@ export const ProviderAvailabilityManager: React.FC<ProviderAvailabilityManagerPr
                         </div>
                         <div className="flex items-center gap-2">
                           <div className={`w-3 h-3 rounded-full ${slot.is_available ? 'bg-green-500' : 'bg-red-500'}`} />
-                          <span className="text-sm">
+                          <Badge variant={slot.is_available ? 'default' : 'secondary'}>
                             {slot.is_available ? 'Available' : 'Unavailable'}
-                          </span>
+                          </Badge>
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -287,6 +385,28 @@ export const ProviderAvailabilityManager: React.FC<ProviderAvailabilityManagerPr
           </Card>
         ))}
       </div>
+
+      {/* Sync Instructions */}
+      <Card className="border-dashed">
+        <CardContent className="pt-6">
+          <div className="text-center space-y-2">
+            <Calendar className="h-8 w-8 mx-auto text-muted-foreground" />
+            <h3 className="font-medium">Sync with Google Calendar</h3>
+            <p className="text-sm text-muted-foreground">
+              Connect your Google Calendar to automatically update your availability based on existing events. 
+              Busy times will be marked as unavailable for new appointments.
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsSyncDialogOpen(true)}
+              className="mt-2"
+            >
+              Get Started
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
