@@ -191,7 +191,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             <div
               onMouseEnter={() => setBookingOpen(true)}
               onMouseLeave={() => setBookingOpen(false)}
-              className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 min-w-[180px]"
+              className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg shadow-2xl z-[1100] min-w-[180px] backdrop-blur-sm"
             >
               {bookingDropdown.map((item) => (
                 <Link
@@ -228,7 +228,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             <div
               onMouseEnter={() => setInfoOpen(true)}
               onMouseLeave={() => setInfoOpen(false)}
-              className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 min-w-[180px]"
+              className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg shadow-2xl z-[1100] min-w-[180px] backdrop-blur-sm"
             >
               {infoDropdown.map((item) => (
                 <Link
@@ -282,7 +282,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             <div
               onMouseEnter={() => setBookingOpen(true)}
               onMouseLeave={() => setBookingOpen(false)}
-              className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 min-w-[160px]"
+              className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg shadow-2xl z-[1100] min-w-[160px] backdrop-blur-sm"
             >
               {bookingDropdown.map((item) => (
                 <Link
@@ -319,7 +319,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             <div
               onMouseEnter={() => setInfoOpen(true)}
               onMouseLeave={() => setInfoOpen(false)}
-              className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 min-w-[160px]"
+              className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg shadow-2xl z-[1100] min-w-[160px] backdrop-blur-sm"
             >
               {infoDropdown.map((item) => (
                 <Link
