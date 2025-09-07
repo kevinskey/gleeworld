@@ -19,6 +19,7 @@ export interface Appointment {
   duration: number;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   notes?: string;
+  calendarId?: string;
 }
 
 // Convert database format to component format

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { format, addDays } from 'date-fns';
+import { useCalendars } from '@/hooks/useCalendars';
 
 interface Appointment {
   id: string;
@@ -23,6 +24,7 @@ interface Appointment {
   duration: number;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   notes?: string;
+  calendarId?: string;
 }
 
 interface AppointmentManagerProps {
@@ -54,7 +56,8 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
-
+  const { data: calendars = [] } = useCalendars();
+  
   // Form state
   const [formData, setFormData] = useState({
     title: '',
@@ -66,7 +69,8 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
     time: '',
     duration: 60,
     status: 'pending' as 'pending' | 'confirmed' | 'completed' | 'cancelled',
-    notes: ''
+    notes: '',
+    calendarId: ''
   });
 
   // Generate next 30 days for date picker
@@ -89,7 +93,8 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       time: '',
       duration: 60,
       status: 'pending' as 'pending' | 'confirmed' | 'completed' | 'cancelled',
-      notes: ''
+      notes: '',
+      calendarId: ''
     });
   };
 
@@ -111,7 +116,8 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       time: formData.time,
       duration: formData.duration,
       status: formData.status,
-      notes: formData.notes
+      notes: formData.notes,
+      calendarId: formData.calendarId
     };
 
     onAppointmentCreate?.(newAppointment);
@@ -135,7 +141,8 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       time: formData.time,
       duration: formData.duration,
       status: formData.status,
-      notes: formData.notes
+      notes: formData.notes,
+      calendarId: formData.calendarId
     };
 
     onAppointmentUpdate?.(editingAppointment.id, updates);
@@ -156,7 +163,8 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       time: appointment.time,
       duration: appointment.duration,
       status: appointment.status,
-      notes: appointment.notes || ''
+      notes: appointment.notes || '',
+      calendarId: appointment.calendarId || ''
     });
   };
 
@@ -229,6 +237,29 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
               {TIME_SLOTS.map(time => (
                 <SelectItem key={time} value={time}>
                   {time}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Calendar</Label>
+          <Select value={formData.calendarId} onValueChange={(value) => setFormData(prev => ({ ...prev, calendarId: value }))}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select calendar (optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">No specific calendar</SelectItem>
+              {calendars.map(calendar => (
+                <SelectItem key={calendar.id} value={calendar.id}>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: calendar.color }}
+                    />
+                    {calendar.name}
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>

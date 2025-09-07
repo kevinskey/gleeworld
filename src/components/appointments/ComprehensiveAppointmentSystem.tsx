@@ -13,12 +13,14 @@ import {
   useDeleteRealAppointment,
   type Appointment 
 } from '@/hooks/useRealAppointments';
+import { useCalendars } from '@/hooks/useCalendars';
 
 export const ComprehensiveAppointmentSystem = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   
   // Use real appointments data
   const { data: appointments = [], isLoading, error } = useRealAppointments();
+  const { data: calendars = [] } = useCalendars();
   const createMutation = useCreateRealAppointment();
   const updateMutation = useUpdateRealAppointment();
   const deleteMutation = useDeleteRealAppointment();
@@ -86,9 +88,22 @@ export const ComprehensiveAppointmentSystem = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Appointment System</h1>
-        <p className="text-muted-foreground">Complete appointment scheduling and management platform</p>
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Appointment System</h1>
+          <p className="text-muted-foreground">Complete appointment scheduling and management platform</p>
+        </div>
+        
+        <div className="flex gap-2">
+          <select className="px-3 py-2 border rounded-md text-sm">
+            <option value="">All Calendars</option>
+            {calendars.map(calendar => (
+              <option key={calendar.id} value={calendar.id}>
+                {calendar.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Stats Dashboard */}
