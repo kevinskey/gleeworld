@@ -924,6 +924,33 @@ export type Database = {
         }
         Relationships: []
       }
+      bowman_scholars: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          grad_year: number | null
+          headshot_url: string | null
+          major: string | null
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          grad_year?: number | null
+          headshot_url?: string | null
+          major?: string | null
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          grad_year?: number | null
+          headshot_url?: string | null
+          major?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       budget_attachments: {
         Row: {
           budget_id: string | null
@@ -13080,6 +13107,77 @@ export type Database = {
         }
         Relationships: []
       }
+      liturgical_weeks: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          lectionary_cycle: string | null
+          notes: string | null
+          title: string
+          week_of: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          lectionary_cycle?: string | null
+          notes?: string | null
+          title: string
+          week_of: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          lectionary_cycle?: string | null
+          notes?: string | null
+          title?: string
+          week_of?: string
+        }
+        Relationships: []
+      }
+      liturgy_assets: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          external_url: string | null
+          id: string
+          kind: string | null
+          liturgical_week_id: string | null
+          storage_path: string | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          external_url?: string | null
+          id?: string
+          kind?: string | null
+          liturgical_week_id?: string | null
+          storage_path?: string | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          external_url?: string | null
+          id?: string
+          kind?: string | null
+          liturgical_week_id?: string | null
+          storage_path?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "liturgy_assets_liturgical_week_id_fkey"
+            columns: ["liturgical_week_id"]
+            isOneToOne: false
+            referencedRelation: "liturgical_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       materials_budget: {
         Row: {
           cost: number | null
@@ -14545,6 +14643,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      playlist_items: {
+        Row: {
+          created_at: string | null
+          external_url: string | null
+          id: string
+          library_track_id: string | null
+          notes: string | null
+          playlist_id: string | null
+          position: number
+          source: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          external_url?: string | null
+          id?: string
+          library_track_id?: string | null
+          notes?: string | null
+          playlist_id?: string | null
+          position?: number
+          source?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          external_url?: string | null
+          id?: string
+          library_track_id?: string | null
+          notes?: string | null
+          playlist_id?: string | null
+          position?: number
+          source?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_items_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       playlist_tracks: {
         Row: {
@@ -16748,6 +16890,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles_multi: {
+        Row: {
+          created_at: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       username_module_permissions: {
         Row: {
           can_manage: boolean
@@ -17628,10 +17788,9 @@ export type Database = {
         Returns: boolean
       }
       has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
+        Args:
+          | { _role: Database["public"]["Enums"]["app_role"]; _user_id: string }
+          | { target: string }
         Returns: boolean
       }
       has_username_permission: {
@@ -17750,7 +17909,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: {
-        Args: { _user_id: string }
+        Args: Record<PropertyKey, never> | { _user_id: string }
         Returns: boolean
       }
       is_user_admin: {
