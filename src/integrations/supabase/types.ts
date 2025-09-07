@@ -13137,6 +13137,51 @@ export type Database = {
         }
         Relationships: []
       }
+      liturgical_worksheets: {
+        Row: {
+          created_at: string | null
+          id: string
+          liturgical_date: string
+          liturgical_season: string
+          music_selections: Json | null
+          notes: string | null
+          readings: Json | null
+          special_instructions: string | null
+          status: string | null
+          theme: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          liturgical_date: string
+          liturgical_season: string
+          music_selections?: Json | null
+          notes?: string | null
+          readings?: Json | null
+          special_instructions?: string | null
+          status?: string | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          liturgical_date?: string
+          liturgical_season?: string
+          music_selections?: Json | null
+          notes?: string | null
+          readings?: Json | null
+          special_instructions?: string | null
+          status?: string | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       liturgy_assets: {
         Row: {
           created_at: string | null

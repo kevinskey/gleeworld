@@ -9,15 +9,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBowmanScholars } from '@/hooks/useBowmanScholars';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { GraduationCap, User, Edit2, Users, BookOpen, Calendar } from 'lucide-react';
+import { GraduationCap, User, Edit2, Users, BookOpen, Calendar, Plus, FileText, Clock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useLiturgicalWorksheets, LiturgicalWorksheet } from '@/hooks/useLiturgicalWorksheets';
+import { LiturgicalWorksheetForm } from '@/components/liturgical/LiturgicalWorksheetForm';
+import { format } from 'date-fns';
 
 export const BowmanScholarsModule = () => {
   const { scholars, loading, updateScholar, getCurrentScholar } = useBowmanScholars();
   const { user } = useAuth();
   const currentScholar = getCurrentScholar();
   
+  // Liturgical worksheets functionality
+  const { 
+    worksheets, 
+    loading: worksheetsLoading, 
+    createWorksheet, 
+    updateWorksheet, 
+    deleteWorksheet 
+  } = useLiturgicalWorksheets();
+  
   const [editMode, setEditMode] = useState(false);
+  const [showWorksheetForm, setShowWorksheetForm] = useState(false);
+  const [editingWorksheet, setEditingWorksheet] = useState<LiturgicalWorksheet | undefined>();
+  
   const [formData, setFormData] = useState({
     major: currentScholar?.major || '',
     grad_year: currentScholar?.grad_year || new Date().getFullYear(),
@@ -34,6 +49,29 @@ export const BowmanScholarsModule = () => {
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleWorksheetSave = async (worksheetData: Partial<LiturgicalWorksheet>) => {
+    if (editingWorksheet) {
+      return await updateWorksheet(editingWorksheet.id, worksheetData);
+    } else {
+      return await createWorksheet(worksheetData);
+    }
+  };
+
+  const handleEditWorksheet = (worksheet: LiturgicalWorksheet) => {
+    setEditingWorksheet(worksheet);
+    setShowWorksheetForm(true);
+  };
+
+  const handleNewWorksheet = () => {
+    setEditingWorksheet(undefined);
+    setShowWorksheetForm(true);
+  };
+
+  const handleCancelWorksheet = () => {
+    setShowWorksheetForm(false);
+    setEditingWorksheet(undefined);
   };
 
   if (loading) {
@@ -62,7 +100,7 @@ export const BowmanScholarsModule = () => {
       </div>
 
       <Tabs defaultValue="directory" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="directory" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Scholar Directory
@@ -70,6 +108,10 @@ export const BowmanScholarsModule = () => {
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             My Profile
+          </TabsTrigger>
+          <TabsTrigger value="liturgical" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Liturgical Planning
           </TabsTrigger>
           <TabsTrigger value="resources" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
@@ -246,6 +288,108 @@ export const BowmanScholarsModule = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="liturgical" className="space-y-4">
+          {showWorksheetForm ? (
+            <LiturgicalWorksheetForm
+              worksheet={editingWorksheet}
+              onSave={handleWorksheetSave}
+              onCancel={handleCancelWorksheet}
+            />
+          ) : (
+            <>
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Liturgical Worksheets for Lyke House Catholic Center
+                    </CardTitle>
+                    <Button onClick={handleNewWorksheet}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Worksheet
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {worksheetsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      <p className="ml-2">Loading worksheets...</p>
+                    </div>
+                  ) : worksheets.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-medium mb-2">No Liturgical Worksheets Yet</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Create your first liturgical planning worksheet for weekly liturgies at Lyke House.
+                      </p>
+                      <Button onClick={handleNewWorksheet}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create First Worksheet
+                      </Button>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-96">
+                      <div className="space-y-4">
+                        {worksheets.map((worksheet) => (
+                          <Card key={worksheet.id} className="p-4 hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h4 className="font-medium">
+                                    {format(new Date(worksheet.liturgical_date), 'MMMM d, yyyy')}
+                                  </h4>
+                                  <Badge variant="secondary">
+                                    {worksheet.liturgical_season}
+                                  </Badge>
+                                  <Badge 
+                                    variant={worksheet.status === 'published' ? 'default' : 'outline'}
+                                  >
+                                    {worksheet.status}
+                                  </Badge>
+                                </div>
+                                {worksheet.theme && (
+                                  <p className="text-sm font-medium text-primary mb-1">
+                                    Theme: {worksheet.theme}
+                                  </p>
+                                )}
+                                <div className="text-sm text-muted-foreground space-y-1">
+                                  {worksheet.readings?.gospel && (
+                                    <p><strong>Gospel:</strong> {worksheet.readings.gospel}</p>
+                                  )}
+                                  {worksheet.music_selections?.entrance_hymn && (
+                                    <p><strong>Entrance:</strong> {worksheet.music_selections.entrance_hymn}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditWorksheet(worksheet)}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deleteWorksheet(worksheet.id)}
+                                >
+                                  <FileText className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="resources" className="space-y-4">

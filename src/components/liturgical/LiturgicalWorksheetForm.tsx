@@ -1,0 +1,313 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar, Music, BookOpen, FileText } from 'lucide-react';
+import { LiturgicalWorksheet } from '@/hooks/useLiturgicalWorksheets';
+
+interface LiturgicalWorksheetFormProps {
+  worksheet?: LiturgicalWorksheet;
+  onSave: (data: Partial<LiturgicalWorksheet>) => Promise<{ success: boolean }>;
+  onCancel: () => void;
+}
+
+export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: LiturgicalWorksheetFormProps) => {
+  const [formData, setFormData] = useState({
+    liturgical_date: worksheet?.liturgical_date || '',
+    liturgical_season: worksheet?.liturgical_season || '',
+    theme: worksheet?.theme || '',
+    readings: {
+      first_reading: worksheet?.readings?.first_reading || '',
+      psalm: worksheet?.readings?.psalm || '',
+      second_reading: worksheet?.readings?.second_reading || '',
+      gospel: worksheet?.readings?.gospel || '',
+    },
+    music_selections: {
+      entrance_hymn: worksheet?.music_selections?.entrance_hymn || '',
+      responsorial_psalm: worksheet?.music_selections?.responsorial_psalm || '',
+      alleluia: worksheet?.music_selections?.alleluia || '',
+      offertory: worksheet?.music_selections?.offertory || '',
+      communion: worksheet?.music_selections?.communion || '',
+      closing_hymn: worksheet?.music_selections?.closing_hymn || '',
+    },
+    special_instructions: worksheet?.special_instructions || '',
+    notes: worksheet?.notes || '',
+    status: worksheet?.status || 'draft' as const,
+  });
+
+  const [saving, setSaving] = useState(false);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleReadingChange = (reading: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      readings: { ...prev.readings, [reading]: value }
+    }));
+  };
+
+  const handleMusicChange = (music: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      music_selections: { ...prev.music_selections, [music]: value }
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    
+    const result = await onSave(formData);
+    
+    setSaving(false);
+    if (result.success) {
+      onCancel(); // Close form on success
+    }
+  };
+
+  const liturgicalSeasons = [
+    'Advent',
+    'Christmas',
+    'Ordinary Time',
+    'Lent',
+    'Easter',
+    'Pentecost'
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Calendar className="h-5 w-5" />
+          {worksheet ? 'Edit Liturgical Worksheet' : 'New Liturgical Worksheet'}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="liturgical_date">Liturgical Date</Label>
+              <Input
+                id="liturgical_date"
+                type="date"
+                value={formData.liturgical_date}
+                onChange={(e) => handleInputChange('liturgical_date', e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="liturgical_season">Liturgical Season</Label>
+              <Select
+                value={formData.liturgical_season}
+                onValueChange={(value) => handleInputChange('liturgical_season', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select season" />
+                </SelectTrigger>
+                <SelectContent>
+                  {liturgicalSeasons.map((season) => (
+                    <SelectItem key={season} value={season}>
+                      {season}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => handleInputChange('status', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="theme">Theme</Label>
+            <Input
+              id="theme"
+              value={formData.theme}
+              onChange={(e) => handleInputChange('theme', e.target.value)}
+              placeholder="Weekly liturgical theme"
+            />
+          </div>
+
+          {/* Readings Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <BookOpen className="h-4 w-4" />
+                Scripture Readings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="first_reading">First Reading</Label>
+                  <Input
+                    id="first_reading"
+                    value={formData.readings.first_reading}
+                    onChange={(e) => handleReadingChange('first_reading', e.target.value)}
+                    placeholder="e.g., Isaiah 43:16-21"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="psalm">Responsorial Psalm</Label>
+                  <Input
+                    id="psalm"
+                    value={formData.readings.psalm}
+                    onChange={(e) => handleReadingChange('psalm', e.target.value)}
+                    placeholder="e.g., Psalm 126"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="second_reading">Second Reading</Label>
+                  <Input
+                    id="second_reading"
+                    value={formData.readings.second_reading}
+                    onChange={(e) => handleReadingChange('second_reading', e.target.value)}
+                    placeholder="e.g., Philippians 3:8-14"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="gospel">Gospel</Label>
+                  <Input
+                    id="gospel"
+                    value={formData.readings.gospel}
+                    onChange={(e) => handleReadingChange('gospel', e.target.value)}
+                    placeholder="e.g., John 12:12-16"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Music Selections */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Music className="h-4 w-4" />
+                Music Selections
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="entrance_hymn">Entrance Hymn</Label>
+                  <Input
+                    id="entrance_hymn"
+                    value={formData.music_selections.entrance_hymn}
+                    onChange={(e) => handleMusicChange('entrance_hymn', e.target.value)}
+                    placeholder="Opening hymn title"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="responsorial_psalm_music">Responsorial Psalm Music</Label>
+                  <Input
+                    id="responsorial_psalm_music"
+                    value={formData.music_selections.responsorial_psalm}
+                    onChange={(e) => handleMusicChange('responsorial_psalm', e.target.value)}
+                    placeholder="Psalm response melody"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="alleluia">Alleluia/Gospel Acclamation</Label>
+                  <Input
+                    id="alleluia"
+                    value={formData.music_selections.alleluia}
+                    onChange={(e) => handleMusicChange('alleluia', e.target.value)}
+                    placeholder="Gospel acclamation"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="offertory">Offertory</Label>
+                  <Input
+                    id="offertory"
+                    value={formData.music_selections.offertory}
+                    onChange={(e) => handleMusicChange('offertory', e.target.value)}
+                    placeholder="Preparation of gifts music"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="communion">Communion Hymn</Label>
+                  <Input
+                    id="communion"
+                    value={formData.music_selections.communion}
+                    onChange={(e) => handleMusicChange('communion', e.target.value)}
+                    placeholder="Communion processional"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="closing_hymn">Closing Hymn</Label>
+                  <Input
+                    id="closing_hymn"
+                    value={formData.music_selections.closing_hymn}
+                    onChange={(e) => handleMusicChange('closing_hymn', e.target.value)}
+                    placeholder="Recessional hymn"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Additional Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <FileText className="h-4 w-4" />
+                Additional Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="special_instructions">Special Instructions</Label>
+                <Textarea
+                  id="special_instructions"
+                  value={formData.special_instructions}
+                  onChange={(e) => handleInputChange('special_instructions', e.target.value)}
+                  placeholder="Any special liturgical instructions or notes for ministers..."
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="notes">Planning Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
+                  placeholder="Personal planning notes, ideas, or reminders..."
+                  rows={3}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Form Actions */}
+          <div className="flex gap-2">
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving...' : (worksheet ? 'Update Worksheet' : 'Create Worksheet')}
+            </Button>
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+};
