@@ -475,8 +475,11 @@ export default function UnifiedBookingPage() {
           if (appointmentError) throw appointmentError;
         }
 
-      // Send SMS notification to client if phone number is provided
+      // Temporarily disable SMS notifications to avoid CORS issues
       if (contactInfo.phone) {
+        console.log('SMS notifications temporarily disabled during Stripe integration setup');
+        // TODO: Re-enable SMS after CORS issues are resolved
+        /*
         try {
           const appointmentDateTime = new Date(utcDateTime);
           const smsMessage = `Hi ${contactInfo.name}! 🎵 Your ${selectedAppointmentType.name.toLowerCase()} appointment has been confirmed for ${selectedSlot.displayDate} at ${selectedSlot.displayTime} EST. Please arrive 5 minutes early. Looking forward to seeing you! - Dr. Johnson`;
@@ -499,6 +502,7 @@ export default function UnifiedBookingPage() {
           console.error('Error sending SMS:', smsError);
           // Don't fail the booking if SMS fails
         }
+        */
       }
 
       setIsConfirmed(true);
