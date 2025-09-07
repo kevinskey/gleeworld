@@ -134,13 +134,28 @@ export default function UnifiedBookingPage() {
         const endDate = new Date(selectedDate);
         endDate.setHours(23, 59, 59, 999);
 
-        const { data: existingAppointments } = await supabase
+        const { data: existingAppointments, error: appointmentsError } = await supabase
           .from('gw_appointments')
           .select('appointment_date, duration_minutes')
           .eq('provider_id', selectedProvider.id)
           .gte('appointment_date', startDate.toISOString())
           .lte('appointment_date', endDate.toISOString())
           .neq('status', 'cancelled');
+
+        if (appointmentsError) {
+          console.error('Error fetching existing appointments:', appointmentsError);
+          setAllTimeSlots([]);
+          setLoading(false);
+          return;
+        }
+
+        console.log(`Found ${existingAppointments?.length || 0} existing appointments for ${selectedDate.toDateString()}`);
+        if (existingAppointments?.length) {
+          console.log('Existing appointments:', existingAppointments.map(apt => ({
+            date: new Date(apt.appointment_date).toISOString(),
+            duration: apt.duration_minutes
+          })));
+        }
 
         // Generate time slots from availability slots
         const timeSlots = [];
@@ -174,8 +189,19 @@ export default function UnifiedBookingPage() {
                 const aptEnd = new Date(aptStart.getTime() + (apt.duration_minutes || slotDuration) * 60000);
                 const slotEnd = new Date(slotTime.getTime() + slotDuration * 60000);
                 
-                // Check for overlap
-                return slotTime < aptEnd && slotEnd > aptStart;
+                // Check for overlap - any overlap makes the slot unavailable
+                const hasOverlap = slotTime < aptEnd && slotEnd > aptStart;
+                
+                if (hasOverlap) {
+                  console.log(`Slot ${time12Hour} conflicts with existing appointment:`, {
+                    appointmentStart: aptStart.toISOString(),
+                    appointmentEnd: aptEnd.toISOString(),
+                    slotStart: slotTime.toISOString(),
+                    slotEnd: slotEnd.toISOString()
+                  });
+                }
+                
+                return hasOverlap;
               });
               
               // Only add available time slots
