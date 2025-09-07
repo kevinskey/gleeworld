@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { AnnouncementsEventsSection } from "@/components/user-dashboard/sections/AnnouncementsEventsSection";
@@ -21,7 +23,7 @@ import { useState as reactUseState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ModuleCard } from '@/components/shared/ModuleWrapper';
 import { UNIFIED_MODULE_CATEGORIES } from '@/config/unified-modules';
-import { Calendar, CheckCircle, DollarSign, Bell, Music, BookOpen, Clock, Award, Users, TrendingUp, Settings, Star, Shield, Database, BarChart3, FileText, AlertCircle, Crown, Server, Activity, Lock, GraduationCap, Grid3X3, ChevronDown, ChevronUp, GripVertical, Globe, Zap, Heart, Eye } from "lucide-react";
+import { Calendar, CheckCircle, DollarSign, Bell, Music, BookOpen, Clock, Award, Users, TrendingUp, Settings, Star, Shield, Database, BarChart3, FileText, AlertCircle, Crown, Server, Activity, Lock, GraduationCap, Grid3X3, ChevronDown, ChevronUp, GripVertical, Globe, Zap, Heart, Eye, Search, Filter, SortAsc, SortDesc } from "lucide-react";
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(module => ({
   default: module.CalendarViews
 })));
@@ -165,6 +167,12 @@ export const SuperAdminDashboard = ({
   const [showAllModules, setShowAllModules] = useState(false);
   const [overviewCollapsed, setOverviewCollapsed] = useState(true);
 
+  // Search and Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'category' | 'status'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+
   // Initialize collapsed sections - default all categories to collapsed
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
     const initialCollapsed: Record<string, boolean> = {};
@@ -173,6 +181,53 @@ export const SuperAdminDashboard = ({
     });
     return initialCollapsed;
   });
+
+  // Sort and filter modules
+  const filteredAndSortedModules = useMemo(() => {
+    const allModules = Object.entries(modulesByCategory).flatMap(([category, modules]) => 
+      modules.map(module => ({ ...module, category }))
+    );
+
+    // Filter by search query
+    let filtered = allModules.filter(module => 
+      module.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      module.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      module.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // Filter by category
+    if (filterCategory !== 'all') {
+      filtered = filtered.filter(module => module.category === filterCategory);
+    }
+
+    // Sort modules
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case 'name':
+          aValue = a.title || '';
+          bValue = b.title || '';
+          break;
+        case 'category':
+          aValue = a.category;
+          bValue = b.category;
+          break;
+        case 'status':
+          aValue = a.isActive ? 'active' : 'inactive';
+          bValue = b.isActive ? 'active' : 'inactive';
+          break;
+        default:
+          aValue = a.title || '';
+          bValue = b.title || '';
+      }
+
+      const comparison = aValue.localeCompare(bValue);
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [modulesByCategory, searchQuery, filterCategory, sortBy, sortOrder]);
 
   // Sort modules within categories based on custom ordering
   const sortedModulesByCategory = useMemo(() => {
@@ -395,6 +450,68 @@ export const SuperAdminDashboard = ({
           {showAllModules ? "Show Overview" : "Show All Modules"}
         </Button>
       </div>
+
+      {/* Search and Filter Controls */}
+      {showAllModules && (
+        <Card className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search modules..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger>
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>
+                    {category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={sortBy} onValueChange={(value: 'name' | 'category' | 'status') => setSortBy(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Name</SelectItem>
+                <SelectItem value="category">Category</SelectItem>
+                <SelectItem value="status">Status</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="outline"
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="flex items-center gap-2"
+            >
+              {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+              {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+            </Button>
+          </div>
+
+          {/* Filtered Results Count */}
+          {searchQuery || filterCategory !== 'all' ? (
+            <div className="mt-4 text-sm text-muted-foreground">
+              Found {filteredAndSortedModules.length} modules
+              {searchQuery && ` matching "${searchQuery}"`}
+              {filterCategory !== 'all' && ` in ${filterCategory.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`}
+            </div>
+          ) : null}
+        </Card>
+      )}
+
       {/* Quick Action Modules */}
       <div className="bg-gradient-to-r from-primary/5 via-background to-muted/20 rounded-lg p-6">
         <div className="flex items-center gap-3 mb-4">
