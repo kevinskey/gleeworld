@@ -25,6 +25,9 @@ interface Appointment {
   time: string;
   duration: number;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  payment_status?: 'pending' | 'paid' | 'free' | 'failed';
+  payment_amount?: number;
+  is_recurring?: boolean;
   notes?: string;
   calendarId?: string;
 }
@@ -437,27 +440,34 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
           <p className="text-muted-foreground">Manage and track all appointments</p>
         </div>
         
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Appointment
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>Create New Appointment</DialogTitle>
-              <DialogDescription>Fill in the details to schedule a new appointment</DialogDescription>
-            </DialogHeader>
-            <AppointmentForm />
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                Cancel
+        <div className="flex gap-2">
+          <Button onClick={() => setIsPaymentDialogOpen(true)} className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Book & Pay for Lesson
+          </Button>
+          
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" onClick={() => resetForm()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Free Appointment
               </Button>
-              <Button onClick={handleCreate}>Create Appointment</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Create New Appointment</DialogTitle>
+                <DialogDescription>Fill in the details to schedule a new appointment</DialogDescription>
+              </DialogHeader>
+              <AppointmentForm />
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreate}>Create Appointment</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Search and Filter */}
@@ -509,6 +519,14 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
                         <Badge className={getStatusColor(appointment.status)}>
                           {appointment.status}
                         </Badge>
+                        {appointment.payment_status && appointment.payment_status !== 'free' && (
+                          <Badge variant={appointment.payment_status === 'paid' ? 'default' : 'secondary'} className="flex items-center gap-1">
+                            {appointment.payment_status === 'paid' ? <CheckCircle className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
+                            {appointment.payment_status === 'paid' ? 'Paid' : 'Payment Pending'}
+                            {appointment.payment_amount && ` $${(appointment.payment_amount / 100).toFixed(2)}`}
+                            {appointment.is_recurring && ' (Recurring)'}
+                          </Badge>
+                        )}
                       </div>
                       
                       <div className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
@@ -586,6 +604,17 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Payment Dialog */}
+      <AppointmentPayment
+        isOpen={isPaymentDialogOpen}
+        onClose={() => setIsPaymentDialogOpen(false)}
+        onSuccess={(appointment) => {
+          console.log('Payment successful for appointment:', appointment);
+          setIsPaymentDialogOpen(false);
+        }}
+        providers={providers}
+      />
     </div>
   );
 };

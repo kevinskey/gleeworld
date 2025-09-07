@@ -552,6 +552,16 @@ export const ProviderProfileSelector = () => {
       {activeTab === 'services' && (
         <ProviderServiceManager provider={currentProvider} />
       )}
+
+      {/* Add Recurring Payment Management for customers */}
+      {currentProvider?.email && (
+        <div className="mt-6">
+          <RecurringPaymentManager 
+            customerEmail={currentProvider.email} 
+            appointments={myAppointments}
+          />
+        </div>
+      )}
     </div>
   );
 };

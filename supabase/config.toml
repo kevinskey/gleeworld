@@ -171,3 +171,12 @@ verify_jwt = false
 
 [functions.upload-file]
 verify_jwt = false
+
+[functions.create-appointment-payment]
+verify_jwt = false
+
+[functions.verify-appointment-payment]
+verify_jwt = false
+
+[functions.appointment-customer-portal]
+verify_jwt = false
