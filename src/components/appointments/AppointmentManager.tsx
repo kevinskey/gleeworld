@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, Clock, User, Mail, Phone, Plus, Search, Filter, Edit, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Clock, User, Mail, Phone, Plus, Search, Filter, Edit, Trash2, CreditCard, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,9 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { format, addDays } from 'date-fns';
 import { useCalendars } from '@/hooks/useCalendars';
+import { AppointmentPayment } from './AppointmentPayment';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Appointment {
   id: string;
@@ -56,9 +58,60 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const { data: calendars = [] } = useCalendars();
   const { data: services = [] } = useServices();
+  const { data: providers = [] } = useServiceProviders();
+
+  // Check for successful payment on component mount
+  useEffect(() => {
+    const checkPaymentSuccess = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment');
+      const sessionId = urlParams.get('session_id');
+      
+      if (paymentStatus === 'success' && sessionId) {
+        try {
+          const { data, error } = await supabase.functions.invoke('verify-appointment-payment', {
+            body: { sessionId }
+          });
+          
+          if (error) throw error;
+          
+          if (data.success) {
+            toast({
+              title: "Payment Successful!",
+              description: "Your appointment has been scheduled.",
+            });
+            
+            // Clear URL parameters
+            window.history.replaceState({}, '', window.location.pathname);
+            
+            // Optionally trigger a data refresh
+            window.location.reload();
+          }
+        } catch (error) {
+          console.error('Payment verification error:', error);
+          toast({
+            title: "Payment Verification Failed",
+            description: "Please contact support if your payment was processed.",
+            variant: "destructive"
+          });
+        }
+      } else if (paymentStatus === 'cancelled') {
+        toast({
+          title: "Payment Cancelled",
+          description: "Your appointment was not scheduled.",
+          variant: "destructive"
+        });
+        // Clear URL parameters
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    };
+    
+    checkPaymentSuccess();
+  }, []);
 
   // Handle external editing request from calendar
   React.useEffect(() => {
@@ -117,7 +170,11 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
 
   const handleCreate = () => {
     if (!formData.clientName || !formData.clientEmail || !formData.service || !formData.date || !formData.time) {
-      toast.error('Please fill in all required fields');
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -139,7 +196,10 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
     };
 
     onAppointmentCreate?.(newAppointment);
-    toast.success('Appointment created successfully!');
+    toast({
+      title: "Success",
+      description: "Appointment created successfully!"
+    });
     setIsCreateDialogOpen(false);
     resetForm();
   };
@@ -165,7 +225,10 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
     };
 
     onAppointmentUpdate?.(editingAppointment.id, updates);
-    toast.success('Appointment updated successfully!');
+    toast({
+      title: "Success", 
+      description: "Appointment updated successfully!"
+    });
     setEditingAppointment(null);
     resetForm();
   };
@@ -195,7 +258,10 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this appointment?')) {
       onAppointmentDelete?.(id);
-      toast.success('Appointment deleted successfully!');
+      toast({
+        title: "Success",
+        description: "Appointment deleted successfully!"
+      });
     }
   };
 

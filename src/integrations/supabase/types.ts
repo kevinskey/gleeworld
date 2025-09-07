@@ -3503,12 +3503,16 @@ export type Database = {
           max_occurrences: number | null
           notes: string | null
           parent_appointment_id: string | null
+          payment_amount: number | null
+          payment_status: string | null
           provider_id: string | null
           recurrence_days_of_week: number[] | null
           recurrence_end_date: string | null
           recurrence_interval: number | null
           recurrence_type: string | null
           status: string
+          stripe_session_id: string | null
+          stripe_subscription_id: string | null
           title: string
           updated_at: string
         }
@@ -3530,12 +3534,16 @@ export type Database = {
           max_occurrences?: number | null
           notes?: string | null
           parent_appointment_id?: string | null
+          payment_amount?: number | null
+          payment_status?: string | null
           provider_id?: string | null
           recurrence_days_of_week?: number[] | null
           recurrence_end_date?: string | null
           recurrence_interval?: number | null
           recurrence_type?: string | null
           status?: string
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
           title: string
           updated_at?: string
         }
@@ -3557,12 +3565,16 @@ export type Database = {
           max_occurrences?: number | null
           notes?: string | null
           parent_appointment_id?: string | null
+          payment_amount?: number | null
+          payment_status?: string | null
           provider_id?: string | null
           recurrence_days_of_week?: number[] | null
           recurrence_end_date?: string | null
           recurrence_interval?: number | null
           recurrence_type?: string | null
           status?: string
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
           title?: string
           updated_at?: string
         }
