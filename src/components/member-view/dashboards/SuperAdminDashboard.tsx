@@ -32,11 +32,13 @@ const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews
 interface SortableModuleCardProps {
   module: any;
   onModuleClick: (moduleId: string) => void;
+  navigate: (path: string) => void;
   isDragging?: boolean;
 }
 const SortableModuleCard = ({
   module,
   onModuleClick,
+  navigate,
   isDragging
 }: SortableModuleCardProps) => {
   const {
@@ -87,8 +89,7 @@ const SortableModuleCard = ({
             className="w-full" 
             onClick={() => {
               if (module.id === 'librarian') {
-                // Direct navigation to librarian dashboard
-                window.location.href = '/librarian-dashboard';
+                navigate('/librarian-dashboard');
               } else {
                 onModuleClick(module.id);
               }
@@ -549,6 +550,7 @@ export const SuperAdminDashboard = ({
                         key={module.id}
                         module={module}
                         onModuleClick={(moduleId) => setSelectedModule(moduleId)}
+                        navigate={navigate}
                       />
                     ))}
                   </div>
@@ -634,6 +636,7 @@ export const SuperAdminDashboard = ({
                                   key={module.id}
                                   module={module}
                                   onModuleClick={(moduleId) => setSelectedModule(moduleId)}
+                                  navigate={navigate}
                                 />
                               ))}
                             </div>
@@ -778,7 +781,7 @@ export const SuperAdminDashboard = ({
                       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={event => handleDragEnd(event, categoryName)}>
                         <SortableContext items={categoryModules.map(m => m.id)} strategy={verticalListSortingStrategy}>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
-                            {categoryModules.map(module => <SortableModuleCard key={module.id} module={module} onModuleClick={moduleId => setSelectedModule(moduleId)} />)}
+                            {categoryModules.map(module => <SortableModuleCard key={module.id} module={module} onModuleClick={moduleId => setSelectedModule(moduleId)} navigate={navigate} />)}
                           </div>
                         </SortableContext>
                       </DndContext>
