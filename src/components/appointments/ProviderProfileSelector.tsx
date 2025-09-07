@@ -109,13 +109,19 @@ export const ProviderProfileSelector = () => {
 
   // Filter appointments for current provider
   const myAppointments = appointments.filter(apt => {
-    // If appointment has provider_id, check if it matches current provider
-    // If no provider_id but appointment type matches service category, include it
-    return currentProvider && (
-      apt.service === currentProvider.id || // This might need adjustment based on actual data structure
-      apt.clientEmail === currentProvider.email // Fallback logic
-    );
+    if (!currentProvider) return false;
+    
+    console.log('🔍 Filtering appointment:', apt.title, 'Provider:', currentProvider.provider_name);
+    console.log('🔍 Appointment service:', apt.service, 'Provider ID:', currentProvider.id);
+    
+    // For now, show all appointments since provider_id assignment needs to be implemented
+    // TODO: Implement proper provider assignment in appointment creation
+    return true;
   }).slice(0, 5); // Show only next 5 appointments
+
+  console.log('🔍 Current provider:', currentProvider?.provider_name);
+  console.log('🔍 All appointments:', appointments.length);
+  console.log('🔍 My filtered appointments:', myAppointments.length);
 
   if (isLoading) {
     return (
