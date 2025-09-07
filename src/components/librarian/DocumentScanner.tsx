@@ -143,17 +143,25 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
           const processed = await processDocument(canvas);
           finalCanvas = processed.canvas;
           
+          const statusMessage = processed.enhanced 
+            ? "Auto-crop and enhancement applied successfully" 
+            : "Auto-crop applied (enhancement unavailable)";
+            
           toast({
-            title: "Document Enhanced",
-            description: processed.enhanced 
-              ? "AI processing and auto-crop applied successfully" 
-              : "Auto-crop applied (AI enhancement unavailable)",
+            title: "Document Processed",
+            description: statusMessage,
+          });
+          
+          console.log('📄 Document processing completed:', {
+            enhanced: processed.enhanced,
+            corners: !!processed.corners,
+            canvasSize: `${processed.canvas.width}x${processed.canvas.height}`
           });
         } catch (error) {
-          console.warn('Advanced processing failed, using basic capture:', error);
+          console.error('🚨 Document processing failed:', error);
           toast({
             title: "Basic Capture",
-            description: "Advanced processing unavailable, using basic capture",
+            description: "Using basic capture (processing failed)",
             variant: "default",
           });
         }

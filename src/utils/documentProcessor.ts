@@ -1,8 +1,4 @@
-import { pipeline, env } from '@huggingface/transformers';
-
-// Configure transformers.js
-env.allowLocalModels = false;
-env.useBrowserCache = true;
+// Document processing utilities - no external dependencies required
 
 interface DocumentCorners {
   topLeft: { x: number; y: number };
@@ -126,39 +122,58 @@ export const autoCropDocument = (canvas: HTMLCanvasElement, corners?: DocumentCo
  * Complete document processing pipeline
  */
 export const processDocument = async (sourceCanvas: HTMLCanvasElement): Promise<ProcessedDocument> => {
-  console.log('Starting document processing...');
+  console.log('📄 Starting document processing...');
   
-  // Step 1: Detect document edges
-  const corners = detectDocumentEdges(sourceCanvas);
-  console.log('Document corners detected:', corners);
-  
-  // Step 2: Apply perspective correction if corners found
-  let processedCanvas = sourceCanvas;
-  if (corners) {
-    processedCanvas = applyPerspectiveCorrection(sourceCanvas, corners);
-    console.log('Perspective correction applied');
-  }
-  
-  // Step 3: Auto-crop to document
-  processedCanvas = autoCropDocument(processedCanvas, corners);
-  console.log('Auto-crop applied');
-  
-  // Step 4: AI enhancement
   try {
-    processedCanvas = await enhanceDocument(processedCanvas);
-    console.log('AI enhancement applied');
+    // Step 1: Detect document edges
+    const corners = detectDocumentEdges(sourceCanvas);
+    console.log('📐 Document corners detected:', corners);
     
-    return {
-      canvas: processedCanvas,
-      corners,
-      enhanced: true
-    };
+    // Step 2: Apply perspective correction if corners found
+    let processedCanvas = sourceCanvas;
+    if (corners) {
+      try {
+        processedCanvas = applyPerspectiveCorrection(sourceCanvas, corners);
+        console.log('✨ Perspective correction applied');
+      } catch (error) {
+        console.warn('⚠️ Perspective correction failed, using original:', error);
+      }
+    }
+    
+    // Step 3: Auto-crop to document
+    try {
+      processedCanvas = autoCropDocument(processedCanvas, corners);
+      console.log('✂️ Auto-crop applied');
+    } catch (error) {
+      console.warn('⚠️ Auto-crop failed, using current canvas:', error);
+    }
+    
+    // Step 4: Basic enhancement (no external AI needed)
+    try {
+      processedCanvas = await enhanceDocument(processedCanvas);
+      console.log('✨ Document enhancement applied');
+      
+      return {
+        canvas: processedCanvas,
+        corners,
+        enhanced: true
+      };
+    } catch (error) {
+      console.warn('⚠️ Enhancement failed, using basic processing:', error);
+      
+      return {
+        canvas: processedCanvas,
+        corners,
+        enhanced: false
+      };
+    }
   } catch (error) {
-    console.warn('AI enhancement failed, using basic processing:', error);
+    console.error('🚨 Document processing failed completely:', error);
     
+    // Return original canvas if everything fails
     return {
-      canvas: processedCanvas,
-      corners,
+      canvas: sourceCanvas,
+      corners: null,
       enhanced: false
     };
   }
@@ -235,7 +250,7 @@ function calculatePerspectiveTransform(corners: DocumentCorners, targetWidth: nu
 }
 
 function enhanceDocumentQuality(data: Uint8ClampedArray) {
-  // Advanced document enhancement
+  // Enhanced document processing for better text clarity
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i];
     const g = data[i + 1];
@@ -244,15 +259,21 @@ function enhanceDocumentQuality(data: Uint8ClampedArray) {
     // Convert to grayscale
     const gray = 0.299 * r + 0.587 * g + 0.114 * b;
     
-    // Apply adaptive thresholding for text enhancement
-    const enhanced = gray > 128 ? 255 : 0;
+    // Apply contrast enhancement for better text readability
+    let enhanced;
+    if (gray > 180) {
+      enhanced = 255; // Pure white for light areas
+    } else if (gray < 75) {
+      enhanced = 0;   // Pure black for dark areas (text)
+    } else {
+      // Enhance contrast in middle range
+      enhanced = gray > 127 ? Math.min(255, gray * 1.3) : Math.max(0, gray * 0.7);
+    }
     
-    // High contrast for text documents
-    const finalValue = enhanced > 200 ? 255 : enhanced < 50 ? 0 : enhanced;
-    
-    data[i] = finalValue;     // R
-    data[i + 1] = finalValue; // G
-    data[i + 2] = finalValue; // B
+    data[i] = enhanced;     // R
+    data[i + 1] = enhanced; // G
+    data[i + 2] = enhanced; // B
+    // Alpha channel (data[i + 3]) remains unchanged
   }
 }
 
