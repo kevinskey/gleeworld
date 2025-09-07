@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ProviderSelector } from '@/components/providers/ProviderSelector';
 import { useServiceProviders, type ServiceProvider } from '@/hooks/useServiceProviders';
+import { useNavigate } from 'react-router-dom';
 
 import { cn } from '@/lib/utils';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
@@ -42,6 +43,7 @@ interface AppointmentType {
 
 export default function UnifiedBookingPage() {
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string; displayDate: string; displayTime: string } | null>(null);
@@ -557,7 +559,7 @@ export default function UnifiedBookingPage() {
 
               <div className="space-y-3">
                 <Button 
-                  onClick={() => window.location.href = '/'}
+                  onClick={() => navigate('/')}
                   className="w-full max-w-md"
                 >
                   Return to Home
