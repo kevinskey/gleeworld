@@ -68,7 +68,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
 
   return (
     <>
-      <header className="bg-background/90 backdrop-blur-lg border-b border-border sticky top-0 z-50 shadow-lg">
+      <header className="bg-background/95 backdrop-blur-xl border-b border-border sticky top-0 z-50 shadow-lg supports-[backdrop-filter]:bg-background/90">
           <div className="container mx-auto px-2 sm:px-4 lg:px-6 flex justify-center">
             <div className="flex items-center justify-between w-full max-w-7xl min-h-10 sm:min-h-12 md:min-h-14 lg:min-h-20 py-2 sm:py-3 md:py-4 lg:py-6">
           {/* Logo and Navigation */}
