@@ -314,6 +314,45 @@ export default function UnifiedBookingPage() {
     setIsSubmitting(true);
     
     try {
+      // Check if this service requires payment (lessons)
+      const requiresPayment = selectedAppointmentType.name.toLowerCase().includes('lesson');
+      
+      if (requiresPayment) {
+        // Create Stripe payment session for lessons
+        const { data, error } = await supabase.functions.invoke('create-appointment-payment', {
+          body: {
+            appointmentDetails: {
+              service: selectedAppointmentType.name,
+              providerId: selectedProvider?.id || '',
+              date: selectedSlot.date,
+              time: selectedSlot.time,
+              duration: selectedAppointmentType.default_duration_minutes
+            },
+            paymentType: 'one-time',
+            clientName: contactInfo.name,
+            clientEmail: contactInfo.email
+          }
+        });
+
+        if (error) {
+          console.error('Payment creation error:', error);
+          throw new Error('Failed to create payment session');
+        }
+
+        if (data?.url) {
+          // Open Stripe checkout in a new tab
+          window.open(data.url, '_blank');
+          
+          toast({
+            title: "Redirecting to Payment",
+            description: "Please complete your payment in the new tab to confirm your lesson booking.",
+          });
+          
+          return; // Exit here - appointment will be created after successful payment
+        }
+      }
+
+      // For free services or if payment is not required, proceed with direct booking
       const easternTimeZone = 'America/New_York';
       
       // Parse the time from the selectedSlot.time (e.g., "6:30 PM")
