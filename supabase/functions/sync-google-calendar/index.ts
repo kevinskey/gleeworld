@@ -31,6 +31,10 @@ serve(async (req) => {
     const { calendarId } = await req.json();
     console.log('Syncing Google Calendar:', calendarId);
 
+    if (!calendarId) {
+      throw new Error('Calendar ID is required');
+    }
+
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -52,7 +56,9 @@ serve(async (req) => {
     );
 
     if (!response.ok) {
-      throw new Error(`Google Calendar API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Google Calendar API error: ${response.status} - ${errorText}`);
+      throw new Error(`Google Calendar API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();

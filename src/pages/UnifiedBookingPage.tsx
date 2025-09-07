@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, CheckCircle, User, Mail, Phone } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, CheckCircle, User, Mail, Phone, Users } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { ProviderSelector } from '@/components/providers/ProviderSelector';
+import { useServiceProviders, type ServiceProvider } from '@/hooks/useServiceProviders';
 
 import { cn } from '@/lib/utils';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
@@ -54,6 +56,7 @@ export default function UnifiedBookingPage() {
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [appointmentTypes, setAppointmentTypes] = useState<AppointmentType[]>([]);
   const [selectedAppointmentType, setSelectedAppointmentType] = useState<AppointmentType | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<ServiceProvider | null>(null);
 
   // Generate available time slots for any selected date
   const [allTimeSlots, setAllTimeSlots] = useState<any[]>([]);
@@ -81,7 +84,7 @@ export default function UnifiedBookingPage() {
 
   // Generate time slots based on database availability settings and check existing appointments
   useEffect(() => {
-    if (!selectedDate) {
+    if (!selectedDate || !selectedProvider) {
       setAllTimeSlots([]);
       return;
     }
@@ -93,10 +96,11 @@ export default function UnifiedBookingPage() {
         // Get day of week (0 = Sunday, 1 = Monday, etc.)
         const dayOfWeek = selectedDate.getDay();
 
-        // Fetch availability slots for this day from database
+        // Fetch availability slots for this day and provider from database
         const { data: availabilitySlots, error: availabilityError } = await supabase
-          .from('gw_appointment_availability')
+          .from('gw_provider_availability')
           .select('*')
+          .eq('provider_id', selectedProvider.id)
           .eq('day_of_week', dayOfWeek)
           .eq('is_available', true)
           .order('start_time', { ascending: true });
@@ -133,6 +137,7 @@ export default function UnifiedBookingPage() {
         const { data: existingAppointments } = await supabase
           .from('gw_appointments')
           .select('appointment_date, duration_minutes')
+          .eq('provider_id', selectedProvider.id)
           .gte('appointment_date', startDate.toISOString())
           .lte('appointment_date', endDate.toISOString())
           .neq('status', 'cancelled');
@@ -209,7 +214,7 @@ export default function UnifiedBookingPage() {
     };
 
     generateTimeSlots();
-  }, [selectedDate]);
+  }, [selectedDate, selectedProvider]);
 
   // Restore selected time slot from localStorage when user returns from auth
   useEffect(() => {
@@ -377,7 +382,8 @@ export default function UnifiedBookingPage() {
               client_phone: contactInfo.phone,
               status: 'scheduled',
               appointment_type: validAppointmentType,
-              duration_minutes: selectedAppointmentType.default_duration_minutes
+              duration_minutes: selectedAppointmentType.default_duration_minutes,
+              provider_id: selectedProvider?.id
             });
 
           if (appointmentError) throw appointmentError;
@@ -541,22 +547,42 @@ export default function UnifiedBookingPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground text-sm">
-                      Select a new time below to schedule or update your appointment.
+                      Select a provider and time below to schedule or update your appointment.
                     </p>
                   </CardContent>
                 </Card>
               )}
               
-              <Card className="shadow-xl border border-border/50 backdrop-blur-sm bg-card/80 max-w-6xl mx-auto">
-                <CardHeader className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-t-lg border-b border-border/50 p-4 md:p-8">
-                  <CardTitle className="flex items-center text-xl md:text-3xl font-bold">
-                    <CalendarIcon className="h-5 w-5 md:h-8 md:w-8 mr-2 md:mr-4 text-primary" />
-                    Choose Your Appointment Date (EST)
+              {/* Provider Selection */}
+              <Card className="shadow-xl border border-border/50 backdrop-blur-sm bg-card/80">
+                <CardHeader className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-t-lg border-b border-border/50">
+                  <CardTitle className="flex items-center text-xl md:text-2xl font-bold">
+                    <Users className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3 text-primary" />
+                    Choose Your Provider
                   </CardTitle>
-                  <p className="text-muted-foreground text-sm md:text-lg mt-1 md:mt-2">
-                    Select any available date from the calendar below. All appointments are scheduled in Eastern Time (ET).
+                  <p className="text-muted-foreground text-sm md:text-base">
+                    Select a provider to see their available appointment times.
                   </p>
                 </CardHeader>
+                <CardContent className="p-6">
+                  <ProviderSelector
+                    selectedProviderId={selectedProvider?.id}
+                    onProviderSelect={setSelectedProvider}
+                  />
+                </CardContent>
+              </Card>
+              
+              {selectedProvider && (
+                <Card className="shadow-xl border border-border/50 backdrop-blur-sm bg-card/80 max-w-6xl mx-auto">
+                  <CardHeader className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-t-lg border-b border-border/50 p-4 md:p-8">
+                    <CardTitle className="flex items-center text-xl md:text-3xl font-bold">
+                      <CalendarIcon className="h-5 w-5 md:h-8 md:w-8 mr-2 md:mr-4 text-primary" />
+                      Choose Your Appointment Date (EST)
+                    </CardTitle>
+                    <p className="text-muted-foreground text-sm md:text-lg mt-1 md:mt-2">
+                      Select any available date from the calendar below for {selectedProvider.title} {selectedProvider.provider_name}. All appointments are scheduled in Eastern Time (ET).
+                    </p>
+                  </CardHeader>
                 <CardContent className="px-4 pb-10">
                   <div className="pt-8">
                     <div className="flex justify-center">
@@ -583,10 +609,11 @@ export default function UnifiedBookingPage() {
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
 
-              {selectedDate && (
+              {selectedDate && selectedProvider && (
                 <Card className="shadow-xl border border-border/50 backdrop-blur-sm bg-card/90">
                   <CardHeader className="bg-gradient-to-r from-primary/10 via-primary/5 to-secondary/5 rounded-t-lg border-b border-border/50">
                     <CardTitle className="flex items-center text-2xl font-bold">
@@ -665,7 +692,21 @@ export default function UnifiedBookingPage() {
                 </Card>
               )}
 
-              {!selectedDate && (
+              {!selectedProvider && (
+                <Card className="shadow-lg">
+                  <CardContent className="text-center py-16">
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-muted rounded-full mb-6">
+                      <Users className="h-10 w-10 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-2xl font-semibold mb-4">Select a Provider</h3>
+                    <p className="text-lg text-muted-foreground mb-6 max-w-md mx-auto">
+                      Please select a provider above to view their calendar and available appointment times.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {selectedProvider && !selectedDate && (
                 <Card className="shadow-lg">
                   <CardContent className="text-center py-16">
                     <div className="inline-flex items-center justify-center w-20 h-20 bg-muted rounded-full mb-6">
@@ -673,7 +714,7 @@ export default function UnifiedBookingPage() {
                     </div>
                     <h3 className="text-2xl font-semibold mb-4">Select a Date</h3>
                     <p className="text-lg text-muted-foreground mb-6 max-w-md mx-auto">
-                      Please select a date from the calendar above to view available appointment times.
+                      Please select a date from the calendar above to view available appointment times with {selectedProvider.title} {selectedProvider.provider_name}.
                     </p>
                   </CardContent>
                 </Card>
