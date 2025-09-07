@@ -37,6 +37,8 @@ interface AppointmentManagerProps {
 }
 
 import { useServices } from '@/hooks/useServices';
+import { ProviderSelector } from '@/components/providers/ProviderSelector';
+import { useServiceProviders, type ServiceProvider } from '@/hooks/useServiceProviders';
 
 const TIME_SLOTS = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -76,6 +78,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
     clientEmail: '',
     clientPhone: '',
     service: '',
+    providerId: '',
     date: '',
     time: '',
     duration: 60,
@@ -83,6 +86,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
     notes: '',
     calendarId: 'none'
   });
+  const [selectedProvider, setSelectedProvider] = useState<ServiceProvider | null>(null);
 
   // Generate next 30 days for date picker
   const availableDates = Array.from({ length: 30 }, (_, i) => {
@@ -100,6 +104,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       clientEmail: '',
       clientPhone: '',
       service: '',
+      providerId: '',
       date: '',
       time: '',
       duration: 60,
@@ -107,6 +112,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       notes: '',
       calendarId: 'none'
     });
+    setSelectedProvider(null);
   };
 
   const handleCreate = () => {
@@ -176,6 +182,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       clientEmail: appointment.clientEmail,
       clientPhone: appointment.clientPhone || '',
       service: matchingService?.id || '', // Use service ID if found, otherwise empty
+      providerId: '', // TODO: Add provider_id to Appointment interface when available
       date: format(appointment.date, 'yyyy-MM-dd'),
       time: appointment.time,
       duration: appointment.duration,
@@ -226,6 +233,18 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Provider Selection */}
+        <div className="md:col-span-2">
+          <ProviderSelector
+            selectedProviderId={formData.providerId}
+            onProviderSelect={(provider) => {
+              setSelectedProvider(provider);
+              setFormData(prev => ({ ...prev, providerId: provider.id }));
+            }}
+            serviceType={formData.service ? services.find(s => s.id === formData.service)?.category : undefined}
+          />
         </div>
 
         <div>

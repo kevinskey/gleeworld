@@ -15,6 +15,7 @@ import {
   type Appointment 
 } from '@/hooks/useRealAppointments';
 import { useCalendars } from '@/hooks/useCalendars';
+import { useServiceProviders } from '@/hooks/useServiceProviders';
 
 export const ComprehensiveAppointmentSystem = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -23,6 +24,7 @@ export const ComprehensiveAppointmentSystem = () => {
   // Use real appointments data
   const { data: appointments = [], isLoading, error } = useRealAppointments();
   const { data: calendars = [] } = useCalendars();
+  const { data: providers = [] } = useServiceProviders();
   const createMutation = useCreateRealAppointment();
   const updateMutation = useUpdateRealAppointment();
   const deleteMutation = useDeleteRealAppointment();
@@ -110,6 +112,14 @@ export const ComprehensiveAppointmentSystem = () => {
         
         <div className="flex gap-2">
           <select className="px-3 py-2 border rounded-md text-sm">
+            <option value="">All Providers</option>
+            {providers.map(provider => (
+              <option key={provider.id} value={provider.id}>
+                {provider.title} {provider.provider_name}
+              </option>
+            ))}
+          </select>
+          <select className="px-3 py-2 border rounded-md text-sm">
             <option value="">All Calendars</option>
             {calendars.map(calendar => (
               <option key={calendar.id} value={calendar.id}>
@@ -173,10 +183,11 @@ export const ComprehensiveAppointmentSystem = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="calendar" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="calendar">Calendar View</TabsTrigger>
           <TabsTrigger value="management">Appointment Management</TabsTrigger>
           <TabsTrigger value="services">Service Management</TabsTrigger>
+          <TabsTrigger value="providers">Providers</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
@@ -200,6 +211,46 @@ export const ComprehensiveAppointmentSystem = () => {
 
         <TabsContent value="services" className="space-y-6">
           <AppointmentServiceManager />
+        </TabsContent>
+
+        <TabsContent value="providers" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {providers.map(provider => (
+              <Card key={provider.id}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    {provider.profile_image_url ? (
+                      <img 
+                        src={provider.profile_image_url} 
+                        alt={provider.provider_name}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Users className="w-6 h-6 text-primary" />
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="font-medium">{provider.title} {provider.provider_name}</h3>
+                      <p className="text-sm text-muted-foreground">{provider.department}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium">Email:</span> {provider.email}</p>
+                    {provider.phone && <p><span className="font-medium">Phone:</span> {provider.phone}</p>}
+                    <p><span className="font-medium">Services:</span> {provider.services_offered.join(', ')}</p>
+                    <p><span className="font-medium">Status:</span> 
+                      <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
+                        provider.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {provider.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">

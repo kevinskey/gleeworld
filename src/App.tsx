@@ -152,6 +152,7 @@ import FirstYearConsolePage from "./pages/console/FirstYearConsolePage";
 import SetupCrewPage from "./pages/SetupCrewPage";
 import { Onboarding } from "./pages/Onboarding";
 import StudentRegistration from "./pages/StudentRegistration";
+import { ProviderDashboard } from "./components/providers/ProviderDashboard";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
 import ClassLanding from "./pages/mus240/ClassLanding";
@@ -1085,17 +1086,27 @@ const App = () => {
                                    </ProtectedRoute>
                                  } 
                                />
-                              <Route 
-                                path="/appointments" 
-                                element={
-                                  <ProtectedRoute>
-                                    <Appointments />
-                                  </ProtectedRoute>
-                                } 
-                              />
-                              <Route 
-                                path="/wardrobe" 
-                                element={
+                               <Route 
+                                 path="/appointments" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <Appointments />
+                                   </ProtectedRoute>
+                                 } 
+                               />
+                               <Route 
+                                 path="/provider-dashboard" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout>
+                                       <ProviderDashboard />
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 } 
+                               />
+                               <Route 
+                                 path="/wardrobe" 
+                                 element={
                                   <ProtectedRoute>
                                     <Wardrobe />
                                   </ProtectedRoute>
