@@ -10,7 +10,8 @@ import {
   Bell,
   Mic,
   Users,
-  Camera
+  Camera,
+  CalendarClock
 } from 'lucide-react';
 
 export const QuickActions: React.FC = () => {
@@ -57,6 +58,13 @@ export const QuickActions: React.FC = () => {
       label: 'Directory',
       description: 'Find members',
       action: () => navigate('/directory'),
+      variant: 'outline' as const
+    },
+    {
+      icon: <CalendarClock className="h-4 w-4" />,
+      label: 'Appointments',
+      description: 'Book & manage',
+      action: () => navigate('/appointments'),
       variant: 'outline' as const
     }
   ];
