@@ -308,41 +308,47 @@ export default function UnifiedBookingPage() {
     setIsSubmitting(true);
     
     try {
-      // Check if this service requires payment (only lessons require payment)
-      const requiresPayment = selectedAppointmentType.name.toLowerCase().includes('lesson');
+      // Check if this service requires payment (only specific paid lessons require payment)
+      const requiresPayment = selectedAppointmentType.name.toLowerCase().includes('lesson') && 
+                             selectedAppointmentType.name.toLowerCase().includes('private');
       
       if (requiresPayment) {
-        // Create Stripe payment session for lessons
-        const { data, error } = await supabase.functions.invoke('create-appointment-payment', {
-          body: {
-            appointmentDetails: {
-              service: selectedAppointmentType.name,
-              providerId: selectedProvider?.id || '',
-              date: selectedSlot.date,
-              time: selectedSlot.time,
-              duration: selectedAppointmentType.default_duration_minutes
-            },
-            paymentType: 'one-time',
-            clientName: contactInfo.name,
-            clientEmail: contactInfo.email
-          }
-        });
-
-        if (error) {
-          console.error('Payment creation error:', error);
-          throw new Error('Failed to create payment session');
-        }
-
-        if (data?.url) {
-          // Open Stripe checkout in a new tab
-          window.open(data.url, '_blank');
-          
-          toast({
-            title: "Redirecting to Payment",
-            description: "Please complete your payment in the new tab to confirm your lesson booking.",
+        try {
+          // Create Stripe payment session for lessons
+          const { data, error } = await supabase.functions.invoke('create-appointment-payment', {
+            body: {
+              appointmentDetails: {
+                service: selectedAppointmentType.name,
+                providerId: selectedProvider?.id || '',
+                date: selectedSlot.date,
+                time: selectedSlot.time,
+                duration: selectedAppointmentType.default_duration_minutes
+              },
+              paymentType: 'one-time',
+              clientName: contactInfo.name,
+              clientEmail: contactInfo.email
+            }
           });
-          
-          return; // Exit here - appointment will be created after successful payment
+
+          if (error) {
+            console.error('Payment creation error:', error);
+            // Fall back to free booking if payment fails
+            console.log('Payment system unavailable, proceeding with free booking');
+          } else if (data?.url) {
+            // Open Stripe checkout in a new tab
+            window.open(data.url, '_blank');
+            
+            toast({
+              title: "Redirecting to Payment",
+              description: "Please complete your payment in the new tab to confirm your lesson booking.",
+            });
+            
+            return; // Exit here - appointment will be created after successful payment
+          }
+        } catch (paymentError) {
+          console.error('Payment system error:', paymentError);
+          // Continue with free booking as fallback
+          console.log('Payment system error, proceeding with free booking');
         }
       }
 
