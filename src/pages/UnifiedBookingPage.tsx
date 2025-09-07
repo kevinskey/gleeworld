@@ -312,51 +312,16 @@ export default function UnifiedBookingPage() {
       const requiresPayment = selectedAppointmentType.name.toLowerCase().includes('lesson');
       
       if (requiresPayment) {
-        console.log('Creating payment session for:', {
-          service: selectedAppointmentType.name,
-          providerId: selectedProvider?.id || '',
-          date: selectedSlot.date,
-          time: selectedSlot.time,
-          duration: selectedAppointmentType.default_duration_minutes,
-          clientName: contactInfo.name,
-          clientEmail: contactInfo.email
+        console.log('Payment required for lesson - temporarily bypassing for testing');
+        
+        // Show a message about payment bypass
+        toast({
+          title: "Payment Temporarily Bypassed",
+          description: "Payment functionality is being set up. Proceeding with free booking for testing.",
+          variant: "default"
         });
         
-        // Create Stripe payment session for lessons
-        const { data, error } = await supabase.functions.invoke('create-appointment-payment', {
-          body: {
-            appointmentDetails: {
-              service: selectedAppointmentType.name,
-              providerId: selectedProvider?.id || '',
-              date: selectedSlot.date,
-              time: selectedSlot.time,
-              duration: selectedAppointmentType.default_duration_minutes
-            },
-            paymentType: 'one-time',
-            clientName: contactInfo.name,
-            clientEmail: contactInfo.email
-          }
-        });
-
-        console.log('Payment function response:', { data, error });
-
-        if (error) {
-          console.error('Payment creation error:', error);
-          throw new Error('Failed to create payment session');
-        }
-
-        if (data?.url) {
-          console.log('Opening payment URL:', data.url);
-          // Open Stripe checkout in a new tab
-          window.open(data.url, '_blank');
-          
-          toast({
-            title: "Redirecting to Payment",
-            description: "Please complete your payment in the new tab to confirm your lesson booking.",
-          });
-          
-          return; // Exit here - appointment will be created after successful payment
-        }
+        // Continue with the regular booking flow below instead of trying payment
       }
 
       // For free services or if payment is not required, proceed with direct booking
