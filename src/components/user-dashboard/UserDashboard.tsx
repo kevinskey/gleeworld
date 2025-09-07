@@ -39,6 +39,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 const UserDashboard = React.memo(() => {
   console.log('UserDashboard component starting to render...');
+  console.log('🔍 QuickActions import check:', typeof QuickActions);
   const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
   const [permissionsOpen, setPermissionsOpen] = useState(false);
   
@@ -72,6 +73,7 @@ const UserDashboard = React.memo(() => {
   
   // Get selected module from URL parameter
   const selectedModule = searchParams.get('module');
+  console.log('🔍 UserDashboard: selectedModule from URL:', selectedModule);
   
   const isAdmin = profile?.is_admin || profile?.is_super_admin;
   console.log('UserDashboard: Admin check debug:', {
