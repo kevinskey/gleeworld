@@ -7,7 +7,7 @@ import { ChevronDown } from "lucide-react";
 const publicNavItems = [
   { href: "/", label: "Home", shortLabel: "Home" },
   { href: "/glee-academy", label: "Glee Academy", shortLabel: "Academy" },
-  { href: "/calendar", label: "Calendar", shortLabel: "Calendar" },
+  { href: "/public-calendar", label: "Calendar", shortLabel: "Calendar" },
   { href: "/shop", label: "Shop", shortLabel: "Shop" },
 ];
 
