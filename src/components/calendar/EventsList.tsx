@@ -108,7 +108,7 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
                   <img 
                     src={event.image_url} 
                     alt={event.title}
-                    className="w-full h-32 object-cover rounded-md border"
+                    className="w-full h-40 object-cover rounded-md border"
                     onError={(e) => {
                       console.log('Failed to load event image:', event.image_url);
                       e.currentTarget.style.display = 'none';
