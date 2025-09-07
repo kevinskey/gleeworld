@@ -62,8 +62,8 @@ export const useUSCCBSync = () => {
       setLiturgicalData(data.data);
 
       toast({
-        title: "Liturgical Data Synced",
-        description: `Successfully loaded readings for ${new Date(date).toLocaleDateString()}`,
+        title: "Liturgical Data Loaded",
+        description: `Successfully loaded liturgical calendar for ${new Date(date).toLocaleDateString()}`,
       });
 
       return data.data;
