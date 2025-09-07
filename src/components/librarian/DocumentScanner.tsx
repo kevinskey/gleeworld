@@ -68,8 +68,8 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
       const constraints = {
         video: {
           facingMode,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          width: { ideal: 1080 },
+          height: { ideal: 1920 }
         }
       };
       
