@@ -312,6 +312,16 @@ export default function UnifiedBookingPage() {
       const requiresPayment = selectedAppointmentType.name.toLowerCase().includes('lesson');
       
       if (requiresPayment) {
+        console.log('Creating payment session for:', {
+          service: selectedAppointmentType.name,
+          providerId: selectedProvider?.id || '',
+          date: selectedSlot.date,
+          time: selectedSlot.time,
+          duration: selectedAppointmentType.default_duration_minutes,
+          clientName: contactInfo.name,
+          clientEmail: contactInfo.email
+        });
+        
         // Create Stripe payment session for lessons
         const { data, error } = await supabase.functions.invoke('create-appointment-payment', {
           body: {
@@ -328,12 +338,15 @@ export default function UnifiedBookingPage() {
           }
         });
 
+        console.log('Payment function response:', { data, error });
+
         if (error) {
           console.error('Payment creation error:', error);
           throw new Error('Failed to create payment session');
         }
 
         if (data?.url) {
+          console.log('Opening payment URL:', data.url);
           // Open Stripe checkout in a new tab
           window.open(data.url, '_blank');
           
