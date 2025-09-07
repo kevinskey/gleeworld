@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { AppointmentCalendar } from './AppointmentCalendar';
 import { AppointmentManager } from './AppointmentManager';
 import { AppointmentServiceManager } from './AppointmentServiceManager';
+import { ProviderProfileSelector } from './ProviderProfileSelector';
 import { ProviderManagement } from '@/components/admin/ProviderManagement';
 import { format, addDays, startOfWeek, addWeeks } from 'date-fns';
 import { 
@@ -184,13 +185,13 @@ export const ComprehensiveAppointmentSystem = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="calendar" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 gap-1">
           <TabsTrigger value="calendar" className="text-xs md:text-sm">Calendar</TabsTrigger>
           <TabsTrigger value="management" className="text-xs md:text-sm">Management</TabsTrigger>
+          <TabsTrigger value="my-profile" className="text-xs md:text-sm">My Profile</TabsTrigger>
           <TabsTrigger value="services" className="text-xs md:text-sm">Services</TabsTrigger>
           <TabsTrigger value="providers" className="text-xs md:text-sm">Providers</TabsTrigger>
           <TabsTrigger value="admin" className="text-xs md:text-sm">Admin</TabsTrigger>
-          <TabsTrigger value="analytics" className="text-xs md:text-sm">Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="calendar" className="space-y-6">
@@ -209,6 +210,10 @@ export const ComprehensiveAppointmentSystem = () => {
             editingAppointmentId={editingAppointmentId}
             onEditingAppointmentIdChange={setEditingAppointmentId}
           />
+        </TabsContent>
+
+        <TabsContent value="my-profile" className="space-y-6">
+          <ProviderProfileSelector />
         </TabsContent>
 
         <TabsContent value="services" className="space-y-6">
@@ -257,61 +262,6 @@ export const ComprehensiveAppointmentSystem = () => {
 
         <TabsContent value="admin" className="space-y-6">
           <ProviderManagement />
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Appointment Status Distribution</CardTitle>
-                <CardDescription>Breakdown of appointment statuses</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { status: 'Confirmed', count: confirmedAppointments, color: 'bg-green-500' },
-                    { status: 'Pending', count: pendingAppointments, color: 'bg-yellow-500' },
-                    { status: 'Completed', count: appointments.filter(a => a.status === 'completed').length, color: 'bg-blue-500' },
-                    { status: 'Cancelled', count: appointments.filter(a => a.status === 'cancelled').length, color: 'bg-red-500' },
-                  ].map(item => (
-                    <div key={item.status} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${item.color}`} />
-                        <span>{item.status}</span>
-                      </div>
-                      <span className="font-medium">{item.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Calendar Integration</CardTitle>
-                <CardDescription>Automatic calendar synchronization</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 rounded-full bg-indigo-500"></div>
-                    <div>
-                      <p className="font-medium">Appointments Calendar</p>
-                      <p className="text-sm text-muted-foreground">
-                        All appointments auto-sync to calendar
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    <p>✅ Auto-create calendar events</p>
-                    <p>✅ Sync updates in real-time</p>
-                    <p>✅ Include client details</p>
-                    <p>✅ Remove deleted appointments</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
 
