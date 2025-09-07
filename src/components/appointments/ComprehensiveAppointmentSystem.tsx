@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { AppointmentCalendar } from './AppointmentCalendar';
 import { AppointmentManager } from './AppointmentManager';
 import { AppointmentServiceManager } from './AppointmentServiceManager';
+import { ProviderManagement } from '@/components/admin/ProviderManagement';
 import { format, addDays, startOfWeek, addWeeks } from 'date-fns';
 import { 
   useRealAppointments, 
@@ -188,6 +189,7 @@ export const ComprehensiveAppointmentSystem = () => {
           <TabsTrigger value="management" className="text-xs md:text-sm">Management</TabsTrigger>
           <TabsTrigger value="services" className="text-xs md:text-sm">Services</TabsTrigger>
           <TabsTrigger value="providers" className="text-xs md:text-sm">Providers</TabsTrigger>
+          <TabsTrigger value="admin" className="text-xs md:text-sm">Admin</TabsTrigger>
           <TabsTrigger value="analytics" className="text-xs md:text-sm">Analytics</TabsTrigger>
         </TabsList>
 
@@ -251,6 +253,10 @@ export const ComprehensiveAppointmentSystem = () => {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="admin" className="space-y-6">
+          <ProviderManagement />
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
