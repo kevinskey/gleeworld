@@ -139,14 +139,6 @@ export const ComprehensiveAppointmentSystem = () => {
               </option>
             ))}
           </select>
-          <select className="px-3 py-2 border rounded-md text-sm">
-            <option value="">All Calendars</option>
-            {calendars.map(calendar => (
-              <option key={calendar.id} value={calendar.id}>
-                {calendar.name}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 
