@@ -81,7 +81,19 @@ const SortableModuleCard = ({
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <Button variant="outline" size="sm" className="w-full" onClick={() => onModuleClick(module.id)}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full" 
+            onClick={() => {
+              if (module.id === 'librarian') {
+                // Direct navigation to librarian dashboard
+                window.location.href = '/librarian-dashboard';
+              } else {
+                onModuleClick(module.id);
+              }
+            }}
+          >
             Open Module
           </Button>
         </CardContent>
