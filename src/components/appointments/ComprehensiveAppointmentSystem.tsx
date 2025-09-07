@@ -183,12 +183,12 @@ export const ComprehensiveAppointmentSystem = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="calendar" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="calendar">Calendar View</TabsTrigger>
-          <TabsTrigger value="management">Appointment Management</TabsTrigger>
-          <TabsTrigger value="services">Service Management</TabsTrigger>
-          <TabsTrigger value="providers">Providers</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1">
+          <TabsTrigger value="calendar" className="text-xs md:text-sm">Calendar</TabsTrigger>
+          <TabsTrigger value="management" className="text-xs md:text-sm">Management</TabsTrigger>
+          <TabsTrigger value="services" className="text-xs md:text-sm">Services</TabsTrigger>
+          <TabsTrigger value="providers" className="text-xs md:text-sm">Providers</TabsTrigger>
+          <TabsTrigger value="analytics" className="text-xs md:text-sm">Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="calendar" className="space-y-6">
