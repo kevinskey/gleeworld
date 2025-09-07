@@ -1,7 +1,6 @@
 import React from 'react';
 import { Users } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useServiceProviders, type ServiceProvider } from '@/hooks/useServiceProviders';
 import { useProviderServices } from '@/hooks/useProviderServices';
 
@@ -10,75 +9,6 @@ interface ProviderSelectorProps {
   onProviderSelect: (provider: ServiceProvider) => void;
   serviceId?: string; // Filter providers by a specific service
 }
-
-const ProviderCard = ({ 
-  provider, 
-  isSelected, 
-  onSelect 
-}: { 
-  provider: ServiceProvider; 
-  isSelected: boolean; 
-  onSelect: () => void;
-}) => {
-  const { data: providerServices = [] } = useProviderServices(provider.id);
-
-  return (
-    <Card 
-      className={`cursor-pointer transition-all hover:shadow-md ${
-        isSelected 
-          ? 'ring-2 ring-primary border-primary' 
-          : 'hover:border-primary/50'
-      }`}
-      onClick={onSelect}
-    >
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          {provider.profile_image_url ? (
-            <img 
-              src={provider.profile_image_url} 
-              alt={provider.provider_name}
-              className="w-12 h-12 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Users className="w-6 h-6 text-primary" />
-            </div>
-          )}
-          <div className="flex-1">
-            <h4 className="font-medium">{provider.title} {provider.provider_name}</h4>
-            <p className="text-sm text-muted-foreground">{provider.department}</p>
-            <div className="flex flex-wrap gap-1 mt-2">
-              {providerServices.slice(0, 3).map(ps => (
-                <Badge 
-                  key={ps.id}
-                  variant="outline"
-                  className="text-xs"
-                >
-                  {ps.service?.name}
-                </Badge>
-              ))}
-              {providerServices.length > 3 && (
-                <Badge variant="outline" className="text-xs">
-                  +{providerServices.length - 3} more
-                </Badge>
-              )}
-              {providerServices.length === 0 && (
-                <span className="text-xs text-muted-foreground italic">
-                  No services assigned
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-        {provider.bio && (
-          <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
-            {provider.bio}
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
 
 export const ProviderSelector = ({ 
   selectedProviderId, 
@@ -113,19 +43,73 @@ export const ProviderSelector = ({
     );
   }
 
+  const selectedProvider = filteredProviders.find(p => p.id === selectedProviderId);
+
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium">Select a Provider</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredProviders.map(provider => (
-          <ProviderCard
-            key={provider.id}
-            provider={provider}
-            isSelected={selectedProviderId === provider.id}
-            onSelect={() => onProviderSelect(provider)}
-          />
-        ))}
-      </div>
+    <div className="space-y-2">
+      <Select
+        value={selectedProviderId || ''}
+        onValueChange={(value) => {
+          const provider = filteredProviders.find(p => p.id === value);
+          if (provider) {
+            onProviderSelect(provider);
+          }
+        }}
+      >
+        <SelectTrigger className="w-full h-12 bg-background border-2 focus:border-primary">
+          <SelectValue placeholder="Select a provider...">
+            {selectedProvider && (
+              <div className="flex items-center gap-3">
+                {selectedProvider.profile_image_url ? (
+                  <img 
+                    src={selectedProvider.profile_image_url} 
+                    alt={selectedProvider.provider_name}
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Users className="w-3 h-3 text-primary" />
+                  </div>
+                )}
+                <span className="font-medium">
+                  {selectedProvider.title} {selectedProvider.provider_name}
+                </span>
+              </div>
+            )}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent className="max-h-60 overflow-y-auto bg-background border shadow-lg z-50">
+          {filteredProviders.map(provider => (
+            <SelectItem 
+              key={provider.id} 
+              value={provider.id}
+              className="cursor-pointer hover:bg-muted focus:bg-muted"
+            >
+              <div className="flex items-center gap-3 py-2">
+                {provider.profile_image_url ? (
+                  <img 
+                    src={provider.profile_image_url} 
+                    alt={provider.provider_name}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Users className="w-4 h-4 text-primary" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">
+                    {provider.title} {provider.provider_name}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {provider.department}
+                  </div>
+                </div>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 };
