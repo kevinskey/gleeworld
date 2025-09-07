@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useServices } from "@/hooks/useServices";
 import { useServiceProviders } from "@/hooks/useProviderServices";
-import { useServiceProviders as useProviders } from "@/hooks/useServiceProviders";
+import { useServiceProviders as useProviders, useProviderAvailability } from "@/hooks/useServiceProviders";
 
 const bookingSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -52,6 +52,7 @@ export const PublicAppointmentBooking = () => {
   const [selectedService, setSelectedService] = useState<string>("");
   const [selectedProvider, setSelectedProvider] = useState<string>("");
   const { data: serviceProviders = [] } = useServiceProviders(selectedService || undefined);
+  const { data: providerAvailability = [] } = useProviderAvailability(selectedProvider || undefined);
 
   const form = useForm<BookingForm>({
     resolver: zodResolver(bookingSchema),
@@ -66,47 +67,105 @@ export const PublicAppointmentBooking = () => {
     },
   });
 
-  // Generate time slots for selected date
+  // Generate time slots for selected date based on provider availability
   const generateTimeSlots = async (date: Date) => {
     if (!date) return;
 
+    // Get existing appointments for this date
     const { data: existingAppointments } = await supabase
       .from('gw_appointments')
-      .select('appointment_date, duration_minutes')
+      .select('appointment_date, duration_minutes, provider_id')
       .gte('appointment_date', startOfDay(date).toISOString())
       .lte('appointment_date', endOfDay(date).toISOString())
       .neq('status', 'cancelled');
 
     const slots: TimeSlot[] = [];
-    const duration = 30; // Default slot duration - should be configurable
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
     
-    // Business hours should be configurable from availability settings
-    // For now using default business hours until connected to availability manager
-    for (let hour = 9; hour < 17; hour++) {
-      for (let minute = 0; minute < 60; minute += duration) {
-        const currentTime = new Date(date);
-        currentTime.setHours(hour, minute, 0, 0);
-        
-        const slotEndTime = new Date(currentTime.getTime() + duration * 60000);
-        
-        if (slotEndTime.getHours() >= 17) continue;
-        
-        const timeString = format(currentTime, 'h:mm a');
-        
-        // Check availability
-        const isAvailable = !existingAppointments?.some(apt => {
-          const aptStart = new Date(apt.appointment_date);
-          const aptEnd = new Date(aptStart.getTime() + apt.duration_minutes * 60000);
-          const newSlotEnd = new Date(currentTime.getTime() + duration * 60000);
-          
-          return (currentTime < aptEnd && newSlotEnd > aptStart);
-        });
+    // If a provider is selected, use their availability
+    if (selectedProvider && providerAvailability.length > 0) {
+      const todayAvailability = providerAvailability.filter(
+        avail => avail.day_of_week === dayOfWeek && avail.is_available
+      );
 
-        // Only show future slots
-        const now = new Date();
-        const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-        if (currentTime > oneHourFromNow) {
-          slots.push({ time: timeString, available: isAvailable });
+      if (todayAvailability.length === 0) {
+        setAvailableSlots([]);
+        return;
+      }
+
+      // Generate slots based on provider availability
+      todayAvailability.forEach(availability => {
+        const [startHour, startMinute] = availability.start_time.split(':').map(Number);
+        const [endHour, endMinute] = availability.end_time.split(':').map(Number);
+        
+        const slotDuration = availability.slot_duration_minutes;
+        const breakBetween = availability.break_between_slots_minutes;
+        
+        let currentTime = new Date(date);
+        currentTime.setHours(startHour, startMinute, 0, 0);
+        
+        const endTime = new Date(date);
+        endTime.setHours(endHour, endMinute, 0, 0);
+        
+        while (currentTime < endTime) {
+          const slotEndTime = new Date(currentTime.getTime() + slotDuration * 60000);
+          
+          if (slotEndTime > endTime) break;
+          
+          const timeString = format(currentTime, 'h:mm a');
+          
+          // Check if slot conflicts with existing appointments for this provider
+          const isAvailable = !existingAppointments?.some(apt => {
+            if (selectedProvider && apt.provider_id !== selectedProvider) return false;
+            
+            const aptStart = new Date(apt.appointment_date);
+            const aptEnd = new Date(aptStart.getTime() + apt.duration_minutes * 60000);
+            const newSlotEnd = new Date(currentTime.getTime() + slotDuration * 60000);
+            
+            return (currentTime < aptEnd && newSlotEnd > aptStart);
+          });
+
+          // Only show future slots (at least 1 hour from now)
+          const now = new Date();
+          const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+          if (currentTime > oneHourFromNow) {
+            slots.push({ time: timeString, available: isAvailable });
+          }
+          
+          // Move to next slot
+          currentTime = new Date(currentTime.getTime() + (slotDuration + breakBetween) * 60000);
+        }
+      });
+    } else {
+      // Default business hours if no provider selected (fallback)
+      const duration = 30; // Default slot duration
+      
+      for (let hour = 9; hour < 17; hour++) {
+        for (let minute = 0; minute < 60; minute += duration) {
+          const currentTime = new Date(date);
+          currentTime.setHours(hour, minute, 0, 0);
+          
+          const slotEndTime = new Date(currentTime.getTime() + duration * 60000);
+          
+          if (slotEndTime.getHours() >= 17) continue;
+          
+          const timeString = format(currentTime, 'h:mm a');
+          
+          // Check availability against all appointments if no provider selected
+          const isAvailable = !existingAppointments?.some(apt => {
+            const aptStart = new Date(apt.appointment_date);
+            const aptEnd = new Date(aptStart.getTime() + apt.duration_minutes * 60000);
+            const newSlotEnd = new Date(currentTime.getTime() + duration * 60000);
+            
+            return (currentTime < aptEnd && newSlotEnd > aptStart);
+          });
+
+          // Only show future slots
+          const now = new Date();
+          const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+          if (currentTime > oneHourFromNow) {
+            slots.push({ time: timeString, available: isAvailable });
+          }
         }
       }
     }
@@ -118,7 +177,7 @@ export const PublicAppointmentBooking = () => {
     if (selectedDate) {
       generateTimeSlots(selectedDate);
     }
-  }, [selectedDate]);
+  }, [selectedDate, selectedProvider, providerAvailability]);
 
   const handleServiceSelection = () => {
     if (!selectedService) {
@@ -335,7 +394,12 @@ export const PublicAppointmentBooking = () => {
                         <Button
                           key={sp.provider?.id}
                           variant={selectedProvider === sp.provider?.id ? "default" : "outline"}
-                          onClick={() => setSelectedProvider(sp.provider?.id || "")}
+                          onClick={() => {
+                            setSelectedProvider(sp.provider?.id || "");
+                            // Reset time selection when provider changes
+                            setSelectedTime("");
+                            setSelectedDate(undefined);
+                          }}
                           className="h-auto p-4 text-left justify-start"
                         >
                           <div className="flex items-center space-x-3 w-full">
@@ -373,7 +437,12 @@ export const PublicAppointmentBooking = () => {
               <div className="grid grid-cols-1 gap-6">
                 <div>
                   <h3 className="font-medium mb-3">Choose Any Available Date</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Select any future date - all available days are shown below</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {selectedProvider 
+                      ? "Select a date to see available times for your chosen provider" 
+                      : "Select any future date - all available days are shown below"
+                    }
+                  </p>
                   <Calendar
                     mode="single"
                     selected={selectedDate}
@@ -391,6 +460,11 @@ export const PublicAppointmentBooking = () => {
 
                 <div className="mt-6">
                   <h3 className="font-medium mb-3">Available Times</h3>
+                  {selectedProvider && providerAvailability.length === 0 && (
+                    <p className="text-center text-muted-foreground py-4">
+                      Loading provider availability...
+                    </p>
+                  )}
                   {selectedDate ? (
                     <div className="space-y-2 max-h-80 overflow-y-auto">
                       {availableSlots.filter(slot => slot.available).map((slot) => (
@@ -406,7 +480,10 @@ export const PublicAppointmentBooking = () => {
                       ))}
                       {availableSlots.filter(slot => slot.available).length === 0 && (
                         <p className="text-center text-muted-foreground py-4">
-                          No available slots for this date
+                          {selectedProvider 
+                            ? "No available slots for this provider on this date" 
+                            : "No available slots for this date"
+                          }
                         </p>
                       )}
                     </div>
