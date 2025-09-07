@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, Users, TrendingUp, BarChart3 } from 'lucide-react';
+import { Calendar, Clock, Users, TrendingUp, BarChart3, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AppointmentCalendar } from './AppointmentCalendar';
@@ -23,6 +25,7 @@ import { useServiceProviders } from '@/hooks/useServiceProviders';
 export const ComprehensiveAppointmentSystem = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   // Use user role hook
   const { isSuperAdmin } = useUserRole();
@@ -109,11 +112,22 @@ export const ComprehensiveAppointmentSystem = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
-      {/* Header */}
+      {/* Header with Back Button */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Appointment System</h1>
-          <p className="text-muted-foreground">Complete appointment scheduling and management platform</p>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Appointment System</h1>
+            <p className="text-muted-foreground">Complete appointment scheduling and management platform</p>
+          </div>
         </div>
         
         <div className="flex gap-2">
