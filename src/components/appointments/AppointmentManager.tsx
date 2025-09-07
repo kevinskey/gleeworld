@@ -115,14 +115,15 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       return;
     }
 
-    const serviceName = services.find(s => s.id === formData.service)?.name || formData.service;
+    const selectedService = services.find(s => s.id === formData.service);
+    const serviceName = selectedService?.name || formData.service;
     
     const newAppointment: Omit<Appointment, 'id'> = {
       title: formData.title || `${serviceName} with ${formData.clientName}`,
       clientName: formData.clientName,
       clientEmail: formData.clientEmail,
       clientPhone: formData.clientPhone,
-      service: serviceName,
+      service: formData.service, // Pass the service ID instead of name
       date: new Date(formData.date),
       time: formData.time,
       duration: formData.duration,
@@ -140,14 +141,15 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
   const handleUpdate = () => {
     if (!editingAppointment) return;
 
-    const serviceName = services.find(s => s.id === formData.service)?.name || formData.service;
+    const selectedService = services.find(s => s.id === formData.service);
+    const serviceName = selectedService?.name || formData.service;
     
     const updates: Partial<Appointment> = {
       title: formData.title || `${serviceName} with ${formData.clientName}`,
       clientName: formData.clientName,
       clientEmail: formData.clientEmail,
       clientPhone: formData.clientPhone,
-      service: serviceName,
+      service: formData.service, // Pass the service ID instead of name
       date: new Date(formData.date),
       time: formData.time,
       duration: formData.duration,
@@ -164,12 +166,16 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
 
   const handleEdit = (appointment: Appointment) => {
     setEditingAppointment(appointment);
+    
+    // Find the service ID by matching category with appointment.service (which is actually the appointment_type/category)
+    const matchingService = services.find(s => s.category === appointment.service);
+    
     setFormData({
       title: appointment.title,
       clientName: appointment.clientName,
       clientEmail: appointment.clientEmail,
       clientPhone: appointment.clientPhone || '',
-      service: appointment.service,
+      service: matchingService?.id || '', // Use service ID if found, otherwise empty
       date: format(appointment.date, 'yyyy-MM-dd'),
       time: appointment.time,
       duration: appointment.duration,

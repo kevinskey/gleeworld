@@ -64,18 +64,32 @@ const convertDbToAppointment = (dbAppt: DbAppointment): Appointment => {
 };
 
 // Convert component format to database format
-const convertAppointmentToDb = (appt: Omit<Appointment, 'id'>): DbAppointmentInsert => {
+const convertAppointmentToDb = async (appt: Omit<Appointment, 'id'>): Promise<DbAppointmentInsert> => {
   // Combine date and time
   const [hours, minutes] = appt.time.split(':').map(Number);
   const appointmentDateTime = new Date(appt.date);
   appointmentDateTime.setHours(hours, minutes, 0, 0);
+
+  // Get service category for appointment_type
+  let appointmentType = 'general'; // Default fallback
+  if (appt.service) {
+    const { data: service } = await supabase
+      .from('gw_services')
+      .select('category')
+      .eq('id', appt.service)
+      .single();
+    
+    if (service?.category) {
+      appointmentType = service.category;
+    }
+  }
 
   return {
     title: appt.title,
     client_name: appt.clientName,
     client_email: appt.clientEmail,
     client_phone: appt.clientPhone || null,
-    appointment_type: appt.service,
+    appointment_type: appointmentType,
     appointment_date: appointmentDateTime.toISOString(),
     duration_minutes: appt.duration,
     status: appt.status === 'confirmed' ? 'scheduled' : appt.status,
@@ -188,7 +202,7 @@ export const useCreateRealAppointment = () => {
 
   return useMutation({
     mutationFn: async (appointment: Omit<Appointment, 'id'>): Promise<Appointment> => {
-      const dbData = convertAppointmentToDb(appointment);
+      const dbData = await convertAppointmentToDb(appointment);
       
       const { data, error } = await supabase
         .from('gw_appointments')
@@ -240,7 +254,24 @@ export const useUpdateRealAppointment = () => {
       if (updates.clientName) dbUpdates.client_name = updates.clientName;
       if (updates.clientEmail) dbUpdates.client_email = updates.clientEmail;
       if (updates.clientPhone !== undefined) dbUpdates.client_phone = updates.clientPhone || null;
-      if (updates.service) dbUpdates.appointment_type = updates.service;
+      
+      // Handle service/appointment_type - need to get the service category
+      if (updates.service) {
+        // If service is a service ID, get the category
+        const { data: service } = await supabase
+          .from('gw_services')
+          .select('category')
+          .eq('id', updates.service)
+          .single();
+        
+        if (service?.category) {
+          dbUpdates.appointment_type = service.category;
+        } else {
+          // Fallback to 'general' if service not found or no category
+          dbUpdates.appointment_type = 'general';
+        }
+      }
+      
       if (updates.duration) dbUpdates.duration_minutes = updates.duration;
       if (updates.status) dbUpdates.status = updates.status === 'confirmed' ? 'scheduled' : updates.status;
       if (updates.notes !== undefined) {
