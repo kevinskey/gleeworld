@@ -1,22 +1,30 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { task, prompt } = await req.json()
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    const { task, prompt } = await req.json();
+    console.log('Received request:', { task, prompt });
 
     if (task === 'poll_creation') {
-      // Generate a structured poll response
-      const pollResponse = await generateMusicTheoryPoll(prompt)
+      // Generate a structured poll response using OpenAI
+      const pollResponse = await generateMusicTheoryPoll(prompt);
       
       return new Response(
         JSON.stringify({ response: pollResponse }),
@@ -24,7 +32,7 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
         },
-      )
+      );
     }
 
     return new Response(
@@ -33,86 +41,104 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       },
-    )
+    );
   } catch (error) {
-    console.error('Error in mus240-instructor-assistant:', error)
+    console.error('Error in mus240-instructor-assistant:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       },
-    )
+    );
   }
-})
+});
 
 async function generateMusicTheoryPoll(prompt: string) {
-  // Extract number of questions from prompt
-  const questionMatch = prompt.match(/(\d+)\s*questions?/i)
-  const numQuestions = questionMatch ? parseInt(questionMatch[1]) : 3
+  console.log('Generating poll with OpenAI for prompt:', prompt);
+  
+  const systemPrompt = `You are a music theory instructor creating educational polls for MUS 240 (African American Music). 
 
-  // Generate sample poll data based on common music theory topics
-  const sampleQuestions = [
+Create a structured quiz based on the user's prompt. Return your response as a valid JSON object with the following structure:
+
+{
+  "title": "Quiz Title",
+  "description": "Brief description of the quiz content",
+  "questions": [
     {
-      question: "Which scale degree is the dominant?",
-      options: ["3rd", "4th", "5th", "7th"],
-      correct_answer: 2,
-      explanation: "The dominant is the 5th scale degree, which creates tension that wants to resolve to the tonic."
-    },
-    {
-      question: "What is the interval between C and G?",
-      options: ["Perfect 4th", "Perfect 5th", "Major 6th", "Perfect octave"],
-      correct_answer: 1,
-      explanation: "C to G is a Perfect 5th, spanning 7 semitones."
-    },
-    {
-      question: "In a major scale, which chord is built on the ii degree?",
-      options: ["Major triad", "Minor triad", "Diminished triad", "Augmented triad"],
-      correct_answer: 1,
-      explanation: "The ii chord in a major scale is a minor triad (e.g., Dm in C major)."
-    },
-    {
-      question: "What time signature has 3 beats per measure with each beat being a quarter note?",
-      options: ["2/4", "3/4", "4/4", "6/8"],
-      correct_answer: 1,
-      explanation: "3/4 time has three quarter note beats per measure, common in waltzes."
-    },
-    {
-      question: "Which mode starts on the 2nd degree of the major scale?",
-      options: ["Lydian", "Dorian", "Phrygian", "Mixolydian"],
-      correct_answer: 1,
-      explanation: "Dorian mode starts on the 2nd degree of the major scale."
-    },
-    {
-      question: "What is the relative minor of C major?",
-      options: ["A minor", "D minor", "E minor", "F minor"],
-      correct_answer: 0,
-      explanation: "A minor is the relative minor of C major, sharing the same key signature."
+      "question": "Question text",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correct_answer": 0,
+      "explanation": "Why this answer is correct"
     }
   ]
+}
 
-  // Select random questions based on the requested number
-  const selectedQuestions = sampleQuestions
-    .sort(() => 0.5 - Math.random())
-    .slice(0, Math.min(numQuestions, sampleQuestions.length))
+Rules:
+- Create 3-10 questions based on the prompt
+- Each question should have 4 multiple choice options
+- Include detailed explanations for correct answers
+- Focus on African American music history, theory, and cultural context
+- Make questions educationally valuable and appropriately challenging
+- Ensure all JSON is properly formatted and escaped
 
-  // Generate a title based on the prompt
-  let title = "Music Theory Quiz"
-  if (prompt.toLowerCase().includes("blues")) {
-    title = "Blues Theory and Development"
-  } else if (prompt.toLowerCase().includes("scale")) {
-    title = "Scale Theory Assessment"
-  } else if (prompt.toLowerCase().includes("chord")) {
-    title = "Chord Progressions and Harmony"
-  } else if (prompt.toLowerCase().includes("rhythm")) {
-    title = "Rhythm and Time Signatures"
+Respond ONLY with the JSON object, no additional text.`;
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 2000,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('OpenAI API error:', response.status, errorData);
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('OpenAI response received');
+    
+    const generatedContent = data.choices[0].message.content.trim();
+    console.log('Generated content:', generatedContent);
+    
+    // Try to parse the JSON response
+    try {
+      const pollData = JSON.parse(generatedContent);
+      return JSON.stringify(pollData);
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response as JSON:', parseError);
+      console.error('Raw content:', generatedContent);
+      
+      // Fallback: create a simple poll if AI response can't be parsed
+      const fallbackPoll = {
+        title: "Music Theory Quiz",
+        description: `Quiz based on: ${prompt}`,
+        questions: [
+          {
+            question: "Which element is fundamental to African American musical traditions?",
+            options: ["Call and response", "Written notation", "European harmony", "Complex time signatures"],
+            correct_answer: 0,
+            explanation: "Call and response is a foundational element in African American music, rooted in African musical traditions."
+          }
+        ]
+      };
+      return JSON.stringify(fallbackPoll);
+    }
+  } catch (error) {
+    console.error('Error calling OpenAI API:', error);
+    throw new Error(`Failed to generate poll: ${error.message}`);
   }
-
-  const pollData = {
-    title: title,
-    description: `Generated quiz based on: ${prompt.substring(0, 100)}...`,
-    questions: selectedQuestions
-  }
-
-  return JSON.stringify(pollData)
 }
