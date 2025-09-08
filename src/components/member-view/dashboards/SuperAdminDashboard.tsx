@@ -62,7 +62,7 @@ const SortableModuleCard = ({
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3 flex-1">
-              <div {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded">
+              <div {...listeners} className="cursor-grab active:cursor-grabbing p-2 hover:bg-muted rounded-md border border-muted-foreground/20">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
               </div>
               {IconComponent && <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
