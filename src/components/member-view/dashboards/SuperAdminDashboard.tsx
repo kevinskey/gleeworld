@@ -451,11 +451,12 @@ export const SuperAdminDashboard = ({
 
       {/* Search and Filter Controls */}
       {showAllModules && <Card className="p-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex flex-col gap-3">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 h-8" />
             </div>
+            <div className="flex flex-wrap items-center gap-3">
             
             <Select value={filterCategory} onValueChange={setFilterCategory}>
               <SelectTrigger className="w-[120px] h-8">
@@ -483,7 +484,9 @@ export const SuperAdminDashboard = ({
             <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="h-8 w-8 p-0">
               {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
             </Button>
+            </div>
           </div>
+        </Card>}
 
           {/* Filtered Results Count */}
           {searchQuery || filterCategory !== 'all' ? <div className="mt-4 text-sm text-muted-foreground">
@@ -491,7 +494,6 @@ export const SuperAdminDashboard = ({
               {searchQuery && ` matching "${searchQuery}"`}
               {filterCategory !== 'all' && ` in ${filterCategory.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`}
             </div> : null}
-        </Card>}
 
       {/* All Modules Display */}
       {showAllModules && <div className="space-y-6">
