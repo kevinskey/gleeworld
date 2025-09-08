@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Heart, HeartPulse, Megaphone, Bell, Mail, Users2, Link as LinkIcon, ExternalLink, Sparkles, Calendar as CalendarIcon } from "lucide-react";
+import { Heart, HeartPulse, Megaphone, Bell, Mail, Users2, Link as LinkIcon, ExternalLink, Sparkles, Calendar as CalendarIcon, Music } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -276,6 +276,28 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
                 }>
                   <CalendarViewsLazy />
                 </Suspense>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Music Library */}
+            <AccordionItem value="music-library">
+              <AccordionTrigger className="text-base">
+                <div className="flex items-center gap-2"><Music className="h-4 w-4 text-primary" /> Music Library</div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <Card>
+                  <CardContent className="pt-6 space-y-4">
+                    <p className="text-sm text-muted-foreground">Access sheet music, recordings, and musical resources.</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button asChild>
+                        <a href="/music-library">Open Music Library</a>
+                      </Button>
+                      <Button variant="outline" asChild>
+                        <a href="/member/music-library">Member Library</a>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </AccordionContent>
             </AccordionItem>
 
