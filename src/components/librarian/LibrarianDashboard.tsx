@@ -76,7 +76,7 @@ export const LibrarianDashboard = () => {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="pdf-import">PDF Import</TabsTrigger>
           <TabsTrigger value="inventory">Physical Inventory</TabsTrigger>
