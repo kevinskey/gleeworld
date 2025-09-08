@@ -295,6 +295,7 @@ export const SuperAdminDashboard = ({
   });
   const [calendarCollapsed, setCalendarCollapsed] = useState(true);
   const [quickAccessCollapsed, setQuickAccessCollapsed] = useState(true);
+  const [filterControlsCollapsed, setFilterControlsCollapsed] = useState(true);
   const handleDragEnd = (event: DragEndEvent, category: string) => {
     const {
       active,
@@ -448,51 +449,67 @@ export const SuperAdminDashboard = ({
         </h1>
       </div>
 
-      {/* Search and Filter Controls */}
+      {/* Search Field */}
       {showAllModules && <Card className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search modules..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
-            </div>
-            
-            <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger>
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter by category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map(category => <SelectItem key={category} value={category}>
-                    {category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                  </SelectItem>)}
-              </SelectContent>
-            </Select>
-
-            <Select value={sortBy} onValueChange={(value: 'name' | 'category' | 'status') => setSortBy(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">Name</SelectItem>
-                <SelectItem value="category">Category</SelectItem>
-                <SelectItem value="status">Status</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button variant="outline" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-2">
-              {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
-              {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-            </Button>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search modules..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
           </div>
-
-          {/* Filtered Results Count */}
-          {searchQuery || filterCategory !== 'all' ? <div className="mt-4 text-sm text-muted-foreground">
-              Found {filteredAndSortedModules.length} modules
-              {searchQuery && ` matching "${searchQuery}"`}
-              {filterCategory !== 'all' && ` in ${filterCategory.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`}
-            </div> : null}
         </Card>}
+
+      {/* Filter Controls - Collapsible */}
+      {showAllModules && <Collapsible open={!filterControlsCollapsed} onOpenChange={(open) => setFilterControlsCollapsed(!open)}>
+          <Card>
+            <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                <span className="font-medium">Filter & Sort Options</span>
+              </div>
+              {filterControlsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-4 pb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Select value={filterCategory} onValueChange={setFilterCategory}>
+                    <SelectTrigger>
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Filter by category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map(category => <SelectItem key={category} value={category}>
+                          {category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                        </SelectItem>)}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={sortBy} onValueChange={(value: 'name' | 'category' | 'status') => setSortBy(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Name</SelectItem>
+                      <SelectItem value="category">Category</SelectItem>
+                      <SelectItem value="status">Status</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Button variant="outline" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-2">
+                    {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                    {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                  </Button>
+                </div>
+
+                {/* Filtered Results Count */}
+                {searchQuery || filterCategory !== 'all' ? <div className="mt-4 text-sm text-muted-foreground">
+                    Found {filteredAndSortedModules.length} modules
+                    {searchQuery && ` matching "${searchQuery}"`}
+                    {filterCategory !== 'all' && ` in ${filterCategory.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`}
+                  </div> : null}
+              </div>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>}
 
       {/* All Modules Display */}
       {showAllModules && <div className="space-y-6">
