@@ -450,17 +450,16 @@ export const SuperAdminDashboard = ({
       </div>
 
       {/* Search and Filter Controls */}
-      {showAllModules && <Card className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
+      {showAllModules && <Card className="p-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search modules..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
+              <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 h-8" />
             </div>
             
             <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger>
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter by category" />
+              <SelectTrigger className="w-[120px] h-8">
+                <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
@@ -481,9 +480,8 @@ export const SuperAdminDashboard = ({
               </SelectContent>
             </Select>
 
-            <Button variant="outline" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="h-8 w-8 p-0">
               {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
-              {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
             </Button>
           </div>
 
