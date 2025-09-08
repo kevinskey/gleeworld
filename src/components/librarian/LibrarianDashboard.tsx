@@ -84,7 +84,7 @@ export const LibrarianDashboard = () => {
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="library">Library</TabsTrigger>
-          <TabsTrigger value="pdf-import">PDF Import</TabsTrigger>
+          <TabsTrigger value="pdf-import" className="pb-[5px]">PDF Import</TabsTrigger>
           <TabsTrigger value="inventory">Physical Inventory</TabsTrigger>
           <TabsTrigger value="csv">CSV Tools</TabsTrigger>
         </TabsList>
