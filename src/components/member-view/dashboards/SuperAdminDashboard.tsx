@@ -591,78 +591,7 @@ export const SuperAdminDashboard = ({
         </div>
 
       {/* All Modules View */}
-      <div className="space-y-8">
-          {modulesLoading ? <div className="text-center py-8 text-lg">Loading modules...</div> : (() => {
-        // Sort categories to prioritize important ones at the top
-        const sortedEntries = Object.entries(sortedModulesByCategory).sort(([categoryA], [categoryB]) => {
-          // Define priority order - put most important categories first
-          const priorityOrder = ['user-management', 'music', 'administrative', 'events', 'communications', 'financial'];
-          const priorityA = priorityOrder.indexOf(categoryA);
-          const priorityB = priorityOrder.indexOf(categoryB);
-
-          // If both are in priority list, sort by priority order
-          if (priorityA !== -1 && priorityB !== -1) {
-            return priorityA - priorityB;
-          }
-          // If only A is in priority list, A comes first
-          if (priorityA !== -1) return -1;
-          // If only B is in priority list, B comes first  
-          if (priorityB !== -1) return 1;
-          // If neither is in priority list, sort alphabetically
-          return categoryA.localeCompare(categoryB);
-        });
-        return sortedEntries.map(([categoryName, categoryModules]) => {
-          const categoryConfig = UNIFIED_MODULE_CATEGORIES.find(c => c.id === categoryName);
-          const IconComponent = categoryConfig?.icon || Users;
-          const isCollapsed = collapsedSections[categoryName];
-          const isSingleModule = categoryModules.length === 1;
-          if (categoryModules.length === 0) return null;
-          return <div key={categoryName} className="space-y-3">
-                  {/* Category Header */}
-                  <Collapsible open={!isCollapsed} onOpenChange={open => {
-              if (!isSingleModule) {
-                setCollapsedSections(prev => ({
-                  ...prev,
-                  [categoryName]: !open
-                }));
-              }
-            }}>
-                    <CollapsibleTrigger className={`w-full ${isSingleModule ? 'cursor-default' : 'cursor-pointer'}`} disabled={isSingleModule}>
-                      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <IconComponent className="h-5 w-5 text-primary" />
-                          <div className="text-left">
-                            <h3 className="font-semibold text-base lg:text-lg">
-                              {categoryConfig?.title || categoryName.charAt(0).toUpperCase() + categoryName.slice(1).replace('-', ' ')}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {categoryConfig?.description || `Administrative modules for ${categoryName}`}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="font-medium">
-                            {categoryModules.length} module{categoryModules.length !== 1 ? 's' : ''}
-                          </Badge>
-                          {!isSingleModule && (isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />)}
-                        </div>
-                      </div>
-                    </CollapsibleTrigger>
-                    
-                    <CollapsibleContent className="space-y-3">
-                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={event => handleDragEnd(event, categoryName)}>
-                        <SortableContext items={categoryModules.map(m => m.id)} strategy={verticalListSortingStrategy}>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
-                            {categoryModules.map(module => <SortableModuleCard key={module.id} module={module} onModuleClick={moduleId => setSelectedModule(moduleId)} navigate={navigate} />)}
-                          </div>
-                        </SortableContext>
-                      </DndContext>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>;
-        });
-      })()}
-        </div>) : (/* Dashboard Overview */
+      ) : (/* Dashboard Overview */
     <div className="space-y-6">
 
           {/* Overview Cards Section - moved to bottom */}
