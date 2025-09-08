@@ -238,7 +238,7 @@ const CommunityHub: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="px-4 py-4 space-y-4">
+      <div className="px-3 py-2 space-y-3 max-w-full overflow-hidden">
         {activeTab === 'feed' && (
           <div className="space-y-3">
             {mockEntries.map((entry) => (
