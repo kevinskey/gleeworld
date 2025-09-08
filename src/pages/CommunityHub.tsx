@@ -1,26 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MobileBottomNav } from '@/components/community/MobileBottomNav';
-import { FloatingActionButton } from '@/components/community/FloatingActionButton';
-import { UnifiedFeed } from '@/components/community/UnifiedFeed';
-import { UserProgressWidget } from '@/components/community/UserProgressWidget';
-import { BucketsOfLoveWidget } from '@/components/shared/BucketsOfLoveWidget';
-import { NotificationsInterface } from '@/components/notifications/NotificationsInterface';
-import { VocalHealthLog } from '@/modules/wellness/vocal-health/VocalHealthLog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { UnifiedEntry, UserProgress } from '@/types/unified-feed';
+import { UnifiedEntry, UserProgress, ENTRY_COLORS } from '@/types/unified-feed';
+import { BucketsOfLoveWidget } from '@/components/shared/BucketsOfLoveWidget';
+import { NotificationsInterface } from '@/components/notifications/NotificationsInterface';
+import { VocalHealthLog } from '@/modules/wellness/vocal-health/VocalHealthLog';
+import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { 
   Heart, 
   Activity,
   Users,
   Sparkles,
-  Grid3x3,
-  Mail,
   MessageSquare,
-  Phone
+  Mail,
+  Phone,
+  Plus,
+  Home,
+  Megaphone,
+  ThumbsUp,
+  Star
 } from 'lucide-react';
 
 const CommunityHub: React.FC = () => {
@@ -124,7 +126,7 @@ const CommunityHub: React.FC = () => {
   };
 
   if (!isMobile) {
-    // Desktop layout - keep existing structure but simplified
+    // Desktop layout - simplified version without complex components
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto p-6 space-y-6">
@@ -146,19 +148,38 @@ const CommunityHub: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Main Feed */}
-            <div className="lg:col-span-3">
-              <UnifiedFeed 
-                entries={mockEntries}
-                onReaction={handleReaction}
-                onShare={handleShare}
-                onReply={handleReply}
-              />
+            {/* Main Feed - simplified */}
+            <div className="lg:col-span-3 space-y-4">
+              {mockEntries.map((entry) => (
+                <Card key={entry.id} className="bg-white">
+                  <CardContent className="p-4">
+                    <div className="flex gap-3">
+                      <div 
+                        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: `${ENTRY_COLORS[entry.type]}20` }}
+                      >
+                        <div 
+                          className="w-6 h-6 rounded flex items-center justify-center"
+                          style={{ backgroundColor: ENTRY_COLORS[entry.type] }}
+                        >
+                          {entry.type === 'announcement' && <Megaphone className="h-3 w-3 text-white" />}
+                          {entry.type === 'wellness_check' && <Activity className="h-3 w-3 text-white" />}
+                          {entry.type === 'love_note' && <Heart className="h-3 w-3 text-white fill-current" />}
+                          {entry.type === 'message' && <Mail className="h-3 w-3 text-white" />}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        {entry.title && <h3 className="font-semibold mb-1">{entry.title}</h3>}
+                        <p className="text-sm text-gray-700">{entry.content}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
             
             {/* Sidebar */}
             <div className="space-y-6">
-              <UserProgressWidget progress={mockUserProgress} />
               <BucketsOfLoveWidget />
             </div>
           </div>
@@ -169,18 +190,49 @@ const CommunityHub: React.FC = () => {
 
   // Mobile layout with bottom navigation
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* Mobile Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="px-4 py-3">
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-200">
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-primary" />
-              Community
-            </h1>
-            <Badge variant="secondary" className="text-xs">
-              Level {mockUserProgress.level}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center">
+                <Users className="h-5 w-5 text-white" />
+              </div>
+              <h1 className="text-xl font-semibold text-gray-900">Community Hub</h1>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => handleFloatingAction('announcement')}
+              className="w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 p-0"
+            >
+              <Plus className="h-5 w-5 text-white" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Top Filter Tabs */}
+        <div className="px-4 pb-3">
+          <div className="flex gap-6 border-b border-gray-100">
+            {[
+              { id: 'all', label: 'All' },
+              { id: 'announcements', label: 'Announcements' },
+              { id: 'love', label: 'Love' },
+              { id: 'wellness', label: 'Wellness' }
+            ].map(({ id, label }) => (
+              <button
+                key={id}
+                className={cn(
+                  "pb-2 text-sm font-medium border-b-2 transition-colors",
+                  activeTab === 'feed' && id === 'all'
+                    ? "text-blue-600 border-blue-600"
+                    : "text-gray-500 border-transparent hover:text-gray-700"
+                )}
+                onClick={() => id === 'all' ? handleTabChange('feed') : handleTabChange(id)}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -188,130 +240,190 @@ const CommunityHub: React.FC = () => {
       {/* Content */}
       <div className="px-4 py-4 space-y-4">
         {activeTab === 'feed' && (
-          <>
-            <UserProgressWidget progress={mockUserProgress} compact />
-            <UnifiedFeed 
-              entries={mockEntries}
-              onReaction={handleReaction}
-              onShare={handleShare}
-              onReply={handleReply}
-            />
-          </>
+          <div className="space-y-3">
+            {mockEntries.map((entry) => (
+              <Card key={entry.id} className="bg-white border-0 shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex gap-3">
+                    {/* Icon */}
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: `${ENTRY_COLORS[entry.type]}20` }}
+                    >
+                      {entry.type === 'announcement' && (
+                        <div 
+                          className="w-6 h-6 rounded flex items-center justify-center"
+                          style={{ backgroundColor: ENTRY_COLORS[entry.type] }}
+                        >
+                          <Megaphone className="h-3 w-3 text-white" />
+                        </div>
+                      )}
+                      {entry.type === 'wellness_check' && (
+                        <div 
+                          className="w-6 h-6 rounded flex items-center justify-center"
+                          style={{ backgroundColor: ENTRY_COLORS[entry.type] }}
+                        >
+                          <Activity className="h-3 w-3 text-white" />
+                        </div>
+                      )}
+                      {entry.type === 'love_note' && (
+                        <div 
+                          className="w-6 h-6 rounded flex items-center justify-center"
+                          style={{ backgroundColor: ENTRY_COLORS[entry.type] }}
+                        >
+                          <Heart className="h-3 w-3 text-white fill-current" />
+                        </div>
+                      )}
+                      {entry.type === 'message' && (
+                        <div 
+                          className="w-6 h-6 rounded flex items-center justify-center"
+                          style={{ backgroundColor: ENTRY_COLORS[entry.type] }}
+                        >
+                          <Mail className="h-3 w-3 text-white" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium text-gray-600 capitalize">
+                              {entry.type.replace('_', ' ')}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {formatDistanceToNow(entry.timestamp, { addSuffix: true }).replace('about ', '')}
+                            </span>
+                          </div>
+                          {entry.title && (
+                            <h3 className="text-base font-semibold text-gray-900 mb-1">
+                              {entry.title}
+                            </h3>
+                          )}
+                          <p className="text-sm text-gray-700 leading-relaxed">
+                            {entry.content}
+                          </p>
+
+                          {/* Streak Display */}
+                          {entry.metadata?.streak_day && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-lg">😊</span>
+                              <span className="text-sm font-medium text-gray-600">
+                                {entry.metadata.streak_day}-day streak
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Author for love notes */}
+                          {entry.type === 'love_note' && (
+                            <div className="mt-2 text-xs text-gray-500">
+                              {entry.author.name} • {formatDistanceToNow(entry.timestamp, { addSuffix: true }).replace('about ', '')}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Reactions */}
+                      {entry.reactions && entry.reactions.length > 0 && (
+                        <div className="flex items-center gap-4 mt-3 pt-2 border-t border-gray-100">
+                          {entry.reactions.map((reaction) => (
+                            <button
+                              key={reaction.type}
+                              onClick={() => handleReaction(entry.id, reaction.type)}
+                              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+                            >
+                              {reaction.type === 'heart' && <Heart className="h-3 w-3" />}
+                              {reaction.type === 'thumbs_up' && <ThumbsUp className="h-3 w-3" />}
+                              {reaction.type === 'star' && <Star className="h-3 w-3" />}
+                              {reaction.type === 'clap' && <span>👏</span>}
+                              <span>{reaction.count}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
 
+        {/* Other tabs remain the same but simplified */}
         {activeTab === 'wellness' && (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-green-500" />
-                  Wellness Check-In
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <VocalHealthLog />
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="bg-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-green-700">
+                <Activity className="h-5 w-5" />
+                Daily Wellness Check
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <VocalHealthLog />
+            </CardContent>
+          </Card>
         )}
 
         {activeTab === 'love' && (
           <div className="space-y-4">
-            {/* View Toggle */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Buckets of Love</h2>
-              <div className="flex gap-1 bg-muted rounded-lg p-1">
-                <Button
-                  variant={loveViewMode === 'feed' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setLoveViewMode('feed')}
-                  className="text-xs h-7"
-                >
-                  Feed
-                </Button>
-                <Button
-                  variant={loveViewMode === 'grid' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setLoveViewMode('grid')}
-                  className="text-xs h-7 gap-1"
-                >
-                  <Grid3x3 className="h-3 w-3" />
-                  Grid
-                </Button>
-              </div>
-            </div>
-
-            {loveViewMode === 'feed' ? (
-              <UnifiedFeed 
-                entries={mockEntries.filter(e => e.type === 'love_note')}
-                onReaction={handleReaction}
-                onShare={handleShare}
-                onReply={handleReply}
-              />
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {mockEntries.filter(e => e.type === 'love_note').map(entry => (
-                  <Card key={entry.id} className="p-4 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950/20 dark:to-pink-900/20">
-                    <div className="space-y-2">
-                      <p className="text-sm text-pink-700 dark:text-pink-300">
-                        "{entry.content}"
-                      </p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>From {entry.author.name}</span>
-                        <Heart className="h-3 w-3 text-pink-500" />
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'messages' && (
-          <div className="space-y-4">
-            <Card>
+            <Card className="bg-white">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-purple-500" />
-                  Communications
+                <CardTitle className="flex items-center gap-2 text-pink-600">
+                  <Heart className="h-5 w-5" />
+                  Send Love Note
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="gap-2 h-12">
-                    <Mail className="h-4 w-4" />
-                    Email
-                  </Button>
-                  <Button variant="outline" className="gap-2 h-12">
-                    <Phone className="h-4 w-4" />
-                    SMS
-                  </Button>
-                </div>
-                <NotificationsInterface />
+              <CardContent>
+                <BucketsOfLoveWidget />
               </CardContent>
             </Card>
           </div>
         )}
+
+        {activeTab === 'messages' && (
+          <Card className="bg-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-purple-600">
+                <MessageSquare className="h-5 w-5" />
+                Messages
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <NotificationsInterface />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav 
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        hasNotifications={{
-          feed: true,
-          wellness: false,
-          love: true,
-          messages: false
-        }}
-      />
-
-      {/* Floating Action Button */}
-      <FloatingActionButton 
-        activeTab={activeTab}
-        onAction={handleFloatingAction}
-      />
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-pb">
+        <div className="grid grid-cols-4 py-2">
+          {[
+            { id: 'feed', label: 'Feed', icon: Home, color: 'text-blue-500' },
+            { id: 'wellness', label: 'Wellness', icon: Activity, color: 'text-green-500' },
+            { id: 'love', label: 'Love', icon: Heart, color: 'text-pink-500' },
+            { id: 'messages', label: 'Messages', icon: Mail, color: 'text-purple-500' }
+          ].map(({ id, label, icon: Icon, color }) => (
+            <button
+              key={id}
+              onClick={() => handleTabChange(id)}
+              className={cn(
+                "flex flex-col items-center gap-1 py-2 transition-colors",
+                activeTab === id ? color : "text-gray-400"
+              )}
+            >
+              <div className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center transition-colors",
+                activeTab === id ? `${color.replace('text-', 'bg-')}/10` : ""
+              )}>
+                <Icon className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-medium">{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

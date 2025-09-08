@@ -48,11 +48,11 @@ export interface UserProgress {
 }
 
 export const ENTRY_COLORS = {
-  announcement: 'hsl(var(--blue-500))',
-  love_note: 'hsl(var(--pink-500))',
-  wellness_check: 'hsl(var(--green-500))',
-  message: 'hsl(var(--purple-500))',
-  notification: 'hsl(var(--orange-500))'
+  announcement: 'hsl(219, 94%, 60%)', // Blue
+  love_note: 'hsl(330, 81%, 60%)', // Pink  
+  wellness_check: 'hsl(142, 71%, 45%)', // Green
+  message: 'hsl(262, 83%, 58%)', // Purple
+  notification: 'hsl(25, 95%, 53%)' // Orange
 } as const;
 
 export const BADGES = {
