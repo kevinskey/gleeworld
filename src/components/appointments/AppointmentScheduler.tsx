@@ -15,6 +15,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRealAppointments, useCreateRealAppointment } from "@/hooks/useRealAppointments";
 
 const appointmentSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -47,6 +48,10 @@ export const AppointmentScheduler = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  
+  // Use shared appointment hooks
+  const { data: appointments = [], refetch } = useRealAppointments();
+  const createMutation = useCreateRealAppointment();
 
   const form = useForm<AppointmentForm>({
     resolver: zodResolver(appointmentSchema),
@@ -95,13 +100,13 @@ export const AppointmentScheduler = () => {
         return;
       }
 
-      // Check for existing appointments for this date
-      const { data: existingAppointments } = await supabase
-        .from('gw_appointments')
-        .select('appointment_date, duration_minutes')
-        .gte('appointment_date', startOfDay(date).toISOString())
-        .lte('appointment_date', endOfDay(date).toISOString())
-        .neq('status', 'cancelled');
+      // Use synced appointments data from the shared hook
+      const existingAppointments = appointments.filter(apt => 
+        isSameDay(apt.date, date) && apt.status !== 'cancelled'
+      ).map(apt => ({
+        appointment_date: apt.date.toISOString(),
+        duration_minutes: apt.duration || 30
+      }));
 
       const slots: TimeSlot[] = [];
       const now = new Date();
@@ -188,20 +193,18 @@ export const AppointmentScheduler = () => {
       const appointmentDateTime = new Date(selectedDate);
       appointmentDateTime.setHours(hour, minute, 0, 0);
 
-      // CRITICAL: Double-check for conflicts before creating appointment to prevent overbooking
+      // CRITICAL: Double-check for conflicts using synced appointment data
       const appointmentEndTime = new Date(appointmentDateTime.getTime() + data.duration_minutes * 60000);
       
-      const { data: conflictCheck } = await supabase
-        .from('gw_appointments')
-        .select('id, appointment_date, duration_minutes, client_name')
-        .gte('appointment_date', startOfDay(selectedDate).toISOString())
-        .lte('appointment_date', endOfDay(selectedDate).toISOString())
-        .neq('status', 'cancelled');
+      // Use the synced appointments from the shared hook
+      const conflictCheck = appointments.filter(apt => 
+        isSameDay(apt.date, selectedDate) && apt.status !== 'cancelled'
+      );
 
       // Check for any overlapping appointments
-      const hasConflict = conflictCheck?.some(apt => {
-        const aptStart = new Date(apt.appointment_date);
-        const aptEnd = new Date(aptStart.getTime() + apt.duration_minutes * 60000);
+      const hasConflict = conflictCheck.some(apt => {
+        const aptStart = apt.date;
+        const aptEnd = new Date(aptStart.getTime() + (apt.duration || 30) * 60000);
         
         // Check for any overlap between existing appointment and new request
         return (
@@ -235,6 +238,20 @@ export const AppointmentScheduler = () => {
         ...(user?.id && { created_by: user.id }),
       };
 
+      // Use the shared create mutation for consistency
+      const newAppointment = {
+        title: data.title,
+        clientName: data.client_name,
+        clientEmail: data.client_email,
+        clientPhone: data.client_phone,
+        service: data.appointment_type,
+        date: appointmentDateTime,
+        time: selectedTime,
+        duration: data.duration_minutes,
+        status: 'pending' as const,
+        notes: data.description || undefined
+      };
+
       // Check if this is a recurring appointment
       if (data.is_recurring) {
         // Use the edge function for recurring appointments
@@ -257,14 +274,8 @@ export const AppointmentScheduler = () => {
           description: `Created ${result.created_count} recurring appointments successfully!`,
         });
       } else {
-        // Create single appointment
-        const { data: appointment, error } = await supabase
-          .from('gw_appointments')
-          .insert(appointmentData)
-          .select()
-          .single();
-
-        if (error) throw error;
+        // Use the shared mutation to create appointment
+        await createMutation.mutateAsync(newAppointment);
 
         // Send SMS notifications to both parties
         try {
@@ -283,7 +294,7 @@ export const AppointmentScheduler = () => {
           await supabase.functions.invoke('gw-send-sms', {
             body: {
               to: adminPhone,
-              message: `New appointment request from ${data.client_name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Type: ${data.appointment_type}. Reply APPROVE ${appointment.id} or DENY ${appointment.id}`
+              message: `New appointment request from ${data.client_name} for ${format(appointmentDateTime, 'PPP')} at ${selectedTime}. Type: ${data.appointment_type}. Reply APPROVE or DENY`
             }
           });
         } catch (smsError) {
@@ -300,8 +311,10 @@ export const AppointmentScheduler = () => {
       setOpen(false);
       form.reset();
       setSelectedTime("");
-      const duration = form.getValues('duration_minutes') || 10;
+      const duration = form.getValues('duration_minutes') || 30;
       generateTimeSlots(selectedDate, duration);
+      // Refresh the appointments data
+      refetch();
       
     } catch (error) {
       console.error('Error creating appointment:', error);
