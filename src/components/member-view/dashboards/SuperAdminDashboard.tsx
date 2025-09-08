@@ -291,6 +291,7 @@ export const SuperAdminDashboard = ({
   });
   const [calendarCollapsed, setCalendarCollapsed] = useState(true);
   const [quickAccessCollapsed, setQuickAccessCollapsed] = useState(true);
+  const [showAllModules, setShowAllModules] = useState(true);
   const handleDragEnd = (event: DragEndEvent, category: string) => {
     const {
       active,
