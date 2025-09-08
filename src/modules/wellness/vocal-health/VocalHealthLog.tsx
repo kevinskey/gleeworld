@@ -196,7 +196,7 @@ export const VocalHealthLog = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Vocal Health Log</h2>
+          <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap overflow-hidden text-ellipsis">Vocal Health Log</h2>
           <p className="text-muted-foreground">Track your daily wellness for optimal vocal performance</p>
         </div>
         <div className="flex items-center gap-2">
