@@ -200,7 +200,7 @@ export const MusicLibraryManager = () => {
     <div className="space-y-4 md:space-y-6">
       {/* Mobile-First Header */}
       <Card className="border-0 md:border bg-transparent md:bg-background">
-        <CardHeader className="px-4 pb-3 md:pb-4">
+        <CardHeader className="px-4 pb-6 md:pb-4 pt-6">
           <div className="flex flex-col space-y-3 md:space-y-0 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2">
               <Music className="h-5 w-5 text-primary" />
