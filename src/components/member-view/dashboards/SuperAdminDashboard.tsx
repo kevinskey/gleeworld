@@ -182,13 +182,18 @@ export const SuperAdminDashboard = ({
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
   // Initialize collapsed sections - default all categories to collapsed
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
-    const initialCollapsed: Record<string, boolean> = {};
-    categories.forEach(category => {
-      initialCollapsed[category] = true; // Default to collapsed
-    });
-    return initialCollapsed;
-  });
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  
+  // Ensure all categories default to collapsed when categories change
+  useEffect(() => {
+    if (categories.length > 0) {
+      const initialCollapsed: Record<string, boolean> = {};
+      categories.forEach(category => {
+        initialCollapsed[category] = true; // Default to collapsed
+      });
+      setCollapsedSections(initialCollapsed);
+    }
+  }, [categories]);
 
   // Sort and filter modules
   const filteredAndSortedModules = useMemo(() => {
