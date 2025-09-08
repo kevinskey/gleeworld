@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ProviderSelector } from '@/components/providers/ProviderSelector';
@@ -618,8 +619,10 @@ export default function UnifiedBookingPage() {
     );
   }
 
+  const Layout = user ? UniversalLayout : PublicLayout;
+
   return (
-    <PublicLayout>
+    <Layout>
       <div className="min-h-screen relative">
         {/* Background Image */}
         <div 
@@ -956,6 +959,6 @@ export default function UnifiedBookingPage() {
           )}
         </div>
       </div>
-    </PublicLayout>
+    </Layout>
   );
 }
