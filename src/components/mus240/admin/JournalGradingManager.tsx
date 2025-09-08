@@ -44,6 +44,25 @@ export const JournalGradingManager = () => {
 
   useEffect(() => {
     loadSubmissions();
+    
+    // Set up real-time subscription for journal entries
+    const channel = supabase
+      .channel('journal-entries-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mus240_journal_entries'
+        },
+        (payload) => {
+          console.log('Real-time journal entry change:', payload);
+          // Reload submissions when there are changes
+          syncSubmissions();
+        }
+      )
+      .subscribe();
+
     // Auto-refresh every 30 seconds when on this tab
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
@@ -51,7 +70,10 @@ export const JournalGradingManager = () => {
       }
     }, 30000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const syncSubmissions = async () => {
