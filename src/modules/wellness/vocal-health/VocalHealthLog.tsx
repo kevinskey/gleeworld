@@ -67,9 +67,9 @@ export const VocalHealthLog = () => {
       <p className="text-muted-foreground">Complete assignments, practice sight reading, and track your progress</p>
       
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <Clock className="h-8 w-8 text-orange-600" />
               <div>
@@ -81,7 +81,7 @@ export const VocalHealthLog = () => {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <CalendarIcon className="h-8 w-8 text-blue-600" />
               <div>
@@ -93,7 +93,7 @@ export const VocalHealthLog = () => {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <CheckCircle className="h-8 w-8 text-green-600" />
               <div>
