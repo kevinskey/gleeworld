@@ -110,21 +110,35 @@ export const LibrarianStats = () => {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      {statCards.map((stat) => (
-        <Card key={stat.title} className={stat.variant === 'warning' ? 'border-yellow-300' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {loading ? '...' : stat.value.toLocaleString()}
+    <Card className="mb-4">
+      <CardContent className="p-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-primary" />
+            <span className="font-medium">{loading ? '...' : stats.totalScores}</span>
+            <span className="text-muted-foreground">total scores</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Package className="h-4 w-4 text-primary" />
+            <span className="font-medium">{loading ? '...' : stats.physicalCopies}</span>
+            <span className="text-muted-foreground">physical copies</span>
+          </div>
+          {stats.needsLocation > 0 && (
+            <div className="flex items-center gap-2 text-yellow-600">
+              <MapPin className="h-4 w-4" />
+              <span className="font-medium">{stats.needsLocation}</span>
+              <span>need location</span>
             </div>
-            <p className="text-xs text-muted-foreground">{stat.description}</p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          )}
+          {stats.needsInventory > 0 && (
+            <div className="flex items-center gap-2 text-yellow-600">
+              <Package className="h-4 w-4" />
+              <span className="font-medium">{stats.needsInventory}</span>
+              <span>need inventory</span>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
