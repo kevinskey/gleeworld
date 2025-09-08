@@ -293,7 +293,6 @@ export const VocalHealthLog = () => {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
       </div>
 
       {/* Health Alert */}
