@@ -37,12 +37,21 @@ export const LibrarianDashboard = () => {
 
       {/* Header */}
       <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <BookOpen className="h-8 w-8" />
-            Music Librarian Dashboard
-          </h1>
+        {/* Metal Plate Header */}
+        <div className="relative bg-gradient-to-b from-zinc-300 via-zinc-400 to-zinc-500 dark:from-zinc-600 dark:via-zinc-700 dark:to-zinc-800 rounded-lg shadow-lg p-5 border border-zinc-400 dark:border-zinc-600">
+          {/* Left Rivet */}
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-gradient-radial from-zinc-200 to-zinc-500 dark:from-zinc-500 dark:to-zinc-800 rounded-full shadow-inner border border-zinc-600 dark:border-zinc-400"></div>
           
+          {/* Right Rivet */}
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-gradient-radial from-zinc-200 to-zinc-500 dark:from-zinc-500 dark:to-zinc-800 rounded-full shadow-inner border border-zinc-600 dark:border-zinc-400"></div>
+          
+          {/* Header Content */}
+          <div className="flex items-center justify-center">
+            <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-2 tracking-wider">
+              <BookOpen className="h-7 w-7" />
+              Music Librarian Dashboard
+            </h1>
+          </div>
         </div>
 
         {/* Quick Actions */}
