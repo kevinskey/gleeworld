@@ -74,19 +74,34 @@ export const Mus240PollSystem = () => {
     console.log('Starting AI poll generation...');
     
     try {
-      // Add timeout to prevent infinite hanging
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 30000)
-      );
+      // First, test if the edge function is reachable with a simple ping
+      console.log('Testing edge function connectivity...');
       
-      const requestPromise = supabase.functions.invoke('mus240-instructor-assistant', {
+      const testResponse = await supabase.functions.invoke('mus240-instructor-assistant', {
+        body: { 
+          task: 'test', 
+          prompt: 'test'
+        }
+      });
+      
+      console.log('Test response:', testResponse);
+      
+      // If test fails, don't proceed
+      if (testResponse.error) {
+        console.error('Edge function not reachable:', testResponse.error);
+        throw new Error('Edge function connectivity issue');
+      }
+
+      // Now make the actual request
+      console.log('Making actual AI poll request...');
+      const { data, error } = await supabase.functions.invoke('mus240-instructor-assistant', {
         body: { 
           task: 'poll_creation', 
           prompt: `${aiPollPrompt.trim()}. Create exactly ${numQuestions} questions.`
         }
       });
 
-      const { data, error } = await Promise.race([requestPromise, timeoutPromise]) as any;
+      console.log('AI poll response received:', { data, error });
 
       if (error) {
         console.error('Edge function error:', error);
@@ -94,34 +109,47 @@ export const Mus240PollSystem = () => {
       }
 
       if (!data || !data.response) {
+        console.error('No response data received:', data);
         throw new Error('No response data received');
       }
 
       // Parse the AI response to extract poll data
       const response = data.response;
+      console.log('Raw response:', response);
       let pollData;
       
       try {
         // If response is already a parsed object
         if (typeof response === 'object') {
           pollData = response;
-        } else {
-          // Try to extract JSON from the response string
-          const jsonMatch = response.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            pollData = JSON.parse(jsonMatch[0]);
-          } else {
-            throw new Error('No valid JSON found in response');
+        } else if (typeof response === 'string') {
+          // Try parsing as JSON directly first
+          try {
+            pollData = JSON.parse(response);
+          } catch {
+            // Try to extract JSON from the response string
+            const jsonMatch = response.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              pollData = JSON.parse(jsonMatch[0]);
+            } else {
+              throw new Error('No valid JSON found in response');
+            }
           }
+        } else {
+          throw new Error('Unexpected response format');
         }
       } catch (parseError) {
         console.error('JSON parse error:', parseError);
+        console.error('Response that failed to parse:', response);
         toast.error('Failed to parse AI response. Please try again.');
         return;
       }
 
+      console.log('Parsed poll data:', pollData);
+
       // Validate poll data structure
       if (!pollData.title || !pollData.questions || !Array.isArray(pollData.questions)) {
+        console.error('Invalid poll data structure:', pollData);
         throw new Error('Invalid poll data structure received');
       }
 
@@ -136,8 +164,10 @@ export const Mus240PollSystem = () => {
       // More specific error messages
       if (error.message.includes('timeout') || error.message.includes('Failed to fetch')) {
         toast.error('Connection timeout. Please check your internet connection and try again.');
-      } else if (error.message.includes('Edge Function')) {
-        toast.error('Service temporarily unavailable. Please try again in a moment.');
+      } else if (error.message.includes('Edge Function') || error.message.includes('connectivity')) {
+        toast.error('Service temporarily unavailable. The AI service may be restarting. Please wait a moment and try again.');
+      } else if (error.message.includes('OpenAI') || error.message.includes('API')) {
+        toast.error('AI service error. Please try again with a different prompt.');
       } else {
         toast.error('Failed to generate poll with AI. Please try again.');
       }

@@ -22,6 +22,17 @@ serve(async (req) => {
     const { task, prompt } = await req.json();
     console.log('Received request:', { task, prompt });
 
+    if (task === 'test') {
+      // Simple connectivity test
+      return new Response(
+        JSON.stringify({ status: 'ok', message: 'Edge function is reachable' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      );
+    }
+
     if (task === 'poll_creation') {
       // Generate a structured poll response using OpenAI
       const pollResponse = await generateMusicTheoryPoll(prompt);
