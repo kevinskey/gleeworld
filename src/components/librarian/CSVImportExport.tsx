@@ -236,7 +236,7 @@ export const CSVImportExport = () => {
             Export Library to CSV
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-6">
           <p className="text-sm text-muted-foreground">
             Export all music library data including physical inventory information to a CSV file.
           </p>
