@@ -551,7 +551,7 @@ export const SuperAdminDashboard = ({
         return <Card key={category} className="overflow-hidden">
                   <Collapsible open={!isCollapsed} onOpenChange={() => toggleSectionCollapse(category)}>
                     <CollapsibleTrigger className="w-full">
-                      <CardHeader className="hover:bg-muted/50 transition-colors cursor-pointer">
+                      <CardHeader className="hover:bg-muted/50 transition-colors cursor-pointer pb-2.5">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-lg bg-${categoryData?.color || 'blue'}-100 dark:bg-${categoryData?.color || 'blue'}-900/20`}>
