@@ -197,22 +197,25 @@ export const VocalHealthLog = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap overflow-hidden text-ellipsis">Vocal Health Log</h2>
-          <p className="text-muted-foreground">Track your daily wellness for optimal vocal performance</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={exportData} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
-          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-            <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                <span className="hidden xs:inline">Daily Check-in</span>
-                <span className="xs:hidden">Check-in</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
+      </div>
+      
+      <p className="text-muted-foreground">Track your daily wellness for optimal vocal performance</p>
+      
+      <div className="flex items-center gap-2 justify-end">
+        <Button onClick={exportData} variant="outline" size="sm">
+          <Download className="h-4 w-4 mr-2" />
+          Export CSV
+        </Button>
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogTrigger asChild>
+            <Button className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="hidden xs:inline">Daily Check-in</span>
+              <span className="xs:hidden">Check-in</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
               <DialogHeader>
                 <DialogTitle>Daily Vocal Health Check-in</DialogTitle>
               </DialogHeader>
