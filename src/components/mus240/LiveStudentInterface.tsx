@@ -241,6 +241,49 @@ export const LiveStudentInterface: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Big Classroom Display */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 rounded-3xl shadow-2xl text-white text-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+          {/* Live Response Count */}
+          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
+            <div className="text-6xl md:text-8xl font-bold text-white mb-2 animate-pulse">
+              {totalResponses}
+            </div>
+            <div className="text-xl md:text-2xl font-semibold text-white/90">
+              Responses Received
+            </div>
+            <div className="text-sm md:text-base text-white/70 mt-2">
+              Question {activePoll.current_question_index + 1} of {activePoll.questions.length}
+            </div>
+          </div>
+
+          {/* Poll Status */}
+          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
+            <div className="text-4xl md:text-6xl mb-4">📊</div>
+            <div className="text-xl md:text-2xl font-bold text-white mb-2">
+              {activePoll.title}
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-lg md:text-xl font-semibold text-white">LIVE POLL</span>
+            </div>
+          </div>
+
+          {/* Participation Rate */}
+          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
+            <div className="text-4xl md:text-6xl font-bold text-white mb-2">
+              {totalResponses > 0 ? Math.round((totalResponses / 30) * 100) : 0}%
+            </div>
+            <div className="text-xl md:text-2xl font-semibold text-white/90">
+              Class Participation
+            </div>
+            <div className="text-sm md:text-base text-white/70 mt-2">
+              Keep the responses coming!
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Poll Header */}
       <Card className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 shadow-lg">
         <CardHeader>
@@ -316,10 +359,33 @@ export const LiveStudentInterface: React.FC = () => {
           ) : (
             // Results Display Mode
             <div className="space-y-4">
-              <div className="text-center text-lg font-semibold text-gray-800 mb-6 animate-pulse">
-                📊 Live Results ({totalResponses} responses)
+              {/* Big Results Display for Classroom */}
+              <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-8 rounded-3xl shadow-2xl text-white text-center mb-8">
+                <div className="text-4xl md:text-6xl font-bold mb-4">📊 LIVE RESULTS</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {responseStats.map((stat, index) => (
+                    <div key={index} className="bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30">
+                      <div className="text-3xl md:text-5xl font-bold text-white mb-2">
+                        {stat.count}
+                      </div>
+                      <div className="text-lg md:text-xl font-semibold text-white/90">
+                        {String.fromCharCode(65 + index)}
+                      </div>
+                      <div className="text-sm md:text-base text-white/70">
+                        {stat.percentage.toFixed(0)}%
+                      </div>
+                      {stat.isCorrect && (
+                        <div className="text-2xl mt-2">✅</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="text-xl md:text-2xl text-white/90 mt-6">
+                  Total: {totalResponses} responses
+                </div>
               </div>
               
+              {/* Detailed Results for Individual View */}
               {responseStats.map((stat, index) => (
                 <div
                   key={index}
