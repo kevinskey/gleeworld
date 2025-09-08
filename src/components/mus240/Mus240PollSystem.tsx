@@ -261,12 +261,12 @@ export const Mus240PollSystem = () => {
       <div className="space-y-6 bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-white/30">
         {hasAdminAccess && (
           <div className="flex justify-end mb-4">
-            <button
+            <Button
               onClick={() => setViewMode('admin')}
-              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all duration-300 font-medium shadow-lg"
+              className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 transition-all duration-300 shadow-lg"
             >
               Switch to Admin View
-            </button>
+            </Button>
           </div>
         )}
         <div className="text-center">
@@ -282,12 +282,12 @@ export const Mus240PollSystem = () => {
     <div className="space-y-6 bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-white/30">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold text-gray-900">Admin Poll Management</h2>
-        <button
+        <Button
           onClick={() => setViewMode('student')}
-          className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all duration-300 font-medium shadow-lg"
+          className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 transition-all duration-300 shadow-lg"
         >
           Switch to Student View
-        </button>
+        </Button>
       </div>
       <Tabs defaultValue="manage" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -329,10 +329,10 @@ export const Mus240PollSystem = () => {
                   <p className="text-xs text-gray-500">Number of questions (1-10)</p>
                 </div>
               </div>
-              <button 
+              <Button 
                 onClick={generatePollWithAI}
                 disabled={generatingPoll || !aiPollPrompt.trim()}
-                className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {generatingPoll ? (
                   <>
@@ -345,7 +345,7 @@ export const Mus240PollSystem = () => {
                     Generate Poll with AI
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -371,14 +371,14 @@ export const Mus240PollSystem = () => {
                 rows={2}
                 className="border-blue-200 focus:border-blue-400 rounded-xl"
               />
-              <button 
+              <Button 
                 onClick={() => createPoll(newPollTitle, newPollDescription)}
                 disabled={!newPollTitle.trim()}
-                className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl hover:from-blue-600 hover:to-cyan-700 transition-all duration-300 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-600 text-white hover:from-blue-600 hover:to-cyan-700 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <Plus className="h-5 w-5" />
                 Create Poll
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -421,15 +421,15 @@ export const Mus240PollSystem = () => {
                             <span>Created {new Date(poll.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => togglePoll(poll.id, poll.is_active)}
-                            className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 shadow-lg flex items-center gap-2 ${
-                              poll.is_active 
-                                ? 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700' 
-                                : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700'
-                            }`}
-                          >
+                         <div className="flex items-center gap-3">
+                           <Button
+                             onClick={() => togglePoll(poll.id, poll.is_active)}
+                             className={`transition-all duration-300 shadow-lg flex items-center gap-2 ${
+                               poll.is_active 
+                                 ? 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700' 
+                                 : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700'
+                             }`}
+                           >
                             {poll.is_active ? (
                               <>
                                 <Square className="h-4 w-4" />
@@ -440,14 +440,16 @@ export const Mus240PollSystem = () => {
                                 <Play className="h-4 w-4" />
                                 Start
                               </>
-                            )}
-                          </button>
-                          <button
-                            onClick={() => deletePoll(poll.id)}
-                            className="px-3 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl transition-all duration-300 shadow-sm"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                             )}
+                           </Button>
+                           <Button
+                             onClick={() => deletePoll(poll.id)}
+                             variant="outline"
+                             size="sm"
+                             className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                           >
+                             <Trash2 className="h-4 w-4" />
+                           </Button>
                         </div>
                       </div>
                     </div>
