@@ -135,28 +135,66 @@ export default function Groups() {
 
     setAutoAssigning(true);
     try {
+      console.log('Starting to create project groups...');
+      console.log('User info:', { user: user?.id, hasAdminAccess });
+      
       // Create groups for each project type
-      for (const projectType of PROJECT_TYPES) {
-        const { error: groupError } = await supabase
+      for (let i = 0; i < PROJECT_TYPES.length; i++) {
+        const projectType = PROJECT_TYPES[i];
+        console.log(`Creating group ${i + 1}/${PROJECT_TYPES.length}:`, projectType.name);
+        
+        const groupData = {
+          name: projectType.name,
+          description: projectType.description,
+          leader_id: user?.id, // Set current user as initial leader instead of null
+          semester: 'Fall 2024',
+          max_members: 4,
+          member_count: 1, // Start with 1 since we're adding the creator
+          is_official: false
+        };
+        
+        console.log('Group data to insert:', groupData);
+        
+        const { data, error: groupError } = await supabase
           .from('mus240_project_groups')
-          .insert({
-            name: projectType.name,
-            description: projectType.description,
-            leader_id: null,
-            semester: 'Fall 2024',
-            max_members: 4,
-            member_count: 0,
-            is_official: false
-          });
+          .insert(groupData)
+          .select();
 
-        if (groupError) throw groupError;
+        if (groupError) {
+          console.error('Failed to create group:', projectType.name, groupError);
+          throw groupError;
+        }
+        
+        console.log('Successfully created group:', data);
+        
+        // Add the current user as the initial leader member
+        if (data && data[0]) {
+          const { error: membershipError } = await supabase
+            .from('mus240_group_memberships')
+            .insert({
+              group_id: data[0].id,
+              member_id: user?.id,
+              role: 'leader'
+            });
+            
+          if (membershipError) {
+            console.error('Failed to add leader membership:', membershipError);
+            // Don't throw here, group was created successfully
+          }
+        }
       }
 
       toast.success(`Successfully created ${PROJECT_TYPES.length} project groups!`);
       refetch();
     } catch (err) {
       console.error('Error creating project groups:', err);
-      toast.error('Failed to create project groups');
+      console.error('Error details:', {
+        message: err.message,
+        code: err.code,
+        details: err.details,
+        hint: err.hint
+      });
+      toast.error(`Failed to create project groups: ${err.message || 'Unknown error'}`);
     } finally {
       setAutoAssigning(false);
     }
