@@ -45,8 +45,8 @@ export const JournalGradingManager = () => {
   useEffect(() => {
     loadSubmissions();
     
-    // Set up real-time subscription for journal entries with unique channel name
-    const channelName = `journal-entries-admin-${Math.random().toString(36).substr(2, 9)}`;
+    // Set up real-time subscription for assignment submissions with unique channel name
+    const channelName = `assignment-submissions-admin-${Math.random().toString(36).substr(2, 9)}`;
     const channel = supabase
       .channel(channelName)
       .on(
@@ -54,10 +54,10 @@ export const JournalGradingManager = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'mus240_journal_entries'
+          table: 'assignment_submissions'
         },
         (payload) => {
-          console.log('Real-time journal entry change:', payload);
+          console.log('Real-time assignment submission change:', payload);
           // Reload submissions when there are changes
           syncSubmissions();
         }
