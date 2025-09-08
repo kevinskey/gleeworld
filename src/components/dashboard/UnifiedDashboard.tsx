@@ -111,7 +111,7 @@ export const UnifiedDashboard = () => {
                 <div>
                   <h1 className="text-3xl font-bold mb-2 text-white">Welcome to Glee Academy</h1>
                   
-                  <Button variant="secondary" size="sm" className="bg-white text-primary hover:bg-white/90 px-3 py-1 text-xs">
+                  <Button variant="secondary" size="lg" className="bg-white text-primary hover:bg-white/90">
                     Start Learning →
                   </Button>
                 </div>
@@ -133,11 +133,7 @@ export const UnifiedDashboard = () => {
           </div>
 
           {/* Community Hub for Members */}
-          <div className="border border-border rounded-xl bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
-            <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded" />}>
-              <CommunityHubModule />
-            </Suspense>
-          </div>
+          
 
           {/* Calendar Section */}
           <div className="bg-card rounded-lg border shadow-sm">
