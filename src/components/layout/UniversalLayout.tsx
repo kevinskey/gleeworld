@@ -51,15 +51,17 @@ export const UniversalLayout = ({
           )}
         </>
       )}
-      <main className={`flex-1 w-full overflow-x-hidden ${className}`} style={{ paddingLeft: 'var(--space-4)', paddingRight: 'var(--space-4)' }}>
+      <main className={`flex-1 w-full overflow-x-hidden px-4 md:px-6 lg:px-8 xl:px-12 ${className}`}>
         {containerized ? (
           <ResponsiveContainer maxWidth={maxWidth}>
-            <div style={{ paddingTop: 'var(--space-6)', paddingBottom: 'var(--space-6)' }}>
+            <div className="py-4 md:py-6 lg:py-8 xl:py-10">
               {children}
             </div>
           </ResponsiveContainer>
         ) : (
-          children
+          <div className="py-4 md:py-6 lg:py-8 xl:py-10">
+            {children}
+          </div>
         )}
       </main>
       {showFooter && <UniversalFooter />}
