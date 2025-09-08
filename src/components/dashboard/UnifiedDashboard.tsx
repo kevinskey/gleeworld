@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon, Eye, Music } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
-
 import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
 import { PublicDashboardMonitor } from '@/components/admin/PublicDashboardMonitor';
 import { FanDashboardMonitor } from '@/components/admin/FanDashboardMonitor';
@@ -42,7 +41,6 @@ export const UnifiedDashboard = () => {
   const [fanViewMode, setFanViewMode] = useState<'monitor' | 'experience'>('monitor');
   const [publicViewMode, setPublicViewMode] = useState<'monitor' | 'experience'>('monitor');
   const location = useLocation();
-  
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const moduleId = params.get('module');
@@ -74,21 +72,18 @@ export const UnifiedDashboard = () => {
   // Show loading if profile is still loading
   if (profileLoading) {
     console.log('🎯 UnifiedDashboard: Profile still loading...');
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+    return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading your dashboard...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Check if we have a profile - if not, show access restricted
   if (!profile) {
     console.log('🎯 UnifiedDashboard: No profile found, showing access restricted');
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
+    return <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
         <div className="max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Restricted</h1>
           <p className="text-gray-600 mb-6">
@@ -98,8 +93,7 @@ export const UnifiedDashboard = () => {
             User ID: {user?.id}
           </p>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Show different dashboard content based on view mode
@@ -116,9 +110,7 @@ export const UnifiedDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold mb-2 text-white">Welcome to Glee Academy</h1>
-                  <p className="text-white/90 text-lg mb-4">
-                    Enhance your musical journey with our comprehensive learning platform
-                  </p>
+                  
                   <Button variant="secondary" size="lg" className="bg-white text-primary hover:bg-white/90">
                     Start Learning →
                   </Button>
