@@ -19,6 +19,11 @@ export const CommunityHeader = () => {
 
   return (
     <div className="space-y-3 md:space-y-4">
+      {/* Members Dashboard Title */}
+      <div className="text-center py-4">
+        <h1 className="text-4xl font-bold text-white">Members Dashboard</h1>
+      </div>
+
       {/* Community Overview */}
       <Collapsible open={quickStatsOpen} onOpenChange={setQuickStatsOpen}>
         <Card className="glass-card border border-white/10">
