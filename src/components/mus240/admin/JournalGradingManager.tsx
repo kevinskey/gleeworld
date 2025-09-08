@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { FileText, Download, Eye, Edit3, Save, Search, Filter, ExternalLink } from 'lucide-react';
+import { FileText, Download, Eye, Edit3, Save, Search, Filter, ExternalLink, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,17 +32,33 @@ interface JournalSubmission {
 export const JournalGradingManager = () => {
   const [submissions, setSubmissions] = useState<JournalSubmission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [assignmentFilter, setAssignmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [editingSubmission, setEditingSubmission] = useState<string | null>(null);
   const [grades, setGrades] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<Record<string, string>>({});
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     loadSubmissions();
+    // Auto-refresh every 30 seconds when on this tab
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        syncSubmissions();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
+
+  const syncSubmissions = async () => {
+    setSyncing(true);
+    await loadSubmissions();
+    setSyncing(false);
+  };
 
   const loadSubmissions = async () => {
     try {
@@ -74,6 +90,7 @@ export const JournalGradingManager = () => {
       
       setGrades(initialGrades);
       setFeedback(initialFeedback);
+      setLastSyncTime(new Date());
     } catch (error) {
       console.error('Error loading submissions:', error);
       toast({
@@ -83,6 +100,7 @@ export const JournalGradingManager = () => {
       });
     } finally {
       setLoading(false);
+      setSyncing(false);
     }
   };
 
@@ -183,8 +201,26 @@ export const JournalGradingManager = () => {
           <h3 className="text-2xl font-bold">Journal Assignment Grading</h3>
           <p className="text-muted-foreground">Grade and provide feedback on student journal submissions</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {filteredSubmissions.filter(s => s.status === 'graded').length} of {filteredSubmissions.length} graded
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={syncSubmissions}
+            disabled={loading || syncing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${(loading || syncing) ? 'animate-spin' : ''}`} />
+            {syncing ? 'Syncing...' : 'Sync Submissions'}
+          </Button>
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {filteredSubmissions.filter(s => s.status === 'graded').length} of {filteredSubmissions.length} graded
+            </div>
+            {lastSyncTime && (
+              <div className="text-xs text-muted-foreground">
+                Last synced: {lastSyncTime.toLocaleTimeString()}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
