@@ -14,15 +14,15 @@ export const ResponsiveContainer = ({
 }: ResponsiveContainerProps) => {
   const maxWidthClasses = {
     sm: "max-w-sm",
-    md: "max-w-md", 
-    lg: "max-w-lg",
-    xl: "max-w-xl",
-    "2xl": "max-w-2xl",
+    md: "max-w-2xl", 
+    lg: "max-w-4xl",
+    xl: "max-w-5xl",
+    "2xl": "max-w-6xl",
     full: "max-w-full"
   };
 
   return (
-    <div className={`w-full ${maxWidthClasses[maxWidth]} mx-auto px-2 lg:px-6 ${className}`}>
+    <div className={`w-full ${maxWidthClasses[maxWidth]} mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 ${className}`}>
       {children}
     </div>
   );
