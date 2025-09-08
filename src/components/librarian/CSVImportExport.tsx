@@ -230,7 +230,7 @@ export const CSVImportExport = () => {
     <div className="space-y-6">
       {/* Export Section */}
       <Card>
-        <CardHeader>
+        <CardHeader className="p-6">
           <CardTitle className="flex items-center gap-2">
             <Download className="h-5 w-5" />
             Export Library to CSV
