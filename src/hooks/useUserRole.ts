@@ -22,21 +22,13 @@ export const useUserRole = () => {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      console.log('🔍 useUserRole: fetchUserProfile called with user:', {
-        user: !!user,
-        userId: user?.id,
-        userEmail: user?.email
-      });
-
       if (!user) {
-        console.log('🔍 useUserRole: No user, setting profile to null');
         setProfile(null);
         setLoading(false);
         return;
       }
 
       try {
-        console.log('🔍 useUserRole: Fetching profile for user:', user.id);
         const { data, error } = await supabase
           .from('gw_profiles')
           .select('id, user_id, email, role, full_name, is_admin, is_super_admin, exec_board_role, is_exec_board, verified')
@@ -50,7 +42,6 @@ export const useUserRole = () => {
           console.log('🔍 useUserRole: No profile found for user:', user.id);
           setProfile(null);
         } else {
-          console.log('🔍 useUserRole: Profile loaded successfully:', data);
           setProfile(data);
         }
       } catch (error) {
