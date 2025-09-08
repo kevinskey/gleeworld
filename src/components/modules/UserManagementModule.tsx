@@ -138,7 +138,7 @@ export const UserManagementModule = () => {
                 Search and manage all registered users
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-2 md:space-y-4">
               <div className="flex items-center space-x-2">
                 <Search className="h-4 w-4 text-muted-foreground" />
                 <Input
