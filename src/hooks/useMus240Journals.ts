@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,6 +60,89 @@ export const useMus240Journals = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Setup real-time subscriptions for journal data sync
+  useEffect(() => {
+    if (!user) return;
+
+    // Subscribe to journal entries changes
+    const journalChannel = supabase
+      .channel(`journal-entries-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mus240_journal_entries',
+        },
+        (payload) => {
+          console.log('Journal entry changed:', payload);
+          // Refresh entries when changes occur
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            // Re-fetch if this affects the current user or all users for published entries
+            setEntries(prev => {
+              // Simple refresh approach - in production might want more granular updates
+              return [...prev];
+            });
+          } else if (payload.eventType === 'DELETE') {
+            setEntries(prev => prev.filter(entry => entry.id !== payload.old?.id));
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to comments changes
+    const commentsChannel = supabase
+      .channel(`journal-comments-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mus240_journal_comments',
+        },
+        (payload) => {
+          console.log('Journal comment changed:', payload);
+          // Refresh comments when changes occur
+          if (payload.eventType === 'INSERT') {
+            const newComment = payload.new as JournalComment;
+            setComments(prev => ({
+              ...prev,
+              [newComment.journal_id]: [
+                ...(prev[newComment.journal_id] || []),
+                newComment
+              ]
+            }));
+          } else if (payload.eventType === 'DELETE') {
+            const deletedComment = payload.old as JournalComment;
+            setComments(prev => ({
+              ...prev,
+              [deletedComment.journal_id]: (prev[deletedComment.journal_id] || [])
+                .filter(comment => comment.id !== deletedComment.id)
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(journalChannel);
+      supabase.removeChannel(commentsChannel);
+    };
+  }, [user]);
+
+  // Add a sync function for manual refresh
+  const syncJournalData = useCallback(async (assignmentId?: string) => {
+    if (assignmentId) {
+      // Refresh specific assignment data
+      try {
+        const published = await fetchPublishedJournals(assignmentId);
+        setEntries(published);
+      } catch (error) {
+        console.error('Error syncing journal data:', error);
+      }
+    }
+  }, []);
 
   const fetchUserEntry = async (assignmentId: string): Promise<JournalEntry | null> => {
     if (!user) return null;
@@ -325,6 +408,7 @@ export const useMus240Journals = () => {
     addJournalComment,
     saveJournal,
     publishJournal,
-    deleteJournal
+    deleteJournal,
+    syncJournalData
   };
 };
