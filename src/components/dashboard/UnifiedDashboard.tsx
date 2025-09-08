@@ -111,7 +111,7 @@ export const UnifiedDashboard = () => {
                 <div>
                   <h1 className="text-3xl font-bold mb-2 text-white">Welcome to Glee Academy</h1>
                   
-                  <Button variant="secondary" size="lg" className="bg-white text-primary hover:bg-white/90">
+                  <Button variant="secondary" size="sm" className="bg-white text-primary hover:bg-white/90 px-3 py-1 text-xs">
                     Start Learning →
                   </Button>
                 </div>
