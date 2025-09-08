@@ -4,15 +4,17 @@ import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import ResourcesAdmin from '@/pages/mus240/admin/ResourcesAdmin';
 import { EnrollmentManager } from '@/components/mus240/admin/EnrollmentManager';
 import { JournalGradingManager } from '@/components/mus240/admin/JournalGradingManager';
+import { PollResultsViewer } from '@/components/mus240/admin/PollResultsViewer';
+import { StudentScoresViewer } from '@/components/mus240/admin/StudentScoresViewer';
 import { Mus240PollSystem } from '@/components/mus240/Mus240PollSystem';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Users, FileText, Settings, ExternalLink, BarChart, BookOpen } from 'lucide-react';
+import { GraduationCap, Users, FileText, Settings, ExternalLink, BarChart, BookOpen, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import backgroundImage from '@/assets/mus240-background.jpg';
 
 export const Mus240AdminPage = () => {
-  const [activeTab, setActiveTab] = useState('polls');
+  const [activeTab, setActiveTab] = useState('scores');
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
@@ -60,7 +62,12 @@ export const Mus240AdminPage = () => {
           {/* Main Content */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-5 mb-6 bg-white/20 backdrop-blur-sm">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-6 bg-white/20 backdrop-blur-sm">
+                <TabsTrigger value="scores" className="flex items-center gap-2 text-xs sm:text-sm">
+                  <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Scores</span>
+                  <span className="sm:hidden">Scores</span>
+                </TabsTrigger>
                 <TabsTrigger value="enrollments" className="flex items-center gap-2 text-xs sm:text-sm">
                   <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden sm:inline">Enrollments</span>
@@ -85,6 +92,10 @@ export const Mus240AdminPage = () => {
                 </TabsTrigger>
               </TabsList>
               
+              <TabsContent value="scores" className="mt-6">
+                <StudentScoresViewer />
+              </TabsContent>
+
               <TabsContent value="enrollments" className="mt-6">
                 <EnrollmentManager />
               </TabsContent>
@@ -98,7 +109,17 @@ export const Mus240AdminPage = () => {
               </TabsContent>
               
               <TabsContent value="polls" className="mt-6">
-                <Mus240PollSystem />
+                <div className="space-y-6">
+                  <PollResultsViewer />
+                  <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
+                    <CardHeader>
+                      <CardTitle>Poll Management</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Mus240PollSystem />
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
               
               <TabsContent value="settings" className="mt-6">
