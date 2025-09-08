@@ -60,7 +60,7 @@ export const UniversalLayout = ({
             backgroundImage: `url('/lovable-uploads/46a0770f-abdd-41c3-85dc-3c75eaf35e02.png')`
           }}
         >
-          <div className="absolute inset-0 bg-black/40"></div>
+          
           <div className="relative z-10">
             {children}
           </div>
