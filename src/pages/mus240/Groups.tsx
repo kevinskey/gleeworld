@@ -128,6 +128,40 @@ export default function Groups() {
     }
   };
 
+  const handleCreateProjectGroups = async () => {
+    if (!confirm('This will create all 6 project type groups. Are you sure?')) {
+      return;
+    }
+
+    setAutoAssigning(true);
+    try {
+      // Create groups for each project type
+      for (const projectType of PROJECT_TYPES) {
+        const { error: groupError } = await supabase
+          .from('mus240_project_groups')
+          .insert({
+            name: projectType.name,
+            description: projectType.description,
+            leader_id: null,
+            semester: 'Fall 2024',
+            max_members: 4,
+            member_count: 0,
+            is_official: false
+          });
+
+        if (groupError) throw groupError;
+      }
+
+      toast.success(`Successfully created ${PROJECT_TYPES.length} project groups!`);
+      refetch();
+    } catch (err) {
+      console.error('Error creating project groups:', err);
+      toast.error('Failed to create project groups');
+    } finally {
+      setAutoAssigning(false);
+    }
+  };
+
   const handleAutoAssignGroups = async () => {
     if (!confirm('This will clear all existing groups and create new ones with the project types. Are you sure?')) {
       return;
@@ -357,26 +391,46 @@ export default function Groups() {
                   <AlertTriangle className="h-5 w-5 text-amber-300" />
                   <span className="text-white font-medium">Admin Controls</span>
                 </div>
-                <Button
-                  onClick={handleAutoAssignGroups}
-                  disabled={autoAssigning}
-                  className="bg-red-500 hover:bg-red-600 text-white font-medium px-6 py-2"
-                >
-                  {autoAssigning ? (
-                    <>
-                      <Clock className="h-4 w-4 mr-2 animate-spin" />
-                      Auto-Assigning...
-                    </>
-                  ) : (
-                    <>
-                      <Shuffle className="h-4 w-4 mr-2" />
-                      Auto-Assign All Students to Project Groups
-                    </>
-                  )}
-                </Button>
-                <p className="text-xs text-white/70 mt-2">
-                  This will clear existing groups and randomly assign all enrolled students to the 6 project types (max 4 per group)
-                </p>
+                <div className="flex flex-col gap-3">
+                  <Button
+                    onClick={handleCreateProjectGroups}
+                    disabled={autoAssigning}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-2"
+                  >
+                    {autoAssigning ? (
+                      <>
+                        <Clock className="h-4 w-4 mr-2 animate-spin" />
+                        Creating Groups...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create All Project Groups
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleAutoAssignGroups}
+                    disabled={autoAssigning}
+                    className="bg-red-500 hover:bg-red-600 text-white font-medium px-6 py-2"
+                  >
+                    {autoAssigning ? (
+                      <>
+                        <Clock className="h-4 w-4 mr-2 animate-spin" />
+                        Auto-Assigning...
+                      </>
+                    ) : (
+                      <>
+                        <Shuffle className="h-4 w-4 mr-2" />
+                        Auto-Assign All Students to Project Groups
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <div className="text-xs text-white/70 space-y-1">
+                  <p>Create Project Groups: Creates the 6 empty project groups for students to join</p>
+                  <p>Auto-Assign: Clears existing groups and randomly assigns all enrolled students (max 4 per group)</p>
+                </div>
               </div>
             )}
           </div>
