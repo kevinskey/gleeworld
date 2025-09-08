@@ -85,6 +85,30 @@ export const LibrarianDashboard = () => {
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button size="sm" className="w-full" onClick={() => setShowScanner(true)}>
+                  <Camera className="h-4 w-4 mr-2" />
+                  Scan New Score
+                </Button>
+                <Button size="sm" variant="outline" className="w-full" onClick={() => setActiveTab('inventory')}>
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Update Location
+                </Button>
+                <Button size="sm" variant="outline" className="w-full" onClick={() => setActiveTab('csv')}>
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Generate Report
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Recent Activity */}
             <Card>
               <CardHeader>
@@ -134,30 +158,6 @@ export const LibrarianDashboard = () => {
                     <Badge variant="outline">8</Badge>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button size="sm" className="w-full" onClick={() => setShowScanner(true)}>
-                  <Camera className="h-4 w-4 mr-2" />
-                  Scan New Score
-                </Button>
-                <Button size="sm" variant="outline" className="w-full" onClick={() => setActiveTab('inventory')}>
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Update Location
-                </Button>
-                <Button size="sm" variant="outline" className="w-full" onClick={() => setActiveTab('csv')}>
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Generate Report
-                </Button>
               </CardContent>
             </Card>
           </div>
