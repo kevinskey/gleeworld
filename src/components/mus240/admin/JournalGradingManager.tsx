@@ -221,7 +221,7 @@ export const JournalGradingManager = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-2xl font-bold">Journal Assignment Grading</h3>
+          <h3 className="text-4xl font-bold text-white">Journal Assignment Grading</h3>
           <p className="text-muted-foreground">Grade and provide feedback on student journal submissions</p>
         </div>
         <div className="flex items-center gap-4">
