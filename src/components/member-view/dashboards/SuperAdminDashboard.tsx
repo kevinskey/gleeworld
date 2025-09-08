@@ -816,7 +816,7 @@ export const SuperAdminDashboard = ({
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Module Assignment - Only for Super Admin */}
-                    <Button variant="outline" className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-blue-200 hover:border-blue-300" onClick={() => {
+                    <Button variant="outline" className="p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-blue-200 hover:border-blue-300" onClick={() => {
                   console.log('Module Assignment button clicked, setting selectedModule to user-module-assignment');
                   setSelectedModule('user-module-assignment');
                 }}>
@@ -826,9 +826,6 @@ export const SuperAdminDashboard = ({
                           <Badge variant="secondary" className="text-xs">Super Admin Only</Badge>
                         </div>
                         <h3 className="font-semibold text-base lg:text-lg text-blue-700">Module Assignment</h3>
-                        <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
-                          Assign specific modules to individual users
-                        </p>
                       </div>
                     </Button>
 
@@ -836,16 +833,13 @@ export const SuperAdminDashboard = ({
                     
                     
                     {/* Music Library Quick Access */}
-                    <Button variant="outline" className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-green-200 hover:border-green-300" onClick={() => navigate('/music-library')}>
+                    <Button variant="outline" className="p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-green-200 hover:border-green-300" onClick={() => navigate('/music-library')}>
                       <div className="w-full">
                         <div className="flex items-center gap-2 mb-2">
                           <Music className="h-5 w-5 text-green-600" />
                           <Badge variant="secondary" className="text-xs">Quick Access</Badge>
                         </div>
                         <h3 className="font-semibold text-base lg:text-lg text-green-700">Music Library</h3>
-                        <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
-                          Access sheet music, create setlists, and manage study scores
-                        </p>
                       </div>
                     </Button>
                     
@@ -854,7 +848,7 @@ export const SuperAdminDashboard = ({
                   <Button 
                     key={module.id}
                     variant="outline" 
-                    className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-purple-200 hover:border-purple-300" 
+                    className="p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-purple-200 hover:border-purple-300" 
                     onClick={() => setSelectedModule(module.id)}
                   >
                     <div className="w-full">
@@ -863,9 +857,6 @@ export const SuperAdminDashboard = ({
                         <Badge variant="secondary" className="text-xs">Admin</Badge>
                       </div>
                       <h3 className="font-semibold text-base lg:text-lg text-purple-700">{module.title}</h3>
-                      <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
-                        {module.description}
-                      </p>
                     </div>
                   </Button>
                 ))}
