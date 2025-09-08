@@ -456,7 +456,7 @@ export const SuperAdminDashboard = ({
         <div className="border-l-4 border-primary pl-4">
           <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold flex items-center gap-2">
             <Crown className="h-6 w-6 text-purple-600" />
-            Super Admin Dashboard
+            Director's Dashboard
           </h1>
           
         </div>
