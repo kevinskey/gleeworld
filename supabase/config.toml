@@ -180,3 +180,6 @@ verify_jwt = false
 
 [functions.appointment-customer-portal]
 verify_jwt = false
+
+[functions.admin-reset-password]
+verify_jwt = true
