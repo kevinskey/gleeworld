@@ -4,6 +4,7 @@ import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import ResourcesAdmin from '@/pages/mus240/admin/ResourcesAdmin';
 import { EnrollmentManager } from '@/components/mus240/admin/EnrollmentManager';
 import { JournalGradingManager } from '@/components/mus240/admin/JournalGradingManager';
+import { ComprehensiveJournalAdmin } from '@/components/mus240/admin/ComprehensiveJournalAdmin';
 import { PollResultsViewer } from '@/components/mus240/admin/PollResultsViewer';
 import { StudentScoresViewer } from '@/components/mus240/admin/StudentScoresViewer';
 import { Mus240PollSystem } from '@/components/mus240/Mus240PollSystem';
@@ -101,7 +102,7 @@ export const Mus240AdminPage = () => {
               </TabsContent>
               
               <TabsContent value="journals" className="mt-6">
-                <JournalGradingManager />
+                <ComprehensiveJournalAdmin />
               </TabsContent>
               
               <TabsContent value="resources" className="mt-6">
