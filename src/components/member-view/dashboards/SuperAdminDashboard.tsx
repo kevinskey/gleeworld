@@ -589,10 +589,9 @@ export const SuperAdminDashboard = ({
                 </Card>;
       })}
         </div>
-
-      {/* All Modules View */}
-      ) : (/* Dashboard Overview */
-    <div className="space-y-6">
+      ) : (
+        /* Dashboard Overview */
+        <div className="space-y-6">
 
           {/* Overview Cards Section - moved to bottom */}
           <div className="space-y-4">
