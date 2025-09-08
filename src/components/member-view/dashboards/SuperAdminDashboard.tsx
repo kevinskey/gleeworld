@@ -594,21 +594,21 @@ export const SuperAdminDashboard = ({
                 </Card>;
       })}
         </div>
-      ) : (
-        /* Dashboard Overview */
-        <div className="space-y-6">
 
           {/* Overview Cards Section - moved to bottom */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl lg:text-2xl font-semibold">System Overview</h2>
-              <Button variant="ghost" size="sm" onClick={() => setOverviewCollapsed(!overviewCollapsed)} className="flex items-center gap-2">
-                {overviewCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                {overviewCollapsed ? 'Expand' : 'Collapse'}
-              </Button>
-            </div>
+          <Card className="border-2">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl lg:text-2xl font-semibold">System Overview</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setOverviewCollapsed(!overviewCollapsed)} className="flex items-center gap-2">
+                  {overviewCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                  {overviewCollapsed ? 'Expand' : 'Collapse'}
+                </Button>
+              </div>
+            </CardHeader>
             
-            {!overviewCollapsed && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {!overviewCollapsed && <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* System Overview Card */}
                 <Card className="border-2 border-purple-200">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
@@ -936,8 +936,12 @@ export const SuperAdminDashboard = ({
                     </CardContent>
                   </Card>
                 </div>
-              </div>}
-          </div>
+              </div>
+              </CardContent>}
+          </Card>
+          </Card>
         </div>
-    </div>;
+      )}
+    </div>
+  );
 };
