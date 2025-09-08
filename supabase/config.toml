@@ -186,3 +186,6 @@ verify_jwt = true
 
 [functions.promote-super-admin]
 verify_jwt = true
+
+[functions.grade-journal-ai]
+verify_jwt = true

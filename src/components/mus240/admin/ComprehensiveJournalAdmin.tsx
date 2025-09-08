@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, MessageSquare, User, Calendar, Search, Filter, RefreshCw, Eye, Edit3, Save } from 'lucide-react';
+import { FileText, MessageSquare, User, Calendar, Search, Filter, RefreshCw, Eye, Edit3, Save, Bot, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { AIGradeViewer } from './AIGradeViewer';
 
 interface JournalEntry {
   id: string;
@@ -280,6 +281,43 @@ export const ComprehensiveJournalAdmin = () => {
     return comments.filter(comment => comment.journal_id === entryId);
   };
 
+  const handleAIGrading = async (entry: JournalEntry) => {
+    try {
+      toast({
+        title: "AI Grading Started",
+        description: `Grading journal entry by ${entry.student_name}...`,
+      });
+
+      const { data, error } = await supabase.functions.invoke('grade-journal-ai', {
+        body: {
+          journalId: entry.id,
+          journalContent: entry.content,
+          assignmentId: entry.assignment_id
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "AI Grading Complete",
+          description: `Journal graded successfully! Overall score: ${data.grading.overallScore}/100 (${data.grading.letterGrade})`,
+        });
+        // Refresh data to show new grade
+        loadAllData();
+      } else {
+        throw new Error(data.error || 'AI grading failed');
+      }
+    } catch (error) {
+      console.error('AI grading error:', error);
+      toast({
+        title: "AI Grading Failed",
+        description: error.message || 'Failed to grade journal with AI',
+        variant: "destructive"
+      });
+    }
+  };
+
   const filteredJournalEntries = journalEntries.filter(entry => {
     const matchesSearch = entry.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.student_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -453,7 +491,35 @@ export const ComprehensiveJournalAdmin = () => {
                           ))}
                         </div>
                       </div>
-                     )}
+                    )}
+                    
+                     <div className="flex gap-2 pt-2 border-t">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleAIGrading(entry)}
+                        className="flex items-center gap-2"
+                      >
+                        <Bot className="h-4 w-4" />
+                        Grade with AI
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setSelectedEntry(selectedEntry === entry.id ? null : entry.id)}
+                        className="flex items-center gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        {selectedEntry === entry.id ? 'Hide' : 'View'} Grade
+                      </Button>
+                    </div>
+
+                    {/* AI Grade Display */}
+                    {selectedEntry === entry.id && (
+                      <div className="mt-4 pt-4 border-t">
+                        <AIGradeViewer journalId={entry.id} />
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
