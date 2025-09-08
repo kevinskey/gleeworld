@@ -174,6 +174,7 @@ export const SuperAdminDashboard = ({
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [showAllModules, setShowAllModules] = useState(true);
   const [overviewCollapsed, setOverviewCollapsed] = useState(true);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(true);
 
   // Search and Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -458,8 +459,22 @@ export const SuperAdminDashboard = ({
         </Card>}
 
       {/* Filter Controls */}
-      {showAllModules && <Card className="p-3">
-          <div className="flex flex-wrap items-center gap-3">
+      {showAllModules && <Card className="overflow-hidden">
+          <Collapsible open={!filtersCollapsed} onOpenChange={() => setFiltersCollapsed(!filtersCollapsed)}>
+            <CollapsibleTrigger className="w-full">
+              <div className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    <span className="text-sm font-medium">Filter Controls</span>
+                  </div>
+                  {filtersCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                </div>
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-3 pt-0">
+                <div className="flex flex-wrap items-center gap-3">
             
             <Select value={filterCategory} onValueChange={setFilterCategory}>
               <SelectTrigger className="w-[120px] h-8">
@@ -487,7 +502,10 @@ export const SuperAdminDashboard = ({
             <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="h-8 w-8 p-0">
               {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
             </Button>
-            </div>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </Card>}
 
           {/* Filtered Results Count */}
