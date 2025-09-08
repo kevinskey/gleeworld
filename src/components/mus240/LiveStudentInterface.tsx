@@ -79,7 +79,7 @@ export const LiveStudentInterface: React.FC = () => {
     return () => {
       supabase.removeChannel(pollChannel);
     };
-  }, []);
+  }, [activePoll?.current_question_index]);
 
   useEffect(() => {
     if (activePoll) {
@@ -97,7 +97,10 @@ export const LiveStudentInterface: React.FC = () => {
             table: 'mus240_poll_responses',
             filter: `poll_id=eq.${activePoll.id},question_index=eq.${activePoll.current_question_index}`
           },
-          () => fetchResponses()
+          (payload) => {
+            console.log('Response update:', payload);
+            fetchResponses(); // Refetch to get updated counts
+          }
         )
         .subscribe();
 
@@ -313,16 +316,16 @@ export const LiveStudentInterface: React.FC = () => {
           ) : (
             // Results Display Mode
             <div className="space-y-4">
-              <div className="text-center text-lg font-semibold text-gray-800 mb-6">
-                Live Results
+              <div className="text-center text-lg font-semibold text-gray-800 mb-6 animate-pulse">
+                📊 Live Results ({totalResponses} responses)
               </div>
               
               {responseStats.map((stat, index) => (
                 <div
                   key={index}
-                  className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                  className={`p-4 rounded-xl border-2 transition-all duration-500 ${
                     stat.isCorrect
-                      ? 'border-green-300 bg-green-50'
+                      ? 'border-green-300 bg-green-50 shadow-lg'
                       : userResponse === index && !stat.isCorrect
                       ? 'border-red-300 bg-red-50'
                       : 'border-gray-200 bg-gray-50'
@@ -334,26 +337,39 @@ export const LiveStudentInterface: React.FC = () => {
                     </span>
                     <div className="flex items-center gap-2">
                       {stat.isCorrect && (
-                        <Badge className="bg-green-600 text-white">Correct</Badge>
+                        <Badge className="bg-green-600 text-white animate-bounce">
+                          ✓ Correct
+                        </Badge>
                       )}
                       {userResponse === index && (
                         <Badge className="bg-blue-600 text-white">Your Answer</Badge>
                       )}
-                      <span className="text-sm font-medium text-gray-600">
+                      <span className="text-sm font-medium text-gray-600 bg-white px-2 py-1 rounded-full">
                         {stat.count} ({stat.percentage.toFixed(1)}%)
                       </span>
                     </div>
                   </div>
-                  <Progress value={stat.percentage} className="h-2" />
+                  <Progress 
+                    value={stat.percentage} 
+                    className={`h-3 transition-all duration-700 ${
+                      stat.isCorrect ? 'bg-green-100' : 'bg-gray-100'
+                    }`}
+                  />
                 </div>
               ))}
               
               {currentQuestion.explanation && (
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <h4 className="font-semibold text-blue-900 mb-2">Explanation:</h4>
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl animate-fadeIn">
+                  <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                    💡 Explanation:
+                  </h4>
                   <p className="text-blue-800">{currentQuestion.explanation}</p>
                 </div>
               )}
+
+              <div className="text-center text-sm text-gray-500 mt-4">
+                Results update in real-time as classmates submit answers
+              </div>
             </div>
           )}
         </CardContent>
