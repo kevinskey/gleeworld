@@ -71,42 +71,79 @@ export const Mus240PollSystem = () => {
     }
 
     setGeneratingPoll(true);
+    console.log('Starting AI poll generation...');
+    
     try {
-      const { data, error } = await supabase.functions.invoke('mus240-instructor-assistant', {
+      // Add timeout to prevent infinite hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 30000)
+      );
+      
+      const requestPromise = supabase.functions.invoke('mus240-instructor-assistant', {
         body: { 
           task: 'poll_creation', 
           prompt: `${aiPollPrompt.trim()}. Create exactly ${numQuestions} questions.`
         }
       });
 
-      if (error) throw error;
+      const { data, error } = await Promise.race([requestPromise, timeoutPromise]) as any;
+
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
+
+      if (!data || !data.response) {
+        throw new Error('No response data received');
+      }
 
       // Parse the AI response to extract poll data
       const response = data.response;
       let pollData;
       
       try {
-        // Try to extract JSON from the response
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          pollData = JSON.parse(jsonMatch[0]);
+        // If response is already a parsed object
+        if (typeof response === 'object') {
+          pollData = response;
         } else {
-          throw new Error('No valid JSON found in response');
+          // Try to extract JSON from the response string
+          const jsonMatch = response.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            pollData = JSON.parse(jsonMatch[0]);
+          } else {
+            throw new Error('No valid JSON found in response');
+          }
         }
       } catch (parseError) {
+        console.error('JSON parse error:', parseError);
         toast.error('Failed to parse AI response. Please try again.');
         return;
+      }
+
+      // Validate poll data structure
+      if (!pollData.title || !pollData.questions || !Array.isArray(pollData.questions)) {
+        throw new Error('Invalid poll data structure received');
       }
 
       // Create the poll
       await createPoll(pollData.title, pollData.description || '', pollData.questions);
       setAiPollPrompt('');
       toast.success('AI-generated poll created successfully!');
+      console.log('AI poll generation completed successfully');
     } catch (error) {
       console.error('Error generating poll with AI:', error);
-      toast.error('Failed to generate poll with AI');
+      
+      // More specific error messages
+      if (error.message.includes('timeout') || error.message.includes('Failed to fetch')) {
+        toast.error('Connection timeout. Please check your internet connection and try again.');
+      } else if (error.message.includes('Edge Function')) {
+        toast.error('Service temporarily unavailable. Please try again in a moment.');
+      } else {
+        toast.error('Failed to generate poll with AI. Please try again.');
+      }
     } finally {
       setGeneratingPoll(false);
+      console.log('AI poll generation process ended');
     }
   };
 
