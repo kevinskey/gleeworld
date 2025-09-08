@@ -176,48 +176,50 @@ export const AppointmentsList = () => {
                 <div className="space-y-3 ml-7">
                   {userAppointments.map((appointment) => (
                     <div key={appointment.id} className="border rounded-lg p-4 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <h4 className="font-semibold">{appointment.title}</h4>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="h-4 w-4" />
-                            {format(new Date(appointment.appointment_date), 'PPP p')}
-                            <span>({appointment.duration_minutes} min)</span>
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div className="space-y-1 flex-1">
+                          <h4 className="font-semibold text-sm sm:text-base">{appointment.title}</h4>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                              <span className="truncate">{format(new Date(appointment.appointment_date), 'PPP p')}</span>
+                            </div>
+                            <span className="text-xs">({appointment.duration_minutes} min)</span>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Badge className={getStatusColor(appointment.status)}>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Badge className={`${getStatusColor(appointment.status)} text-xs px-2 py-1`}>
                             {appointment.status}
                           </Badge>
-                          <Badge className={getTypeColor(appointment.appointment_type)}>
+                          <Badge className={`${getTypeColor(appointment.appointment_type)} text-xs px-2 py-1`}>
                             {appointment.appointment_type}
                           </Badge>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                      <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                        <div className="space-y-1">
                           {appointment.client_phone && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Phone className="h-4 w-4" />
-                              <span>{appointment.client_phone}</span>
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                              <Phone className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                              <span className="truncate">{appointment.client_phone}</span>
                             </div>
                           )}
                           {appointment.client_email && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Mail className="h-4 w-4" />
-                              <span>{appointment.client_email}</span>
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                              <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                              <span className="truncate">{appointment.client_email}</span>
                             </div>
                           )}
                         </div>
 
                         {appointment.description && (
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm font-medium">
-                              <FileText className="h-4 w-4" />
+                          <div className="space-y-1 mt-2">
+                            <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
+                              <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                               Description
                             </div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-xs sm:text-sm text-muted-foreground">
                               {appointment.description}
                             </p>
                           </div>
@@ -225,9 +227,10 @@ export const AppointmentsList = () => {
                       </div>
 
                       {appointment.status === 'pending_approval' && (
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <Button 
                             size="sm" 
+                            className="text-xs sm:text-sm"
                             onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
                           >
                             Approve
@@ -235,6 +238,7 @@ export const AppointmentsList = () => {
                           <Button 
                             size="sm" 
                             variant="outline"
+                            className="text-xs sm:text-sm"
                             onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
                           >
                             Deny
@@ -243,9 +247,10 @@ export const AppointmentsList = () => {
                       )}
 
                       {appointment.status === 'scheduled' && (
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <Button 
                             size="sm" 
+                            className="text-xs sm:text-sm"
                             onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
                           >
                             Confirm
@@ -253,6 +258,7 @@ export const AppointmentsList = () => {
                           <Button 
                             size="sm" 
                             variant="outline"
+                            className="text-xs sm:text-sm"
                             onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
                           >
                             Cancel
@@ -261,9 +267,10 @@ export const AppointmentsList = () => {
                       )}
 
                       {appointment.status === 'confirmed' && (
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <Button 
                             size="sm" 
+                            className="text-xs sm:text-sm"
                             onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
                           >
                             Mark Complete
@@ -271,6 +278,7 @@ export const AppointmentsList = () => {
                           <Button 
                             size="sm" 
                             variant="outline"
+                            className="text-xs sm:text-sm"
                             onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
                           >
                             Cancel
