@@ -430,7 +430,6 @@ export const SuperAdminDashboard = ({
           <SecurityDashboard />
         </div>;
     }
-
     const moduleConfig = ModuleRegistry.getModule(selectedModule);
     if (moduleConfig && moduleConfig.component) {
       const ModuleComponent = moduleConfig.component;
@@ -459,9 +458,7 @@ export const SuperAdminDashboard = ({
             <Crown className="h-6 w-6 text-purple-600" />
             Super Admin Dashboard
           </h1>
-          <p className="text-sm lg:text-base text-muted-foreground mt-1">
-            Complete system administration and module management
-          </p>
+          
         </div>
       </div>
 
