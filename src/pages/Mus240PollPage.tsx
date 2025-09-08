@@ -1,5 +1,6 @@
 import React from 'react';
 import { Mus240PollSystem } from '@/components/mus240/Mus240PollSystem';
+import { BackNavigation } from '@/components/shared/BackNavigation';
 import { BarChart } from 'lucide-react';
 
 export const Mus240PollPage = () => {
@@ -9,6 +10,8 @@ export const Mus240PollPage = () => {
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-black/5"></div>
       
       <div className="relative z-10 container mx-auto px-4 py-8">
+        <BackNavigation fallbackPath="/dashboard" className="mb-6" />
+        
         {/* Header with glass morphism */}
         <div className="mb-8 text-center">
           <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
