@@ -83,18 +83,13 @@ const SortableModuleCard = ({
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full" 
-            onClick={() => {
-              if (module.id === 'librarian') {
-                navigate('/librarian-dashboard');
-              } else {
-                onModuleClick(module.id);
-              }
-            }}
-          >
+          <Button variant="outline" size="sm" className="w-full" onClick={() => {
+          if (module.id === 'librarian') {
+            navigate('/librarian-dashboard');
+          } else {
+            onModuleClick(module.id);
+          }
+        }}>
             Open Module
           </Button>
         </CardContent>
@@ -197,16 +192,13 @@ export const SuperAdminDashboard = ({
 
   // Sort and filter modules
   const filteredAndSortedModules = useMemo(() => {
-    const allModules = Object.entries(modulesByCategory).flatMap(([category, modules]) => 
-      modules.map(module => ({ ...module, category }))
-    );
+    const allModules = Object.entries(modulesByCategory).flatMap(([category, modules]) => modules.map(module => ({
+      ...module,
+      category
+    })));
 
     // Filter by search query
-    let filtered = allModules.filter(module => 
-      module.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      module.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      module.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    let filtered = allModules.filter(module => module.title?.toLowerCase().includes(searchQuery.toLowerCase()) || module.description?.toLowerCase().includes(searchQuery.toLowerCase()) || module.category.toLowerCase().includes(searchQuery.toLowerCase()));
 
     // Filter by category
     if (filterCategory !== 'all') {
@@ -216,7 +208,6 @@ export const SuperAdminDashboard = ({
     // Sort modules
     filtered.sort((a, b) => {
       let aValue, bValue;
-      
       switch (sortBy) {
         case 'name':
           aValue = a.title || '';
@@ -234,11 +225,9 @@ export const SuperAdminDashboard = ({
           aValue = a.title || '';
           bValue = b.title || '';
       }
-
       const comparison = aValue.localeCompare(bValue);
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-
     return filtered;
   }, [modulesByCategory, searchQuery, filterCategory, sortBy, sortOrder]);
 
@@ -454,9 +443,7 @@ export const SuperAdminDashboard = ({
             <Crown className="h-6 w-6 text-purple-600" />
             Super Admin Dashboard
           </h1>
-          <p className="text-sm lg:text-base text-muted-foreground mt-1">
-            Complete system administration and module management
-          </p>
+          
         </div>
         <Button onClick={() => setShowAllModules(!showAllModules)} variant={showAllModules ? "default" : "outline"} className="flex items-center gap-2 h-8 px-4 text-sm">
           <Grid3X3 className="h-4 w-4" />
@@ -465,17 +452,11 @@ export const SuperAdminDashboard = ({
       </div>
 
       {/* Search and Filter Controls */}
-      {showAllModules && (
-        <Card className="p-4">
+      {showAllModules && <Card className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search modules..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+              <Input placeholder="Search modules..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
             </div>
             
             <Select value={filterCategory} onValueChange={setFilterCategory}>
@@ -485,11 +466,9 @@ export const SuperAdminDashboard = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
+                {categories.map(category => <SelectItem key={category} value={category}>
                     {category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
             </Select>
 
@@ -504,33 +483,24 @@ export const SuperAdminDashboard = ({
               </SelectContent>
             </Select>
 
-            <Button
-              variant="outline"
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              className="flex items-center gap-2"
-            >
+            <Button variant="outline" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-2">
               {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
               {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
             </Button>
           </div>
 
           {/* Filtered Results Count */}
-          {searchQuery || filterCategory !== 'all' ? (
-            <div className="mt-4 text-sm text-muted-foreground">
+          {searchQuery || filterCategory !== 'all' ? <div className="mt-4 text-sm text-muted-foreground">
               Found {filteredAndSortedModules.length} modules
               {searchQuery && ` matching "${searchQuery}"`}
               {filterCategory !== 'all' && ` in ${filterCategory.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`}
-            </div>
-          ) : null}
-        </Card>
-      )}
+            </div> : null}
+        </Card>}
 
       {/* All Modules Display */}
-      {showAllModules && (
-        <div className="space-y-6">
+      {showAllModules && <div className="space-y-6">
           {/* Always show search results when there's a search query or filter */}
-          {searchQuery.trim() || filterCategory !== 'all' ? (
-            <Card className="overflow-hidden">
+          {searchQuery.trim() || filterCategory !== 'all' ? <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Search className="h-5 w-5" />
@@ -543,54 +513,32 @@ export const SuperAdminDashboard = ({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {filteredAndSortedModules.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredAndSortedModules.map(module => (
-                      <SortableModuleCard
-                        key={module.id}
-                        module={module}
-                        onModuleClick={(moduleId) => setSelectedModule(moduleId)}
-                        navigate={navigate}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
+                {filteredAndSortedModules.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredAndSortedModules.map(module => <SortableModuleCard key={module.id} module={module} onModuleClick={moduleId => setSelectedModule(moduleId)} navigate={navigate} />)}
+                  </div> : <div className="text-center py-12 text-muted-foreground">
                     <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <h3 className="text-lg font-medium mb-2">No modules found</h3>
                     <p className="text-sm">
                       Try adjusting your search criteria or clearing the filters
                     </p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-4"
-                      onClick={() => {
-                        setSearchQuery('');
-                        setFilterCategory('all');
-                      }}
-                    >
+                    <Button variant="outline" className="mt-4" onClick={() => {
+              setSearchQuery('');
+              setFilterCategory('all');
+            }}>
                       Clear Search
                     </Button>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
-            </Card>
-          ) : (
-            // Show modules by category when no search/filter is active
-            categories.map(category => {
-              const categoryModules = sortedModulesByCategory[category];
-              if (!categoryModules || categoryModules.length === 0) return null;
-              
-              const categoryData = UNIFIED_MODULE_CATEGORIES.find(c => c.id === category);
-              const IconComponent = categoryData?.icon || Settings;
-              const isCollapsed = collapsedSections[category];
-              
-              return (
-                <Card key={category} className="overflow-hidden">
-                  <Collapsible
-                    open={!isCollapsed}
-                    onOpenChange={() => toggleSectionCollapse(category)}
-                  >
+            </Card> :
+      // Show modules by category when no search/filter is active
+      categories.map(category => {
+        const categoryModules = sortedModulesByCategory[category];
+        if (!categoryModules || categoryModules.length === 0) return null;
+        const categoryData = UNIFIED_MODULE_CATEGORIES.find(c => c.id === category);
+        const IconComponent = categoryData?.icon || Settings;
+        const isCollapsed = collapsedSections[category];
+        return <Card key={category} className="overflow-hidden">
+                  <Collapsible open={!isCollapsed} onOpenChange={() => toggleSectionCollapse(category)}>
                     <CollapsibleTrigger className="w-full">
                       <CardHeader className="hover:bg-muted/50 transition-colors cursor-pointer">
                         <div className="flex items-center justify-between">
@@ -609,11 +557,7 @@ export const SuperAdminDashboard = ({
                             <Badge variant="secondary" className="text-xs">
                               {categoryModules.length} modules
                             </Badge>
-                            {isCollapsed ? (
-                              <ChevronDown className="h-4 w-4" />
-                            ) : (
-                              <ChevronUp className="h-4 w-4" />
-                            )}
+                            {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                           </div>
                         </div>
                       </CardHeader>
@@ -621,36 +565,19 @@ export const SuperAdminDashboard = ({
                     
                     <CollapsibleContent>
                       <CardContent>
-                        <DndContext
-                          sensors={sensors}
-                          collisionDetection={closestCenter}
-                          onDragEnd={(event) => handleDragEnd(event, category)}
-                        >
-                          <SortableContext 
-                            items={categoryModules.map(m => m.id)}
-                            strategy={verticalListSortingStrategy}
-                          >
+                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={event => handleDragEnd(event, category)}>
+                          <SortableContext items={categoryModules.map(m => m.id)} strategy={verticalListSortingStrategy}>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {categoryModules.map(module => (
-                                <SortableModuleCard
-                                  key={module.id}
-                                  module={module}
-                                  onModuleClick={(moduleId) => setSelectedModule(moduleId)}
-                                  navigate={navigate}
-                                />
-                              ))}
+                              {categoryModules.map(module => <SortableModuleCard key={module.id} module={module} onModuleClick={moduleId => setSelectedModule(moduleId)} navigate={navigate} />)}
                             </div>
                           </SortableContext>
                         </DndContext>
                       </CardContent>
                     </CollapsibleContent>
                   </Collapsible>
-                </Card>
-              );
-            })
-          )}
-        </div>
-      )}
+                </Card>;
+      })}
+        </div>}
 
       {/* Quick Action Modules */}
       <div className="bg-gradient-to-r from-primary/5 via-background to-muted/20 rounded-lg p-6">
@@ -720,41 +647,40 @@ export const SuperAdminDashboard = ({
       {showAllModules ? (/* All Modules View */
     <div className="space-y-8">
           {modulesLoading ? <div className="text-center py-8 text-lg">Loading modules...</div> : (() => {
-            // Sort categories to prioritize important ones at the top
-            const sortedEntries = Object.entries(sortedModulesByCategory).sort(([categoryA], [categoryB]) => {
-              // Define priority order - put most important categories first
-              const priorityOrder = ['administrative', 'financial', 'events', 'user-management', 'communications'];
-              const priorityA = priorityOrder.indexOf(categoryA);
-              const priorityB = priorityOrder.indexOf(categoryB);
-              
-              // If both are in priority list, sort by priority order
-              if (priorityA !== -1 && priorityB !== -1) {
-                return priorityA - priorityB;
-              }
-              // If only A is in priority list, A comes first
-              if (priorityA !== -1) return -1;
-              // If only B is in priority list, B comes first  
-              if (priorityB !== -1) return 1;
-              // If neither is in priority list, sort alphabetically
-              return categoryA.localeCompare(categoryB);
-            });
-            
-            return sortedEntries.map(([categoryName, categoryModules]) => {
-        const categoryConfig = UNIFIED_MODULE_CATEGORIES.find(c => c.id === categoryName);
-        const IconComponent = categoryConfig?.icon || Users;
-        const isCollapsed = collapsedSections[categoryName];
-        const isSingleModule = categoryModules.length === 1;
-        if (categoryModules.length === 0) return null;
-        return <div key={categoryName} className="space-y-3">
+        // Sort categories to prioritize important ones at the top
+        const sortedEntries = Object.entries(sortedModulesByCategory).sort(([categoryA], [categoryB]) => {
+          // Define priority order - put most important categories first
+          const priorityOrder = ['administrative', 'financial', 'events', 'user-management', 'communications'];
+          const priorityA = priorityOrder.indexOf(categoryA);
+          const priorityB = priorityOrder.indexOf(categoryB);
+
+          // If both are in priority list, sort by priority order
+          if (priorityA !== -1 && priorityB !== -1) {
+            return priorityA - priorityB;
+          }
+          // If only A is in priority list, A comes first
+          if (priorityA !== -1) return -1;
+          // If only B is in priority list, B comes first  
+          if (priorityB !== -1) return 1;
+          // If neither is in priority list, sort alphabetically
+          return categoryA.localeCompare(categoryB);
+        });
+        return sortedEntries.map(([categoryName, categoryModules]) => {
+          const categoryConfig = UNIFIED_MODULE_CATEGORIES.find(c => c.id === categoryName);
+          const IconComponent = categoryConfig?.icon || Users;
+          const isCollapsed = collapsedSections[categoryName];
+          const isSingleModule = categoryModules.length === 1;
+          if (categoryModules.length === 0) return null;
+          return <div key={categoryName} className="space-y-3">
                   {/* Category Header */}
                   <Collapsible open={!isCollapsed} onOpenChange={open => {
-            if (!isSingleModule) {
-              setCollapsedSections(prev => ({
-                ...prev,
-                [categoryName]: !open
-              }));
-            }
-          }}>
+              if (!isSingleModule) {
+                setCollapsedSections(prev => ({
+                  ...prev,
+                  [categoryName]: !open
+                }));
+              }
+            }}>
                     <CollapsibleTrigger className={`w-full ${isSingleModule ? 'cursor-default' : 'cursor-pointer'}`} disabled={isSingleModule}>
                       <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors">
                         <div className="flex items-center gap-3">
@@ -788,8 +714,8 @@ export const SuperAdminDashboard = ({
                     </CollapsibleContent>
                   </Collapsible>
                 </div>;
-            });
-          })()}
+        });
+      })()}
         </div>) : (/* Dashboard Overview */
     <div className="space-y-6">
           {/* Quick Access Modules Section */}
@@ -850,13 +776,7 @@ export const SuperAdminDashboard = ({
                     </Button>
                     
                     {allModules.filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id)).slice(0, 4) // Reduced from 5 to 4 to accommodate Music Library
-                .map(module => (
-                  <Button 
-                    key={module.id}
-                    variant="outline" 
-                    className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-purple-200 hover:border-purple-300" 
-                    onClick={() => setSelectedModule(module.id)}
-                  >
+                .map(module => <Button key={module.id} variant="outline" className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-purple-200 hover:border-purple-300" onClick={() => setSelectedModule(module.id)}>
                     <div className="w-full">
                       <div className="flex items-center gap-2 mb-2">
                         <module.icon className="h-5 w-5 text-purple-600" />
@@ -867,8 +787,7 @@ export const SuperAdminDashboard = ({
                         {module.description}
                       </p>
                     </div>
-                  </Button>
-                ))}
+                  </Button>)}
                   </div>
                 </CardContent>
               </CollapsibleContent>
