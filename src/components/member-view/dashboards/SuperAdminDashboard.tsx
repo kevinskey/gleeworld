@@ -6,6 +6,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import SecurityDashboard from "@/components/admin/SecurityDashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -415,6 +416,21 @@ export const SuperAdminDashboard = ({
 
   // If a specific module is selected, show it full page
   if (selectedModule) {
+    // Special handling for security dashboard
+    if (selectedModule === 'security-dashboard') {
+      return <div className="min-h-screen p-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+            <Button variant="ghost" size="sm" onClick={() => setSelectedModule(null)} className="p-0 h-auto">
+              Super Admin Dashboard
+            </Button>
+            <span>/</span>
+            <span className="text-foreground font-medium">Security Dashboard</span>
+          </div>
+          
+          <SecurityDashboard />
+        </div>;
+    }
+
     const moduleConfig = ModuleRegistry.getModule(selectedModule);
     if (moduleConfig && moduleConfig.component) {
       const ModuleComponent = moduleConfig.component;
@@ -588,6 +604,17 @@ export const SuperAdminDashboard = ({
           <h2 className="text-lg font-semibold">Quick Actions</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {/* Security Dashboard Module */}
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedModule('security-dashboard')}>
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-3">
+                <Shield className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="font-semibold text-sm mb-1">Security</h3>
+              <p className="text-xs text-muted-foreground">Security monitoring</p>
+            </CardContent>
+          </Card>
+
           {/* Permissions Module */}
           <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedModule('permissions')}>
             <CardContent className="p-4 text-center">
