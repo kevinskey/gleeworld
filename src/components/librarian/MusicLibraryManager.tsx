@@ -200,8 +200,8 @@ export const MusicLibraryManager = () => {
     <div className="space-y-6">
       {/* Header with Search and Filters */}
       <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Music className="h-5 w-5" />
               <span className="text-lg font-semibold">Music Library</span>
