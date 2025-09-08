@@ -92,7 +92,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     GleeWorld
                   </span>
                 </Link>
-                <HeaderClock className="text-sm ml-3 md:mr-8 lg:mr-10" />
+                <HeaderClock className="text-sm ml-2 md:ml-3 md:mr-8 lg:mr-10 hidden sm:block" />
               </div>
             </EnhancedTooltip>
             
@@ -104,8 +104,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
           <div className="flex-1 md:hidden"></div>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-5">
-            <HeaderRadioControls />
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 lg:gap-5 flex-shrink-0">
+            <div className="flex-shrink-0"><HeaderRadioControls /></div>
             <MusicalToolkit />
             
             {user && (
