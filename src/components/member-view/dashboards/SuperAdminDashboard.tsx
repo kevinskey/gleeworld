@@ -431,7 +431,7 @@ export const SuperAdminDashboard = ({
     const moduleConfig = ModuleRegistry.getModule(selectedModule);
     if (moduleConfig && moduleConfig.component) {
       const ModuleComponent = moduleConfig.component;
-      return <div className="min-h-screen p-6">
+      return <div className="min-h-screen p-4 md:p-6 lg:p-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
             <Button variant="ghost" size="sm" onClick={() => setSelectedModule(null)} className="p-0 h-auto">
               Super Admin Dashboard
