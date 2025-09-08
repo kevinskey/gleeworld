@@ -242,55 +242,55 @@ export const LiveStudentInterface: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Beautiful Classroom Display */}
-      <div className="bg-gradient-to-br from-rose-400 via-orange-300 to-amber-300 p-8 rounded-3xl shadow-xl border border-white/20 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-slate-700 via-slate-600 to-slate-500 p-8 rounded-3xl shadow-xl border border-slate-400/20 relative overflow-hidden">
         {/* Decorative elements */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent"></div>
-        <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/20 rounded-full blur-xl"></div>
-        <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-amber-400/30 rounded-full blur-2xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent"></div>
+        <div className="absolute -top-4 -right-4 w-24 h-24 bg-amber-400/20 rounded-full blur-xl"></div>
+        <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-rose-400/20 rounded-full blur-2xl"></div>
         
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
           {/* Live Response Count */}
-          <div className="bg-white/30 backdrop-blur-xl rounded-3xl p-6 border border-white/40 shadow-lg">
+          <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 shadow-lg">
             <div className="text-center">
-              <div className="text-5xl mb-2">🎵</div>
-              <div className="text-6xl md:text-7xl font-light text-white mb-2 tracking-tight">
+              <div className="text-4xl mb-2">🎵</div>
+              <div className="text-5xl md:text-6xl font-light text-gray-800 mb-2 tracking-tight">
                 {totalResponses}
               </div>
-              <div className="text-lg font-medium text-white/90 tracking-wide">
-                Beautiful Responses
+              <div className="text-lg font-medium text-gray-700 tracking-wide">
+                Responses
               </div>
-              <div className="text-sm text-white/70 mt-1 font-light">
+              <div className="text-sm text-gray-600 mt-1 font-light">
                 Question {activePoll.current_question_index + 1} of {activePoll.questions.length}
               </div>
             </div>
           </div>
 
           {/* Poll Status */}
-          <div className="bg-white/30 backdrop-blur-xl rounded-3xl p-6 border border-white/40 shadow-lg">
+          <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 shadow-lg">
             <div className="text-center">
               <div className="text-4xl mb-3">✨</div>
-              <div className="text-xl font-medium text-white mb-2 leading-relaxed">
+              <div className="text-xl font-medium text-gray-800 mb-2 leading-relaxed">
                 {activePoll.title}
               </div>
               <div className="flex items-center justify-center gap-2 mt-3">
-                <div className="w-2 h-2 bg-rose-200 rounded-full animate-pulse"></div>
-                <span className="text-base font-light text-white/90 tracking-wide">Live Session</span>
-                <div className="w-2 h-2 bg-rose-200 rounded-full animate-pulse delay-75"></div>
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span className="text-base font-medium text-gray-700 tracking-wide">Live Session</span>
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse delay-75"></div>
               </div>
             </div>
           </div>
 
           {/* Participation Rate */}
-          <div className="bg-white/30 backdrop-blur-xl rounded-3xl p-6 border border-white/40 shadow-lg">
+          <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 shadow-lg">
             <div className="text-center">
-              <div className="text-5xl mb-2">🌟</div>
-              <div className="text-5xl md:text-6xl font-light text-white mb-2 tracking-tight">
+              <div className="text-4xl mb-2">🌟</div>
+              <div className="text-4xl md:text-5xl font-light text-gray-800 mb-2 tracking-tight">
                 {totalResponses > 0 ? Math.round((totalResponses / 30) * 100) : 0}%
               </div>
-              <div className="text-lg font-medium text-white/90 tracking-wide">
-                Class Harmony
+              <div className="text-lg font-medium text-gray-700 tracking-wide">
+                Participation
               </div>
-              <div className="text-sm text-white/70 mt-1 font-light">
+              <div className="text-sm text-gray-600 mt-1 font-light">
                 Every voice matters!
               </div>
             </div>
@@ -299,7 +299,7 @@ export const LiveStudentInterface: React.FC = () => {
       </div>
 
       {/* Poll Header */}
-      <Card className="bg-gradient-to-r from-rose-50 via-orange-50 to-amber-50 border border-rose-200/50 shadow-lg backdrop-blur-sm">
+      <Card className="bg-white/95 backdrop-blur-sm border border-gray-200 shadow-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -357,10 +357,10 @@ export const LiveStudentInterface: React.FC = () => {
                   disabled={hasSubmitted || submitting}
                   className={`w-full text-left justify-start p-4 h-auto transition-all duration-300 ${
                     userResponse === index
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-xl border-0 transform scale-[1.02]'
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg border-0 transform scale-[1.02]'
                       : hasSubmitted
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                      : 'bg-white hover:bg-gradient-to-r hover:from-rose-50 hover:to-orange-50 text-gray-900 border border-rose-200/50 hover:border-rose-300 shadow-sm hover:shadow-md hover:transform hover:scale-[1.01]'
+                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200'
+                      : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md hover:transform hover:scale-[1.01]'
                   }`}
                 >
                   <span className="font-medium mr-3">
@@ -374,34 +374,34 @@ export const LiveStudentInterface: React.FC = () => {
             // Results Display Mode
             <div className="space-y-4">
               {/* Beautiful Results Display for Classroom */}
-              <div className="bg-gradient-to-br from-emerald-400 via-teal-300 to-cyan-300 p-8 rounded-3xl shadow-xl border border-white/20 relative overflow-hidden mb-8">
+              <div className="bg-gradient-to-br from-slate-700 via-slate-600 to-slate-500 p-8 rounded-3xl shadow-xl border border-slate-400/20 relative overflow-hidden mb-8">
                 {/* Decorative elements */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent"></div>
-                <div className="absolute -top-6 -right-6 w-32 h-32 bg-white/20 rounded-full blur-2xl"></div>
-                <div className="absolute -bottom-6 -left-6 w-40 h-40 bg-cyan-400/30 rounded-full blur-3xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent"></div>
+                <div className="absolute -top-6 -right-6 w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl"></div>
+                <div className="absolute -bottom-6 -left-6 w-40 h-40 bg-blue-400/20 rounded-full blur-3xl"></div>
                 
                 <div className="relative z-10 text-center">
-                  <div className="text-5xl mb-6">🎼 Live Results</div>
+                  <div className="text-4xl mb-6 text-white">🎼 Live Results</div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {responseStats.map((stat, index) => (
-                      <div key={index} className="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/50 shadow-lg transform hover:scale-105 transition-all duration-300">
-                        <div className="text-4xl md:text-6xl font-light text-white mb-3 tracking-tight">
+                      <div key={index} className="bg-white/95 backdrop-blur-xl rounded-2xl p-6 border border-gray-200 shadow-lg transform hover:scale-105 transition-all duration-300">
+                        <div className="text-3xl md:text-5xl font-light text-gray-800 mb-3 tracking-tight">
                           {stat.count}
                         </div>
-                        <div className="text-2xl font-medium text-white/90 mb-2">
+                        <div className="text-xl font-medium text-gray-700 mb-2">
                           {String.fromCharCode(65 + index)}
                         </div>
-                        <div className="text-lg text-white/80 font-light">
+                        <div className="text-lg text-gray-600 font-light">
                           {stat.percentage.toFixed(0)}%
                         </div>
                         {stat.isCorrect && (
-                          <div className="text-3xl mt-3 animate-bounce">🌟</div>
+                          <div className="text-2xl mt-3 animate-bounce">🌟</div>
                         )}
                       </div>
                     ))}
                   </div>
-                  <div className="text-2xl text-white/90 mt-8 font-light tracking-wide">
-                    {totalResponses} beautiful responses received ✨
+                  <div className="text-xl text-white/90 mt-8 font-light tracking-wide">
+                    {totalResponses} responses received ✨
                   </div>
                 </div>
               </div>
