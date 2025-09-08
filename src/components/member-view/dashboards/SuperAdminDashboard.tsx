@@ -172,7 +172,7 @@ export const SuperAdminDashboard = ({
     coordinateGetter: sortableKeyboardCoordinates
   }));
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
-  const [showAllModules, setShowAllModules] = useState(false);
+  const [showAllModules, setShowAllModules] = useState(true);
   const [overviewCollapsed, setOverviewCollapsed] = useState(true);
 
   // Search and Filter State
@@ -436,19 +436,12 @@ export const SuperAdminDashboard = ({
     }
   }
   return <div className="space-y-4">
-      {/* Header with Module Toggle */}
-      <div className="flex items-center justify-between">
-        <div className="border-l-4 border-primary pl-4">
-          <h1 className="text-xl lg:text-2xl font-bold flex items-center gap-2">
-            <Crown className="h-6 w-6 text-purple-600" />
-            Super Admin Dashboard
-          </h1>
-          
-        </div>
-        <Button onClick={() => setShowAllModules(!showAllModules)} variant={showAllModules ? "default" : "outline"} className="flex items-center gap-2 h-8 px-4 text-sm">
-          <Grid3X3 className="h-4 w-4" />
-          {showAllModules ? "Show Overview" : "Show All Modules"}
-        </Button>
+      {/* Header */}
+      <div className="border-l-4 border-primary pl-4">
+        <h1 className="text-xl lg:text-2xl font-bold flex items-center gap-2">
+          <Crown className="h-6 w-6 text-purple-600" />
+          Super Admin Dashboard
+        </h1>
       </div>
 
       {/* Search and Filter Controls */}
