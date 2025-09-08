@@ -3,20 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  BookOpen, 
-  Upload, 
-  Camera, 
-  FileSpreadsheet, 
-  Package, 
-  BarChart3,
-  FileText,
-  MapPin,
-  Clock,
-  AlertCircle,
-  ArrowLeft,
-  Home
-} from 'lucide-react';
+import { BookOpen, Upload, Camera, FileSpreadsheet, Package, BarChart3, FileText, MapPin, Clock, AlertCircle, ArrowLeft, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { PDFImportManager } from './PDFImportManager';
@@ -24,36 +11,24 @@ import { PhysicalInventoryManager } from './PhysicalInventoryManager';
 import { LibrarianStats } from './LibrarianStats';
 import { CSVImportExport } from './CSVImportExport';
 import { DocumentScanner } from './DocumentScanner';
-
 export const LibrarianDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showScanner, setShowScanner] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   console.log('🔍 LibrarianDashboard component rendering');
-
-  return (
-    <div className="container mx-auto p-4 space-y-6">
+  return <div className="container mx-auto p-4 space-y-6">
       {/* Navigation Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2"
-          >
+          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>
           <div className="h-6 w-px bg-border" />
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2"
-          >
+          <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="flex items-center gap-2">
             <Home className="h-4 w-4" />
             Home
           </Button>
@@ -67,9 +42,7 @@ export const LibrarianDashboard = () => {
             <BookOpen className="h-8 w-8" />
             Music Librarian Dashboard
           </h1>
-          <p className="text-muted-foreground">
-            Manage both digital PDFs and physical hard copy scores
-          </p>
+          
         </div>
 
         {/* Quick Actions */}
@@ -195,20 +168,14 @@ export const LibrarianDashboard = () => {
       </Tabs>
 
       {/* Document Scanner Modal */}
-      {showScanner && (
-        <DocumentScanner
-          onClose={() => setShowScanner(false)}
-          onComplete={(pdfUrl, metadata) => {
-            setShowScanner(false);
-            toast({
-              title: "Document Scanned Successfully",
-              description: `"${metadata.title}" has been scanned and saved to the music library.`,
-            });
-            // Optionally switch to PDF import tab to show the completed upload
-            setActiveTab('pdf-import');
-          }}
-        />
-      )}
-    </div>
-  );
+      {showScanner && <DocumentScanner onClose={() => setShowScanner(false)} onComplete={(pdfUrl, metadata) => {
+      setShowScanner(false);
+      toast({
+        title: "Document Scanned Successfully",
+        description: `"${metadata.title}" has been scanned and saved to the music library.`
+      });
+      // Optionally switch to PDF import tab to show the completed upload
+      setActiveTab('pdf-import');
+    }} />}
+    </div>;
 };
