@@ -45,9 +45,10 @@ export const JournalGradingManager = () => {
   useEffect(() => {
     loadSubmissions();
     
-    // Set up real-time subscription for journal entries
+    // Set up real-time subscription for journal entries with unique channel name
+    const channelName = `journal-entries-admin-${Math.random().toString(36).substr(2, 9)}`;
     const channel = supabase
-      .channel('journal-entries-changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
