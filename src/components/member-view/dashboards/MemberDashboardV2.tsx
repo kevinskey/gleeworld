@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Heart, HeartPulse, Megaphone, Bell, Mail, Users2, Link as LinkIcon, ExternalLink, Sparkles } from "lucide-react";
+import { Heart, HeartPulse, Megaphone, Bell, Mail, Users2, Link as LinkIcon, ExternalLink, Sparkles, Calendar as CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -54,7 +54,6 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
   const [mError, setMError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [calendarCollapsed, setCalendarCollapsed] = useState(true);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -181,37 +180,6 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
           </Card>
         </section>
 
-{/* Calendar for all members (collapsed by default) */}
-<section aria-label="Member calendar" className="animate-fade-in">
-  <div className="flex items-center justify-between mb-2">
-    <h2 className="text-base font-semibold">Glee Calendar</h2>
-    <Button
-      variant="ghost"
-      size="sm"
-      aria-controls="member-glee-calendar"
-      aria-expanded={!calendarCollapsed}
-      onClick={() => setCalendarCollapsed((v) => !v)}
-    >
-      {calendarCollapsed ? 'Expand' : 'Collapse'}
-    </Button>
-  </div>
-  {!calendarCollapsed && (
-    <Suspense fallback={
-      <Card className="glass-dashboard-card">
-        <CardHeader>
-          <CardTitle>Glee Calendar</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="py-6">Loading calendar…</div>
-        </CardContent>
-      </Card>
-    }>
-      <div id="member-glee-calendar">
-        <CalendarViewsLazy />
-      </div>
-    </Suspense>
-  )}
-</section>
 
         {/* Member Sight Reading Studio */}
         <section className="mb-6">
@@ -284,6 +252,27 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
 
         <section>
           <Accordion type="multiple" className="w-full">
+            {/* Calendar */}
+            <AccordionItem value="calendar">
+              <AccordionTrigger className="text-base">
+                <div className="flex items-center gap-2"><CalendarIcon className="h-4 w-4 text-primary" /> Glee Calendar</div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <Suspense fallback={
+                  <Card className="glass-dashboard-card">
+                    <CardHeader>
+                      <CardTitle>Glee Calendar</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="py-6">Loading calendar…</div>
+                    </CardContent>
+                  </Card>
+                }>
+                  <CalendarViewsLazy />
+                </Suspense>
+              </AccordionContent>
+            </AccordionItem>
+
             {/* Announcements */}
             <AccordionItem value="announcements">
               <AccordionTrigger className="text-base">
