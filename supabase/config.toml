@@ -180,9 +180,3 @@ verify_jwt = false
 
 [functions.appointment-customer-portal]
 verify_jwt = false
-
-[functions.gw-send-sms]
-verify_jwt = false
-
-[functions.send-group-sms]
-verify_jwt = true

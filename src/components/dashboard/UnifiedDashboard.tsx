@@ -289,9 +289,9 @@ export const UnifiedDashboard = () => {
 
   // Default view: If user is super admin and on default /dashboard route, show the SuperAdminDashboard
   if ((profile?.is_super_admin || profile?.role === 'super-admin') && viewMode === 'default') {
-    return <div className="min-h-screen">
+    return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         
-        <div className="py-2 sm:py-4 md:py-6 lg:py-4 max-w-7xl mx-auto">
+        <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
           <SuperAdminDashboard user={{
           id: profile.user_id,
           email: profile.email || '',

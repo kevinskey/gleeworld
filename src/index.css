@@ -7,119 +7,70 @@
 
 @layer base {
   :root {
-    /* Accessible Design System for GleeWorld - Reduced Eye Strain */
+    /* High-Contrast Design System for GleeWorld */
     
-    /* Spelman Brand Colors (locked) */
-    --blue-900: 212 95% 19%; /* #0B2F5F */
-    --blue-800: 212 88% 25%; /* #0D3A75 */
-    --blue-700: 212 81% 31%; /* #114488 - primary */
-    --blue-300: 203 85% 63%; /* #55BBEE */
+    /* Core Brand Colors - Bold and Professional */
+    --spelman-blue-dark: 212 100% 15%; /* Deep navy blue - maximum impact */
+    --spelman-blue-light: 212 100% 45%; /* Vibrant blue - high visibility */
+    --spelman-gold: 45 100% 55%; /* Elegant gold accent */
     
-    /* Accessible Secondary Palette */
-    --teal: 186 88% 30%; /* #0E7C86 */
-    --emerald: 122 47% 35%; /* #2E7D32 */
-    --amber: 36 68% 42%; /* #B7791F */
-    --crimson: 4 79% 41%; /* #B3261E */
-    --orchid: 254 100% 66%; /* #7C4DFF */
-    
-    /* Slate Ramp for Text/Backgrounds */
-    --slate-900: 222 84% 5%; /* #0F172A */
-    --slate-800: 215 28% 17%; /* #1E293B */
-    --slate-700: 215 20% 27%; /* #334155 */
-    --slate-600: 215 16% 37%; /* #475569 */
-    --slate-500: 215 20% 47%; /* #64748B */
-    --slate-400: 215 20% 65%; /* #94A3B8 */
-    --slate-300: 214 32% 78%; /* #CBD5E1 */
-    --slate-200: 214 32% 91%; /* #E2E8F0 */
-    --slate-100: 220 14% 96%; /* #F1F5F9 */
-    --slate-50: 210 20% 98%; /* #F8FAFC */
-    
-    /* Base Backgrounds - Improved contrast */
-    --bg: 216 20% 93%; /* Darker background for better contrast */
-    --surface: 0 0% 100%; /* Pure white for cards */
-    --surface-alt: 210 20% 96%; /* Light background for sections */
-    
-    /* Text Colors - Enhanced contrast */
-    --text: 215 30% 20%; /* Darker text for better readability */
-    --text-muted: 215 20% 40%; /* Improved muted text contrast */
-    --text-inverse: 0 0% 100%;
-    
-    /* Links - Slightly muted */
-    --link: 215 50% 40%; /* Softer blue */
-    --link-hover: 142 47% 35%; /* Green on hover */
-    --link-visited: 254 50% 50%; /* Purple for visited */
-    
-    /* Primary Design System Tokens */
-    --primary: var(--blue-700);
-    --primary-foreground: var(--text-inverse);
-    --secondary: var(--slate-200);
-    --secondary-foreground: var(--text);
-    
-    /* Backgrounds - Using softer tones */
-    --background: var(--bg);
-    --foreground: var(--text);
-    
-    /* Card System */
-    --card: var(--surface);
-    --card-foreground: var(--text);
-    
-    /* Popover and Dropdowns */
-    --popover: var(--surface);
-    --popover-foreground: var(--text);
-    
-    /* Muted Elements */
-    --muted: var(--slate-100);
-    --muted-foreground: var(--text-muted);
-    
-    /* Accent for Interactive Elements */
-    --accent: var(--slate-100);
-    --accent-foreground: var(--text);
-    
-    /* State Colors - AA Compliant */
-    --success: var(--emerald);
-    --warning: var(--amber);
-    --error: var(--crimson);
-    --info: var(--blue-700);
-    
-    /* System Colors */
-    --destructive: var(--error);
-    --destructive-foreground: var(--text-inverse);
-    
-    /* Borders and Focus */
-    --border: var(--slate-300);
-    --input: var(--surface);
-    --ring: var(--blue-300); /* Focus ring color */
-    
-    /* Border Radius */
-    --radius: 12px; /* Cards */
-    --radius-sm: 8px; /* Inputs */
-    
-    /* Elevation Shadows */
-    --shadow-1: 0 1px 2px rgba(2,6,23,.06);
-    --shadow-2: 0 2px 8px rgba(2,6,23,.08);
-    --shadow-3: 0 10px 24px rgba(2,6,23,.12);
+    /* Primary Brand Palette */
+    --primary: var(--spelman-blue-dark);
+    --primary-foreground: 0 0% 100%; /* Pure white for maximum contrast */
 
-    /* Spacing Scale - Responsive */
-    --space-1: 4px;
-    --space-2: 8px;
-    --space-3: 12px;
-    --space-4: 16px;
-    --space-5: 24px;
-    --space-6: 32px;
-    --space-7: 48px;
-    --space-8: 64px;
+    /* Secondary Accent Colors */
+    --secondary: var(--spelman-blue-light);
+    --secondary-foreground: 0 0% 100%; /* White text on blue */
     
-    /* Enhanced Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(var(--blue-700)), hsl(var(--blue-300)));
-    --gradient-card: linear-gradient(145deg, hsl(var(--surface)), hsl(var(--slate-50)));
+    /* High-Contrast Backgrounds */
+    --background: 0 0% 100%; /* Pure white background */
+    --foreground: 0 0% 8%; /* Near-black text for readability */
+
+    /* Card System - Clean and Bold */
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 0 0% 8%; /* Dark text on white */
+
+    /* Popover and Dropdown Elements */
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 8%;
+
+    /* Muted Elements - Subtle but Readable */
+    --muted: 0 0% 96%; /* Very light gray */
+    --muted-foreground: 0 0% 25%; /* Medium dark gray */
+
+    /* Accent for Interactive Elements */
+    --accent: var(--spelman-blue-light);
+    --accent-foreground: 0 0% 100%; /* White text on blue */
+
+    /* System Colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border and Input Styling */
+    --border: 0 0% 85%; /* Visible but subtle borders */
+    --input: 0 0% 98%; /* Very light gray input backgrounds for contrast */
+    --ring: var(--spelman-blue-light); /* Blue focus rings */
+
+    --radius: 0.75rem;
+
+    /* Enhanced Color Tokens */
+    --text-secondary: 0 0% 30%; /* Readable secondary text */
+    --hover-accent: 212 100% 50%; /* Bright blue for hovers */
     
-    /* Legacy Shadow Support */
-    --shadow-card: var(--shadow-1);
-    --shadow-hover: var(--shadow-2);
-    --shadow-focus: 0 0 0 2px hsl(var(--ring));
-    --shadow-depth-1: var(--shadow-1);
-    --shadow-depth-2: var(--shadow-2);
-    --shadow-depth-3: var(--shadow-3);
+    /* Professional Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--spelman-blue-dark)), hsl(var(--spelman-blue-light)));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --gradient-accent: linear-gradient(90deg, hsl(var(--spelman-gold)), hsl(45 100% 60%));
+    
+    /* Enhanced 3D Shadow System */
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+    --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    --shadow-depth-1: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-depth-2: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.12);
+    --shadow-depth-3: 0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.16);
+    --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
     
     /* Animation Variables */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -163,48 +114,64 @@
   }
 
   .light {
-    /* Light theme inherits from root - already optimized */
+    /* High-contrast light theme - everything already optimized in root */
+    --background: 0 0% 100%; /* Pure white */
+    --foreground: 0 0% 8%; /* Near-black text */
+
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 0 0% 8%; /* Dark text */
+
+    --popover: 0 0% 100%; /* Pure white */
+    --popover-foreground: 0 0% 8%; /* Dark text */
+
+    --primary: var(--spelman-blue-dark);
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: var(--spelman-blue-light);
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 96%; /* Very light gray */
+    --muted-foreground: 0 0% 25%; /* Medium dark gray */
+
+    --accent: var(--spelman-blue-light);
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 85%;
+    --input: 0 0% 98%;
+    --ring: var(--spelman-blue-light);
   }
 
-  [data-theme="dark"] {
-    /* Dark Theme - Eye-friendly dark mode */
-    --bg: var(--slate-900);
-    --surface: 215 28% 10%; /* #111827 */
-    --surface-alt: 222 84% 4%; /* #0B1220 */
-    
-    --text: 218 11% 90%; /* #E5E7EB */
-    --text-muted: 218 11% 69%; /* #A7B0BF */
-    
-    --link: var(--blue-300);
-    --link-hover: 203 85% 73%; /* #8BC9F5 - lighter blue */
-    
-    --background: var(--bg);
-    --foreground: var(--text);
-    
-    --card: var(--surface);
-    --card-foreground: var(--text);
-    
-    --popover: var(--surface);
-    --popover-foreground: var(--text);
-    
-    --primary: var(--blue-300);
-    --primary-foreground: var(--slate-900);
-    
-    --secondary: var(--slate-800);
-    --secondary-foreground: var(--text);
-    
-    --muted: var(--slate-800);
-    --muted-foreground: var(--text-muted);
-    
-    --accent: var(--slate-800);
-    --accent-foreground: var(--text);
-    
-    --destructive: var(--crimson);
-    --destructive-foreground: var(--text);
-    
-    --border: 215 28% 20%; /* #1F2937 */
-    --input: var(--surface);
-    --ring: var(--blue-300);
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: var(--spelman-blue-light);
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 75%;
+
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 14.9%;
+    --ring: var(--spelman-blue-light);
   }
 }
 
@@ -223,118 +190,47 @@
 
   body {
     @apply bg-background text-foreground min-h-screen;
-    font-family: 'Inter', 'SF Pro Text', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
-    font-size: clamp(1rem, 0.9vw, 1.0625rem);
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
     line-height: 1.6;
-    /* Auto-hyphenation for better text flow */
-    hyphens: auto;
-    /* Constrain text blocks to 80ch max */
-    max-width: 80ch;
   }
 
-  /* Mobile-first utilities */
-  .touch-target {
-    @apply min-h-[44px] min-w-[44px];
-  }
-
-  .safe-area-pb {
-    padding-bottom: env(safe-area-inset-bottom, 0);
-  }
-
-  .line-clamp-1 {
-    @apply overflow-hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-  }
-
-  .line-clamp-2 {
-    @apply overflow-hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-
-  /* Responsive Typography System with clamp() */
+  /* Responsive typography system */
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Bebas Neue', cursive;
     font-weight: 400;
     letter-spacing: 0.025em;
     color: hsl(var(--foreground));
-    line-height: 1.2;
-    max-width: 80ch; /* Constrain headings for readability */
   }
 
   h1 {
-    font-size: clamp(1.8rem, 2vw, 2.4rem);
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl;
   }
 
   h2 {
-    font-size: clamp(1.5rem, 1.5vw, 1.9rem);
+    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl;
   }
 
   h3 {
-    font-size: clamp(1.25rem, 1.2vw, 1.5rem);
+    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl;
   }
 
-  h4, h5, h6 {
-    font-size: clamp(1rem, 0.9vw, 1.125rem);
+  h4 {
+    @apply text-base sm:text-lg md:text-xl lg:text-2xl;
   }
 
-  /* Responsive body text with optimal line length */
+  h5 {
+    @apply text-sm sm:text-base md:text-lg lg:text-xl;
+  }
+
+  h6 {
+    @apply text-xs sm:text-sm md:text-base lg:text-lg;
+  }
+
+  /* Responsive body text */
   p, div, span {
-    font-size: clamp(1rem, 0.9vw, 1.0625rem);
+    @apply text-sm sm:text-base md:text-lg;
     line-height: 1.6;
-    max-width: 80ch; /* Optimal reading width */
-  }
-  
-  /* Small text with good contrast */
-  .text-small, small {
-    font-size: clamp(0.9rem, 0.8vw, 0.95rem);
-    line-height: 1.45;
-  }
-  
-  /* Display text for hero sections */
-  .text-display {
-    font-size: clamp(2.2rem, 2.5vw, 3rem);
-    line-height: 1.2;
-    font-family: 'Bebas Neue', cursive;
-  }
-  
-  /* Ensure minimum 12px on smallest screens */
-  @media (max-width: 480px) {
-    body, p, div, span {
-      font-size: max(0.75rem, 12px);
-    }
-  }
-  
-  /* Responsive Images */
-  img {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--radius);
-  }
-  
-  /* Focus rings always visible for accessibility */
-  button:focus,
-  input:focus,
-  textarea:focus,
-  select:focus,
-  a:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px hsl(var(--ring));
-    outline-offset: 2px;
-  }
-  
-  /* Touch targets minimum 44x44px */
-  @media (max-width: 768px) {
-    button, 
-    a,
-    input[type="button"],
-    input[type="submit"] {
-      min-height: 44px;
-      min-width: 44px;
-    }
   }
 }
 
@@ -393,86 +289,17 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   }
 
-  /* Button System - Accessible States */
+  /* Button Styles - New Design System */
   .btn-primary {
-    background: hsl(var(--blue-700));
-    color: hsl(var(--text-inverse));
-    border: 1px solid hsl(var(--blue-700));
-    transition: var(--transition-smooth);
-  }
-  
-  .btn-primary:hover {
-    background: hsl(var(--blue-800));
-    border-color: hsl(var(--blue-800));
-  }
-  
-  .btn-primary:focus {
-    box-shadow: 0 0 0 2px hsl(var(--ring));
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 border-primary;
   }
   
   .btn-secondary {
-    background: hsl(var(--slate-200));
-    color: hsl(var(--text));
-    border: 1px solid hsl(var(--slate-200));
-    transition: var(--transition-smooth);
-  }
-  
-  .btn-secondary:hover {
-    background: hsl(var(--slate-300));
-    border-color: hsl(var(--slate-300));
-  }
-  
-  .btn-tertiary {
-    background: transparent;
-    color: hsl(var(--blue-700));
-    border: none;
-    text-decoration: underline;
-  }
-  
-  .btn-tertiary:hover {
-    text-decoration: none;
-  }
-  
-  .btn-destructive {
-    background: hsl(var(--crimson));
-    color: hsl(var(--text-inverse));
-    border: 1px solid hsl(var(--crimson));
-  }
-  
-  .btn-destructive:hover {
-    background: hsl(4 79% 35%); /* Darker crimson */
+    @apply bg-background text-primary border border-primary hover:bg-secondary hover:text-secondary-foreground;
   }
   
   .btn-disabled {
-    background: hsl(var(--slate-400));
-    color: hsl(var(--slate-600));
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-  
-  /* Chip/Badge System */
-  .chip-info {
-    background: #E6F3FF; /* Light blue background */
-    color: hsl(var(--blue-700));
-    border: 1px solid #CCE7FF;
-  }
-  
-  .chip-success {
-    background: #E8F5F1; /* Light green background */
-    color: hsl(var(--emerald));
-    border: 1px solid #C3E9DD;
-  }
-  
-  .chip-warning {
-    background: #FFF4E5; /* Light amber background */
-    color: hsl(var(--amber));
-    border: 1px solid #FFE4B8;
-  }
-  
-  .chip-error {
-    background: #FDECEC; /* Light red background */
-    color: hsl(var(--crimson));
-    border: 1px solid #F5C6C6;
+    @apply bg-muted text-muted-foreground cursor-not-allowed;
   }
 
   /* Dropdown & Filter Styles */

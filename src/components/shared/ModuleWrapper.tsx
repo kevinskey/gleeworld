@@ -39,7 +39,7 @@ export const ModuleWrapper = ({
   onBack,
   stickyHeader = false,
   collapsible = true,
-  defaultOpen = false,
+  defaultOpen = true,
 }: ModuleWrapperProps) => {
   const containerClass = fullPage 
     ? "min-h-screen space-y-4" 

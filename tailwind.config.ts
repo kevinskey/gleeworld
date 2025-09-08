@@ -15,8 +15,7 @@ export default {
 			center: true,
 			padding: {
 				DEFAULT: '1rem',
-				sm: '1.5rem',
-				lg: '2rem',
+				sm: '2rem',
 			},
 			screens: {
 				'2xl': '1400px'
@@ -221,9 +220,6 @@ export default {
 			boxShadow: {
 				'glass': '0 8px 32px 0 rgba(85, 187, 238, 0.15)',
 				'glass-lg': '0 25px 50px -12px rgba(85, 187, 238, 0.25)',
-			},
-			spacing: {
-				fluid: 'clamp(1rem, 1vw + 0.5rem, 2rem)',
 			}
 		}
 	},

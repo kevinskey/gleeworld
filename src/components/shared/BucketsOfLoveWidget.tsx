@@ -26,25 +26,25 @@ export const BucketsOfLoveWidget = () => {
   };
 
   return (
-    <Card className="transition-all duration-200 hover:shadow-lg bg-card border-border" style={{ boxShadow: 'var(--shadow-1)', borderRadius: 'var(--radius)' }}>
-      <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-border/50" style={{ background: 'linear-gradient(90deg, hsl(var(--blue-700)), hsl(var(--blue-300)) 60%)', height: '4px', marginBottom: 'var(--space-4)' }}>
-        <CardTitle className="text-base flex items-center gap-2 text-foreground">
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-base flex items-center gap-2">
           <Heart className="h-4 w-4 text-primary" /> Buckets of Love
         </CardTitle>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="chip-info">Community</Badge>
+          <Badge variant="outline">Community</Badge>
           <Button
             variant="outline"
             size="sm"
             onClick={handleCleanupDuplicates}
-            className="gap-1 btn-secondary"
+            className="gap-1"
           >
             <Trash2 className="h-3 w-3" />
             Clean Dupes
           </Button>
         </div>
       </CardHeader>
-      <CardContent style={{ padding: 'var(--space-4)' }}>
+      <CardContent>
         <SendBucketOfLove />
       </CardContent>
     </Card>

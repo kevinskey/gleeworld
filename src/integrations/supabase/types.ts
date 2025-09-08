@@ -17441,10 +17441,6 @@ export type Database = {
         Args: { user_email_param: string }
         Returns: boolean
       }
-      bulk_update_user_roles_secure: {
-        Args: { new_role: string; performer_id: string; user_ids: string[] }
-        Returns: Json
-      }
       calculate_event_budget_totals: {
         Args: { event_id_param: string }
         Returns: undefined
@@ -17622,10 +17618,6 @@ export type Database = {
       }
       generate_qr_token: {
         Args: { event_id_param: string }
-        Returns: string
-      }
-      generate_secure_password: {
-        Args: { length?: number }
         Returns: string
       }
       generate_secure_qr_token: {
@@ -18115,14 +18107,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
-      require_security_confirmation: {
-        Args: {
-          operation_type: string
-          performer_id: string
-          target_resource: string
-        }
-        Returns: boolean
-      }
       save_onboarding_signature: {
         Args: {
           p_full_name: string
@@ -18345,15 +18329,6 @@ export type Database = {
       validate_password_strength: {
         Args: { password_text: string }
         Returns: Json
-      }
-      validate_secure_file_access: {
-        Args: {
-          access_type?: string
-          bucket_name: string
-          file_path_param: string
-          user_id_param: string
-        }
-        Returns: boolean
       }
       validate_signature_data: {
         Args: { signature_data: string }

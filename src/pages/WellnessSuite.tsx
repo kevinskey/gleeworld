@@ -8,37 +8,35 @@ const WellnessSuite = () => {
   const [activeTab, setActiveTab] = useState('wellness');
 
   return (
-    <div className="bg-background text-foreground min-h-screen" style={{ padding: 'var(--space-6)' }}>
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div style={{ maxWidth: '80ch' }}>
-            <h1 className="text-display font-display text-foreground">Wellness & Development Suite</h1>
-            <p className="text-muted-foreground" style={{ fontSize: 'clamp(1rem, 0.9vw, 1.0625rem)', lineHeight: '1.6' }}>
-              Track vocal health, manage gear, and monitor performance development
-            </p>
-          </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Wellness & Development Suite</h1>
+          <p className="text-muted-foreground">
+            Track vocal health, manage gear, and monitor performance development
+          </p>
         </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted border-border" style={{ borderRadius: 'var(--radius-sm)' }}>
-            <TabsTrigger value="wellness" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Vocal Health</TabsTrigger>
-            <TabsTrigger value="gear" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Uniform & Gear</TabsTrigger>
-            <TabsTrigger value="feedback" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Rehearsal Feedback</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="wellness" style={{ marginTop: 'var(--space-6)' }}>
-            <VocalHealthLog />
-          </TabsContent>
-          
-          <TabsContent value="gear" style={{ marginTop: 'var(--space-6)' }}>
-            <UniformTracker />
-          </TabsContent>
-          
-          <TabsContent value="feedback" style={{ marginTop: 'var(--space-6)' }}>
-            <RehearsalFeedback />
-          </TabsContent>
-        </Tabs>
       </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="wellness">Vocal Health</TabsTrigger>
+          <TabsTrigger value="gear">Uniform & Gear</TabsTrigger>
+          <TabsTrigger value="feedback">Rehearsal Feedback</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="wellness" className="mt-6">
+          <VocalHealthLog />
+        </TabsContent>
+        
+        <TabsContent value="gear" className="mt-6">
+          <UniformTracker />
+        </TabsContent>
+        
+        <TabsContent value="feedback" className="mt-6">
+          <RehearsalFeedback />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

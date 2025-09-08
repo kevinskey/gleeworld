@@ -17,8 +17,8 @@ export const WellnessModule = ({ user, isFullPage = false }: ModuleProps) => {
       fullPage={isFullPage}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-muted-foreground" style={{ fontSize: 'clamp(0.9rem, 0.8vw, 0.95rem)', maxWidth: '80ch' }}>Open the Wellness Suite for daily check-ins and resources.</p>
-        <Button asChild className="btn-primary">
+        <p className="text-sm text-muted-foreground">Open the Wellness Suite for daily check-ins and resources.</p>
+        <Button asChild>
           <Link to={ROUTES.WELLNESS}>Open Wellness Suite</Link>
         </Button>
       </div>

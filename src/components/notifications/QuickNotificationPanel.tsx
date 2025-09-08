@@ -207,12 +207,12 @@ export const QuickNotificationPanel: React.FC = () => {
 
         {/* SMS Warning */}
         {formData.type === 'sms' && (
-          <div key="sms-warning" className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
             <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
-              <div className="text-sm text-amber-800">
-                <p className="font-medium">SMS requires phone numbers in profiles</p>
-                <p className="text-xs mt-1">
+              <AlertTriangle className="h-4 w-4 text-white mt-0.5" />
+              <div className="text-sm text-white">
+                <p className="font-medium text-white">SMS requires phone numbers in profiles</p>
+                <p className="text-xs mt-1 text-white">
                   Members without phone numbers won't receive SMS messages.
                 </p>
               </div>
