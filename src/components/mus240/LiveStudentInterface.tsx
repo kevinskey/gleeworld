@@ -241,51 +241,65 @@ export const LiveStudentInterface: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Big Classroom Display */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 rounded-3xl shadow-2xl text-white text-center">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+      {/* Beautiful Classroom Display */}
+      <div className="bg-gradient-to-br from-rose-400 via-orange-300 to-amber-300 p-8 rounded-3xl shadow-xl border border-white/20 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent"></div>
+        <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/20 rounded-full blur-xl"></div>
+        <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-amber-400/30 rounded-full blur-2xl"></div>
+        
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
           {/* Live Response Count */}
-          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
-            <div className="text-6xl md:text-8xl font-bold text-white mb-2 animate-pulse">
-              {totalResponses}
-            </div>
-            <div className="text-xl md:text-2xl font-semibold text-white/90">
-              Responses Received
-            </div>
-            <div className="text-sm md:text-base text-white/70 mt-2">
-              Question {activePoll.current_question_index + 1} of {activePoll.questions.length}
+          <div className="bg-white/30 backdrop-blur-xl rounded-3xl p-6 border border-white/40 shadow-lg">
+            <div className="text-center">
+              <div className="text-5xl mb-2">🎵</div>
+              <div className="text-6xl md:text-7xl font-light text-white mb-2 tracking-tight">
+                {totalResponses}
+              </div>
+              <div className="text-lg font-medium text-white/90 tracking-wide">
+                Beautiful Responses
+              </div>
+              <div className="text-sm text-white/70 mt-1 font-light">
+                Question {activePoll.current_question_index + 1} of {activePoll.questions.length}
+              </div>
             </div>
           </div>
 
           {/* Poll Status */}
-          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
-            <div className="text-4xl md:text-6xl mb-4">📊</div>
-            <div className="text-xl md:text-2xl font-bold text-white mb-2">
-              {activePoll.title}
-            </div>
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="text-lg md:text-xl font-semibold text-white">LIVE POLL</span>
+          <div className="bg-white/30 backdrop-blur-xl rounded-3xl p-6 border border-white/40 shadow-lg">
+            <div className="text-center">
+              <div className="text-4xl mb-3">✨</div>
+              <div className="text-xl font-medium text-white mb-2 leading-relaxed">
+                {activePoll.title}
+              </div>
+              <div className="flex items-center justify-center gap-2 mt-3">
+                <div className="w-2 h-2 bg-rose-200 rounded-full animate-pulse"></div>
+                <span className="text-base font-light text-white/90 tracking-wide">Live Session</span>
+                <div className="w-2 h-2 bg-rose-200 rounded-full animate-pulse delay-75"></div>
+              </div>
             </div>
           </div>
 
           {/* Participation Rate */}
-          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
-            <div className="text-4xl md:text-6xl font-bold text-white mb-2">
-              {totalResponses > 0 ? Math.round((totalResponses / 30) * 100) : 0}%
-            </div>
-            <div className="text-xl md:text-2xl font-semibold text-white/90">
-              Class Participation
-            </div>
-            <div className="text-sm md:text-base text-white/70 mt-2">
-              Keep the responses coming!
+          <div className="bg-white/30 backdrop-blur-xl rounded-3xl p-6 border border-white/40 shadow-lg">
+            <div className="text-center">
+              <div className="text-5xl mb-2">🌟</div>
+              <div className="text-5xl md:text-6xl font-light text-white mb-2 tracking-tight">
+                {totalResponses > 0 ? Math.round((totalResponses / 30) * 100) : 0}%
+              </div>
+              <div className="text-lg font-medium text-white/90 tracking-wide">
+                Class Harmony
+              </div>
+              <div className="text-sm text-white/70 mt-1 font-light">
+                Every voice matters!
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Poll Header */}
-      <Card className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 shadow-lg">
+      <Card className="bg-gradient-to-r from-rose-50 via-orange-50 to-amber-50 border border-rose-200/50 shadow-lg backdrop-blur-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -293,8 +307,8 @@ export const LiveStudentInterface: React.FC = () => {
               <p className="text-gray-600 mt-1">{activePoll.description}</p>
             </div>
             <div className="flex items-center gap-3">
-              <Badge className="bg-red-600 text-white animate-pulse">
-                <div className="w-2 h-2 bg-white rounded-full mr-2"></div>
+              <Badge className="bg-gradient-to-r from-rose-500 to-pink-500 text-white animate-pulse border-0 shadow-lg">
+                <div className="w-2 h-2 bg-white rounded-full mr-2 animate-bounce"></div>
                 LIVE
               </Badge>
               <div className="text-right text-sm text-gray-600">
@@ -341,12 +355,12 @@ export const LiveStudentInterface: React.FC = () => {
                   key={index}
                   onClick={() => submitResponse(index)}
                   disabled={hasSubmitted || submitting}
-                  className={`w-full text-left justify-start p-4 h-auto transition-all duration-200 ${
+                  className={`w-full text-left justify-start p-4 h-auto transition-all duration-300 ${
                     userResponse === index
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-xl border-0 transform scale-[1.02]'
                       : hasSubmitted
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white hover:bg-orange-50 text-gray-900 border border-gray-200 hover:border-orange-300 shadow-sm'
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                      : 'bg-white hover:bg-gradient-to-r hover:from-rose-50 hover:to-orange-50 text-gray-900 border border-rose-200/50 hover:border-rose-300 shadow-sm hover:shadow-md hover:transform hover:scale-[1.01]'
                   }`}
                 >
                   <span className="font-medium mr-3">
@@ -359,29 +373,36 @@ export const LiveStudentInterface: React.FC = () => {
           ) : (
             // Results Display Mode
             <div className="space-y-4">
-              {/* Big Results Display for Classroom */}
-              <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-8 rounded-3xl shadow-2xl text-white text-center mb-8">
-                <div className="text-4xl md:text-6xl font-bold mb-4">📊 LIVE RESULTS</div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {responseStats.map((stat, index) => (
-                    <div key={index} className="bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30">
-                      <div className="text-3xl md:text-5xl font-bold text-white mb-2">
-                        {stat.count}
+              {/* Beautiful Results Display for Classroom */}
+              <div className="bg-gradient-to-br from-emerald-400 via-teal-300 to-cyan-300 p-8 rounded-3xl shadow-xl border border-white/20 relative overflow-hidden mb-8">
+                {/* Decorative elements */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent"></div>
+                <div className="absolute -top-6 -right-6 w-32 h-32 bg-white/20 rounded-full blur-2xl"></div>
+                <div className="absolute -bottom-6 -left-6 w-40 h-40 bg-cyan-400/30 rounded-full blur-3xl"></div>
+                
+                <div className="relative z-10 text-center">
+                  <div className="text-5xl mb-6">🎼 Live Results</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {responseStats.map((stat, index) => (
+                      <div key={index} className="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/50 shadow-lg transform hover:scale-105 transition-all duration-300">
+                        <div className="text-4xl md:text-6xl font-light text-white mb-3 tracking-tight">
+                          {stat.count}
+                        </div>
+                        <div className="text-2xl font-medium text-white/90 mb-2">
+                          {String.fromCharCode(65 + index)}
+                        </div>
+                        <div className="text-lg text-white/80 font-light">
+                          {stat.percentage.toFixed(0)}%
+                        </div>
+                        {stat.isCorrect && (
+                          <div className="text-3xl mt-3 animate-bounce">🌟</div>
+                        )}
                       </div>
-                      <div className="text-lg md:text-xl font-semibold text-white/90">
-                        {String.fromCharCode(65 + index)}
-                      </div>
-                      <div className="text-sm md:text-base text-white/70">
-                        {stat.percentage.toFixed(0)}%
-                      </div>
-                      {stat.isCorrect && (
-                        <div className="text-2xl mt-2">✅</div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="text-xl md:text-2xl text-white/90 mt-6">
-                  Total: {totalResponses} responses
+                    ))}
+                  </div>
+                  <div className="text-2xl text-white/90 mt-8 font-light tracking-wide">
+                    {totalResponses} beautiful responses received ✨
+                  </div>
                 </div>
               </div>
               
