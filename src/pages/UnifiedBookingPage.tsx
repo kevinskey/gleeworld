@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, CheckCircle, User, Mail, Phone, Users } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, CheckCircle, User, Mail, Phone, Users, ArrowLeft } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -629,8 +629,21 @@ export default function UnifiedBookingPage() {
         
         <div className="relative max-w-6xl mx-auto px-2 md:px-4 py-8 bg-gradient-to-br from-primary/5 via-background to-brand-400/10">
           
-          {/* Header */}
+          {/* Header with Back Button */}
           <div className="text-center mb-12">
+            {/* Back Button */}
+            <div className="flex justify-start mb-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 hover:bg-primary/10"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+            </div>
+            
             <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-full mb-6 shadow-xl animate-fade-in">
               <CalendarIcon className="h-6 w-6 text-primary-foreground" />
             </div>
