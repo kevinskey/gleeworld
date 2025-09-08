@@ -54,9 +54,17 @@ export const UniversalLayout = ({
       <main className={`flex-1 w-full overflow-x-hidden px-4 md:px-6 lg:px-8 xl:px-12 ${className}`}>
         {containerized ? (
           <ResponsiveContainer maxWidth={maxWidth}>
-            <div className="py-4 md:py-6 lg:py-8 xl:py-10">
-              {children}
-            </div>
+        <div 
+          className="py-4 md:py-6 lg:py-8 xl:py-10 relative bg-cover bg-center bg-no-repeat grayscale"
+          style={{
+            backgroundImage: `url('/lovable-uploads/46a0770f-abdd-41c3-85dc-3c75eaf35e02.png')`
+          }}
+        >
+          <div className="absolute inset-0 bg-black/20"></div>
+          <div className="relative z-10">
+            {children}
+          </div>
+        </div>
           </ResponsiveContainer>
         ) : (
           <div className="py-4 md:py-6 lg:py-8 xl:py-10">
