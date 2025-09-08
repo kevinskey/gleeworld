@@ -34,20 +34,20 @@
     --slate-100: 220 14% 96%; /* #F1F5F9 */
     --slate-50: 210 20% 98%; /* #F8FAFC */
     
-    /* Base Backgrounds - Softer than pure white */
-    --bg: var(--slate-50); /* App background */
-    --surface: 0 0% 100%; /* Surface default (white) */
-    --surface-alt: 214 100% 97%; /* #F6FAFF - tinted light blue wash */
+    /* Base Backgrounds - Much softer and warmer */
+    --bg: 218 15% 96%; /* Even softer gray-blue background */
+    --surface: 220 15% 98%; /* Very soft white for cards */
+    --surface-alt: 214 20% 95%; /* Muted background for sections */
     
-    /* Text Colors */
-    --text: 220 39% 11%; /* #0E1621 - near-black for body */
-    --text-muted: var(--slate-600);
+    /* Text Colors - Reduced contrast for less strain */
+    --text: 215 25% 27%; /* Softer dark gray for body */
+    --text-muted: 215 16% 47%; /* Lighter muted text */
     --text-inverse: 0 0% 100%;
     
-    /* Links */
-    --link: var(--blue-700);
-    --link-hover: var(--blue-800);
-    --link-visited: var(--blue-900);
+    /* Links - Slightly muted */
+    --link: 215 50% 40%; /* Softer blue */
+    --link-hover: 142 47% 35%; /* Green on hover */
+    --link-visited: 254 50% 50%; /* Purple for visited */
     
     /* Primary Design System Tokens */
     --primary: var(--blue-700);
