@@ -16,18 +16,23 @@ import { CreateEventDialog } from "./CreateEventDialog";
 import { AppointmentScheduler } from "@/components/appointments/AppointmentScheduler";
 import { AppointmentsList } from "@/components/appointments/AppointmentsList";
 import { CallMeetingDialog } from "./CallMeetingDialog";
-
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
-
 export const CalendarViews = () => {
   const [activeView, setActiveView] = useState("month");
   const [visibleCalendarIds, setVisibleCalendarIds] = useState<string[]>([]);
-  const { events, loading, fetchEvents } = useGleeWorldEvents();
-  const { user } = useAuth();
-  const { profile } = useProfile();
-  
+  const {
+    events,
+    loading,
+    fetchEvents
+  } = useGleeWorldEvents();
+  const {
+    user
+  } = useAuth();
+  const {
+    profile
+  } = useProfile();
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
   const isExecMember = profile?.role === 'executive' || isAdmin;
 
@@ -36,13 +41,10 @@ export const CalendarViews = () => {
   const filteredEvents = events.filter(event => {
     return visibleCalendarIds.length === 0 || visibleCalendarIds.includes(event.calendar_id);
   });
-
   console.log('Total events:', events.length, 'Filtered events:', filteredEvents.length, 'Filtered events:', filteredEvents.map(e => e.title));
   console.log('visibleCalendarIds:', visibleCalendarIds);
-
   if (loading) {
-    return (
-      <Card className="glass-dashboard-card">
+    return <Card className="glass-dashboard-card">
         <CardHeader>
           <CardTitle>Calendar</CardTitle>
         </CardHeader>
@@ -51,12 +53,9 @@ export const CalendarViews = () => {
             <div className="animate-pulse">Loading events...</div>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <TooltipProvider>
+  return <TooltipProvider>
       <div className="space-y-4">
         <Card className="glass-dashboard-card">
           <CardHeader className="p-0">
@@ -78,8 +77,7 @@ export const CalendarViews = () => {
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                {isExecMember && (
-                  <div className="flex justify-center">
+                {isExecMember && <div className="flex justify-center">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="w-full max-w-[120px]">
@@ -90,22 +88,17 @@ export const CalendarViews = () => {
                         <p>Create a new event for the calendar</p>
                       </TooltipContent>
                     </Tooltip>
-                  </div>
-                )}
-                {isExecMember && (
-                  <div className="flex justify-center">
+                  </div>}
+                {isExecMember && <div className="flex justify-center">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="w-full max-w-[120px]">
-                          <CallMeetingDialog onMeetingCreated={fetchEvents} />
-                        </div>
+                        
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>Call an executive board meeting</p>
                       </TooltipContent>
                     </Tooltip>
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>
           </CardHeader>
@@ -147,8 +140,7 @@ export const CalendarViews = () => {
       <CalendarFilterStrip onCalendarsChange={setVisibleCalendarIds} />
       
       {/* Admin Controls */}
-      {isAdmin && (
-        <Card className="glass-dashboard-card">
+      {isAdmin && <Card className="glass-dashboard-card">
           <CardHeader className="pb-0 pt-2">
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
               <div className="flex items-center justify-between gap-2 mb-2">
@@ -169,8 +161,7 @@ export const CalendarViews = () => {
               </div>
             </div>
           </CardHeader>
-        </Card>
-      )}
+        </Card>}
       
       {/* Appointments Section - Only visible to admins, super-admins, and secretaries */}
       {isAdmin && <AppointmentsList />}
@@ -180,6 +171,5 @@ export const CalendarViews = () => {
         <CalendarExport />
       </div>
     </div>
-    </TooltipProvider>
-  );
+    </TooltipProvider>;
 };

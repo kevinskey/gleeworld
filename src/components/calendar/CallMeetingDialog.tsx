@@ -13,7 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-
 interface ExecutiveBoardMember {
   id: string;
   user_id: string;
@@ -24,14 +23,18 @@ interface ExecutiveBoardMember {
     avatar_url?: string;
   };
 }
-
 interface CallMeetingDialogProps {
   onMeetingCreated: () => void;
 }
-
-export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+export const CallMeetingDialog = ({
+  onMeetingCreated
+}: CallMeetingDialogProps) => {
+  const {
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [execMembers, setExecMembers] = useState<ExecutiveBoardMember[]>([]);
@@ -48,9 +51,10 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
   const loadExecMembers = async () => {
     try {
       console.log('🔍 Loading executive board members...');
-      const { data, error } = await supabase
-        .from('gw_executive_board_members')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('gw_executive_board_members').select(`
           id,
           user_id,
           position,
@@ -59,21 +63,16 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
             email,
             avatar_url
           )
-        `)
-        .eq('is_active', true)
-        .order('position');
-
-      console.log('🔍 Executive board query result:', { data, error });
-
+        `).eq('is_active', true).order('position');
+      console.log('🔍 Executive board query result:', {
+        data,
+        error
+      });
       if (error) throw error;
-
       const membersWithProfiles = data?.map(member => ({
         ...member,
-        user_profile: Array.isArray(member.gw_profiles) 
-          ? member.gw_profiles[0] 
-          : member.gw_profiles
+        user_profile: Array.isArray(member.gw_profiles) ? member.gw_profiles[0] : member.gw_profiles
       })) || [];
-
       console.log('🔍 Processed executive board members:', membersWithProfiles);
       setExecMembers(membersWithProfiles);
     } catch (error) {
@@ -81,11 +80,10 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
       toast({
         title: "Error",
         description: "Failed to load executive board members",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   useEffect(() => {
     if (open) {
       loadExecMembers();
@@ -98,7 +96,6 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
       });
     }
   }, [open]);
-
   const getPositionLabel = (position: string) => {
     const positionLabels: Record<string, string> = {
       'president': 'President',
@@ -120,7 +117,6 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
     };
     return positionLabels[position] || position;
   };
-
   const getPositionColor = (position: string) => {
     const colors: Record<string, string> = {
       'president': 'bg-purple-100 text-purple-800',
@@ -131,30 +127,27 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
     };
     return colors[position] || 'bg-gray-100 text-gray-800';
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🔍 Call Meeting - Starting handleSubmit', { 
-      user: user?.id, 
-      selectedDate, 
+    console.log('🔍 Call Meeting - Starting handleSubmit', {
+      user: user?.id,
+      selectedDate,
       formData,
-      execMembersCount: execMembers.length 
+      execMembersCount: execMembers.length
     });
-    
     if (!user || !selectedDate || !formData.time) {
-      console.log('❌ Call Meeting - Missing required fields', { 
-        user: !!user, 
-        selectedDate: !!selectedDate, 
-        time: formData.time 
+      console.log('❌ Call Meeting - Missing required fields', {
+        user: !!user,
+        selectedDate: !!selectedDate,
+        time: formData.time
       });
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setLoading(true);
     try {
       console.log('🔍 Call Meeting - Creating meeting event...');
@@ -162,29 +155,25 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
       const meetingDateTime = new Date(selectedDate);
       const [hours, minutes] = formData.time.split(':').map(Number);
       meetingDateTime.setHours(hours, minutes, 0, 0);
-
       const endDateTime = new Date(meetingDateTime);
       endDateTime.setMinutes(endDateTime.getMinutes() + parseInt(formData.duration));
 
       // Get the default calendar or executive board calendar
       console.log('🔍 Call Meeting - Looking for calendar...');
-      const { data: calendars, error: calendarError } = await supabase
-        .from('gw_calendars')
-        .select('id, name')
-        .or('name.ilike.%executive%,is_default.eq.true')
-        .eq('is_visible', true)
-        .limit(1);
-
-      console.log('🔍 Call Meeting - Calendar query result:', { calendars, calendarError });
-
+      const {
+        data: calendars,
+        error: calendarError
+      } = await supabase.from('gw_calendars').select('id, name').or('name.ilike.%executive%,is_default.eq.true').eq('is_visible', true).limit(1);
+      console.log('🔍 Call Meeting - Calendar query result:', {
+        calendars,
+        calendarError
+      });
       const calendarId = calendars?.[0]?.id;
       if (!calendarId) {
         console.log('❌ Call Meeting - No calendar found');
         throw new Error('No suitable calendar found for the meeting');
       }
-
       console.log('🔍 Call Meeting - Using calendar:', calendarId);
-
       const eventData = {
         title: formData.title,
         description: formData.description + (formData.agenda ? `\n\nAgenda:\n${formData.agenda}` : ''),
@@ -197,17 +186,15 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
         status: 'scheduled',
         calendar_id: calendarId
       };
-
       console.log('🔍 Call Meeting - Event data:', eventData);
-
-      const { data: newEvent, error: eventError } = await supabase
-        .from('gw_events')
-        .insert(eventData)
-        .select()
-        .single();
-
-      console.log('🔍 Call Meeting - Event creation result:', { newEvent, eventError });
-
+      const {
+        data: newEvent,
+        error: eventError
+      } = await supabase.from('gw_events').insert(eventData).select().single();
+      console.log('🔍 Call Meeting - Event creation result:', {
+        newEvent,
+        eventError
+      });
       if (eventError) throw eventError;
 
       // Create team members for all executive board members
@@ -217,11 +204,9 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
           user_id: member.user_id,
           role: getPositionLabel(member.position)
         }));
-
-        const { error: teamError } = await supabase
-          .from('event_team_members')
-          .insert(teamMemberData);
-
+        const {
+          error: teamError
+        } = await supabase.from('event_team_members').insert(teamMemberData);
         if (teamError) {
           console.error('Error adding team members:', teamError);
         }
@@ -242,12 +227,10 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
         console.error('Error sending notifications:', notificationError);
         // Don't fail the meeting creation if notifications fail
       }
-
       toast({
         title: "Success",
-        description: `Executive Board Meeting scheduled for ${format(meetingDateTime, 'PPP')} at ${formData.time}`,
+        description: `Executive Board Meeting scheduled for ${format(meetingDateTime, 'PPP')} at ${formData.time}`
       });
-
       setOpen(false);
       onMeetingCreated();
     } catch (error) {
@@ -255,21 +238,15 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
       toast({
         title: "Error",
         description: "Failed to schedule meeting",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
+  return <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1 text-xs w-full h-12 border-primary/30 hover:bg-primary/10 px-2 flex flex-col items-center justify-center">
-          <Users className="h-4 w-4 flex-shrink-0" />
-          <span className="text-[10px] leading-tight hidden sm:inline">Call Meeting</span>
-          <span className="text-[10px] leading-tight sm:hidden">CM</span>
-        </Button>
+        
       </DialogTrigger>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -289,8 +266,7 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 max-h-96 overflow-y-auto">
-              {execMembers.map((member) => (
-                <div key={member.id} className="flex items-center gap-3 p-3 rounded-lg border">
+              {execMembers.map(member => <div key={member.id} className="flex items-center gap-3 p-3 rounded-lg border">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={member.user_profile?.avatar_url} />
                     <AvatarFallback>
@@ -305,8 +281,7 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
                       {getPositionLabel(member.position)}
                     </Badge>
                   </div>
-                </div>
-              ))}
+                </div>)}
             </CardContent>
           </Card>
 
@@ -322,71 +297,48 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <Label htmlFor="title">Meeting Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Executive Board Meeting"
-                    required
-                  />
+                  <Input id="title" value={formData.title} onChange={e => setFormData(prev => ({
+                  ...prev,
+                  title: e.target.value
+                }))} placeholder="Executive Board Meeting" required />
                 </div>
 
                 <div>
                   <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Brief description of the meeting purpose..."
-                    rows={3}
-                  />
+                  <Textarea id="description" value={formData.description} onChange={e => setFormData(prev => ({
+                  ...prev,
+                  description: e.target.value
+                }))} placeholder="Brief description of the meeting purpose..." rows={3} />
                 </div>
 
                 <div>
                   <Label>Select Date</Label>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    disabled={(date) => date < new Date()}
-                    className="rounded-md border w-full mt-2"
-                  />
+                  <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} disabled={date => date < new Date()} className="rounded-md border w-full mt-2" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="time">Time</Label>
-                    <Input
-                      id="time"
-                      type="time"
-                      value={formData.time}
-                      onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
-                      required
-                    />
+                    <Input id="time" type="time" value={formData.time} onChange={e => setFormData(prev => ({
+                    ...prev,
+                    time: e.target.value
+                  }))} required />
                   </div>
                   <div>
                     <Label htmlFor="duration">Duration (minutes)</Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      value={formData.duration}
-                      onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
-                      min="15"
-                      max="180"
-                      step="15"
-                    />
+                    <Input id="duration" type="number" value={formData.duration} onChange={e => setFormData(prev => ({
+                    ...prev,
+                    duration: e.target.value
+                  }))} min="15" max="180" step="15" />
                   </div>
                 </div>
 
                 <div>
                   <Label htmlFor="agenda">Agenda (Optional)</Label>
-                  <Textarea
-                    id="agenda"
-                    value={formData.agenda}
-                    onChange={(e) => setFormData(prev => ({ ...prev, agenda: e.target.value }))}
-                    placeholder="Meeting agenda items..."
-                    rows={4}
-                  />
+                  <Textarea id="agenda" value={formData.agenda} onChange={e => setFormData(prev => ({
+                  ...prev,
+                  agenda: e.target.value
+                }))} placeholder="Meeting agenda items..." rows={4} />
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">
@@ -402,6 +354,5 @@ export const CallMeetingDialog = ({ onMeetingCreated }: CallMeetingDialogProps) 
           </Card>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
