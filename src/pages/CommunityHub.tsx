@@ -9,22 +9,10 @@ import { VocalHealthLog } from '@/modules/wellness/vocal-health/VocalHealthLog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { 
-  MessageSquare, 
-  Bell, 
-  Heart, 
-  Mic, 
-  Activity,
-  Users,
-  Calendar,
-  Sparkles
-} from 'lucide-react';
-
+import { MessageSquare, Bell, Heart, Mic, Activity, Users, Calendar, Sparkles } from 'lucide-react';
 const CommunityHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
-
-  return (
-    <CommunityLayout>
+  return <CommunityLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -33,9 +21,7 @@ const CommunityHub: React.FC = () => {
               <Sparkles className="h-8 w-8 text-primary" />
               Community Hub
             </h1>
-            <p className="text-muted-foreground">
-              Your central space for messages, wellness, love notes, and staying connected
-            </p>
+            
           </div>
           <Badge variant="secondary" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -177,8 +163,6 @@ const CommunityHub: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </CommunityLayout>
-  );
+    </CommunityLayout>;
 };
-
 export default CommunityHub;
