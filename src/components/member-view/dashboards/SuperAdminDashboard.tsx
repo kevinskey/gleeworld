@@ -454,7 +454,7 @@ export const SuperAdminDashboard = ({
       {/* Header with Module Toggle */}
       <div className="flex items-center justify-between">
         <div className="border-l-4 border-primary pl-4">
-          <h1 className="text-xl lg:text-2xl font-bold flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold flex items-center gap-2">
             <Crown className="h-6 w-6 text-purple-600" />
             Super Admin Dashboard
           </h1>
