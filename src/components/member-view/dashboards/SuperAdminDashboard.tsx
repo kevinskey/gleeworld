@@ -173,7 +173,6 @@ export const SuperAdminDashboard = ({
     coordinateGetter: sortableKeyboardCoordinates
   }));
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
-  const [showAllModules, setShowAllModules] = useState(false);
   const [overviewCollapsed, setOverviewCollapsed] = useState(true);
 
   // Search and Filter State
@@ -463,14 +462,10 @@ export const SuperAdminDashboard = ({
             Complete system administration and module management
           </p>
         </div>
-        <Button onClick={() => setShowAllModules(!showAllModules)} variant={showAllModules ? "default" : "outline"} className="flex items-center gap-2 h-8 px-4 text-sm">
-          <Grid3X3 className="h-4 w-4" />
-          {showAllModules ? "Show Overview" : "Show All Modules"}
-        </Button>
       </div>
 
       {/* Search and Filter Controls */}
-      {showAllModules && <Card className="p-4">
+      <Card className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -513,10 +508,10 @@ export const SuperAdminDashboard = ({
               {searchQuery && ` matching "${searchQuery}"`}
               {filterCategory !== 'all' && ` in ${filterCategory.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`}
             </div> : null}
-        </Card>}
+        </Card>
 
       {/* All Modules Display */}
-      {showAllModules && <div className="space-y-6">
+      <div className="space-y-6">
           {/* Always show search results when there's a search query or filter */}
           {searchQuery.trim() || filterCategory !== 'all' ? <Card className="overflow-hidden">
               <CardHeader>
@@ -595,12 +590,10 @@ export const SuperAdminDashboard = ({
                   </Collapsible>
                 </Card>;
       })}
-        </div>}
+        </div>
 
-
-
-      {showAllModules ? (/* All Modules View */
-    <div className="space-y-8">
+      {/* All Modules View */}
+      <div className="space-y-8">
           {modulesLoading ? <div className="text-center py-8 text-lg">Loading modules...</div> : (() => {
         // Sort categories to prioritize important ones at the top
         const sortedEntries = Object.entries(sortedModulesByCategory).sort(([categoryA], [categoryB]) => {
@@ -1014,6 +1007,6 @@ export const SuperAdminDashboard = ({
                 </div>
               </div>}
           </div>
-        </div>)}
+        </div>
     </div>;
 };
