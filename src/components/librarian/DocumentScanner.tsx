@@ -12,9 +12,7 @@ import {
   RotateCw, 
   Trash2, 
   FileText, 
-  Plus,
   Download,
-  Upload,
   ScanLine,
   CheckCircle,
   AlertCircle,
@@ -25,7 +23,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFileAndGetUrl } from '@/utils/storage';
-import { processDocument } from '@/utils/documentProcessor';
 import jsPDF from 'jspdf';
 
 interface CapturedPage {
@@ -51,7 +48,6 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [capturedPages, setCapturedPages] = useState<CapturedPage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [autoProcessing, setAutoProcessing] = useState(true);
   
   // Form state for metadata
   const [title, setTitle] = useState('');
@@ -91,12 +87,17 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
         setIsCameraReady(true);
+        
+        toast({
+          title: "Camera Ready",
+          description: "Position your document within the frame and tap capture.",
+        });
       }
     } catch (error) {
       console.error('Error starting camera:', error);
       toast({
         title: "Camera Error",
-        description: "Unable to access camera. Please check permissions.",
+        description: "Unable to access camera. Please check permissions and try again.",
         variant: "destructive",
       });
       setIsScanning(false);
@@ -130,45 +131,40 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
       // Draw video frame to canvas
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      let finalCanvas = canvas;
+      // Apply basic image enhancement
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
       
-      // Apply advanced processing if enabled
-      if (autoProcessing) {
-        toast({
-          title: "Processing Document",
-          description: "Applying AI enhancement and auto-cropping...",
-        });
+      // Basic contrast enhancement for document clarity
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
         
-        try {
-          const processed = await processDocument(canvas);
-          finalCanvas = processed.canvas;
-          
-          const statusMessage = processed.enhanced 
-            ? "Auto-crop and enhancement applied successfully" 
-            : "Auto-crop applied (enhancement unavailable)";
-            
-          toast({
-            title: "Document Processed",
-            description: statusMessage,
-          });
-          
-          console.log('📄 Document processing completed:', {
-            enhanced: processed.enhanced,
-            corners: !!processed.corners,
-            canvasSize: `${processed.canvas.width}x${processed.canvas.height}`
-          });
-        } catch (error) {
-          console.error('🚨 Document processing failed:', error);
-          toast({
-            title: "Basic Capture",
-            description: "Using basic capture (processing failed)",
-            variant: "default",
-          });
+        // Convert to grayscale
+        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+        
+        // Enhance contrast for better text readability
+        let enhanced;
+        if (gray > 180) {
+          enhanced = 255; // Pure white for light areas
+        } else if (gray < 75) {
+          enhanced = 0;   // Pure black for dark areas (text)
+        } else {
+          // Enhance contrast in middle range
+          enhanced = gray > 127 ? Math.min(255, gray * 1.2) : Math.max(0, gray * 0.8);
         }
+        
+        data[i] = enhanced;     // R
+        data[i + 1] = enhanced; // G
+        data[i + 2] = enhanced; // B
+        // Alpha channel remains unchanged
       }
+      
+      context.putImageData(imageData, 0, 0);
 
       // Convert to blob
-      finalCanvas.toBlob((blob) => {
+      canvas.toBlob((blob) => {
         if (blob) {
           const pageId = `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
           const imageUrl = URL.createObjectURL(blob);
@@ -201,7 +197,7 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
       });
       setIsProcessing(false);
     }
-  }, [isCameraReady, capturedPages.length, autoProcessing, toast]);
+  }, [isCameraReady, capturedPages.length, toast]);
 
   const deletePage = useCallback((pageId: string) => {
     setCapturedPages(prev => {
@@ -212,7 +208,12 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
         pageNumber: index + 1
       }));
     });
-  }, []);
+    
+    toast({
+      title: "Page Deleted",
+      description: "Page has been removed from the document.",
+    });
+  }, [toast]);
 
   const switchCamera = useCallback(async () => {
     if (isScanning) {
@@ -246,6 +247,11 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
 
     try {
       setIsProcessing(true);
+      
+      toast({
+        title: "Generating PDF",
+        description: "Creating PDF from captured pages...",
+      });
       
       // Create PDF with captured pages
       const pdf = new jsPDF();
@@ -327,7 +333,7 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
           created_by: user?.id,
           scan_metadata: {
             pages_scanned: capturedPages.length,
-            scan_method: 'camera',
+            scan_method: 'ai_camera',
             scanned_at: new Date().toISOString(),
             camera_mode: facingMode
           }
@@ -336,7 +342,7 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
       if (error) throw error;
       
       toast({
-        title: "Success",
+        title: "Success!",
         description: `Document "${title}" scanned and saved successfully!`,
       });
       
@@ -373,58 +379,58 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
   }, [startCamera, stopCamera]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-2 md:p-4">
-      <div className="w-full h-full bg-background rounded-lg overflow-hidden flex flex-col">
-        {/* Mobile Header */}
-        <div className="flex items-center justify-between p-3 md:p-4 bg-background border-b">
+    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-2 md:p-4">
+      <div className="w-full h-full max-w-6xl max-h-[95vh] bg-background rounded-lg overflow-hidden flex flex-col shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between p-3 md:p-4 bg-background border-b shrink-0">
           <div className="flex items-center gap-2">
             <ScanLine className="h-5 w-5 text-primary" />
             <h3 className="font-semibold text-sm md:text-base">AI Document Scanner</h3>
             <Badge variant="secondary" className="text-xs">
               {capturedPages.length} page{capturedPages.length !== 1 ? 's' : ''}
             </Badge>
-            {autoProcessing && (
-              <Badge variant="default" className="text-xs flex items-center gap-1">
-                <Zap className="h-3 w-3" />
-                AI
-              </Badge>
-            )}
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant={autoProcessing ? "default" : "outline"}
-              size="sm"
-              onClick={() => setAutoProcessing(!autoProcessing)}
-              className="px-2"
-            >
-              <Crop className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-1">
             {isScanning && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={switchCamera}
-                disabled={!isCameraReady}
-                className="px-2"
+                disabled={!isCameraReady || isProcessing}
+                className="px-2 h-8"
               >
                 <RotateCw className="h-4 w-4" />
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={() => {
-              stopCamera();
-              onClose();
-            }} className="px-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                stopCamera();
+                onClose();
+              }} 
+              className="px-2 h-8"
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        {/* Mobile Layout - Responsive */}
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
           {/* Camera Panel */}
           <div className="flex-1 flex flex-col bg-black min-h-0">
             {/* Camera View */}
-            <div className="flex-1 relative bg-gray-900 min-h-[300px] md:min-h-[400px]">
+            <div className="flex-1 relative bg-gray-900 min-h-[250px] md:min-h-[400px]">
+              {!isScanning && (
+                <div className="absolute inset-0 flex items-center justify-center text-white">
+                  <div className="text-center">
+                    <Camera className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-sm">Initializing camera...</p>
+                  </div>
+                </div>
+              )}
+              
               {isScanning && (
                 <video
                   ref={videoRef}
@@ -432,25 +438,20 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
                   playsInline
                   muted
                   className="w-full h-full object-cover"
+                  style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
                 />
               )}
               
-              {/* AI-Enhanced Scanning Overlay */}
+              {/* Scanning Guide Overlay */}
               {isCameraReady && (
-                <div className="absolute inset-0 flex items-center justify-center p-4">
+                <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
                   <div className="border-2 border-primary/70 border-dashed rounded-lg w-full max-w-sm h-3/4 max-h-80 flex items-center justify-center relative">
-                    {autoProcessing && (
-                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-2 py-1 rounded text-xs flex items-center gap-1">
-                        <Zap className="h-3 w-3" />
-                        AI
-                      </div>
-                    )}
                     <div className="text-white text-center">
                       <div className="flex justify-center mb-2">
-                        {autoProcessing ? <Crop className="h-6 w-6 md:h-8 md:w-8" /> : <ScanLine className="h-6 w-6 md:h-8 md:w-8" />}
+                        <Crop className="h-6 w-6 md:h-8 md:w-8" />
                       </div>
-                      <p className="text-xs md:text-sm">
-                        {autoProcessing ? "AI will auto-crop & enhance" : "Position document within frame"}
+                      <p className="text-xs md:text-sm max-w-xs">
+                        Position document within the frame for best results
                       </p>
                     </div>
                   </div>
@@ -460,26 +461,25 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
               <canvas ref={canvasRef} className="hidden" />
             </div>
             
-            {/* AI-Enhanced Camera Controls */}
+            {/* Camera Controls */}
             {isCameraReady && (
-              <div className="p-3 md:p-4 bg-background border-t">
+              <div className="p-3 md:p-4 bg-background border-t shrink-0">
                 <div className="flex justify-center">
                   <Button
                     onClick={capturePage}
                     size="lg"
                     disabled={isProcessing}
-                    className="bg-primary hover:bg-primary/90 px-4 md:px-8 w-full max-w-xs flex items-center gap-2"
+                    className="bg-primary hover:bg-primary/90 px-4 md:px-8 w-full max-w-xs flex items-center gap-2 h-12 text-sm md:text-base font-medium"
                   >
                     {isProcessing ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                        <span className="text-sm md:text-base">Processing...</span>
+                        <span>Processing...</span>
                       </>
                     ) : (
                       <>
                         <Camera className="h-4 w-4 md:h-5 md:w-5" />
-                        <span className="text-sm md:text-base">Capture Page {capturedPages.length + 1}</span>
-                        {autoProcessing && <Zap className="h-3 w-3" />}
+                        <span>Capture Page {capturedPages.length + 1}</span>
                       </>
                     )}
                   </Button>
@@ -488,119 +488,114 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
             )}
           </div>
           
-          {/* Metadata & Pages Panel - Responsive */}
-          <div className="w-full lg:w-80 lg:border-l bg-background overflow-y-auto max-h-96 lg:max-h-none">
+          {/* Metadata & Pages Panel */}
+          <div className="w-full lg:w-80 lg:border-l bg-background overflow-y-auto max-h-96 lg:max-h-none shrink-0">
             <div className="p-3 md:p-4 space-y-3 md:space-y-4">
-              {/* Document Metadata Form - Mobile Optimized */}
-              <Card>
-                <CardHeader className="pb-2 md:pb-3">
+              {/* Document Info Form */}
+              <Card className="border-0 lg:border">
+                <CardHeader className="pb-2 md:pb-3 px-0 lg:px-6">
                   <CardTitle className="text-sm md:text-base">Document Information</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 md:space-y-3">
+                <CardContent className="space-y-2 md:space-y-3 px-0 lg:px-6">
                   <div>
-                    <Label htmlFor="doc-title" className="text-xs md:text-sm">Title *</Label>
+                    <Label htmlFor="title" className="text-xs md:text-sm">Title *</Label>
                     <Input
-                      id="doc-title"
+                      id="title"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="Enter document title"
-                      className="h-9 md:h-10 text-sm"
+                      className="h-8 md:h-9 text-sm"
+                      required
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div>
-                      <Label htmlFor="doc-composer" className="text-xs md:text-sm">Composer</Label>
+                      <Label htmlFor="composer" className="text-xs md:text-sm">Composer</Label>
                       <Input
-                        id="doc-composer"
+                        id="composer"
                         value={composer}
                         onChange={(e) => setComposer(e.target.value)}
-                        placeholder="Composer name"
-                        className="h-9 md:h-10 text-sm"
+                        placeholder="Composer"
+                        className="h-8 md:h-9 text-sm"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="doc-arranger" className="text-xs md:text-sm">Arranger</Label>
+                      <Label htmlFor="arranger" className="text-xs md:text-sm">Arranger</Label>
                       <Input
-                        id="doc-arranger"
+                        id="arranger"
                         value={arranger}
                         onChange={(e) => setArranger(e.target.value)}
-                        placeholder="Arranger name"
-                        className="h-9 md:h-10 text-sm"
+                        placeholder="Arranger"
+                        className="h-8 md:h-9 text-sm"
                       />
                     </div>
                   </div>
+
                   <div>
-                    <Label htmlFor="doc-voicing" className="text-xs md:text-sm">Voicing</Label>
+                    <Label htmlFor="voicing" className="text-xs md:text-sm">Voicing</Label>
                     <Select value={voicing} onValueChange={setVoicing}>
-                      <SelectTrigger className="h-9 md:h-10">
+                      <SelectTrigger className="h-8 md:h-9 text-sm">
                         <SelectValue placeholder="Select voicing" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="SATB">SATB</SelectItem>
-                        <SelectItem value="SSA">SSA</SelectItem>
                         <SelectItem value="SAB">SAB</SelectItem>
-                        <SelectItem value="TTB">TTB</SelectItem>
-                        <SelectItem value="SSAA">SSAA</SelectItem>
+                        <SelectItem value="SSA">SSA</SelectItem>
                         <SelectItem value="TTBB">TTBB</SelectItem>
-                        <SelectItem value="Solo">Solo</SelectItem>
                         <SelectItem value="Unison">Unison</SelectItem>
+                        <SelectItem value="Solo">Solo</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+
                   <div>
-                    <Label htmlFor="doc-notes" className="text-xs md:text-sm">Notes</Label>
+                    <Label htmlFor="notes" className="text-xs md:text-sm">Notes</Label>
                     <Textarea
-                      id="doc-notes"
+                      id="notes"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Additional notes..."
-                      rows={2}
-                      className="resize-none text-sm"
+                      className="min-h-[60px] text-sm resize-none"
+                      rows={3}
                     />
                   </div>
                 </CardContent>
               </Card>
-              
-              {/* Captured Pages - Mobile Optimized */}
-              <Card>
-                <CardHeader className="pb-2 md:pb-3">
-                  <CardTitle className="text-sm md:text-base flex items-center justify-between">
-                    Captured Pages
-                    <Badge variant="outline" className="text-xs">
-                      {capturedPages.length}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {capturedPages.length === 0 ? (
-                    <div className="text-center text-muted-foreground py-6 md:py-8">
-                      <FileText className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-xs md:text-sm">No pages captured yet</p>
-                      <p className="text-xs opacity-75">Use the camera to capture document pages</p>
-                    </div>
-                  ) : (
+
+              {/* Captured Pages */}
+              {capturedPages.length > 0 && (
+                <Card className="border-0 lg:border">
+                  <CardHeader className="pb-2 md:pb-3 px-0 lg:px-6">
+                    <CardTitle className="text-sm md:text-base flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Captured Pages ({capturedPages.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-0 lg:px-6">
                     <div className="space-y-2">
                       {capturedPages.map((page) => (
                         <div
                           key={page.id}
-                          className="flex items-center gap-2 md:gap-3 p-2 border rounded-lg"
+                          className="flex items-center gap-3 p-2 border rounded-lg"
                         >
                           <div className="relative">
                             <img
                               src={page.imageUrl}
                               alt={`Page ${page.pageNumber}`}
-                              className="w-10 h-12 md:w-12 md:h-16 object-cover rounded border"
+                              className="w-12 h-16 object-cover rounded border"
                             />
                             <Badge
                               variant="secondary"
-                              className="absolute -top-1 -right-1 text-xs h-4 w-4 md:h-5 md:w-5 p-0 flex items-center justify-center"
+                              className="absolute -top-1 -right-1 text-xs h-5 w-5 p-0 flex items-center justify-center"
                             >
                               {page.pageNumber}
                             </Badge>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs md:text-sm font-medium">Page {page.pageNumber}</p>
-                            <p className="text-xs text-muted-foreground truncate">
+                            <p className="text-sm font-medium">Page {page.pageNumber}</p>
+                            <p className="text-xs text-muted-foreground">
                               {page.timestamp.toLocaleTimeString()}
                             </p>
                           </div>
@@ -608,68 +603,49 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
                             variant="ghost"
                             size="sm"
                             onClick={() => deletePage(page.id)}
-                            className="text-destructive hover:text-destructive/90 h-7 w-7 md:h-8 md:w-8 p-0 flex-shrink-0"
+                            className="text-destructive hover:text-destructive/90 h-8 w-8 p-0"
                           >
-                            <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       ))}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-              
-              {/* Mobile-Optimized Actions */}
-              <div className="space-y-2 md:space-y-3">
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Actions */}
+              <div className="space-y-2">
                 <Button
                   onClick={generatePDF}
-                  disabled={capturedPages.length === 0 || isProcessing || !title.trim()}
-                  className="w-full h-10 md:h-11"
-                  size="sm"
+                  disabled={capturedPages.length === 0 || !title.trim() || isProcessing}
+                  className="w-full h-10 md:h-11 text-sm md:text-base font-medium"
+                  size="lg"
                 >
                   {isProcessing ? (
                     <>
-                      <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                      <span className="text-sm">Generating PDF...</span>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                      Generating PDF...
                     </>
                   ) : (
                     <>
-                      <FileText className="h-4 w-4 mr-2" />
-                      <span className="text-sm">Generate PDF ({capturedPages.length} pages)</span>
+                      <Download className="h-4 w-4 mr-2" />
+                      Generate PDF ({capturedPages.length} page{capturedPages.length !== 1 ? 's' : ''})
                     </>
                   )}
                 </Button>
                 
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9"
-                    onClick={() => {
-                      capturedPages.forEach(page => URL.revokeObjectURL(page.imageUrl));
-                      setCapturedPages([]);
-                      toast({
-                        title: "Pages Cleared",
-                        description: "All captured pages have been removed.",
-                      });
-                    }}
-                    disabled={capturedPages.length === 0}
-                  >
-                    <Trash2 className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                    <span className="text-xs md:text-sm">Clear All</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9"
-                    onClick={() => {
-                      stopCamera();
-                      onClose();
-                    }}
-                  >
-                    <span className="text-xs md:text-sm">Cancel</span>
-                  </Button>
-                </div>
+                {capturedPages.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Capture at least one page to generate PDF
+                  </p>
+                )}
+                
+                {capturedPages.length > 0 && !title.trim() && (
+                  <p className="text-xs text-destructive text-center">
+                    Title is required to generate PDF
+                  </p>
+                )}
               </div>
             </div>
           </div>
