@@ -184,6 +184,10 @@ export const SuperAdminDashboard = ({
   // Initialize collapsed sections - default all categories to collapsed
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
     const initialCollapsed: Record<string, boolean> = {};
+    // Get all categories and default them to collapsed
+    Object.keys(UNIFIED_MODULE_CATEGORIES).forEach(category => {
+      initialCollapsed[category] = true; // Default to collapsed
+    });
     categories.forEach(category => {
       initialCollapsed[category] = true; // Default to collapsed
     });
