@@ -431,21 +431,29 @@ export const ComprehensiveJournalAdmin = () => {
                       <p className="text-sm whitespace-pre-wrap">{entry.content}</p>
                     </div>
 
-                    {getCommentsForEntry(entry.id).length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="font-medium">Comments on this entry:</h5>
-                        {getCommentsForEntry(entry.id).map(comment => (
-                          <div key={comment.id} className="bg-background border-l-4 border-primary pl-4 py-2">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                              <span className="font-medium">{comment.commenter_name}</span>
-                              <span>•</span>
-                              <span>{new Date(comment.created_at).toLocaleString()}</span>
+                     {getCommentsForEntry(entry.id).length > 0 && (
+                      <div className="space-y-3 mt-4 pt-4 border-t">
+                        <h5 className="font-medium text-sm flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4" />
+                          Comments ({getCommentsForEntry(entry.id).length})
+                        </h5>
+                        <div className="space-y-3">
+                          {getCommentsForEntry(entry.id).map(comment => (
+                            <div key={comment.id} className="bg-card border border-border rounded-md p-3">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                                <User className="h-3 w-3" />
+                                <span className="font-medium">{comment.commenter_name}</span>
+                                <span>•</span>
+                                <Calendar className="h-3 w-3" />
+                                <span>{new Date(comment.created_at).toLocaleDateString()}</span>
+                                <span>{new Date(comment.created_at).toLocaleTimeString()}</span>
+                              </div>
+                              <p className="text-sm text-foreground leading-relaxed">{comment.content}</p>
                             </div>
-                            <p className="text-sm">{comment.content}</p>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    )}
+                     )}
                   </div>
                 </CardContent>
               </Card>
