@@ -201,35 +201,33 @@ export const MusicLibraryManager = () => {
       {/* Header with Search and Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Music className="h-5 w-5" />
-              Music Library Management
+              <span className="text-lg font-semibold">Music Library</span>
             </div>
-            <Button onClick={openAddDialog}>
+            <Button onClick={openAddDialog} size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              Add New Item
+              Add Item
             </Button>
-          </CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by title, composer, or arranger..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+          <div className="flex flex-col gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search music..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4" />
               <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by category" />
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filter category" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map(category => (
@@ -244,113 +242,200 @@ export const MusicLibraryManager = () => {
         </CardContent>
       </Card>
 
-      {/* Music Library Table */}
+      {/* Mobile Cards / Desktop Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Composer</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Voice Parts</TableHead>
-                <TableHead>Physical Copies</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredItems.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">
-                    <div>
-                      <div className="font-semibold">{item.title}</div>
-                      {item.arranger && (
-                        <div className="text-sm text-muted-foreground">
-                          arr. {item.arranger}
-                        </div>
-                      )}
+          {/* Mobile Cards View */}
+          <div className="block lg:hidden">
+            {filteredItems.map((item) => (
+              <div key={item.id} className="border-b p-4 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-base truncate">{item.title}</h3>
+                    <div className="text-sm text-muted-foreground">
+                      {item.composer && <span>by {item.composer}</span>}
+                      {item.arranger && <span className="block">arr. {item.arranger}</span>}
                     </div>
-                  </TableCell>
-                  <TableCell>{item.composer || 'Unknown'}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {item.category || 'uncategorized'}
+                  </div>
+                  <div className="flex items-center gap-1 ml-2">
+                    {item.pdf_url && (
+                      <Button size="sm" variant="ghost" asChild className="h-8 w-8 p-0">
+                        <a href={item.pdf_url} target="_blank" rel="noopener noreferrer">
+                          <Eye className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => openEditDialog(item)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDelete(item.id)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    {item.category || 'uncategorized'}
+                  </Badge>
+                  {item.voice_parts?.slice(0, 2).map((part, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {part}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {item.voice_parts?.map((part, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {part}
-                        </Badge>
-                      )) || 'N/A'}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span>{item.physical_copies_count || 0}</span>
-                      {item.physical_location && (
-                        <Badge variant="outline" className="text-xs">
-                          {item.physical_location}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      {item.pdf_url && (
-                        <Badge variant="default" className="text-xs">
-                          PDF
-                        </Badge>
-                      )}
-                      {item.is_public && (
-                        <Badge variant="default" className="text-xs">
-                          Public
-                        </Badge>
-                      )}
-                      {item.is_featured && (
-                        <Badge variant="destructive" className="text-xs">
-                          Featured
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {item.pdf_url && (
-                        <Button size="sm" variant="ghost" asChild>
-                          <a href={item.pdf_url} target="_blank" rel="noopener noreferrer">
-                            <Eye className="h-4 w-4" />
-                          </a>
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => openEditDialog(item)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  ))}
+                  {item.voice_parts && item.voice_parts.length > 2 && (
+                    <Badge variant="secondary" className="text-xs">
+                      +{item.voice_parts.length - 2}
+                    </Badge>
+                  )}
+                </div>
+                
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Copies:</span>
+                    <span>{item.physical_copies_count || 0}</span>
+                    {item.physical_location && (
+                      <Badge variant="outline" className="text-xs">
+                        {item.physical_location}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-1">
+                    {item.pdf_url && (
+                      <Badge variant="default" className="text-xs">PDF</Badge>
+                    )}
+                    {item.is_featured && (
+                      <Badge variant="destructive" className="text-xs">Featured</Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {filteredItems.length === 0 && (
+              <div className="p-8 text-center text-muted-foreground">
+                No music items found. {searchTerm || filterCategory !== 'all' ? 'Try adjusting your search or filters.' : 'Add your first music item to get started.'}
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden lg:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Composer</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Voice Parts</TableHead>
+                  <TableHead>Copies</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          
-          {filteredItems.length === 0 && (
-            <div className="p-8 text-center text-muted-foreground">
-              No music items found. {searchTerm || filterCategory !== 'all' ? 'Try adjusting your search or filters.' : 'Add your first music item to get started.'}
-            </div>
-          )}
+              </TableHeader>
+              <TableBody>
+                {filteredItems.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">
+                      <div>
+                        <div className="font-semibold">{item.title}</div>
+                        {item.arranger && (
+                          <div className="text-sm text-muted-foreground">
+                            arr. {item.arranger}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>{item.composer || 'Unknown'}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {item.category || 'uncategorized'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {item.voice_parts?.map((part, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {part}
+                          </Badge>
+                        )) || 'N/A'}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span>{item.physical_copies_count || 0}</span>
+                        {item.physical_location && (
+                          <Badge variant="outline" className="text-xs">
+                            {item.physical_location}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {item.pdf_url && (
+                          <Badge variant="default" className="text-xs">
+                            PDF
+                          </Badge>
+                        )}
+                        {item.is_public && (
+                          <Badge variant="default" className="text-xs">
+                            Public
+                          </Badge>
+                        )}
+                        {item.is_featured && (
+                          <Badge variant="destructive" className="text-xs">
+                            Featured
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {item.pdf_url && (
+                          <Button size="sm" variant="ghost" asChild>
+                            <a href={item.pdf_url} target="_blank" rel="noopener noreferrer">
+                              <Eye className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openEditDialog(item)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            
+            {filteredItems.length === 0 && (
+              <div className="p-8 text-center text-muted-foreground">
+                No music items found. {searchTerm || filterCategory !== 'all' ? 'Try adjusting your search or filters.' : 'Add your first music item to get started.'}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
