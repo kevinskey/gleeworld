@@ -211,13 +211,19 @@ export const Mus240PollSystem = () => {
       // First, deactivate all other polls
       await supabase
         .from('mus240_polls')
-        .update({ is_active: false })
+        .update({ 
+          is_active: false,
+          is_live_session: false 
+        })
         .neq('id', pollId);
 
       // Then toggle the selected poll
       const { error } = await supabase
         .from('mus240_polls')
-        .update({ is_active: !isActive })
+        .update({ 
+          is_active: !isActive,
+          is_live_session: !isActive
+        })
         .eq('id', pollId);
 
       if (error) throw error;

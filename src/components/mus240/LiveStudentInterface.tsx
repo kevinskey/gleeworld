@@ -112,8 +112,9 @@ export const LiveStudentInterface: React.FC = () => {
       const { data, error } = await supabase
         .from('mus240_polls')
         .select('*')
+        .eq('is_active', true)
         .eq('is_live_session', true)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         throw error;

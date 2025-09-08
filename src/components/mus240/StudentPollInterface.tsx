@@ -70,7 +70,7 @@ export const StudentPollInterface: React.FC<StudentPollInterfaceProps> = ({ stud
         .from('mus240_polls')
         .select('*')
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching poll:', error);
