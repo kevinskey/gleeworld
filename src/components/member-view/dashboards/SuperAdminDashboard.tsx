@@ -62,7 +62,7 @@ const SortableModuleCard = ({
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3 flex-1">
-              <div {...listeners} className="cursor-grab active:cursor-grabbing p-2 hover:bg-muted rounded-md border border-muted-foreground/20">
+              <div {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
               </div>
               {IconComponent && <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
@@ -174,7 +174,6 @@ export const SuperAdminDashboard = ({
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [showAllModules, setShowAllModules] = useState(true);
   const [overviewCollapsed, setOverviewCollapsed] = useState(true);
-  const [filtersCollapsed, setFiltersCollapsed] = useState(true);
 
   // Search and Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -183,18 +182,17 @@ export const SuperAdminDashboard = ({
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
   // Initialize collapsed sections - default all categories to collapsed
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
-
-  // Update collapsed sections when categories change
-  useEffect(() => {
-    if (categories.length > 0) {
-      const initialCollapsed: Record<string, boolean> = {};
-      categories.forEach(category => {
-        initialCollapsed[category] = true; // Default to collapsed
-      });
-      setCollapsedSections(initialCollapsed);
-    }
-  }, [categories]);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
+    const initialCollapsed: Record<string, boolean> = {};
+    // Get all categories and default them to collapsed
+    Object.keys(UNIFIED_MODULE_CATEGORIES).forEach(category => {
+      initialCollapsed[category] = true; // Default to collapsed
+    });
+    categories.forEach(category => {
+      initialCollapsed[category] = true; // Default to collapsed
+    });
+    return initialCollapsed;
+  });
 
   // Sort and filter modules
   const filteredAndSortedModules = useMemo(() => {
@@ -445,40 +443,23 @@ export const SuperAdminDashboard = ({
       {/* Header */}
       <div className="border-l-4 border-primary pl-4">
         <h1 className="text-xl lg:text-2xl font-bold flex items-center gap-2">
-          <Crown className="h-6 w-6 text-purple-600" />
+          
           Super Admin Dashboard
         </h1>
       </div>
 
-      {/* Search Field */}
-      {showAllModules && <Card className="p-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 h-8" />
-          </div>
-        </Card>}
-
-      {/* Filter Controls */}
-      {showAllModules && <Card className="overflow-hidden">
-          <Collapsible open={!filtersCollapsed} onOpenChange={() => setFiltersCollapsed(!filtersCollapsed)}>
-            <CollapsibleTrigger className="w-full">
-              <div className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4" />
-                    <span className="text-sm font-medium">Filter Controls</span>
-                  </div>
-                  {filtersCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                </div>
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="p-3 pt-0">
-                <div className="flex flex-wrap items-center gap-3">
+      {/* Search and Filter Controls */}
+      {showAllModules && <Card className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search modules..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
+            </div>
             
             <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-[120px] h-8">
-                <SelectValue placeholder="Category" />
+              <SelectTrigger>
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
@@ -499,14 +480,11 @@ export const SuperAdminDashboard = ({
               </SelectContent>
             </Select>
 
-            <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="h-8 w-8 p-0">
+            <Button variant="outline" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-2">
               {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+              {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
             </Button>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>}
+          </div>
 
           {/* Filtered Results Count */}
           {searchQuery || filterCategory !== 'all' ? <div className="mt-4 text-sm text-muted-foreground">
@@ -514,6 +492,7 @@ export const SuperAdminDashboard = ({
               {searchQuery && ` matching "${searchQuery}"`}
               {filterCategory !== 'all' && ` in ${filterCategory.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`}
             </div> : null}
+        </Card>}
 
       {/* All Modules Display */}
       {showAllModules && <div className="space-y-6">
