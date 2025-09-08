@@ -107,13 +107,7 @@ export const ComprehensiveJournalAdmin = () => {
       
       const { data, error } = await supabase
         .from('mus240_journal_entries')
-        .select(`
-          *,
-          gw_profiles!student_id(
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       console.log('Journal entries query result:', { data, error });
@@ -123,11 +117,26 @@ export const ComprehensiveJournalAdmin = () => {
         throw error;
       }
 
-      const entries = (data as any[]).map(entry => ({
-        ...entry,
-        student_name: entry.gw_profiles?.full_name || 'Unknown Student',
-        student_email: entry.gw_profiles?.email || ''
-      }));
+      // Get student profiles separately
+      const studentIds = [...new Set(data?.map(entry => entry.student_id).filter(Boolean))];
+      let studentProfiles = [];
+      
+      if (studentIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, email')
+          .in('user_id', studentIds);
+        studentProfiles = profiles || [];
+      }
+
+      const entries = (data || []).map(entry => {
+        const profile = studentProfiles.find(p => p.user_id === entry.student_id);
+        return {
+          ...entry,
+          student_name: profile?.full_name || 'Unknown Student',
+          student_email: profile?.email || ''
+        };
+      });
 
       console.log('Processed journal entries:', entries.length);
       setJournalEntries(entries);
@@ -147,16 +156,7 @@ export const ComprehensiveJournalAdmin = () => {
       
       const { data, error } = await supabase
         .from('mus240_journal_comments')
-        .select(`
-          *,
-          gw_profiles!commenter_id(
-            full_name,
-            email
-          ),
-          mus240_journal_entries!journal_id(
-            assignment_id
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       console.log('Journal comments query result:', { data, error });
@@ -166,12 +166,39 @@ export const ComprehensiveJournalAdmin = () => {
         throw error;
       }
 
-      const commentsWithDetails = (data as any[]).map(comment => ({
-        ...comment,
-        commenter_name: comment.gw_profiles?.full_name || 'Anonymous',
-        commenter_email: comment.gw_profiles?.email || '',
-        journal_assignment_id: comment.mus240_journal_entries?.assignment_id || ''
-      }));
+      // Get commenter profiles and journal entries separately
+      const commenterIds = [...new Set(data?.map(comment => comment.commenter_id).filter(Boolean))];
+      const journalIds = [...new Set(data?.map(comment => comment.journal_id).filter(Boolean))];
+      
+      let commenterProfiles = [];
+      let journalEntries = [];
+      
+      if (commenterIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, email')
+          .in('user_id', commenterIds);
+        commenterProfiles = profiles || [];
+      }
+      
+      if (journalIds.length > 0) {
+        const { data: journals } = await supabase
+          .from('mus240_journal_entries')
+          .select('id, assignment_id')
+          .in('id', journalIds);
+        journalEntries = journals || [];
+      }
+
+      const commentsWithDetails = (data || []).map(comment => {
+        const profile = commenterProfiles.find(p => p.user_id === comment.commenter_id);
+        const journal = journalEntries.find(j => j.id === comment.journal_id);
+        return {
+          ...comment,
+          commenter_name: profile?.full_name || 'Anonymous',
+          commenter_email: profile?.email || '',
+          journal_assignment_id: journal?.assignment_id || ''
+        };
+      });
 
       console.log('Processed journal comments:', commentsWithDetails.length);
       setComments(commentsWithDetails);
@@ -191,13 +218,7 @@ export const ComprehensiveJournalAdmin = () => {
       
       const { data, error } = await supabase
         .from('assignment_submissions')
-        .select(`
-          *,
-          gw_profiles!student_id(
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .ilike('assignment_id', '%lj%')
         .order('submitted_at', { ascending: false });
 
@@ -208,11 +229,26 @@ export const ComprehensiveJournalAdmin = () => {
         throw error;
       }
 
-      const submissions = (data as any[]).map(submission => ({
-        ...submission,
-        student_name: submission.gw_profiles?.full_name || 'Unknown Student',
-        student_email: submission.gw_profiles?.email || ''
-      }));
+      // Get student profiles separately
+      const studentIds = [...new Set(data?.map(submission => submission.student_id).filter(Boolean))];
+      let studentProfiles = [];
+      
+      if (studentIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, email')
+          .in('user_id', studentIds);
+        studentProfiles = profiles || [];
+      }
+
+      const submissions = (data || []).map(submission => {
+        const profile = studentProfiles.find(p => p.user_id === submission.student_id);
+        return {
+          ...submission,
+          student_name: profile?.full_name || 'Unknown Student',
+          student_email: profile?.email || ''
+        };
+      });
 
       console.log('Processed file submissions:', submissions.length);
       setFileSubmissions(submissions);
