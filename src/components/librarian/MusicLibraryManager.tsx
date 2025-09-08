@@ -206,7 +206,7 @@ export const MusicLibraryManager = () => {
               <Music className="h-5 w-5" />
               <span className="text-lg font-semibold">Music Library</span>
             </div>
-            <Button onClick={openAddDialog} size="sm">
+            <Button onClick={openAddDialog} size="sm" className="pt-3">
               <Plus className="h-4 w-4 mr-2" />
               Add Item
             </Button>
