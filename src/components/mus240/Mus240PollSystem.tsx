@@ -13,6 +13,7 @@ import { LivePollResults } from './LivePollResults';
 import { StudentPollInterface } from './StudentPollInterface';
 import { LiveQuestionController } from './LiveQuestionController';
 import { LiveStudentInterface } from './LiveStudentInterface';
+import { TextPollCreator } from './TextPollCreator';
 
 interface Poll {
   id: string;
@@ -296,8 +297,9 @@ export const Mus240PollSystem = () => {
         </Button>
       </div>
       <Tabs defaultValue="manage" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="manage">Manage Polls</TabsTrigger>
+          <TabsTrigger value="create">Create from Text</TabsTrigger>
           <TabsTrigger value="results">Live Results</TabsTrigger>
           <TabsTrigger value="student">Student View</TabsTrigger>
         </TabsList>
@@ -464,6 +466,10 @@ export const Mus240PollSystem = () => {
               )}
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="create" className="space-y-6">
+          <TextPollCreator onPollCreated={fetchPolls} />
         </TabsContent>
 
         <TabsContent value="results">
