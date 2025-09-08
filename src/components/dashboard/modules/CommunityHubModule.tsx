@@ -49,36 +49,7 @@ export const CommunityHubModule = () => {
   return <div className="h-full flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/10">
       {/* Add QuickActions at the top */}
       
-      <div className="p-4 md:p-6 border-b border-border bg-gradient-to-r from-primary/15 via-accent/10 to-secondary/15">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <h1 className="text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
-              Community Hub
-            </h1>
-            
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant={activeTab === 'announcements' ? 'secondary' : 'outline'} onClick={() => handleTabToggle('announcements')} className="hover-scale">
-              Announcements
-            </Button>
-            <Button size="sm" variant={activeTab === 'wellness' ? 'secondary' : 'outline'} onClick={() => handleTabToggle('wellness')} className="hover-scale">
-              Wellness
-            </Button>
-            <Button size="sm" variant={activeTab === 'buckets' ? 'secondary' : 'outline'} onClick={() => handleTabToggle('buckets')} className="hover-scale">
-              <Heart className="h-4 w-4 mr-1" />
-              <span className="md:hidden">Bucket</span>
-              <span className="hidden md:inline">Bucket of Love</span>
-            </Button>
-            <Button size="sm" variant={activeTab === 'notifications' ? 'secondary' : 'outline'} onClick={() => handleTabToggle('notifications')} className="hover-scale">
-              <Bell className="h-4 w-4 mr-1" /> Notifications
-            </Button>
-            <SendBucketOfLove trigger={<Button size="sm" variant="ghost" className="hover-scale">
-                  <Send className="h-4 w-4 mr-1" /> Send Love
-                </Button>} />
-          </div>
-        </div>
-      </div>
+      
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         
@@ -99,77 +70,7 @@ export const CommunityHubModule = () => {
             </div>
           </div>
         </TabsContent>
-        <TabsContent value="announcements" className="flex-1 p-4 bg-gradient-to-b from-blue-50/50 to-background h-full overflow-hidden">
-          {announcementsLoading ? <div className="text-center text-muted-foreground">
-              <MessageSquare className="w-12 h-12 mx-auto mb-3 text-blue-500 animate-pulse" />
-              <p className="font-medium text-blue-700 mb-2">Loading announcements...</p>
-            </div> : announcements.length === 0 ? <div className="text-center text-muted-foreground">
-              <MessageSquare className="w-12 h-12 mx-auto mb-3 text-blue-500" />
-              <p className="font-medium text-blue-700 mb-2">No new announcements</p>
-              <p className="text-sm">Stay tuned for important updates</p>
-            </div> : <ScrollArea className="h-full">
-              <div className="space-y-3 pb-4">
-                {announcements.slice(0, 5).map(announcement => <Card key={announcement.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <CardTitle className="text-lg font-semibold text-blue-900 flex-1">
-                          {announcement.title}
-                        </CardTitle>
-                        <div className="flex items-center gap-2 ml-2">
-                          {announcement.is_featured && <Badge variant="secondary" className="text-sm">Featured</Badge>}
-                          {user?.id === announcement.created_by && <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem onSelect={e => e.preventDefault()}>
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Announcement</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Are you sure you want to delete this announcement? This action cannot be undone.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteAnnouncement(announcement.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                        Delete
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </DropdownMenuContent>
-                            </DropdownMenu>}
-                        </div>
-                      </div>
-                      {announcement.created_at && <div className="flex items-center text-sm text-muted-foreground">
-                          <Clock className="w-4 h-4 mr-2" />
-                          {format(new Date(announcement.created_at), 'MMM dd, yyyy')}
-                        </div>}
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-base text-foreground leading-relaxed">
-                        {announcement.content}
-                      </p>
-                      {announcement.announcement_type && <Badge variant="outline" className="mt-3 text-sm">
-                          {announcement.announcement_type}
-                        </Badge>}
-                    </CardContent>
-                  </Card>)}
-                {announcements.length > 5 && <Button variant="outline" size="sm" className="w-full" onClick={() => navigate('/announcements')}>
-                    View All Announcements
-                  </Button>}
-              </div>
-            </ScrollArea>}
-        </TabsContent>
+        
         
         <TabsContent value="buckets" className="flex-1 p-4 bg-gradient-to-b from-pink-50/50 to-background h-full overflow-y-auto">
           <div className="flex items-center justify-between mb-3">
