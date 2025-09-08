@@ -16,6 +16,7 @@ import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { AuditionStatsWidget } from "@/components/member-view/AuditionStatsWidget";
 import { getModulesByCategory } from "@/config/unified-modules";
 import { MemberSightReadingModule } from "@/components/modules/MemberSightReadingModule";
+import { MemberModules } from "@/components/member-view/MemberModules";
 import { QuickActions } from "@/components/community/QuickActions";
 import { ExecBoardModularHub } from "@/components/executive/ExecBoardModularHub";
 
@@ -180,6 +181,11 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
           </Card>
         </section>
 
+
+        {/* Member Tools */}
+        <section className="mb-6">
+          <MemberModules user={user} />
+        </section>
 
         {/* Member Sight Reading Studio */}
         <section className="mb-6">
