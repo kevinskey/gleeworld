@@ -103,6 +103,8 @@ export const ComprehensiveJournalAdmin = () => {
 
   const loadJournalEntries = async () => {
     try {
+      console.log('Loading journal entries...');
+      
       const { data, error } = await supabase
         .from('mus240_journal_entries')
         .select(`
@@ -114,7 +116,12 @@ export const ComprehensiveJournalAdmin = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('Journal entries query result:', { data, error });
+
+      if (error) {
+        console.error('Journal entries query error:', error);
+        throw error;
+      }
 
       const entries = (data as any[]).map(entry => ({
         ...entry,
@@ -122,12 +129,13 @@ export const ComprehensiveJournalAdmin = () => {
         student_email: entry.gw_profiles?.email || ''
       }));
 
+      console.log('Processed journal entries:', entries.length);
       setJournalEntries(entries);
     } catch (error) {
       console.error('Error loading journal entries:', error);
       toast({
         title: "Error",
-        description: "Failed to load journal entries",
+        description: `Failed to load journal entries: ${error.message}`,
         variant: "destructive"
       });
     }
@@ -135,6 +143,8 @@ export const ComprehensiveJournalAdmin = () => {
 
   const loadComments = async () => {
     try {
+      console.log('Loading journal comments...');
+      
       const { data, error } = await supabase
         .from('mus240_journal_comments')
         .select(`
@@ -149,7 +159,12 @@ export const ComprehensiveJournalAdmin = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('Journal comments query result:', { data, error });
+
+      if (error) {
+        console.error('Journal comments query error:', error);
+        throw error;
+      }
 
       const commentsWithDetails = (data as any[]).map(comment => ({
         ...comment,
@@ -158,12 +173,13 @@ export const ComprehensiveJournalAdmin = () => {
         journal_assignment_id: comment.mus240_journal_entries?.assignment_id || ''
       }));
 
+      console.log('Processed journal comments:', commentsWithDetails.length);
       setComments(commentsWithDetails);
     } catch (error) {
       console.error('Error loading comments:', error);
       toast({
         title: "Error",
-        description: "Failed to load comments",
+        description: `Failed to load comments: ${error.message}`,
         variant: "destructive"
       });
     }
@@ -171,6 +187,8 @@ export const ComprehensiveJournalAdmin = () => {
 
   const loadFileSubmissions = async () => {
     try {
+      console.log('Loading file submissions...');
+      
       const { data, error } = await supabase
         .from('assignment_submissions')
         .select(`
@@ -183,7 +201,12 @@ export const ComprehensiveJournalAdmin = () => {
         .ilike('assignment_id', '%lj%')
         .order('submitted_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('File submissions query result:', { data, error });
+
+      if (error) {
+        console.error('File submissions query error:', error);
+        throw error;
+      }
 
       const submissions = (data as any[]).map(submission => ({
         ...submission,
@@ -191,12 +214,13 @@ export const ComprehensiveJournalAdmin = () => {
         student_email: submission.gw_profiles?.email || ''
       }));
 
+      console.log('Processed file submissions:', submissions.length);
       setFileSubmissions(submissions);
     } catch (error) {
       console.error('Error loading file submissions:', error);
       toast({
         title: "Error",
-        description: "Failed to load file submissions",
+        description: `Failed to load file submissions: ${error.message}`,
         variant: "destructive"
       });
     }
