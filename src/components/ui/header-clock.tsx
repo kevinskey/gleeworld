@@ -72,7 +72,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
     <div className={`relative ${className}`}>
       <div className="flex items-center gap-2">
         <div
-          className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
+          className="relative w-6 h-6 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
           onMouseEnter={() => setShowCountdown(true)}
           onMouseLeave={() => setShowCountdown(false)}
           onClick={() => setShowCountdown(!showCountdown)}
@@ -83,11 +83,11 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
             {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="absolute w-0.5 h-1.5 bg-gray-700 rounded-full"
+                className="absolute w-0.5 h-1 sm:h-1.5 bg-gray-700 rounded-full"
                 style={{
-                  top: '2px',
+                  top: '1px',
                   left: '50%',
-                  transformOrigin: '50% 16px',
+                  transformOrigin: '50% 12px',
                   transform: `translateX(-50%) rotate(${i * 30}deg)`,
                 }}
               />
@@ -97,7 +97,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
             <div
               className="absolute top-1/2 left-1/2 w-0.5 bg-gray-800 rounded-full origin-bottom z-10"
               style={{
-                height: '9px',
+                height: '6px',
                 transform: `translate(-50%, -100%) rotate(${getHourAngle()}deg)`,
               }}
             />
@@ -106,13 +106,13 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
             <div
               className="absolute top-1/2 left-1/2 w-0.5 bg-gray-700 rounded-full origin-bottom z-20"
               style={{
-                height: '14px',
+                height: '9px',
                 transform: `translate(-50%, -100%) rotate(${getMinuteAngle()}deg)`,
               }}
             />
             
             {/* Center Dot */}
-            <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-spelman-blue-dark rounded-full transform -translate-x-1/2 -translate-y-1/2 z-30" />
+            <div className="absolute top-1/2 left-1/2 w-0.5 h-0.5 sm:w-1 sm:h-1 bg-spelman-blue-dark rounded-full transform -translate-x-1/2 -translate-y-1/2 z-30" />
           </div>
         </div>
         
