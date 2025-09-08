@@ -20,7 +20,7 @@ interface FeatureSlide {
   action_button_enabled: boolean | null;
   is_active: boolean | null;
 }
-export const DashboardFeaturesCarousel: React.FC = () => {
+const DashboardFeaturesCarousel: React.FC = () => {
   const [slides, setSlides] = useState<FeatureSlide[]>([]);
   const [current, setCurrent] = useState(0);
   useEffect(() => {
@@ -118,4 +118,5 @@ export const DashboardFeaturesCarousel: React.FC = () => {
       </CardContent>
     </Card>;
 };
+
 export default DashboardFeaturesCarousel;
