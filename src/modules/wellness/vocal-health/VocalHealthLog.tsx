@@ -67,7 +67,7 @@ export const VocalHealthLog = () => {
       <p className="text-muted-foreground">Complete assignments, practice sight reading, and track your progress</p>
       
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+      <div className="responsive-grid-3">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
