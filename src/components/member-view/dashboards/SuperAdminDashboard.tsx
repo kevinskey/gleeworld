@@ -302,6 +302,7 @@ export const SuperAdminDashboard = ({
   });
   const [calendarCollapsed, setCalendarCollapsed] = useState(true);
   const [quickAccessCollapsed, setQuickAccessCollapsed] = useState(true);
+  const [quickActionsCollapsed, setQuickActionsCollapsed] = useState(true);
   const handleDragEnd = (event: DragEndEvent, category: string) => {
     const {
       active,
@@ -653,12 +654,23 @@ export const SuperAdminDashboard = ({
       )}
 
       {/* Quick Action Modules */}
-      <div className="bg-gradient-to-r from-primary/5 via-background to-muted/20 rounded-lg p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Zap className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Quick Actions</h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <Card className="bg-gradient-to-r from-primary/5 via-background to-muted/20">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Zap className="h-5 w-5 text-primary" />
+              <CardTitle>Quick Actions</CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setQuickActionsCollapsed(!quickActionsCollapsed)} className="flex items-center gap-2">
+              {quickActionsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+              {quickActionsCollapsed ? 'Expand' : 'Collapse'}
+            </Button>
+          </div>
+        </CardHeader>
+        <Collapsible open={!quickActionsCollapsed}>
+          <CollapsibleContent>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {/* Permissions Module */}
           <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedModule('permissions')}>
             <CardContent className="p-4 text-center">
@@ -713,8 +725,11 @@ export const SuperAdminDashboard = ({
               <p className="text-xs text-muted-foreground">System alerts</p>
             </CardContent>
           </Card>
-        </div>
-      </div>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
 
 
       {showAllModules ? (/* All Modules View */
