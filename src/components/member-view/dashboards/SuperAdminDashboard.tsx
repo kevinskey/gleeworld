@@ -598,7 +598,7 @@ export const SuperAdminDashboard = ({
         // Sort categories to prioritize important ones at the top
         const sortedEntries = Object.entries(sortedModulesByCategory).sort(([categoryA], [categoryB]) => {
           // Define priority order - put most important categories first
-          const priorityOrder = ['administrative', 'financial', 'events', 'user-management', 'communications'];
+          const priorityOrder = ['user-management', 'music', 'administrative', 'events', 'communications', 'financial'];
           const priorityA = priorityOrder.indexOf(categoryA);
           const priorityB = priorityOrder.indexOf(categoryB);
 
