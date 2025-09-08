@@ -39,7 +39,7 @@ export const useMus240Enrollment = () => {
         .from('mus240_enrollments')
         .select('*')
         .eq('student_id', user.id)
-        .eq('semester', 'Fall 2024')
+        .eq('semester', 'Fall 2025')
         .maybeSingle();
 
       if (supabaseError) {
@@ -56,7 +56,7 @@ export const useMus240Enrollment = () => {
   };
 
   const isEnrolled = () => {
-    return enrollment?.enrollment_status === 'active';
+    return enrollment?.enrollment_status === 'enrolled';
   };
 
   return {
