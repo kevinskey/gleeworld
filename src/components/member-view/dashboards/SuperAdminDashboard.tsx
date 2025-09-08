@@ -449,11 +449,21 @@ export const SuperAdminDashboard = ({
     }
   }
   return <div className="space-y-4">
-      {/* Header */}
-      <div className="border-l-4 border-primary pl-4">
-        <h1 className="text-xl lg:text-2xl font-bold flex items-center gap-2">
-          
-          Super Admin Dashboard
+      {/* Metal Plate Header */}
+      <div className="relative bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg p-6">
+        {/* Left Rivet */}
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
+          <div className="w-2 h-2 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+        </div>
+        
+        {/* Right Rivet */}
+        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
+          <div className="w-2 h-2 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+        </div>
+        
+        {/* Centered Title */}
+        <h1 className="text-xl lg:text-2xl font-bold text-center text-slate-800 dark:text-slate-100 tracking-wide font-mono uppercase">
+          Director's Dashboard
         </h1>
       </div>
 
