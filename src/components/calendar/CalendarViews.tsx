@@ -89,16 +89,7 @@ export const CalendarViews = () => {
                       </TooltipContent>
                     </Tooltip>
                   </div>}
-                {isExecMember && <div className="flex justify-center">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Call an executive board meeting</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>}
+                {isExecMember}
               </div>
             </div>
           </CardHeader>
