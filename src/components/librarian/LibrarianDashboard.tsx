@@ -11,6 +11,7 @@ import { PhysicalInventoryManager } from './PhysicalInventoryManager';
 import { LibrarianStats } from './LibrarianStats';
 import { CSVImportExport } from './CSVImportExport';
 import { DocumentScanner } from './DocumentScanner';
+import { MusicLibraryManager } from './MusicLibraryManager';
 export const LibrarianDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showScanner, setShowScanner] = useState(false);
@@ -56,7 +57,11 @@ export const LibrarianDashboard = () => {
 
         {/* Quick Actions */}
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => setActiveTab('pdf-import')} size="sm">
+          <Button onClick={() => setActiveTab('library')} size="sm">
+            <BookOpen className="h-4 w-4 mr-2" />
+            Manage Library
+          </Button>
+          <Button onClick={() => setActiveTab('pdf-import')} size="sm" variant="outline">
             <Upload className="h-4 w-4 mr-2" />
             Import PDFs
           </Button>
@@ -76,8 +81,9 @@ export const LibrarianDashboard = () => {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="library">Library</TabsTrigger>
           <TabsTrigger value="pdf-import">PDF Import</TabsTrigger>
           <TabsTrigger value="inventory">Physical Inventory</TabsTrigger>
           <TabsTrigger value="csv">CSV Tools</TabsTrigger>
@@ -161,6 +167,10 @@ export const LibrarianDashboard = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="library">
+          <MusicLibraryManager />
         </TabsContent>
 
         <TabsContent value="pdf-import">
