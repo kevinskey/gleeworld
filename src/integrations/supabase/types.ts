@@ -17441,6 +17441,10 @@ export type Database = {
         Args: { user_email_param: string }
         Returns: boolean
       }
+      bulk_update_user_roles_secure: {
+        Args: { new_role: string; performer_id: string; user_ids: string[] }
+        Returns: Json
+      }
       calculate_event_budget_totals: {
         Args: { event_id_param: string }
         Returns: undefined
