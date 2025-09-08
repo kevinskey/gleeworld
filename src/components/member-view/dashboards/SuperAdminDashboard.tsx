@@ -545,9 +545,11 @@ export const SuperAdminDashboard = ({
                     </Button>
                   </div>}
               </CardContent>
-            </Card> :
-      // Show modules by category when no search/filter is active
-      categories.map(category => {
+            </Card>
+          ) : (
+            // Show modules by category when no search/filter is active
+            <div className="space-y-4 md:space-y-6 lg:space-y-8">
+              {categories.map(category => {
         const categoryModules = sortedModulesByCategory[category];
         if (!categoryModules || categoryModules.length === 0) return null;
         const categoryData = UNIFIED_MODULE_CATEGORIES.find(c => c.id === category);
@@ -591,11 +593,11 @@ export const SuperAdminDashboard = ({
                       </CardContent>
                     </CollapsibleContent>
                   </Collapsible>
-                </Card>;
-      })}
-        </div>
+                </Card>
+              );
+            })}
 
-          {/* Overview Cards Section - moved to bottom */}
+            {/* Overview Cards Section - moved to bottom */}
           <Card className="border-2">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -937,8 +939,7 @@ export const SuperAdminDashboard = ({
                   </Card>
                 </div>
               </div>
-              </CardContent>}
-          </Card>
+            </CardContent>}
           </Card>
         </div>
       )}
