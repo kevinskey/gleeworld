@@ -10,14 +10,14 @@ interface ResponsiveContainerProps {
 export const ResponsiveContainer = ({ 
   children, 
   className = "",
-  maxWidth = "2xl" 
+  maxWidth = "full" 
 }: ResponsiveContainerProps) => {
   const maxWidthClasses = {
-    sm: "max-w-sm",
-    md: "max-w-2xl", 
-    lg: "max-w-4xl",
-    xl: "max-w-5xl",
-    "2xl": "max-w-6xl",
+    sm: "max-w-2xl",
+    md: "max-w-4xl", 
+    lg: "max-w-6xl",
+    xl: "max-w-7xl",
+    "2xl": "max-w-screen-2xl",
     full: "max-w-full"
   };
 
