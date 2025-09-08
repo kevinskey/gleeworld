@@ -231,6 +231,8 @@ export const LiveStudentInterface: React.FC = () => {
 
   const currentQuestion = activePoll.questions[activePoll.current_question_index];
   const totalResponses = responses.length;
+  const isLastQuestion = activePoll.current_question_index === activePoll.questions.length - 1;
+  const pollCompleted = isLastQuestion && hasSubmitted && activePoll.show_results;
 
   // Calculate response percentages for results display
   const responseStats = currentQuestion?.options.map((option, index) => {
@@ -239,8 +241,134 @@ export const LiveStudentInterface: React.FC = () => {
     return { option, count, percentage, isCorrect: index === currentQuestion.correct_answer };
   }) || [];
 
+  // Poll completion state
+  if (pollCompleted) {
+    return (
+      <div className="space-y-6">
+        {/* Completion Celebration */}
+        <div className="bg-gradient-to-br from-emerald-500 via-teal-400 to-cyan-400 p-8 rounded-3xl shadow-xl border border-white/20 relative overflow-hidden text-center">
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent"></div>
+          <div className="absolute -top-4 -right-4 w-32 h-32 bg-white/20 rounded-full blur-2xl animate-pulse"></div>
+          <div className="absolute -bottom-4 -left-4 w-40 h-40 bg-yellow-400/30 rounded-full blur-3xl animate-pulse delay-75"></div>
+          
+          <div className="relative z-10">
+            <div className="text-8xl mb-6 animate-bounce">🎉</div>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+              Poll Complete!
+            </h2>
+            <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto leading-relaxed">
+              Thank you for participating in "{activePoll.title}". Your responses have been recorded and will contribute to your participation grade.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className="bg-white/20 backdrop-blur-xl rounded-2xl p-6 border border-white/30">
+                <div className="text-3xl mb-2">📚</div>
+                <div className="text-2xl font-bold text-white mb-1">
+                  {activePoll.questions.length}
+                </div>
+                <div className="text-white/80">Questions Answered</div>
+              </div>
+              
+              <div className="bg-white/20 backdrop-blur-xl rounded-2xl p-6 border border-white/30">
+                <div className="text-3xl mb-2">⭐</div>
+                <div className="text-2xl font-bold text-white mb-1">
+                  100%
+                </div>
+                <div className="text-white/80">Participation</div>
+              </div>
+              
+              <div className="bg-white/20 backdrop-blur-xl rounded-2xl p-6 border border-white/30">
+                <div className="text-3xl mb-2">🎵</div>
+                <div className="text-2xl font-bold text-white mb-1">
+                  Complete
+                </div>
+                <div className="text-white/80">Status</div>
+              </div>
+            </div>
+
+            <div className="mt-8 p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 max-w-2xl mx-auto">
+              <h3 className="text-xl font-semibold text-white mb-3">What's Next?</h3>
+              <div className="text-white/90 space-y-2">
+                <p>✓ Your responses are saved and counted toward participation</p>
+                <p>✓ Review the correct answers shown below</p>
+                <p>✓ Wait for your instructor to start the next activity</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Final Results Review */}
+        <Card className="bg-white/95 backdrop-blur-sm border border-white/30 shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-xl text-gray-900 flex items-center gap-3">
+              <span className="text-2xl">📊</span>
+              Final Results - {activePoll.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {activePoll.questions.map((question, questionIndex) => {
+                const questionResponses = responses.filter(r => r.question_index === questionIndex);
+                const questionStats = question.options.map((option, optionIndex) => {
+                  const count = questionResponses.filter(r => r.selected_option === optionIndex).length;
+                  const percentage = questionResponses.length > 0 ? (count / questionResponses.length) * 100 : 0;
+                  return { option, count, percentage, isCorrect: optionIndex === question.correct_answer };
+                });
+
+                return (
+                  <div key={questionIndex} className="border border-gray-200 rounded-xl p-6 bg-gray-50/50">
+                    <h4 className="font-semibold text-gray-900 mb-4">
+                      {questionIndex + 1}. {question.question}
+                    </h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      {questionStats.map((stat, optionIndex) => (
+                        <div
+                          key={optionIndex}
+                          className={`p-3 rounded-lg border-2 transition-all ${
+                            stat.isCorrect
+                              ? 'border-green-500 bg-green-50 text-green-900'
+                              : 'border-gray-300 bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span>
+                              <span className="font-medium mr-2">
+                                {String.fromCharCode(65 + optionIndex)}.
+                              </span>
+                              {stat.option}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              {stat.isCorrect && (
+                                <Badge className="bg-green-600 text-white">✓ Correct</Badge>
+                              )}
+                              <span className="text-sm text-gray-600">
+                                {stat.percentage.toFixed(0)}%
+                              </span>
+                            </div>
+                          </div>
+                          <Progress value={stat.percentage} className="mt-2 h-2" />
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {question.explanation && (
+                      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h5 className="font-medium text-blue-900 mb-2">💡 Explanation:</h5>
+                        <p className="text-blue-800 text-sm">{question.explanation}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6">{/* Rest of the existing component remains the same */}
       {/* Beautiful Classroom Display */}
       <div className="bg-gradient-to-br from-slate-700 via-slate-600 to-slate-500 p-8 rounded-3xl shadow-xl border border-slate-400/20 relative overflow-hidden">
         {/* Decorative elements */}
