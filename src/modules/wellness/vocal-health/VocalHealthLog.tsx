@@ -206,9 +206,10 @@ export const VocalHealthLog = () => {
           </Button>
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
-                Daily Check-in
+                <span className="hidden xs:inline">Daily Check-in</span>
+                <span className="xs:hidden">Check-in</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
