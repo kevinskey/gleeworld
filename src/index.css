@@ -7,70 +7,119 @@
 
 @layer base {
   :root {
-    /* High-Contrast Design System for GleeWorld */
+    /* Accessible Design System for GleeWorld - Reduced Eye Strain */
     
-    /* Core Brand Colors - Bold and Professional */
-    --spelman-blue-dark: 212 100% 15%; /* Deep navy blue - maximum impact */
-    --spelman-blue-light: 212 100% 45%; /* Vibrant blue - high visibility */
-    --spelman-gold: 45 100% 55%; /* Elegant gold accent */
+    /* Spelman Brand Colors (locked) */
+    --blue-900: 212 95% 19%; /* #0B2F5F */
+    --blue-800: 212 88% 25%; /* #0D3A75 */
+    --blue-700: 212 81% 31%; /* #114488 - primary */
+    --blue-300: 203 85% 63%; /* #55BBEE */
     
-    /* Primary Brand Palette */
-    --primary: var(--spelman-blue-dark);
-    --primary-foreground: 0 0% 100%; /* Pure white for maximum contrast */
-
-    /* Secondary Accent Colors */
-    --secondary: var(--spelman-blue-light);
-    --secondary-foreground: 0 0% 100%; /* White text on blue */
+    /* Accessible Secondary Palette */
+    --teal: 186 88% 30%; /* #0E7C86 */
+    --emerald: 122 47% 35%; /* #2E7D32 */
+    --amber: 36 68% 42%; /* #B7791F */
+    --crimson: 4 79% 41%; /* #B3261E */
+    --orchid: 254 100% 66%; /* #7C4DFF */
     
-    /* High-Contrast Backgrounds */
-    --background: 0 0% 100%; /* Pure white background */
-    --foreground: 0 0% 8%; /* Near-black text for readability */
-
-    /* Card System - Clean and Bold */
-    --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 0 0% 8%; /* Dark text on white */
-
-    /* Popover and Dropdown Elements */
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
-
-    /* Muted Elements - Subtle but Readable */
-    --muted: 0 0% 96%; /* Very light gray */
-    --muted-foreground: 0 0% 25%; /* Medium dark gray */
-
+    /* Slate Ramp for Text/Backgrounds */
+    --slate-900: 222 84% 5%; /* #0F172A */
+    --slate-800: 215 28% 17%; /* #1E293B */
+    --slate-700: 215 20% 27%; /* #334155 */
+    --slate-600: 215 16% 37%; /* #475569 */
+    --slate-500: 215 20% 47%; /* #64748B */
+    --slate-400: 215 20% 65%; /* #94A3B8 */
+    --slate-300: 214 32% 78%; /* #CBD5E1 */
+    --slate-200: 214 32% 91%; /* #E2E8F0 */
+    --slate-100: 220 14% 96%; /* #F1F5F9 */
+    --slate-50: 210 20% 98%; /* #F8FAFC */
+    
+    /* Base Backgrounds - Softer than pure white */
+    --bg: var(--slate-50); /* App background */
+    --surface: 0 0% 100%; /* Surface default (white) */
+    --surface-alt: 214 100% 97%; /* #F6FAFF - tinted light blue wash */
+    
+    /* Text Colors */
+    --text: 220 39% 11%; /* #0E1621 - near-black for body */
+    --text-muted: var(--slate-600);
+    --text-inverse: 0 0% 100%;
+    
+    /* Links */
+    --link: var(--blue-700);
+    --link-hover: var(--blue-800);
+    --link-visited: var(--blue-900);
+    
+    /* Primary Design System Tokens */
+    --primary: var(--blue-700);
+    --primary-foreground: var(--text-inverse);
+    --secondary: var(--slate-200);
+    --secondary-foreground: var(--text);
+    
+    /* Backgrounds - Using softer tones */
+    --background: var(--bg);
+    --foreground: var(--text);
+    
+    /* Card System */
+    --card: var(--surface);
+    --card-foreground: var(--text);
+    
+    /* Popover and Dropdowns */
+    --popover: var(--surface);
+    --popover-foreground: var(--text);
+    
+    /* Muted Elements */
+    --muted: var(--slate-100);
+    --muted-foreground: var(--text-muted);
+    
     /* Accent for Interactive Elements */
-    --accent: var(--spelman-blue-light);
-    --accent-foreground: 0 0% 100%; /* White text on blue */
-
+    --accent: var(--slate-100);
+    --accent-foreground: var(--text);
+    
+    /* State Colors - AA Compliant */
+    --success: var(--emerald);
+    --warning: var(--amber);
+    --error: var(--crimson);
+    --info: var(--blue-700);
+    
     /* System Colors */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Border and Input Styling */
-    --border: 0 0% 85%; /* Visible but subtle borders */
-    --input: 0 0% 98%; /* Very light gray input backgrounds for contrast */
-    --ring: var(--spelman-blue-light); /* Blue focus rings */
-
-    --radius: 0.75rem;
-
-    /* Enhanced Color Tokens */
-    --text-secondary: 0 0% 30%; /* Readable secondary text */
-    --hover-accent: 212 100% 50%; /* Bright blue for hovers */
+    --destructive: var(--error);
+    --destructive-foreground: var(--text-inverse);
     
-    /* Professional Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(var(--spelman-blue-dark)), hsl(var(--spelman-blue-light)));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 98%));
-    --gradient-accent: linear-gradient(90deg, hsl(var(--spelman-gold)), hsl(45 100% 60%));
+    /* Borders and Focus */
+    --border: var(--slate-200);
+    --input: var(--surface);
+    --ring: var(--blue-300); /* Focus ring color */
     
-    /* Enhanced 3D Shadow System */
-    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
-    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
-    --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    --shadow-depth-1: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-depth-2: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.12);
-    --shadow-depth-3: 0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.16);
-    --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.06);
-    --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+    /* Border Radius */
+    --radius: 12px; /* Cards */
+    --radius-sm: 8px; /* Inputs */
+    
+    /* Elevation Shadows */
+    --shadow-1: 0 1px 2px rgba(2,6,23,.06);
+    --shadow-2: 0 2px 8px rgba(2,6,23,.08);
+    --shadow-3: 0 10px 24px rgba(2,6,23,.12);
+
+    /* Spacing Scale - Responsive */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --space-8: 64px;
+    
+    /* Enhanced Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--blue-700)), hsl(var(--blue-300)));
+    --gradient-card: linear-gradient(145deg, hsl(var(--surface)), hsl(var(--slate-50)));
+    
+    /* Legacy Shadow Support */
+    --shadow-card: var(--shadow-1);
+    --shadow-hover: var(--shadow-2);
+    --shadow-focus: 0 0 0 2px hsl(var(--ring));
+    --shadow-depth-1: var(--shadow-1);
+    --shadow-depth-2: var(--shadow-2);
+    --shadow-depth-3: var(--shadow-3);
     
     /* Animation Variables */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -114,64 +163,48 @@
   }
 
   .light {
-    /* High-contrast light theme - everything already optimized in root */
-    --background: 0 0% 100%; /* Pure white */
-    --foreground: 0 0% 8%; /* Near-black text */
-
-    --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 0 0% 8%; /* Dark text */
-
-    --popover: 0 0% 100%; /* Pure white */
-    --popover-foreground: 0 0% 8%; /* Dark text */
-
-    --primary: var(--spelman-blue-dark);
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: var(--spelman-blue-light);
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 0 0% 96%; /* Very light gray */
-    --muted-foreground: 0 0% 25%; /* Medium dark gray */
-
-    --accent: var(--spelman-blue-light);
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 85%;
-    --input: 0 0% 98%;
-    --ring: var(--spelman-blue-light);
+    /* Light theme inherits from root - already optimized */
   }
 
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: var(--spelman-blue-light);
-    --primary-foreground: 0 0% 98%;
-
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 75%;
-
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 20%;
-    --input: 0 0% 14.9%;
-    --ring: var(--spelman-blue-light);
+  [data-theme="dark"] {
+    /* Dark Theme - Eye-friendly dark mode */
+    --bg: var(--slate-900);
+    --surface: 215 28% 10%; /* #111827 */
+    --surface-alt: 222 84% 4%; /* #0B1220 */
+    
+    --text: 218 11% 90%; /* #E5E7EB */
+    --text-muted: 218 11% 69%; /* #A7B0BF */
+    
+    --link: var(--blue-300);
+    --link-hover: 203 85% 73%; /* #8BC9F5 - lighter blue */
+    
+    --background: var(--bg);
+    --foreground: var(--text);
+    
+    --card: var(--surface);
+    --card-foreground: var(--text);
+    
+    --popover: var(--surface);
+    --popover-foreground: var(--text);
+    
+    --primary: var(--blue-300);
+    --primary-foreground: var(--slate-900);
+    
+    --secondary: var(--slate-800);
+    --secondary-foreground: var(--text);
+    
+    --muted: var(--slate-800);
+    --muted-foreground: var(--text-muted);
+    
+    --accent: var(--slate-800);
+    --accent-foreground: var(--text);
+    
+    --destructive: var(--crimson);
+    --destructive-foreground: var(--text);
+    
+    --border: 215 28% 20%; /* #1F2937 */
+    --input: var(--surface);
+    --ring: var(--blue-300);
   }
 }
 
@@ -190,9 +223,13 @@
 
   body {
     @apply bg-background text-foreground min-h-screen;
-    font-family: 'Roboto', sans-serif;
-    font-size: 16px;
+    font-family: 'Inter', 'SF Pro Text', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+    font-size: clamp(1rem, 0.9vw, 1.0625rem);
     line-height: 1.6;
+    /* Auto-hyphenation for better text flow */
+    hyphens: auto;
+    /* Constrain text blocks to 80ch max */
+    max-width: 80ch;
   }
 
   /* Mobile-first utilities */
@@ -218,42 +255,86 @@
     -webkit-box-orient: vertical;
   }
 
-  /* Responsive typography system */
+  /* Responsive Typography System with clamp() */
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Bebas Neue', cursive;
     font-weight: 400;
     letter-spacing: 0.025em;
     color: hsl(var(--foreground));
+    line-height: 1.2;
+    max-width: 80ch; /* Constrain headings for readability */
   }
 
   h1 {
-    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl;
+    font-size: clamp(1.8rem, 2vw, 2.4rem);
   }
 
   h2 {
-    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl;
+    font-size: clamp(1.5rem, 1.5vw, 1.9rem);
   }
 
   h3 {
-    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl;
+    font-size: clamp(1.25rem, 1.2vw, 1.5rem);
   }
 
-  h4 {
-    @apply text-base sm:text-lg md:text-xl lg:text-2xl;
+  h4, h5, h6 {
+    font-size: clamp(1rem, 0.9vw, 1.125rem);
   }
 
-  h5 {
-    @apply text-sm sm:text-base md:text-lg lg:text-xl;
-  }
-
-  h6 {
-    @apply text-xs sm:text-sm md:text-base lg:text-lg;
-  }
-
-  /* Responsive body text */
+  /* Responsive body text with optimal line length */
   p, div, span {
-    @apply text-sm sm:text-base md:text-lg;
+    font-size: clamp(1rem, 0.9vw, 1.0625rem);
     line-height: 1.6;
+    max-width: 80ch; /* Optimal reading width */
+  }
+  
+  /* Small text with good contrast */
+  .text-small, small {
+    font-size: clamp(0.9rem, 0.8vw, 0.95rem);
+    line-height: 1.45;
+  }
+  
+  /* Display text for hero sections */
+  .text-display {
+    font-size: clamp(2.2rem, 2.5vw, 3rem);
+    line-height: 1.2;
+    font-family: 'Bebas Neue', cursive;
+  }
+  
+  /* Ensure minimum 12px on smallest screens */
+  @media (max-width: 480px) {
+    body, p, div, span {
+      font-size: max(0.75rem, 12px);
+    }
+  }
+  
+  /* Responsive Images */
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+  }
+  
+  /* Focus rings always visible for accessibility */
+  button:focus,
+  input:focus,
+  textarea:focus,
+  select:focus,
+  a:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  
+  /* Touch targets minimum 44x44px */
+  @media (max-width: 768px) {
+    button, 
+    a,
+    input[type="button"],
+    input[type="submit"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 }
 
@@ -312,17 +393,86 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   }
 
-  /* Button Styles - New Design System */
+  /* Button System - Accessible States */
   .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 border-primary;
+    background: hsl(var(--blue-700));
+    color: hsl(var(--text-inverse));
+    border: 1px solid hsl(var(--blue-700));
+    transition: var(--transition-smooth);
+  }
+  
+  .btn-primary:hover {
+    background: hsl(var(--blue-800));
+    border-color: hsl(var(--blue-800));
+  }
+  
+  .btn-primary:focus {
+    box-shadow: 0 0 0 2px hsl(var(--ring));
   }
   
   .btn-secondary {
-    @apply bg-background text-primary border border-primary hover:bg-secondary hover:text-secondary-foreground;
+    background: hsl(var(--slate-200));
+    color: hsl(var(--text));
+    border: 1px solid hsl(var(--slate-200));
+    transition: var(--transition-smooth);
+  }
+  
+  .btn-secondary:hover {
+    background: hsl(var(--slate-300));
+    border-color: hsl(var(--slate-300));
+  }
+  
+  .btn-tertiary {
+    background: transparent;
+    color: hsl(var(--blue-700));
+    border: none;
+    text-decoration: underline;
+  }
+  
+  .btn-tertiary:hover {
+    text-decoration: none;
+  }
+  
+  .btn-destructive {
+    background: hsl(var(--crimson));
+    color: hsl(var(--text-inverse));
+    border: 1px solid hsl(var(--crimson));
+  }
+  
+  .btn-destructive:hover {
+    background: hsl(4 79% 35%); /* Darker crimson */
   }
   
   .btn-disabled {
-    @apply bg-muted text-muted-foreground cursor-not-allowed;
+    background: hsl(var(--slate-400));
+    color: hsl(var(--slate-600));
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  /* Chip/Badge System */
+  .chip-info {
+    background: #E6F3FF; /* Light blue background */
+    color: hsl(var(--blue-700));
+    border: 1px solid #CCE7FF;
+  }
+  
+  .chip-success {
+    background: #E8F5F1; /* Light green background */
+    color: hsl(var(--emerald));
+    border: 1px solid #C3E9DD;
+  }
+  
+  .chip-warning {
+    background: #FFF4E5; /* Light amber background */
+    color: hsl(var(--amber));
+    border: 1px solid #FFE4B8;
+  }
+  
+  .chip-error {
+    background: #FDECEC; /* Light red background */
+    color: hsl(var(--crimson));
+    border: 1px solid #F5C6C6;
   }
 
   /* Dropdown & Filter Styles */

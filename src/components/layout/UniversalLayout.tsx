@@ -38,7 +38,7 @@ export const UniversalLayout = ({
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
 
   return (
-    <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
+    <div className="min-h-screen flex flex-col w-full overflow-x-hidden bg-background text-foreground">
       {showHeader && (
         <>
           {shouldUsePublicHeader ? (
@@ -51,10 +51,10 @@ export const UniversalLayout = ({
           )}
         </>
       )}
-      <main className={`flex-1 w-full overflow-x-hidden ${className}`}>
+      <main className={`flex-1 w-full overflow-x-hidden ${className}`} style={{ paddingLeft: 'var(--space-4)', paddingRight: 'var(--space-4)' }}>
         {containerized ? (
           <ResponsiveContainer maxWidth={maxWidth}>
-            <div className="py-1 sm:py-2">
+            <div style={{ paddingTop: 'var(--space-6)', paddingBottom: 'var(--space-6)' }}>
               {children}
             </div>
           </ResponsiveContainer>
