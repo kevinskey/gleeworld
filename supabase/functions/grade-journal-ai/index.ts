@@ -145,7 +145,7 @@ Be fair but thorough in your evaluation. Consider the level appropriate for an i
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini', // Using legacy model for compatibility
         messages: [
           {
             role: 'system',
@@ -198,7 +198,7 @@ Be fair but thorough in your evaluation. Consider the level appropriate for an i
         letter_grade: parsedGrading.letterGrade,
         rubric: parsedGrading.rubricScores,
         feedback: parsedGrading.overallFeedback + '\n\nSuggestions: ' + parsedGrading.suggestions,
-        ai_model: 'gpt-4.1-2025-04-14',
+        ai_model: 'gpt-4o-mini',
         graded_at: new Date().toISOString()
       })
       .select()
