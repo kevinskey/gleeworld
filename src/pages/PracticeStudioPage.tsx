@@ -23,7 +23,7 @@ import { AssignmentManagement } from '@/components/practice-studio/AssignmentMan
 
 const PracticeStudioPage: React.FC = () => {
   const { user } = useAuth();
-  const { userProfile: profile } = useUserProfile();
+  const { userProfile: profile } = useUserProfile(user);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'library' | 'assignments'>('dashboard');
 
   // Check user permissions for different sections

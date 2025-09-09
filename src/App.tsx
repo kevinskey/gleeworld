@@ -129,6 +129,7 @@ import SightReadingSubmission from "./pages/SightReadingSubmission";
 import SightReadingPreview from "./pages/SightReadingPreview";
 import SightReadingGeneratorPage from "./pages/SightReadingGenerator";
 import AssignmentCreatorPage from "./pages/AssignmentCreator";
+import PracticeStudioPage from "./pages/PracticeStudioPage";
 import { MemberSightReadingStudioPage } from "./pages/MemberSightReadingStudioPage";
 import SchedulingPage from "./pages/SchedulingPage";
 import BookingPage from "./pages/BookingPage";
@@ -1283,6 +1284,14 @@ const App = () => {
                                             <AssignmentCreatorPage />
                                           </ProtectedRoute>
                                         } 
+                                      />
+                                      <Route 
+                                        path="/practice-studio" 
+                                        element={
+                                          <ProtectedRoute>
+                                            <PracticeStudioPage />
+                                          </ProtectedRoute>
+                                        }
                                       />
                                       <Route 
                                         path="/member-sight-reading-studio" 

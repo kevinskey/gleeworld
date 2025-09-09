@@ -190,20 +190,20 @@ export const PracticeStudioDashboard: React.FC<PracticeStudioDashboardProps> = (
                                 <Calendar className="h-3 w-3" />
                                 Due: {new Date(assignment.due_date).toLocaleDateString()}
                               </span>
-                              {assignment.sheet_music?.title && (
+                              {assignment.sheet_music_id && (
                                 <span className="flex items-center gap-1">
                                   <FileMusic className="h-3 w-3" />
-                                  {assignment.sheet_music.title}
+                                  Score ID: {assignment.sheet_music_id.slice(0, 8)}
                                 </span>
                               )}
                             </div>
                             
                             {submission && (
                               <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                {submission.grade && (
+                                {submission.rhythm_accuracy && (
                                   <span className="flex items-center gap-1">
                                     <Award className="h-3 w-3" />
-                                    Grade: {submission.grade}%
+                                    Score: {submission.rhythm_accuracy}%
                                   </span>
                                 )}
                                 <span>

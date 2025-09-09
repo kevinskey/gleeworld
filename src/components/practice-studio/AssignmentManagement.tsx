@@ -78,8 +78,8 @@ export const AssignmentManagement: React.FC<AssignmentManagementProps> = ({ user
     const gradedSubmissions = assignmentSubmissions.filter(sub => sub.status === 'graded').length;
     const avgGrade = gradedSubmissions > 0 
       ? assignmentSubmissions
-          .filter(sub => sub.grade !== null)
-          .reduce((sum, sub) => sum + (sub.grade || 0), 0) / gradedSubmissions
+          .filter(sub => sub.rhythm_accuracy !== null)
+          .reduce((sum, sub) => sum + (sub.rhythm_accuracy || 0), 0) / gradedSubmissions
       : 0;
     
     return { totalSubmissions, gradedSubmissions, avgGrade };
@@ -99,10 +99,13 @@ export const AssignmentManagement: React.FC<AssignmentManagementProps> = ({ user
       await createAssignment({
         title: newAssignment.title,
         description: newAssignment.description,
-        sheet_music_id: newAssignment.sheet_music_id,
+        assignment_type: 'sight_reading',
         due_date: new Date(newAssignment.due_date).toISOString(),
-        max_attempts: newAssignment.max_attempts,
-        instructions: newAssignment.instructions
+        grading_period: 'week_1',
+        points_possible: 100,
+        sheet_music_id: newAssignment.sheet_music_id,
+        target_type: 'all',
+        notes: newAssignment.instructions
       });
       
       toast({
@@ -131,12 +134,12 @@ export const AssignmentManagement: React.FC<AssignmentManagementProps> = ({ user
   const exportAssignmentData = (assignment: any) => {
     const assignmentSubmissions = submissions.filter(sub => sub.assignment_id === assignment.id);
     const csvData = [
-      ['Student ID', 'Submitted At', 'Status', 'Grade', 'Feedback'],
+      ['User ID', 'Submitted At', 'Status', 'Score', 'Feedback'],
       ...assignmentSubmissions.map(sub => [
-        sub.student_id,
+        sub.user_id,
         new Date(sub.submitted_at).toISOString(),
         sub.status,
-        sub.grade || '',
+        sub.rhythm_accuracy || '',
         sub.feedback || ''
       ])
     ];
@@ -249,16 +252,16 @@ export const AssignmentManagement: React.FC<AssignmentManagementProps> = ({ user
                     
                     <CardContent className="space-y-3">
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Due: {new Date(assignment.due_date).toLocaleDateString()}
-                        </span>
-                        {assignment.sheet_music?.title && (
-                          <span className="flex items-center gap-1">
-                            <FileMusic className="h-3 w-3" />
-                            {assignment.sheet_music.title}
-                          </span>
-                        )}
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Due: {new Date(assignment.due_date).toLocaleDateString()}
+                              </span>
+                              {assignment.sheet_music_id && (
+                                <span className="flex items-center gap-1">
+                                  <FileMusic className="h-3 w-3" />
+                                  Score ID: {assignment.sheet_music_id.slice(0, 8)}
+                                </span>
+                              )}
                       </div>
                       
                       <div className="grid grid-cols-3 gap-2 text-center">

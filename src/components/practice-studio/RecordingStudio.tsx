@@ -23,7 +23,6 @@ import { useGrading } from '@/components/sight-singing/hooks/useGrading';
 import { useAssignments } from '@/hooks/useAssignments';
 import { useToast } from '@/hooks/use-toast';
 import { ScoreDisplay } from '@/components/sight-singing/ScoreDisplay';
-// Removed import - using direct conversion
 
 interface RecordingStudioProps {
   assignment: any;
@@ -82,18 +81,28 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({
 
   // Handle AI grading
   const handleGradeRecording = async () => {
-    if (!audioBlob || !assignment.sheet_music?.xml_content) {
+    if (!audioBlob) {
       toast({
         title: "Cannot Grade Recording",
-        description: "Recording or score data is missing.",
+        description: "Recording data is missing.",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      // Convert XML to score format for grading
-      const scoreData = { measures: [], tempo: 120, timeSignature: { beats: 4, beatType: 4 }, totalDuration: 0 };
+      // Create a simple score structure for grading
+      const scoreData = {
+        key: { tonic: 'C', mode: 'major' as const },
+        time: { num: 4, den: 4 as const },
+        numMeasures: 4,
+        parts: [{
+          role: 'S' as const,
+          range: { min: 'C4', max: 'C5' },
+          measures: [[]]
+        }],
+        cadencePlan: []
+      };
       
       await gradeRecording(audioBlob, scoreData, 120);
       
@@ -128,11 +137,8 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({
       // Convert audio blob to file
       const audioFile = new File([audioBlob], 'recording.wav', { type: 'audio/wav' });
       
-      await submitAssignment({
-        assignment_id: assignment.id,
-        audio_file: audioFile,
-        notes: submissionNotes,
-        grading_results: gradingResults
+      await submitAssignment(assignment.id, {
+        notes: submissionNotes
       });
       
       toast({
@@ -294,28 +300,28 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="text-center space-y-1">
                     <div className="text-2xl font-bold text-blue-600">
-                      {gradingResults.pitchAccuracy}%
+                      {gradingResults.pitchAcc || 0}%
                     </div>
                     <div className="text-sm text-muted-foreground">Pitch Accuracy</div>
                   </div>
                   
                   <div className="text-center space-y-1">
                     <div className="text-2xl font-bold text-green-600">
-                      {gradingResults.rhythmAccuracy}%
+                      {gradingResults.rhythmAcc || 0}%
                     </div>
                     <div className="text-sm text-muted-foreground">Rhythm Accuracy</div>
                   </div>
                   
                   <div className="text-center space-y-1">
                     <div className="text-2xl font-bold text-purple-600">
-                      {gradingResults.overallScore}%
+                      {gradingResults.overall || 0}%
                     </div>
                     <div className="text-sm text-muted-foreground">Overall Score</div>
                   </div>
                 </div>
                 
                 <div className="p-4 bg-muted/50 rounded-lg">
-                  <div className="text-sm font-medium mb-2">Grade: {gradingResults.letter_grade || 'N/A'}</div>
+                  <div className="text-sm font-medium mb-2">Grade: {gradingResults.letter || 'N/A'}</div>
                   <div className="text-sm text-muted-foreground">
                     AI evaluation based on pitch accuracy, rhythm precision, and overall musicality.
                   </div>
