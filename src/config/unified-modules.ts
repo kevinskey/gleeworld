@@ -80,6 +80,10 @@ import { RadioManagement } from '@/components/admin/RadioManagement';
 import { TheoryPollModule } from '@/components/modules/TheoryPollModule';
 import { ProductManagement } from '@/pages/ProductManagement';
 import { BowmanScholarsModule } from '@/components/modules/BowmanScholarsModule';
+import { PRManagerModule } from '@/components/modules/PRManagerModule';
+import { SightReadingGeneratorModule } from '@/components/modules/SightReadingGeneratorModule';
+import { MemberSightReadingModule } from '@/components/modules/MemberSightReadingModule';
+import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -745,6 +749,78 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: EmailManagementModule,
     dbFunctionName: "internal-communications"
+  },
+  {
+    id: "pr-manager",
+    name: "pr-manager",
+    title: "PR Manager",
+    description: "Public relations and marketing management",
+    icon: Megaphone,
+    iconColor: "pink",
+    category: "communications",
+    isActive: true,
+    component: PRManagerModule,
+    dbFunctionName: "pr-manager"
+  },
+  {
+    id: "executive-board-management",
+    name: "executive-board-management",
+    title: "Executive Board Management",
+    description: "Executive board functions and leadership tools",
+    icon: Users,
+    iconColor: "gold",
+    category: "member-management",
+    isActive: true,
+    component: ExecutiveModule,
+    dbFunctionName: "executive-board-management"
+  },
+  {
+    id: "sight-reading-generator",
+    name: "sight-reading-generator",
+    title: "Sight Reading Generator",
+    description: "Create AI-graded sight reading assignments for students",
+    icon: Music,
+    iconColor: "blue",
+    category: "musical-leadership",
+    isActive: true,
+    component: SightReadingGeneratorModule,
+    dbFunctionName: "sight-reading-generator"
+  },
+  {
+    id: "member-sight-reading-studio",
+    name: "member-sight-reading-studio",
+    title: "Member Sight Reading Studio",
+    description: "Complete assignments, practice sight reading, and track progress",
+    icon: Music,
+    iconColor: "purple",
+    category: "musical-leadership",
+    isActive: true,
+    component: MemberSightReadingModule,
+    dbFunctionName: "member-sight-reading-studio"
+  },
+  {
+    id: "sight-reading-preview",
+    name: "sight-reading-preview",
+    title: "Sight Reading Preview",
+    description: "Preview and navigate to sight reading tools",
+    icon: Eye,
+    iconColor: "cyan",
+    category: "musical-leadership",
+    isActive: true,
+    component: SightSingingPreviewModule,
+    dbFunctionName: "sight-reading-preview"
+  },
+  {
+    id: "ai-financial",
+    name: "ai-financial",
+    title: "AI Financial Planning",
+    description: "AI-powered financial planning and analysis tools",
+    icon: Brain,
+    iconColor: "green",
+    category: "finances",
+    isActive: true,
+    component: BudgetsModule, // Using existing budget module as placeholder
+    dbFunctionName: "ai-financial"
   }
 ];
 
