@@ -50,7 +50,10 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   const watchedBpm = watch('bpm');
 
   const tonics = ["C", "D", "E", "F", "G", "A", "B", "Db", "Eb", "Gb", "Ab", "Bb"];
-  const modes = ["major", "minor"];
+  const modes = [
+    "major", "minor", "natural minor", "harmonic minor", "melodic minor",
+    "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"
+  ];
   const timeSignatures = [
     { num: 2, den: 4 }, { num: 3, den: 4 }, { num: 4, den: 4 }, 
     { num: 6, den: 8 }, { num: 9, den: 8 }
@@ -108,7 +111,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border shadow-lg z-50 max-h-[200px] overflow-y-auto">
                   {tonics.map(tonic => (
                     <SelectItem key={tonic} value={tonic}>{tonic}</SelectItem>
                   ))}
@@ -124,7 +127,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border shadow-lg z-50">
                   {modes.map(mode => (
                     <SelectItem key={mode} value={mode}>
                       {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -145,7 +148,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border shadow-lg z-50">
                   {timeSignatures.map(time => (
                     <SelectItem key={`${time.num}/${time.den}`} value={`${time.num}/${time.den}`}>
                       {time.num}/{time.den}
@@ -163,7 +166,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border shadow-lg z-50">
                   {measureOptions.map(measure => (
                     <SelectItem key={measure} value={measure.toString()}>{measure}</SelectItem>
                   ))}
@@ -192,7 +195,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border shadow-lg z-50">
                   <SelectItem value="soprano">Soprano Only</SelectItem>
                   <SelectItem value="soprano-alto">Soprano + Alto</SelectItem>
                 </SelectContent>
@@ -207,7 +210,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border shadow-lg z-50">
                   {bpmOptions.map(bpm => (
                     <SelectItem key={bpm} value={bpm.toString()}>{bpm}</SelectItem>
                   ))}
@@ -226,7 +229,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border shadow-lg z-50">
                 {cadenceOptions.map(cadence => (
                   <SelectItem key={cadence} value={cadence.toString()}>
                     {cadence} bars
