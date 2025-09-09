@@ -43,6 +43,7 @@ export const useSheetMusicLibrary = () => {
 
       const { data, error: fetchError } = await query
         .eq('is_archived', false)
+        .not('xml_content', 'is', null) // Only show scores that have MusicXML content
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
