@@ -6,21 +6,29 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Function called with method:', req.method);
+  
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight');
     return new Response(null, { headers: corsHeaders });
   }
 
+  console.log('Processing POST request');
+  
   try {
+    const body = await req.json();
+    console.log('Request body parsed successfully');
+    
     return new Response(JSON.stringify({
       success: true,
-      message: 'Function is working!',
-      method: req.method,
-      url: req.url
+      message: 'Test function working!',
+      receivedData: body
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
     
   } catch (error) {
+    console.error('Error in function:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
       success: false 
