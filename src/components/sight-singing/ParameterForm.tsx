@@ -58,7 +58,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     defaultValues: {
       key: { tonic: "C", mode: "major" },
       time: { num: 4, den: 4 },
-      numMeasures: 4,
+      numMeasures: 8,
       parts: [{ role: "S", range: { min: "C4", max: "C5" } }],
       allowedDur: ["quarter"],
       allowDots: false,
