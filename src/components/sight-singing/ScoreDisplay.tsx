@@ -188,8 +188,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       />
       
       {!musicXML && (
-        <div className="flex-1 min-h-[300px] h-full flex items-center justify-center text-muted-foreground text-center px-4">
-          Generate an exercise to see the musical notation
+        <div className="hidden">
         </div>
       )}
     </div>
