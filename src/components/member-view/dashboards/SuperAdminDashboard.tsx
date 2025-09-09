@@ -23,7 +23,7 @@ import { useState as reactUseState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ModuleCard } from '@/components/shared/ModuleWrapper';
 import { UNIFIED_MODULE_CATEGORIES } from '@/config/unified-modules';
-import { Calendar, CheckCircle, DollarSign, Bell, Music, BookOpen, Clock, Award, Users, TrendingUp, Settings, Star, Shield, Database, BarChart3, FileText, AlertCircle, Crown, Server, Activity, Lock, GraduationCap, Grid3X3, ChevronDown, ChevronUp, GripVertical, Globe, Zap, Heart, Eye, Search, Filter, SortAsc, SortDesc } from "lucide-react";
+import { Calendar, CheckCircle, DollarSign, Bell, Music, BookOpen, Clock, Award, Users, TrendingUp, Settings, Star, Shield, Database, BarChart3, FileText, AlertCircle, Crown, Server, Activity, Lock, GraduationCap, Grid3X3, ChevronDown, ChevronUp, GripVertical, Globe, Zap, Heart, Eye, Search, Filter, SortAsc, SortDesc, Pin, PinOff } from "lucide-react";
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(module => ({
   default: module.CalendarViews
 })));
@@ -34,12 +34,16 @@ interface SortableModuleCardProps {
   onModuleClick: (moduleId: string) => void;
   navigate: (path: string) => void;
   isDragging?: boolean;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
 }
 const SortableModuleCard = ({
   module,
   onModuleClick,
   navigate,
-  isDragging
+  isDragging,
+  isPinned = false,
+  onTogglePin
 }: SortableModuleCardProps) => {
   const {
     attributes,
@@ -60,11 +64,11 @@ const SortableModuleCard = ({
   return <div ref={setNodeRef} style={style} {...attributes}>
       <Card className={`cursor-pointer hover:shadow-md transition-all duration-200 ${isSortableDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}`}>
         <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3 flex-1">
-              <div {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded">
-                <GripVertical className="h-4 w-4 text-muted-foreground" />
-              </div>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3 flex-1">
+                <div {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded">
+                  <GripVertical className="h-4 w-4 text-muted-foreground" />
+                </div>
               {IconComponent && <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
                   <IconComponent className={`h-4 w-4 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
                 </div>}
@@ -77,9 +81,22 @@ const SortableModuleCard = ({
                 </CardDescription>
               </div>
             </div>
-            {module.isNew && <Badge variant="secondary" className="text-xs px-2 py-0.5 ml-2">
-                New
-              </Badge>}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTogglePin?.();
+                }}
+                className={`p-1 h-auto ${isPinned ? 'text-primary' : 'text-muted-foreground'}`}
+              >
+                {isPinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
+              </Button>
+              {module.isNew && <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                  New
+                </Badge>}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
@@ -127,7 +144,9 @@ export const SuperAdminDashboard = ({
     isAdmin: true
   });
   const {
-    saveCategoryOrder
+    saveCategoryOrder,
+    toggleModulePin,
+    isModulePinned
   } = useModuleOrdering(user.id);
 
   // Create modulesByCategory object from the function, enhanced with component data
@@ -256,19 +275,32 @@ export const SuperAdminDashboard = ({
     return filtered;
   }, [modulesByCategory, searchQuery, filterCategory, sortBy, sortOrder]);
 
-  // Sort modules within categories based on custom ordering
+  // Sort modules within categories based on custom ordering and pinning
   const sortedModulesByCategory = useMemo(() => {
     const result: Record<string, any[]> = {};
 
     // Add null check to prevent Object.entries error
     if (modulesByCategory && typeof modulesByCategory === 'object') {
       Object.entries(modulesByCategory).forEach(([category, categoryModules]) => {
-        // For now, we'll keep the default order but this is where custom ordering would be applied
-        result[category] = categoryModules ? [...categoryModules] : [];
+        if (!categoryModules) {
+          result[category] = [];
+          return;
+        }
+
+        // Separate pinned and unpinned modules
+        const pinnedModules = categoryModules.filter(module => 
+          isModulePinned(category, module.id)
+        );
+        const unpinnedModules = categoryModules.filter(module => 
+          !isModulePinned(category, module.id)
+        );
+
+        // Combine with pinned modules first
+        result[category] = [...pinnedModules, ...unpinnedModules];
       });
     }
     return result;
-  }, [modulesByCategory]);
+  }, [modulesByCategory, isModulePinned]);
 
   // Format events for AnnouncementsEventsSection
   const formattedUpcomingEvents = upcomingEvents.filter(event => {
@@ -613,7 +645,14 @@ export const SuperAdminDashboard = ({
                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={event => handleDragEnd(event, category)}>
                           <SortableContext items={categoryModules.map(m => m.id)} strategy={verticalListSortingStrategy}>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {categoryModules.map(module => <SortableModuleCard key={module.id} module={module} onModuleClick={moduleId => setSelectedModule(moduleId)} navigate={navigate} />)}
+                              {categoryModules.map(module => <SortableModuleCard 
+                                key={module.id} 
+                                module={module} 
+                                onModuleClick={moduleId => setSelectedModule(moduleId)} 
+                                navigate={navigate}
+                                isPinned={isModulePinned(category, module.id)}
+                                onTogglePin={() => toggleModulePin(category, module.id)}
+                              />)}
                             </div>
                           </SortableContext>
                         </DndContext>
@@ -751,9 +790,16 @@ export const SuperAdminDashboard = ({
                     <CollapsibleContent className="space-y-3">
                       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={event => handleDragEnd(event, categoryName)}>
                         <SortableContext items={categoryModules.map(m => m.id)} strategy={verticalListSortingStrategy}>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
-                            {categoryModules.map(module => <SortableModuleCard key={module.id} module={module} onModuleClick={moduleId => setSelectedModule(moduleId)} navigate={navigate} />)}
-                          </div>
+                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+                             {categoryModules.map(module => <SortableModuleCard 
+                               key={module.id} 
+                               module={module} 
+                               onModuleClick={moduleId => setSelectedModule(moduleId)} 
+                               navigate={navigate}
+                               isPinned={isModulePinned(categoryName, module.id)}
+                               onTogglePin={() => toggleModulePin(categoryName, module.id)}
+                             />)}
+                           </div>
                         </SortableContext>
                       </DndContext>
                     </CollapsibleContent>
