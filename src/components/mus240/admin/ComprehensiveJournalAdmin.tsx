@@ -288,11 +288,13 @@ export const ComprehensiveJournalAdmin = () => {
         description: `Grading journal entry by ${entry.student_name}...`,
       });
 
-      const { data, error } = await supabase.functions.invoke('grade-journal-ai', {
+      const { data, error } = await supabase.functions.invoke('grade-journal', {
         body: {
-          journalId: entry.id,
-          journalContent: entry.content,
-          assignmentId: entry.assignment_id
+          assignment_id: entry.assignment_id,
+          journal_content: entry.content,
+          student_id: entry.student_id,
+          journal_id: entry.id,
+          stub_test: false
         }
       });
 
@@ -301,7 +303,7 @@ export const ComprehensiveJournalAdmin = () => {
       if (data.success) {
         toast({
           title: "AI Grading Complete",
-          description: `Journal graded successfully! Overall score: ${data.grading.overallScore}/100 (${data.grading.letterGrade})`,
+          description: `Journal graded successfully! Overall score: ${data.grade.overall_score}/100 (${data.grade.letter_grade})`,
         });
         // Refresh data to show new grade
         loadAllData();
