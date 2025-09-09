@@ -171,7 +171,8 @@ class AzuraCastService {
 
   // Set admin API key for management operations
   setAdminApiKey(apiKey: string): void {
-    this.adminApiKey = apiKey;
+    // Clean the API key of any non-ASCII characters that could cause Headers errors
+    this.adminApiKey = apiKey.replace(/[^\x00-\x7F]/g, "").trim();
   }
 
   // Get admin headers for authenticated requests
@@ -179,8 +180,16 @@ class AzuraCastService {
     if (!this.adminApiKey) {
       throw new Error('Admin API key not set. Call setAdminApiKey() first.');
     }
+    
+    // Ensure the API key contains only valid ASCII characters for HTTP headers
+    const cleanApiKey = this.adminApiKey.replace(/[^\x00-\x7F]/g, "").trim();
+    
+    if (!cleanApiKey) {
+      throw new Error('Invalid API key format. API key must contain valid ASCII characters only.');
+    }
+    
     return {
-      'Authorization': `Bearer ${this.adminApiKey}`,
+      'Authorization': `Bearer ${cleanApiKey}`,
       'Accept': 'application/json',
       'Content-Type': 'application/json',
     };

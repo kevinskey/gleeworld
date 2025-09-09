@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   standardizeModuleName, 
@@ -54,14 +54,9 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  console.log('🔍 useUnifiedModules: filterOptions =', filterOptions);
   
   // Use the new module grants system
   const { grants: moduleGrants, loading: grantsLoading } = useUserModuleGrants(filterOptions?.userId);
-  
-  console.log('🔍 useUnifiedModules: filterOptions =', filterOptions);
-  console.log('🔍 useUnifiedModules: moduleGrants =', { moduleGrants, grantsLoading, count: moduleGrants?.length });
-  console.log('🔍 useUnifiedModules: allModules =', { allModules, count: allModules?.length });
 
   const fetchBaseModules = async () => {
     try {
@@ -111,58 +106,50 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
     fetchBaseModules();
   }, []);
 
-  // Merge module data with user grants and frontend config
-  const modules = allModules.map(module => {
-    const grant = moduleGrants.find(g => g.module_key === module.id || g.module_key === module.name);
-    
-    console.log(`🔍 Processing module ${module.id}: grant =`, grant);
-    
-    // Find the corresponding frontend module definition
-    const frontendModule = UNIFIED_MODULES.find(fm => 
-      fm.id === module.id ||
-      fm.name === module.name || 
-      fm.dbFunctionName === module.id ||
-      fm.dbFunctionName === module.name
-    );
-    
-    console.log(`🔍 Processing module ${module.name}:`, {
-      module: module.name,
-      moduleId: module.id,
-      grant,
-      frontendModule: frontendModule?.name,
-      isAdmin: filterOptions?.isAdmin
-    });
-    
-    // Admin override
-    const isAdminOverride = filterOptions?.isAdmin;
-    
-    const canAccess = isAdminOverride || grant?.can_view || false;
-    const canManage = isAdminOverride || grant?.can_manage || false;
-    
-    return {
-      ...module,
-      // Merge in frontend module properties if found
-      ...(frontendModule && {
-        icon: frontendModule.icon,
-        component: frontendModule.component,
-        fullPageComponent: frontendModule.fullPageComponent,
-        iconColor: frontendModule.iconColor
-      }),
-      permissions: {
+  // Merge module data with user grants and frontend config - MEMOIZED to prevent infinite loops
+  const modules = useMemo(() => {
+    return allModules.map(module => {
+      const grant = moduleGrants.find(g => g.module_key === module.id || g.module_key === module.name);
+      
+      // Find the corresponding frontend module definition
+      const frontendModule = UNIFIED_MODULES.find(fm => 
+        fm.id === module.id ||
+        fm.name === module.name || 
+        fm.dbFunctionName === module.id ||
+        fm.dbFunctionName === module.name
+      );
+      
+      // Admin override
+      const isAdminOverride = filterOptions?.isAdmin;
+      
+      const canAccess = isAdminOverride || grant?.can_view || false;
+      const canManage = isAdminOverride || grant?.can_manage || false;
+      
+      return {
+        ...module,
+        // Merge in frontend module properties if found
+        ...(frontendModule && {
+          icon: frontendModule.icon,
+          component: frontendModule.component,
+          fullPageComponent: frontendModule.fullPageComponent,
+          iconColor: frontendModule.iconColor
+        }),
+        permissions: {
+          canAccess,
+          canManage,
+          source: isAdminOverride ? 'admin' as const : grant ? 'role' as const : 'none' as const
+        },
+        // Update legacy properties for compatibility
         canAccess,
         canManage,
-        source: isAdminOverride ? 'admin' as const : grant ? 'role' as const : 'none' as const
-      },
-      // Update legacy properties for compatibility
-      canAccess,
-      canManage,
-      hasPermission: (type: string) => {
-        if (type === 'view' || type === 'access') return canAccess;
-        if (type === 'manage') return canManage;
-        return false;
-      }
-    };
-  });
+        hasPermission: (type: string) => {
+          if (type === 'view' || type === 'access') return canAccess;
+          if (type === 'manage') return canManage;
+          return false;
+        }
+      };
+    });
+  }, [allModules, moduleGrants, filterOptions?.isAdmin]);
 
   // Apply filters
   const filteredModules = modules.filter(module => {
