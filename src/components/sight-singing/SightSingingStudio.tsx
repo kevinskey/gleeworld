@@ -927,22 +927,6 @@ export const SightSingingStudio: React.FC = () => {
                           </TooltipContent>
                         </Tooltip>
                         
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={handleDownloadMusicXML}
-                              className="flex items-center gap-1"
-                            >
-                              <Download className="h-3 w-3" />
-                              Download XML
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Download the current exercise as a MusicXML file</p>
-                          </TooltipContent>
-                        </Tooltip>
                       </div>
                     )}
                   </div>
