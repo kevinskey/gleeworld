@@ -192,7 +192,7 @@ export const SightSingingStudio: React.FC = () => {
   const [currentMusicXML, setCurrentMusicXML] = useState<string>('');
   const [currentExerciseId, setCurrentExerciseId] = useState<string | null>(null);
   const [currentBpm, setCurrentBpm] = useState(120);
-  const [activeTab, setActiveTab] = useState<'practice' | 'library' | 'history' | 'report'>('practice');
+  const [activeTab, setActiveTab] = useState<'practice' | 'library' | 'assignments' | 'history' | 'report'>('practice');
   const [parameters, setParameters] = useState<ExerciseParameters | null>(null);
   const [soundSettings, setSoundSettings] = useState({ notes: 'piano', click: 'woodblock' });
   const [selectedScore, setSelectedScore] = useState<any>(null);
@@ -875,10 +875,11 @@ export const SightSingingStudio: React.FC = () => {
       <div className="min-h-screen bg-slate-50 px-2 sm:px-4 lg:px-8 xl:px-12 py-2 sm:py-4 lg:py-6">
       <div className="h-full flex flex-col gap-3 sm:gap-6">
         {/* Navigation Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'practice' | 'library' | 'history' | 'report')} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 h-8 sm:h-10">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'practice' | 'library' | 'assignments' | 'history' | 'report')} className="w-full">
+          <TabsList className="grid w-full grid-cols-5 h-8 sm:h-10">
             <TabsTrigger value="practice" className="text-xs sm:text-sm">Practice Studio</TabsTrigger>
             <TabsTrigger value="library" className="text-xs sm:text-sm">Score Library</TabsTrigger>
+            <TabsTrigger value="assignments" className="text-xs sm:text-sm">Create Assignment</TabsTrigger>
             <TabsTrigger value="history" className="text-xs sm:text-sm">Score History</TabsTrigger>
             <TabsTrigger value="report" disabled={!gradingResults || !currentMusicXML} className="text-xs sm:text-sm">Performance Report</TabsTrigger>
           </TabsList>
@@ -1223,7 +1224,7 @@ export const SightSingingStudio: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="library" className="mt-6">
-            <div className="grid gap-6 lg:grid-cols-3">
+            <div className="grid gap-6 lg:grid-cols-2">
               {/* Left Column - Score Generator */}
               <div className="space-y-4">
                 <div className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
@@ -1254,12 +1255,12 @@ export const SightSingingStudio: React.FC = () => {
                 </Card>
               </div>
 
-              {/* Middle Column - Score Library */}
+              {/* Right Column - Score Library */}
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
                   <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">📚 Score Library</h3>
                   <p className="text-sm text-blue-700 dark:text-blue-300">
-                    Browse your saved scores and uploaded MusicXML files. Select any score to create assignments.
+                    Browse your saved scores and uploaded MusicXML files. Select any score to use in the Assignment Creator.
                   </p>
                 </div>
                 
@@ -1275,7 +1276,7 @@ export const SightSingingStudio: React.FC = () => {
                       
                       toast({
                         title: "Score Selected",
-                        description: `"${score.title}" selected. You can now create an assignment from it.`,
+                        description: `"${score.title}" selected. Switch to the Assignment Creator tab to create an assignment.`,
                       });
                     } else {
                       toast({
@@ -1288,41 +1289,55 @@ export const SightSingingStudio: React.FC = () => {
                   selectedScoreId={selectedScore?.id}
                 />
               </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="assignments" className="mt-6">
+            <div className="max-w-4xl mx-auto space-y-6">
+              {/* Header */}
+              <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">📝 Create Assignment</h3>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  Turn selected scores into assignments for students. Select a score from the Score Library tab first, then configure the assignment details below.
+                </p>
+              </div>
+
+              {/* Assignment Creator */}
+              <AssignmentCreator 
+                selectedScore={selectedScore}
+                onAssignmentCreated={() => {
+                  toast({
+                    title: "Assignment Created",
+                    description: "Students can now access this assignment through their member dashboard.",
+                  });
+                }}
+              />
               
-              {/* Right Column - Assignment Creator */}
-              <div className="space-y-4">
+              {/* Selected Score Status */}
+              {selectedScore && currentMusicXML ? (
                 <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">📝 Create Assignment</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <h4 className="font-medium text-green-900 dark:text-green-100">Score Selected</h4>
+                  </div>
                   <p className="text-sm text-green-700 dark:text-green-300">
-                    Turn selected scores into assignments for students. Set difficulty and requirements.
+                    <strong>"{selectedScore.title}"</strong> by {selectedScore.composer || 'Unknown'} is ready.
+                  </p>
+                  <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                    Fill out the assignment details above to create an assignment for your students.
                   </p>
                 </div>
-
-                <AssignmentCreator 
-                  selectedScore={selectedScore}
-                  onAssignmentCreated={() => {
-                    toast({
-                      title: "Assignment Created",
-                      description: "Students can now access this assignment through their member dashboard.",
-                    });
-                  }}
-                />
-                
-                {selectedScore && currentMusicXML && (
-                  <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <h4 className="font-medium text-green-900 dark:text-green-100">Score Selected</h4>
-                    </div>
-                    <p className="text-sm text-green-700 dark:text-green-300">
-                      <strong>"{selectedScore.title}"</strong> by {selectedScore.composer || 'Unknown'} is ready.
-                    </p>
-                    <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                      Fill out the assignment details to create an assignment for your students.
-                    </p>
+              ) : (
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
+                    <h4 className="font-medium text-yellow-900 dark:text-yellow-100">No Score Selected</h4>
                   </div>
-                )}
-              </div>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Please select a score from the <strong>Score Library</strong> tab first, or generate a new score to create an assignment.
+                  </p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
