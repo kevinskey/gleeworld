@@ -191,4 +191,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.grade-journal-ai]
-verify_jwt = true
+verify_jwt = false
+
+[functions.test-journal-ai]
+verify_jwt = false
