@@ -102,53 +102,28 @@ class AzuraCastService {
 
   async getNowPlaying(): Promise<AzuraCastNowPlaying | null> {
     try {
-      console.log('Fetching AzuraCast now playing data...');
+      console.log('AzuraCast: Fetching now playing data via proxy...');
       
-      // Try the public API endpoint first (no auth required)
-      const response = await fetch(`${this.baseUrl}/api/nowplaying/${this.stationId}`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        console.error(`AzuraCast API error: ${response.status} ${response.statusText}`);
-        return null;
-      }
-
-      const data = await response.json();
+      // Use our proxy for API calls to handle CORS and authentication
+      const data = await this.makeProxyRequest(`/nowplaying/${this.stationId}`);
       console.log('AzuraCast now playing data:', data);
       return data;
     } catch (error) {
-      console.error('Error fetching AzuraCast data:', error);
+      console.error('Error fetching AzuraCast data via proxy:', error);
       return null;
     }
   }
 
   async getStationInfo(): Promise<AzuraCastStation | null> {
     try {
-      console.log('Fetching AzuraCast station info...');
+      console.log('AzuraCast: Fetching station info via proxy...');
       
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        console.error(`AzuraCast Station API error: ${response.status} ${response.statusText}`);
-        return null;
-      }
-
-      const data = await response.json();
+      // Use our proxy for API calls to handle CORS and authentication  
+      const data = await this.makeProxyRequest(`/station/${this.stationId}`);
       console.log('AzuraCast station info:', data);
       return data;
     } catch (error) {
-      console.error('Error fetching AzuraCast station info:', error);
+      console.error('Error fetching AzuraCast station info via proxy:', error);
       return null;
     }
   }
