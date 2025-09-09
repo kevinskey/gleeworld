@@ -60,8 +60,38 @@ serve(async (req) => {
   try {
     console.log('AI Journal Grading function started');
     
-    const requestBody = await req.json();
-    console.log('Request body:', requestBody);
+    // Test basic functionality first
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    console.log('Environment check - OpenAI key exists:', !!openAIApiKey);
+    
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not found in environment');
+      return new Response(JSON.stringify({ 
+        error: 'OpenAI API key not configured',
+        success: false 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Log API key format (first few characters only for security)
+    console.log('API key format check:', openAIApiKey.substring(0, 3) + '...');
+    
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log('Request received successfully');
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return new Response(JSON.stringify({ 
+        error: 'Invalid JSON in request body',
+        success: false 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     
     const { journalId, journalContent, assignmentId } = requestBody;
     
@@ -77,25 +107,28 @@ serve(async (req) => {
     }
 
     console.log(`Grading journal ${journalId} for assignment ${assignmentId}`);
+    console.log('Journal content length:', journalContent.length);
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    console.log('OpenAI API Key available:', !!openAIApiKey);
-    console.log('OpenAI API Key format check:', openAIApiKey ? `${openAIApiKey.substring(0, 7)}...` : 'NOT_FOUND');
+    // Create Supabase client with error handling
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not configured');
+    console.log('Supabase environment check:', {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseKey
+    });
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase environment variables');
       return new Response(JSON.stringify({ 
-        error: 'OpenAI API key not configured',
+        error: 'Supabase configuration missing',
         success: false 
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Build the grading prompt
