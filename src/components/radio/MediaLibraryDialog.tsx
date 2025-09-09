@@ -39,14 +39,16 @@ export const MediaLibraryDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Media Library</span>
-            <MediaUploadButton 
-              context="pr-hub"
-              className="gap-2"
-              onUploadComplete={() => {
-                // Refresh the media library when upload completes
-                window.location.reload();
-              }}
-            />
+            <div className="flex gap-2">
+              <MediaUploadButton 
+                context="pr-hub"
+                className="gap-2"
+                onUploadComplete={() => {
+                  // Refresh the media library when upload completes
+                  window.location.reload();
+                }}
+              />
+            </div>
           </DialogTitle>
         </DialogHeader>
         <div className="overflow-y-auto">

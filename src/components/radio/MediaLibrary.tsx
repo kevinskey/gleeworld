@@ -34,12 +34,14 @@ import {
   ZoomOut,
   Edit2,
   Trash2,
-  Upload
+  Upload,
+  Album
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { getFileUrl } from '@/utils/storage';
+import { MediaLibraryBulkUpload } from '@/components/media/MediaLibraryBulkUpload';
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
@@ -90,6 +92,7 @@ export const MediaLibrary = ({
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -712,39 +715,54 @@ export const MediaLibrary = ({
         </p>
       </div>
 
-      {/* Upload Drop Zone */}
+      {/* Upload Controls */}
       {isAdmin && (
-        <div
-          {...getRootProps()}
-          className={`
-            border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
-            ${isDragActive 
-              ? 'border-primary bg-primary/5' 
-              : 'border-muted-foreground/30 hover:border-primary/50'
-            }
-            ${uploading ? 'pointer-events-none opacity-50' : ''}
-          `}
-        >
-          <input {...getInputProps()} />
-          <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          {uploading ? (
-            <div>
-              <p className="text-lg font-medium">Uploading files...</p>
-              <p className="text-sm text-muted-foreground">Please wait</p>
-            </div>
-          ) : isDragActive ? (
-            <div>
-              <p className="text-lg font-medium">Drop files here</p>
-              <p className="text-sm text-muted-foreground">Release to upload</p>
-            </div>
-          ) : (
-            <div>
-              <p className="text-lg font-medium">Drag & drop files here</p>
-              <p className="text-sm text-muted-foreground">
-                Or click to select files • Images, Audio, Video, PDF supported
-              </p>
-            </div>
-          )}
+        <div className="space-y-4">
+          {/* Bulk Upload Button */}
+          <div className="flex justify-center">
+            <Button
+              onClick={() => setShowBulkUpload(true)}
+              className="gap-2"
+              size="lg"
+            >
+              <Album className="h-5 w-5" />
+              Bulk Upload MP3 Albums
+            </Button>
+          </div>
+
+          {/* Quick Drop Zone */}
+          <div
+            {...getRootProps()}
+            className={`
+              border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer
+              ${isDragActive 
+                ? 'border-primary bg-primary/5' 
+                : 'border-muted-foreground/30 hover:border-primary/50'
+              }
+              ${uploading ? 'pointer-events-none opacity-50' : ''}
+            `}
+          >
+            <input {...getInputProps()} />
+            <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+            {uploading ? (
+              <div>
+                <p className="font-medium">Uploading files...</p>
+                <p className="text-sm text-muted-foreground">Please wait</p>
+              </div>
+            ) : isDragActive ? (
+              <div>
+                <p className="font-medium">Drop files here</p>
+                <p className="text-sm text-muted-foreground">Release to upload</p>
+              </div>
+            ) : (
+              <div>
+                <p className="font-medium">Quick Upload</p>
+                <p className="text-sm text-muted-foreground">
+                  Drag & drop or click for individual files
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -1133,6 +1151,26 @@ export const MediaLibrary = ({
                 </Button>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Bulk Upload Dialog */}
+      {showBulkUpload && (
+        <Dialog open={showBulkUpload} onOpenChange={setShowBulkUpload}>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Album className="h-5 w-5" />
+                Bulk Upload MP3 Albums
+              </DialogTitle>
+            </DialogHeader>
+            <div className="overflow-y-auto">
+              <MediaLibraryBulkUpload
+                onUploadComplete={fetchMediaData}
+                onClose={() => setShowBulkUpload(false)}
+              />
+            </div>
           </DialogContent>
         </Dialog>
       )}
