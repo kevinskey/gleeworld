@@ -1,11 +1,18 @@
 import { serve } from "https://deno.land/std/http/server.ts";
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, cache-control, pragma',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Content-Type': 'application/json'
+};
+
 function cors(origin: string|null) {
   return {
     "Vary":"Origin",
     "Access-Control-Allow-Origin": origin ?? "*",
     "Access-Control-Allow-Methods":"POST,OPTIONS",
-    "Access-Control-Allow-Headers":"authorization,content-type,apikey,x-client-info",
+    "Access-Control-Allow-Headers":"authorization,content-type,apikey,x-client-info,cache-control,pragma",
     "Content-Type":"application/json"
   };
 }
@@ -430,8 +437,12 @@ class SeededRandom {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+  
   const origin = req.headers.get("origin");
-  if (req.method === "OPTIONS") return new Response(null,{status:204,headers:cors(origin)});
 
   console.log("=== EDGE FUNCTION START ===");
   
