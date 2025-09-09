@@ -75,11 +75,15 @@ export const MediaLibraryBulkUpload: React.FC<MediaLibraryBulkUploadProps> = ({
     );
   };
 
-  const uploadFile = async (uploadFile: UploadFile): Promise<void> => {
+const uploadFile = async (uploadFile: UploadFile): Promise<void> => {
     const { file, title, description, album, artist } = uploadFile;
     
     try {
       updateFile(uploadFile.id, { status: 'uploading', progress: 10 });
+
+      // Get current user ID
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
 
       // Generate unique filename
       const fileExt = file.name.split('.').pop();
@@ -108,23 +112,22 @@ export const MediaLibraryBulkUpload: React.FC<MediaLibraryBulkUploadProps> = ({
       const { error: dbError } = await supabase
         .from('gw_media_library')
         .insert({
-          filename: fileName,
-          original_filename: file.name,
-          file_path: filePath,
-          file_url: data.publicUrl,
-          file_type: 'audio',
-          file_size: file.size,
-          mime_type: file.type,
           title,
           description: description || `${artist ? `${artist} - ` : ''}${title}${album ? ` (${album})` : ''}`,
-          bucket_id: 'media-library',
+          file_url: data.publicUrl,
+          file_path: filePath,
+          file_type: 'audio',
+          file_size: file.size,
           category: 'music',
           tags: [
             ...(album ? [album] : []),
             ...(artist ? [artist] : []),
             'mp3',
             'music'
-          ].filter(Boolean)
+          ].filter(Boolean),
+          uploaded_by: userId,
+          is_public: true,
+          is_featured: false
         });
 
       if (dbError) throw dbError;

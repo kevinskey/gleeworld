@@ -160,8 +160,6 @@ const MediaLibrary = () => {
         const { error: insertErr } = await supabase
           .from('gw_media_library')
           .insert({
-            filename: safeName,
-            original_filename: file.name,
             title: file.name,
             description: null,
             file_url: publicUrl,
@@ -171,9 +169,7 @@ const MediaLibrary = () => {
                       file.type.startsWith('video/') ? 'video' :
                       file.type.includes('pdf') ? 'document' : 'other',
             file_size: file.size,
-            mime_type: file.type,
             category: 'general',
-            bucket_id: 'media-library',
             uploaded_by: user.id,
             is_public: true,
             is_featured: false
