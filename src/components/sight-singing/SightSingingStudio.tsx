@@ -872,8 +872,9 @@ export const SightSingingStudio: React.FC = () => {
                     
                     {/* Transport Controls - Standard Container */}
                     {currentMusicXML && (
-                      <div className="mb-4 bg-white border rounded-lg shadow-md p-3 lg:p-4">
-                        <div className="flex flex-wrap items-center justify-center gap-2 lg:gap-6">
+                      <div className="mb-4 bg-card border rounded-lg shadow-md p-3 lg:p-4">
+                        <div className="responsive-grid-3 items-center gap-3 lg:gap-4"
+                             style={{ gridTemplateColumns: '1fr auto 1fr' }}>
                           {/* Sound Selectors */}
                           <div className="flex items-center gap-2 lg:gap-3 order-1">
                             <Select 
