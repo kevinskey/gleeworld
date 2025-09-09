@@ -5,6 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 interface RubricCriterion {
@@ -58,17 +59,34 @@ serve(async (req) => {
   try {
     console.log('AI Journal Grading function started');
     
-    const { journalId, journalContent, assignmentId } = await req.json();
+    const requestBody = await req.json();
+    console.log('Request body:', requestBody);
+    
+    const { journalId, journalContent, assignmentId } = requestBody;
     
     if (!journalId || !journalContent) {
-      throw new Error('Journal ID and content are required');
+      console.error('Missing required parameters:', { journalId: !!journalId, journalContent: !!journalContent });
+      return new Response(JSON.stringify({ 
+        error: 'Journal ID and content are required',
+        success: false 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log(`Grading journal ${journalId} for assignment ${assignmentId}`);
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+      console.error('OpenAI API key not configured');
+      return new Response(JSON.stringify({ 
+        error: 'OpenAI API key not configured',
+        success: false 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Create Supabase client
