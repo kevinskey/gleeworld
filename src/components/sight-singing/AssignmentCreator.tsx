@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Users, Music, Upload } from 'lucide-react';
+import { CalendarIcon, Users, Music, Upload, GraduationCap, UserCog } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +26,13 @@ export const AssignmentCreator: React.FC<AssignmentCreatorProps> = ({
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
   const [dueDate, setDueDate] = useState<Date>();
+  const [availableGroups, setAvailableGroups] = useState({
+    voiceParts: [] as string[],
+    roles: [] as string[],
+    executivePositions: [] as string[],
+    cohorts: [] as { id: string; name: string }[],
+    classYears: [] as number[]
+  });
   const [formData, setFormData] = useState({
     title: selectedScore?.title || '',
     description: '',
@@ -34,6 +41,63 @@ export const AssignmentCreator: React.FC<AssignmentCreatorProps> = ({
     target_value: '',
     grading_period: 'quarter1'
   });
+
+  // Fetch available groups on component mount
+  useEffect(() => {
+    const fetchAvailableGroups = async () => {
+      try {
+        // Fetch voice parts
+        const { data: voicePartsData } = await supabase
+          .from('gw_profiles')
+          .select('voice_part')
+          .not('voice_part', 'is', null);
+        
+        const voiceParts = [...new Set(voicePartsData?.map(p => p.voice_part).filter(Boolean))];
+
+        // Fetch roles
+        const { data: rolesData } = await supabase
+          .from('gw_profiles')
+          .select('role')
+          .not('role', 'is', null);
+        
+        const roles = [...new Set(rolesData?.map(p => p.role).filter(Boolean))];
+
+        // Fetch executive positions
+        const { data: execData } = await supabase
+          .from('gw_executive_board_members')
+          .select('position')
+          .eq('is_active', true);
+        
+        const executivePositions = [...new Set(execData?.map(e => e.position).filter(Boolean))];
+
+        // Fetch cohorts
+        const { data: cohortsData } = await supabase
+          .from('fy_cohorts')
+          .select('id, name')
+          .eq('is_active', true);
+
+        // Fetch class years
+        const { data: classYearsData } = await supabase
+          .from('gw_profiles')
+          .select('class_year')
+          .not('class_year', 'is', null);
+        
+        const classYears = [...new Set(classYearsData?.map(p => p.class_year).filter(Boolean))].sort((a, b) => b - a);
+
+        setAvailableGroups({
+          voiceParts: voiceParts.sort(),
+          roles: roles.sort(),
+          executivePositions: executivePositions.sort(),
+          cohorts: cohortsData || [],
+          classYears
+        });
+      } catch (error) {
+        console.error('Error fetching available groups:', error);
+      }
+    };
+
+    fetchAvailableGroups();
+  }, []);
 
   const handleCreateAssignment = async () => {
     if (!selectedScore?.xml_content) {
@@ -228,26 +292,91 @@ export const AssignmentCreator: React.FC<AssignmentCreatorProps> = ({
                       All Members
                     </div>
                   </SelectItem>
-                  <SelectItem value="voice_part">Voice Part</SelectItem>
+                  <SelectItem value="voice_part">
+                    <div className="flex items-center gap-2">
+                      <Music className="h-4 w-4" />
+                      Voice Part
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="role">
+                    <div className="flex items-center gap-2">
+                      <UserCog className="h-4 w-4" />
+                      Role
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="executive_position">
+                    <div className="flex items-center gap-2">
+                      <UserCog className="h-4 w-4" />
+                      Executive Position
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="class_year">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      Class Year
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="cohort">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      FY Cohort
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {formData.target_type === 'voice_part' && (
+            {/* Dynamic second dropdown based on target type */}
+            {formData.target_type !== 'all_members' && (
               <div>
-                <Label htmlFor="voice-part">Voice Part</Label>
+                <Label htmlFor="target-value">
+                  {formData.target_type === 'voice_part' && 'Voice Part'}
+                  {formData.target_type === 'role' && 'Role'}
+                  {formData.target_type === 'executive_position' && 'Position'}
+                  {formData.target_type === 'class_year' && 'Class Year'}
+                  {formData.target_type === 'cohort' && 'Cohort'}
+                </Label>
                 <Select
                   value={formData.target_value}
                   onValueChange={(value) => setFormData({ ...formData, target_value: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select voice part" />
+                    <SelectValue placeholder={`Select ${formData.target_type.replace('_', ' ')}`} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="soprano">Soprano</SelectItem>
-                    <SelectItem value="alto">Alto</SelectItem>
-                    <SelectItem value="tenor">Tenor</SelectItem>
-                    <SelectItem value="bass">Bass</SelectItem>
+                    {formData.target_type === 'voice_part' && 
+                      availableGroups.voiceParts.map(part => (
+                        <SelectItem key={part} value={part}>{part}</SelectItem>
+                      ))
+                    }
+                    {formData.target_type === 'role' &&
+                      availableGroups.roles.map(role => (
+                        <SelectItem key={role} value={role}>
+                          {role.charAt(0).toUpperCase() + role.slice(1)}
+                        </SelectItem>
+                      ))
+                    }
+                    {formData.target_type === 'executive_position' &&
+                      availableGroups.executivePositions.map(position => (
+                        <SelectItem key={position} value={position}>
+                          {position.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </SelectItem>
+                      ))
+                    }
+                    {formData.target_type === 'class_year' &&
+                      availableGroups.classYears.map(year => (
+                        <SelectItem key={year} value={year.toString()}>
+                          Class of {year}
+                        </SelectItem>
+                      ))
+                    }
+                    {formData.target_type === 'cohort' &&
+                      availableGroups.cohorts.map(cohort => (
+                        <SelectItem key={cohort.id} value={cohort.id}>
+                          {cohort.name}
+                        </SelectItem>
+                      ))
+                    }
                   </SelectContent>
                 </Select>
               </div>
@@ -280,7 +409,7 @@ export const AssignmentCreator: React.FC<AssignmentCreatorProps> = ({
             disabled={!selectedScore?.xml_content || !dueDate || !formData.title.trim() || isCreating}
             className="w-full"
           >
-            {isCreating ? "Creating Assignment..." : "Create Assignment for Members"}
+            {isCreating ? "Creating Assignment..." : "Create Assignment"}
           </Button>
         </div>
       </CardContent>
