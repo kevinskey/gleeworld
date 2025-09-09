@@ -7020,6 +7020,7 @@ export type Database = {
           category: string
           created_at: string | null
           id: string
+          is_pinned: boolean | null
           module_key: string
           sort_order: number
           updated_at: string | null
@@ -7029,6 +7030,7 @@ export type Database = {
           category: string
           created_at?: string | null
           id?: string
+          is_pinned?: boolean | null
           module_key: string
           sort_order?: number
           updated_at?: string | null
@@ -7038,6 +7040,7 @@ export type Database = {
           category?: string
           created_at?: string | null
           id?: string
+          is_pinned?: boolean | null
           module_key?: string
           sort_order?: number
           updated_at?: string | null
