@@ -97,6 +97,7 @@ class AzuraCastService {
   private stationId = 'glee_world_radio';
   private directStreamUrl = 'https://radio.gleeworld.org/listen/glee_world_radio/radio.mp3'; // Use HTTPS
   private proxyBaseUrl = 'https://oopmlreysjzuxzylyheb.functions.supabase.co/radio-proxy';
+  private apiProxyUrl = 'https://oopmlreysjzuxzylyheb.functions.supabase.co/azuracast-api-proxy';
   private adminApiKey?: string;
 
   async getNowPlaying(): Promise<AzuraCastNowPlaying | null> {
@@ -175,43 +176,33 @@ class AzuraCastService {
     this.adminApiKey = apiKey.replace(/[^\x00-\x7F]/g, "").trim();
   }
 
-  // Get admin headers for authenticated requests
-  private getAdminHeaders(): Record<string, string> {
-    if (!this.adminApiKey) {
-      throw new Error('Admin API key not set. Call setAdminApiKey() first.');
+  // Make authenticated request via proxy
+  private async makeProxyRequest(endpoint: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any) {
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    console.log('AzuraCast: Making proxy request to:', endpoint);
+    
+    const { data, error } = await supabase.functions.invoke('azuracast-api-proxy', {
+      body: {
+        endpoint,
+        method,
+        body,
+        stationId: this.stationId
+      }
+    });
+
+    if (error) {
+      console.error('AzuraCast: Proxy request error:', error);
+      throw new Error(`Proxy request failed: ${error.message}`);
     }
-    
-    // Ensure the API key contains only valid ASCII characters for HTTP headers
-    const cleanApiKey = this.adminApiKey.replace(/[^\x00-\x7F]/g, "").trim();
-    
-    if (!cleanApiKey) {
-      throw new Error('Invalid API key format. API key must contain valid ASCII characters only.');
-    }
-    
-    return {
-      'Authorization': `Bearer ${cleanApiKey}`,
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
+
+    console.log('AzuraCast: Proxy request successful');
+    return data;
   }
 
   // PLAYLIST MANAGEMENT
   async getPlaylists(): Promise<any[]> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/playlists`, {
-        method: 'GET',
-        headers: this.getAdminHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch playlists: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching playlists:', error);
-      throw error;
-    }
+    return await this.makeProxyRequest(`/station/{stationId}/playlists`);
   }
 
   async createPlaylist(playlistData: {
@@ -221,57 +212,15 @@ class AzuraCastService {
     type?: 'default' | 'scheduled' | 'once_per_x_songs' | 'once_per_x_minutes';
     weight?: number;
   }): Promise<any> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/playlists`, {
-        method: 'POST',
-        headers: this.getAdminHeaders(),
-        body: JSON.stringify(playlistData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to create playlist: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error creating playlist:', error);
-      throw error;
-    }
+    return await this.makeProxyRequest(`/station/{stationId}/playlists`, 'POST', playlistData);
   }
 
   async updatePlaylist(playlistId: number, playlistData: any): Promise<any> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/playlist/${playlistId}`, {
-        method: 'PUT',
-        headers: this.getAdminHeaders(),
-        body: JSON.stringify(playlistData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update playlist: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating playlist:', error);
-      throw error;
-    }
+    return await this.makeProxyRequest(`/station/{stationId}/playlist/${playlistId}`, 'PUT', playlistData);
   }
 
   async deletePlaylist(playlistId: number): Promise<void> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/playlist/${playlistId}`, {
-        method: 'DELETE',
-        headers: this.getAdminHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete playlist: ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Error deleting playlist:', error);
-      throw error;
-    }
+    await this.makeProxyRequest(`/station/{stationId}/playlist/${playlistId}`, 'DELETE');
   }
 
   // FILE UPLOAD TO AZURACAST MEDIA LIBRARY
@@ -281,88 +230,21 @@ class AzuraCastService {
     album?: string;
     genre?: string;
   }): Promise<any> {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      if (metadata) {
-        Object.entries(metadata).forEach(([key, value]) => {
-          if (value) formData.append(key, value);
-        });
-      }
-
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/files`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.adminApiKey}`,
-          // Don't set Content-Type for FormData - let browser set it with boundary
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to upload file: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      throw error;
-    }
+    // Note: File upload will need special handling via proxy
+    throw new Error('File upload not yet implemented via proxy');
   }
 
   async getFiles(path: string = ''): Promise<any[]> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/files?path=${encodeURIComponent(path)}`, {
-        method: 'GET',
-        headers: this.getAdminHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch files: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching files:', error);
-      throw error;
-    }
+    return await this.makeProxyRequest(`/station/{stationId}/files?path=${encodeURIComponent(path)}`);
   }
 
   async deleteFile(filePath: string): Promise<void> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/file`, {
-        method: 'DELETE',
-        headers: this.getAdminHeaders(),
-        body: JSON.stringify({ path: filePath }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete file: ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Error deleting file:', error);
-      throw error;
-    }
+    await this.makeProxyRequest(`/station/{stationId}/file`, 'DELETE', { path: filePath });
   }
 
   // SCHEDULE CONTROL
   async getSchedule(): Promise<any[]> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/schedule`, {
-        method: 'GET',
-        headers: this.getAdminHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch schedule: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching schedule:', error);
-      throw error;
-    }
+    return await this.makeProxyRequest(`/station/{stationId}/schedule`);
   }
 
   async createScheduleEntry(scheduleData: {
@@ -375,86 +257,21 @@ class AzuraCastService {
     end_date?: string;   // YYYY-MM-DD format
     days?: number[];     // Array of day numbers (0=Sunday, 1=Monday, etc.)
   }): Promise<any> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/schedule`, {
-        method: 'POST',
-        headers: this.getAdminHeaders(),
-        body: JSON.stringify(scheduleData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to create schedule entry: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error creating schedule entry:', error);
-      throw error;
-    }
+    return await this.makeProxyRequest(`/station/{stationId}/schedule`, 'POST', scheduleData);
   }
 
   async updateScheduleEntry(scheduleId: number, scheduleData: any): Promise<any> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/schedule/${scheduleId}`, {
-        method: 'PUT',
-        headers: this.getAdminHeaders(),
-        body: JSON.stringify(scheduleData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update schedule entry: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating schedule entry:', error);
-      throw error;
-    }
+    return await this.makeProxyRequest(`/station/{stationId}/schedule/${scheduleId}`, 'PUT', scheduleData);
   }
 
   async deleteScheduleEntry(scheduleId: number): Promise<void> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/schedule/${scheduleId}`, {
-        method: 'DELETE',
-        headers: this.getAdminHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete schedule entry: ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Error deleting schedule entry:', error);
-      throw error;
-    }
+    await this.makeProxyRequest(`/station/{stationId}/schedule/${scheduleId}`, 'DELETE');
   }
 
   // STATION CONFIGURATION
   async getStationConfig(): Promise<any> {
-    try {
-      console.log('AzuraCast: Fetching station config with URL:', `${this.baseUrl}/api/station/${this.stationId}`);
-      console.log('AzuraCast: Using headers:', this.getAdminHeaders());
-      
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}`, {
-        method: 'GET',
-        headers: this.getAdminHeaders(),
-      });
-
-      console.log('AzuraCast: Station config response status:', response.status);
-      console.log('AzuraCast: Station config response headers:', response.headers);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('AzuraCast: Station config error response:', errorText);
-        throw new Error(`Failed to fetch station config: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('AzuraCast: Station config data received:', data);
-      return data;
-    } catch (error) {
-      console.error('Error fetching station config:', error);
-      throw error;
-    }
+    console.log('AzuraCast: Getting station config via proxy...');
+    return await this.makeProxyRequest(`/station/{stationId}`);
   }
 
   async updateStationConfig(configData: {
@@ -467,74 +284,20 @@ class AzuraCastService {
     enable_on_demand?: boolean;
     default_album_art_url?: string;
   }): Promise<any> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}`, {
-        method: 'PUT',
-        headers: this.getAdminHeaders(),
-        body: JSON.stringify(configData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update station config: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating station config:', error);
-      throw error;
-    }
+    return await this.makeProxyRequest(`/station/{stationId}`, 'PUT', configData);
   }
 
   async restartStation(): Promise<void> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/restart`, {
-        method: 'POST',
-        headers: this.getAdminHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to restart station: ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Error restarting station:', error);
-      throw error;
-    }
+    await this.makeProxyRequest(`/station/{stationId}/restart`, 'POST');
   }
 
-  // MEDIA MANAGEMENT
+  // MEDIA MANAGEMENT  
   async addToPlaylist(playlistId: number, fileIds: number[]): Promise<any> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/playlist/${playlistId}/media`, {
-        method: 'POST',
-        headers: this.getAdminHeaders(),
-        body: JSON.stringify({ media: fileIds }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to add media to playlist: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error adding media to playlist:', error);
-      throw error;
-    }
+    return await this.makeProxyRequest(`/station/{stationId}/playlist/${playlistId}/media`, 'POST', { media: fileIds });
   }
 
   async removeFromPlaylist(playlistId: number, mediaId: number): Promise<void> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}/playlist/${playlistId}/media/${mediaId}`, {
-        method: 'DELETE',
-        headers: this.getAdminHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to remove media from playlist: ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Error removing media from playlist:', error);
-      throw error;
-    }
+    await this.makeProxyRequest(`/station/{stationId}/playlist/${playlistId}/media/${mediaId}`, 'DELETE');
   }
 }
 

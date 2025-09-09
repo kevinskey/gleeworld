@@ -50,7 +50,6 @@ interface StationConfig {
 }
 
 export const AzuraCastAdminPanel = () => {
-  const [apiKey, setApiKey] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
@@ -82,31 +81,11 @@ export const AzuraCastAdminPanel = () => {
   });
 
   const connectToAzuraCast = async () => {
-    if (!apiKey.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter your AzuraCast admin API key",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check if user entered placeholder text instead of real API key
-    if (apiKey.includes('AzuraCast admin API calls') || apiKey.includes('Playlist Management')) {
-      toast({
-        title: "Invalid API Key",
-        description: "Please enter your actual AzuraCast API key, not the placeholder text",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
-      console.log('AzuraCast: Setting API key and testing connection...');
-      azuraCastService.setAdminApiKey(apiKey);
+      console.log('AzuraCast: Testing connection via proxy...');
       
-      // Test connection by fetching station info
+      // Test connection by fetching station info via proxy
       console.log('AzuraCast: Testing connection with getStationConfig...');
       const stationConfig = await azuraCastService.getStationConfig();
       console.log('AzuraCast: Connection successful, station config:', stationConfig);
@@ -363,38 +342,19 @@ export const AzuraCastAdminPanel = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="p-4 border rounded-lg bg-muted/50">
-              <h4 className="font-medium mb-2">Connection Requirements:</h4>
+              <h4 className="font-medium mb-2">Connection Status:</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Valid AzuraCast Admin API key</li>
-                <li>• Access to radio.gleeworld.org</li>
-                <li>• Admin or Super Admin permissions on AzuraCast</li>
-                <li>• CORS enabled for this domain</li>
+                <li>• Using secure server-side proxy</li>
+                <li>• API key stored in Supabase secrets</li>
+                <li>• Admin permissions verified</li>
+                <li>• Connecting to radio.gleeworld.org</li>
               </ul>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="apiKey">Admin API Key</Label>
-              <Input
-                id="apiKey"
-                type="password"
-                placeholder="Enter your AzuraCast admin API key (not placeholder text)"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-              <p className="text-sm text-muted-foreground">
-                Get your API key from: AzuraCast Admin → Account Settings → API Keys
-              </p>
-              {apiKey && (apiKey.includes('AzuraCast admin API calls') || apiKey.includes('Playlist Management')) && (
-                <p className="text-sm text-destructive">
-                  ⚠️ This looks like placeholder text. Please enter your actual API key.
-                </p>
-              )}
             </div>
             
             <div className="flex gap-2">
               <Button 
                 onClick={connectToAzuraCast}
-                disabled={loading || !apiKey.trim()}
+                disabled={loading}
                 className="flex-1"
               >
                 {loading ? (
