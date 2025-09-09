@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { X } from 'lucide-react';
 import { ExerciseParameters } from './SightSingingStudio';
 
@@ -276,6 +277,25 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                   {duration === '16th' ? '16th' : duration.charAt(0).toUpperCase()}
                 </Badge>
               ))}
+              
+              {/* Dotted Notes Radio Group */}
+              <div className="flex items-center space-x-2 ml-4">
+                <Label className="text-xs font-medium">Dotted Notes:</Label>
+                <RadioGroup 
+                  value={watchedAllowDots ? "yes" : "no"}
+                  onValueChange={(value) => setValue('allowDots', value === "yes")}
+                  className="flex flex-row space-x-2"
+                >
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="yes" id="dots-yes" />
+                    <Label htmlFor="dots-yes" className="text-xs">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="no" id="dots-no" />
+                    <Label htmlFor="dots-no" className="text-xs">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
             </div>
           </div>
 
