@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Music, Image, Video, Upload, FileText, ArrowLeft, Loader2, ExternalLink, Camera, Album, Plus, X } from "lucide-react";
+import { Music, Image, Video, Upload, FileText, ArrowLeft, Loader2, ExternalLink, Camera, Album, Plus, X, Folder, FolderOpen, Home } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,6 +24,8 @@ interface MediaItem {
   file_type?: string | null;
   category?: string | null;
   created_at?: string | null;
+  file_path?: string | null;
+  folder_path?: string | null;
 }
 
 const MIME_TO_KIND = (mime?: string | null, fallback?: string | null) => {
@@ -56,6 +58,8 @@ const MediaLibrary = () => {
   const [uploading, setUploading] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
+  const [currentFolder, setCurrentFolder] = useState('');
+  const [folderStructure, setFolderStructure] = useState<Record<string, MediaItem[]>>({});
 
   const fetchItems = async () => {
     setLoading(true);
@@ -74,7 +78,18 @@ const MediaLibrary = () => {
         file_type: r.file_type ?? null,
         category: r.category ?? null,
         created_at: r.created_at ?? null,
+        file_path: r.file_path ?? null,
+        folder_path: r.file_path ? r.file_path.split('/').slice(0, -1).join('/') : null,
       }));
+      
+      // Build folder structure
+      const folders: Record<string, MediaItem[]> = {};
+      mapped.forEach(item => {
+        const folderPath = item.folder_path || '';
+        if (!folders[folderPath]) folders[folderPath] = [];
+        folders[folderPath].push(item);
+      });
+      setFolderStructure(folders);
       setItems(mapped);
     } catch (e) {
       console.error('Failed to load media:', e);
@@ -87,6 +102,14 @@ const MediaLibrary = () => {
     fetchItems();
   }, []);
 
+  const currentFolderItems = currentFolder 
+    ? folderStructure[currentFolder] || []
+    : folderStructure[''] || [];
+
+  const availableFolders = Object.keys(folderStructure)
+    .filter(folder => folder !== '' && folder !== currentFolder)
+    .sort();
+
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
     const isDoc = (i: MediaItem) => {
@@ -95,7 +118,7 @@ const MediaLibrary = () => {
       const ft = (i.file_type || '').toLowerCase();
       return mt.includes('pdf') || mt.includes('msword') || mt.includes('officedocument') || ft === 'document' || cat.includes('document');
     };
-    return items.filter(i => {
+    return currentFolderItems.filter(i => {
       const kind = MIME_TO_KIND(i.mime_type, i.file_type);
       const matchesKind = activeKind === 'all'
         ? true
@@ -107,7 +130,7 @@ const MediaLibrary = () => {
         .some(v => (v as string).toLowerCase().includes(q));
       return matchesKind && matchesQuery;
     });
-  }, [items, activeKind, query]);
+  }, [currentFolderItems, activeKind, query]);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedItem = useMemo(() => filtered.find(i => i.id === selectedId) || null, [filtered, selectedId]);
@@ -132,7 +155,7 @@ const MediaLibrary = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleBulkUploadFiles = async (files: File[]) => {
+  const handleBulkUploadFiles = async (files: File[], preserveFolderStructure = false) => {
     if (!user) return;
     
     setUploading(true);
@@ -142,8 +165,20 @@ const MediaLibrary = () => {
         const date = new Date();
         const pad = (n: number) => n.toString().padStart(2, '0');
         const ymd = `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}`;
-        const safeName = file.name.replace(/\s+/g, '-').toLowerCase();
-        const filePath = `${user.id}/${ymd}-${index}-${crypto.randomUUID()}-${safeName}`;
+        
+        let filePath: string;
+        if (preserveFolderStructure && (file as any).webkitRelativePath) {
+          // Preserve folder structure from folder upload
+          const relativePath = (file as any).webkitRelativePath;
+          const safePath = relativePath.replace(/\s+/g, '-').toLowerCase();
+          filePath = `${user.id}/folders/${safePath}`;
+        } else {
+          // Regular file upload
+          const safeName = file.name.replace(/\s+/g, '-').toLowerCase();
+          filePath = currentFolder 
+            ? `${user.id}/${currentFolder}/${ymd}-${index}-${crypto.randomUUID()}-${safeName}`
+            : `${user.id}/${ymd}-${index}-${crypto.randomUUID()}-${safeName}`;
+        }
 
         // Upload to storage bucket (using media-library bucket for consistency)
         const { data: upRes, error: upErr } = await supabase.storage
@@ -217,9 +252,10 @@ const MediaLibrary = () => {
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      handleBulkUploadFiles(acceptedFiles);
+      const hasRelativePaths = acceptedFiles.some((file: any) => file.webkitRelativePath);
+      handleBulkUploadFiles(acceptedFiles, hasRelativePaths);
     }
-  }, [user]);
+  }, [user, currentFolder]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -232,6 +268,17 @@ const MediaLibrary = () => {
       'application/pdf': ['.pdf']
     }
   });
+
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  
+  const handleFolderUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      handleBulkUploadFiles(files, true);
+    }
+    if (folderInputRef.current) folderInputRef.current.value = '';
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/50">
@@ -258,6 +305,18 @@ const MediaLibrary = () => {
                 Bulk Upload
               </Button>
               <input ref={fileInputRef} type="file" className="hidden" onChange={handleSingleUpload} multiple />
+              <input 
+                ref={folderInputRef} 
+                type="file" 
+                className="hidden" 
+                {...({ webkitdirectory: '' } as any)}
+                onChange={handleFolderUpload} 
+                multiple 
+              />
+              <Button onClick={() => folderInputRef.current?.click()} disabled={uploading} variant="outline" className="hover:bg-secondary/80">
+                <Folder className="mr-2 h-4 w-4" />
+                Upload Folder
+              </Button>
               <Button onClick={onUploadClick} disabled={uploading} variant="outline" className="hover:bg-secondary/80">
                 {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                 {uploading ? 'Uploading...' : 'Quick Upload'}
@@ -309,6 +368,7 @@ const MediaLibrary = () => {
                     <div className="text-sm text-muted-foreground space-y-1">
                       <p>Supports: Images, Audio, Video, PDFs, Documents</p>
                       <p>• Multiple files uploaded in parallel for maximum speed</p>
+                      <p>• Drag entire folders to preserve structure</p>
                     </div>
                   </>
                 )}
@@ -327,6 +387,36 @@ const MediaLibrary = () => {
               <CardDescription>Filter by type or search by filename/category</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Folder Navigation */}
+            <div className="flex items-center gap-2 mb-4 p-3 bg-gradient-to-r from-muted/40 to-muted/20 rounded-lg border border-border/30">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentFolder('')}
+                className={`gap-2 ${currentFolder === '' ? 'bg-primary/20 text-primary' : ''}`}
+              >
+                <Home className="h-4 w-4" />
+                Root
+              </Button>
+              {availableFolders.length > 0 && (
+                <>
+                  <span className="text-muted-foreground">|</span>
+                  {availableFolders.map(folder => (
+                    <Button
+                      key={folder}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCurrentFolder(folder)}
+                      className={`gap-2 ${currentFolder === folder ? 'bg-primary/20 text-primary' : ''}`}
+                    >
+                      <Folder className="h-4 w-4" />
+                      {folder.split('/').pop() || folder}
+                    </Button>
+                  ))}
+                </>
+              )}
+            </div>
+
             <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between mb-6">
               <Tabs value={activeKind} onValueChange={(v) => setActiveKind(v as any)}>
                 <TabsList className="bg-gradient-to-r from-muted/80 to-muted/60 backdrop-blur-md border border-border/30">
@@ -385,7 +475,14 @@ const MediaLibrary = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="truncate font-medium">{m.original_filename || m.title}</div>
-                          <div className="text-sm text-muted-foreground">{(kind || 'file').toUpperCase()}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {(kind || 'file').toUpperCase()}
+                            {m.folder_path && m.folder_path !== currentFolder && (
+                              <span className="ml-2 text-xs bg-muted/50 px-2 py-1 rounded">
+                                {m.folder_path.split('/').pop()}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         {m.category && <Badge variant="outline" className="text-xs bg-secondary/20">{m.category}</Badge>}
                       </button>
