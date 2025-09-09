@@ -33,6 +33,7 @@ import { RadioTimeline } from '../radio/RadioTimeline';
 import { MediaUploadButton } from '@/components/media/MediaUploadButton';
 import { BulkUploadDialog } from '@/components/radio/BulkUploadDialog';
 import { MediaLibraryDialog } from '@/components/radio/MediaLibraryDialog';
+import { AzuraCastAdminPanel } from './AzuraCastAdminPanel';
 
 interface AudioTrack {
   id: string;
@@ -456,8 +457,8 @@ export const RadioManagement = () => {
         </Card>
       </div>
 
-      {/* Split Layout: Track Library + Timeline */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Three-Panel Layout: Track Library + Timeline + AzuraCast Admin */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-6">
         {/* Left Side: Track Library */}
         <div className="space-y-4">
           <Card>
@@ -638,7 +639,7 @@ export const RadioManagement = () => {
           </Card>
         </div>
 
-        {/* Right Side: Timeline */}
+        {/* Center: Timeline */}
         <div className="space-y-4">
           <RadioTimeline 
             onTrackScheduled={(track) => {
@@ -649,6 +650,11 @@ export const RadioManagement = () => {
               });
             }}
           />
+        </div>
+
+        {/* Right Side: AzuraCast Admin Panel */}
+        <div className="space-y-4">
+          <AzuraCastAdminPanel />
         </div>
       </div>
 
