@@ -646,28 +646,47 @@ serve(async (req) => {
 
 CRITICAL: Your response must be ONLY a valid JSON object with no additional text, explanations, or markdown formatting.
 
-COMPOSITIONAL REQUIREMENTS:
-1. PHRASE STRUCTURE: Create balanced 4-measure phrases with proper antecedent/consequent relationships
-2. MELODIC CONTOUR: Use arch-shaped melodies with clear high points and resolution
-3. CADENCES: 
-   - Authentic cadences (7-1 or 2-1) at phrase endings
-   - Half cadences (ending on 5) for mid-phrase breathing points
-   - Deceptive cadences (7-6) for variety
-4. VOICE LEADING:
-   - Predominantly stepwise motion (70% step, 20% skip, 10% leap)
-   - Resolve tendency tones properly (7→1, 4→3)
-   - Balance ascending and descending motion
-5. RHYTHM: Use rhythmic variety but maintain clear beat patterns
-6. RANGE: Stay within singable range (C4-A5 for soprano)
+VOICE LEADING REQUIREMENTS:
+1. STEPWISE MOTION: Prioritize stepwise motion (70% steps, 20% skips, 10% leaps maximum)
+2. TENDENCY TONES: Always resolve tendency tones properly:
+   - Leading tone (7) must resolve to tonic (1)
+   - Subdominant (4) should resolve down to mediant (3) in most contexts
+   - Applied leading tones must resolve correctly
+3. SMOOTH VOICE LEADING: Avoid large leaps without preparation or resolution
+4. MELODIC CONTOUR: Create balanced arch-shaped phrases with clear direction
+
+CADENCE REQUIREMENTS:
+1. STRONG BEAT PLACEMENT: All cadences must occur on strong beats (beat 1 or 3 in 4/4)
+2. COMPLETE MEASURES: Always complete full measures unless specifically instructed otherwise
+3. CADENCE TYPES:
+   - Authentic Cadence: End with scale degrees 7-1 or 2-1 
+   - Half Cadence: End on scale degree 5
+   - Plagal Cadence: End with 4-1 motion
+   - Deceptive Cadence: Use 7-6 resolution instead of 7-1
+4. PHRASE BREATHING: Insert half cadences at phrase midpoints for musical breathing
+
+RHYTHMIC REQUIREMENTS:
+1. BEAT INTEGRITY: Never split measures incorrectly
+2. METRIC EMPHASIS: Place important melodic notes on strong beats
+3. COMPLETE MEASURES: Fill all beats in each measure completely
 
 FORBIDDEN:
-- Augmented or diminished intervals
-- Large leaps (>P5) without stepwise resolution
-- Tritones unless resolved properly
-- Accidentals when allowAccidentals=false
+- Augmented or diminished intervals except in resolved contexts
+- Large leaps (>P5) without stepwise approach or resolution  
+- Tritones unless part of proper dominant function and resolution
+- Incomplete measures (unless specified in parameters)
+- Weak beat cadences
+- Unresolved tendency tones
 
 DURATIONS ALLOWED: ${allowed.join(", ")}
 ${allowAccidentals ? '' : 'ACCIDENTALS: NEVER use acc values other than 0'}
+
+Parameters received:
+- Cadence Type: ${params.cadenceType || 'authentic'}
+- Enforce Voice Leading: ${params.enforceVoiceLeading ?? true}
+- Require Resolution: ${params.requireResolution ?? true}
+- Strong Beat Cadence: ${params.strongBeatCadence ?? true}
+- Stepwise Motion %: ${params.stepwiseMotionPercentage ?? 70}%
 
 Return ONLY this exact JSON structure:`;
 
@@ -759,12 +778,15 @@ Return this exact JSON structure with your composition:
         const notes = [];
         let currentTicks = 0;
         
-        // Enhanced tonal harmony controls
+        // Enhanced tonal harmony controls from parameters
         const maxInterval = params.maxInterval ?? 7; // Perfect 5th by default
-        const avoidedIntervals = params.avoidedIntervals ?? [6]; // Avoid tritone by default
-        const stepwisePercentage = params.stepwiseMotionPercentage ?? 60;
+        const avoidedIntervals = [6]; // Avoid tritone by default
+        const stepwisePercentage = params.stepwiseMotionPercentage ?? 70;
         const enforceVoiceLeading = params.enforceVoiceLeading ?? true;
-        const melodicRange = params.melodicRange ?? { min: 1, max: 8 };
+        const requireResolution = params.requireResolution ?? true;
+        const strongBeatCadence = params.strongBeatCadence ?? true;
+        const cadenceType = params.cadenceType ?? 'authentic';
+        const melodicRange = { min: 1, max: 8 };
         
         // Use interval motion preferences with enhanced control
         const allowedMotion = params.intervalMotion || ["step", "skip"];
@@ -791,9 +813,26 @@ Return this exact JSON structure with your composition:
           ]
         };
         
-        // Cadential patterns based on measure position
+        // Cadential patterns based on measure position and cadence type
         const cadenceEvery = params.cadenceEvery ?? 4;
         const isCadentialMeasure = (measureIndex + 1) % cadenceEvery === 0;
+        const isLastMeasure = measureIndex === (numMeasures - 1);
+        
+        // Define cadence-specific patterns based on cadenceType
+        const cadencePatterns = {
+          authentic: [
+            [7, 1], [2, 1], [5, 1], [4, 3, 2, 1] // Authentic cadence endings
+          ],
+          half: [
+            [1, 5], [2, 5], [4, 5], [6, 5] // Half cadence endings  
+          ],
+          plagal: [
+            [4, 1], [6, 4, 1] // Plagal cadence endings
+          ],
+          deceptive: [
+            [7, 6], [5, 6] // Deceptive cadence endings
+          ]
+        };
         
         // Create seeded random generator for this measure if we have seeds
         const seedString = `${requestId || 'default'}-${randomSeed || Date.now()}-${measureIndex}`;

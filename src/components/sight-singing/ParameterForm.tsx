@@ -34,7 +34,13 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
       intervalMotion: ["step", "skip"],
       cadenceEvery: 4,
       bpm: 120,
-      title: "Sight-Singing Exercise"
+      title: "Sight-Singing Exercise",
+      cadenceType: "authentic",
+      enforceVoiceLeading: true,
+      requireResolution: true,
+      strongBeatCadence: true,
+      maxInterval: 7,
+      stepwiseMotionPercentage: 70
     }
   });
 
@@ -62,6 +68,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   const motions = ["step", "skip", "leap", "repeat"];
   const measureOptions = [4, 8, 16, 32];
   const cadenceOptions = [2, 4, 8];
+  const cadenceTypes = ["authentic", "half", "plagal", "deceptive"];
   const bpmOptions = [60, 72, 84, 96, 108, 120, 132, 144, 160, 180];
 
   const handleDurationToggle = (duration: string) => {
@@ -219,35 +226,82 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             </div>
           </div>
 
-          {/* Row 4: Cadence */}
-          <div className="space-y-1">
-            <Label className="text-xs font-medium">Cadence Every</Label>
-            <Select 
-              value={watchedCadenceEvery.toString()} 
-              onValueChange={(value) => setValue('cadenceEvery', parseInt(value))}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-background border shadow-lg z-50">
-                {cadenceOptions.map(cadence => (
-                  <SelectItem key={cadence} value={cadence.toString()}>
-                    {cadence} bars
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Row 4: Cadence Every and Type */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Cadence Every</Label>
+              <Select 
+                value={watchedCadenceEvery.toString()} 
+                onValueChange={(value) => setValue('cadenceEvery', parseInt(value))}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {cadenceOptions.map(cadence => (
+                    <SelectItem key={cadence} value={cadence.toString()}>
+                      {cadence} bars
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Cadence Type</Label>
+              <Select 
+                value={watch('cadenceType') || 'authentic'} 
+                onValueChange={(value) => setValue('cadenceType', value as 'authentic' | 'half' | 'plagal' | 'deceptive')}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {cadenceTypes.map(type => (
+                    <SelectItem key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Checkbox Options */}
-          <div className="flex items-center space-x-3">
+          <div className="grid grid-cols-2 gap-2">
             <div className="flex items-center space-x-1">
               <Checkbox 
                 id="allowDots"
                 checked={watchedAllowDots}
                 onCheckedChange={(checked) => setValue('allowDots', !!checked)}
               />
-              <Label htmlFor="allowDots" className="text-xs">Dots</Label>
+              <Label htmlFor="allowDots" className="text-xs">Dotted Notes</Label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Checkbox 
+                id="enforceVoiceLeading"
+                checked={watch('enforceVoiceLeading') ?? true}
+                onCheckedChange={(checked) => setValue('enforceVoiceLeading', !!checked)}
+              />
+              <Label htmlFor="enforceVoiceLeading" className="text-xs">Voice Leading</Label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center space-x-1">
+              <Checkbox 
+                id="requireResolution"
+                checked={watch('requireResolution') ?? true}
+                onCheckedChange={(checked) => setValue('requireResolution', !!checked)}
+              />
+              <Label htmlFor="requireResolution" className="text-xs">Resolve Tendencies</Label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Checkbox 
+                id="strongBeatCadence"
+                checked={watch('strongBeatCadence') ?? true}
+                onCheckedChange={(checked) => setValue('strongBeatCadence', !!checked)}
+              />
+              <Label htmlFor="strongBeatCadence" className="text-xs">Strong Beat Cadence</Label>
             </div>
           </div>
 

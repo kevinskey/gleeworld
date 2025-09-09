@@ -61,6 +61,13 @@ export interface ExerciseParameters {
     prefer24TiedEighths?: boolean;
     avoidWeakBeatQuarters?: boolean;
   };
+  // Voice leading and cadence parameters
+  cadenceType?: 'authentic' | 'half' | 'plagal' | 'deceptive';
+  enforceVoiceLeading?: boolean;
+  requireResolution?: boolean;
+  strongBeatCadence?: boolean;
+  maxInterval?: number;
+  stepwiseMotionPercentage?: number;
 }
 
 export interface ScoreJSON {
