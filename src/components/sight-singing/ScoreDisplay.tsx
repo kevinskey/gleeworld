@@ -66,9 +66,9 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
           autoResize: true,
           backend: "svg",
-          drawTitle: false,
+          drawTitle: containerWidth < 768, // Show title on mobile/tablet
           drawCredits: false,
-          drawPartNames: true,
+          drawPartNames: containerWidth >= 768, // Hide part names on mobile to save space
           drawMeasureNumbers: true,
           coloringMode: 0, // No coloring
           cursorsOptions: [{
