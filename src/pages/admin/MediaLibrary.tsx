@@ -31,10 +31,14 @@ interface MediaItem {
 const MIME_TO_KIND = (mime?: string | null, fallback?: string | null) => {
   if (!mime && fallback) return fallback;
   if (!mime) return 'other';
+  
+  // Handle actual MIME types from database
   if (mime.startsWith('image/')) return 'image';
   if (mime.startsWith('audio/')) return 'audio';
   if (mime.startsWith('video/')) return 'video';
-  if (mime.includes('pdf')) return 'pdf';
+  if (mime.includes('pdf') || mime === 'application/pdf') return 'pdf';
+  if (mime.includes('msword') || mime.includes('officedocument')) return 'pdf';
+  
   return 'other';
 };
 
@@ -74,7 +78,7 @@ const MediaLibrary = () => {
         file_url: r.file_url ?? null,
         title: r.title ?? null,
         original_filename: r.title ?? null,
-        mime_type: r.file_type ?? null,
+        mime_type: r.file_type ?? null, // This is actually the MIME type from the database
         file_type: r.file_type ?? null,
         category: r.category ?? null,
         created_at: r.created_at ?? null,
@@ -115,9 +119,9 @@ const MediaLibrary = () => {
     const isDoc = (i: MediaItem) => {
       const mt = (i.mime_type || '').toLowerCase();
       const cat = (i.category || '').toLowerCase();
-      const ft = (i.file_type || '').toLowerCase();
-      return mt.includes('pdf') || mt.includes('msword') || mt.includes('officedocument') || ft === 'document' || cat.includes('document');
+      return mt.includes('pdf') || mt.includes('msword') || mt.includes('officedocument') || cat.includes('document');
     };
+    
     return currentFolderItems.filter(i => {
       const kind = MIME_TO_KIND(i.mime_type, i.file_type);
       const matchesKind = activeKind === 'all'
@@ -199,10 +203,7 @@ const MediaLibrary = () => {
             description: null,
             file_url: publicUrl,
             file_path: filePath,
-            file_type: file.type.startsWith('image/') ? 'image' : 
-                      file.type.startsWith('audio/') ? 'audio' :
-                      file.type.startsWith('video/') ? 'video' :
-                      file.type.includes('pdf') ? 'document' : 'other',
+            file_type: file.type, // Store the actual MIME type
             file_size: file.size,
             category: 'general',
             uploaded_by: user.id,
