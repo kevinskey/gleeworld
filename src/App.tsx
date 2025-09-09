@@ -171,6 +171,7 @@ import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
 import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
+import SightSingingTestPage from "./pages/SightSingingTestPage";
 import { Mus240PollPage } from "./pages/Mus240PollPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
@@ -1274,14 +1275,22 @@ const App = () => {
                                          </ProtectedRoute>
                                        } 
                                      />
-                                     <Route 
-                                       path="/member-sight-reading-studio" 
-                                       element={
-                                         <ProtectedRoute>
-                                           <MemberSightReadingStudioPage />
-                                         </ProtectedRoute>
-                                       } 
-                                     />
+                                      <Route 
+                                        path="/member-sight-reading-studio" 
+                                        element={
+                                          <ProtectedRoute>
+                                            <MemberSightReadingStudioPage />
+                                          </ProtectedRoute>
+                                        } 
+                                      />
+                                      <Route 
+                                        path="/sight-singing-test" 
+                                        element={
+                                          <ProtectedRoute>
+                                            <SightSingingTestPage />
+                                          </ProtectedRoute>
+                                        } 
+                                      />
                                      <Route 
                                        path="/scheduling" 
                                        element={
