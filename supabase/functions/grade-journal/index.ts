@@ -44,13 +44,21 @@ serve(async (req) => {
 
   try {
     console.log('=== STARTING JOURNAL GRADING FUNCTION ===');
+    console.log('Request method:', req.method);
+    console.log('Request URL:', req.url);
     
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     console.log('OpenAI API key configured:', openAIApiKey ? 'Yes' : 'No');
     
     if (!openAIApiKey) {
       console.error('OpenAI API key not configured');
-      throw new Error('OpenAI API key not configured');
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'OpenAI API key not configured'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Initialize Supabase client with service role (bypasses RLS)
@@ -66,6 +74,7 @@ serve(async (req) => {
       }
     });
 
+    console.log('About to parse request body...');
     const requestBody = await req.json();
     console.log('Raw request body:', JSON.stringify(requestBody, null, 2));
     
@@ -399,11 +408,22 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
     );
 
   } catch (error) {
-    console.error('Error in grade-journal function:', error);
+    console.error('=== ERROR IN GRADE-JOURNAL FUNCTION ===');
+    console.error('Error type:', typeof error);
+    console.error('Error name:', error?.name);
+    console.error('Error message:', error?.message);
+    console.error('Error stack:', error?.stack);
+    console.error('Full error object:', JSON.stringify(error, null, 2));
+    
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error.message || 'Internal server error'
+        error: error?.message || 'Internal server error',
+        errorType: error?.name || 'Unknown',
+        debug: {
+          timestamp: new Date().toISOString(),
+          errorDetails: String(error)
+        }
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
