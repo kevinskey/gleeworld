@@ -774,6 +774,7 @@ Return this exact JSON structure with your composition:
       
       // Function to create notes that follow tonal harmony rules
       const createMeasureNotes = (measureIndex: number, timeSignature: {num: number, den: number}) => {
+        console.log(`Creating measure ${measureIndex} notes, requestId: ${requestId}, randomSeed: ${randomSeed}`);
         const measureTicks = barTicks(timeSignature.num, timeSignature.den as 1|2|4|8|16);
         const notes = [];
         let currentTicks = 0;
@@ -836,6 +837,7 @@ Return this exact JSON structure with your composition:
         
         // Create seeded random generator for this measure if we have seeds
         const seedString = `${requestId || 'default'}-${randomSeed || Date.now()}-${measureIndex}`;
+        console.log(`Creating rng for measure ${measureIndex} with seed: ${seedString}`);
         const rng = new SeededRandom(seedString);
         
         // Create educationally appropriate rhythmic patterns based on time signature
@@ -1085,7 +1087,7 @@ Return this exact JSON structure with your composition:
           if (avoidedIntervals.includes(interval)) {
             // Replace with consonant interval
             const consonantIntervals = [1, 2, 3, 4, 5]; // unison, 2nd, 3rd, 4th, 5th
-            const replacement = consonantIntervals[Math.floor(Math.random() * consonantIntervals.length)];
+            const replacement = consonantIntervals[Math.floor(rng.next() * consonantIntervals.length)];
             
             if (currentDegree > prevDegree) {
               improvedPattern[i] = prevDegree + replacement;
@@ -1215,9 +1217,10 @@ Return this exact JSON structure with your composition:
 
   } catch (error) {
     console.error("=== EDGE FUNCTION ERROR ===");
-    console.error("Error details:", error);
+    console.error("Error name:", error.name);
     console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
+    console.error("Error details:", error);
     
     return new Response(JSON.stringify({
       success: false,
