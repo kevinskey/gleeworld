@@ -182,8 +182,8 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             </div>
           </div>
 
-          {/* Row 2: Parts and BPM */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* Row 2: Parts, BPM, Cadence, and Cadence Type */}
+          <div className="grid grid-cols-4 gap-2">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Parts</Label>
               <Select 
@@ -224,10 +224,6 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Row 4: Cadence Every and Type */}
-          <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Cadence Every</Label>
               <Select 
