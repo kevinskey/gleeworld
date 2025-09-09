@@ -6,9 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Label } from '@/components/ui/label';
 import { Knob } from '@/components/ui/knob';
 import { useToast } from '@/hooks/use-toast';
-import { Download, Play, Pause, Volume2, VolumeX, Save } from 'lucide-react';
+import { Download, Play, Pause, Volume2, VolumeX, Save, FileMusic } from 'lucide-react';
 
 // Import all the components
 import { ParameterForm } from './ParameterForm';
@@ -187,6 +188,7 @@ const convertScoreJSONToParsedScore = (scoreJSON: ScoreJSON, tempo: number): Par
 export const SightSingingStudio: React.FC = () => {
   const { toast } = useToast();
   const { addScore } = useSheetMusicLibrary();
+  const { scores: libraryScores, loading: libraryLoading } = useSheetMusicLibrary();
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentScore, setCurrentScore] = useState<ScoreJSON | null>(null);
   const [currentMusicXML, setCurrentMusicXML] = useState<string>('');
@@ -1298,9 +1300,68 @@ export const SightSingingStudio: React.FC = () => {
               <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
                 <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">📝 Create Assignment</h3>
                 <p className="text-sm text-green-700 dark:text-green-300">
-                  Turn selected scores into assignments for students. Select a score from the Score Library tab first, then configure the assignment details below.
+                  Select a score from your library and configure assignment details for your students.
                 </p>
               </div>
+
+              {/* Score Selector */}
+              <Card className="p-4">
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">Select Score from Library</Label>
+                  <Select
+                    value={selectedScore?.id || ""}
+                    onValueChange={(scoreId) => {
+                      const score = libraryScores.find(s => s.id === scoreId);
+                      if (score) {
+                        console.log('📚 Score selected from dropdown:', score);
+                        setSelectedScore(score);
+                        if (score.xml_content) {
+                          setCurrentMusicXML(score.xml_content);
+                          setCurrentExerciseId(`library-${score.id}`);
+                          setCurrentScore(null);
+                          setCurrentBpm(120);
+                          
+                          toast({
+                            title: "Score Selected",
+                            description: `"${score.title}" selected and title auto-populated.`,
+                          });
+                        } else {
+                          toast({
+                            title: "No XML Content",
+                            description: "This score needs XML content to create assignments.",
+                            variant: "destructive",
+                          });
+                        }
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 z-50">
+                      <div className="flex items-center gap-2">
+                        <FileMusic className="h-4 w-4" />
+                        <SelectValue placeholder="Choose a score from your library..." />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 z-50 max-h-60 overflow-y-auto">
+                      {libraryLoading ? (
+                        <SelectItem value="loading" disabled>Loading scores...</SelectItem>
+                      ) : libraryScores.length === 0 ? (
+                        <SelectItem value="empty" disabled>No scores available. Add scores to your library first.</SelectItem>
+                      ) : (
+                        libraryScores.map((score) => (
+                          <SelectItem key={score.id} value={score.id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <div className="flex flex-col items-start">
+                              <span className="font-medium">{score.title}</span>
+                              {score.composer && (
+                                <span className="text-xs text-gray-500 dark:text-gray-400">by {score.composer}</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </Card>
 
               {/* Assignment Creator */}
               <AssignmentCreator 
@@ -1324,7 +1385,7 @@ export const SightSingingStudio: React.FC = () => {
                     <strong>"{selectedScore.title}"</strong> by {selectedScore.composer || 'Unknown'} is ready.
                   </p>
                   <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                    Fill out the assignment details above to create an assignment for your students.
+                    Assignment title has been auto-populated. Configure additional details above.
                   </p>
                 </div>
               ) : (
@@ -1334,7 +1395,7 @@ export const SightSingingStudio: React.FC = () => {
                     <h4 className="font-medium text-yellow-900 dark:text-yellow-100">No Score Selected</h4>
                   </div>
                   <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                    Please select a score from the <strong>Score Library</strong> tab first, or generate a new score to create an assignment.
+                    Please select a score from the dropdown above to create an assignment.
                   </p>
                 </div>
               )}
