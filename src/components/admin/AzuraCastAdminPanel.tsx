@@ -103,13 +103,18 @@ export const AzuraCastAdminPanel = () => {
 
     try {
       setLoading(true);
+      console.log('AzuraCast: Setting API key and testing connection...');
       azuraCastService.setAdminApiKey(apiKey);
       
       // Test connection by fetching station info
-      await azuraCastService.getStationConfig();
+      console.log('AzuraCast: Testing connection with getStationConfig...');
+      const stationConfig = await azuraCastService.getStationConfig();
+      console.log('AzuraCast: Connection successful, station config:', stationConfig);
+      
       setIsConnected(true);
       
       // Load initial data
+      console.log('AzuraCast: Loading initial data...');
       await Promise.all([
         loadPlaylists(),
         loadSchedule(),
@@ -121,16 +126,23 @@ export const AzuraCastAdminPanel = () => {
         description: "Successfully connected to AzuraCast admin API",
       });
     } catch (error) {
-      console.error('Connection error:', error);
+      console.error('AzuraCast Connection error:', error);
+      console.error('AzuraCast Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       setIsConnected(false);
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log('AzuraCast Error message:', errorMessage);
+      
       let description = "Failed to connect to AzuraCast. ";
       
       if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
-        description += "Check that radio.gleeworld.org is accessible and has CORS enabled.";
+        description += "Network error: Check that radio.gleeworld.org is accessible and has CORS enabled.";
       } else if (errorMessage.includes('401') || errorMessage.includes('403')) {
-        description += "Invalid API key or insufficient permissions.";
+        description += "Authentication error: Invalid API key or insufficient permissions.";
+      } else if (errorMessage.includes('Failed to construct')) {
+        description += "API key format error: Please check your API key contains only valid characters.";
+      } else if (errorMessage.includes('500')) {
+        description += "Server error: AzuraCast server is experiencing issues.";
       } else {
         description += `Error: ${errorMessage}`;
       }
@@ -350,36 +362,79 @@ export const AzuraCastAdminPanel = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="p-4 border rounded-lg bg-muted/50">
+              <h4 className="font-medium mb-2">Connection Requirements:</h4>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• Valid AzuraCast Admin API key</li>
+                <li>• Access to radio.gleeworld.org</li>
+                <li>• Admin or Super Admin permissions on AzuraCast</li>
+                <li>• CORS enabled for this domain</li>
+              </ul>
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="apiKey">Admin API Key</Label>
               <Input
                 id="apiKey"
                 type="password"
-                placeholder="Enter your AzuraCast admin API key"
+                placeholder="Enter your AzuraCast admin API key (not placeholder text)"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
               />
               <p className="text-sm text-muted-foreground">
-                Get your API key from AzuraCast Admin → Account Settings → API Keys
+                Get your API key from: AzuraCast Admin → Account Settings → API Keys
               </p>
-            </div>
-            <Button 
-              onClick={connectToAzuraCast}
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <Radio className="h-4 w-4 mr-2" />
-                  Connect to AzuraCast
-                </>
+              {apiKey && (apiKey.includes('AzuraCast admin API calls') || apiKey.includes('Playlist Management')) && (
+                <p className="text-sm text-destructive">
+                  ⚠️ This looks like placeholder text. Please enter your actual API key.
+                </p>
               )}
-            </Button>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                onClick={connectToAzuraCast}
+                disabled={loading || !apiKey.trim()}
+                className="flex-1"
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Radio className="h-4 w-4 mr-2" />
+                    Connect to AzuraCast
+                  </>
+                )}
+              </Button>
+              
+              <Button 
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    console.log('Testing basic connectivity to radio.gleeworld.org...');
+                    const response = await fetch('https://radio.gleeworld.org/api/nowplaying/glee_world_radio', {
+                      method: 'GET',
+                      mode: 'cors'
+                    });
+                    console.log('Basic connectivity test result:', response.status);
+                    if (response.ok) {
+                      toast({ title: "Connectivity Test", description: "Basic connection to AzuraCast server successful" });
+                    } else {
+                      toast({ title: "Connectivity Test", description: `Server responded with ${response.status}`, variant: "destructive" });
+                    }
+                  } catch (error) {
+                    console.error('Connectivity test failed:', error);
+                    toast({ title: "Connectivity Test", description: "Failed to reach AzuraCast server", variant: "destructive" });
+                  }
+                }}
+                disabled={loading}
+              >
+                Test Connection
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

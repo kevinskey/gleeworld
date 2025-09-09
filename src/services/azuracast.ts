@@ -431,16 +431,26 @@ class AzuraCastService {
   // STATION CONFIGURATION
   async getStationConfig(): Promise<any> {
     try {
+      console.log('AzuraCast: Fetching station config with URL:', `${this.baseUrl}/api/station/${this.stationId}`);
+      console.log('AzuraCast: Using headers:', this.getAdminHeaders());
+      
       const response = await fetch(`${this.baseUrl}/api/station/${this.stationId}`, {
         method: 'GET',
         headers: this.getAdminHeaders(),
       });
 
+      console.log('AzuraCast: Station config response status:', response.status);
+      console.log('AzuraCast: Station config response headers:', response.headers);
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch station config: ${response.status}`);
+        const errorText = await response.text();
+        console.error('AzuraCast: Station config error response:', errorText);
+        throw new Error(`Failed to fetch station config: ${response.status} - ${errorText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('AzuraCast: Station config data received:', data);
+      return data;
     } catch (error) {
       console.error('Error fetching station config:', error);
       throw error;
