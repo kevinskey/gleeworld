@@ -816,25 +816,25 @@ export const SightSingingStudio: React.FC = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-slate-50 px-4 lg:px-8 xl:px-12 py-6">
-      <div className="h-full flex flex-col gap-6">
+      <div className="min-h-screen bg-slate-50 px-2 sm:px-4 lg:px-8 xl:px-12 py-2 sm:py-4 lg:py-6">
+      <div className="h-full flex flex-col gap-3 sm:gap-6">
         {/* Navigation Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'practice' | 'library' | 'history' | 'report')} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="practice">Practice Studio</TabsTrigger>
-            <TabsTrigger value="library">Score Library</TabsTrigger>
-            <TabsTrigger value="history">Score History</TabsTrigger>
-            <TabsTrigger value="report" disabled={!gradingResults || !currentMusicXML}>Performance Report</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 h-8 sm:h-10">
+            <TabsTrigger value="practice" className="text-xs sm:text-sm">Practice Studio</TabsTrigger>
+            <TabsTrigger value="library" className="text-xs sm:text-sm">Score Library</TabsTrigger>
+            <TabsTrigger value="history" className="text-xs sm:text-sm">Score History</TabsTrigger>
+            <TabsTrigger value="report" disabled={!gradingResults || !currentMusicXML} className="text-xs sm:text-sm">Performance Report</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="practice" className="mt-3">
+          <TabsContent value="practice" className="mt-2 sm:mt-3">
             {/* Main Content */}
-            <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
-              {/* Left Column - Parameters & Controls (1/3 width on desktop, full width on mobile) */}
-               <div className="lg:col-span-1 col-span-1">
+            <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
+              {/* Left Column - Parameters & Controls */}
+               <div className="w-full lg:w-80 lg:flex-shrink-0">
                  {/* Parameters */}
-                 <Card className="p-4">
-                   <h2 className="text-sm font-semibold mb-3 flex-shrink-0">Parameters</h2>
+                 <Card className="p-2 sm:p-4">
+                   <h2 className="text-sm font-semibold mb-2 sm:mb-3 flex-shrink-0">Parameters</h2>
                    <div>
                      <ParameterForm 
                        onGenerate={handleGenerateExercise}
@@ -846,10 +846,10 @@ export const SightSingingStudio: React.FC = () => {
                  </Card>
                </div>
 
-              {/* Right Column - Score Display (2/3 width on desktop, full width on mobile) */}
+              {/* Right Column - Score Display */}
               {currentMusicXML && (
-                <div className="lg:col-span-2 col-span-1 order-first lg:order-last">
-                  <Card className="p-3 lg:p-4 min-h-[500px] flex flex-col shadow-2xl border-2 bg-white">
+                <div className="flex-1 min-w-0">
+                  <Card className="p-2 sm:p-3 lg:p-4 min-h-[400px] sm:min-h-[500px] flex flex-col shadow-2xl border-2 bg-white">
                   <div className="flex items-center justify-between mb-3 flex-shrink-0">
                     <h2 className="text-base font-semibold">Musical Score</h2>
                     {currentMusicXML && (

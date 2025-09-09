@@ -160,7 +160,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-end mb-4">
+      <div className="flex items-center justify-end mb-2 sm:mb-4">
         <div className="flex gap-2">
           {hasRecording && onGradeRecording && (
             <Button 
@@ -168,8 +168,9 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
               disabled={isGrading}
               variant="default"
               size="sm"
+              className="text-xs sm:text-sm"
             >
-              <CheckCircle className="h-4 w-4 mr-2" />
+              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               {isGrading ? 'Grading...' : 'Grade Performance'}
             </Button>
           )}
@@ -179,7 +180,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       {musicXML && (
         <div 
           ref={scoreRef}
-          className="flex-1 min-h-[300px] w-full bg-white rounded-lg border-2 shadow-xl p-2 lg:p-4 overflow-auto"
+          className="flex-1 min-h-[250px] sm:min-h-[300px] w-full bg-white rounded-lg border-2 shadow-xl p-1 sm:p-2 lg:p-4 overflow-auto"
           style={{ 
             width: '100%',
             display: 'flex',
@@ -190,7 +191,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       )}
       
       {!musicXML && (
-        <div className="hidden">
+        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          <p className="text-sm sm:text-base">Generate an exercise to see the score</p>
         </div>
       )}
     </div>

@@ -140,10 +140,10 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     onGenerate(data);
   };
   return <Card className="w-full">
-      <CardContent className="p-3 space-y-3">
-        <form className="space-y-3">
+      <CardContent className="p-2 sm:p-3 space-y-2 sm:space-y-3">
+        <form className="space-y-2 sm:space-y-3">
           {/* Row 1: Key, Mode, Time, and Measures */}
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Key</Label>
               <Select value={watchedKey.tonic} onValueChange={value => setValue('key.tonic', value)}>
@@ -201,7 +201,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           </div>
 
           {/* Row 2: Parts and BPM */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Parts</Label>
               <Select value={watchedParts?.length === 1 ? "soprano" : "soprano-alto"} onValueChange={value => {
@@ -252,7 +252,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           </div>
 
           {/* Row 4: Cadence Every and Type */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Cadence Every</Label>
               <Select value={watchedCadenceEvery.toString()} onValueChange={value => setValue('cadenceEvery', parseInt(value))}>
@@ -282,7 +282,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           </div>
 
           {/* Checkbox Options */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="flex items-center space-x-1">
               <Checkbox id="allowDots" checked={watchedAllowDots} onCheckedChange={checked => setValue('allowDots', !!checked)} />
               <Label htmlFor="allowDots" className="text-xs">Dotted Notes</Label>
@@ -293,7 +293,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="flex items-center space-x-1">
               <Checkbox id="requireResolution" checked={watch('requireResolution') ?? true} onCheckedChange={checked => setValue('requireResolution', !!checked)} />
               <Label htmlFor="requireResolution" className="text-xs">Resolve Tendencies</Label>
