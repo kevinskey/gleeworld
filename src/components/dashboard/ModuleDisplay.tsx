@@ -28,6 +28,7 @@ import { GleeWritingWidget } from '../writing/GleeWritingWidget';
 import { FirstYearConsoleModule } from '../modules/FirstYearConsoleModule';
 import { UserManagementModule } from '../modules/UserManagementModule';
 import { BowmanScholarsModule } from '../modules/BowmanScholarsModule';
+import { RadioManagement } from '../admin/RadioManagement';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -57,7 +58,7 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
       case 'radio':
         return <RadioModule />;
       case 'radio-management':
-        return <RadioModule />;
+        return <RadioManagement />;
       case 'handbook':
         return <HandbookModule />;
       case 'directory':
