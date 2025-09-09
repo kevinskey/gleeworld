@@ -30,6 +30,7 @@ export const ROUTES = {
   SIGHT_READING_SUBMISSION: '/sight-reading-submission',
   SIGHT_READING_PREVIEW: '/sight-reading-preview',
   SIGHT_READING_GENERATOR: '/sight-reading-generator',
+  ASSIGNMENT_CREATOR: '/assignment-creator',
   
   PERMISSIONS: '/admin/permissions',
   WELLNESS: '/wellness',
@@ -62,6 +63,7 @@ export const PROTECTED_ROUTES = [
   ROUTES.SIGHT_READING_SUBMISSION,
   ROUTES.SIGHT_READING_PREVIEW,
   ROUTES.SIGHT_READING_GENERATOR,
+  ROUTES.ASSIGNMENT_CREATOR,
   ROUTES.PERMISSIONS,
   ROUTES.WELLNESS,
   ROUTES.LIBRARIAN_DASHBOARD,

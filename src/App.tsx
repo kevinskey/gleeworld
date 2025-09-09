@@ -128,6 +128,7 @@ import ApprovalSystemPage from "./pages/ApprovalSystemPage";
 import SightReadingSubmission from "./pages/SightReadingSubmission";
 import SightReadingPreview from "./pages/SightReadingPreview";
 import SightReadingGeneratorPage from "./pages/SightReadingGenerator";
+import AssignmentCreatorPage from "./pages/AssignmentCreator";
 import { MemberSightReadingStudioPage } from "./pages/MemberSightReadingStudioPage";
 import SchedulingPage from "./pages/SchedulingPage";
 import BookingPage from "./pages/BookingPage";
@@ -1267,14 +1268,22 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                    />
-                                     <Route 
-                                       path="/sight-reading-generator" 
-                                       element={
-                                         <ProtectedRoute>
-                                           <SightReadingGeneratorPage />
-                                         </ProtectedRoute>
-                                       } 
-                                     />
+                                      <Route 
+                                        path="/sight-reading-generator" 
+                                        element={
+                                          <ProtectedRoute>
+                                            <SightReadingGeneratorPage />
+                                          </ProtectedRoute>
+                                        } 
+                                      />
+                                      <Route 
+                                        path="/assignment-creator" 
+                                        element={
+                                          <ProtectedRoute>
+                                            <AssignmentCreatorPage />
+                                          </ProtectedRoute>
+                                        } 
+                                      />
                                       <Route 
                                         path="/member-sight-reading-studio" 
                                         element={

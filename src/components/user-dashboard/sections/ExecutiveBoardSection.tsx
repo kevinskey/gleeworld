@@ -16,6 +16,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { 
   Crown, 
   Plus, 
+  PlusCircle,
   Settings, 
   FileText, 
   Users, 
@@ -82,6 +83,7 @@ export const ExecutiveBoardSection = ({ isExecBoardMember }: ExecutiveBoardSecti
   const sectionLeaderActions = [
     { name: "Section Leader", icon: UserCheck, route: "/dashboard/section-leader" },
     { name: "Sight Reading Generator", icon: Wand2, route: "/sight-reading-generator" },
+    { name: "Assignment Creator", icon: PlusCircle, route: "/assignment-creator" },
     { name: "Sight Reading Submission", icon: FileAudio, route: "/sight-reading-submission" },
     { name: "Student Conductor", icon: Music2, route: "/dashboard/student-conductor" },
   ];
