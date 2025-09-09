@@ -266,14 +266,6 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           <div className="grid grid-cols-2 gap-2">
             <div className="flex items-center space-x-1">
               <Checkbox 
-                id="allowDots"
-                checked={watchedAllowDots}
-                onCheckedChange={(checked) => setValue('allowDots', !!checked)}
-              />
-              <Label htmlFor="allowDots" className="text-xs">Dotted Notes</Label>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Checkbox 
                 id="enforceVoiceLeading"
                 checked={watch('enforceVoiceLeading') ?? true}
                 onCheckedChange={(checked) => setValue('enforceVoiceLeading', !!checked)}
@@ -302,8 +294,18 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           </div>
 
           {/* Note Values Selection */}
-          <div className="space-y-1">
-            <Label className="text-xs font-medium">Note Values</Label>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium">Note Values</Label>
+              <div className="flex items-center space-x-1">
+                <Checkbox 
+                  id="allowDots"
+                  checked={watchedAllowDots}
+                  onCheckedChange={(checked) => setValue('allowDots', !!checked)}
+                />
+                <Label htmlFor="allowDots" className="text-xs">Dotted Notes</Label>
+              </div>
+            </div>
             <div className="flex flex-wrap gap-1">
               {durations.map((duration) => (
                 <Badge
