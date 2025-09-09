@@ -2,7 +2,11 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { X } from 'lucide-react';
 import { ExerciseParameters } from './SightSingingStudio';
 
 interface ParameterFormProps {
@@ -11,42 +15,6 @@ interface ParameterFormProps {
   onReset?: () => void;
   hasExercise?: boolean;
 }
-
-// Note value icons as SVG components
-const NoteIcons = {
-  whole: () => (
-    <svg viewBox="0 0 24 24" className="w-4 h-4">
-      <ellipse cx="12" cy="16" rx="5" ry="3" fill="none" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  ),
-  half: () => (
-    <svg viewBox="0 0 24 24" className="w-4 h-4">
-      <ellipse cx="8" cy="16" rx="4" ry="3" fill="currentColor"/>
-      <line x1="12" y1="16" x2="12" y2="4" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  ),
-  quarter: () => (
-    <svg viewBox="0 0 24 24" className="w-4 h-4">
-      <ellipse cx="8" cy="16" rx="4" ry="3" fill="currentColor"/>
-      <line x1="12" y1="16" x2="12" y2="4" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  ),
-  eighth: () => (
-    <svg viewBox="0 0 24 24" className="w-4 h-4">
-      <ellipse cx="6" cy="18" rx="3" ry="2" fill="currentColor"/>
-      <line x1="9" y1="18" x2="9" y2="6" stroke="currentColor" strokeWidth="2"/>
-      <path d="M9 6 Q15 4 15 8" fill="none" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  ),
-  '16th': () => (
-    <svg viewBox="0 0 24 24" className="w-4 h-4">
-      <ellipse cx="6" cy="18" rx="3" ry="2" fill="currentColor"/>
-      <line x1="9" y1="18" x2="9" y2="6" stroke="currentColor" strokeWidth="2"/>
-      <path d="M9 6 Q15 4 15 8" fill="none" stroke="currentColor" strokeWidth="2"/>
-      <path d="M9 9 Q15 7 15 11" fill="none" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  )
-};
 
 export const ParameterForm: React.FC<ParameterFormProps> = ({
   onGenerate,
@@ -70,13 +38,14 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     }
   });
 
+  // Watch form values
   const watchedKey = watch('key');
   const watchedTime = watch('time');
   const watchedNumMeasures = watch('numMeasures');
   const watchedParts = watch('parts');
   const watchedAllowedDur = watch('allowedDur');
-  const watchedIntervalMotion = watch('intervalMotion');
   const watchedAllowDots = watch('allowDots');
+  const watchedIntervalMotion = watch('intervalMotion');
   const watchedCadenceEvery = watch('cadenceEvery');
   const watchedBpm = watch('bpm');
 
@@ -90,20 +59,27 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   const motions = ["step", "skip", "leap", "repeat"];
   const measureOptions = [4, 8, 16, 32];
   const cadenceOptions = [2, 4, 8];
+  const bpmOptions = [60, 72, 84, 96, 108, 120, 132, 144, 160, 180];
 
-  const handleDurationChange = (duration: string) => {
+  const handleDurationToggle = (duration: string) => {
     const current = watchedAllowedDur || [];
     if (current.includes(duration as any)) {
-      setValue('allowedDur', current.filter(d => d !== duration));
+      const newDurations = current.filter(d => d !== duration);
+      if (newDurations.length > 0) {
+        setValue('allowedDur', newDurations);
+      }
     } else {
       setValue('allowedDur', [...current, duration as any]);
     }
   };
 
-  const handleMotionChange = (motion: string) => {
+  const handleMotionToggle = (motion: string) => {
     const current = watchedIntervalMotion || [];
     if (current.includes(motion as any)) {
-      setValue('intervalMotion', current.filter(m => m !== motion));
+      const newMotions = current.filter(m => m !== motion);
+      if (newMotions.length > 0) {
+        setValue('intervalMotion', newMotions);
+      }
     } else {
       setValue('intervalMotion', [...current, motion as any]);
     }
@@ -117,203 +93,206 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     onGenerate(data);
   };
 
-  const isSelected = (value: any, currentValue: any) => {
-    if (Array.isArray(currentValue)) {
-      return currentValue.includes(value);
-    }
-    return value === currentValue;
-  };
-
   return (
-    <div className="flex flex-col p-2">
-      <div className="space-y-3">
+    <Card className="w-full">
+      <CardContent className="p-3 space-y-3">
         <form className="space-y-3">
-          {/* Key Selection */}
-          <div className="space-y-1">
-            <Label className="text-sm font-medium">Key</Label>
-            <div className="grid grid-cols-6 gap-1">
-              {tonics.map(tonic => (
-                <Button
-                  key={tonic}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className={`h-8 text-xs ${watchedKey.tonic === tonic ? 'bg-blue-500/20 border-blue-500' : ''}`}
-                  onClick={() => setValue('key.tonic', tonic)}
-                >
-                  {tonic}
-                </Button>
-              ))}
-            </div>
-            <div className="grid grid-cols-2 gap-1 mt-2">
-              {modes.map(mode => (
-                <Button
-                  key={mode}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className={`h-8 text-xs ${watchedKey.mode === mode ? 'bg-blue-500/20 border-blue-500' : ''}`}
-                  onClick={() => setValue('key.mode', mode as "major"|"minor")}
-                >
-                  {mode}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Time Signature */}
-          <div className="space-y-1">
-            <Label className="text-sm font-medium">Time</Label>
-            <div className="grid grid-cols-5 gap-1">
-              {timeSignatures.map(time => (
-                <Button
-                  key={`${time.num}/${time.den}`}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className={`h-8 text-xs ${watchedTime.num === time.num && watchedTime.den === time.den ? 'bg-blue-500/20 border-blue-500' : ''}`}
-                  onClick={() => setValue('time', { num: time.num, den: time.den as 1|2|4|8|16 })}
-                >
-                  {time.num}/{time.den}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Measures */}
-          <div className="space-y-1">
-            <Label className="text-sm font-medium">Measures</Label>
-            <div className="grid grid-cols-4 gap-1">
-              {measureOptions.map(measure => (
-                <Button
-                  key={measure}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className={`h-8 text-xs ${watchedNumMeasures === measure ? 'bg-blue-500/20 border-blue-500' : ''}`}
-                  onClick={() => setValue('numMeasures', measure)}
-                >
-                  {measure}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Voice Parts */}
-          <div className="space-y-1">
-            <Label className="text-sm font-medium">Parts</Label>
-            <div className="grid grid-cols-2 gap-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className={`h-8 text-xs ${watchedParts?.length === 1 ? 'bg-blue-500/20 border-blue-500' : ''}`}
-                onClick={() => setValue('parts', [{ role: "S", range: { min: "C4", max: "C5" } }])}
+          {/* Row 1: Key and Mode */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Key</Label>
+              <Select 
+                value={watchedKey.tonic} 
+                onValueChange={(value) => setValue('key.tonic', value)}
               >
-                Soprano Only
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className={`h-8 text-xs ${watchedParts?.length === 2 ? 'bg-blue-500/20 border-blue-500' : ''}`}
-                onClick={() => setValue('parts', [
-                  { role: "S", range: { min: "C4", max: "C5" } },
-                  { role: "A", range: { min: "F3", max: "F4" } }
-                ])}
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {tonics.map(tonic => (
+                    <SelectItem key={tonic} value={tonic}>{tonic}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Mode</Label>
+              <Select 
+                value={watchedKey.mode} 
+                onValueChange={(value) => setValue('key.mode', value as "major"|"minor")}
               >
-                Soprano + Alto
-              </Button>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {modes.map(mode => (
+                    <SelectItem key={mode} value={mode}>
+                      {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          {/* Note Values */}
-          <div className="space-y-1">
-            <Label className="text-sm font-medium">Note Values</Label>
-            <div className="grid grid-cols-5 gap-1">
-              {durations.map((duration) => {
-                const IconComponent = NoteIcons[duration as keyof typeof NoteIcons];
-                return (
-                  <Button
-                    key={duration}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className={`h-10 flex flex-col items-center gap-1 ${
-                      isSelected(duration, watchedAllowedDur) ? 'bg-blue-500/20 border-blue-500' : ''
-                    }`}
-                    onClick={() => handleDurationChange(duration)}
-                  >
-                    <IconComponent />
-                    <span className="text-xs">{duration === '16th' ? '16th' : duration.slice(0, 1)}</span>
-                  </Button>
-                );
-              })}
+          {/* Row 2: Time Signature and Measures */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Time</Label>
+              <Select 
+                value={`${watchedTime.num}/${watchedTime.den}`}
+                onValueChange={(value) => {
+                  const [num, den] = value.split('/').map(Number);
+                  setValue('time', { num, den: den as 1|2|4|8|16 });
+                }}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeSignatures.map(time => (
+                    <SelectItem key={`${time.num}/${time.den}`} value={`${time.num}/${time.den}`}>
+                      {time.num}/{time.den}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Measures</Label>
+              <Select 
+                value={watchedNumMeasures.toString()} 
+                onValueChange={(value) => setValue('numMeasures', parseInt(value))}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {measureOptions.map(measure => (
+                    <SelectItem key={measure} value={measure.toString()}>{measure}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          {/* Interval Motion */}
-          <div className="space-y-1">
-            <Label className="text-sm font-medium">Motion</Label>
-            <div className="grid grid-cols-4 gap-1">
-              {motions.map((motion) => (
-                <Button
-                  key={motion}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className={`h-8 text-xs ${
-                    isSelected(motion, watchedIntervalMotion) ? 'bg-blue-500/20 border-blue-500' : ''
-                  }`}
-                  onClick={() => handleMotionChange(motion)}
-                >
-                  {motion}
-                </Button>
-              ))}
+          {/* Row 3: Parts and BPM */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Parts</Label>
+              <Select 
+                value={watchedParts?.length === 1 ? "soprano" : "soprano-alto"}
+                onValueChange={(value) => {
+                  if (value === "soprano") {
+                    setValue('parts', [{ role: "S", range: { min: "C4", max: "C5" } }]);
+                  } else {
+                    setValue('parts', [
+                      { role: "S", range: { min: "C4", max: "C5" } },
+                      { role: "A", range: { min: "F3", max: "F4" } }
+                    ]);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="soprano">Soprano Only</SelectItem>
+                  <SelectItem value="soprano-alto">Soprano + Alto</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">BPM</Label>
+              <Select 
+                value={watchedBpm.toString()} 
+                onValueChange={(value) => setValue('bpm', parseInt(value))}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {bpmOptions.map(bpm => (
+                    <SelectItem key={bpm} value={bpm.toString()}>{bpm}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          {/* Dotted Notes */}
+          {/* Row 4: Cadence */}
           <div className="space-y-1">
-            <Label className="text-sm font-medium">Options</Label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className={`h-8 text-xs ${watchedAllowDots ? 'bg-blue-500/20 border-blue-500' : ''}`}
-              onClick={() => setValue('allowDots', !watchedAllowDots)}
+            <Label className="text-xs font-medium">Cadence Every</Label>
+            <Select 
+              value={watchedCadenceEvery.toString()} 
+              onValueChange={(value) => setValue('cadenceEvery', parseInt(value))}
             >
-              ♪ Dotted Notes
-            </Button>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {cadenceOptions.map(cadence => (
+                  <SelectItem key={cadence} value={cadence.toString()}>
+                    {cadence} bars
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Cadence Frequency */}
+          {/* Checkbox Options */}
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-1">
+              <Checkbox 
+                id="allowDots"
+                checked={watchedAllowDots}
+                onCheckedChange={(checked) => setValue('allowDots', !!checked)}
+              />
+              <Label htmlFor="allowDots" className="text-xs">Dots</Label>
+            </div>
+          </div>
+
+          {/* Note Values Selection */}
           <div className="space-y-1">
-            <Label className="text-sm font-medium">Cadence Every</Label>
-            <div className="grid grid-cols-3 gap-1">
-              {cadenceOptions.map(cadence => (
-                <Button
-                  key={cadence}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className={`h-8 text-xs ${watchedCadenceEvery === cadence ? 'bg-blue-500/20 border-blue-500' : ''}`}
-                  onClick={() => setValue('cadenceEvery', cadence)}
+            <Label className="text-xs font-medium">Note Values</Label>
+            <div className="flex flex-wrap gap-1">
+              {durations.map((duration) => (
+                <Badge
+                  key={duration}
+                  variant={watchedAllowedDur?.includes(duration as any) ? "default" : "outline"}
+                  className="cursor-pointer text-xs px-2 py-1 h-6"
+                  onClick={() => handleDurationToggle(duration)}
                 >
-                  {cadence} bars
-                </Button>
+                  {duration === '16th' ? '16th' : duration.charAt(0).toUpperCase()}
+                </Badge>
               ))}
             </div>
           </div>
 
+          {/* Motion Selection */}
+          <div className="space-y-1">
+            <Label className="text-xs font-medium">Motion Types</Label>
+            <div className="flex flex-wrap gap-1">
+              {motions.map((motion) => (
+                <Badge
+                  key={motion}
+                  variant={watchedIntervalMotion?.includes(motion as any) ? "default" : "outline"}
+                  className="cursor-pointer text-xs px-2 py-1 h-6"
+                  onClick={() => handleMotionToggle(motion)}
+                >
+                  {motion.charAt(0).toUpperCase() + motion.slice(1)}
+                </Badge>
+              ))}
+            </div>
+          </div>
         </form>
         
-        {/* Action Buttons - Right after parameters */}
-        <div className="pt-3 border-t space-y-2">
+        {/* Action Buttons */}
+        <div className="pt-2 border-t space-y-2">
           <Button 
             onClick={handleSubmit(onSubmit)}
             size="sm"
-            className="w-full h-12 text-sm font-medium" 
+            className="w-full h-10 text-sm font-medium" 
             disabled={isGenerating || !watchedAllowedDur || watchedAllowedDur.length === 0 || !watchedIntervalMotion || watchedIntervalMotion.length === 0}
           >
             {isGenerating ? 'Generating...' : '🎵 Generate Exercise'}
@@ -324,7 +303,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
               type="button"
               variant="outline"
               size="sm" 
-              className="w-full h-10 text-xs" 
+              className="w-full h-8 text-xs" 
               onClick={onReset}
               disabled={isGenerating}
             >
@@ -332,7 +311,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             </Button>
           )}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
