@@ -35,7 +35,8 @@ import {
   Edit2,
   Trash2,
   Upload,
-  Album
+  Album,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -385,10 +386,12 @@ export const MediaLibrary = ({
     }
 
     setUploading(true);
-    const uploadPromises = files.map(async (file) => {
+    
+    // Upload all files in parallel using Promise.allSettled for better error handling
+    const uploadPromises = files.map(async (file, index) => {
       try {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const fileName = `${Date.now()}-${index}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `media/${fileName}`;
 
         // Upload to storage
@@ -428,20 +431,31 @@ export const MediaLibrary = ({
       }
     });
 
-    const results = await Promise.all(uploadPromises);
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
+    // Use Promise.allSettled to handle all uploads in parallel
+    const results = await Promise.allSettled(uploadPromises);
+    const successfulResults = results
+      .filter((result): result is PromiseFulfilledResult<{ success: boolean; fileName: string }> => 
+        result.status === 'fulfilled' && result.value.success
+      );
+    const failedResults = results
+      .filter(result => 
+        result.status === 'rejected' || 
+        (result.status === 'fulfilled' && !result.value.success)
+      );
+
+    const successful = successfulResults.length;
+    const failed = failedResults.length;
 
     if (successful > 0) {
       toast({
         title: "Upload Complete",
-        description: `${successful} file(s) uploaded successfully${failed > 0 ? `, ${failed} failed` : ''}`
+        description: `${successful} file(s) uploaded successfully${failed > 0 ? `, ${failed} failed` : ''}`,
       });
       fetchMediaData(); // Refresh the media list
     } else {
       toast({
         title: "Upload Failed",
-        description: "All uploads failed",
+        description: "All uploads failed. Please try again.",
         variant: "destructive"
       });
     }
@@ -490,9 +504,9 @@ export const MediaLibrary = ({
     const canPlay = fileType === 'mp3';
 
     return (
-      <Card key={file.id} className="mb-3 hover:shadow-md transition-all bg-background/50 backdrop-blur-sm border-border/50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
+      <Card key={file.id} className="group hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-md border-border/30 hover:border-primary/30 hover:scale-[1.02]">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
             {/* Action Button */}
             <Button
               size="sm"
@@ -512,26 +526,26 @@ export const MediaLibrary = ({
             </Button>
 
             {/* File Icon */}
-            <div className="flex-shrink-0 p-2 bg-muted/50 rounded-md">
+            <div className="flex-shrink-0 p-3 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl border border-primary/20 group-hover:border-primary/40 transition-all">
               {getFileIcon(file.file_url)}
             </div>
 
             {/* File Info */}
-            <div className="flex-1 min-w-0">
-              <h4 className="font-medium text-foreground truncate">
+            <div className="flex-1 min-w-0 space-y-2">
+              <h4 className="font-semibold text-foreground truncate text-lg group-hover:text-primary transition-colors">
                 {file.title}
               </h4>
               {file.description && (
-                <p className="text-sm text-muted-foreground truncate">
+                <p className="text-sm text-muted-foreground truncate leading-relaxed">
                   {file.description}
                 </p>
               )}
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className="text-xs">
+              <div className="flex items-center gap-3 mt-2">
+                <Badge variant="secondary" className="text-xs font-medium bg-gradient-to-r from-primary/20 to-primary/10 text-primary border-primary/30">
                   {fileType.toUpperCase()}
                 </Badge>
                 {file.file_size && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground font-medium">
                     {formatFileSize(file.file_size)}
                   </span>
                 )}
@@ -539,34 +553,34 @@ export const MediaLibrary = ({
             </div>
 
             {/* Actions */}
-            <div className="flex-shrink-0 flex gap-2">
+            <div className="flex-shrink-0 flex flex-wrap gap-2">
               {isAdmin && (
                 <>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleEditFile(file)}
-                    className="text-xs h-8 px-3"
+                    className="text-xs h-9 px-4 hover:bg-secondary/80 transition-all"
                   >
-                    <Edit2 className="h-3 w-3 mr-1" />
+                    <Edit2 className="h-3 w-3 mr-2" />
                     Edit
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleDeleteFile(file)}
-                    className="text-xs h-8 px-3 text-destructive hover:text-destructive"
+                    className="text-xs h-9 px-4 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
                   >
-                    <Trash2 className="h-3 w-3 mr-1" />
+                    <Trash2 className="h-3 w-3 mr-2" />
                     Delete
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleDownload(file)}
-                    className="text-xs h-8 px-3"
+                    className="text-xs h-9 px-4 hover:bg-secondary/80 transition-all"
                   >
-                    <Download className="h-3 w-3 mr-1" />
+                    <Download className="h-3 w-3 mr-2" />
                     Download
                   </Button>
                 </>
@@ -575,11 +589,11 @@ export const MediaLibrary = ({
               {canPlay && (
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="default"
                   onClick={() => handleAddToPlaylist(file)}
-                  className="text-xs h-8 px-3 bg-primary/10 hover:bg-primary/20 border-primary/30 text-primary hover:text-primary"
+                  className="text-xs h-9 px-4 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md hover:shadow-lg transition-all"
                 >
-                  <Plus className="h-3 w-3 mr-1" />
+                  <Plus className="h-3 w-3 mr-2" />
                   Add to Radio
                 </Button>
               )}
@@ -592,12 +606,12 @@ export const MediaLibrary = ({
 
   const renderPdfCard = (file: MediaFile) => {
     return (
-      <Card key={file.id} className="mb-3 hover:shadow-md transition-all bg-background/50 backdrop-blur-sm border-border/50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
+      <Card key={file.id} className="group mb-4 hover:shadow-xl hover:shadow-red-500/10 transition-all duration-300 bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-md border-border/30 hover:border-red-500/30 hover:scale-[1.02]">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
             {/* PDF Icon */}
-            <div className="flex-shrink-0 p-2 bg-red-100 dark:bg-red-900/30 rounded-md">
-              <FileText className="h-4 w-4 text-red-600 dark:text-red-400" />
+            <div className="flex-shrink-0 p-3 bg-gradient-to-br from-red-500/20 to-red-500/10 rounded-xl border border-red-500/20 group-hover:border-red-500/40 transition-all">
+              <FileText className="h-5 w-5 text-red-600 dark:text-red-400" />
             </div>
 
             {/* File Info */}
@@ -704,71 +718,87 @@ export const MediaLibrary = ({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 p-6 bg-gradient-to-br from-background via-background/95 to-muted/50 min-h-screen">
       {/* Header */}
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-foreground mb-2 font-playfair">
+      <div className="text-center space-y-4">
+        <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full border border-primary/20 mb-4">
+          <Music className="h-8 w-8 text-primary" />
+        </div>
+        <h2 className="text-4xl font-bold text-foreground mb-3 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
           Media Library
         </h2>
-        <p className="text-muted-foreground">
-          Browse and manage all types of media files
+        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          Discover, manage, and organize your complete collection of media files with our advanced library system
         </p>
       </div>
 
       {/* Upload Controls */}
       {isAdmin && (
-        <div className="space-y-4">
-          {/* Bulk Upload Button */}
-          <div className="flex justify-center">
-            <Button
-              onClick={() => setShowBulkUpload(true)}
-              className="gap-2"
-              size="lg"
-            >
-              <Album className="h-5 w-5" />
-              Bulk Upload MP3 Albums
-            </Button>
-          </div>
+        <div className="space-y-6">
+          {/* Upload Action Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Bulk Upload Card */}
+            <Card className="group hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-md border-border/30 hover:border-primary/30 cursor-pointer" onClick={() => setShowBulkUpload(true)}>
+              <CardContent className="p-6 text-center space-y-4">
+                <div className="inline-flex items-center justify-center p-4 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full border border-primary/20 group-hover:border-primary/40 transition-all">
+                  <Album className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">Bulk Upload Albums</h3>
+                  <p className="text-sm text-muted-foreground mt-2">Upload multiple MP3 files with album metadata</p>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Quick Drop Zone */}
-          <div
-            {...getRootProps()}
-            className={`
-              border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer
-              ${isDragActive 
-                ? 'border-primary bg-primary/5' 
-                : 'border-muted-foreground/30 hover:border-primary/50'
-              }
-              ${uploading ? 'pointer-events-none opacity-50' : ''}
-            `}
-          >
-            <input {...getInputProps()} />
-            <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-            {uploading ? (
-              <div>
-                <p className="font-medium">Uploading files...</p>
-                <p className="text-sm text-muted-foreground">Please wait</p>
-              </div>
-            ) : isDragActive ? (
-              <div>
-                <p className="font-medium">Drop files here</p>
-                <p className="text-sm text-muted-foreground">Release to upload</p>
-              </div>
-            ) : (
-              <div>
-                <p className="font-medium">Quick Upload</p>
-                <p className="text-sm text-muted-foreground">
-                  Drag & drop or click for individual files
-                </p>
-              </div>
-            )}
+            {/* Quick Upload Card */}
+            <Card 
+              {...getRootProps()}
+              className={`group transition-all duration-300 cursor-pointer backdrop-blur-md border-2 border-dashed
+                ${isDragActive 
+                  ? 'border-primary bg-primary/10 shadow-xl shadow-primary/20 scale-105' 
+                  : 'border-border/50 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 bg-gradient-to-br from-card/90 to-card/50'
+                }
+                ${uploading ? 'pointer-events-none opacity-50' : ''}
+              `}
+            >
+              <input {...getInputProps()} />
+              <CardContent className="p-6 text-center space-y-4">
+                <div className="inline-flex items-center justify-center p-4 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-full border border-secondary/20 group-hover:border-secondary/40 transition-all">
+                  {uploading ? (
+                    <Loader2 className="h-8 w-8 text-secondary animate-spin" />
+                  ) : isDragActive ? (
+                    <Upload className="h-8 w-8 text-primary animate-pulse" />
+                  ) : (
+                    <Upload className="h-8 w-8 text-secondary" />
+                  )}
+                </div>
+                <div>
+                  {uploading ? (
+                    <>
+                      <h3 className="text-xl font-semibold text-foreground">Uploading Files...</h3>
+                      <p className="text-sm text-muted-foreground mt-2">Please wait while we process your files</p>
+                    </>
+                  ) : isDragActive ? (
+                    <>
+                      <h3 className="text-xl font-semibold text-primary">Drop Files Here</h3>
+                      <p className="text-sm text-muted-foreground mt-2">Release to start uploading</p>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-xl font-semibold text-foreground group-hover:text-secondary transition-colors">Quick Upload</h3>
+                      <p className="text-sm text-muted-foreground mt-2">Drag & drop individual files or click to browse</p>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       )}
 
       {/* Search and Sort */}
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-        <CardContent className="p-4 space-y-4">
+      <Card className="bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-md border-border/30 shadow-lg">
+        <CardContent className="p-6 space-y-6">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -826,7 +856,7 @@ export const MediaLibrary = ({
 
       {/* Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5 bg-muted/50">
+        <TabsList className="grid w-full grid-cols-5 bg-gradient-to-r from-muted/80 to-muted/60 backdrop-blur-md border border-border/30 shadow-lg h-14">
           <TabsTrigger value="images" className="flex items-center gap-2">
             <Images className="h-4 w-4" />
             Images ({imageFiles.length})
@@ -943,10 +973,10 @@ export const MediaLibrary = ({
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="mp3" className="mt-6">
-          <ScrollArea className="h-96">
+        <TabsContent value="mp3" className="mt-8">
+          <ScrollArea className="h-[600px] pr-4">
             {mp3Files.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {mp3Files.map(renderMediaCard)}
               </div>
             ) : (
