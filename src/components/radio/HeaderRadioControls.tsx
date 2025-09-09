@@ -8,12 +8,9 @@ import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 
 export const HeaderRadioControls = () => {
-  console.log('HeaderRadioControls: Component rendering');
-  
   try {
     const [isExpanded, setIsExpanded] = useState(false);
     const radioData = useRadioPlayer();
-    console.log('HeaderRadioControls: Radio hook returned:', radioData);
     
     const { 
       isPlaying, 
@@ -26,10 +23,6 @@ export const HeaderRadioControls = () => {
       togglePlayPause, 
       setVolume 
     } = radioData;
-
-    console.log('HeaderRadioControls: Radio state:', { 
-      isPlaying, isLoading, isLive, isOnline, listenerCount, currentTrack 
-    });
 
   const isMuted = volume === 0;
 
@@ -44,7 +37,6 @@ export const HeaderRadioControls = () => {
               variant="ghost"
               size="sm"
               onClick={(e) => {
-                console.log('HeaderRadioControls: Play/Pause button clicked');
                 e.preventDefault();
                 e.stopPropagation();
                 togglePlayPause();
@@ -127,7 +119,6 @@ export const HeaderRadioControls = () => {
                 variant="outline"
                 size="sm"
                 onClick={(e) => {
-                  console.log('HeaderRadioControls: Main play button clicked');
                   e.preventDefault();
                   e.stopPropagation();
                   togglePlayPause();

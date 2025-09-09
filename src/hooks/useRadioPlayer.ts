@@ -268,7 +268,6 @@ export const useRadioPlayer = () => {
 
   const play = useCallback(async () => {
     console.log('Radio play() called');
-    console.log('Current state:', state);
     
     if (!audioRef.current) {
       console.log('No audio ref available');
@@ -300,7 +299,7 @@ export const useRadioPlayer = () => {
         
         // Set new source and load
         audioRef.current.src = streamUrl;
-        audioRef.current.volume = state.volume;
+        audioRef.current.volume = audioRef.current.volume || 0.7; // Use current volume from audio element
         audioRef.current.load();
         
         console.log('Waiting for canplay event...');
@@ -393,7 +392,7 @@ export const useRadioPlayer = () => {
         }
       }
     }
-  }, [state.volume, streamUrls, toast]);
+  }, [streamUrls, toast]);
 
   const pause = useCallback(() => {
     if (audioRef.current) {
