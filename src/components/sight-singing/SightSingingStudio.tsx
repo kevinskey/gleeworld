@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Knob } from '@/components/ui/knob';
 import { useToast } from '@/hooks/use-toast';
-import { Download, Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Download, Play, Pause, Volume2, VolumeX, Save } from 'lucide-react';
 
 // Import all the components
 import { ParameterForm } from './ParameterForm';
@@ -19,6 +19,7 @@ import { GradingResults } from './GradingResults';
 import { ErrorVisualization } from './ErrorVisualization';
 import { PerformanceReport } from './PerformanceReport';
 import { ScoreLibraryManager } from './ScoreLibraryManager';
+import { useSheetMusicLibrary } from '@/hooks/useSheetMusicLibrary';
 import { ScoreHistoryView } from './ScoreHistoryView';
 import { PitchPipe } from './PitchPipe';
 import { AssignmentCreator } from './AssignmentCreator';
@@ -185,6 +186,7 @@ const convertScoreJSONToParsedScore = (scoreJSON: ScoreJSON, tempo: number): Par
 
 export const SightSingingStudio: React.FC = () => {
   const { toast } = useToast();
+  const { addScore } = useSheetMusicLibrary();
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentScore, setCurrentScore] = useState<ScoreJSON | null>(null);
   const [currentMusicXML, setCurrentMusicXML] = useState<string>('');
@@ -814,6 +816,60 @@ export const SightSingingStudio: React.FC = () => {
     });
   };
 
+  const handleSaveToLibrary = async () => {
+    if (!currentMusicXML || !parameters) {
+      toast({
+        title: "Nothing to Save",
+        description: "Please generate an exercise first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Create a meaningful title for the score
+      const keyString = `${parameters.key.tonic} ${parameters.key.mode}`;
+      const timeString = `${parameters.time.num}/${parameters.time.den}`;
+      const title = `Sight Reading Exercise - ${keyString} - ${timeString}`;
+      
+      // Determine difficulty based on parameters
+      let difficulty = 'beginner';
+      if (parameters.allowDots || parameters.allowAccidentals || parameters.numMeasures > 4) {
+        difficulty = 'intermediate';
+      }
+      if (parameters.maxInterval && parameters.maxInterval > 5) {
+        difficulty = 'advanced';
+      }
+
+      // Create voice parts array based on the score
+      const voiceParts = parameters.parts.map(part => part.role === 'S' ? 'Soprano' : 'Alto');
+
+      await addScore({
+        title,
+        composer: 'AI Generated',
+        difficulty_level: difficulty,
+        key_signature: keyString,
+        time_signature: timeString,
+        voice_parts: voiceParts,
+        tags: ['sight-reading', 'generated', parameters.key.mode, timeString],
+        xml_content: currentMusicXML,
+        is_public: false
+      });
+
+      toast({
+        title: "Saved to Library!",
+        description: `"${title}" has been saved to your Score Library.`,
+      });
+    } catch (error) {
+      console.error('Error saving to library:', error);
+      toast({
+        title: "Save Failed",
+        description: error instanceof Error ? error.message : "Failed to save to library.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-slate-50 px-2 sm:px-4 lg:px-8 xl:px-12 py-2 sm:py-4 lg:py-6">
@@ -853,22 +909,41 @@ export const SightSingingStudio: React.FC = () => {
                   <div className="flex items-center justify-between mb-3 flex-shrink-0">
                     <h2 className="text-base font-semibold">Musical Score</h2>
                     {currentMusicXML && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleDownloadMusicXML}
-                            className="flex items-center gap-1"
-                          >
-                            <Download className="h-3 w-3" />
-                            Download XML
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Download the current exercise as a MusicXML file</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <div className="flex gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleSaveToLibrary}
+                              className="flex items-center gap-1"
+                            >
+                              <Save className="h-3 w-3" />
+                              Save to Library
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Save this exercise to your Score Library for future use</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleDownloadMusicXML}
+                              className="flex items-center gap-1"
+                            >
+                              <Download className="h-3 w-3" />
+                              Download XML
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Download the current exercise as a MusicXML file</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
                     )}
                   </div>
                   
