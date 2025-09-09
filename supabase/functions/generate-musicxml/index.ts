@@ -963,13 +963,20 @@ Return this exact JSON structure with your composition:
             octave = 4;
           }
           
+          // Add dotted notes based on allowDots parameter
+          let dots = 0;
+          const allowDots = params.allowDots ?? false;
+          if (allowDots && rng.random() < 0.3) { // 30% chance for dotted notes when enabled
+            dots = 1;
+          }
+          
           notes.push({
             kind: "note",
-            dur: { base: duration, dots: 0 },
+            dur: { base: duration, dots: dots },
             pitch: { degree: ((degree - 1) % 7) + 1, oct: octave, acc: 0 }
           });
           
-          currentTicks += TICKS[duration];
+          currentTicks += TICKS[duration] * (dots > 0 ? 1.5 : 1); // Account for dotted duration
         }
         
         // Fill any remaining time with rest if needed (for educational clarity)
