@@ -966,7 +966,7 @@ Return this exact JSON structure with your composition:
           // Add dotted notes based on allowDots parameter
           let dots = 0;
           const allowDots = params.allowDots ?? false;
-          if (allowDots && rng.random() < 0.3) { // 30% chance for dotted notes when enabled
+          if (allowDots && rng.next() < 0.3) { // 30% chance for dotted notes when enabled
             dots = 1;
           }
           
