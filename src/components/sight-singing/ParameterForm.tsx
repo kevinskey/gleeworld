@@ -121,7 +121,22 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     if (!data.allowedDur || data.allowedDur.length === 0) {
       return;
     }
-    console.log('Form submission data:', data);
+    console.log('🎵 PARAMETER FORM SUBMISSION:', {
+      key: data.key,
+      timeSignature: data.time,
+      measures: data.numMeasures,
+      durations: data.allowedDur,
+      bpm: data.bpm,
+      allowDots: data.allowDots,
+      cadenceEvery: data.cadenceEvery,
+      cadenceType: data.cadenceType,
+      intervalMotion: data.intervalMotion,
+      enforceVoiceLeading: data.enforceVoiceLeading,
+      requireResolution: data.requireResolution,
+      strongBeatCadence: data.strongBeatCadence,
+      maxInterval: data.maxInterval,
+      stepwiseMotionPercentage: data.stepwiseMotionPercentage
+    });
     onGenerate(data);
   };
   return <Card className="w-full">
