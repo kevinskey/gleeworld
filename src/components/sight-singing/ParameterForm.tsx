@@ -6,29 +6,45 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { X } from 'lucide-react';
 import { ExerciseParameters } from './SightSingingStudio';
-
 interface ParameterFormProps {
   onGenerate: (parameters: ExerciseParameters) => void;
   isGenerating: boolean;
   onReset?: () => void;
   hasExercise?: boolean;
 }
-
 export const ParameterForm: React.FC<ParameterFormProps> = ({
   onGenerate,
   isGenerating,
   onReset,
   hasExercise
 }) => {
-  const { handleSubmit, watch, setValue, formState: { errors } } = useForm<ExerciseParameters>({
+  const {
+    handleSubmit,
+    watch,
+    setValue,
+    formState: {
+      errors
+    }
+  } = useForm<ExerciseParameters>({
     defaultValues: {
-      key: { tonic: "C", mode: "major" },
-      time: { num: 4, den: 4 },
+      key: {
+        tonic: "C",
+        mode: "major"
+      },
+      time: {
+        num: 4,
+        den: 4
+      },
       numMeasures: 8,
-      parts: [{ role: "S", range: { min: "C4", max: "C5" } }],
+      parts: [{
+        role: "S",
+        range: {
+          min: "C4",
+          max: "C5"
+        }
+      }],
       allowedDur: ["quarter"],
       allowDots: false,
       allowAccidentals: false,
@@ -55,23 +71,30 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   const watchedIntervalMotion = watch('intervalMotion');
   const watchedCadenceEvery = watch('cadenceEvery');
   const watchedBpm = watch('bpm');
-
   const tonics = ["C", "D", "E", "F", "G", "A", "B", "Db", "Eb", "Gb", "Ab", "Bb"];
-  const modes = [
-    "major", "minor", "natural minor", "harmonic minor", "melodic minor",
-    "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"
-  ];
-  const timeSignatures = [
-    { num: 2, den: 4 }, { num: 3, den: 4 }, { num: 4, den: 4 }, 
-    { num: 6, den: 8 }, { num: 9, den: 8 }
-  ];
+  const modes = ["major", "minor", "natural minor", "harmonic minor", "melodic minor", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"];
+  const timeSignatures = [{
+    num: 2,
+    den: 4
+  }, {
+    num: 3,
+    den: 4
+  }, {
+    num: 4,
+    den: 4
+  }, {
+    num: 6,
+    den: 8
+  }, {
+    num: 9,
+    den: 8
+  }];
   const durations = ["whole", "half", "quarter", "eighth", "16th"];
   const motions = ["step", "skip", "leap", "repeat"];
   const measureOptions = [4, 8, 16, 32];
   const cadenceOptions = [2, 4, 8];
   const cadenceTypes = ["authentic", "half", "plagal", "deceptive"];
   const bpmOptions = [60, 72, 84, 96, 108, 120, 132, 144, 160, 180];
-
   const handleDurationToggle = (duration: string) => {
     const current = watchedAllowedDur || [];
     if (current.includes(duration as any)) {
@@ -83,7 +106,6 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
       setValue('allowedDur', [...current, duration as any]);
     }
   };
-
   const handleMotionToggle = (motion: string) => {
     const current = watchedIntervalMotion || [];
     if (current.includes(motion as any)) {
@@ -95,7 +117,6 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
       setValue('intervalMotion', [...current, motion as any]);
     }
   };
-
   const onSubmit = (data: ExerciseParameters) => {
     if (!data.allowedDur || data.allowedDur.length === 0) {
       return;
@@ -103,103 +124,96 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     console.log('Form submission data:', data);
     onGenerate(data);
   };
-
-  return (
-    <Card className="w-full">
+  return <Card className="w-full">
       <CardContent className="p-3 space-y-3">
         <form className="space-y-3">
           {/* Row 1: Key, Mode, Time, and Measures */}
           <div className="grid grid-cols-4 gap-2">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Key</Label>
-              <Select 
-                value={watchedKey.tonic} 
-                onValueChange={(value) => setValue('key.tonic', value)}
-              >
+              <Select value={watchedKey.tonic} onValueChange={value => setValue('key.tonic', value)}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50 max-h-[200px] overflow-y-auto">
-                  {tonics.map(tonic => (
-                    <SelectItem key={tonic} value={tonic}>{tonic}</SelectItem>
-                  ))}
+                  {tonics.map(tonic => <SelectItem key={tonic} value={tonic}>{tonic}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-medium">Mode</Label>
-              <Select 
-                value={watchedKey.mode} 
-                onValueChange={(value) => setValue('key.mode', value as "major"|"minor")}
-              >
+              <Select value={watchedKey.mode} onValueChange={value => setValue('key.mode', value as "major" | "minor")}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
-                  {modes.map(mode => (
-                    <SelectItem key={mode} value={mode}>
+                  {modes.map(mode => <SelectItem key={mode} value={mode}>
                       {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-medium">Time</Label>
-              <Select 
-                value={`${watchedTime.num}/${watchedTime.den}`}
-                onValueChange={(value) => {
-                  const [num, den] = value.split('/').map(Number);
-                  setValue('time', { num, den: den as 1|2|4|8|16 });
-                }}
-              >
+              <Select value={`${watchedTime.num}/${watchedTime.den}`} onValueChange={value => {
+              const [num, den] = value.split('/').map(Number);
+              setValue('time', {
+                num,
+                den: den as 1 | 2 | 4 | 8 | 16
+              });
+            }}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
-                  {timeSignatures.map(time => (
-                    <SelectItem key={`${time.num}/${time.den}`} value={`${time.num}/${time.den}`}>
+                  {timeSignatures.map(time => <SelectItem key={`${time.num}/${time.den}`} value={`${time.num}/${time.den}`}>
                       {time.num}/{time.den}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-medium">Measures</Label>
-              <Select 
-                value={watchedNumMeasures.toString()} 
-                onValueChange={(value) => setValue('numMeasures', parseInt(value))}
-              >
+              <Select value={watchedNumMeasures.toString()} onValueChange={value => setValue('numMeasures', parseInt(value))}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
-                  {measureOptions.map(measure => (
-                    <SelectItem key={measure} value={measure.toString()}>{measure}</SelectItem>
-                  ))}
+                  {measureOptions.map(measure => <SelectItem key={measure} value={measure.toString()}>{measure}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* Row 2: Parts, BPM, Cadence, and Cadence Type */}
-          <div className="grid grid-cols-4 gap-2">
+          {/* Row 2: Parts and BPM */}
+          <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Parts</Label>
-              <Select 
-                value={watchedParts?.length === 1 ? "soprano" : "soprano-alto"}
-                onValueChange={(value) => {
-                  if (value === "soprano") {
-                    setValue('parts', [{ role: "S", range: { min: "C4", max: "C5" } }]);
-                  } else {
-                    setValue('parts', [
-                      { role: "S", range: { min: "C4", max: "C5" } },
-                      { role: "A", range: { min: "F3", max: "F4" } }
-                    ]);
+              <Select value={watchedParts?.length === 1 ? "soprano" : "soprano-alto"} onValueChange={value => {
+              if (value === "soprano") {
+                setValue('parts', [{
+                  role: "S",
+                  range: {
+                    min: "C4",
+                    max: "C5"
                   }
-                }}
-              >
+                }]);
+              } else {
+                setValue('parts', [{
+                  role: "S",
+                  range: {
+                    min: "C4",
+                    max: "C5"
+                  }
+                }, {
+                  role: "A",
+                  range: {
+                    min: "F3",
+                    max: "F4"
+                  }
+                }]);
+              }
+            }}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
@@ -211,181 +225,101 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-medium">BPM</Label>
-              <Select 
-                value={watchedBpm.toString()} 
-                onValueChange={(value) => setValue('bpm', parseInt(value))}
-              >
+              <Select value={watchedBpm.toString()} onValueChange={value => setValue('bpm', parseInt(value))}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
-                  {bpmOptions.map(bpm => (
-                    <SelectItem key={bpm} value={bpm.toString()}>{bpm}</SelectItem>
-                  ))}
+                  {bpmOptions.map(bpm => <SelectItem key={bpm} value={bpm.toString()}>{bpm}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Row 4: Cadence Every and Type */}
+          <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Cadence Every</Label>
-              <Select 
-                value={watchedCadenceEvery.toString()} 
-                onValueChange={(value) => setValue('cadenceEvery', parseInt(value))}
-              >
+              <Select value={watchedCadenceEvery.toString()} onValueChange={value => setValue('cadenceEvery', parseInt(value))}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
-                  {cadenceOptions.map(cadence => (
-                    <SelectItem key={cadence} value={cadence.toString()}>
+                  {cadenceOptions.map(cadence => <SelectItem key={cadence} value={cadence.toString()}>
                       {cadence} bars
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-medium">Cadence Type</Label>
-              <Select 
-                value={watch('cadenceType') || 'authentic'} 
-                onValueChange={(value) => setValue('cadenceType', value as 'authentic' | 'half' | 'plagal' | 'deceptive')}
-              >
+              <Select value={watch('cadenceType') || 'authentic'} onValueChange={value => setValue('cadenceType', value as 'authentic' | 'half' | 'plagal' | 'deceptive')}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
-                  {cadenceTypes.map(type => (
-                    <SelectItem key={type} value={type}>
+                  {cadenceTypes.map(type => <SelectItem key={type} value={type}>
                       {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* Note Values Selection */}
-          <div className="space-y-2">
-            <Label className="text-xs font-medium">Note Values</Label>
-            <div className="flex flex-wrap gap-1">
-              {durations.map((duration) => (
-                <Badge
-                  key={duration}
-                  variant={watchedAllowedDur?.includes(duration as any) ? "default" : "outline"}
-                  className="cursor-pointer text-xs px-2 py-1 h-6"
-                  onClick={() => handleDurationToggle(duration)}
-                >
-                  {duration === '16th' ? '16th' : duration.charAt(0).toUpperCase()}
-                </Badge>
-              ))}
-              
-              {/* Dotted Notes Radio Group */}
-              <div className="flex items-center space-x-2 ml-4">
-                <Label className="text-xs font-medium">Dotted Notes:</Label>
-                <RadioGroup 
-                  value={watchedAllowDots ? "yes" : "no"}
-                  onValueChange={(value) => setValue('allowDots', value === "yes")}
-                  className="flex flex-row space-x-2"
-                >
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="yes" id="dots-yes" />
-                    <Label htmlFor="dots-yes" className="text-xs">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="no" id="dots-no" />
-                    <Label htmlFor="dots-no" className="text-xs">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+          {/* Checkbox Options */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center space-x-1">
+              <Checkbox id="allowDots" checked={watchedAllowDots} onCheckedChange={checked => setValue('allowDots', !!checked)} />
+              <Label htmlFor="allowDots" className="text-xs">Dotted Notes</Label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Checkbox id="enforceVoiceLeading" checked={watch('enforceVoiceLeading') ?? true} onCheckedChange={checked => setValue('enforceVoiceLeading', !!checked)} />
+              <Label htmlFor="enforceVoiceLeading" className="text-xs">Voice Leading</Label>
             </div>
           </div>
 
-          {/* Final Row: Checkboxes and Motion Types */}
-          <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-4">
-              {/* Left Column: Checkbox Parameters */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium">Options</Label>
-                <div className="grid grid-cols-1 gap-1">
-                  <div className="flex items-center space-x-1">
-                    <Checkbox 
-                      id="allowDots"
-                      checked={watchedAllowDots}
-                      onCheckedChange={(checked) => setValue('allowDots', !!checked)}
-                    />
-                    <Label htmlFor="allowDots" className="text-xs">Dotted Notes</Label>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Checkbox 
-                      id="enforceVoiceLeading"
-                      checked={watch('enforceVoiceLeading') ?? true}
-                      onCheckedChange={(checked) => setValue('enforceVoiceLeading', !!checked)}
-                    />
-                    <Label htmlFor="enforceVoiceLeading" className="text-xs">Voice Leading</Label>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Checkbox 
-                      id="requireResolution"
-                      checked={watch('requireResolution') ?? true}
-                      onCheckedChange={(checked) => setValue('requireResolution', !!checked)}
-                    />
-                    <Label htmlFor="requireResolution" className="text-xs">Resolve Tendencies</Label>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Checkbox 
-                      id="strongBeatCadence"
-                      checked={watch('strongBeatCadence') ?? true}
-                      onCheckedChange={(checked) => setValue('strongBeatCadence', !!checked)}
-                    />
-                    <Label htmlFor="strongBeatCadence" className="text-xs">Strong Beat Cadence</Label>
-                  </div>
-                </div>
-              </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center space-x-1">
+              <Checkbox id="requireResolution" checked={watch('requireResolution') ?? true} onCheckedChange={checked => setValue('requireResolution', !!checked)} />
+              <Label htmlFor="requireResolution" className="text-xs">Resolve Tendencies</Label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Checkbox id="strongBeatCadence" checked={watch('strongBeatCadence') ?? true} onCheckedChange={checked => setValue('strongBeatCadence', !!checked)} />
+              <Label htmlFor="strongBeatCadence" className="text-xs">Strong Beat Cadence</Label>
+            </div>
+          </div>
 
-              {/* Right Column: Motion Types */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium">Motion Types</Label>
-                <div className="flex flex-wrap gap-1">
-                  {motions.map((motion) => (
-                    <Badge
-                      key={motion}
-                      variant={watchedIntervalMotion?.includes(motion as any) ? "default" : "outline"}
-                      className="cursor-pointer text-xs px-2 py-1 h-6"
-                      onClick={() => handleMotionToggle(motion)}
-                    >
-                      {motion.charAt(0).toUpperCase() + motion.slice(1)}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+          {/* Note Values Selection */}
+          <div className="space-y-1">
+            
+            <div className="flex flex-wrap gap-1">
+              {durations.map(duration => <Badge key={duration} variant={watchedAllowedDur?.includes(duration as any) ? "default" : "outline"} className="cursor-pointer text-xs px-2 py-1 h-6" onClick={() => handleDurationToggle(duration)}>
+                  {duration === '16th' ? '16th' : duration.charAt(0).toUpperCase()}
+                </Badge>)}
+            </div>
+          </div>
+
+          {/* Motion Selection */}
+          <div className="space-y-1">
+            <Label className="text-xs font-medium">Motion Types</Label>
+            <div className="flex flex-wrap gap-1">
+              {motions.map(motion => <Badge key={motion} variant={watchedIntervalMotion?.includes(motion as any) ? "default" : "outline"} className="cursor-pointer text-xs px-2 py-1 h-6" onClick={() => handleMotionToggle(motion)}>
+                  {motion.charAt(0).toUpperCase() + motion.slice(1)}
+                </Badge>)}
             </div>
           </div>
         </form>
         
         {/* Action Buttons */}
         <div className="pt-2 border-t space-y-2">
-          <Button 
-            onClick={handleSubmit(onSubmit)}
-            size="sm"
-            className="w-full h-10 text-sm font-medium" 
-            disabled={isGenerating || !watchedAllowedDur || watchedAllowedDur.length === 0 || !watchedIntervalMotion || watchedIntervalMotion.length === 0}
-          >
+          <Button onClick={handleSubmit(onSubmit)} size="sm" className="w-full h-10 text-sm font-medium" disabled={isGenerating || !watchedAllowedDur || watchedAllowedDur.length === 0 || !watchedIntervalMotion || watchedIntervalMotion.length === 0}>
             {isGenerating ? 'Generating...' : '🎵 Generate Exercise'}
           </Button>
           
-          {hasExercise && onReset && (
-            <Button 
-              type="button"
-              variant="outline"
-              size="sm" 
-              className="w-full h-8 text-xs" 
-              onClick={onReset}
-              disabled={isGenerating}
-            >
+          {hasExercise && onReset && <Button type="button" variant="outline" size="sm" className="w-full h-8 text-xs" onClick={onReset} disabled={isGenerating}>
               🔄 Reset
-            </Button>
-          )}
+            </Button>}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
