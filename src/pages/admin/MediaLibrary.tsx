@@ -83,7 +83,7 @@ const MediaLibrary = () => {
         category: r.category ?? null,
         created_at: r.created_at ?? null,
         file_path: r.file_path ?? null,
-        folder_path: r.file_path ? r.file_path.split('/').slice(0, -1).join('/') : null,
+        folder_path: r.file_path ? r.file_path.includes('/') ? r.file_path.split('/').slice(1, -1).join('/') : '' : '',
       }));
       
       // Build folder structure
@@ -388,34 +388,39 @@ const MediaLibrary = () => {
               <CardDescription>Filter by type or search by filename/category</CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Folder Navigation */}
-            <div className="flex items-center gap-2 mb-4 p-3 bg-gradient-to-r from-muted/40 to-muted/20 rounded-lg border border-border/30">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentFolder('')}
-                className={`gap-2 ${currentFolder === '' ? 'bg-primary/20 text-primary' : ''}`}
+            {/* Folder Navigation using Tabs */}
+            <div className="mb-6">
+              <Tabs 
+                value={currentFolder} 
+                onValueChange={(value) => setCurrentFolder(value)}
+                className="w-full"
               >
-                <Home className="h-4 w-4" />
-                Root
-              </Button>
-              {availableFolders.length > 0 && (
-                <>
-                  <span className="text-muted-foreground">|</span>
+                <TabsList className="bg-gradient-to-r from-muted/80 to-muted/60 backdrop-blur-md border border-border/30 h-auto p-1">
+                  <TabsTrigger 
+                    value=""
+                    className="gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+                  >
+                    <Home className="h-4 w-4" />
+                    Root
+                    <Badge variant="outline" className="ml-1 text-xs">
+                      {folderStructure['']?.length || 0}
+                    </Badge>
+                  </TabsTrigger>
                   {availableFolders.map(folder => (
-                    <Button
+                    <TabsTrigger 
                       key={folder}
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setCurrentFolder(folder)}
-                      className={`gap-2 ${currentFolder === folder ? 'bg-primary/20 text-primary' : ''}`}
+                      value={folder}
+                      className="gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
                     >
                       <Folder className="h-4 w-4" />
                       {folder.split('/').pop() || folder}
-                    </Button>
+                      <Badge variant="outline" className="ml-1 text-xs">
+                        {folderStructure[folder]?.length || 0}
+                      </Badge>
+                    </TabsTrigger>
                   ))}
-                </>
-              )}
+                </TabsList>
+              </Tabs>
             </div>
 
             <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between mb-6">
