@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Music, Image, Video, Upload, FileText, ArrowLeft, Loader2, ExternalLink, Camera, Album, Plus, X, Folder, FolderOpen, Home } from "lucide-react";
+import { Music, Image, Video, Upload, FileText, ArrowLeft, Loader2, ExternalLink, Camera, Album, Plus, X, Folder, FolderOpen, Home, ChevronRight, ChevronDown } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -64,6 +64,8 @@ const MediaLibrary = () => {
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [currentFolder, setCurrentFolder] = useState('');
   const [folderStructure, setFolderStructure] = useState<Record<string, MediaItem[]>>({});
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set([''])); // Root expanded by default
+  const [navigationPath, setNavigationPath] = useState<string[]>(['']); // Breadcrumb path
 
   const fetchItems = async () => {
     setLoading(true);
@@ -110,9 +112,35 @@ const MediaLibrary = () => {
     ? folderStructure[currentFolder] || []
     : folderStructure[''] || [];
 
-  const availableFolders = Object.keys(folderStructure)
-    .filter(folder => folder !== '' && folder !== currentFolder)
-    .sort();
+  // Build hierarchical folder structure for tree view
+  const folderHierarchy = useMemo(() => {
+    const hierarchy: Record<string, { folders: string[], files: MediaItem[] }> = {};
+    
+    Object.keys(folderStructure).forEach(folderPath => {
+      const folders = folderPath === '' ? [] : folderPath.split('/');
+      const currentPath = '';
+      
+      // Initialize if doesn't exist
+      if (!hierarchy[currentPath]) {
+        hierarchy[currentPath] = { folders: [], files: [] };
+      }
+      
+      // Add direct subfolders and files for current view
+      if (folderPath === currentFolder) {
+        hierarchy[currentPath].files = folderStructure[folderPath] || [];
+      } else if (folderPath.startsWith(currentFolder) && folderPath !== currentFolder) {
+        const relativePath = currentFolder === '' ? folderPath : folderPath.substring(currentFolder.length + 1);
+        const nextFolder = relativePath.split('/')[0];
+        const fullNextPath = currentFolder === '' ? nextFolder : `${currentFolder}/${nextFolder}`;
+        
+        if (!hierarchy[currentPath].folders.includes(fullNextPath)) {
+          hierarchy[currentPath].folders.push(fullNextPath);
+        }
+      }
+    });
+    
+    return hierarchy;
+  }, [folderStructure, currentFolder]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -280,6 +308,112 @@ const MediaLibrary = () => {
     if (folderInputRef.current) folderInputRef.current.value = '';
   };
 
+  const toggleFolder = (folderPath: string) => {
+    const newExpanded = new Set(expandedFolders);
+    if (newExpanded.has(folderPath)) {
+      newExpanded.delete(folderPath);
+    } else {
+      newExpanded.add(folderPath);
+    }
+    setExpandedFolders(newExpanded);
+  };
+
+  const navigateToFolder = (folderPath: string) => {
+    setCurrentFolder(folderPath);
+    const pathParts = folderPath === '' ? [''] : ['', ...folderPath.split('/')];
+    setNavigationPath(pathParts);
+  };
+
+  const renderFolderTree = () => {
+    const currentHierarchy = folderHierarchy[''] || { folders: [], files: [] };
+    const folders = currentHierarchy.folders || [];
+    const files = currentHierarchy.files || [];
+
+    return (
+      <div className="p-2">
+        {/* Render folders first */}
+        {folders.map((folderPath) => {
+          const folderName = folderPath.split('/').pop() || folderPath;
+          const isExpanded = expandedFolders.has(folderPath);
+          const folderItems = folderStructure[folderPath] || [];
+          
+          return (
+            <div key={folderPath} className="mb-1">
+              <button
+                onClick={() => navigateToFolder(folderPath)}
+                className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted/60 transition-all group"
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFolder(folderPath);
+                  }}
+                  className="p-0.5 hover:bg-muted rounded"
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                  )}
+                </button>
+                <Folder className="h-4 w-4 text-blue-500" />
+                <span className="font-medium truncate flex-1">{folderName}</span>
+                <Badge variant="outline" className="text-xs">
+                  {folderItems.length}
+                </Badge>
+              </button>
+            </div>
+          );
+        })}
+        
+        {/* Render files */}
+        {filtered.map((m) => {
+          const kind = MIME_TO_KIND(m.mime_type, m.file_type);
+          const active = m.id === selectedId;
+          return (
+            <button
+              key={m.id}
+              onClick={() => setSelectedId(m.id)}
+              className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-md transition-all ml-5
+                ${active 
+                  ? 'bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30' 
+                  : 'hover:bg-muted/60'
+                }`}
+            >
+              <div className={`p-1.5 rounded ${active ? 'bg-primary/20' : 'bg-muted/50'}`}>
+                {kind === 'image' ? (
+                  <Image className="h-4 w-4 text-primary" />
+                ) : kind === 'audio' ? (
+                  <Music className="h-4 w-4 text-primary" />
+                ) : kind === 'video' ? (
+                  <Video className="h-4 w-4 text-primary" />
+                ) : kind === 'pdf' ? (
+                  <FileText className="h-4 w-4 text-primary" />
+                ) : (
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="truncate font-medium text-sm">{m.original_filename || m.title}</div>
+                <div className="text-xs text-muted-foreground">
+                  {(kind || 'file').toUpperCase()}
+                </div>
+              </div>
+              {m.category && <Badge variant="outline" className="text-xs bg-secondary/20">{m.category}</Badge>}
+            </button>
+          );
+        })}
+        
+        {folders.length === 0 && files.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            <Folder className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No files in this folder</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/50">
@@ -388,41 +522,6 @@ const MediaLibrary = () => {
               <CardDescription>Filter by type or search by filename/category</CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Folder Navigation using Tabs */}
-            <div className="mb-6">
-              <Tabs 
-                value={currentFolder} 
-                onValueChange={(value) => setCurrentFolder(value)}
-                className="w-full"
-              >
-                <TabsList className="bg-gradient-to-r from-muted/80 to-muted/60 backdrop-blur-md border border-border/30 h-auto p-1">
-                  <TabsTrigger 
-                    value=""
-                    className="gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-                  >
-                    <Home className="h-4 w-4" />
-                    Root
-                    <Badge variant="outline" className="ml-1 text-xs">
-                      {folderStructure['']?.length || 0}
-                    </Badge>
-                  </TabsTrigger>
-                  {availableFolders.map(folder => (
-                    <TabsTrigger 
-                      key={folder}
-                      value={folder}
-                      className="gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-                    >
-                      <Folder className="h-4 w-4" />
-                      {folder.split('/').pop() || folder}
-                      <Badge variant="outline" className="ml-1 text-xs">
-                        {folderStructure[folder]?.length || 0}
-                      </Badge>
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            </div>
-
             <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between mb-6">
               <Tabs value={activeKind} onValueChange={(v) => setActiveKind(v as any)}>
                 <TabsList className="bg-gradient-to-r from-muted/80 to-muted/60 backdrop-blur-md border border-border/30">
@@ -453,47 +552,31 @@ const MediaLibrary = () => {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 border border-border/30 rounded-lg bg-gradient-to-br from-background/90 to-background/50 backdrop-blur-md max-h-[70vh] overflow-y-auto">
-                  {filtered.map((m) => {
-                    const kind = MIME_TO_KIND(m.mime_type, m.file_type);
-                    const active = m.id === selectedId;
-                    return (
-                      <button
-                        key={m.id}
-                        onClick={() => setSelectedId(m.id)}
-                        className={`w-full text-left flex items-center gap-4 px-4 py-3 border-b border-border/20 transition-all
-                          ${active 
-                            ? 'bg-gradient-to-r from-primary/20 to-primary/10 border-primary/30' 
-                            : 'hover:bg-gradient-to-r hover:from-muted/60 hover:to-muted/40'
-                          }`}
-                      >
-                        <div className={`p-2 rounded-lg ${active ? 'bg-primary/20' : 'bg-muted/50'}`}>
-                          {kind === 'image' ? (
-                            <Image className="h-5 w-5 text-primary" />
-                          ) : kind === 'audio' ? (
-                            <Music className="h-5 w-5 text-primary" />
-                          ) : kind === 'video' ? (
-                            <Video className="h-5 w-5 text-primary" />
-                          ) : kind === 'pdf' ? (
-                            <FileText className="h-5 w-5 text-primary" />
-                          ) : (
-                            <FileText className="h-5 w-5 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="truncate font-medium">{m.original_filename || m.title}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {(kind || 'file').toUpperCase()}
-                            {m.folder_path && m.folder_path !== currentFolder && (
-                              <span className="ml-2 text-xs bg-muted/50 px-2 py-1 rounded">
-                                {m.folder_path.split('/').pop()}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        {m.category && <Badge variant="outline" className="text-xs bg-secondary/20">{m.category}</Badge>}
-                      </button>
-                    );
-                  })}
+                  {/* Breadcrumb Navigation */}
+                  {navigationPath.length > 1 && (
+                    <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b border-border/30 p-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const newPath = navigationPath.slice(0, -1);
+                            setNavigationPath(newPath);
+                            setCurrentFolder(newPath[newPath.length - 1]);
+                          }}
+                          className="p-1 h-6 w-6"
+                        >
+                          <ArrowLeft className="h-3 w-3" />
+                        </Button>
+                        <span className="truncate">
+                          {navigationPath.slice(1).join(' / ') || 'Root'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Vertical Folder Tree */}
+                  {renderFolderTree()}
                 </div>
                 <div className="lg:col-span-2 border border-border/30 rounded-lg bg-gradient-to-br from-background/90 to-background/50 backdrop-blur-md min-h-[50vh] p-6">
                   {!selectedItem ? (
