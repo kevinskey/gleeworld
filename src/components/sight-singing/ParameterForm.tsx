@@ -262,50 +262,9 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             </div>
           </div>
 
-          {/* Checkbox Options */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center space-x-1">
-              <Checkbox 
-                id="enforceVoiceLeading"
-                checked={watch('enforceVoiceLeading') ?? true}
-                onCheckedChange={(checked) => setValue('enforceVoiceLeading', !!checked)}
-              />
-              <Label htmlFor="enforceVoiceLeading" className="text-xs">Voice Leading</Label>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center space-x-1">
-              <Checkbox 
-                id="requireResolution"
-                checked={watch('requireResolution') ?? true}
-                onCheckedChange={(checked) => setValue('requireResolution', !!checked)}
-              />
-              <Label htmlFor="requireResolution" className="text-xs">Resolve Tendencies</Label>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Checkbox 
-                id="strongBeatCadence"
-                checked={watch('strongBeatCadence') ?? true}
-                onCheckedChange={(checked) => setValue('strongBeatCadence', !!checked)}
-              />
-              <Label htmlFor="strongBeatCadence" className="text-xs">Strong Beat Cadence</Label>
-            </div>
-          </div>
-
           {/* Note Values Selection */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-medium">Note Values</Label>
-              <div className="flex items-center space-x-1">
-                <Checkbox 
-                  id="allowDots"
-                  checked={watchedAllowDots}
-                  onCheckedChange={(checked) => setValue('allowDots', !!checked)}
-                />
-                <Label htmlFor="allowDots" className="text-xs">Dotted Notes</Label>
-              </div>
-            </div>
+            <Label className="text-xs font-medium">Note Values</Label>
             <div className="flex flex-wrap gap-1">
               {durations.map((duration) => (
                 <Badge
@@ -320,20 +279,64 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             </div>
           </div>
 
-          {/* Motion Selection */}
-          <div className="space-y-1">
-            <Label className="text-xs font-medium">Motion Types</Label>
-            <div className="flex flex-wrap gap-1">
-              {motions.map((motion) => (
-                <Badge
-                  key={motion}
-                  variant={watchedIntervalMotion?.includes(motion as any) ? "default" : "outline"}
-                  className="cursor-pointer text-xs px-2 py-1 h-6"
-                  onClick={() => handleMotionToggle(motion)}
-                >
-                  {motion.charAt(0).toUpperCase() + motion.slice(1)}
-                </Badge>
-              ))}
+          {/* Final Row: Checkboxes and Motion Types */}
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-4">
+              {/* Left Column: Checkbox Parameters */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Options</Label>
+                <div className="grid grid-cols-1 gap-1">
+                  <div className="flex items-center space-x-1">
+                    <Checkbox 
+                      id="allowDots"
+                      checked={watchedAllowDots}
+                      onCheckedChange={(checked) => setValue('allowDots', !!checked)}
+                    />
+                    <Label htmlFor="allowDots" className="text-xs">Dotted Notes</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Checkbox 
+                      id="enforceVoiceLeading"
+                      checked={watch('enforceVoiceLeading') ?? true}
+                      onCheckedChange={(checked) => setValue('enforceVoiceLeading', !!checked)}
+                    />
+                    <Label htmlFor="enforceVoiceLeading" className="text-xs">Voice Leading</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Checkbox 
+                      id="requireResolution"
+                      checked={watch('requireResolution') ?? true}
+                      onCheckedChange={(checked) => setValue('requireResolution', !!checked)}
+                    />
+                    <Label htmlFor="requireResolution" className="text-xs">Resolve Tendencies</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Checkbox 
+                      id="strongBeatCadence"
+                      checked={watch('strongBeatCadence') ?? true}
+                      onCheckedChange={(checked) => setValue('strongBeatCadence', !!checked)}
+                    />
+                    <Label htmlFor="strongBeatCadence" className="text-xs">Strong Beat Cadence</Label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Motion Types */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Motion Types</Label>
+                <div className="flex flex-wrap gap-1">
+                  {motions.map((motion) => (
+                    <Badge
+                      key={motion}
+                      variant={watchedIntervalMotion?.includes(motion as any) ? "default" : "outline"}
+                      className="cursor-pointer text-xs px-2 py-1 h-6"
+                      onClick={() => handleMotionToggle(motion)}
+                    >
+                      {motion.charAt(0).toUpperCase() + motion.slice(1)}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </form>
