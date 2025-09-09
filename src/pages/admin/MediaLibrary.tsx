@@ -1,13 +1,17 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Music, Image, Video, Upload, FileText, ArrowLeft, Loader2, ExternalLink, Camera } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Music, Image, Video, Upload, FileText, ArrowLeft, Loader2, ExternalLink, Camera, Album, Plus, X } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { useDropzone } from 'react-dropzone';
 import { Document as PdfDocument, Page as PdfPage, pdfjs } from 'react-pdf';
 (pdfjs as any).GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -32,8 +36,17 @@ const MIME_TO_KIND = (mime?: string | null, fallback?: string | null) => {
   return 'other';
 };
 
+interface UploadFile {
+  file: File;
+  id: string;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  progress: number;
+  error?: string;
+}
+
 const MediaLibrary = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,6 +54,8 @@ const MediaLibrary = () => {
   const [query, setQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -107,91 +122,218 @@ const MediaLibrary = () => {
 
   const onUploadClick = () => fileInputRef.current?.click();
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSingleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    
+    const files = [file];
+    await handleBulkUploadFiles(files);
+    
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleBulkUploadFiles = async (files: File[]) => {
+    if (!user) return;
+    
     setUploading(true);
+    
+    const uploadPromises = files.map(async (file, index) => {
+      try {
+        const date = new Date();
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        const ymd = `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}`;
+        const safeName = file.name.replace(/\s+/g, '-').toLowerCase();
+        const filePath = `${user.id}/${ymd}-${index}-${crypto.randomUUID()}-${safeName}`;
+
+        // Upload to storage bucket (using media-library bucket for consistency)
+        const { data: upRes, error: upErr } = await supabase.storage
+          .from('media-library')
+          .upload(filePath, file, { upsert: false, contentType: file.type });
+        if (upErr) throw upErr;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('media-library')
+          .getPublicUrl(filePath);
+
+        // Insert directly into media library table
+        const { error: insertErr } = await supabase
+          .from('gw_media_library')
+          .insert({
+            filename: safeName,
+            original_filename: file.name,
+            title: file.name,
+            description: null,
+            file_url: publicUrl,
+            file_path: filePath,
+            file_type: file.type.startsWith('image/') ? 'image' : 
+                      file.type.startsWith('audio/') ? 'audio' :
+                      file.type.startsWith('video/') ? 'video' :
+                      file.type.includes('pdf') ? 'document' : 'other',
+            file_size: file.size,
+            mime_type: file.type,
+            category: 'general',
+            bucket_id: 'media-library',
+            uploaded_by: user.id,
+            is_public: true,
+            is_featured: false
+          });
+        
+        if (insertErr) throw insertErr;
+        return { success: true, fileName: file.name };
+      } catch (err) {
+        console.error(`Upload failed for ${file.name}:`, err);
+        return { success: false, fileName: file.name, error: err };
+      }
+    });
+
     try {
-      const date = new Date();
-      const pad = (n: number) => n.toString().padStart(2, '0');
-      const ymd = `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}`;
-      const safeName = file.name.replace(/\s+/g, '-').toLowerCase();
-      const filePath = `${user.id}/${ymd}-${crypto.randomUUID()}-${safeName}`;
+      const results = await Promise.allSettled(uploadPromises);
+      const successful = results.filter((result): result is PromiseFulfilledResult<{success: boolean; fileName: string}> => 
+        result.status === 'fulfilled' && result.value.success
+      ).length;
+      const failed = results.length - successful;
 
-      // Upload to storage bucket
-      const { data: upRes, error: upErr } = await supabase.storage
-        .from('service-images')
-        .upload(filePath, file, { upsert: false, contentType: file.type });
-      if (upErr) throw upErr;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('service-images')
-        .getPublicUrl(filePath);
-
-      // Insert directly into media library table
-      const { error: insertErr } = await supabase
-        .from('gw_media_library')
-        .insert({
-          title: file.name,
-          description: null,
-          file_url: publicUrl,
-          file_path: filePath,
-          file_type: file.type,
-          file_size: file.size,
-          category: 'general',
-          uploaded_by: user.id,
-          is_public: true,
-          is_featured: false
+      if (successful > 0) {
+        toast({
+          title: "Upload Complete",
+          description: `${successful} file(s) uploaded successfully${failed > 0 ? `, ${failed} failed` : ''}`,
         });
-      
-      if (insertErr) throw insertErr;
-      await fetchItems();
+        await fetchItems();
+      } else {
+        toast({
+          title: "Upload Failed",
+          description: "All uploads failed. Please try again.",
+          variant: "destructive"
+        });
+      }
     } catch (err) {
-      console.error('Upload failed:', err);
+      console.error('Bulk upload failed:', err);
+      toast({
+        title: "Upload Error",
+        description: "An unexpected error occurred during upload",
+        variant: "destructive"
+      });
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      handleBulkUploadFiles(acceptedFiles);
+    }
+  }, [user]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    disabled: uploading,
+    multiple: true,
+    accept: {
+      'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'],
+      'audio/*': ['.mp3', '.wav', '.aac', '.m4a', '.ogg', '.flac'],
+      'video/*': ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv'],
+      'application/pdf': ['.pdf']
+    }
+  });
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <header className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-b">
+        <header className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-b shadow-sm">
           <div className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-3">
-              <div className="rounded-md bg-primary/10 p-2 text-primary">
-                <Camera className="h-5 w-5" />
+            <div className="flex items-center gap-4">
+              <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full border border-primary/20">
+                <Camera className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Media Library</h1>
-                <p className="text-sm text-muted-foreground">Manage images, audio, videos, and documents</p>
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+                  Media Library
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">Manage images, audio, videos, and documents with advanced parallel uploading</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => navigate('/admin')}>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={() => navigate('/admin')} className="hover:bg-secondary/80">
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back to Admin
               </Button>
-              <input ref={fileInputRef} type="file" className="hidden" onChange={handleUpload} />
-              <Button onClick={onUploadClick} disabled={uploading}>
+              <Button onClick={() => setShowBulkUpload(true)} className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md">
+                <Album className="h-4 w-4" />
+                Bulk Upload
+              </Button>
+              <input ref={fileInputRef} type="file" className="hidden" onChange={handleSingleUpload} multiple />
+              <Button onClick={onUploadClick} disabled={uploading} variant="outline" className="hover:bg-secondary/80">
                 {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                {uploading ? 'Uploading...' : 'Upload Media'}
+                {uploading ? 'Uploading...' : 'Quick Upload'}
               </Button>
             </div>
           </div>
         </header>
 
-        <main className="pt-6 space-y-6">
-          <Card className="bg-background/50 border-border">
+        <main className="pt-8 space-y-8">
+          {/* Enhanced Drag & Drop Zone */}
+          <Card 
+            {...getRootProps()}
+            className={`group transition-all duration-300 cursor-pointer backdrop-blur-md border-2 border-dashed
+              ${isDragActive 
+                ? 'border-primary bg-primary/10 shadow-xl shadow-primary/20 scale-105' 
+                : 'border-border/50 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 bg-gradient-to-br from-card/90 to-card/50'
+              }
+              ${uploading ? 'pointer-events-none opacity-50' : ''}
+            `}
+          >
+            <input {...getInputProps()} />
+            <CardContent className="p-8 text-center space-y-6">
+              <div className="inline-flex items-center justify-center p-6 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-full border border-secondary/20 group-hover:border-secondary/40 transition-all">
+                {uploading ? (
+                  <Loader2 className="h-12 w-12 text-secondary animate-spin" />
+                ) : isDragActive ? (
+                  <Upload className="h-12 w-12 text-primary animate-pulse" />
+                ) : (
+                  <Upload className="h-12 w-12 text-secondary" />
+                )}
+              </div>
+              <div>
+                {uploading ? (
+                  <>
+                    <h3 className="text-2xl font-semibold text-foreground mb-2">Processing Upload...</h3>
+                    <p className="text-muted-foreground">Please wait while we upload your files in parallel</p>
+                  </>
+                ) : isDragActive ? (
+                  <>
+                    <h3 className="text-2xl font-semibold text-primary mb-2">Drop Files Here</h3>
+                    <p className="text-muted-foreground">Release to start parallel uploading</p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-2xl font-semibold text-foreground group-hover:text-secondary transition-colors mb-2">
+                      Drag & Drop Media Files
+                    </h3>
+                    <p className="text-muted-foreground mb-4">Upload multiple files simultaneously with our parallel processing system</p>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <p>Supports: Images, Audio, Video, PDFs, Documents</p>
+                      <p>• Multiple files uploaded in parallel for maximum speed</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-md border-border/30 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-lg">Browse</CardTitle>
+              <CardTitle className="text-xl flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg">
+                  <FileText className="h-5 w-5 text-primary" />
+                </div>
+                Browse Media Collection
+              </CardTitle>
               <CardDescription>Filter by type or search by filename/category</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between mb-4">
+            <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between mb-6">
               <Tabs value={activeKind} onValueChange={(v) => setActiveKind(v as any)}>
-                <TabsList>
+                <TabsList className="bg-gradient-to-r from-muted/80 to-muted/60 backdrop-blur-md border border-border/30">
                   <TabsTrigger value="all">All</TabsTrigger>
                   <TabsTrigger value="image">Images</TabsTrigger>
                   <TabsTrigger value="audio">Audio</TabsTrigger>
@@ -201,16 +343,24 @@ const MediaLibrary = () => {
                   <TabsTrigger value="other">Other</TabsTrigger>
                 </TabsList>
               </Tabs>
-              <Input placeholder="Search..." value={query} onChange={(e) => setQuery(e.target.value)} className="md:max-w-sm" />
+              <Input 
+                placeholder="Search media files..." 
+                value={query} 
+                onChange={(e) => setQuery(e.target.value)} 
+                className="md:max-w-sm bg-background/80 border-border/50" 
+              />
             </div>
 
             {loading ? (
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+              <div className="flex items-center justify-center py-12 space-y-4">
+                <div className="text-center">
+                  <Loader2 className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
+                  <p className="text-muted-foreground">Loading media collection...</p>
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="lg:col-span-1 border border-border rounded-md bg-background/40 max-h-[70vh] overflow-y-auto divide-y divide-border/60">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1 border border-border/30 rounded-lg bg-gradient-to-br from-background/90 to-background/50 backdrop-blur-md max-h-[70vh] overflow-y-auto">
                   {filtered.map((m) => {
                     const kind = MIME_TO_KIND(m.mime_type, m.file_type);
                     const active = m.id === selectedId;
@@ -218,57 +368,79 @@ const MediaLibrary = () => {
                       <button
                         key={m.id}
                         onClick={() => setSelectedId(m.id)}
-                        className={`w-full text-left flex items-center gap-3 px-3 py-2 ${active ? 'bg-primary/10' : 'hover:bg-muted/60'}`}
+                        className={`w-full text-left flex items-center gap-4 px-4 py-3 border-b border-border/20 transition-all
+                          ${active 
+                            ? 'bg-gradient-to-r from-primary/20 to-primary/10 border-primary/30' 
+                            : 'hover:bg-gradient-to-r hover:from-muted/60 hover:to-muted/40'
+                          }`}
                       >
-                        {kind === 'image' ? (
-                          <Image className="h-4 w-4 text-primary" />
-                        ) : kind === 'audio' ? (
-                          <Music className="h-4 w-4 text-primary" />
-                        ) : kind === 'video' ? (
-                          <Video className="h-4 w-4 text-primary" />
-                        ) : kind === 'pdf' ? (
-                          <FileText className="h-4 w-4 text-primary" />
-                        ) : (
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="truncate text-sm font-medium">{m.original_filename || m.title}</div>
-                          <div className="text-xs text-muted-foreground">{(kind || 'file').toUpperCase()}</div>
+                        <div className={`p-2 rounded-lg ${active ? 'bg-primary/20' : 'bg-muted/50'}`}>
+                          {kind === 'image' ? (
+                            <Image className="h-5 w-5 text-primary" />
+                          ) : kind === 'audio' ? (
+                            <Music className="h-5 w-5 text-primary" />
+                          ) : kind === 'video' ? (
+                            <Video className="h-5 w-5 text-primary" />
+                          ) : kind === 'pdf' ? (
+                            <FileText className="h-5 w-5 text-primary" />
+                          ) : (
+                            <FileText className="h-5 w-5 text-muted-foreground" />
+                          )}
                         </div>
-                        {m.category && <Badge variant="outline" className="text-[10px]">{m.category}</Badge>}
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate font-medium">{m.original_filename || m.title}</div>
+                          <div className="text-sm text-muted-foreground">{(kind || 'file').toUpperCase()}</div>
+                        </div>
+                        {m.category && <Badge variant="outline" className="text-xs bg-secondary/20">{m.category}</Badge>}
                       </button>
                     );
                   })}
                 </div>
-                <div className="lg:col-span-2 border border-border rounded-md bg-background/40 min-h-[50vh] p-3">
+                <div className="lg:col-span-2 border border-border/30 rounded-lg bg-gradient-to-br from-background/90 to-background/50 backdrop-blur-md min-h-[50vh] p-6">
                   {!selectedItem ? (
-                    <div className="text-sm text-muted-foreground">Select an item from the list to preview.</div>
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center space-y-4">
+                        <div className="p-4 bg-muted/20 rounded-full inline-flex">
+                          <FileText className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <p className="text-muted-foreground">Select an item from the list to preview</p>
+                      </div>
+                    </div>
                   ) : (
                     (() => {
                       const kind = MIME_TO_KIND(selectedItem.mime_type, selectedItem.file_type);
                       const isPdf = (selectedItem.mime_type || '').toLowerCase().includes('pdf');
                       return (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="font-medium truncate" title={selectedItem.original_filename || selectedItem.title || ''}>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between gap-4 pb-4 border-b border-border/20">
+                            <div className="font-semibold text-lg truncate" title={selectedItem.original_filename || selectedItem.title || ''}>
                               {selectedItem.original_filename || selectedItem.title}
                             </div>
                             {selectedItem.file_url && (
-                              <a href={selectedItem.file_url} target="_blank" rel="noopener noreferrer" className="text-sm inline-flex items-center gap-1 text-primary hover:underline">
-                                Open <ExternalLink className="h-4 w-4" />
-                              </a>
+                              <Button variant="outline" asChild className="gap-2">
+                                <a href={selectedItem.file_url} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="h-4 w-4" />
+                                  Open
+                                </a>
+                              </Button>
                             )}
                           </div>
                           <div className="w-full">
                             {kind === 'image' && selectedItem.file_url ? (
-                              <img src={selectedItem.file_url} alt={selectedItem.title || 'media'} className="w-full max-h-[70vh] object-contain" />
+                              <img src={selectedItem.file_url} alt={selectedItem.title || 'media'} className="w-full max-h-[70vh] object-contain rounded-lg shadow-lg" />
                             ) : kind === 'audio' && selectedItem.file_url ? (
-                              <audio controls className="w-full">
-                                <source src={selectedItem.file_url} />
-                                Your browser does not support the audio element.
-                              </audio>
+                              <div className="space-y-4">
+                                <div className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg">
+                                  <Music className="h-8 w-8 text-primary mb-2" />
+                                  <p className="text-sm text-muted-foreground">Audio file ready to play</p>
+                                </div>
+                                <audio controls className="w-full">
+                                  <source src={selectedItem.file_url} />
+                                  Your browser does not support the audio element.
+                                </audio>
+                              </div>
                             ) : kind === 'video' && selectedItem.file_url ? (
-                              <video controls className="w-full max-h-[70vh]">
+                              <video controls className="w-full max-h-[70vh] rounded-lg shadow-lg">
                                 <source src={selectedItem.file_url} />
                                 Your browser does not support the video tag.
                               </video>
@@ -276,18 +448,16 @@ const MediaLibrary = () => {
                               <div className="w-full">
                                 <PdfDocument 
                                   file={selectedItem.file_url} 
-                                  loading={<div className="text-sm text-muted-foreground">Loading PDF...</div>}
+                                  loading={<div className="text-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" /><p className="text-muted-foreground">Loading PDF...</p></div>}
                                   error={
-                                    <div className="text-center p-4 space-y-2">
-                                      <div className="text-sm text-destructive">Failed to load PDF preview</div>
-                                      <a 
-                                        href={selectedItem.file_url} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 text-primary hover:underline text-sm"
-                                      >
-                                        Open PDF in new tab <ExternalLink className="h-4 w-4" />
-                                      </a>
+                                    <div className="text-center p-8 space-y-4 bg-muted/20 rounded-lg">
+                                      <div className="text-destructive">Failed to load PDF preview</div>
+                                      <Button variant="outline" asChild>
+                                        <a href={selectedItem.file_url} target="_blank" rel="noopener noreferrer" className="gap-2">
+                                          <ExternalLink className="h-4 w-4" />
+                                          Open PDF in new tab
+                                        </a>
+                                      </Button>
                                     </div>
                                   }
                                   onLoadError={(error) => {
@@ -303,9 +473,20 @@ const MediaLibrary = () => {
                                 </PdfDocument>
                               </div>
                             ) : selectedItem.file_url ? (
-                              <div className="text-sm text-muted-foreground">Preview not available. Use the Open link above to view or download.</div>
+                              <div className="text-center py-8 space-y-4 bg-muted/20 rounded-lg">
+                                <FileText className="h-12 w-12 text-muted-foreground mx-auto" />
+                                <p className="text-muted-foreground">Preview not available for this file type</p>
+                                <Button variant="outline" asChild>
+                                  <a href={selectedItem.file_url} target="_blank" rel="noopener noreferrer" className="gap-2">
+                                    <ExternalLink className="h-4 w-4" />
+                                    Open or Download
+                                  </a>
+                                </Button>
+                              </div>
                             ) : (
-                              <div className="text-sm text-muted-foreground">No file URL available.</div>
+                              <div className="text-center py-8 bg-muted/20 rounded-lg">
+                                <p className="text-muted-foreground">No file URL available</p>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -318,6 +499,45 @@ const MediaLibrary = () => {
           </CardContent>
         </Card>
         </main>
+
+        {/* Bulk Upload Dialog */}
+        <Dialog open={showBulkUpload} onOpenChange={setShowBulkUpload}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Album className="h-5 w-5" />
+                Bulk Media Upload
+              </DialogTitle>
+            </DialogHeader>
+            <div className="overflow-y-auto">
+              <div className="space-y-6 p-4">
+                <div 
+                  {...getRootProps()}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer
+                    ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}
+                  `}
+                >
+                  <input {...getInputProps()} />
+                  <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-lg font-medium mb-2">
+                      {isDragActive ? 'Drop files here' : 'Drag & drop files for bulk upload'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      or click to browse • Multiple files supported • Parallel processing
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button variant="outline" onClick={() => setShowBulkUpload(false)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
