@@ -79,6 +79,9 @@ serve(async (req) => {
     console.log(`Grading journal ${journalId} for assignment ${assignmentId}`);
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    console.log('OpenAI API Key available:', !!openAIApiKey);
+    console.log('OpenAI API Key format check:', openAIApiKey ? `${openAIApiKey.substring(0, 7)}...` : 'NOT_FOUND');
+    
     if (!openAIApiKey) {
       console.error('OpenAI API key not configured');
       return new Response(JSON.stringify({ 
@@ -162,9 +165,13 @@ Be fair but thorough in your evaluation. Consider the level appropriate for an i
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+      const errorData = await response.json().catch(() => ({ error: { message: 'Failed to parse error response' } }));
+      console.error('OpenAI API error details:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      });
+      throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText || 'Unknown error'}`);
     }
 
     const data = await response.json();
