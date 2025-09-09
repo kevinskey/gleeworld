@@ -1165,7 +1165,7 @@ Return this exact JSON structure with your composition:
       source: aiJson ? "openai" : "fallback-seeded",
       requestId,
       randomSeed
-    }), {status:200,headers:cors(origin)});
+    }), {status:200,headers:corsHeaders});
 
   } catch (error) {
     console.error("=== EDGE FUNCTION ERROR ===");
@@ -1180,7 +1180,7 @@ Return this exact JSON structure with your composition:
       timestamp: new Date().toISOString()
     }), {
       status: 500,
-      headers: cors(origin)
+      headers: corsHeaders
     });
   }
 });
