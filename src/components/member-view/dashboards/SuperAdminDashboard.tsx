@@ -141,8 +141,15 @@ export const SuperAdminDashboard = ({
               // Get the full module config from registry
               const moduleConfig = ModuleRegistry.getModule(module.id);
               if (!moduleConfig) {
-                console.warn(`Module config not found for: ${module.id}`);
-                return null;
+                // Instead of warning and returning null, create a fallback module
+                console.warn(`Module config not found for: ${module.id}, using fallback`);
+                return {
+                  ...module,
+                  icon: (module as any).icon || Calendar,
+                  iconColor: (module as any).iconColor || 'blue',
+                  component: null,
+                  isNew: false
+                };
               }
               return {
                 ...module,
@@ -153,13 +160,22 @@ export const SuperAdminDashboard = ({
               };
             } catch (error) {
               console.error(`Error processing module ${module.id}:`, error);
-              return null;
+              // Return fallback module instead of null
+              return {
+                ...module,
+                icon: (module as any).icon || Calendar,
+                iconColor: (module as any).iconColor || 'blue',
+                component: null,
+                isNew: false
+              };
             }
-          }).filter(module => module !== null && module.component !== undefined); // Filter out null modules and modules without components
-          result[category] = modules;
+          }).filter(Boolean); // Filter out any null values
+          
+          if (modules.length > 0) {
+            result[category] = modules;
+          }
         } catch (error) {
           console.error(`Error processing category ${category}:`, error);
-          result[category] = [];
         }
       });
       return result;

@@ -135,6 +135,9 @@ export class ModuleRegistry {
 // Initialize on import
 ModuleRegistry.initialize();
 
+// Re-initialize to make sure new modules are included
+setTimeout(() => ModuleRegistry.initialize(), 0);
+
 // Register the UserModuleAssignment component as a special module
 ModuleRegistry.registerModule({
   id: 'user-module-assignment',

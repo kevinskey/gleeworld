@@ -74,6 +74,7 @@ import { FirstYearConsoleModule } from '@/components/modules/FirstYearConsoleMod
 import { AIToolsModule } from '@/components/modules/AIToolsModule';
 import { LibrarianModule } from '@/components/modules/LibrarianModule';
 import { AppointmentServiceManager } from '@/components/appointments/AppointmentServiceManager';
+import { AppointmentSchedulingModule } from '@/components/modules/AppointmentSchedulingModule';
 import MediaLibrary from '@/pages/admin/MediaLibrary';
 import { RadioManagement } from '@/components/admin/RadioManagement';
 import { TheoryPollModule } from '@/components/modules/TheoryPollModule';
@@ -240,6 +241,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: CalendarManagementModule,
     dbFunctionName: "calendar-management"
+  },
+  {
+    id: "appointments",
+    name: "appointments",
+    title: "Appointment System",
+    description: "Comprehensive appointment booking and management system",
+    icon: Calendar,
+    iconColor: "blue",
+    category: "communications",
+    isActive: true,
+    component: AppointmentSchedulingModule,
+    dbFunctionName: "appointments"
   },
 
   // Attendance & Member Management modules
