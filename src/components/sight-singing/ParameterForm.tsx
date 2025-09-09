@@ -97,8 +97,8 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     <Card className="w-full">
       <CardContent className="p-3 space-y-3">
         <form className="space-y-3">
-          {/* Row 1: Key and Mode */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* Row 1: Key, Mode, Time, and Measures */}
+          <div className="grid grid-cols-4 gap-2">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Key</Label>
               <Select 
@@ -133,10 +133,6 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Row 2: Time Signature and Measures */}
-          <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Time</Label>
               <Select 
@@ -176,7 +172,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             </div>
           </div>
 
-          {/* Row 3: Parts and BPM */}
+          {/* Row 2: Parts and BPM */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Parts</Label>
