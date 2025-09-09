@@ -1223,13 +1223,43 @@ export const SightSingingStudio: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="library" className="mt-6">
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* Left Column - Score Library */}
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* Left Column - Score Generator */}
+              <div className="space-y-4">
+                <div className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">🎼 Generate New Scores</h3>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Create custom sight-reading exercises using AI. Generated scores are automatically saved to your library.
+                  </p>
+                </div>
+                
+                <Card className="p-2 sm:p-4">
+                  <h2 className="text-sm font-semibold mb-2 sm:mb-3 flex-shrink-0">Score Generator</h2>
+                  <div>
+                    <ParameterForm 
+                      onGenerate={(params) => {
+                        handleGenerateExercise(params);
+                        // Auto-save generated exercise to library
+                        setTimeout(() => {
+                          if (currentMusicXML && parameters) {
+                            handleSaveToLibrary();
+                          }
+                        }, 2000);
+                      }}
+                      isGenerating={isGenerating}
+                      onReset={handleReset}
+                      hasExercise={!!currentMusicXML}
+                    />
+                  </div>
+                </Card>
+              </div>
+
+              {/* Middle Column - Score Library */}
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">📚 Import Your XML Files</h3>
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">📚 Score Library</h3>
                   <p className="text-sm text-blue-700 dark:text-blue-300">
-                    Upload your MusicXML files here. Once loaded, you can create assignments for students.
+                    Browse your saved scores and uploaded MusicXML files. Select any score to create assignments.
                   </p>
                 </div>
                 
@@ -1261,6 +1291,13 @@ export const SightSingingStudio: React.FC = () => {
               
               {/* Right Column - Assignment Creator */}
               <div className="space-y-4">
+                <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">📝 Create Assignment</h3>
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Turn selected scores into assignments for students. Set difficulty and requirements.
+                  </p>
+                </div>
+
                 <AssignmentCreator 
                   selectedScore={selectedScore}
                   onAssignmentCreated={() => {
