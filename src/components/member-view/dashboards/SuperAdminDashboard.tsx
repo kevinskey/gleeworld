@@ -202,7 +202,7 @@ export const SuperAdminDashboard = ({
 
   // Ensure all categories are collapsed by default when categories load
   useEffect(() => {
-    if (categories.length > 0) {
+    if (categories.length > 0 && Object.keys(collapsedSections).length === 0) {
       const initialCollapsed: Record<string, boolean> = {};
       // Get all categories and default them to collapsed
       Object.keys(UNIFIED_MODULE_CATEGORIES).forEach(category => {
@@ -211,12 +211,9 @@ export const SuperAdminDashboard = ({
       categories.forEach(category => {
         initialCollapsed[category] = true; // Default to collapsed
       });
-      setCollapsedSections(prev => ({
-        ...initialCollapsed,
-        ...prev // Keep any existing user preferences
-      }));
+      setCollapsedSections(initialCollapsed);
     }
-  }, [categories]);
+  }, [categories.length]); // Only depend on the length, not the entire array
 
   // Sort and filter modules
   const filteredAndSortedModules = useMemo(() => {
