@@ -94,6 +94,7 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
         contract_id: contractId || undefined,
         event_id: eventId || undefined,
         status: 'active' as const,
+        // approval_status will be set to 'draft' in the hook
         created_by: '' // This will be set in the hook
       };
 

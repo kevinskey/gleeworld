@@ -1209,6 +1209,7 @@ export type Database = {
       budgets: {
         Row: {
           allocated_amount: number
+          approval_status: string | null
           budget_type: string
           contract_id: string | null
           created_at: string
@@ -1217,16 +1218,24 @@ export type Database = {
           end_date: string | null
           event_id: string | null
           id: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
           remaining_amount: number | null
           spent_amount: number
           start_date: string
           status: string
+          superadmin_approved_at: string | null
+          superadmin_approved_by: string | null
           title: string
           total_amount: number
+          treasurer_approved_at: string | null
+          treasurer_approved_by: string | null
           updated_at: string
         }
         Insert: {
           allocated_amount?: number
+          approval_status?: string | null
           budget_type?: string
           contract_id?: string | null
           created_at?: string
@@ -1235,16 +1244,24 @@ export type Database = {
           end_date?: string | null
           event_id?: string | null
           id?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           remaining_amount?: number | null
           spent_amount?: number
           start_date: string
           status?: string
+          superadmin_approved_at?: string | null
+          superadmin_approved_by?: string | null
           title: string
           total_amount?: number
+          treasurer_approved_at?: string | null
+          treasurer_approved_by?: string | null
           updated_at?: string
         }
         Update: {
           allocated_amount?: number
+          approval_status?: string | null
           budget_type?: string
           contract_id?: string | null
           created_at?: string
@@ -1253,12 +1270,19 @@ export type Database = {
           end_date?: string | null
           event_id?: string | null
           id?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           remaining_amount?: number | null
           spent_amount?: number
           start_date?: string
           status?: string
+          superadmin_approved_at?: string | null
+          superadmin_approved_by?: string | null
           title?: string
           total_amount?: number
+          treasurer_approved_at?: string | null
+          treasurer_approved_by?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -17435,6 +17459,15 @@ export type Database = {
         }
         Returns: Json
       }
+      approve_budget_step: {
+        Args: {
+          p_action?: string
+          p_approver_role: string
+          p_budget_id: string
+          p_rejection_reason?: string
+        }
+        Returns: Json
+      }
       block_date: {
         Args: { block_reason?: string; date_to_block: string }
         Returns: undefined
@@ -18199,6 +18232,10 @@ export type Database = {
       simple_admin_bootstrap: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      submit_budget_for_approval: {
+        Args: { p_budget_id: string }
+        Returns: Json
       }
       sync_auditioner_names_from_applications: {
         Args: Record<PropertyKey, never>

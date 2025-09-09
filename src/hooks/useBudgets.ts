@@ -13,11 +13,19 @@ export interface Budget {
   remaining_amount: number;
   budget_type: 'project' | 'event' | 'contract' | 'annual';
   status: 'active' | 'completed' | 'cancelled' | 'on_hold';
+  approval_status: 'draft' | 'pending_treasurer' | 'treasurer_approved' | 'pending_superadmin' | 'fully_approved' | 'rejected';
   start_date: string;
   end_date?: string;
   created_by: string;
   contract_id?: string;
   event_id?: string;
+  treasurer_approved_by?: string;
+  treasurer_approved_at?: string;
+  superadmin_approved_by?: string;
+  superadmin_approved_at?: string;
+  rejection_reason?: string;
+  rejected_by?: string;
+  rejected_at?: string;
   created_at: string;
   updated_at: string;
 }
@@ -113,7 +121,7 @@ export const useBudgets = () => {
   };
 
   const createBudget = async (
-    budgetData: Omit<Budget, 'id' | 'created_at' | 'updated_at' | 'remaining_amount' | 'spent_amount' | 'created_by'> & { created_by?: string },
+    budgetData: Omit<Budget, 'id' | 'created_at' | 'updated_at' | 'remaining_amount' | 'spent_amount' | 'created_by' | 'approval_status'> & { created_by?: string },
     userAssociations?: Array<{ user: { id: string; email: string; full_name?: string }; permission_type: 'view' | 'edit' | 'manage' }>
   ) => {
     if (!user) return null;
@@ -124,6 +132,7 @@ export const useBudgets = () => {
         .from('budgets')
         .insert([{
           ...budgetData,
+          approval_status: 'draft', // All new budgets start as draft
           created_by: user.id
         }])
         .select()
@@ -227,6 +236,79 @@ export const useBudgets = () => {
     }
   };
 
+  const submitForApproval = async (id: string) => {
+    try {
+      const { data, error } = await supabase.rpc('submit_budget_for_approval', {
+        p_budget_id: id
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; message?: string; error?: string };
+      if (result?.success) {
+        await fetchBudgets(); // Refresh to get updated approval status
+        toast({
+          title: "Success",
+          description: result.message || "Budget submitted for approval",
+        });
+        return true;
+      } else {
+        toast({
+          title: "Error",
+          description: result?.error || "Failed to submit budget for approval",
+          variant: "destructive",
+        });
+        return false;
+      }
+    } catch (err) {
+      console.error('Error submitting budget for approval:', err);
+      toast({
+        title: "Error",
+        description: "Failed to submit budget for approval",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const approveBudget = async (id: string, approverRole: 'treasurer' | 'superadmin', action: 'approve' | 'reject' = 'approve', rejectionReason?: string) => {
+    try {
+      const { data, error } = await supabase.rpc('approve_budget_step', {
+        p_budget_id: id,
+        p_approver_role: approverRole,
+        p_action: action,
+        p_rejection_reason: rejectionReason
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; message?: string; error?: string };
+      if (result?.success) {
+        await fetchBudgets(); // Refresh to get updated approval status
+        toast({
+          title: "Success",
+          description: result.message || "Approval processed successfully",
+        });
+        return true;
+      } else {
+        toast({
+          title: "Error",
+          description: result?.error || "Failed to process approval",
+          variant: "destructive",
+        });
+        return false;
+      }
+    } catch (err) {
+      console.error('Error processing approval:', err);
+      toast({
+        title: "Error",
+        description: "Failed to process approval",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchBudgets();
   }, [user]);
@@ -238,6 +320,8 @@ export const useBudgets = () => {
     createBudget,
     updateBudget,
     deleteBudget,
+    submitForApproval,
+    approveBudget,
     refetch: fetchBudgets
   };
 };

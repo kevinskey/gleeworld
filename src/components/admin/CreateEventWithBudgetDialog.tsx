@@ -122,7 +122,8 @@ export const CreateEventWithBudgetDialog = ({ onSuccess, triggerButton }: Create
         start_date: budgetData.start_date,
         end_date: budgetData.end_date || null,
         event_id: eventResult.id,
-        status: 'active' as const
+        status: 'active' as const,
+        // approval_status will be set to 'draft' in the hook
       };
 
       const budgetResult = await createBudget(budgetPayload);
