@@ -91,6 +91,16 @@ export const AzuraCastAdminPanel = () => {
       return;
     }
 
+    // Check if user entered placeholder text instead of real API key
+    if (apiKey.includes('AzuraCast admin API calls') || apiKey.includes('Playlist Management')) {
+      toast({
+        title: "Invalid API Key",
+        description: "Please enter your actual AzuraCast API key, not the placeholder text",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       azuraCastService.setAdminApiKey(apiKey);
@@ -113,9 +123,21 @@ export const AzuraCastAdminPanel = () => {
     } catch (error) {
       console.error('Connection error:', error);
       setIsConnected(false);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      let description = "Failed to connect to AzuraCast. ";
+      
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        description += "Check that radio.gleeworld.org is accessible and has CORS enabled.";
+      } else if (errorMessage.includes('401') || errorMessage.includes('403')) {
+        description += "Invalid API key or insufficient permissions.";
+      } else {
+        description += `Error: ${errorMessage}`;
+      }
+      
       toast({
         title: "Connection Failed",
-        description: "Failed to connect to AzuraCast. Check your API key.",
+        description,
         variant: "destructive",
       });
     } finally {
