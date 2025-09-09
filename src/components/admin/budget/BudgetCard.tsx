@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { Budget } from "@/hooks/useBudgets";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface BudgetCardProps {
   budget: Budget;
@@ -31,6 +33,8 @@ interface BudgetCardProps {
 }
 
 export const BudgetCard = ({ budget, onEdit, onDelete, onViewDetails, onUpdate }: BudgetCardProps) => {
+  const { user } = useAuth();
+  const { isSuperAdmin } = useUserRole();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -104,6 +108,9 @@ export const BudgetCard = ({ budget, onEdit, onDelete, onViewDetails, onUpdate }
   const isOverBudget = budget.spent_amount > budget.total_amount;
   const isNearingLimit = spentPercentage > 80 && !isOverBudget;
   const remainingAmount = (budget.total_amount || 0) - (budget.spent_amount || 0);
+  
+  // Check if user can delete this budget (superadmin can delete any budget, others can only delete their own)
+  const canDeleteBudget = isSuperAdmin() || (user && budget.created_by === user.id);
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -158,12 +165,14 @@ export const BudgetCard = ({ budget, onEdit, onDelete, onViewDetails, onUpdate }
                     <DropdownMenuItem onClick={() => onEdit?.(budget)}>
                       Edit in Modal
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => onDelete?.(budget)}
-                      className="text-red-600"
-                    >
-                      Delete Budget
-                    </DropdownMenuItem>
+                    {canDeleteBudget && (
+                      <DropdownMenuItem 
+                        onClick={() => onDelete?.(budget)}
+                        className="text-red-600"
+                      >
+                        Delete Budget
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
