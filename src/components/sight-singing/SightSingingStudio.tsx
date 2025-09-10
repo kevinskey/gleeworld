@@ -52,8 +52,8 @@ export interface ExerciseParameters {
   time: { num: number; den: 1|2|4|8|16 };
   numMeasures: number;
   parts: Array<{ role: string; range: { min: string; max: string } }>;
-  allowedDur: Array<'whole'|'half'|'quarter'|'eighth'|'16th'>;
-  allowedRests?: Array<'whole'|'half'|'quarter'|'eighth'|'16th'>;
+  allowedDur: Array<'whole'|'half'|'quarter'|'eighth'|'16th'|'32nd'>;
+  allowedRests?: Array<'whole'|'half'|'quarter'|'eighth'|'16th'|'32nd'>;
   allowDots: boolean;
   allowAccidentals: boolean;
   intervalMotion: Array<'step'|'skip'|'leap'|'repeat'>;

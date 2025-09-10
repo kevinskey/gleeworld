@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { X, Music, Music2, Music3, Music4, Square, Minus } from 'lucide-react';
+import { MusicalNotation, getNoteSymbol, getRestSymbol } from '@/components/ui/musical-notation';
 import { ExerciseParameters } from './SightSingingStudio';
 interface ParameterFormProps {
   onGenerate: (parameters: ExerciseParameters) => void;
@@ -91,35 +91,12 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     num: 9,
     den: 8
   }];
-  const durations = ["whole", "half", "quarter", "eighth", "16th"];
+  const durations = ["whole", "half", "quarter", "eighth", "16th", "32nd"];
   const motions = ["step", "skip", "leap", "repeat"];
   const measureOptions = [4, 8, 16, 32];
   const cadenceOptions = [2, 4, 8];
   const cadenceTypes = ["authentic", "half", "plagal", "deceptive"];
   const bpmOptions = [60, 72, 84, 96, 108, 120, 132, 144, 160, 180];
-
-  // Helper functions for icons
-  const getNoteIcon = (duration: string) => {
-    switch (duration) {
-      case 'whole': return Music4;
-      case 'half': return Music3;
-      case 'quarter': return Music2;
-      case 'eighth': return Music;
-      case '16th': return Music;
-      default: return Music;
-    }
-  };
-
-  const getRestIcon = (duration: string) => {
-    switch (duration) {
-      case 'whole': return Square;
-      case 'half': return Square;
-      case 'quarter': return Minus;
-      case 'eighth': return Minus;
-      case '16th': return Minus;
-      default: return Minus;
-    }
-  };
   const handleDurationToggle = (duration: string) => {
     const current = watchedAllowedDur || [];
     if (current.includes(duration as any)) {
@@ -346,7 +323,6 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             <Label className="text-xs font-medium">Note Values</Label>
             <div className="flex flex-wrap gap-1">
               {durations.map(duration => {
-                const IconComponent = getNoteIcon(duration);
                 return (
                   <Badge 
                     key={duration} 
@@ -354,7 +330,10 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                     className="cursor-pointer text-xs px-2 py-1 h-8 w-8 flex items-center justify-center" 
                     onClick={() => handleDurationToggle(duration)}
                   >
-                    <IconComponent className="h-4 w-4" />
+                    <MusicalNotation 
+                      symbol={getNoteSymbol(duration)} 
+                      className="text-lg"
+                    />
                   </Badge>
                 );
               })}
@@ -366,7 +345,6 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             <Label className="text-xs font-medium">Rest Values</Label>
             <div className="flex flex-wrap gap-1">
               {durations.map(restType => {
-                const IconComponent = getRestIcon(restType);
                 return (
                   <Badge 
                     key={`rest-${restType}`} 
@@ -374,7 +352,10 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                     className="cursor-pointer text-xs px-2 py-1 h-8 w-8 flex items-center justify-center" 
                     onClick={() => handleRestToggle(restType)}
                   >
-                    <IconComponent className="h-4 w-4" />
+                    <MusicalNotation 
+                      symbol={getRestSymbol(restType)} 
+                      className="text-lg"
+                    />
                   </Badge>
                 );
               })}

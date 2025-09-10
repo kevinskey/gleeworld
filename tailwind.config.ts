@@ -35,6 +35,7 @@ export default {
 				'bebas': ['Bebas Neue', 'cursive'],
 				'roboto': ['Roboto', 'sans-serif'],
 				'playfair': ['Playfair Display', 'serif'],
+				'bravura': ['Bravura', 'serif'],
 				'sans': ['Roboto', 'system-ui', 'sans-serif'],
 			},
 			colors: {
