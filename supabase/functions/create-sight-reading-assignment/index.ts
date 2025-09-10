@@ -50,7 +50,7 @@ serve(async (req) => {
       .from('gw_profiles')
       .select('is_admin, is_super_admin, role, exec_board_role, is_exec_board, is_section_leader')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (profileError) {
       throw new Error('Failed to verify user permissions');
