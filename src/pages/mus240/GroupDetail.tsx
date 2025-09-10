@@ -393,17 +393,45 @@ export default function GroupDetail() {
                   Access the shared NotebookLM workspace for compiling sources, asking questions, and creating media for your projects.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <button
-                  onClick={() => {
-                    console.log('NotebookLM button clicked, opening:', NOTEBOOKLM_URL);
-                    window.open(NOTEBOOKLM_URL, '_blank', 'noopener,noreferrer');
-                  }}
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors font-medium cursor-pointer"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Open NotebookLM Data Center
-                </button>
+              <CardContent className="space-y-4">
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800 font-medium mb-2">NotebookLM Workspace URL:</p>
+                  <code className="text-xs bg-white px-2 py-1 rounded border text-blue-900 break-all block">
+                    {NOTEBOOKLM_URL}
+                  </code>
+                </div>
+                
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(NOTEBOOKLM_URL);
+                        toast.success('URL copied to clipboard! Open a new tab and paste it.');
+                      } catch (err) {
+                        console.error('Failed to copy:', err);
+                        toast.error('Failed to copy URL. Please copy manually from above.');
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors font-medium"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Copy NotebookLM URL
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      window.location.href = NOTEBOOKLM_URL;
+                    }}
+                    className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors font-medium"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Go to NotebookLM
+                  </button>
+                </div>
+                
+                <p className="text-xs text-slate-600">
+                  Note: If the direct link is blocked, copy the URL above and paste it into a new browser tab.
+                </p>
               </CardContent>
             </Card>
           </div>
