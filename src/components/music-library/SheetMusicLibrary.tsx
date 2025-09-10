@@ -21,6 +21,7 @@ import { SheetMusicEditDialog } from "./SheetMusicEditDialog";
 import { SheetMusicViewDialog } from "./SheetMusicViewDialog";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 import { PDFThumbnail } from "./PDFThumbnail";
+import { OSMDViewer } from "@/components/OSMDViewer";
 
 interface SheetMusic {
   id: string;
@@ -40,6 +41,8 @@ interface SheetMusic {
   is_public: boolean;
   created_by: string;
   created_at: string;
+  xml_content: string | null;
+  xml_url: string | null;
 }
 
 interface SheetMusicLibraryProps {
@@ -260,8 +263,13 @@ export const SheetMusicLibrary = ({
             onClick={() => {
               const nextId = isSelected ? null : item.id;
               setSelectedItemId(nextId);
-                if (nextId && item.pdf_url && onPdfSelect) {
-                  onPdfSelect(item.pdf_url, item.title, item.id);
+                if (nextId && onPdfSelect) {
+                  if (item.pdf_url) {
+                    onPdfSelect(item.pdf_url, item.title, item.id);
+                  } else if (item.xml_content || item.xml_url) {
+                    // For XML files, we'll handle viewing inline
+                    console.log('Selected MusicXML item:', item.title);
+                  }
                 }
             }}
           >
@@ -294,20 +302,41 @@ export const SheetMusicLibrary = ({
               </div>
             </CardHeader>
             <CardContent className={`${isSelected ? 'space-y-3' : 'space-y-0 pt-0 pb-1'}`}>
-              {/* Collapsed/Expanded Thumbnail */}
+              {/* Collapsed/Expanded Content */}
               {isSelected ? (
-                <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
-                  {item.pdf_url ? (
-                    <PDFThumbnail
-                      pdfUrl={item.pdf_url}
-                      alt={`${item.title} thumbnail`}
-                      title={item.title}
-                      musicId={item.id}
-                      className="w-full h-full"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <FileText className="h-12 w-12 text-muted-foreground" />
+                <div className="space-y-3">
+                  {/* PDF Viewer */}
+                  {item.pdf_url && (
+                    <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
+                      <PDFThumbnail
+                        pdfUrl={item.pdf_url}
+                        alt={`${item.title} thumbnail`}
+                        title={item.title}
+                        musicId={item.id}
+                        className="w-full h-full"
+                      />
+                    </div>
+                  )}
+                  
+                  {/* MusicXML Viewer */}
+                  {(item.xml_content || item.xml_url) && !item.pdf_url && (
+                    <div className="bg-muted rounded-lg overflow-hidden h-64">
+                      <OSMDViewer
+                        xmlContent={item.xml_content || undefined}
+                        xmlUrl={item.xml_url || undefined}
+                        title={item.title}
+                        className="w-full h-full"
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Fallback when no content */}
+                  {!item.pdf_url && !item.xml_content && !item.xml_url && (
+                    <div className="aspect-[3/4] bg-muted rounded-lg flex items-center justify-center">
+                      <div className="text-center">
+                        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">No preview available</p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -395,8 +424,13 @@ export const SheetMusicLibrary = ({
             onClick={() => {
               const nextId = isSelected ? null : item.id;
               setSelectedItemId(nextId);
-              if (nextId && item.pdf_url && onPdfSelect) {
-                onPdfSelect(item.pdf_url, item.title, item.id);
+              if (nextId && onPdfSelect) {
+                if (item.pdf_url) {
+                  onPdfSelect(item.pdf_url, item.title, item.id);
+                } else if (item.xml_content || item.xml_url) {
+                  // For XML files, we'll handle viewing inline
+                  console.log('Selected MusicXML item:', item.title);
+                }
               }
             }}
           >
@@ -413,6 +447,10 @@ export const SheetMusicLibrary = ({
                         musicId={item.id}
                         className="w-full h-full"
                       />
+                    ) : (item.xml_content || item.xml_url) ? (
+                      <div className="w-full h-full flex items-center justify-center bg-blue-50">
+                        <Music2 className="h-4 w-4 text-blue-600" />
+                      </div>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <FileText className="h-4 w-4 text-muted-foreground" />
@@ -421,7 +459,11 @@ export const SheetMusicLibrary = ({
                   </div>
                 ) : (
                   <div className="w-4 h-4 bg-muted/30 rounded flex items-center justify-center flex-shrink-0">
-                    <div className="w-2 h-1 bg-muted-foreground/30 rounded-sm"></div>
+                    {(item.xml_content || item.xml_url) ? (
+                      <Music2 className="h-2 w-2 text-blue-600/60" />
+                    ) : (
+                      <div className="w-2 h-1 bg-muted-foreground/30 rounded-sm"></div>
+                    )}
                   </div>
                 )}
 
@@ -475,6 +517,18 @@ export const SheetMusicLibrary = ({
                   </div>
                 </div>
               </div>
+              
+              {/* Expanded MusicXML View for List Mode */}
+              {isSelected && (item.xml_content || item.xml_url) && !item.pdf_url && (
+                <div className="mt-3 bg-muted rounded-lg overflow-hidden h-48">
+                  <OSMDViewer
+                    xmlContent={item.xml_content || undefined}
+                    xmlUrl={item.xml_url || undefined}
+                    title={item.title}
+                    className="w-full h-full"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         );
