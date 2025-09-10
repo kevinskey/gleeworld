@@ -912,34 +912,14 @@ export const SightSingingStudio: React.FC = () => {
 
           <TabsContent value="library" className="mt-6">
             <div className="grid gap-6 lg:grid-cols-2">
-              {/* Left Column - Score Generator */}
+              {/* Left Column - Score Library */}
               <div className="space-y-4">
-                <div className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                  <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">🎼 Generate New Scores</h3>
-                  <p className="text-sm text-purple-700 dark:text-purple-300">
-                    Create custom sight-reading exercises using AI. Generated scores are automatically saved to your library.
+                <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">📚 Score Library</h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Browse your saved scores and uploaded MusicXML files. Select any score to view and practice with playback controls.
                   </p>
                 </div>
-                
-                <Card className="p-2 sm:p-4">
-                  <h2 className="text-sm font-semibold mb-2 sm:mb-3 flex-shrink-0">Score Generator</h2>
-                  <div>
-                    <ParameterForm 
-                      onGenerate={(params) => {
-                        handleGenerateExercise(params);
-                        // Auto-save generated exercise to library
-                        setTimeout(() => {
-                          if (currentMusicXML && parameters) {
-                            handleSaveToLibrary();
-                          }
-                        }, 2000);
-                      }}
-                      isGenerating={isGenerating}
-                      onReset={handleReset}
-                      hasExercise={!!currentMusicXML}
-                    />
-                  </div>
-                </Card>
                 
                 <ScoreLibraryManager 
                   onScoreSelect={(score) => {
