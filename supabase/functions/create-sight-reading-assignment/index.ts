@@ -70,18 +70,19 @@ serve(async (req) => {
 
     const request: CreateAssignmentRequest = await req.json();
 
-    // Map target_type values to match database constraints
+    // Map target_type values to match database constraints, default to 'all' if not provided
     const targetTypeMap: { [key: string]: string } = {
       'all_members': 'all',
       'voice_part': 'section',
       'individual': 'individual'
     };
 
-    const mappedTargetType = targetTypeMap[request.target_type] || request.target_type;
+    const requestTargetType = request.target_type || 'all_members'; // Default to all_members
+    const mappedTargetType = targetTypeMap[requestTargetType] || 'all';
 
     console.log('Creating sight-reading assignment:', {
       title: request.title,
-      target_type: request.target_type,
+      target_type: requestTargetType,
       mapped_target_type: mappedTargetType,
       due_date: request.due_date,
       has_musicxml: !!request.musicxml_content,
@@ -146,13 +147,13 @@ serve(async (req) => {
 
     // Get member count for the assignment target
     let targetMembers = 0;
-    if (request.target_type === 'all_members') {
+    if (requestTargetType === 'all_members') {
       const { count } = await supabase
         .from('gw_profiles')
         .select('*', { count: 'exact', head: true })
         .eq('role', 'member');
       targetMembers = count || 0;
-    } else if (request.target_type === 'voice_part' && request.target_value) {
+    } else if (requestTargetType === 'voice_part' && request.target_value) {
       const { count } = await supabase
         .from('gw_profiles')
         .select('*', { count: 'exact', head: true })
