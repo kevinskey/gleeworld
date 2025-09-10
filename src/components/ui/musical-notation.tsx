@@ -6,23 +6,23 @@ interface MusicalNotationProps {
   className?: string;
 }
 
-// SMuFL Unicode codepoints for musical symbols
+// Fallback Unicode musical symbols that work with common fonts
 export const MUSICAL_SYMBOLS = {
-  // Note values
-  wholeNote: '\uE1D2',      // U+E1D2 - Whole note (semibreve)
-  halfNote: '\uE1D3',       // U+E1D3 - Half note (minim) stem up
-  quarterNote: '\uE1D5',    // U+E1D5 - Quarter note (crotchet) stem up
-  eighthNote: '\uE1D7',     // U+E1D7 - Eighth note (quaver) stem up
-  sixteenthNote: '\uE1D9',  // U+E1D9 - Sixteenth note (semiquaver) stem up
-  thirtySecondNote: '\uE1DB', // U+E1DB - Thirty-second note (demisemiquaver) stem up
+  // Note values using common Unicode musical symbols
+  wholeNote: '𝅝',        // U+1D15D - Whole note
+  halfNote: '𝅗𝅥',        // U+1D157 - Half note
+  quarterNote: '♩',       // U+2669 - Quarter note (commonly supported)
+  eighthNote: '♪',        // U+266A - Eighth note (commonly supported)
+  sixteenthNote: '𝅘𝅥𝅯',    // U+1D15F - Sixteenth note
+  thirtySecondNote: '𝅘𝅥𝅰', // U+1D160 - Thirty-second note
   
-  // Rest values
-  wholeRest: '\uE4E3',      // U+E4E3 - Whole (semibreve) rest
-  halfRest: '\uE4E4',       // U+E4E4 - Half (minim) rest
-  quarterRest: '\uE4E5',    // U+E4E5 - Quarter (crotchet) rest
-  eighthRest: '\uE4E6',     // U+E4E6 - Eighth (quaver) rest
-  sixteenthRest: '\uE4E7',  // U+E4E7 - Sixteenth (semiquaver) rest
-  thirtySecondRest: '\uE4E8', // U+E4E8 - Thirty-second (demisemiquaver) rest
+  // Rest values using common Unicode musical symbols
+  wholeRest: '𝄻',        // U+1D13B - Whole rest
+  halfRest: '𝄼',         // U+1D13C - Half rest
+  quarterRest: '𝄽',      // U+1D13D - Quarter rest
+  eighthRest: '𝄾',       // U+1D13E - Eighth rest
+  sixteenthRest: '𝄿',    // U+1D13F - Sixteenth rest
+  thirtySecondRest: '𝅀', // U+1D140 - Thirty-second rest
 } as const;
 
 export const MusicalNotation: React.FC<MusicalNotationProps> = ({ 
@@ -32,10 +32,13 @@ export const MusicalNotation: React.FC<MusicalNotationProps> = ({
   return (
     <span 
       className={cn(
-        "font-bravura text-base leading-none select-none",
+        "text-base leading-none select-none font-medium",
         className
       )}
-      style={{ fontFamily: 'Bravura, serif' }}
+      style={{ 
+        fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+        fontSize: '1.2em'
+      }}
     >
       {symbol}
     </span>
