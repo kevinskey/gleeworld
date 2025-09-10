@@ -890,28 +890,84 @@ export const SightSingingStudio: React.FC = () => {
             <div className="mb-4 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
               <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">🎵 Practice Studio</h3>
               <p className="text-sm text-green-700 dark:text-green-300">
-                Generate and practice sight-reading exercises. Use the score generator below to create new exercises for immediate practice.
+                The Practice Studio has been simplified. Please use the <strong>Score Library</strong> tab to generate new exercises, view scores, and practice with playback controls.
               </p>
             </div>
-            {/* Main Content */}
-            <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
-              {/* Left Column - Parameters & Controls */}
-               <div className="w-full lg:w-80 lg:flex-shrink-0">
-                 {/* Parameters */}
-                 <Card className="p-2 sm:p-4">
-                   <h2 className="text-sm font-semibold mb-2 sm:mb-3 flex-shrink-0">Parameters</h2>
-                   <div>
-                     <ParameterForm 
-                       onGenerate={handleGenerateExercise}
-                       isGenerating={isGenerating}
-                       onReset={handleReset}
-                       hasExercise={!!currentMusicXML}
-                     />
-                   </div>
-                 </Card>
-               </div>
+            
+            <div className="max-w-2xl mx-auto">
+              <Card className="p-6 text-center">
+                <h3 className="text-lg font-semibold mb-3">Moved to Score Library</h3>
+                <p className="text-muted-foreground mb-4">
+                  All score generation, viewing, and practice features have been consolidated into the <strong>Score Library</strong> tab for a better experience.
+                </p>
+                <Button 
+                  onClick={() => setActiveTab('library')}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Go to Score Library
+                </Button>
+              </Card>
+            </div>
+          </TabsContent>
 
-              {/* Right Column - Score Display */}
+          <TabsContent value="library" className="mt-6">
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Left Column - Score Generator */}
+              <div className="space-y-4">
+                <div className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">🎼 Generate New Scores</h3>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Create custom sight-reading exercises using AI. Generated scores are automatically saved to your library.
+                  </p>
+                </div>
+                
+                <Card className="p-2 sm:p-4">
+                  <h2 className="text-sm font-semibold mb-2 sm:mb-3 flex-shrink-0">Score Generator</h2>
+                  <div>
+                    <ParameterForm 
+                      onGenerate={(params) => {
+                        handleGenerateExercise(params);
+                        // Auto-save generated exercise to library
+                        setTimeout(() => {
+                          if (currentMusicXML && parameters) {
+                            handleSaveToLibrary();
+                          }
+                        }, 2000);
+                      }}
+                      isGenerating={isGenerating}
+                      onReset={handleReset}
+                      hasExercise={!!currentMusicXML}
+                    />
+                  </div>
+                </Card>
+                
+                <ScoreLibraryManager 
+                  onScoreSelect={(score) => {
+                    console.log('📚 Score selected from library for playing/viewing:', score);
+                    setSelectedScore(score);
+                    if (score.xml_content) {
+                      setCurrentMusicXML(score.xml_content);
+                      setCurrentExerciseId(`library-${score.id}`);
+                      setCurrentScore(null);
+                      setCurrentBpm(120);
+                      
+                      toast({
+                        title: "Score Loaded",
+                        description: `"${score.title}" loaded for viewing and playback.`,
+                      });
+                    } else {
+                      toast({
+                        title: "No XML Content",
+                        description: "This score needs XML content to display.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  selectedScoreId={selectedScore?.id}
+                />
+              </div>
+
+              {/* Right Column - Musical Score Display */}
               {currentMusicXML && (
                 <div className="flex-1 min-w-0">
                   <Card className="p-2 sm:p-3 lg:p-4 min-h-[400px] sm:min-h-[500px] flex flex-col shadow-2xl border-2 bg-white">
@@ -1228,63 +1284,6 @@ export const SightSingingStudio: React.FC = () => {
                 </Card>
                 </div>
               )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="library" className="mt-6">
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* Left Column - Score Generator */}
-              <div className="space-y-4">
-                <div className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                  <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">🎼 Generate New Scores</h3>
-                  <p className="text-sm text-purple-700 dark:text-purple-300">
-                    Create custom sight-reading exercises using AI. Generated scores are automatically saved to your library.
-                  </p>
-                </div>
-                
-                <Card className="p-2 sm:p-4">
-                  <h2 className="text-sm font-semibold mb-2 sm:mb-3 flex-shrink-0">Score Generator</h2>
-                  <div>
-                    <ParameterForm 
-                      onGenerate={(params) => {
-                        handleGenerateExercise(params);
-                        // Auto-save generated exercise to library
-                        setTimeout(() => {
-                          if (currentMusicXML && parameters) {
-                            handleSaveToLibrary();
-                          }
-                        }, 2000);
-                      }}
-                      isGenerating={isGenerating}
-                      onReset={handleReset}
-                      hasExercise={!!currentMusicXML}
-                    />
-                  </div>
-                </Card>
-              </div>
-
-              {/* Right Column - Score Library */}
-              <div className="space-y-4">
-                <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">📚 Score Library</h3>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    Browse your saved scores and uploaded MusicXML files. Select any score to use in the Assignment Creator.
-                  </p>
-                </div>
-                
-                <ScoreLibraryManager 
-                  onScoreSelect={(score) => {
-                    console.log('📚 Score selected from library for assignment creation:', score);
-                    setSelectedScore(score);
-                    // Don't automatically load into the current exercise - just select for assignment creation
-                    toast({
-                      title: "Score Selected",
-                      description: `"${score.title}" selected for assignment creation.`,
-                    });
-                  }}
-                  selectedScoreId={selectedScore?.id}
-                />
-              </div>
             </div>
           </TabsContent>
 
