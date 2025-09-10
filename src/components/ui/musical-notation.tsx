@@ -16,13 +16,13 @@ export const MUSICAL_SYMBOLS = {
   sixteenthNote: '𝅘𝅥𝅯',    // U+1D15F - Sixteenth note
   thirtySecondNote: '𝅘𝅥𝅰', // U+1D160 - Thirty-second note
   
-  // Rest values using common Unicode musical symbols
-  wholeRest: '𝄻',        // U+1D13B - Whole rest
-  halfRest: '𝄼',         // U+1D13C - Half rest
-  quarterRest: '𝄽',      // U+1D13D - Quarter rest
-  eighthRest: '𝄾',       // U+1D13E - Eighth rest
-  sixteenthRest: '𝄿',    // U+1D13F - Sixteenth rest
-  thirtySecondRest: '𝅀', // U+1D140 - Thirty-second rest
+  // Rest values using simple text symbols that work everywhere
+  wholeRest: '■',         // Solid block for whole rest
+  halfRest: '■',          // Solid block for half rest  
+  quarterRest: '𝄽',       // Try quarter rest, fallback to text
+  eighthRest: '𝄾',        // Try eighth rest, fallback to text
+  sixteenthRest: '≋',     // Wave symbol for sixteenth rest
+  thirtySecondRest: '≈',  // Approx symbol for thirty-second rest
 } as const;
 
 export const MusicalNotation: React.FC<MusicalNotationProps> = ({ 
@@ -32,12 +32,13 @@ export const MusicalNotation: React.FC<MusicalNotationProps> = ({
   return (
     <span 
       className={cn(
-        "text-base leading-none select-none font-medium",
+        "text-xs leading-none select-none font-bold text-center block",
         className
       )}
       style={{ 
-        fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif',
-        fontSize: '1.2em'
+        fontFamily: 'system-ui, -apple-system, "Segoe UI", monospace',
+        fontSize: symbol.length > 2 ? '0.7em' : '1.1em',
+        minWidth: '1.5em'
       }}
     >
       {symbol}
@@ -60,12 +61,12 @@ export const getNoteSymbol = (duration: string): string => {
 
 export const getRestSymbol = (duration: string): string => {
   switch (duration) {
-    case 'whole': return MUSICAL_SYMBOLS.wholeRest;
-    case 'half': return MUSICAL_SYMBOLS.halfRest;
-    case 'quarter': return MUSICAL_SYMBOLS.quarterRest;
-    case 'eighth': return MUSICAL_SYMBOLS.eighthRest;
-    case '16th': return MUSICAL_SYMBOLS.sixteenthRest;
-    case '32nd': return MUSICAL_SYMBOLS.thirtySecondRest;
-    default: return MUSICAL_SYMBOLS.quarterRest;
+    case 'whole': return 'WR';     // Text abbreviation
+    case 'half': return 'HR';      // Text abbreviation
+    case 'quarter': return 'QR';   // Text abbreviation
+    case 'eighth': return '8R';    // Text abbreviation
+    case '16th': return '16R';     // Text abbreviation
+    case '32nd': return '32R';     // Text abbreviation
+    default: return 'QR';
   }
 };
