@@ -1577,16 +1577,26 @@ const App = () => {
                                   </Mus240EnrollmentRoute>
                                 }
                                 />
-                                 <Route 
-                                   path="/classes/mus240/instructor" 
-                                   element={
-                                     <ProtectedRoute>
-                                       <AdminOnlyRoute>
-                                         <InstructorConsole />
-                                       </AdminOnlyRoute>
-                                     </ProtectedRoute>
-                                   } 
-                                 />
+                                  <Route 
+                                    path="/classes/mus240/admin" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <AdminOnlyRoute>
+                                          <Mus240AdminPage />
+                                        </AdminOnlyRoute>
+                                      </ProtectedRoute>
+                                    } 
+                                  />
+                                  <Route 
+                                    path="/classes/mus240/instructor" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <AdminOnlyRoute>
+                                          <InstructorConsole />
+                                        </AdminOnlyRoute>
+                                      </ProtectedRoute>
+                                    } 
+                                  />
                            </Routes>
                     </Suspense>
                    <GlobalMusicPlayer />
