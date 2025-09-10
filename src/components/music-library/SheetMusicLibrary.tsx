@@ -90,16 +90,26 @@ export const SheetMusicLibrary = ({
 
   const fetchSheetMusic = async () => {
     try {
+      console.log('SheetMusicLibrary: Starting to fetch sheet music...');
       setLoading(true);
+      
       const { data, error } = await supabase
         .from('gw_sheet_music')
         .select('*')
+        .eq('is_archived', false)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('SheetMusicLibrary: Query result:', { data: data?.length || 0, error });
+
+      if (error) {
+        console.error('SheetMusicLibrary: Database error:', error);
+        throw error;
+      }
+      
       setSheetMusic(data || []);
+      console.log('SheetMusicLibrary: Successfully loaded', data?.length || 0, 'items');
     } catch (error) {
-      console.error('Error fetching sheet music:', error);
+      console.error('SheetMusicLibrary: Error fetching sheet music:', error);
       toast({
         title: "Error",
         description: "Failed to load sheet music library",

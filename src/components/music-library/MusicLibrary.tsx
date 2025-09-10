@@ -244,7 +244,17 @@ export const MusicLibrary = () => {
                         
                         {/* Sheet Music Library */}
                         <div className="card-compact">
-                          <SheetMusicLibrary searchQuery={librarySearchQuery} selectedCategory="all" sortBy="title" sortOrder="asc" viewMode="list" onPdfSelect={(url: string, title: string, id?: string) => handlePdfSelect(url, title, id)} />
+                          <SheetMusicLibrary 
+                            searchQuery={librarySearchQuery} 
+                            selectedCategory="all" 
+                            sortBy="title" 
+                            sortOrder="asc" 
+                            viewMode="list" 
+                            onPdfSelect={(url: string, title: string, id?: string) => {
+                              console.log('MusicLibrary: PDF selected from SheetMusicLibrary:', { url, title, id });
+                              handlePdfSelect(url, title, id);
+                            }} 
+                          />
                         </div>
                       </div>}
                   </div>
