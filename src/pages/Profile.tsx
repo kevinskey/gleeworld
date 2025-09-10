@@ -99,9 +99,7 @@ const profileSchema = z.object({
   height_measurement: z.string().optional(),
   
   // Wardrobe sizes
-  shirt_size: z.string().optional(),
   dress_size: z.string().optional(),
-  pants_size: z.string().optional(),
   
   // Classification
   classification: z.string().optional(),
@@ -348,7 +346,7 @@ const Profile = () => {
         
         // Map form fields to database columns for wardrobe sync
         formal_dress_size: data.dress_size || null, // map dress_size to formal_dress_size
-        tshirt_size: data.shirt_size || null, // map shirt_size to tshirt_size
+        tshirt_size: data.dress_size || null, // map dress_size to tshirt_size for consistency
         
         updated_at: new Date().toISOString(),
       };
@@ -1255,26 +1253,7 @@ const Profile = () => {
               {/* Sizes Section */}
               <div className="space-y-4">
                 <h4 className="font-medium text-foreground">Sizes</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="shirt_size">Shirt Size</Label>
-                    <Select
-                      value={watch("shirt_size") || ""}
-                      onValueChange={(value) => setValue("shirt_size", value)}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select shirt size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
-                          <SelectItem key={size} value={size}>
-                            {size}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="dress_size">Dress Size</Label>
                     <Select
@@ -1286,26 +1265,7 @@ const Profile = () => {
                         <SelectValue placeholder="Select dress size" />
                       </SelectTrigger>
                       <SelectContent>
-                        {["Size 2", "Size 4", "Size 6", "Size 8", "Size 10", "Size 12", "Size 14", "Size 16", "Size 18", "Size 20"].map((size) => (
-                          <SelectItem key={size} value={size}>
-                            {size}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="pants_size">Pants Size</Label>
-                    <Select
-                      value={watch("pants_size") || ""}
-                      onValueChange={(value) => setValue("pants_size", value)}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select pants size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {["Size 2", "Size 4", "Size 6", "Size 8", "Size 10", "Size 12", "Size 14", "Size 16", "Size 18", "Size 20"].map((size) => (
+                        {["XS", "S", "M", "L", "XL", "XXL", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20"].map((size) => (
                           <SelectItem key={size} value={size}>
                             {size}
                           </SelectItem>
