@@ -327,12 +327,12 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                   <Badge 
                     key={duration} 
                     variant={watchedAllowedDur?.includes(duration as any) ? "default" : "outline"} 
-                    className="cursor-pointer text-xs px-2 py-1 h-8 w-8 flex items-center justify-center" 
+                    className="cursor-pointer text-xs px-2 py-1 h-10 w-10 flex items-center justify-center" 
                     onClick={() => handleDurationToggle(duration)}
                   >
                     <MusicalNotation 
                       symbol={getNoteSymbol(duration)} 
-                      className="text-lg"
+                      className="text-sm"
                     />
                   </Badge>
                 );
@@ -349,12 +349,12 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                   <Badge 
                     key={`rest-${restType}`} 
                     variant={watchedAllowedRests?.includes(restType as any) ? "default" : "outline"} 
-                    className="cursor-pointer text-xs px-2 py-1 h-8 w-8 flex items-center justify-center" 
+                    className="cursor-pointer text-xs px-2 py-1 h-10 w-10 flex items-center justify-center" 
                     onClick={() => handleRestToggle(restType)}
                   >
                     <MusicalNotation 
                       symbol={getRestSymbol(restType)} 
-                      className="text-lg"
+                      className="text-sm"
                     />
                   </Badge>
                 );
