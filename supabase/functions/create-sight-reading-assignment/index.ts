@@ -135,7 +135,14 @@ serve(async (req) => {
 
     if (assignmentError) {
       console.error('Error creating assignment:', assignmentError);
-      throw new Error(`Failed to create assignment: ${assignmentError.message}`);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: `Failed to create assignment: ${assignmentError.message}`,
+        details: assignmentError
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // If MusicXML content is provided and no sheet_music_id, create a sheet music entry
