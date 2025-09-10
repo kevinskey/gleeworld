@@ -218,37 +218,50 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Parts</Label>
-              <Select value={watchedParts?.length === 1 ? "soprano" : "soprano-alto"} onValueChange={value => {
-              if (value === "soprano") {
-                setValue('parts', [{
-                  role: "S",
-                  range: {
-                    min: "C4",
-                    max: "C5"
-                  }
-                }]);
-              } else {
-                setValue('parts', [{
-                  role: "S",
-                  range: {
-                    min: "C4",
-                    max: "C5"
-                  }
-                }, {
-                  role: "A",
-                  range: {
-                    min: "F3",
-                    max: "F4"
-                  }
-                }]);
-              }
-            }}>
+              <Select value={
+                watchedParts?.length === 1 && watchedParts[0].role === "S" ? "S" :
+                watchedParts?.length === 1 && watchedParts[0].role === "A" ? "A" :
+                watchedParts?.length === 2 ? "SA" : "S"
+              } onValueChange={value => {
+                if (value === "S") {
+                  setValue('parts', [{
+                    role: "S",
+                    range: {
+                      min: "C4",
+                      max: "C5"
+                    }
+                  }]);
+                } else if (value === "A") {
+                  setValue('parts', [{
+                    role: "A",
+                    range: {
+                      min: "F3",
+                      max: "F4"
+                    }
+                  }]);
+                } else if (value === "SA") {
+                  setValue('parts', [{
+                    role: "S",
+                    range: {
+                      min: "C4",
+                      max: "C5"
+                    }
+                  }, {
+                    role: "A",
+                    range: {
+                      min: "F3",
+                      max: "F4"
+                    }
+                  }]);
+                }
+              }}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
-                  <SelectItem value="soprano">Soprano Only</SelectItem>
-                  <SelectItem value="soprano-alto">Soprano + Alto</SelectItem>
+                  <SelectItem value="S">Soprano (S)</SelectItem>
+                  <SelectItem value="A">Alto (A)</SelectItem>
+                  <SelectItem value="SA">Soprano + Alto (SA)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
