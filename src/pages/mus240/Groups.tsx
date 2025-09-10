@@ -645,90 +645,43 @@ export default function Groups() {
                 <div className="space-y-6">
                   <Card className="bg-white border border-slate-200 shadow-md">
                     <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-slate-900">{userGroup.name}</CardTitle>
-                          <CardDescription className="text-slate-600">
-                            {userGroup.description}
-                          </CardDescription>
-                        </div>
-                        <Button
-                          onClick={() => handleLeaveGroup(userGroup.id)}
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 border-red-300 hover:bg-red-50"
-                        >
-                          Leave Group
-                        </Button>
-                      </div>
+                      <CardTitle className="text-slate-900 mb-4">You're in a group!</CardTitle>
+                      <CardDescription className="text-slate-600">
+                        Navigate to your group workspace to collaborate with your team.
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-blue-600" />
-                           <span className="text-base text-slate-700">
-                            {userGroup.member_count || 0} / {userGroup.max_members || 4} members
-                          </span>
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <h3 className="font-semibold text-blue-900 mb-2">{userGroup.name}</h3>
+                          <p className="text-blue-700 mb-3">{userGroup.description}</p>
+                          <div className="flex items-center gap-2 mb-4">
+                            <Users className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm text-blue-700">
+                              {userGroup.member_count || 0} / {userGroup.max_members || 4} members
+                            </span>
+                          </div>
+                          <Link 
+                            to={`/classes/mus240/groups/${userGroup.id}`}
+                            className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors"
+                          >
+                            Go to Group Workspace
+                          </Link>
                         </div>
                         
-                        {userGroup.is_official && (
-                          <Badge className="bg-green-100 text-green-700 border-green-200">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Official Group
-                          </Badge>
-                        )}
+                        <div className="flex justify-end">
+                          <Button
+                            onClick={() => handleLeaveGroup(userGroup.id)}
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 border-red-300 hover:bg-red-50"
+                          >
+                            Leave Group
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
-
-                  {/* Group Members */}
-                  {userGroup.members && userGroup.members.length > 0 && (
-                    <Card className="bg-white border border-slate-200 shadow-md">
-                      <CardHeader>
-                        <CardTitle className="text-slate-900">Group Members</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {userGroup.members.map((member: any) => (
-                            <div key={member.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <div>
-                                  <p className="font-medium text-slate-900">
-                                    {member.gw_profiles?.full_name || 'Unknown Member'}
-                                  </p>
-                                  <p className="text-sm text-slate-600">
-                                    {member.gw_profiles?.email}
-                                  </p>
-                                </div>
-                                <Badge variant="outline" className="ml-2">
-                                  {member.role}
-                                </Badge>
-                              </div>
-                              
-                              {/* Role management - only for group leaders */}
-                              {userGroup.leader_id === user?.id && member.member_id !== user?.id && (
-                                <Button
-                                  onClick={() => {
-                                    setSelectedGroupId(userGroup.id);
-                                    setSelectedMember({
-                                      id: member.member_id,
-                                      name: member.gw_profiles?.full_name || 'Unknown',
-                                      role: member.role
-                                    });
-                                    setShowMemberManagement(true);
-                                  }}
-                                  variant="ghost"
-                                  size="sm"
-                                >
-                                  Change Role
-                                </Button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
                 </div>
               ) : (
                 <div className="text-center py-12">
