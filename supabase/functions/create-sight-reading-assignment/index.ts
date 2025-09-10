@@ -112,7 +112,7 @@ serve(async (req) => {
         points_possible: request.points_possible || 100,
         sheet_music_id: request.sheet_music_id,
         assigned_by: user.id,
-        target_type: mappedTargetType,
+        target_type: 'all',
         target_value: request.target_value,
         is_active: true
       })
