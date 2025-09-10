@@ -300,44 +300,39 @@ export default function Groups() {
       setAutoAssigning(false);
     }
   };
-
   const handleDeleteAllGroups = async () => {
     if (!window.confirm('Are you sure you want to delete ALL MUS 240 groups? This action cannot be undone and will remove all groups, memberships, and applications.')) {
       return;
     }
-    
     if (!window.confirm('This will permanently delete all groups and cannot be reversed. Are you absolutely sure?')) {
       return;
     }
-
     setDeletingAllGroups(true);
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      
       if (!token) {
         toast.error('Authentication required');
         return;
       }
-
-      const { data, error } = await supabase.functions.invoke('delete-all-mus240-groups', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('delete-all-mus240-groups', {
         headers: {
-          Authorization: `Bearer ${token}`,
-        },
+          Authorization: `Bearer ${token}`
+        }
       });
-
       if (error) {
         console.error('Error deleting all groups:', error);
         toast.error('Failed to delete all groups');
         return;
       }
-
       if (data?.error) {
         console.error('Server error:', data.error);
         toast.error(data.error);
         return;
       }
-
       toast.success(data.message || 'Successfully deleted all MUS 240 groups');
       refetch();
     } catch (err) {
@@ -397,15 +392,12 @@ export default function Groups() {
             <div className="text-white/90 space-y-3">
               <p className="font-medium">This is a graded assignment. You must participate in a group to receive credit.</p>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-                {PROJECT_TYPES.map((project, index) => <div key={index} className="bg-white/20 rounded-lg p-4 border border-white/20">
-                    <h3 className="font-semibold text-amber-300 mb-2">{project.name}</h3>
-                    <p className="text-sm text-muted-foreground">{project.description}</p>
-                  </div>)}
+                {PROJECT_TYPES.map((project, index) => {})}
               </div>
               <ul className="list-disc list-inside space-y-2 mt-4">
-                <li><strong>Have an idea?</strong> Create your own group and recruit members</li>
-                <li><strong>Looking to join?</strong> Browse existing groups and apply to ones that interest you</li>
-                <li><strong>Can't decide?</strong> You can do both - create a group AND apply to others</li>
+                
+                
+                
                 <li>Groups need 3-4 members to become official and start the project</li>
               </ul>
             </div>
@@ -439,11 +431,7 @@ export default function Groups() {
                       </>}
                   </Button>
 
-                  <Button 
-                    onClick={handleDeleteAllGroups} 
-                    disabled={deletingAllGroups} 
-                    className="bg-red-700 hover:bg-red-800 text-white font-medium px-6 py-2"
-                  >
+                  <Button onClick={handleDeleteAllGroups} disabled={deletingAllGroups} className="bg-red-700 hover:bg-red-800 text-white font-medium px-6 py-2">
                     {deletingAllGroups ? <>
                         <Clock className="h-4 w-4 mr-2 animate-spin" />
                         Deleting All Groups...
