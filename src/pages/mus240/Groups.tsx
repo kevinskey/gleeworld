@@ -83,23 +83,64 @@ export default function Groups() {
       toast.error('Failed to create group');
     }
   };
-  const handleApplyToGroup = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+  const handleJoinGroup = async (groupId: string) => {
+    if (!user) {
+      toast.error('Please log in to join a group');
+      return;
+    }
+
     try {
-      await applyToGroup({
-        group_id: selectedGroupId,
-        full_name: formData.get('full_name') as string,
-        email: formData.get('email') as string,
-        phone_number: formData.get('phone_number') as string,
-        main_skill_set: formData.get('main_skill_set') as string,
-        other_skills: formData.get('other_skills') as string,
-        motivation: formData.get('motivation') as string
-      });
-      setShowApplyForm(false);
-      toast.success('Application submitted successfully!');
-    } catch (err) {
-      toast.error('Failed to submit application');
+      // Check if group is full
+      const group = groups.find(g => g.id === groupId);
+      if (!group) {
+        toast.error('Group not found');
+        return;
+      }
+
+      if (group.member_count >= 4) {
+        toast.error('This group is full (maximum 4 members)');
+        return;
+      }
+
+      // Check if user is already in a group
+      if (userGroup) {
+        toast.error('You are already in a group. Leave your current group first.');
+        return;
+      }
+
+      const isFirstMember = group.member_count === 0;
+      
+      // Add user as member
+      const { error: membershipError } = await supabase
+        .from('mus240_group_memberships')
+        .insert({
+          group_id: groupId,
+          member_id: user.id,
+          role: isFirstMember ? 'leader' : 'member'
+        });
+
+      if (membershipError) throw membershipError;
+
+      // Update group member count and leader if first member
+      const updateData: any = {
+        member_count: group.member_count + 1
+      };
+
+      if (isFirstMember) {
+        updateData.leader_id = user.id;
+      }
+
+      const { error: updateError } = await supabase
+        .from('mus240_project_groups')
+        .update(updateData)
+        .eq('id', groupId);
+
+      if (updateError) throw updateError;
+
+      toast.success(isFirstMember ? 'Joined group as leader!' : 'Joined group successfully!');
+      refetch();
+    } catch (err: any) {
+      toast.error('Failed to join group: ' + (err.message || 'Unknown error'));
     }
   };
   const handleReviewApplication = async (applicationId: string, status: 'accepted' | 'rejected') => {
@@ -555,15 +596,13 @@ export default function Groups() {
                         )}
 
                         {!userGroup && group.member_count < (group.max_members || 4) && (
-                          <Button
-                            onClick={() => {
-                              setSelectedGroupId(group.id);
-                              setShowApplyForm(true);
-                            }}
-                            className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-                          >
-                            Apply to Join
-                          </Button>
+                            <Button
+                              onClick={() => handleJoinGroup(group.id)}
+                              className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                              disabled={group.member_count >= 4}
+                            >
+                              {group.member_count >= 4 ? 'Group Full' : 'Join'}
+                            </Button>
                         )}
 
                         {userGroup?.id === group.id && (
@@ -780,63 +819,6 @@ export default function Groups() {
         </DialogContent>
       </Dialog>
 
-      {/* Application Form Dialog */}
-      <Dialog open={showApplyForm} onOpenChange={setShowApplyForm}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Apply to Group</DialogTitle>
-            <DialogDescription>
-              Fill out this application to join the group.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleApplyToGroup} className="space-y-4">
-            <div>
-              <Label htmlFor="full_name">Full Name *</Label>
-              <Input id="full_name" name="full_name" required placeholder="Your full name" />
-            </div>
-            <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input id="email" name="email" type="email" required placeholder="Your email address" />
-            </div>
-            <div>
-              <Label htmlFor="phone_number">Phone Number</Label>
-              <Input id="phone_number" name="phone_number" placeholder="Your phone number" />
-            </div>
-            <div>
-              <Label htmlFor="main_skill_set">Main Skill Set *</Label>
-              <Select name="main_skill_set" required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your main skill" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tech">Tech</SelectItem>
-                  <SelectItem value="artist">Artist</SelectItem>
-                  <SelectItem value="speaker">Speaker</SelectItem>
-                  <SelectItem value="researcher">Researcher</SelectItem>
-                  <SelectItem value="writer">Writer</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="other_skills">Other Skills</Label>
-              <Input id="other_skills" name="other_skills" placeholder="Additional skills you bring" />
-            </div>
-            <div>
-              <Label htmlFor="motivation">Why do you want to join? *</Label>
-              <Textarea id="motivation" name="motivation" required placeholder="Tell the group leader why you want to join" rows={3} />
-            </div>
-            <div className="flex gap-2">
-              <Button type="submit" className="flex-1 bg-amber-500 hover:bg-amber-600 text-white">
-                Submit Application
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setShowApplyForm(false)}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* Member Role Management Dialog */}
       <Dialog open={showMemberManagement} onOpenChange={setShowMemberManagement}>
