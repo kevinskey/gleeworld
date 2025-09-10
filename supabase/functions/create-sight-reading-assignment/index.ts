@@ -53,8 +53,11 @@ serve(async (req) => {
       .maybeSingle();
 
     if (profileError) {
+      console.error('Profile query error:', profileError);
       throw new Error('Failed to verify user permissions');
     }
+
+    console.log('User profile data:', JSON.stringify(profile));
 
     // Check if user has permission: admin, super admin, instructor, student conductor, section leader, or exec board member
     const hasPermission = profile?.is_admin || 
@@ -63,6 +66,17 @@ serve(async (req) => {
                          profile?.exec_board_role === 'student_conductor' ||
                          profile?.is_section_leader ||
                          profile?.is_exec_board;
+
+    console.log('Permission check:', {
+      profile_exists: !!profile,
+      is_admin: profile?.is_admin,
+      is_super_admin: profile?.is_super_admin,
+      role: profile?.role,
+      exec_board_role: profile?.exec_board_role,
+      is_section_leader: profile?.is_section_leader,
+      is_exec_board: profile?.is_exec_board,
+      hasPermission: hasPermission
+    });
 
     if (!hasPermission) {
       throw new Error('Insufficient privileges to create assignments. Must be admin, instructor, student conductor, or section leader.');
