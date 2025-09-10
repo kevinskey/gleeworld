@@ -105,27 +105,16 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
         .from('mus240_project_groups')
         .insert({
           ...groupData,
-          leader_id: user?.id,
-          semester
+          leader_id: null, // No automatic leader assignment
+          semester,
+          member_count: 0 // Start with no members
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      // Add the leader as a member of the group
-      const { error: membershipError } = await supabase
-        .from('mus240_group_memberships')
-        .insert({
-          group_id: data.id,
-          member_id: user?.id,
-          role: 'leader'
-        });
-
-      if (membershipError) {
-        console.error('Error adding leader membership:', membershipError);
-      }
-
+      // Do not automatically add creator as member/leader
       await fetchGroups();
       return data;
     } catch (err) {
