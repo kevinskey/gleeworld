@@ -321,7 +321,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           {/* Note Values Selection */}
           <div className="space-y-1">
             <Label className="text-xs font-medium">Note Values</Label>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1 p-2">
               {durations.map(duration => {
                 return (
                   <Badge 
