@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { X } from 'lucide-react';
+import { X, Music, Music2, Music3, Music4, Square, Minus } from 'lucide-react';
 import { ExerciseParameters } from './SightSingingStudio';
 interface ParameterFormProps {
   onGenerate: (parameters: ExerciseParameters) => void;
@@ -97,6 +97,29 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   const cadenceOptions = [2, 4, 8];
   const cadenceTypes = ["authentic", "half", "plagal", "deceptive"];
   const bpmOptions = [60, 72, 84, 96, 108, 120, 132, 144, 160, 180];
+
+  // Helper functions for icons
+  const getNoteIcon = (duration: string) => {
+    switch (duration) {
+      case 'whole': return Music4;
+      case 'half': return Music3;
+      case 'quarter': return Music2;
+      case 'eighth': return Music;
+      case '16th': return Music;
+      default: return Music;
+    }
+  };
+
+  const getRestIcon = (duration: string) => {
+    switch (duration) {
+      case 'whole': return Square;
+      case 'half': return Square;
+      case 'quarter': return Minus;
+      case 'eighth': return Minus;
+      case '16th': return Minus;
+      default: return Minus;
+    }
+  };
   const handleDurationToggle = (duration: string) => {
     const current = watchedAllowedDur || [];
     if (current.includes(duration as any)) {
@@ -322,9 +345,19 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           <div className="space-y-1">
             <Label className="text-xs font-medium">Note Values</Label>
             <div className="flex flex-wrap gap-1">
-              {durations.map(duration => <Badge key={duration} variant={watchedAllowedDur?.includes(duration as any) ? "default" : "outline"} className="cursor-pointer text-xs px-2 py-1 h-6" onClick={() => handleDurationToggle(duration)}>
-                  {duration === '16th' ? '16th' : duration.charAt(0).toUpperCase()}
-                </Badge>)}
+              {durations.map(duration => {
+                const IconComponent = getNoteIcon(duration);
+                return (
+                  <Badge 
+                    key={duration} 
+                    variant={watchedAllowedDur?.includes(duration as any) ? "default" : "outline"} 
+                    className="cursor-pointer text-xs px-2 py-1 h-8 w-8 flex items-center justify-center" 
+                    onClick={() => handleDurationToggle(duration)}
+                  >
+                    <IconComponent className="h-4 w-4" />
+                  </Badge>
+                );
+              })}
             </div>
           </div>
 
@@ -332,9 +365,19 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           <div className="space-y-1">
             <Label className="text-xs font-medium">Rest Values</Label>
             <div className="flex flex-wrap gap-1">
-              {durations.map(restType => <Badge key={`rest-${restType}`} variant={watchedAllowedRests?.includes(restType as any) ? "default" : "outline"} className="cursor-pointer text-xs px-2 py-1 h-6" onClick={() => handleRestToggle(restType)}>
-                  {restType === '16th' ? '16th' : restType.charAt(0).toUpperCase()} ♪
-                </Badge>)}
+              {durations.map(restType => {
+                const IconComponent = getRestIcon(restType);
+                return (
+                  <Badge 
+                    key={`rest-${restType}`} 
+                    variant={watchedAllowedRests?.includes(restType as any) ? "default" : "outline"} 
+                    className="cursor-pointer text-xs px-2 py-1 h-8 w-8 flex items-center justify-center" 
+                    onClick={() => handleRestToggle(restType)}
+                  >
+                    <IconComponent className="h-4 w-4" />
+                  </Badge>
+                );
+              })}
             </div>
           </div>
 
