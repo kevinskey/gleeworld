@@ -25,6 +25,7 @@ import { ScoreHistoryView } from './ScoreHistoryView';
 import { PitchPipe } from './PitchPipe';
 import { AssignmentCreator } from './AssignmentCreator';
 import { RecordingShareDialog } from './RecordingShareDialog';
+import { UserInfoCard } from './UserInfoCard';
 
 // Import hooks
 import { useAudioRecorder } from './hooks/useAudioRecorder';
@@ -1024,20 +1025,28 @@ export const SightSingingStudio: React.FC = () => {
               </div>
             ) : (
               // Show parameter form when no score is generated
-              <div className="max-w-4xl mx-auto">
-                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">🎵 Score Generator</h3>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    Configure your sight-reading exercise parameters and generate a new score to practice with.
-                  </p>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                {/* User Info Card - Top Left */}
+                <div className="lg:col-span-1">
+                  <UserInfoCard />
                 </div>
                 
-                <ParameterForm 
-                  onGenerate={handleGenerateExercise}
-                  isGenerating={isGenerating}
-                  onReset={handleReset}
-                  hasExercise={!!currentScore}
-                />
+                {/* Parameter Form - Main Area */}
+                <div className="lg:col-span-3">
+                  <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">🎵 Score Generator</h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Configure your sight-reading exercise parameters and generate a new score to practice with.
+                    </p>
+                  </div>
+                  
+                  <ParameterForm 
+                    onGenerate={handleGenerateExercise}
+                    isGenerating={isGenerating}
+                    onReset={handleReset}
+                    hasExercise={!!currentScore}
+                  />
+                </div>
               </div>
             )}
           </TabsContent>
