@@ -42,7 +42,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         role: "S",
         range: {
           min: "C4",
-          max: "C5"
+          max: "G5"
         }
       }],
       allowedDur: ["quarter"],
@@ -228,15 +228,15 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                     role: "S",
                     range: {
                       min: "C4",
-                      max: "C5"
+                      max: "G5"
                     }
                   }]);
                 } else if (value === "A") {
                   setValue('parts', [{
                     role: "A",
                     range: {
-                      min: "F3",
-                      max: "F4"
+                      min: "G3",
+                      max: "C5"
                     }
                   }]);
                 } else if (value === "SA") {
@@ -244,13 +244,13 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                     role: "S",
                     range: {
                       min: "C4",
-                      max: "C5"
+                      max: "G5"
                     }
                   }, {
                     role: "A",
                     range: {
-                      min: "F3",
-                      max: "F4"
+                      min: "G3",
+                      max: "C5"
                     }
                   }]);
                 }
