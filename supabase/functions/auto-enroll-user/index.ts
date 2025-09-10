@@ -128,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Creating auth user with email:', email);
     
     // Create user in Supabase Auth without password - send invite instead
-    const { data: authUser, error: authError } = await supabase.auth.admin.inviteUserByEmail(email, {
+    const { data: authUser, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
       data: {
         full_name: full_name || email.split('@')[0],
         auto_enrolled: true,
@@ -136,9 +136,9 @@ const handler = async (req: Request): Promise<Response> => {
       }
     });
 
-    if (authError) {
-      console.error('Error creating auth user:', authError);
-      throw new Error('Failed to create user account: ' + authError.message);
+    if (inviteError) {
+      console.error('Error creating auth user:', inviteError);
+      throw new Error('Failed to create user account: ' + inviteError.message);
     }
 
     console.log('Auth user created:', authUser.user?.id);
