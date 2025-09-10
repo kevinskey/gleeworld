@@ -48,7 +48,9 @@ import {
   MoreHorizontal,
   ChevronLeft,
   Maximize2,
-  Trash2
+  Trash2,
+  Plus,
+  RefreshCw
 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -78,6 +80,7 @@ export const UserManagement = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [fullscreenEdit, setFullscreenEdit] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -284,13 +287,35 @@ export const UserManagement = () => {
       {/* Controls */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            User Directory
-          </CardTitle>
-          <CardDescription>
-            Manage all registered users, their roles, and permissions
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                User Directory
+              </CardTitle>
+              <CardDescription>
+                Manage all registered users, their roles, and permissions
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={fetchUsers}
+                disabled={loading}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+              <Button 
+                onClick={() => setAddUserDialogOpen(true)}
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add User
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -534,6 +559,40 @@ export const UserManagement = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Add User Dialog */}
+      <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>
+              Create a new user account. Note: The user will need to sign up independently to activate their account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> In Supabase, users must sign up themselves through the authentication system. 
+                As an admin, you can manage existing users' roles and permissions, but new accounts must be created by the users themselves.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button 
+                onClick={() => {
+                  toast({
+                    title: "User Registration",
+                    description: "Direct users to the sign-up page to create their own accounts.",
+                  });
+                  setAddUserDialogOpen(false);
+                }}
+                className="w-full"
+              >
+                Got It
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete User Dialog */}
       <DeleteUserDialog 
