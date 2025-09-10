@@ -768,48 +768,112 @@ Return this exact JSON structure with your composition:
     // 2) Generate score JSON with proper measure count and validation
     let scoreJson = aiJson;
     
-    // Convert OpenAI string pitch format to proper pitch objects
+    // IMPROVED: Convert OpenAI response to proper pitch objects with comprehensive logging
     if (scoreJson && scoreJson.parts) {
-      for (const part of scoreJson.parts) {
+      console.log('=== NORMALIZING AI RESPONSE ===');
+      console.log('Raw scoreJson parts:', scoreJson.parts.length);
+      
+      for (let partIndex = 0; partIndex < scoreJson.parts.length; partIndex++) {
+        const part = scoreJson.parts[partIndex];
+        console.log(`Part ${partIndex} (${part.role || 'unknown'}):`, part.measures?.length || 0, 'measures');
+        
         if (part.measures) {
-          for (const measure of part.measures) {
-            for (const note of measure) {
-              // Handle both step/octave format and string pitch format
-              if (note.step && note.octave) {
-                // Convert step/octave to proper pitch object
-                note.pitch = {
-                  step: note.step,
-                  alter: note.acc || 0,
-                  oct: note.octave
+          for (let measureIndex = 0; measureIndex < part.measures.length; measureIndex++) {
+            const measure = part.measures[measureIndex];
+            const measureSteps = new Set();
+            const measureOctaves = new Set();
+            
+            console.log(`  Measure ${measureIndex + 1}: ${measure.length} notes`);
+            
+            for (let noteIndex = 0; noteIndex < measure.length; noteIndex++) {
+              const note = measure[noteIndex];
+              console.log(`    Note ${noteIndex} before:`, JSON.stringify(note));
+              
+              // Create a new note object to avoid reference issues
+              const newNote = { ...note };
+              
+              // Handle various pitch formats from OpenAI
+              if (note.step) {
+                // Format: {step: "F", octave: 4} or {step: "Ab", oct: 4}
+                let stepPart = note.step;
+                let alterPart = 0;
+                
+                // Handle embedded accidentals like "Ab", "F#"
+                if (stepPart.length > 1) {
+                  const accidental = stepPart.slice(1);
+                  stepPart = stepPart[0];
+                  alterPart = accidental === '#' ? 1 : accidental === 'b' ? -1 : 0;
+                }
+                
+                newNote.pitch = {
+                  step: stepPart,
+                  alter: note.acc !== undefined ? note.acc : alterPart,
+                  oct: note.oct || note.octave || 4
                 };
-                // Remove old properties to avoid confusion
-                delete note.step;
-                delete note.octave;
-                delete note.acc;
-              } else if (note.pitch && typeof note.pitch === 'string') {
-                // Convert "F4" to {step: "F", octave: 4}
-                const pitchMatch = note.pitch.match(/^([A-G])([b#]?)(\d+)$/);
-                if (pitchMatch) {
-                  const [, step, accidental, octave] = pitchMatch;
-                  note.pitch = {
-                    step: step,
-                    alter: accidental === '#' ? 1 : accidental === 'b' ? -1 : 0,
-                    oct: parseInt(octave)
+                
+                // Clean up old properties
+                delete newNote.step;
+                delete newNote.octave;
+                delete newNote.acc;
+                
+              } else if (note.pitch) {
+                if (typeof note.pitch === 'string') {
+                  // Format: "F4", "Ab4", "C#5"
+                  const pitchMatch = note.pitch.match(/^([A-G])([b#]?)(\d+)$/);
+                  if (pitchMatch) {
+                    const [, step, accidental, octave] = pitchMatch;
+                    newNote.pitch = {
+                      step: step,
+                      alter: accidental === '#' ? 1 : accidental === 'b' ? -1 : 0,
+                      oct: parseInt(octave)
+                    };
+                  } else {
+                    console.log(`    Warning: Could not parse pitch string "${note.pitch}"`);
+                    newNote.pitch = { step: 'C', alter: 0, oct: 4 }; // Fallback
+                  }
+                } else if (typeof note.pitch === 'object') {
+                  // Format: {step: "F", alter: 0, oct: 4} - already correct
+                  newNote.pitch = {
+                    step: note.pitch.step || 'C',
+                    alter: note.pitch.alter || note.pitch.acc || 0,
+                    oct: note.pitch.oct || note.pitch.octave || 4
                   };
                 }
+              } else {
+                // No pitch info, use fallback
+                console.log(`    Warning: Note has no pitch info, using C4`);
+                newNote.pitch = { step: 'C', alter: 0, oct: 4 };
               }
-              // Ensure proper dur format
-              if (note.dur && typeof note.dur === 'string') {
-                note.dur = { base: note.dur, dots: 0 };
+              
+              // Ensure proper duration format
+              if (newNote.dur && typeof newNote.dur === 'string') {
+                newNote.dur = { base: newNote.dur, dots: 0 };
+              } else if (!newNote.dur) {
+                newNote.dur = { base: 'quarter', dots: 0 };
               }
-              // Ensure note has kind property
-              if (!note.kind) {
-                note.kind = 'note';
+              
+              // Ensure kind property
+              if (!newNote.kind) {
+                newNote.kind = 'note';
               }
+              
+              // Track unique pitches in this measure
+              if (newNote.pitch) {
+                measureSteps.add(newNote.pitch.step);
+                measureOctaves.add(newNote.pitch.oct);
+              }
+              
+              console.log(`    Note ${noteIndex} after:`, JSON.stringify(newNote));
+              
+              // Replace the note in the measure
+              measure[noteIndex] = newNote;
             }
+            
+            console.log(`  Measure ${measureIndex + 1} summary: ${measureSteps.size} unique steps [${Array.from(measureSteps).join(', ')}], ${measureOctaves.size} unique octaves [${Array.from(measureOctaves).join(', ')}]`);
           }
         }
       }
+      console.log('=== NORMALIZATION COMPLETE ===');
     }
     if (!scoreJson || !Array.isArray(scoreJson?.parts)) {
       // Fallback: synthesize varied measures using ALL selected durations
