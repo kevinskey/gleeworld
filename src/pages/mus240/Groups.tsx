@@ -447,7 +447,7 @@ export default function Groups() {
                 with the first person to join becoming the group leader. Groups meet for weekly updates on Wednesdays and 
                 focus deep dives on Fridays.
               </p>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 inline-block">
                 <p className="text-slate-800 font-medium">
                   <strong className="text-blue-700">Final Showcase:</strong> Integrated GleeWorld.org knowledge hub showcasing your research and findings.
                 </p>
