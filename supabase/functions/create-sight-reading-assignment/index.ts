@@ -70,9 +70,19 @@ serve(async (req) => {
 
     const request: CreateAssignmentRequest = await req.json();
 
+    // Map target_type values to match database constraints
+    const targetTypeMap: { [key: string]: string } = {
+      'all_members': 'all',
+      'voice_part': 'section',
+      'individual': 'individual'
+    };
+
+    const mappedTargetType = targetTypeMap[request.target_type] || request.target_type;
+
     console.log('Creating sight-reading assignment:', {
       title: request.title,
       target_type: request.target_type,
+      mapped_target_type: mappedTargetType,
       due_date: request.due_date,
       has_musicxml: !!request.musicxml_content,
       sheet_music_id: request.sheet_music_id
@@ -90,7 +100,7 @@ serve(async (req) => {
         points_possible: request.points_possible || 100,
         sheet_music_id: request.sheet_music_id,
         assigned_by: user.id,
-        target_type: request.target_type,
+        target_type: mappedTargetType,
         target_value: request.target_value,
         is_active: true
       })
