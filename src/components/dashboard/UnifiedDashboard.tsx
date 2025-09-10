@@ -14,7 +14,6 @@ import { ExecBoardModulePanel } from '@/components/executive/ExecBoardModulePane
 import FanDashboard from '@/pages/FanDashboard';
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
-import historicImage from '@/assets/spelman-glee-historic.jpg';
 
 // Lazy load heavy components to improve initial load time
 const CommunityHubModule = lazy(() => import('./modules/CommunityHubModule').then(m => ({
@@ -278,9 +277,9 @@ export const UnifiedDashboard = () => {
 
   // Default view: If user is super admin and on default /dashboard route, show the SuperAdminDashboard
   if ((profile?.is_super_admin || profile?.role === 'super-admin') && viewMode === 'default') {
-  return <div className="min-h-screen bg-cover bg-center bg-no-repeat relative" style={{backgroundImage: `url(${historicImage})`}}>
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm"></div>
-        <div className="relative z-10 py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
+    return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+        
+        <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
           <SuperAdminDashboard user={{
           id: profile.user_id,
           email: profile.email || '',
