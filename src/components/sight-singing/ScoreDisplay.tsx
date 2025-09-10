@@ -7,16 +7,20 @@ import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 
 interface ScoreDisplayProps {
   musicXML: string;
+  onDownload?: () => void;
+  hasExercise?: boolean;
   onGradeRecording?: () => void;
   hasRecording?: boolean;
   isGrading?: boolean;
 }
 
 export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ 
-  musicXML,
-  onGradeRecording,
-  hasRecording = false,
-  isGrading = false
+  musicXML, 
+  onDownload,
+  hasExercise = false,
+  onGradeRecording, 
+  hasRecording = false, 
+  isGrading = false 
 }) => {
   const scoreRef = useRef<HTMLDivElement>(null);
   const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
