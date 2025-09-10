@@ -596,13 +596,21 @@ export default function Groups() {
                         )}
 
                         {!userGroup && group.member_count < (group.max_members || 4) && (
-                            <Button
-                              onClick={() => handleJoinGroup(group.id)}
-                              className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-                              disabled={group.member_count >= 4}
-                            >
-                              {group.member_count >= 4 ? 'Group Full' : 'Join'}
-                            </Button>
+                            <div className="flex flex-col gap-2">
+                              <Link 
+                                to={`/classes/mus240/groups/${group.id}`}
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-center transition-colors"
+                              >
+                                View Group
+                              </Link>
+                              <Button
+                                onClick={() => handleJoinGroup(group.id)}
+                                className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                                disabled={group.member_count >= 4}
+                              >
+                                {group.member_count >= 4 ? 'Group Full' : 'Join'}
+                              </Button>
+                            </div>
                         )}
 
                         {userGroup?.id === group.id && (

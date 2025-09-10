@@ -13672,6 +13672,39 @@ export type Database = {
           },
         ]
       }
+      mus240_group_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          group_id: string
+          id: string
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          group_id: string
+          id?: string
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          group_id?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       mus240_group_memberships: {
         Row: {
           group_id: string
@@ -13717,6 +13750,69 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      mus240_group_notes: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          group_id: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          group_id: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          group_id?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mus240_group_sandboxes: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string
+          group_id: string
+          id: string
+          sandbox_url: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description: string
+          group_id: string
+          id?: string
+          sandbox_url: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string
+          group_id?: string
+          id?: string
+          sandbox_url?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       mus240_journal_comments: {
         Row: {

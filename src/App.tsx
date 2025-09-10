@@ -166,6 +166,7 @@ import WeekDetail from "./pages/mus240/WeekDetail";
 import AssignmentJournal from "./pages/mus240/AssignmentJournal";
 import Resources from "./pages/mus240/Resources";
 import Groups from "./pages/mus240/Groups";
+import GroupDetail from "./pages/mus240/GroupDetail";
 import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
 import { Mus240AdminPage } from "./pages/mus240/admin/Mus240AdminPage";
 import { InstructorConsole } from "./pages/mus240/InstructorConsole";
@@ -1556,6 +1557,14 @@ const App = () => {
                                  element={
                                    <Mus240EnrollmentRoute>
                                      <Groups />
+                                   </Mus240EnrollmentRoute>
+                                 } 
+                               />
+                               <Route 
+                                 path="/classes/mus240/groups/:groupId" 
+                                 element={
+                                   <Mus240EnrollmentRoute>
+                                     <GroupDetail />
                                    </Mus240EnrollmentRoute>
                                  } 
                                />

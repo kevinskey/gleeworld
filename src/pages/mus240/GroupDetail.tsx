@@ -128,7 +128,7 @@ export default function GroupDetail() {
         id: m.member_id,
         full_name: m.gw_profiles?.full_name || 'Unknown',
         email: m.gw_profiles?.email || '',
-        role: m.role
+        role: m.role as 'leader' | 'member'
       })) || [];
 
       setMembers(formattedMembers);
@@ -149,12 +149,10 @@ export default function GroupDetail() {
   };
 
   const fetchNotes = async () => {
+    // Temporarily use a simpler query until types are updated
     const { data, error } = await supabase
-      .from('mus240_group_notes')
-      .select(`
-        *,
-        gw_profiles!created_by(full_name)
-      `)
+      .from('mus240_group_notes' as any)
+      .select('*')
       .eq('group_id', groupId)
       .order('created_at', { ascending: false });
 
@@ -163,21 +161,13 @@ export default function GroupDetail() {
       return;
     }
 
-    const formattedNotes = data?.map(note => ({
-      ...note,
-      created_by_name: note.gw_profiles?.full_name || 'Unknown'
-    })) || [];
-
-    setNotes(formattedNotes);
+    setNotes(data || []);
   };
 
   const fetchLinks = async () => {
     const { data, error } = await supabase
-      .from('mus240_group_links')
-      .select(`
-        *,
-        gw_profiles!created_by(full_name)
-      `)
+      .from('mus240_group_links' as any)
+      .select('*')
       .eq('group_id', groupId)
       .order('created_at', { ascending: false });
 
@@ -186,21 +176,14 @@ export default function GroupDetail() {
       return;
     }
 
-    const formattedLinks = data?.map(link => ({
-      ...link,
-      created_by_name: link.gw_profiles?.full_name || 'Unknown'
-    })) || [];
-
-    setLinks(formattedLinks);
+    setLinks(data || []);
+  };
   };
 
   const fetchSandboxes = async () => {
     const { data, error } = await supabase
-      .from('mus240_group_sandboxes')
-      .select(`
-        *,
-        gw_profiles!created_by(full_name)
-      `)
+      .from('mus240_group_sandboxes' as any)
+      .select('*')
       .eq('group_id', groupId)
       .order('created_at', { ascending: false });
 
@@ -209,12 +192,7 @@ export default function GroupDetail() {
       return;
     }
 
-    const formattedSandboxes = data?.map(sandbox => ({
-      ...sandbox,
-      created_by_name: sandbox.gw_profiles?.full_name || 'Unknown'
-    })) || [];
-
-    setSandboxes(formattedSandboxes);
+    setSandboxes(data || []);
   };
 
   const handleAddNote = async (e: React.FormEvent<HTMLFormElement>) => {
