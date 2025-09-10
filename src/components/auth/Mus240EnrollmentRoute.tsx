@@ -32,17 +32,8 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
     profile: profile?.role
   });
   
-  // Only log when state actually changes to reduce console spam
-  const currentState = useMemo(() => ({
-    hasUser: !!user,
-    userEmail: user?.email,
-    authLoading,
-    roleLoading,
-    enrollmentLoading,
-    isEnrolled: enrolled
-  }), [user, authLoading, roleLoading, enrollmentLoading, enrolled]);
-  
   if (authLoading || roleLoading || enrollmentLoading) {
+    console.log('MUS 240: Still loading...', { authLoading, roleLoading, enrollmentLoading });
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <LoadingSpinner size="lg" text="Checking course access..." />
