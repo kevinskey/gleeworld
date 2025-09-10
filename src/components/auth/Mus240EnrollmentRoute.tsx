@@ -38,9 +38,9 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
   }
   
   if (!user) {
-    // Store the current path for redirect after auth and use dedicated MUS 240 auth page
+    // Store the current path for redirect after auth and use main auth page
     sessionStorage.setItem('redirectAfterAuth', window.location.pathname);
-    return <Navigate to="/auth/mus240" replace />;
+    return <Navigate to="/auth" replace />;
   }
   
   // Allow admins and super admins access regardless of enrollment

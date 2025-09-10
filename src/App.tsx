@@ -157,6 +157,7 @@ import { Onboarding } from "./pages/Onboarding";
 import StudentRegistration from "./pages/StudentRegistration";
 import { ProviderDashboard } from "./components/providers/ProviderDashboard";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
+import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
 
 import ClassLanding from "./pages/mus240/ClassLanding";
 import SyllabusPage from "./pages/mus240/SyllabusPage";
@@ -366,7 +367,11 @@ const App = () => {
               <Route 
                 path="/mus240-polls" 
                 element={
-                  <Mus240PollPage />
+                  <ProtectedRoute>
+                    <Mus240EnrollmentRoute>
+                      <Mus240PollPage />
+                    </Mus240EnrollmentRoute>
+                  </ProtectedRoute>
                 } 
               />
               {/* Contract signing should be accessible without authentication */}
@@ -1484,51 +1489,75 @@ const App = () => {
                               {/* MUS 240 Class Pages - Protected by enrollment */}
                               <Route 
                                 path="/mus240" 
-                                element={<ClassLanding />}
-                              />
-                               <Route 
-                                   path="/classes/mus240/admin" 
-                                   element={
-                                     <AdminOnlyRoute>
-                                       <Mus240AdminPage />
-                                     </AdminOnlyRoute>
-                                   }
-                                  />
-                               <Route 
-                                 path="/classes/mus240" 
-                                element={<ClassLanding />}
+                                element={
+                                  <Mus240EnrollmentRoute>
+                                    <ClassLanding />
+                                  </Mus240EnrollmentRoute>
+                                }
                                />
                              <Route 
                                path="/classes/mus240/syllabus" 
-                              element={<SyllabusPage />}
+                                element={
+                                  <Mus240EnrollmentRoute>
+                                    <ClassLanding />
+                                  </Mus240EnrollmentRoute>
+                                }
                              />
                               <Route 
                                 path="/classes/mus240/assignments" 
-                               element={<AssignmentWeek />}
+                              element={
+                                  <Mus240EnrollmentRoute>
+                                    <SyllabusPage />
+                                  </Mus240EnrollmentRoute>
+                              }
                               />
                               <Route 
                                 path="/classes/mus240/assignments/:assignmentId" 
-                               element={<AssignmentJournal />}
+                               element={
+                                  <Mus240EnrollmentRoute>
+                                    <AssignmentWeek />
+                                  </Mus240EnrollmentRoute>
+                               }
                               />
                               <Route 
                                 path="/classes/mus240/listening" 
-                               element={<ListeningHub />}
+                               element={
+                                 <Mus240EnrollmentRoute>
+                                   <AssignmentJournal />
+                                 </Mus240EnrollmentRoute>
+                               }
                               />
                               <Route 
                                 path="/classes/mus240/listening/:week" 
-                               element={<WeekDetail />}
+                               element={
+                                 <Mus240EnrollmentRoute>
+                                   <ListeningHub />
+                                 </Mus240EnrollmentRoute>
+                               }
                               />
                                <Route 
                                  path="/classes/mus240/groups" 
-                                element={<Groups />}
+                               element={
+                                 <Mus240EnrollmentRoute>
+                                   <WeekDetail />
+                                 </Mus240EnrollmentRoute>
+                               }
                                />
                                <Route 
                                  path="/classes/mus240/groups/:groupId" 
-                                element={<GroupDetail />}
+                                element={
+                                  <Mus240EnrollmentRoute>
+                                    <Groups />
+                                  </Mus240EnrollmentRoute>
+                                }
                                />
                                <Route 
                                  path="/classes/mus240/resources" 
-                                element={<Resources />}
+                                element={
+                                  <Mus240EnrollmentRoute>
+                                    <GroupDetail />
+                                  </Mus240EnrollmentRoute>
+                                }
                                />
                               <Route 
                                 path="/classes/mus240/resources/admin" 
@@ -1542,7 +1571,11 @@ const App = () => {
                                />
                                <Route 
                                  path="/classes/mus240/grades" 
-                                element={<Mus240GradesPage />}
+                                element={
+                                  <Mus240EnrollmentRoute>
+                                    <Resources />
+                                  </Mus240EnrollmentRoute>
+                                }
                                 />
                                  <Route 
                                    path="/classes/mus240/instructor" 
