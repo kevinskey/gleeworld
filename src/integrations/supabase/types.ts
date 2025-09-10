@@ -14054,7 +14054,7 @@ export type Database = {
           description: string | null
           id: string
           is_official: boolean
-          leader_id: string
+          leader_id: string | null
           max_members: number
           member_count: number
           name: string
@@ -14066,7 +14066,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_official?: boolean
-          leader_id: string
+          leader_id?: string | null
           max_members?: number
           member_count?: number
           name: string
@@ -14078,7 +14078,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_official?: boolean
-          leader_id?: string
+          leader_id?: string | null
           max_members?: number
           member_count?: number
           name?: string
