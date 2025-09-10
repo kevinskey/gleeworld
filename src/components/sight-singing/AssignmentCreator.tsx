@@ -38,8 +38,7 @@ export const AssignmentCreator: React.FC<AssignmentCreatorProps> = ({
     description: '',
     points_possible: 100,
     target_type: 'all_members',
-    target_value: '',
-    grading_period: 'quarter1'
+    target_value: ''
   });
 
   // Fetch available groups on component mount
@@ -139,8 +138,7 @@ export const AssignmentCreator: React.FC<AssignmentCreatorProps> = ({
           sheet_music_id: selectedScore.id,
           musicxml_content: selectedScore.xml_content,
           target_type: formData.target_type,
-          target_value: formData.target_value || null,
-          grading_period: formData.grading_period
+          target_value: formData.target_value || null
         }
       });
 
@@ -160,8 +158,7 @@ export const AssignmentCreator: React.FC<AssignmentCreatorProps> = ({
           description: '',
           points_possible: 100,
           target_type: 'all_members',
-          target_value: '',
-          grading_period: 'quarter1'
+          target_value: ''
         });
         setDueDate(undefined);
         
@@ -383,26 +380,6 @@ export const AssignmentCreator: React.FC<AssignmentCreatorProps> = ({
             )}
           </div>
 
-          <div>
-            <Label htmlFor="grading-period">Grading Period</Label>
-            <Select
-              value={formData.grading_period}
-              onValueChange={(value) => setFormData({ ...formData, grading_period: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="quarter1">Quarter 1</SelectItem>
-                <SelectItem value="quarter2">Quarter 2</SelectItem>
-                <SelectItem value="quarter3">Quarter 3</SelectItem>
-                <SelectItem value="quarter4">Quarter 4</SelectItem>
-                <SelectItem value="semester1">Semester 1</SelectItem>
-                <SelectItem value="semester2">Semester 2</SelectItem>
-                <SelectItem value="annual">Annual</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
           <Button 
             onClick={handleCreateAssignment}
