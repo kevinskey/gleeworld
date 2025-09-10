@@ -44,6 +44,7 @@ export default function Groups() {
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [autoAssigning, setAutoAssigning] = useState(false);
+  const [deletingAllGroups, setDeletingAllGroups] = useState(false);
   const PROJECT_TYPES = [{
     name: "Podcast Group",
     description: "Record and curate conversations about music and culture. Deliverable: Podcast archive hosted on GleeWorld Radio."
@@ -299,6 +300,53 @@ export default function Groups() {
       setAutoAssigning(false);
     }
   };
+
+  const handleDeleteAllGroups = async () => {
+    if (!window.confirm('Are you sure you want to delete ALL MUS 240 groups? This action cannot be undone and will remove all groups, memberships, and applications.')) {
+      return;
+    }
+    
+    if (!window.confirm('This will permanently delete all groups and cannot be reversed. Are you absolutely sure?')) {
+      return;
+    }
+
+    setDeletingAllGroups(true);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      
+      if (!token) {
+        toast.error('Authentication required');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('delete-all-mus240-groups', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (error) {
+        console.error('Error deleting all groups:', error);
+        toast.error('Failed to delete all groups');
+        return;
+      }
+
+      if (data?.error) {
+        console.error('Server error:', data.error);
+        toast.error(data.error);
+        return;
+      }
+
+      toast.success(data.message || 'Successfully deleted all MUS 240 groups');
+      refetch();
+    } catch (err) {
+      console.error('Delete all groups error:', err);
+      toast.error('Failed to delete all groups');
+    } finally {
+      setDeletingAllGroups(false);
+    }
+  };
   const userGroup = getUserGroup();
   const userApplications = getUserApplications();
   const availableGroups = getAvailableGroups();
@@ -390,10 +438,25 @@ export default function Groups() {
                         Auto-Assign All Students to Project Groups
                       </>}
                   </Button>
+
+                  <Button 
+                    onClick={handleDeleteAllGroups} 
+                    disabled={deletingAllGroups} 
+                    className="bg-red-700 hover:bg-red-800 text-white font-medium px-6 py-2"
+                  >
+                    {deletingAllGroups ? <>
+                        <Clock className="h-4 w-4 mr-2 animate-spin" />
+                        Deleting All Groups...
+                      </> : <>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete All Groups
+                      </>}
+                  </Button>
                 </div>
                 <div className="text-xs text-white/70 space-y-1">
                   
                   <p>Auto-Assign: Clears existing groups and randomly assigns all enrolled students (max 4 per group)</p>
+                  <p>Delete All Groups: Permanently removes all groups, memberships, and applications (cannot be undone)</p>
                 </div>
               </div>}
           </div>
