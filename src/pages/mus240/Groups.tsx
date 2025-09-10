@@ -135,12 +135,10 @@ export default function Groups() {
         const groupData = {
           name: projectType.name,
           description: projectType.description,
-          leader_id: user?.id,
-          // Set current user as initial leader instead of null
+          leader_id: null, // No automatic leader assignment
           semester: 'Fall 2025',
           max_members: 4,
-          member_count: 1,
-          // Start with 1 since we're adding the creator
+          member_count: 0, // Start with 0 members
           is_official: false
         };
         console.log('Group data to insert:', groupData);
@@ -153,21 +151,6 @@ export default function Groups() {
           throw groupError;
         }
         console.log('Successfully created group:', data);
-
-        // Add the current user as the initial leader member
-        if (data && data[0]) {
-          const {
-            error: membershipError
-          } = await supabase.from('mus240_group_memberships').insert({
-            group_id: data[0].id,
-            member_id: user?.id,
-            role: 'leader'
-          });
-          if (membershipError) {
-            console.error('Failed to add leader membership:', membershipError);
-            // Don't throw here, group was created successfully
-          }
-        }
       }
       toast.success(`Successfully created ${PROJECT_TYPES.length} project groups!`);
       refetch();
