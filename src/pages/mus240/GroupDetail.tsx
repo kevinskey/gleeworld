@@ -28,12 +28,14 @@ import {
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+type ProjectRole = 'research_lead' | 'content_developer' | 'technical_lead' | 'project_manager' | 'researcher_analyst' | 'writer_editor' | 'designer_developer' | 'coordinator_presenter';
+
 interface GroupMember {
   id: string;
   full_name: string;
   email: string;
   role: 'leader' | 'member';
-  project_role?: string;
+  project_role?: ProjectRole;
 }
 
 interface GroupNote {
@@ -342,7 +344,7 @@ export default function GroupDetail() {
     }
   };
 
-  const handleUpdateProjectRole = async (memberId: string, newRole: string | null) => {
+  const handleUpdateProjectRole = async (memberId: string, newRole: ProjectRole | null) => {
     try {
       const { error } = await supabase
         .from('mus240_group_memberships')
