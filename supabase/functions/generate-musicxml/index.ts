@@ -774,7 +774,19 @@ Return this exact JSON structure with your composition:
         if (part.measures) {
           for (const measure of part.measures) {
             for (const note of measure) {
-              if (note.pitch && typeof note.pitch === 'string') {
+              // Handle both step/octave format and string pitch format
+              if (note.step && note.octave) {
+                // Convert step/octave to proper pitch object
+                note.pitch = {
+                  step: note.step,
+                  alter: note.acc || 0,
+                  oct: note.octave
+                };
+                // Remove old properties to avoid confusion
+                delete note.step;
+                delete note.octave;
+                delete note.acc;
+              } else if (note.pitch && typeof note.pitch === 'string') {
                 // Convert "F4" to {step: "F", octave: 4}
                 const pitchMatch = note.pitch.match(/^([A-G])([b#]?)(\d+)$/);
                 if (pitchMatch) {
