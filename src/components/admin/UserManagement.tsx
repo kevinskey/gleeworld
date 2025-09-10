@@ -47,13 +47,15 @@ import {
   Edit,
   MoreHorizontal,
   ChevronLeft,
-  Maximize2
+  Maximize2,
+  Trash2
 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { UserRoleEditor } from './UserRoleEditor';
 import { BulkExecBoardActions } from './user-management/BulkExecBoardActions';
+import { DeleteUserDialog } from './DeleteUserDialog';
 
 interface UserProfile {
   id: string;
@@ -75,6 +77,7 @@ export const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [fullscreenEdit, setFullscreenEdit] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -439,24 +442,39 @@ export const UserManagement = () => {
                           <DropdownMenuSeparator />
                           
                           {/* Status Toggle */}
-                          <DropdownMenuItem 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleVerificationToggle(user.id, user.verified || false);
-                            }}
-                          >
-                            {user.verified ? (
-                              <>
-                                <UserX className="h-4 w-4 mr-2" />
-                                Mark Unverified
-                              </>
-                            ) : (
-                              <>
-                                <UserCheck className="h-4 w-4 mr-2" />
-                                Mark Verified
-                              </>
-                            )}
-                          </DropdownMenuItem>
+                           <DropdownMenuItem 
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleVerificationToggle(user.id, user.verified || false);
+                             }}
+                           >
+                             {user.verified ? (
+                               <>
+                                 <UserX className="h-4 w-4 mr-2" />
+                                 Mark Unverified
+                               </>
+                             ) : (
+                               <>
+                                 <UserCheck className="h-4 w-4 mr-2" />
+                                 Mark Verified
+                               </>
+                             )}
+                           </DropdownMenuItem>
+                           
+                           <DropdownMenuSeparator />
+                           
+                           {/* Delete User */}
+                           <DropdownMenuItem 
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               setSelectedUser(user);
+                               setDeleteDialogOpen(true);
+                             }}
+                             className="text-red-600"
+                           >
+                             <Trash2 className="h-4 w-4 mr-2" />
+                             Delete User
+                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
 
@@ -516,6 +534,20 @@ export const UserManagement = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete User Dialog */}
+      <DeleteUserDialog 
+        user={selectedUser ? {
+          ...selectedUser,
+          email: selectedUser.email || '',
+          full_name: selectedUser.full_name || null,
+          role: selectedUser.role || 'user',
+          created_at: selectedUser.created_at || new Date().toISOString()
+        } : null}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onUserDeleted={fetchUsers}
+      />
     </div>
   );
 };
