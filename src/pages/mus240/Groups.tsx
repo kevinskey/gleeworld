@@ -387,13 +387,283 @@ export default function Groups() {
           </div>
 
           {/* Instructions */}
-          
+          <div className="text-center mb-12">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 max-w-4xl mx-auto">
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">How It Works</h2>
+              <p className="text-white/90 text-lg leading-relaxed">
+                Create or join a group for your AI music project. Groups can have up to 4 members. 
+                Work together to explore different aspects of AI in music and present your findings.
+              </p>
+            </div>
+          </div>
 
           {/* Status badges and Admin Controls */}
-          
+          <div className="flex flex-wrap gap-4 justify-center mb-12">
+            <Badge variant="secondary" className="bg-white/20 text-white border-white/30 text-lg px-6 py-3">
+              <Users className="h-5 w-5 mr-2" />
+              {totalGroupsCount} Groups Created
+            </Badge>
+            {userGroup && (
+              <Badge variant="secondary" className="bg-green-500/80 text-white border-green-400/50 text-lg px-6 py-3">
+                <CheckCircle className="h-5 w-5 mr-2" />
+                You're in a Group
+              </Badge>
+            )}
+            {hasAdminAccess && (
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleCreateProjectGroups}
+                  disabled={autoAssigning}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {autoAssigning ? (
+                    <>
+                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Project Groups
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleAutoAssignGroups}
+                  disabled={autoAssigning}
+                  variant="outline"
+                  className="bg-purple-600 hover:bg-purple-700 text-white border-purple-500"
+                >
+                  {autoAssigning ? (
+                    <>
+                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                      Auto-assigning...
+                    </>
+                  ) : (
+                    <>
+                      <Shuffle className="h-4 w-4 mr-2" />
+                      Auto-assign Students
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleDeleteAllGroups}
+                  disabled={deletingAllGroups}
+                  variant="destructive"
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {deletingAllGroups ? (
+                    <>
+                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete All Groups
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
 
           {/* Main content */}
-          
+          <Tabs defaultValue="all-groups" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-8 bg-white/10 backdrop-blur-md">
+              <TabsTrigger value="all-groups" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">
+                All Groups
+              </TabsTrigger>
+              <TabsTrigger value="my-group" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">
+                My Group
+              </TabsTrigger>
+              <TabsTrigger value="applications" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">
+                Applications
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all-groups" className="space-y-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-white">All Groups</h2>
+                {!userGroup && availableGroups.length > 0 && (
+                  <Button
+                    onClick={() => setShowCreateGroup(true)}
+                    className="bg-amber-500 hover:bg-amber-600 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Group
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {groups.map((group) => (
+                  <Card key={group.id} className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-white">{group.name}</CardTitle>
+                          <CardDescription className="text-white/70">
+                            {group.description}
+                          </CardDescription>
+                        </div>
+                        {hasAdminAccess && (
+                          <Button
+                            onClick={() => handleDeleteGroup(group.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-amber-400" />
+                          <span className="text-sm text-white/80">
+                            {group.member_count || 0} / {group.max_members || 4} members
+                          </span>
+                        </div>
+                        
+                        {group.is_official && (
+                          <Badge className="bg-green-500/80 text-white">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Official
+                          </Badge>
+                        )}
+
+                        {!userGroup && group.member_count < (group.max_members || 4) && (
+                          <Button
+                            onClick={() => {
+                              setSelectedGroupId(group.id);
+                              setShowApplyForm(true);
+                            }}
+                            className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                          >
+                            Apply to Join
+                          </Button>
+                        )}
+
+                        {userGroup?.id === group.id && (
+                          <Badge className="w-full justify-center bg-blue-500/80 text-white">
+                            <UserCheck className="h-3 w-3 mr-1" />
+                            Your Group
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {groups.length === 0 && (
+                <div className="text-center py-12">
+                  <Users className="h-16 w-16 text-white/40 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">No Groups Yet</h3>
+                  <p className="text-white/70 mb-6">Be the first to create a group for the AI music project!</p>
+                  <Button
+                    onClick={() => setShowCreateGroup(true)}
+                    className="bg-amber-500 hover:bg-amber-600 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Group
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="my-group" className="space-y-6">
+              {userGroup ? (
+                <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="text-white">{userGroup.name}</CardTitle>
+                    <CardDescription className="text-white/70">
+                      {userGroup.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-amber-400" />
+                        <span className="text-sm text-white/80">
+                          {userGroup.member_count || 0} / {userGroup.max_members || 4} members
+                        </span>
+                      </div>
+                      
+                      {userGroup.is_official && (
+                        <Badge className="bg-green-500/80 text-white">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Official Group
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="text-center py-12">
+                  <AlertTriangle className="h-16 w-16 text-amber-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">Not in a Group</h3>
+                  <p className="text-white/70 mb-6">You haven't joined a group yet. Apply to an existing group or create your own!</p>
+                  <div className="flex gap-4 justify-center">
+                    <Button
+                      onClick={() => setShowCreateGroup(true)}
+                      className="bg-amber-500 hover:bg-amber-600 text-white"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Group
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="applications" className="space-y-6">
+              <h2 className="text-2xl font-bold text-white">Your Applications</h2>
+              
+              {userApplications.length > 0 ? (
+                <div className="space-y-4">
+                  {userApplications.map((app) => {
+                    const group = groups.find(g => g.id === app.group_id);
+                    return (
+                      <Card key={app.id} className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                        <CardContent className="pt-6">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold text-white">{group?.name || 'Unknown Group'}</h3>
+                              <p className="text-sm text-white/70 mt-1">
+                                Applied on {new Date(app.applied_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          <Badge 
+                            className={
+                              app.status === 'accepted' ? 'bg-green-500/80 text-white' :
+                              app.status === 'rejected' ? 'bg-red-500/80 text-white' :
+                              'bg-yellow-500/80 text-white'
+                            }
+                          >
+                            {app.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                            {app.status === 'accepted' && <CheckCircle className="h-3 w-3 mr-1" />}
+                            {app.status === 'rejected' && <XCircle className="h-3 w-3 mr-1" />}
+                            {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                           </Badge>
+                         </div>
+                       </CardContent>
+                     </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Users className="h-16 w-16 text-white/40 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">No Applications</h3>
+                  <p className="text-white/70">You haven't applied to any groups yet.</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
 
