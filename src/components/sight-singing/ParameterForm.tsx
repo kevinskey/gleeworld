@@ -343,7 +343,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           {/* Rest Values Selection */}
           <div className="space-y-1">
             <Label className="text-xs font-medium">Rest Values</Label>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1 p-2">
               {durations.map(restType => {
                 return (
                   <Badge 
