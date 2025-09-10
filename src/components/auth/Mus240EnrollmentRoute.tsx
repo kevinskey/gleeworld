@@ -19,6 +19,19 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
   const superAdminAccess = useMemo(() => isSuperAdmin(), [isSuperAdmin]);
   const enrolled = useMemo(() => isEnrolled(), [isEnrolled]);
   
+  // Debug logging for MUS 240 access
+  console.log('MUS 240 Access Debug:', {
+    user: !!user,
+    userEmail: user?.email,
+    authLoading,
+    roleLoading,
+    enrollmentLoading,
+    adminAccess,
+    superAdminAccess,
+    enrolled,
+    profile: profile?.role
+  });
+  
   // Only log when state actually changes to reduce console spam
   const currentState = useMemo(() => ({
     hasUser: !!user,
