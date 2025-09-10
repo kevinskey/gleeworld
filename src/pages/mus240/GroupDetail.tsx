@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -436,169 +437,210 @@ export default function GroupDetail() {
             </Card>
           </div>
 
-          {/* Group Content Sections */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Notes Section */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Notes
-                  </CardTitle>
-                  {isGroupMember && (
-                    <Button 
-                      onClick={() => setShowAddNote(true)}
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {notes.length === 0 ? (
-                  <p className="text-slate-500 text-center py-4">No notes yet</p>
-                ) : (
-                  notes.map((note) => (
-                    <div key={note.id} className="bg-slate-50 rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-medium text-slate-900">{note.title}</h4>
-                        {(note.created_by === user?.id || isGroupLeader) && (
-                          <Button
-                            onClick={() => handleDeleteNote(note.id)}
-                            size="sm"
-                            variant="ghost"
-                            className="text-red-600 hover:text-red-700 h-auto p-1"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                      <p className="text-slate-600 text-sm mb-2">{note.content}</p>
-                      <p className="text-xs text-slate-400">
-                        {new Date(note.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
+          {/* Group Content Tabs */}
+          <div className="mb-8">
+            <Tabs defaultValue="notes" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="notes" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Notes
+                </TabsTrigger>
+                <TabsTrigger value="links" className="flex items-center gap-2">
+                  <LinkIcon className="h-4 w-4" />
+                  Links
+                </TabsTrigger>
+                <TabsTrigger value="sandboxes" className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Sandboxes
+                </TabsTrigger>
+              </TabsList>
 
-            {/* Links Section */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <LinkIcon className="h-5 w-5" />
-                    Links
-                  </CardTitle>
-                  {isGroupMember && (
-                    <Button 
-                      onClick={() => setShowAddLink(true)}
-                      size="sm"
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {links.length === 0 ? (
-                  <p className="text-slate-500 text-center py-4">No links yet</p>
-                ) : (
-                  links.map((link) => (
-                    <div key={link.id} className="bg-slate-50 rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <a 
-                          href={link.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              {/* Notes Tab */}
+              <TabsContent value="notes" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Notes Workspace
+                      </CardTitle>
+                      {isGroupMember && (
+                        <Button 
+                          onClick={() => setShowAddNote(true)}
+                          className="bg-green-600 hover:bg-green-700 text-white"
                         >
-                          {link.title}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                        {(link.created_by === user?.id || isGroupLeader) && (
-                          <Button
-                            onClick={() => handleDeleteLink(link.id)}
-                            size="sm"
-                            variant="ghost"
-                            className="text-red-600 hover:text-red-700 h-auto p-1"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                      {link.description && (
-                        <p className="text-slate-600 text-sm mb-2">{link.description}</p>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Note
+                        </Button>
                       )}
-                      <p className="text-xs text-slate-400">
-                        {new Date(link.created_at).toLocaleDateString()}
-                      </p>
                     </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Sandboxes Section */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Plus className="h-5 w-5" />
-                    Sandboxes
-                  </CardTitle>
-                  {isGroupMember && (
-                    <Button 
-                      onClick={() => setShowAddSandbox(true)}
-                      size="sm"
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {sandboxes.length === 0 ? (
-                  <p className="text-slate-500 text-center py-4">No sandboxes yet</p>
-                ) : (
-                  sandboxes.map((sandbox) => (
-                    <div key={sandbox.id} className="bg-slate-50 rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <a 
-                          href={sandbox.sandbox_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="font-medium text-purple-600 hover:text-purple-700 flex items-center gap-1"
-                        >
-                          {sandbox.title}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                        {(sandbox.created_by === user?.id || isGroupLeader) && (
-                          <Button
-                            onClick={() => handleDeleteSandbox(sandbox.id)}
-                            size="sm"
-                            variant="ghost"
-                            className="text-red-600 hover:text-red-700 h-auto p-1"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                  </CardHeader>
+                  <CardContent className="min-h-[400px]">
+                    {notes.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                        <FileText className="h-12 w-12 text-slate-400 mb-4" />
+                        <p className="text-slate-500 text-lg mb-2">No notes yet</p>
+                        <p className="text-slate-400">Start collaborating by adding your first note</p>
                       </div>
-                      <p className="text-slate-600 text-sm mb-2">{sandbox.description}</p>
-                      <p className="text-xs text-slate-400">
-                        {new Date(sandbox.created_at).toLocaleDateString()}
-                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {notes.map((note) => (
+                          <div key={note.id} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                            <div className="flex items-start justify-between mb-2">
+                              <h4 className="font-medium text-slate-900">{note.title}</h4>
+                              {(note.created_by === user?.id || isGroupLeader) && (
+                                <Button
+                                  onClick={() => handleDeleteNote(note.id)}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-red-600 hover:text-red-700 h-auto p-1"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            <p className="text-slate-600 text-sm mb-2">{note.content}</p>
+                            <p className="text-xs text-slate-400">
+                              {new Date(note.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Links Tab */}
+              <TabsContent value="links" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <LinkIcon className="h-5 w-5" />
+                        Links Workspace
+                      </CardTitle>
+                      {isGroupMember && (
+                        <Button 
+                          onClick={() => setShowAddLink(true)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Link
+                        </Button>
+                      )}
                     </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
+                  </CardHeader>
+                  <CardContent className="min-h-[400px]">
+                    {links.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                        <LinkIcon className="h-12 w-12 text-slate-400 mb-4" />
+                        <p className="text-slate-500 text-lg mb-2">No links yet</p>
+                        <p className="text-slate-400">Share useful resources with your group</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {links.map((link) => (
+                          <div key={link.id} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                            <div className="flex items-start justify-between mb-2">
+                              <a 
+                                href={link.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                              >
+                                {link.title}
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                              {(link.created_by === user?.id || isGroupLeader) && (
+                                <Button
+                                  onClick={() => handleDeleteLink(link.id)}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-red-600 hover:text-red-700 h-auto p-1"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            {link.description && (
+                              <p className="text-slate-600 text-sm mb-2">{link.description}</p>
+                            )}
+                            <p className="text-xs text-slate-400">
+                              {new Date(link.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Sandboxes Tab */}
+              <TabsContent value="sandboxes" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Plus className="h-5 w-5" />
+                        Sandboxes Workspace
+                      </CardTitle>
+                      {isGroupMember && (
+                        <Button 
+                          onClick={() => setShowAddSandbox(true)}
+                          className="bg-purple-600 hover:bg-purple-700 text-white"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Sandbox
+                        </Button>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="min-h-[400px]">
+                    {sandboxes.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                        <Plus className="h-12 w-12 text-slate-400 mb-4" />
+                        <p className="text-slate-500 text-lg mb-2">No sandboxes yet</p>
+                        <p className="text-slate-400">Create collaborative coding environments</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {sandboxes.map((sandbox) => (
+                          <div key={sandbox.id} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                            <div className="flex items-start justify-between mb-2">
+                              <a 
+                                href={sandbox.sandbox_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="font-medium text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                              >
+                                {sandbox.title}
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                              {(sandbox.created_by === user?.id || isGroupLeader) && (
+                                <Button
+                                  onClick={() => handleDeleteSandbox(sandbox.id)}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-red-600 hover:text-red-700 h-auto p-1"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            <p className="text-slate-600 text-sm mb-2">{sandbox.description}</p>
+                            <p className="text-xs text-slate-400">
+                              {new Date(sandbox.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </main>
       </div>
