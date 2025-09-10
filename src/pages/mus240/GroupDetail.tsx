@@ -19,9 +19,6 @@ import {
   FileText, 
   Link as LinkIcon, 
   Trash2, 
-  Edit,
-  Save,
-  X,
   Crown,
   BookOpen
 } from 'lucide-react';
@@ -39,7 +36,7 @@ interface GroupNote {
   title: string;
   content: string;
   created_by: string;
-  created_by_name: string;
+  created_by_name?: string;
   created_at: string;
 }
 
@@ -49,7 +46,7 @@ interface GroupLink {
   url: string;
   description?: string;
   created_by: string;
-  created_by_name: string;
+  created_by_name?: string;
   created_at: string;
 }
 
@@ -59,7 +56,7 @@ interface GroupSandbox {
   description: string;
   sandbox_url: string;
   created_by: string;
-  created_by_name: string;
+  created_by_name?: string;
   created_at: string;
 }
 
@@ -84,7 +81,6 @@ export default function GroupDetail() {
   const [showAddNote, setShowAddNote] = useState(false);
   const [showAddLink, setShowAddLink] = useState(false);
   const [showAddSandbox, setShowAddSandbox] = useState(false);
-  const [editingNote, setEditingNote] = useState<string | null>(null);
 
   const NOTEBOOKLM_URL = "https://notebooklm.google.com/notebook/80622ea3-83d2-4cdd-931c-aa11dffe0edf";
 
@@ -133,7 +129,7 @@ export default function GroupDetail() {
 
       setMembers(formattedMembers);
 
-      // Fetch group notes, links, and sandboxes
+      // Fetch group content
       await Promise.all([
         fetchNotes(),
         fetchLinks(),
@@ -149,7 +145,6 @@ export default function GroupDetail() {
   };
 
   const fetchNotes = async () => {
-    // Temporarily use a simpler query until types are updated
     const { data, error } = await supabase
       .from('mus240_group_notes' as any)
       .select('*')
@@ -161,7 +156,7 @@ export default function GroupDetail() {
       return;
     }
 
-    setNotes(data || []);
+    setNotes((data as any) || []);
   };
 
   const fetchLinks = async () => {
@@ -176,8 +171,7 @@ export default function GroupDetail() {
       return;
     }
 
-    setLinks(data || []);
-  };
+    setLinks((data as any) || []);
   };
 
   const fetchSandboxes = async () => {
@@ -192,7 +186,7 @@ export default function GroupDetail() {
       return;
     }
 
-    setSandboxes(data || []);
+    setSandboxes((data as any) || []);
   };
 
   const handleAddNote = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -201,7 +195,7 @@ export default function GroupDetail() {
 
     try {
       const { error } = await supabase
-        .from('mus240_group_notes')
+        .from('mus240_group_notes' as any)
         .insert({
           group_id: groupId,
           title: formData.get('title') as string,
@@ -226,7 +220,7 @@ export default function GroupDetail() {
 
     try {
       const { error } = await supabase
-        .from('mus240_group_links')
+        .from('mus240_group_links' as any)
         .insert({
           group_id: groupId,
           title: formData.get('title') as string,
@@ -252,7 +246,7 @@ export default function GroupDetail() {
 
     try {
       const { error } = await supabase
-        .from('mus240_group_sandboxes')
+        .from('mus240_group_sandboxes' as any)
         .insert({
           group_id: groupId,
           title: formData.get('title') as string,
@@ -277,7 +271,7 @@ export default function GroupDetail() {
 
     try {
       const { error } = await supabase
-        .from('mus240_group_notes')
+        .from('mus240_group_notes' as any)
         .delete()
         .eq('id', noteId);
 
@@ -296,7 +290,7 @@ export default function GroupDetail() {
 
     try {
       const { error } = await supabase
-        .from('mus240_group_links')
+        .from('mus240_group_links' as any)
         .delete()
         .eq('id', linkId);
 
@@ -315,7 +309,7 @@ export default function GroupDetail() {
 
     try {
       const { error } = await supabase
-        .from('mus240_group_sandboxes')
+        .from('mus240_group_sandboxes' as any)
         .delete()
         .eq('id', sandboxId);
 
@@ -368,11 +362,6 @@ export default function GroupDetail() {
                   <Users className="h-4 w-4 mr-1" />
                   {group.member_count}/{group.max_members} Members
                 </Badge>
-                {!isGroupMember && group.member_count < group.max_members && (
-                  <Button className="bg-amber-500 hover:bg-amber-600 text-white">
-                    Join Group
-                  </Button>
-                )}
               </div>
             </div>
 
@@ -460,7 +449,7 @@ export default function GroupDetail() {
                       </div>
                       <p className="text-slate-600 text-sm mb-2">{note.content}</p>
                       <p className="text-xs text-slate-400">
-                        By {note.created_by_name} • {new Date(note.created_at).toLocaleDateString()}
+                        {new Date(note.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   ))
@@ -518,7 +507,7 @@ export default function GroupDetail() {
                         <p className="text-slate-600 text-sm mb-2">{link.description}</p>
                       )}
                       <p className="text-xs text-slate-400">
-                        By {link.created_by_name} • {new Date(link.created_at).toLocaleDateString()}
+                        {new Date(link.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   ))
@@ -574,7 +563,7 @@ export default function GroupDetail() {
                       </div>
                       <p className="text-slate-600 text-sm mb-2">{sandbox.description}</p>
                       <p className="text-xs text-slate-400">
-                        By {sandbox.created_by_name} • {new Date(sandbox.created_at).toLocaleDateString()}
+                        {new Date(sandbox.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   ))
