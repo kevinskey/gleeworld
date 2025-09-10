@@ -90,6 +90,8 @@ serve(async (req) => {
     });
 
     // Create the assignment
+    console.log('About to insert assignment with target_type:', mappedTargetType);
+    
     const { data: assignment, error: assignmentError } = await supabase
       .from('gw_sight_reading_assignments')
       .insert({
