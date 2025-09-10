@@ -215,6 +215,56 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
     }
   };
 
+  // Leave group function
+  const leaveGroup = async (groupId: string) => {
+    if (!user?.id) throw new Error('User not authenticated');
+    
+    try {
+      const { data, error } = await supabase.rpc('leave_mus240_group', {
+        p_group_id: groupId,
+        p_member_id: user.id
+      });
+      
+      if (error) throw error;
+      
+      const result = data as any;
+      if (!result?.success) throw new Error(result?.error || 'Failed to leave group');
+      
+      // Refresh data
+      await fetchGroups();
+      return result;
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      throw error;
+    }
+  };
+
+  // Update member role function
+  const updateMemberRole = async (groupId: string, memberId: string, newRole: string) => {
+    if (!user?.id) throw new Error('User not authenticated');
+    
+    try {
+      const { data, error } = await supabase.rpc('update_mus240_member_role', {
+        p_group_id: groupId,
+        p_member_id: memberId,
+        p_new_role: newRole,
+        p_requester_id: user.id
+      });
+      
+      if (error) throw error;
+      
+      const result = data as any;
+      if (!result?.success) throw new Error(result?.error || 'Failed to update member role');
+      
+      // Refresh data
+      await fetchGroups();
+      return result;
+    } catch (error) {
+      console.error('Error updating member role:', error);
+      throw error;
+    }
+  };
+
   const getAvailableGroups = () => {
     return groups.filter(group => group.member_count < group.max_members);
   };
@@ -243,6 +293,8 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
     applyToGroup,
     reviewApplication,
     deleteGroup,
+    leaveGroup,
+    updateMemberRole,
     getAvailableGroups,
     getUserGroup,
     getUserApplications,

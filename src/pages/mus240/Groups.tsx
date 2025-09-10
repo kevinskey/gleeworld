@@ -34,6 +34,8 @@ export default function Groups() {
     applyToGroup,
     reviewApplication,
     deleteGroup,
+    leaveGroup,
+    updateMemberRole,
     getAvailableGroups,
     getUserGroup,
     getUserApplications,
@@ -45,6 +47,8 @@ export default function Groups() {
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [autoAssigning, setAutoAssigning] = useState(false);
   const [deletingAllGroups, setDeletingAllGroups] = useState(false);
+  const [showMemberManagement, setShowMemberManagement] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<{id: string, name: string, role: string} | null>(null);
   const PROJECT_TYPES = [{
     name: "Commodification & Technology Timeline",
     description: "Explore how music becomes commodified through technology and AI. Create timeline visualizations and analysis of the transformation from art to product."
@@ -325,6 +329,32 @@ export default function Groups() {
       setDeletingAllGroups(false);
     }
   };
+
+  const handleLeaveGroup = async (groupId: string) => {
+    if (!confirm('Are you sure you want to leave this group?')) {
+      return;
+    }
+    
+    try {
+      await leaveGroup(groupId);
+      toast.success('Successfully left the group');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to leave group');
+    }
+  };
+
+  const handleUpdateMemberRole = async (newRole: string) => {
+    if (!selectedMember || !selectedGroupId) return;
+    
+    try {
+      await updateMemberRole(selectedGroupId, selectedMember.id, newRole);
+      toast.success('Member role updated successfully');
+      setShowMemberManagement(false);
+      setSelectedMember(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update member role');
+    }
+  };
   const userGroup = getUserGroup();
   const userApplications = getUserApplications();
   const availableGroups = getAvailableGroups();
@@ -566,31 +596,94 @@ export default function Groups() {
 
             <TabsContent value="my-group" className="p-6 space-y-6">
               {userGroup ? (
-                <Card className="bg-white border border-slate-200 shadow-md">
-                  <CardHeader>
-                    <CardTitle className="text-slate-900">{userGroup.name}</CardTitle>
-                    <CardDescription className="text-slate-600">
-                      {userGroup.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-blue-600" />
-                         <span className="text-base text-slate-700">
-                          {userGroup.member_count || 0} / {userGroup.max_members || 4} members
-                        </span>
+                <div className="space-y-6">
+                  <Card className="bg-white border border-slate-200 shadow-md">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-slate-900">{userGroup.name}</CardTitle>
+                          <CardDescription className="text-slate-600">
+                            {userGroup.description}
+                          </CardDescription>
+                        </div>
+                        <Button
+                          onClick={() => handleLeaveGroup(userGroup.id)}
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 border-red-300 hover:bg-red-50"
+                        >
+                          Leave Group
+                        </Button>
                       </div>
-                      
-                      {userGroup.is_official && (
-                        <Badge className="bg-green-100 text-green-700 border-green-200">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Official Group
-                        </Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-blue-600" />
+                           <span className="text-base text-slate-700">
+                            {userGroup.member_count || 0} / {userGroup.max_members || 4} members
+                          </span>
+                        </div>
+                        
+                        {userGroup.is_official && (
+                          <Badge className="bg-green-100 text-green-700 border-green-200">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Official Group
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Group Members */}
+                  {userGroup.members && userGroup.members.length > 0 && (
+                    <Card className="bg-white border border-slate-200 shadow-md">
+                      <CardHeader>
+                        <CardTitle className="text-slate-900">Group Members</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {userGroup.members.map((member: any) => (
+                            <div key={member.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div>
+                                  <p className="font-medium text-slate-900">
+                                    {member.gw_profiles?.full_name || 'Unknown Member'}
+                                  </p>
+                                  <p className="text-sm text-slate-600">
+                                    {member.gw_profiles?.email}
+                                  </p>
+                                </div>
+                                <Badge variant="outline" className="ml-2">
+                                  {member.role}
+                                </Badge>
+                              </div>
+                              
+                              {/* Role management - only for group leaders */}
+                              {userGroup.leader_id === user?.id && member.member_id !== user?.id && (
+                                <Button
+                                  onClick={() => {
+                                    setSelectedGroupId(userGroup.id);
+                                    setSelectedMember({
+                                      id: member.member_id,
+                                      name: member.gw_profiles?.full_name || 'Unknown',
+                                      role: member.role
+                                    });
+                                    setShowMemberManagement(true);
+                                  }}
+                                  variant="ghost"
+                                  size="sm"
+                                >
+                                  Change Role
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               ) : (
                 <div className="text-center py-12">
                   <AlertTriangle className="h-16 w-16 text-amber-500 mx-auto mb-4" />
@@ -742,6 +835,40 @@ export default function Groups() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Member Role Management Dialog */}
+      <Dialog open={showMemberManagement} onOpenChange={setShowMemberManagement}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Member Role</DialogTitle>
+            <DialogDescription>
+              Update {selectedMember?.name}'s role in the group
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-2">
+              {['leader', 'co-leader', 'researcher', 'writer', 'presenter', 'tech-lead', 'member'].map((role) => (
+                <Button
+                  key={role}
+                  onClick={() => handleUpdateMemberRole(role)}
+                  variant={selectedMember?.role === role ? "default" : "outline"}
+                  size="sm"
+                  className="capitalize"
+                >
+                  {role.replace('-', ' ')}
+                </Button>
+              ))}
+            </div>
+            <Button
+              onClick={() => setShowMemberManagement(false)}
+              variant="ghost"
+              className="w-full"
+            >
+              Cancel
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </UniversalLayout>
