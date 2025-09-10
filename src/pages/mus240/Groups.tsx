@@ -46,23 +46,23 @@ export default function Groups() {
   const [autoAssigning, setAutoAssigning] = useState(false);
   const [deletingAllGroups, setDeletingAllGroups] = useState(false);
   const PROJECT_TYPES = [{
-    name: "Podcast Group",
-    description: "Record and curate conversations about music and culture. Deliverable: Podcast archive hosted on GleeWorld Radio."
+    name: "Commodification & Technology Timeline",
+    description: "Explore how music becomes commodified through technology and AI. Create timeline visualizations and analysis of the transformation from art to product."
   }, {
-    name: "Merchandise/Commodification Group",
-    description: "Explore how ideas become commodities. Deliverable: Mockups for GleeWorld e-commerce store, commission models, design drafts."
+    name: "Artist Careers in the Age of AI",
+    description: "Investigate how AI is reshaping musical careers, from composition to performance to distribution. Document case studies and career evolution patterns."
   }, {
-    name: "Video/Documentary Group",
-    description: "Collect oral histories, interviews, and rehearsal footage. Deliverable: Video archive and short documentaries on GleeWorld."
+    name: "Genres & AI",
+    description: "Analyze how AI understands, replicates, and transforms musical genres. Explore genre boundaries and AI's impact on musical categorization."
   }, {
-    name: "Slideshows/Visual History Group",
-    description: "Build timeline and image narratives. Deliverable: Curated slideshows with captions published to the GleeWorld library."
+    name: "Cultural Identity & Authorship",
+    description: "Examine questions of cultural appropriation, authenticity, and creative ownership in AI-generated music. Investigate identity representation in AI models."
   }, {
-    name: "Audio Archive Group",
-    description: "Gather clips, performances, and samples. Deliverable: Audio archive, categorized and searchable on GleeWorld."
+    name: "Business & Economics of AI Music",
+    description: "Study the economic impact of AI on the music industry, including revenue models, job displacement, and new business opportunities."
   }, {
-    name: "Digital Exhibits/Interactive Group",
-    description: "Create interactive showcases linking text, image, and sound. Deliverable: Online exhibits embedded in the GleeWorld portal."
+    name: "Ethics, Futures & Innovation",
+    description: "Explore ethical considerations and future possibilities of AI in music. Investigate innovation frameworks and responsible AI development."
   }];
   const hasAdminAccess = isAdmin() || isSuperAdmin();
   const handleCreateGroup = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -389,10 +389,14 @@ export default function Groups() {
           {/* Instructions */}
           <div className="text-center mb-12">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 max-w-4xl mx-auto">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">How It Works</h2>
-              <p className="text-white/90 text-lg leading-relaxed">
-                Create or join a group for your AI music project. Groups can have up to 4 members. 
-                Work together to explore different aspects of AI in music and present your findings.
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">AI Group Project Teams</h2>
+              <p className="text-white/90 text-lg leading-relaxed mb-4">
+                Join one of six themed research groups exploring AI's impact on music. Each group has a maximum of 4 members, 
+                with the first person to join becoming the group leader. Groups meet for weekly updates on Wednesdays and 
+                focus deep dives on Fridays.
+              </p>
+              <p className="text-white/80 text-base">
+                <strong>Final Showcase:</strong> Integrated GleeWorld.org knowledge hub showcasing your research and findings.
               </p>
             </div>
           </div>
@@ -424,7 +428,7 @@ export default function Groups() {
                   ) : (
                     <>
                       <Plus className="h-4 w-4 mr-2" />
-                      Create Project Groups
+                      Create AI Project Groups
                     </>
                   )}
                 </Button>
