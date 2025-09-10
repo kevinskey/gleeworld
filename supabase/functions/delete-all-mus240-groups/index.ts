@@ -34,14 +34,24 @@ serve(async (req) => {
       );
     }
 
-    // Set the auth header for the request
-    supabaseClient.auth.setSession({
-      access_token: authHeader.replace('Bearer ', ''),
-      refresh_token: '',
-    });
+    // Extract JWT token
+    const jwt = authHeader.replace('Bearer ', '');
+    
+    // Initialize client with user's JWT for RLS
+    const supabaseWithAuth = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
+    );
 
     // Get current user
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseWithAuth.auth.getUser(jwt);
     if (userError || !user) {
       console.log('User authentication failed:', userError);
       return new Response(
