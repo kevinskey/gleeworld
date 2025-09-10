@@ -53,6 +53,7 @@ export interface ExerciseParameters {
   numMeasures: number;
   parts: Array<{ role: string; range: { min: string; max: string } }>;
   allowedDur: Array<'whole'|'half'|'quarter'|'eighth'|'16th'>;
+  allowedRests?: Array<'whole'|'half'|'quarter'|'eighth'|'16th'>;
   allowDots: boolean;
   allowAccidentals: boolean;
   intervalMotion: Array<'step'|'skip'|'leap'|'repeat'>;

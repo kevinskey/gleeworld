@@ -46,6 +46,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
         }
       }],
       allowedDur: ["quarter"],
+      allowedRests: ["quarter"],
       allowDots: false,
       allowAccidentals: false,
       intervalMotion: ["step", "skip"],
@@ -67,6 +68,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   const watchedNumMeasures = watch('numMeasures');
   const watchedParts = watch('parts');
   const watchedAllowedDur = watch('allowedDur');
+  const watchedAllowedRests = watch('allowedRests');
   const watchedAllowDots = watch('allowDots');
   const watchedIntervalMotion = watch('intervalMotion');
   const watchedCadenceEvery = watch('cadenceEvery');
@@ -106,6 +108,17 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
       setValue('allowedDur', [...current, duration as any]);
     }
   };
+  
+  const handleRestToggle = (restType: string) => {
+    const current = watchedAllowedRests || [];
+    if (current.includes(restType as any)) {
+      const newRests = current.filter(r => r !== restType);
+      setValue('allowedRests', newRests);
+    } else {
+      setValue('allowedRests', [...current, restType as any]);
+    }
+  };
+  
   const handleMotionToggle = (motion: string) => {
     const current = watchedIntervalMotion || [];
     if (current.includes(motion as any)) {
@@ -126,6 +139,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
       timeSignature: data.time,
       measures: data.numMeasures,
       durations: data.allowedDur,
+      rests: data.allowedRests,
       bpm: data.bpm,
       allowDots: data.allowDots,
       cadenceEvery: data.cadenceEvery,
@@ -306,10 +320,20 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
 
           {/* Note Values Selection */}
           <div className="space-y-1">
-            
+            <Label className="text-xs font-medium">Note Values</Label>
             <div className="flex flex-wrap gap-1">
               {durations.map(duration => <Badge key={duration} variant={watchedAllowedDur?.includes(duration as any) ? "default" : "outline"} className="cursor-pointer text-xs px-2 py-1 h-6" onClick={() => handleDurationToggle(duration)}>
                   {duration === '16th' ? '16th' : duration.charAt(0).toUpperCase()}
+                </Badge>)}
+            </div>
+          </div>
+
+          {/* Rest Values Selection */}
+          <div className="space-y-1">
+            <Label className="text-xs font-medium">Rest Values</Label>
+            <div className="flex flex-wrap gap-1">
+              {durations.map(restType => <Badge key={`rest-${restType}`} variant={watchedAllowedRests?.includes(restType as any) ? "default" : "outline"} className="cursor-pointer text-xs px-2 py-1 h-6" onClick={() => handleRestToggle(restType)}>
+                  {restType === '16th' ? '16th' : restType.charAt(0).toUpperCase()} ♪
                 </Badge>)}
             </div>
           </div>
