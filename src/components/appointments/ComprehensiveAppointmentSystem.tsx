@@ -111,28 +111,29 @@ export const ComprehensiveAppointmentSystem = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-4 lg:py-6 space-y-4 lg:space-y-6">
       {/* Header with Back Button */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:gap-4 lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <Button
             variant="outline"
             size="sm"
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-fit"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Appointment System</h1>
-            <p className="text-muted-foreground">Complete appointment scheduling and management platform</p>
+          <div className="space-y-1">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Appointment System</h1>
+            <p className="text-sm lg:text-base text-muted-foreground">Complete appointment scheduling and management platform</p>
           </div>
         </div>
         
         {isSuperAdmin() && (
           <div className="flex gap-2">
-            <select className="px-3 py-2 border rounded-md text-sm">
+            <select className="px-3 py-2 border rounded-md text-sm w-full min-w-0 lg:w-auto">
               <option value="">All Providers</option>
               {providers.map(provider => (
                 <option key={provider.id} value={provider.id}>
@@ -145,50 +146,50 @@ export const ComprehensiveAppointmentSystem = () => {
       </div>
 
       {/* Stats Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-8 w-8 text-blue-600" />
-              <div>
-                <p className="text-2xl font-bold">{todayAppointments}</p>
-                <p className="text-sm text-muted-foreground">Today</p>
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-center space-x-2 lg:space-x-3">
+              <Calendar className="h-6 w-6 lg:h-8 lg:w-8 text-blue-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-lg lg:text-2xl font-bold">{todayAppointments}</p>
+                <p className="text-xs lg:text-sm text-muted-foreground">Today</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <BarChart3 className="h-8 w-8 text-green-600" />
-              <div>
-                <p className="text-2xl font-bold">{weeklyAppointments}</p>
-                <p className="text-sm text-muted-foreground">This Week</p>
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-center space-x-2 lg:space-x-3">
+              <BarChart3 className="h-6 w-6 lg:h-8 lg:w-8 text-green-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-lg lg:text-2xl font-bold">{weeklyAppointments}</p>
+                <p className="text-xs lg:text-sm text-muted-foreground">This Week</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-8 w-8 text-yellow-600" />
-              <div>
-                <p className="text-2xl font-bold">{pendingAppointments}</p>
-                <p className="text-sm text-muted-foreground">Pending</p>
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-center space-x-2 lg:space-x-3">
+              <Clock className="h-6 w-6 lg:h-8 lg:w-8 text-yellow-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-lg lg:text-2xl font-bold">{pendingAppointments}</p>
+                <p className="text-xs lg:text-sm text-muted-foreground">Pending</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <Users className="h-8 w-8 text-purple-600" />
-              <div>
-                <p className="text-2xl font-bold">{confirmedAppointments}</p>
-                <p className="text-sm text-muted-foreground">Confirmed</p>
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-center space-x-2 lg:space-x-3">
+              <Users className="h-6 w-6 lg:h-8 lg:w-8 text-purple-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-lg lg:text-2xl font-bold">{confirmedAppointments}</p>
+                <p className="text-xs lg:text-sm text-muted-foreground">Confirmed</p>
               </div>
             </div>
           </CardContent>
@@ -196,19 +197,21 @@ export const ComprehensiveAppointmentSystem = () => {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="calendar" className="space-y-6">
-        <TabsList className={`grid w-full gap-1 ${isSuperAdmin() ? 'grid-cols-2 md:grid-cols-6' : 'grid-cols-2 md:grid-cols-4'}`}>
-          <TabsTrigger value="calendar" className="text-xs md:text-sm">Calendar</TabsTrigger>
-          <TabsTrigger value="management" className="text-xs md:text-sm">Management</TabsTrigger>
-          <TabsTrigger value="my-profile" className="text-xs md:text-sm">My Profile</TabsTrigger>
-          <TabsTrigger value="services" className="text-xs md:text-sm">Services</TabsTrigger>
-          {isSuperAdmin() && (
-            <>
-              <TabsTrigger value="providers" className="text-xs md:text-sm">Providers</TabsTrigger>
-              <TabsTrigger value="admin" className="text-xs md:text-sm">Admin</TabsTrigger>
-            </>
-          )}
-        </TabsList>
+      <Tabs defaultValue="calendar" className="space-y-4 lg:space-y-6">
+        <div className="overflow-x-auto">
+          <TabsList className={`inline-flex w-full min-w-fit gap-1 ${isSuperAdmin() ? 'grid-cols-6' : 'grid-cols-4'} lg:grid lg:w-full`}>
+            <TabsTrigger value="calendar" className="text-xs lg:text-sm whitespace-nowrap">Calendar</TabsTrigger>
+            <TabsTrigger value="management" className="text-xs lg:text-sm whitespace-nowrap">Management</TabsTrigger>
+            <TabsTrigger value="my-profile" className="text-xs lg:text-sm whitespace-nowrap">My Profile</TabsTrigger>
+            <TabsTrigger value="services" className="text-xs lg:text-sm whitespace-nowrap">Services</TabsTrigger>
+            {isSuperAdmin() && (
+              <>
+                <TabsTrigger value="providers" className="text-xs lg:text-sm whitespace-nowrap">Providers</TabsTrigger>
+                <TabsTrigger value="admin" className="text-xs lg:text-sm whitespace-nowrap">Admin</TabsTrigger>
+              </>
+            )}
+          </TabsList>
+        </div>
 
         <TabsContent value="calendar" className="space-y-6">
           <AppointmentCalendar
@@ -237,32 +240,35 @@ export const ComprehensiveAppointmentSystem = () => {
         </TabsContent>
 
         {isSuperAdmin() && (
-          <TabsContent value="providers" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <TabsContent value="providers" className="space-y-4 lg:space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
               {providers.map(provider => (
                 <Card key={provider.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
+                  <CardContent className="p-4 lg:p-6">
+                    <div className="flex items-start gap-3 mb-4">
                       {provider.profile_image_url ? (
                         <img 
                           src={provider.profile_image_url} 
                           alt={provider.provider_name}
-                          className="w-12 h-12 rounded-full object-cover"
+                          className="w-10 h-10 lg:w-12 lg:h-12 rounded-full object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Users className="w-6 h-6 text-primary" />
+                        <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Users className="w-5 h-5 lg:w-6 lg:h-6 text-primary" />
                         </div>
                       )}
-                      <div>
-                        <h3 className="font-medium">{provider.title} {provider.provider_name}</h3>
-                        <p className="text-sm text-muted-foreground">{provider.department}</p>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-medium text-sm lg:text-base leading-tight">{provider.title} {provider.provider_name}</h3>
+                        <p className="text-xs lg:text-sm text-muted-foreground mt-1">{provider.department}</p>
                       </div>
                     </div>
-                    <div className="space-y-2 text-sm">
-                      <p><span className="font-medium">Email:</span> {provider.email}</p>
+                    <div className="space-y-2 text-xs lg:text-sm">
+                      <p className="break-all"><span className="font-medium">Email:</span> {provider.email}</p>
                       {provider.phone && <p><span className="font-medium">Phone:</span> {provider.phone}</p>}
-                      <p><span className="font-medium">Services:</span> {provider.services_offered.join(', ')}</p>
+                      <div className="min-w-0">
+                        <span className="font-medium">Services:</span> 
+                        <span className="ml-1 break-words">{provider.services_offered.join(', ')}</span>
+                      </div>
                       <p><span className="font-medium">Status:</span> 
                         <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
                           provider.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -287,9 +293,9 @@ export const ComprehensiveAppointmentSystem = () => {
 
       {/* Edit Appointment Dialog */}
       <Dialog open={!!selectedAppointment} onOpenChange={() => setSelectedAppointment(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Appointment - {selectedAppointment?.title || 'Unknown'}</DialogTitle>
+            <DialogTitle className="text-lg lg:text-xl">Edit Appointment - {selectedAppointment?.title || 'Unknown'}</DialogTitle>
           </DialogHeader>
           {selectedAppointment && (
             <div className="mt-4">

@@ -286,7 +286,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
   };
 
   const AppointmentForm = ({ isEdit = false }: { isEdit?: boolean }) => (
-    <div className="grid md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
       <div className="space-y-4">
         <div>
           <Label>Service *</Label>
@@ -305,7 +305,7 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
         </div>
 
         {/* Provider Selection */}
-        <div className="md:col-span-2">
+        <div className="lg:col-span-2">
           <ProviderSelector
             selectedProviderId={formData.providerId}
             onProviderSelect={(provider) => {
@@ -432,38 +432,38 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header and Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Appointment Management</h2>
-          <p className="text-muted-foreground">Manage and track all appointments</p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="space-y-1">
+          <h2 className="text-xl lg:text-2xl font-bold">Appointment Management</h2>
+          <p className="text-sm lg:text-base text-muted-foreground">Manage and track all appointments</p>
         </div>
         
-        <div className="flex gap-2">
-          <Button onClick={() => setIsPaymentDialogOpen(true)} className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button onClick={() => setIsPaymentDialogOpen(true)} className="flex items-center gap-2 justify-center">
             <CreditCard className="h-4 w-4" />
-            Book & Pay for Lesson
+            <span className="whitespace-nowrap">Book & Pay for Lesson</span>
           </Button>
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" onClick={() => resetForm()}>
-                <Plus className="h-4 w-4 mr-2" />
-                Free Appointment
+              <Button variant="outline" onClick={() => resetForm()} className="flex items-center gap-2 justify-center">
+                <Plus className="h-4 w-4" />
+                <span className="whitespace-nowrap">Free Appointment</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Create New Appointment</DialogTitle>
-                <DialogDescription>Fill in the details to schedule a new appointment</DialogDescription>
+                <DialogTitle className="text-lg lg:text-xl">Create New Appointment</DialogTitle>
+                <DialogDescription className="text-sm lg:text-base">Fill in the details to schedule a new appointment</DialogDescription>
               </DialogHeader>
               <AppointmentForm />
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} className="order-2 sm:order-1">
                   Cancel
                 </Button>
-                <Button onClick={handleCreate}>Create Appointment</Button>
+                <Button onClick={handleCreate} className="order-1 sm:order-2">Create Appointment</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -471,14 +471,14 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
       </div>
 
       {/* Search and Filter */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search appointments..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 text-sm lg:text-base"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
