@@ -354,7 +354,7 @@ export default function GroupDetail() {
           <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-lg mb-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">{group.name}</h1>
+                <h1 className="text-4xl md:text-5xl font-dancing font-bold text-slate-900 mb-2 tracking-wide">{group.name}</h1>
                 <p className="text-slate-600 text-lg">{group.description}</p>
               </div>
               <div className="flex flex-col gap-2">
