@@ -340,7 +340,7 @@ export const EnrollmentManager = () => {
             <SelectContent>
               <SelectItem value="Fall 2025">Fall 2025</SelectItem>
               <SelectItem value="Spring 2025">Spring 2025</SelectItem>
-              <SelectItem value="Fall 2024">Fall 2024</SelectItem>
+              <SelectItem value="Fall 2025">Fall 2025</SelectItem>
             </SelectContent>
           </Select>
         </div>

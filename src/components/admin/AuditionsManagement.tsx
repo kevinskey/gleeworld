@@ -1262,7 +1262,7 @@ export const AuditionsManagement = () => {
                     id="name"
                     value={newSession.name}
                     onChange={(e) => setNewSession({...newSession, name: e.target.value})}
-                    placeholder="Fall 2024 Auditions"
+                    placeholder="Fall 2025 Auditions"
                   />
                 </div>
                 <div>

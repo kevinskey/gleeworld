@@ -17,7 +17,7 @@ export interface Mus240EnrollmentWithProfile {
   };
 }
 
-export const useMus240Enrollments = (semester: string = 'Fall 2024') => {
+export const useMus240Enrollments = (semester: string = 'Fall 2025') => {
   const [enrollments, setEnrollments] = useState<Mus240EnrollmentWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

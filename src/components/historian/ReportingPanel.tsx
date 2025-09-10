@@ -42,7 +42,7 @@ export const ReportingPanel = () => {
       archiveItemsAdded: 89
     },
     "fall-semester": {
-      period: "Fall 2024 Semester",
+      period: "Fall 2025 Semester",
       eventsDocumented: 15,
       totalEvents: 16,
       mediaUploaded: 87,
@@ -123,7 +123,7 @@ export const ReportingPanel = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="current-year">2024 Academic Year</SelectItem>
-                  <SelectItem value="fall-semester">Fall 2024 Semester</SelectItem>
+                  <SelectItem value="fall-semester">Fall 2025 Semester</SelectItem>
                   <SelectItem value="spring-semester">Spring 2024 Semester</SelectItem>
                 </SelectContent>
               </Select>

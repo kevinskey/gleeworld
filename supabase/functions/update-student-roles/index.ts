@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
     const { data: students, error: studentsError } = await supabaseClient
       .from('mus240_grade_summaries')
       .select('student_id')
-      .eq('semester', 'Fall 2024')
+      .eq('semester', 'Fall 2025')
 
     if (studentsError) {
       console.log('Students error:', studentsError)
@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log(`Found ${students.length} students enrolled in MUS 240 Fall 2024`)
+    console.log(`Found ${students.length} students enrolled in MUS 240 Fall 2025`)
 
     // Call the secure database function that bypasses triggers
     console.log(`Calling secure database function to update student roles`)

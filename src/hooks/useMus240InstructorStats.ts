@@ -43,7 +43,7 @@ export const useMus240InstructorStats = () => {
       const { data: enrollments, error: enrollmentsError } = await supabase
         .from('mus240_enrollments')
         .select('student_id')
-        .eq('semester', 'Fall 2024')
+        .eq('semester', 'Fall 2025')
         .eq('enrollment_status', 'enrolled');
 
       if (enrollmentsError) throw enrollmentsError;

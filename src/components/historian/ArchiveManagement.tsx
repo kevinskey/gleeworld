@@ -63,7 +63,7 @@ export const ArchiveManagement = () => {
       category: "Concert",
       year: "2024",
       event: "Fall Concert",
-      description: "Photo collection from the Fall 2024 concert performance",
+      description: "Photo collection from the Fall 2025 concert performance",
       tags: ["Concert", "Fall", "Photos", "Performance"],
       uploadDate: "2024-11-21",
       fileSize: "156 MB",

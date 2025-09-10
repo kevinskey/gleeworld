@@ -69,7 +69,7 @@ export const StudentScoresViewer = () => {
       const { data: summaryData, error: summaryError } = await supabase
         .from('mus240_grade_summaries')
         .select('*')
-        .eq('semester', 'Fall 2024')
+        .eq('semester', 'Fall 2025')
         .order('overall_percentage', { ascending: false });
 
       if (summaryError) throw summaryError;

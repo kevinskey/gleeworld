@@ -30,7 +30,7 @@ interface Term {
 const mockTerms: Term[] = [
   {
     id: '1',
-    name: 'Fall 2024',
+    name: 'Fall 2025',
     startDate: '2024-08-26',
     endDate: '2024-12-15',
     status: 'active',

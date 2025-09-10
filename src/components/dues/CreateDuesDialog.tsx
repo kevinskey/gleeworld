@@ -185,7 +185,7 @@ export const CreateDuesDialog = ({ open, onOpenChange, onSuccess }: CreateDuesDi
                 <SelectItem value="Fall 2025">Fall 2025</SelectItem>
                 <SelectItem value="Spring 2025">Spring 2025</SelectItem>
                 <SelectItem value="Summer 2025">Summer 2025</SelectItem>
-                <SelectItem value="Fall 2024">Fall 2024</SelectItem>
+                <SelectItem value="Fall 2025">Fall 2025</SelectItem>
                 <SelectItem value="Spring 2024">Spring 2024</SelectItem>
               </SelectContent>
             </Select>
