@@ -347,9 +347,21 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
     }
 
     console.log('=== PREPARING DATABASE INSERT ===');
+    
+    // Resolve assignment_id string to database UUID
+    let assignment_db_id = null;
+    if (assignment_id === 'lj1') {
+      assignment_db_id = '550e8400-e29b-41d4-a716-446655440000';
+    } else if (assignment_id === 'lj2') {
+      assignment_db_id = '550e8400-e29b-41d4-a716-446655440001';
+    }
+    
+    console.log('Mapping assignment_id:', assignment_id, '-> assignment_db_id:', assignment_db_id);
+    
     const gradeData = {
       student_id,
-      assignment_id: assignment_id,
+      assignment_id: assignment_id, // Keep original string for reference
+      assignment_db_id, // UUID for database relations
       journal_id,
       overall_score: gradingResult.overall_score,
       rubric: {
@@ -360,7 +372,9 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       feedback: gradingResult.overall_feedback,
       ai_model: stub_test ? 'gpt-5-2025-08-07' : 'gpt-4o-mini',
       graded_by: null, // AI grading
-      graded_at: new Date().toISOString()
+      graded_at: new Date().toISOString(),
+      created_at: new Date().toISOString()
+      // Note: updated_at will be set by database trigger
     };
 
     console.log('=== ATTEMPTING DATABASE INSERT ===');
@@ -375,6 +389,9 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
     if (gradeError) {
       console.error('=== DATABASE INSERT FAILED ===');
       console.error('Error saving grade:', gradeError);
+      console.error('Error code:', gradeError.code);
+      console.error('Error details:', gradeError.details);
+      console.error('Error hint:', gradeError.hint);
       console.error('Grade data that failed:', JSON.stringify(gradeData, null, 2));
       throw new Error(`Failed to save grade: ${gradeError.message}`);
     }
