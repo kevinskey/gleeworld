@@ -1565,8 +1565,40 @@ export const SightSingingStudio: React.FC = () => {
               />
             )}
           </TabsContent>
-        </Tabs>
-        
+            <TabsContent value="library" className="mt-6">
+              <Card>
+                <CardContent className="p-6">
+                  <ScoreLibraryManager />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-6">
+              <Card>
+                <CardContent className="p-6">
+                  <ScoreHistoryView />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="report" className="mt-6">
+              <Card>
+                <CardContent className="p-6">
+                  {gradingResults ? (
+                    <PerformanceReport 
+                      gradingResults={gradingResults} 
+                      musicXML={currentMusicXML}
+                    />
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">No performance data available. Complete a sight-reading exercise and get graded to see your detailed report here.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
         {/* Recording Share Dialog */}
         {currentRecording && (
           <RecordingShareDialog
@@ -1578,8 +1610,8 @@ export const SightSingingStudio: React.FC = () => {
             }}
           />
         )}
+        </div>
       </div>
-    </div>
     </TooltipProvider>
   );
 };
