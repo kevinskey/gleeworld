@@ -122,7 +122,7 @@ serve(async (req) => {
         description: request.description,
         assignment_type: 'sight_reading',
         due_date: request.due_date,
-        grading_period: 'week_1',
+        
         points_possible: request.points_possible || 100,
         sheet_music_id: request.sheet_music_id,
         assigned_by: user.id,
