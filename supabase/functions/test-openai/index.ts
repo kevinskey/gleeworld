@@ -13,46 +13,63 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting comprehensive environment check...');
+    console.log('=== TESTING OPENAI API ===');
     
-    // Get all environment variables
-    const allEnvVars = Object.keys(Deno.env.toObject());
-    console.log('Total env vars count:', allEnvVars.length);
-    console.log('Available environment variables:', allEnvVars);
-    console.log('OpenAI-related env vars:', allEnvVars.filter(key => key.includes('OPENAI') || key.includes('API_KEY')));
-    
-    // Check specific OpenAI key variations
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    const openaiKey = Deno.env.get('OPENAI_KEY');
-    const openaiApiKeySecret = Deno.env.get('OPENAI_API_KEY_SECRET');
+    console.log('OpenAI API Key exists:', !!openAIApiKey);
+    console.log('OpenAI API Key length:', openAIApiKey?.length || 0);
     
-    // Additional detailed logging
-    console.log('OPENAI_API_KEY exists:', !!openAIApiKey);
-    console.log('OPENAI_API_KEY length:', openAIApiKey?.length || 0);
-    if (openAIApiKey) {
-      console.log('OPENAI_API_KEY starts with sk-:', openAIApiKey.startsWith('sk-'));
-      console.log('OPENAI_API_KEY first 10 chars:', openAIApiKey.substring(0, 10));
+    if (!openAIApiKey) {
+      return new Response(
+        JSON.stringify({ error: 'OpenAI API key not found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
-    
-    console.log('OPENAI_API_KEY exists:', !!openAIApiKey);
-    console.log('OPENAI_API_KEY length:', openAIApiKey?.length || 0);
-    console.log('OPENAI_KEY exists:', !!openaiKey);
-    console.log('OPENAI_API_KEY_SECRET exists:', !!openaiApiKeySecret);
 
-    return new Response(JSON.stringify({
-      success: true,
-      debug: {
-        totalEnvVars: allEnvVars.length,
-        openaiApiKeyExists: !!openAIApiKey,
-        openaiApiKeyLength: openAIApiKey?.length || 0,
-        openaiKeyExists: !!openaiKey,
-        openaiApiKeySecretExists: !!openaiApiKeySecret,
-        allEnvVars: allEnvVars,
-        openaiRelatedVars: allEnvVars.filter(key => key.includes('OPENAI') || key.includes('API_KEY'))
-      }
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    console.log('Making test request to OpenAI...');
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant.' },
+          { role: 'user', content: 'Say "Hello, this is a test!"' }
+        ],
+        max_tokens: 50,
+        temperature: 0.7
+      }),
     });
+
+    console.log('OpenAI response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API error:', errorText);
+      return new Response(
+        JSON.stringify({ 
+          error: 'OpenAI API error', 
+          status: response.status,
+          details: errorText 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    const data = await response.json();
+    console.log('OpenAI response success!');
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'OpenAI API is working perfectly!',
+        response: data.choices[0].message.content
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     console.error('Error in test-openai function:', error);

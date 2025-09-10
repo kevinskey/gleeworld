@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { GraduationCap, Users, FileText, Settings, ExternalLink, BarChart, BookOpen, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import backgroundImage from '@/assets/mus240-background.jpg';
+import { OpenAITestButton } from '@/components/mus240/admin/OpenAITestButton';
 
 export const Mus240AdminPage = () => {
   const [activeTab, setActiveTab] = useState('scores');
@@ -129,9 +130,14 @@ export const Mus240AdminPage = () => {
                     <CardTitle className="text-gray-900">Course Settings</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600">
-                      Course settings and configuration options will be available here.
-                    </p>
+                    <div className="space-y-4">
+                      <p className="text-gray-600">
+                        Course settings and configuration options will be available here.
+                      </p>
+                      <div className="flex gap-2">
+                        <OpenAITestButton />
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
