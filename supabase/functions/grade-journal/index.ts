@@ -372,9 +372,8 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
       feedback: gradingResult.overall_feedback,
       ai_model: stub_test ? 'gpt-5-2025-08-07' : 'gpt-4o-mini',
       graded_by: null, // AI grading
-      graded_at: new Date().toISOString(),
-      created_at: new Date().toISOString()
-      // Note: updated_at will be set by database trigger
+      graded_at: new Date().toISOString()
+      // Note: created_at and updated_at will be set by database defaults/triggers
     };
 
     console.log('=== ATTEMPTING DATABASE INSERT ===');
