@@ -1,17 +1,18 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { User, Clock, BookOpen, CheckCircle, AlertCircle } from 'lucide-react';
+import { User, Clock, BookOpen, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
-import { useUserAssignmentsSummary } from '@/hooks/useUserAssignmentsSummary';
+import { useUserAssignments } from '@/hooks/useUserAssignments';
+import { format, isAfter } from 'date-fns';
 
 export const UserInfoCard: React.FC = () => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
   const { stats, loading: statsLoading } = usePracticeStats();
-  const { summary, loading: assignmentsLoading } = useUserAssignmentsSummary();
+  const { assignments, loading: assignmentsLoading } = useUserAssignments();
 
   const formatLastPracticed = (lastPracticed?: Date) => {
     if (!lastPracticed) return 'Never';
@@ -38,8 +39,27 @@ export const UserInfoCard: React.FC = () => {
     return `${hours}h ${minutes}m`;
   };
 
-  const incompleteAssignments = summary.incomplete + summary.overdue;
-  const completedAssignments = summary.completed;
+  const formatDueDate = (dueDate: string | null) => {
+    if (!dueDate) return 'No due date';
+    const date = new Date(dueDate);
+    const now = new Date();
+    
+    if (isAfter(now, date)) {
+      return `Overdue: ${format(date, 'MMM d')}`;
+    }
+    return format(date, 'MMM d');
+  };
+
+  // Get overdue assignments
+  const overdueAssignments = assignments.due.filter(assignment => {
+    if (!assignment.due_date) return false;
+    return isAfter(new Date(), new Date(assignment.due_date));
+  });
+
+  const upcomingAssignments = assignments.due.filter(assignment => {
+    if (!assignment.due_date) return true;
+    return !isAfter(new Date(), new Date(assignment.due_date));
+  });
 
   return (
     <Card className="w-full">
@@ -81,27 +101,76 @@ export const UserInfoCard: React.FC = () => {
           </div>
         </div>
 
-        {/* Assignment Status */}
-        <div className="space-y-2">
+        {/* Assignments Section */}
+        <div className="space-y-3">
           <div className="text-sm font-medium text-muted-foreground">Assignments</div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-orange-500" />
-              <span className="text-sm">Incomplete</span>
-            </div>
-            <Badge variant={incompleteAssignments > 0 ? "destructive" : "secondary"}>
-              {assignmentsLoading ? '...' : incompleteAssignments}
-            </Badge>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span className="text-sm">Completed</span>
-            </div>
-            <Badge variant="secondary">
-              {assignmentsLoading ? '...' : completedAssignments}
-            </Badge>
-          </div>
+          
+          {assignmentsLoading ? (
+            <div className="text-sm text-muted-foreground">Loading...</div>
+          ) : (
+            <>
+              {/* Due Assignments */}
+              {(overdueAssignments.length > 0 || upcomingAssignments.length > 0) && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-orange-500" />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Due ({overdueAssignments.length + upcomingAssignments.length})
+                    </span>
+                  </div>
+                  <div className="space-y-1 max-h-24 overflow-y-auto">
+                    {overdueAssignments.map(assignment => (
+                      <div key={assignment.id} className="flex items-center justify-between text-xs">
+                        <span className="truncate flex-1">{assignment.title}</span>
+                        <Badge variant="destructive" className="ml-2 text-xs">
+                          {formatDueDate(assignment.due_date)}
+                        </Badge>
+                      </div>
+                    ))}
+                    {upcomingAssignments.map(assignment => (
+                      <div key={assignment.id} className="flex items-center justify-between text-xs">
+                        <span className="truncate flex-1">{assignment.title}</span>
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          {formatDueDate(assignment.due_date)}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Completed Assignments */}
+              {assignments.completed.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Completed ({assignments.completed.length})
+                    </span>
+                  </div>
+                  <div className="space-y-1 max-h-16 overflow-y-auto">
+                    {assignments.completed.slice(0, 3).map(assignment => (
+                      <div key={assignment.id} className="flex items-center justify-between text-xs">
+                        <span className="truncate flex-1">{assignment.title}</span>
+                        <Badge variant="secondary" className="ml-2 text-xs">
+                          Done
+                        </Badge>
+                      </div>
+                    ))}
+                    {assignments.completed.length > 3 && (
+                      <div className="text-xs text-muted-foreground">
+                        +{assignments.completed.length - 3} more
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {assignments.due.length === 0 && assignments.completed.length === 0 && (
+                <div className="text-xs text-muted-foreground">No assignments</div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Quick Stats */}
