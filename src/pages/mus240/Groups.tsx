@@ -510,7 +510,7 @@ export default function Groups() {
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
                           <Users className="h-4 w-4 text-amber-400" />
-                          <span className="text-sm text-white/80">
+                          <span className="text-base text-white/80">
                             {group.member_count || 0} / {group.max_members || 4} members
                           </span>
                         </div>
@@ -575,7 +575,7 @@ export default function Groups() {
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-amber-400" />
-                        <span className="text-sm text-white/80">
+                         <span className="text-base text-white/80">
                           {userGroup.member_count || 0} / {userGroup.max_members || 4} members
                         </span>
                       </div>
