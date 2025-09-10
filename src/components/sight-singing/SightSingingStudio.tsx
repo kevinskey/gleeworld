@@ -888,27 +888,158 @@ export const SightSingingStudio: React.FC = () => {
           </TabsList>
 
           <TabsContent value="practice" className="mt-2 sm:mt-3">
-            <div className="mb-4 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-              <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">🎵 Practice Studio</h3>
-              <p className="text-sm text-green-700 dark:text-green-300">
-                The Practice Studio has been simplified. Please use the <strong>Score Library</strong> tab to generate new exercises, view scores, and practice with playback controls.
-              </p>
-            </div>
-            
-            <div className="max-w-2xl mx-auto">
-              <Card className="p-6 text-center">
-                <h3 className="text-lg font-semibold mb-3">Moved to Score Library</h3>
-                <p className="text-muted-foreground mb-4">
-                  All score generation, viewing, and practice features have been consolidated into the <strong>Score Library</strong> tab for a better experience.
-                </p>
-                <Button 
-                  onClick={() => setActiveTab('library')}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  Go to Score Library
-                </Button>
-              </Card>
-            </div>
+            {/* Show score display if we have generated music, otherwise show parameter form */}
+            {currentMusicXML ? (
+              <div className="space-y-4">
+                {/* Score Display with Reset Button */}
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold">Generated Exercise</h2>
+                  <Button 
+                    onClick={handleReset}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    ← New Exercise
+                  </Button>
+                </div>
+                
+                <Card>
+                  <CardContent className="p-4">
+                    <ScoreDisplay 
+                      key={exerciseKey}
+                      musicXML={currentMusicXML}
+                      onGradeRecording={audioBlob ? handleGradeRecording : undefined}
+                      hasRecording={!!audioBlob}
+                      isGrading={isGrading}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Transport Controls */}
+                {currentMusicXML && (
+                  <div className="bg-card border rounded-lg shadow-md p-3 lg:p-4">
+                    <div className="responsive-grid-3 items-center gap-3 lg:gap-4"
+                         style={{ gridTemplateColumns: '1fr auto 1fr' }}>
+                      {/* Sound Selectors */}
+                      <div className="flex items-center gap-2 lg:gap-3 order-1">
+                        <Select 
+                          value={soundSettings.notes} 
+                          onValueChange={(value) => setSoundSettings(prev => ({ ...prev, notes: value }))}
+                        >
+                          <SelectTrigger className="h-8 lg:h-10 w-24 lg:w-28 text-xs lg:text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background border shadow-lg z-50">
+                            <SelectItem value="piano">🎹 Piano</SelectItem>
+                            <SelectItem value="flute">🎵 Flute</SelectItem>
+                            <SelectItem value="xylophone">🎶 Xylophone</SelectItem>
+                            <SelectItem value="synth">🎛️ Synth</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Play Controls */}
+                      <div className="flex items-center gap-1 lg:gap-2 order-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant={isPlaying && mode === 'click-and-score' ? "default" : "outline"}
+                              onClick={() => {
+                                if (isPlaying && mode === 'click-and-score') {
+                                  stopPlayback();
+                                } else {
+                                  safeStart('click-and-score');
+                                }
+                              }}
+                              disabled={!currentMusicXML || isRecording || transportBusy}
+                              className="h-10 lg:h-12 px-3 lg:px-4"
+                            >
+                              {isPlaying && mode === 'click-and-score' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Play exercise with melody and metronome</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        {/* Record Button */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant={isRecording ? "destructive" : "outline"}
+                              onClick={isRecording ? handleStopRecording : handleStartRecording}
+                              className="h-10 lg:h-12 w-10 lg:w-12 p-0"
+                            >
+                              {isRecording ? (
+                                <div className="h-3 lg:h-4 w-3 lg:w-4 bg-white rounded-sm" />
+                              ) : (
+                                <div className="h-4 lg:h-5 w-4 lg:w-5 bg-red-500 rounded-full" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{isRecording ? 'Stop recording' : 'Start recording your performance'}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      {/* BPM Control */}
+                      <div className="flex items-center gap-4 order-3">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <Knob
+                                value={currentBpm}
+                                onValueChange={(newBpm) => {
+                                  setCurrentBpm(newBpm);
+                                  updateMetronomeTempo(newBpm);
+                                }}
+                                min={60}
+                                max={180}
+                                step={5}
+                                size="sm"
+                                label="BPM"
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Adjust tempo (60-180 BPM)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Grading Results */}
+                {gradingResults && (
+                  <Card>
+                    <CardContent className="p-4">
+                      <GradingResults results={gradingResults} />
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              // Show parameter form when no score is generated
+              <div className="max-w-4xl mx-auto">
+                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">🎵 Score Generator</h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Configure your sight-reading exercise parameters and generate a new score to practice with.
+                  </p>
+                </div>
+                
+                <ParameterForm 
+                  onGenerate={handleGenerateExercise}
+                  isGenerating={isGenerating}
+                  onReset={handleReset}
+                  hasExercise={!!currentScore}
+                />
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="library" className="mt-6">
