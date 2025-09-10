@@ -767,6 +767,38 @@ Return this exact JSON structure with your composition:
 
     // 2) Generate score JSON with proper measure count and validation
     let scoreJson = aiJson;
+    
+    // Convert OpenAI string pitch format to proper pitch objects
+    if (scoreJson && scoreJson.parts) {
+      for (const part of scoreJson.parts) {
+        if (part.measures) {
+          for (const measure of part.measures) {
+            for (const note of measure) {
+              if (note.pitch && typeof note.pitch === 'string') {
+                // Convert "F4" to {step: "F", octave: 4}
+                const pitchMatch = note.pitch.match(/^([A-G])([b#]?)(\d+)$/);
+                if (pitchMatch) {
+                  const [, step, accidental, octave] = pitchMatch;
+                  note.pitch = {
+                    step: step,
+                    alter: accidental === '#' ? 1 : accidental === 'b' ? -1 : 0,
+                    oct: parseInt(octave)
+                  };
+                }
+              }
+              // Ensure proper dur format
+              if (note.dur && typeof note.dur === 'string') {
+                note.dur = { base: note.dur, dots: 0 };
+              }
+              // Ensure note has kind property
+              if (!note.kind) {
+                note.kind = 'note';
+              }
+            }
+          }
+        }
+      }
+    }
     if (!scoreJson || !Array.isArray(scoreJson?.parts)) {
       // Fallback: synthesize varied measures using ALL selected durations
       const durOptions = allowed.filter(d => ["whole","half","quarter","eighth","16th"].includes(d));
