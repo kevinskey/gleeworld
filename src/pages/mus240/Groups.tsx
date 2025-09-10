@@ -39,7 +39,6 @@ export default function Groups() {
     updateMemberRole,
     getAvailableGroups,
     getUserGroup,
-    getUserApplications,
     getGroupApplications,
     refetch
   } = useMus240Groups();
@@ -401,7 +400,6 @@ export default function Groups() {
     }
   };
   const userGroup = getUserGroup();
-  const userApplications = getUserApplications();
   const availableGroups = getAvailableGroups();
   const totalGroupsCount = groups.length;
   const maxGroups = 7;
@@ -534,15 +532,12 @@ export default function Groups() {
           {/* Main Content */}
           <div className="bg-white rounded-2xl shadow-lg border border-slate-200">
             <Tabs defaultValue="all-groups" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-slate-100 rounded-t-2xl p-1">
+              <TabsList className="grid w-full grid-cols-2 bg-slate-100 rounded-t-2xl p-1">
                 <TabsTrigger value="all-groups" className="text-slate-700 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
                   All Groups
                 </TabsTrigger>
                 <TabsTrigger value="my-group" className="text-slate-700 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
                   My Group
-                </TabsTrigger>
-                <TabsTrigger value="applications" className="text-slate-700 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
-                  Applications
                 </TabsTrigger>
               </TabsList>
 
@@ -753,49 +748,6 @@ export default function Groups() {
               )}
             </TabsContent>
 
-            <TabsContent value="applications" className="p-6 space-y-6">
-              <h2 className="text-2xl font-bold text-slate-900">Your Applications</h2>
-              
-              {userApplications.length > 0 ? (
-                <div className="space-y-4">
-                  {userApplications.map((app) => {
-                    const group = groups.find(g => g.id === app.group_id);
-                    return (
-                      <Card key={app.id} className="bg-white border border-slate-200 shadow-md">
-                        <CardContent className="pt-6">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-semibold text-slate-900">{group?.name || 'Unknown Group'}</h3>
-                              <p className="text-sm text-slate-600 mt-1">
-                                Applied on {new Date(app.applied_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                          <Badge 
-                            className={
-                              app.status === 'accepted' ? 'bg-green-100 text-green-700 border-green-200' :
-                              app.status === 'rejected' ? 'bg-red-100 text-red-700 border-red-200' :
-                              'bg-yellow-100 text-yellow-700 border-yellow-200'
-                            }
-                          >
-                            {app.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
-                            {app.status === 'accepted' && <CheckCircle className="h-3 w-3 mr-1" />}
-                            {app.status === 'rejected' && <XCircle className="h-3 w-3 mr-1" />}
-                            {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                           </Badge>
-                         </div>
-                       </CardContent>
-                     </Card>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Users className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-slate-900 mb-2">No Applications</h3>
-                  <p className="text-slate-600">You haven't applied to any groups yet.</p>
-                </div>
-              )}
-            </TabsContent>
           </Tabs>
         </div>
         </main>
