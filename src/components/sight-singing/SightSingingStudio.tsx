@@ -448,12 +448,27 @@ export const SightSingingStudio: React.FC = () => {
       
       // Add timestamp + random component to ensure unique requests
       const uniqueId = Date.now() + Math.floor(Math.random() * 10000);
-      const { data, error } = await supabase.functions.invoke('generate-musicxml', {
+      const { data, error } = await supabase.functions.invoke('generate-score', {
         body: {
-          ...enhancedParams,
-          requestId: uniqueId, // Add unique identifier to prevent caching
-          randomSeed: Math.random(), // Add random seed for AI generation
-          forceRefresh: uniqueId // Additional parameter to force refresh
+          key: enhancedParams.key.tonic,
+          mode: enhancedParams.key.mode,
+          timeSignature: `${enhancedParams.time.num}/${enhancedParams.time.den}`,
+          measures: enhancedParams.numMeasures,
+          voiceParts: enhancedParams.parts[0]?.role || 'S',
+          bpm: enhancedParams.bpm,
+          noteValues: enhancedParams.allowedDur,
+          restValues: enhancedParams.allowedRests || ['quarter'],
+          dottedNotes: enhancedParams.allowDots,
+          cadenceFrequency: enhancedParams.cadenceEvery,
+          cadenceTypes: [enhancedParams.cadenceType || 'Authentic'],
+          motionTypes: enhancedParams.intervalMotion.map(m => m.charAt(0).toUpperCase() + m.slice(1)),
+          voiceLeading: enhancedParams.enforceVoiceLeading || false,
+          resolveTendencies: enhancedParams.requireResolution || false,
+          strongBeatCadence: enhancedParams.strongBeatCadence || false,
+          maxInterval: enhancedParams.maxInterval || 12,
+          stepwiseMotionPercent: enhancedParams.stepwiseMotionPercentage || 70,
+          forceRefresh: !!uniqueId,
+          debugEcho: false
         }
       });
 
@@ -471,17 +486,15 @@ export const SightSingingStudio: React.FC = () => {
 
       if (data.success) {
         console.log('✅ Exercise generated successfully:', {
-          hasJSON: !!data.json,
-          hasMusicXML: !!data.musicXML,
-          musicXMLLength: data.musicXML?.length,
-          exerciseId: data.exerciseId,
-          firstNote: data.json?.parts?.[0]?.measures?.[0]?.[0]?.pitch,
-          fullFirstMeasure: data.json?.parts?.[0]?.measures?.[0],
-          requestIdFromResponse: data.requestId
+          hasJSON: !!data.echo,
+          hasMusicXML: !!data.musicxml,
+          musicXMLLength: data.musicxml?.length,
+          echo: data.echo,
+          parameters: data.parameters
         });
         
         // Log the actual MusicXML content to verify it's changing
-        console.log('🎼 MusicXML preview (first 200 chars):', data.musicXML?.substring(0, 200));
+        console.log('🎼 MusicXML preview (first 200 chars):', data.musicxml?.substring(0, 200));
         
         // Force component update by setting a new key based on timestamp
         const newExerciseKey = `exercise-${Date.now()}-${Math.random()}`;
@@ -494,9 +507,9 @@ export const SightSingingStudio: React.FC = () => {
         
         // Use setTimeout to ensure state is cleared before setting new values
         setTimeout(() => {
-          setCurrentScore(data.json);
-          setCurrentMusicXML(data.musicXML);
-          setCurrentExerciseId(data.exerciseId);
+          setCurrentScore(null); // The new function doesn't return JSON format
+          setCurrentMusicXML(data.musicxml);
+          setCurrentExerciseId(newExerciseKey);
           setExerciseKey(newExerciseKey); // Set new key to force re-render
           
           console.log('🎯 State updated with new exercise. Key:', newExerciseKey);

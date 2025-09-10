@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Download } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 
@@ -166,6 +166,27 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-end mb-2 sm:mb-4">
         <div className="flex gap-2">
+          {musicXML && (
+            <Button 
+              onClick={() => {
+                const blob = new Blob([musicXML], { type: 'application/xml' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'sight-reading-exercise.musicxml';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+              }}
+              variant="outline"
+              size="sm"
+              className="text-xs sm:text-sm"
+            >
+              <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              Download MusicXML
+            </Button>
+          )}
           {hasRecording && onGradeRecording && (
             <Button 
               onClick={onGradeRecording}
