@@ -15,12 +15,8 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
+    console.log('Starting delete-all-mus240-groups function');
+    
     // Get the authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -34,36 +30,33 @@ serve(async (req) => {
       );
     }
 
-    // Extract JWT token
-    const jwt = authHeader.replace('Bearer ', '');
-    
-    // Initialize client with user's JWT for RLS
-    const supabaseWithAuth = createClient(
+    console.log('Authorization header found');
+
+    // Initialize Supabase client with service role key for admin operations
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: {
-            Authorization: authHeader,
-          },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabaseWithAuth.auth.getUser(jwt);
-    if (userError || !user) {
-      console.log('User authentication failed:', userError);
-      return new Response(
-        JSON.stringify({ error: 'Authentication failed' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
+    // Extract JWT token and verify user
+    const jwt = authHeader.replace('Bearer ', '');
+    
+    try {
+      // Use the service role client to verify the JWT and get user info
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser(jwt);
+      
+      if (userError || !user) {
+        console.log('User authentication failed:', userError?.message || 'No user found');
+        return new Response(
+          JSON.stringify({ error: 'Authentication failed', details: userError?.message }),
+          { 
+            status: 401, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
 
-    console.log('User authenticated:', user.id);
+      console.log('User authenticated:', user.id);
 
     // Check if user is admin
     const { data: profile, error: profileError } = await supabaseClient
@@ -194,6 +187,17 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
+
+    } catch (authError) {
+      console.error('Authentication error:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Authentication failed', details: authError.message }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
   } catch (error) {
     console.error('Error in delete-all-mus240-groups function:', error);
