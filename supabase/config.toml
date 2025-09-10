@@ -195,3 +195,18 @@ verify_jwt = false
 
 [functions.test-journal-ai]
 verify_jwt = false
+
+[functions.delete-all-mus240-groups]
+verify_jwt = true
+
+[functions.create-sight-reading-assignment]
+verify_jwt = true
+
+[functions.get-member-assignments]
+verify_jwt = true
+
+[functions.mus240-instructor-assistant]
+verify_jwt = true
+
+[functions.update-student-roles]
+verify_jwt = true
