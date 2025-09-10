@@ -1495,11 +1495,19 @@ const App = () => {
                                   </Mus240EnrollmentRoute>
                                 }
                                />
+                               <Route 
+                                path="/classes/mus240" 
+                                element={
+                                  <Mus240EnrollmentRoute>
+                                    <ClassLanding />
+                                  </Mus240EnrollmentRoute>
+                                }
+                               />
                              <Route 
                                path="/classes/mus240/syllabus" 
                                 element={
                                   <Mus240EnrollmentRoute>
-                                    <ClassLanding />
+                                    <SyllabusPage />
                                   </Mus240EnrollmentRoute>
                                 }
                              />
@@ -1507,7 +1515,7 @@ const App = () => {
                                 path="/classes/mus240/assignments" 
                               element={
                                   <Mus240EnrollmentRoute>
-                                    <SyllabusPage />
+                                    <AssignmentJournal />
                                   </Mus240EnrollmentRoute>
                               }
                               />
@@ -1523,7 +1531,7 @@ const App = () => {
                                 path="/classes/mus240/listening" 
                                element={
                                  <Mus240EnrollmentRoute>
-                                   <AssignmentJournal />
+                                   <ListeningHub />
                                  </Mus240EnrollmentRoute>
                                }
                               />
@@ -1531,7 +1539,7 @@ const App = () => {
                                 path="/classes/mus240/listening/:week" 
                                element={
                                  <Mus240EnrollmentRoute>
-                                   <ListeningHub />
+                                   <WeekDetail />
                                  </Mus240EnrollmentRoute>
                                }
                               />
@@ -1539,7 +1547,7 @@ const App = () => {
                                  path="/classes/mus240/groups" 
                                element={
                                  <Mus240EnrollmentRoute>
-                                   <WeekDetail />
+                                   <Groups />
                                  </Mus240EnrollmentRoute>
                                }
                                />
@@ -1547,7 +1555,7 @@ const App = () => {
                                  path="/classes/mus240/groups/:groupId" 
                                 element={
                                   <Mus240EnrollmentRoute>
-                                    <Groups />
+                                    <GroupDetail />
                                   </Mus240EnrollmentRoute>
                                 }
                                />
@@ -1555,7 +1563,7 @@ const App = () => {
                                  path="/classes/mus240/resources" 
                                 element={
                                   <Mus240EnrollmentRoute>
-                                    <GroupDetail />
+                                    <Resources />
                                   </Mus240EnrollmentRoute>
                                 }
                                />
@@ -1567,13 +1575,13 @@ const App = () => {
                                       <ResourcesAdmin />
                                     </AdminOnlyRoute>
                                   </ProtectedRoute>
-                               } 
+                                } 
                                />
                                <Route 
                                  path="/classes/mus240/grades" 
                                 element={
                                   <Mus240EnrollmentRoute>
-                                    <Resources />
+                                    <Mus240GradesPage />
                                   </Mus240EnrollmentRoute>
                                 }
                                 />
