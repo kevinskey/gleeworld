@@ -9,9 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSheetMusicLibrary, SheetMusic } from '@/hooks/useSheetMusicLibrary';
-import { Upload, Download, Music, Plus, Search, Edit, Trash2, FileMusic } from 'lucide-react';
+import { Upload, Download, Music, Plus, Search, Edit, Trash2, FileMusic, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { BulkXMLUpload } from './BulkXMLUpload';
+import { OSMDViewer } from '@/components/OSMDViewer';
 
 interface ScoreLibraryManagerProps {
   onScoreSelect?: (score: SheetMusic) => void;
@@ -26,6 +27,7 @@ export const ScoreLibraryManager: React.FC<ScoreLibraryManagerProps> = ({
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [editingScore, setEditingScore] = useState<SheetMusic | null>(null);
+  const [viewingScore, setViewingScore] = useState<SheetMusic | null>(null);
   const [newScore, setNewScore] = useState({
     title: '',
     composer: '',
@@ -229,8 +231,22 @@ export const ScoreLibraryManager: React.FC<ScoreLibraryManagerProps> = ({
                           variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setViewingScore(score);
+                          }}
+                          title="View MusicXML"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {score.xml_content && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             handleDownloadXML(score);
                           }}
+                          title="Download XML"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
@@ -433,6 +449,30 @@ export const ScoreLibraryManager: React.FC<ScoreLibraryManagerProps> = ({
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* MusicXML Viewer Dialog */}
+        <Dialog open={!!viewingScore} onOpenChange={(open) => !open && setViewingScore(null)}>
+          <DialogContent className="max-w-4xl h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileMusic className="h-5 w-5" />
+                {viewingScore?.title}
+                {viewingScore?.composer && (
+                  <span className="text-sm text-muted-foreground">by {viewingScore.composer}</span>
+                )}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-hidden">
+              {viewingScore?.xml_content && (
+                <OSMDViewer
+                  xmlContent={viewingScore.xml_content}
+                  title={viewingScore.title}
+                  className="w-full h-full"
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
