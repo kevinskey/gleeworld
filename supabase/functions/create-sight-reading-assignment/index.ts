@@ -69,6 +69,8 @@ serve(async (req) => {
     }
 
     const request: CreateAssignmentRequest = await req.json();
+    
+    console.log('Raw request received:', JSON.stringify(request));
 
     // Map target_type values to match database constraints, default to 'all' if not provided
     const targetTypeMap: { [key: string]: string } = {
@@ -79,6 +81,13 @@ serve(async (req) => {
 
     const requestTargetType = request.target_type || 'all_members'; // Default to all_members
     const mappedTargetType = targetTypeMap[requestTargetType] || 'all';
+    
+    console.log('Target type mapping:', {
+      original: request.target_type,
+      requestTargetType: requestTargetType,
+      mappedTargetType: mappedTargetType,
+      validValues: ['individual', 'section', 'class', 'all']
+    });
 
     console.log('Creating sight-reading assignment:', {
       title: request.title,
