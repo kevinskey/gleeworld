@@ -563,26 +563,26 @@ export default function Groups() {
               )}
             </TabsContent>
 
-            <TabsContent value="my-group" className="space-y-6">
+            <TabsContent value="my-group" className="p-6 space-y-6">
               {userGroup ? (
-                <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                <Card className="bg-white border border-slate-200 shadow-md">
                   <CardHeader>
-                    <CardTitle className="text-white">{userGroup.name}</CardTitle>
-                    <CardDescription className="text-white/70">
+                    <CardTitle className="text-slate-900">{userGroup.name}</CardTitle>
+                    <CardDescription className="text-slate-600">
                       {userGroup.description}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-amber-400" />
-                         <span className="text-base text-white/80">
+                        <Users className="h-4 w-4 text-blue-600" />
+                         <span className="text-base text-slate-700">
                           {userGroup.member_count || 0} / {userGroup.max_members || 4} members
                         </span>
                       </div>
                       
                       {userGroup.is_official && (
-                        <Badge className="bg-green-500/80 text-white">
+                        <Badge className="bg-green-100 text-green-700 border-green-200">
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Official Group
                         </Badge>
@@ -592,9 +592,9 @@ export default function Groups() {
                 </Card>
               ) : (
                 <div className="text-center py-12">
-                  <AlertTriangle className="h-16 w-16 text-amber-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">Not in a Group</h3>
-                  <p className="text-white/70 mb-6">You haven't joined a group yet. Apply to an existing group or create your own!</p>
+                  <AlertTriangle className="h-16 w-16 text-amber-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">Not in a Group</h3>
+                  <p className="text-slate-600 mb-6">You haven't joined a group yet. Apply to an existing group or create your own!</p>
                   <div className="flex gap-4 justify-center">
                     <Button
                       onClick={() => setShowCreateGroup(true)}
@@ -608,28 +608,28 @@ export default function Groups() {
               )}
             </TabsContent>
 
-            <TabsContent value="applications" className="space-y-6">
-              <h2 className="text-2xl font-bold text-white">Your Applications</h2>
+            <TabsContent value="applications" className="p-6 space-y-6">
+              <h2 className="text-2xl font-bold text-slate-900">Your Applications</h2>
               
               {userApplications.length > 0 ? (
                 <div className="space-y-4">
                   {userApplications.map((app) => {
                     const group = groups.find(g => g.id === app.group_id);
                     return (
-                      <Card key={app.id} className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                      <Card key={app.id} className="bg-white border border-slate-200 shadow-md">
                         <CardContent className="pt-6">
                           <div className="flex justify-between items-start">
                             <div>
-                              <h3 className="font-semibold text-white">{group?.name || 'Unknown Group'}</h3>
-                              <p className="text-sm text-white/70 mt-1">
+                              <h3 className="font-semibold text-slate-900">{group?.name || 'Unknown Group'}</h3>
+                              <p className="text-sm text-slate-600 mt-1">
                                 Applied on {new Date(app.applied_at).toLocaleDateString()}
                               </p>
                             </div>
                           <Badge 
                             className={
-                              app.status === 'accepted' ? 'bg-green-500/80 text-white' :
-                              app.status === 'rejected' ? 'bg-red-500/80 text-white' :
-                              'bg-yellow-500/80 text-white'
+                              app.status === 'accepted' ? 'bg-green-100 text-green-700 border-green-200' :
+                              app.status === 'rejected' ? 'bg-red-100 text-red-700 border-red-200' :
+                              'bg-yellow-100 text-yellow-700 border-yellow-200'
                             }
                           >
                             {app.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
@@ -645,13 +645,14 @@ export default function Groups() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <Users className="h-16 w-16 text-white/40 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">No Applications</h3>
-                  <p className="text-white/70">You haven't applied to any groups yet.</p>
+                  <Users className="h-16 w-16 text-slate-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">No Applications</h3>
+                  <p className="text-slate-600">You haven't applied to any groups yet.</p>
                 </div>
               )}
             </TabsContent>
           </Tabs>
+        </div>
         </main>
       </div>
 
@@ -742,10 +743,6 @@ export default function Groups() {
           </form>
         </DialogContent>
       </Dialog>
-            </Tabs>
-          </div>
-          </div>
-        </main>
-      </div>
     </UniversalLayout>
+  );
 }
