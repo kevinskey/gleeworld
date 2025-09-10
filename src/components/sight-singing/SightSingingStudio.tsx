@@ -887,6 +887,12 @@ export const SightSingingStudio: React.FC = () => {
           </TabsList>
 
           <TabsContent value="practice" className="mt-2 sm:mt-3">
+            <div className="mb-4 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+              <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">🎵 Practice Studio</h3>
+              <p className="text-sm text-green-700 dark:text-green-300">
+                Generate and practice sight-reading exercises. Use the score generator below to create new exercises for immediate practice.
+              </p>
+            </div>
             {/* Main Content */}
             <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
               {/* Left Column - Parameters & Controls */}
@@ -1268,25 +1274,13 @@ export const SightSingingStudio: React.FC = () => {
                 
                 <ScoreLibraryManager 
                   onScoreSelect={(score) => {
-                    console.log('📚 Loading imported score for assignment creation:', score);
+                    console.log('📚 Score selected from library for assignment creation:', score);
                     setSelectedScore(score);
-                    if (score.xml_content) {
-                      setCurrentMusicXML(score.xml_content);
-                      setCurrentExerciseId(`library-${score.id}`);
-                      setCurrentScore(null);
-                      setCurrentBpm(120);
-                      
-                      toast({
-                        title: "Score Selected",
-                        description: `"${score.title}" selected. Switch to the Assignment Creator tab to create an assignment.`,
-                      });
-                    } else {
-                      toast({
-                        title: "No XML Content",
-                        description: "This score needs XML content to create assignments. Please upload an XML file for this score.",
-                        variant: "destructive",
-                      });
-                    }
+                    // Don't automatically load into the current exercise - just select for assignment creation
+                    toast({
+                      title: "Score Selected",
+                      description: `"${score.title}" selected for assignment creation.`,
+                    });
                   }}
                   selectedScoreId={selectedScore?.id}
                 />
