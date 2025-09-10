@@ -32,12 +32,12 @@ export const MusicalNotation: React.FC<MusicalNotationProps> = ({
   return (
     <span 
       className={cn(
-        "text-2xl leading-none select-none font-normal text-center block",
+        "text-4xl leading-none select-none font-normal text-center block",
         className
       )}
       style={{ 
         fontFamily: '"Segoe UI Symbol", "Apple Symbols", "Noto Music", system-ui',
-        fontSize: '1.8em'
+        fontSize: '2.5em'
       }}
     >
       {symbol}
