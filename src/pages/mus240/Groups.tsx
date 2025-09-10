@@ -338,70 +338,71 @@ export default function Groups() {
   }
   return <UniversalLayout showHeader={true} showFooter={false}>
       <Mus240UserAvatar />
-      <div className="min-h-screen bg-cover bg-center bg-no-repeat relative bg-gradient-to-br from-orange-800 to-amber-600" style={{
-      backgroundImage: `url(${backgroundImage})`
-    }}>
-        {/* Gradient overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10"></div>
-        
-        <main className="relative z-10 max-w-6xl mx-auto px-4 py-12">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header with back navigation */}
           <div className="mb-8">
-            <Link to="/classes/mus240" className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-4 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 hover:bg-white/20">
+            <Link to="/classes/mus240" className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-6 bg-white rounded-lg px-4 py-2 shadow-sm border border-slate-200 hover:shadow-md">
               <ArrowLeft className="h-4 w-4" />
-              Back to MUS 240
+              <span className="font-medium">Back to MUS 240</span>
             </Link>
           </div>
 
           {/* Hero Section */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <Users className="h-6 w-6 md:h-7 md:w-7 text-amber-300" />
-              <span className="text-white/90 font-medium text-xl md:text-2xl lg:text-xl xl:text-2xl">AI Music Project Groups</span>
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-blue-100 rounded-xl border border-blue-200">
+              <Users className="h-6 w-6 md:h-7 md:w-7 text-blue-600" />
+              <span className="text-slate-700 font-semibold text-lg md:text-xl">AI Music Project Groups</span>
             </div>
             
-            <h1 className="text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-slate-900">
               Project Groups
             </h1>
             
-            <p className="text-lg md:text-xl lg:text-lg xl:text-xl text-white/90 mb-8 max-w-3xl mx-auto leading-loose">
+            <p className="text-lg md:text-xl text-slate-600 mb-8 max-w-3xl mx-auto leading-relaxed">
               Form collaborative groups for the AI music project.
             </p>
           </div>
 
           {/* Instructions */}
-          <div className="text-center mb-12">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 max-w-4xl mx-auto">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">AI Group Project Teams</h2>
-              <p className="text-white/90 text-lg leading-relaxed mb-4">
+          <div className="mb-12">
+            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-lg max-w-4xl mx-auto">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">AI Group Project Teams</h2>
+              <p className="text-slate-700 text-lg leading-relaxed mb-4">
                 Join one of six themed research groups exploring AI's impact on music. Each group has a maximum of 4 members, 
                 with the first person to join becoming the group leader. Groups meet for weekly updates on Wednesdays and 
                 focus deep dives on Fridays.
               </p>
-              <p className="text-white/80 text-base">
-                <strong>Final Showcase:</strong> Integrated GleeWorld.org knowledge hub showcasing your research and findings.
-              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-slate-800 font-medium">
+                  <strong className="text-blue-700">Final Showcase:</strong> Integrated GleeWorld.org knowledge hub showcasing your research and findings.
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Status badges and Admin Controls */}
           <div className="flex flex-wrap gap-4 justify-center mb-12">
-            <Badge variant="secondary" className="bg-white/20 text-white border-white/30 text-lg px-6 py-3">
-              <Users className="h-5 w-5 mr-2" />
-              {totalGroupsCount} Groups Created
-            </Badge>
+            <div className="bg-white rounded-lg px-6 py-3 border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-600" />
+                <span className="text-slate-700 font-medium">{totalGroupsCount} Groups Created</span>
+              </div>
+            </div>
             {userGroup && (
-              <Badge variant="secondary" className="bg-green-500/80 text-white border-green-400/50 text-lg px-6 py-3">
-                <CheckCircle className="h-5 w-5 mr-2" />
-                You're in a Group
-              </Badge>
+              <div className="bg-green-50 border border-green-200 rounded-lg px-6 py-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="text-green-700 font-medium">You're in a Group</span>
+                </div>
+              </div>
             )}
             {hasAdminAccess && (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 justify-center">
                 <Button
                   onClick={handleCreateProjectGroups}
                   disabled={autoAssigning}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"
                 >
                   {autoAssigning ? (
                     <>
@@ -418,8 +419,7 @@ export default function Groups() {
                 <Button
                   onClick={handleAutoAssignGroups}
                   disabled={autoAssigning}
-                  variant="outline"
-                  className="bg-purple-600 hover:bg-purple-700 text-white border-purple-500"
+                  className="bg-purple-600 hover:bg-purple-700 text-white shadow-md"
                 >
                   {autoAssigning ? (
                     <>
@@ -437,7 +437,7 @@ export default function Groups() {
                   onClick={handleDeleteAllGroups}
                   disabled={deletingAllGroups}
                   variant="destructive"
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="shadow-md"
                 >
                   {deletingAllGroups ? (
                     <>
@@ -455,28 +455,29 @@ export default function Groups() {
             )}
           </div>
 
-          {/* Main content */}
-          <Tabs defaultValue="all-groups" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8 bg-white/10 backdrop-blur-md">
-              <TabsTrigger value="all-groups" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">
-                All Groups
-              </TabsTrigger>
-              <TabsTrigger value="my-group" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">
-                My Group
-              </TabsTrigger>
-              <TabsTrigger value="applications" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">
-                Applications
-              </TabsTrigger>
-            </TabsList>
+          {/* Main Content */}
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200">
+            <Tabs defaultValue="all-groups" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 bg-slate-100 rounded-t-2xl p-1">
+                <TabsTrigger value="all-groups" className="text-slate-700 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
+                  All Groups
+                </TabsTrigger>
+                <TabsTrigger value="my-group" className="text-slate-700 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
+                  My Group
+                </TabsTrigger>
+                <TabsTrigger value="applications" className="text-slate-700 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
+                  Applications
+                </TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="all-groups" className="space-y-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white">All Groups</h2>
-                {!userGroup && availableGroups.length > 0 && (
-                  <Button
-                    onClick={() => setShowCreateGroup(true)}
-                    className="bg-amber-500 hover:bg-amber-600 text-white"
-                  >
+              <TabsContent value="all-groups" className="p-6 space-y-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-slate-900">All Groups</h2>
+                  {!userGroup && availableGroups.length > 0 && (
+                    <Button
+                      onClick={() => setShowCreateGroup(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                    >
                     <Plus className="h-4 w-4 mr-2" />
                     Create Group
                   </Button>
@@ -485,12 +486,12 @@ export default function Groups() {
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {groups.map((group) => (
-                  <Card key={group.id} className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                  <Card key={group.id} className="bg-white border border-slate-200 shadow-md hover:shadow-lg transition-shadow">
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-white">{group.name}</CardTitle>
-                          <CardDescription className="text-white/70">
+                          <CardTitle className="text-slate-900">{group.name}</CardTitle>
+                          <CardDescription className="text-slate-600">
                             {group.description}
                           </CardDescription>
                         </div>
@@ -509,14 +510,14 @@ export default function Groups() {
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-amber-400" />
-                          <span className="text-base text-white/80">
+                          <Users className="h-4 w-4 text-blue-600" />
+                          <span className="text-base text-slate-700">
                             {group.member_count || 0} / {group.max_members || 4} members
                           </span>
                         </div>
                         
                         {group.is_official && (
-                          <Badge className="bg-green-500/80 text-white">
+                          <Badge className="bg-green-100 text-green-700 border-green-200">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Official
                           </Badge>
@@ -548,12 +549,12 @@ export default function Groups() {
 
               {groups.length === 0 && (
                 <div className="text-center py-12">
-                  <Users className="h-16 w-16 text-white/40 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">No Groups Yet</h3>
-                  <p className="text-white/70 mb-6">Be the first to create a group for the AI music project!</p>
+                  <Users className="h-16 w-16 text-slate-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">No Groups Yet</h3>
+                  <p className="text-slate-600 mb-6">Be the first to create a group for the AI music project!</p>
                   <Button
                     onClick={() => setShowCreateGroup(true)}
-                    className="bg-amber-500 hover:bg-amber-600 text-white"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Create First Group
@@ -741,5 +742,10 @@ export default function Groups() {
           </form>
         </DialogContent>
       </Dialog>
-    </UniversalLayout>;
+            </Tabs>
+          </div>
+          </div>
+        </main>
+      </div>
+    </UniversalLayout>
 }
