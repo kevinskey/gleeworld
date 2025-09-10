@@ -392,7 +392,7 @@ export default function Groups() {
               <p className="font-medium">This is a graded assignment. You must participate in a group to receive credit.</p>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
                 {PROJECT_TYPES.map((project, index) => (
-                  <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <div key={index} className="bg-white/20 rounded-lg p-4 border border-white/20">
                     <h3 className="font-semibold text-amber-300 mb-2">{project.name}</h3>
                     <p className="text-sm text-white/80">{project.description}</p>
                   </div>
