@@ -127,6 +127,8 @@ export const useBookAppointment = () => {
 
   return useMutation({
     mutationFn: async (bookingData: BookingRequest) => {
+      console.log('useBookAppointment: Booking appointment with data:', bookingData);
+      
       const { data, error } = await supabase
         .rpc('book_appointment', {
           p_service_id: bookingData.service_id,
@@ -139,7 +141,14 @@ export const useBookAppointment = () => {
           p_special_requests: bookingData.special_requests
         });
 
-      if (error) throw error;
+      console.log('useBookAppointment: RPC result:', { data, error });
+      
+      if (error) {
+        console.error('useBookAppointment: Error booking appointment:', error);
+        throw error;
+      }
+      
+      console.log('useBookAppointment: Successfully booked appointment:', data);
       return data as unknown as BookingResult;
     },
     onSuccess: (result: BookingResult) => {
