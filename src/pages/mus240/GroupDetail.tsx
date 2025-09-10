@@ -394,15 +394,16 @@ export default function GroupDetail() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <a 
-                  href={NOTEBOOKLM_URL} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors font-medium"
+                <button
+                  onClick={() => {
+                    console.log('NotebookLM button clicked, opening:', NOTEBOOKLM_URL);
+                    window.open(NOTEBOOKLM_URL, '_blank', 'noopener,noreferrer');
+                  }}
+                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors font-medium cursor-pointer"
                 >
                   <ExternalLink className="h-4 w-4" />
                   Open NotebookLM Data Center
-                </a>
+                </button>
               </CardContent>
             </Card>
           </div>
