@@ -27,14 +27,26 @@ export const UserManagementModule = () => {
   const { grantPermission } = useUsernamePermissionsAdmin();
 
   const handleAutoEnroll = async () => {
-    if (!email || !role) return;
+    if (!email || !role) {
+      console.log('Missing email or role:', { email, role });
+      return;
+    }
     
-    await autoEnrollUser(email, fullName || undefined, undefined, role);
+    console.log('Starting auto-enroll for:', { email, fullName, role });
     
-    // Reset form
-    setEmail('');
-    setFullName('');
-    setRole('');
+    try {
+      const result = await autoEnrollUser(email, fullName || undefined, undefined, role);
+      console.log('Auto-enroll result:', result);
+      
+      if (result.success && result.enrolled) {
+        // Reset form on success
+        setEmail('');
+        setFullName('');
+        setRole('');
+      }
+    } catch (error) {
+      console.error('Auto-enroll error:', error);
+    }
   };
 
   const handleUserDeleted = () => {
@@ -238,14 +250,28 @@ export const UserManagementModule = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <UserPlus className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-blue-800">How Auto-Enrollment Works</h4>
+                    <p className="text-sm text-blue-700 mt-1">
+                      This will create a new user account and send them an invitation email to set up their password.
+                      The user will be assigned the selected role immediately.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">Email Address *</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="user@spelman.edu"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
               
@@ -260,32 +286,51 @@ export const UserManagementModule = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select value={role} onValueChange={setRole}>
+                <Label htmlFor="role">Role *</Label>
+                <Select value={role} onValueChange={setRole} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="crew-manager">Crew Manager</SelectItem>
-                    <SelectItem value="librarian">Librarian</SelectItem>
                     <SelectItem value="member">Member</SelectItem>
                     <SelectItem value="auditioner">Auditioner</SelectItem>
                     <SelectItem value="alumna">Alumna</SelectItem>
                     <SelectItem value="fan">Fan</SelectItem>
                     <SelectItem value="executive">Executive</SelectItem>
+                    <SelectItem value="librarian">Librarian</SelectItem>
+                    <SelectItem value="crew-manager">Crew Manager</SelectItem>
                     <SelectItem value="director">Director</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <Button 
-                onClick={handleAutoEnroll}
-                disabled={!email || !role || enrolling}
-                className="w-full"
-              >
-                {enrolling ? 'Enrolling...' : 'Auto-Enroll User'}
-              </Button>
+              <div className="pt-4">
+                <Button 
+                  onClick={handleAutoEnroll}
+                  disabled={!email.trim() || !role || enrolling}
+                  className="w-full"
+                  size="lg"
+                >
+                  {enrolling ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Enrolling User...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Auto-Enroll User
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {enrolling && (
+                <div className="text-sm text-muted-foreground text-center">
+                  Creating user account and sending invitation email...
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
