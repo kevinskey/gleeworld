@@ -947,9 +947,38 @@ export const SightSingingStudio: React.FC = () => {
                 />
               </div>
 
-              {/* Right Column - Musical Score Display */}
-              {currentMusicXML && (
-                <div className="flex-1 min-w-0">
+              {/* Right Column - Parameters and Musical Score Display */}
+              <div className="flex-1 min-w-0 space-y-4">
+                {/* Score Generator Parameters */}
+                <div className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">🎼 Generate New Scores</h3>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Create custom sight-reading exercises using AI. Generated scores are automatically saved to your library.
+                  </p>
+                </div>
+                
+                <Card className="p-2 sm:p-4">
+                  <h2 className="text-sm font-semibold mb-2 sm:mb-3 flex-shrink-0">Score Generator</h2>
+                  <div>
+                    <ParameterForm 
+                      onGenerate={(params) => {
+                        handleGenerateExercise(params);
+                        // Auto-save generated exercise to library
+                        setTimeout(() => {
+                          if (currentMusicXML && parameters) {
+                            handleSaveToLibrary();
+                          }
+                        }, 2000);
+                      }}
+                      isGenerating={isGenerating}
+                      onReset={handleReset}
+                      hasExercise={!!currentMusicXML}
+                    />
+                  </div>
+                </Card>
+
+                {/* Musical Score Display */}
+                {currentMusicXML && (
                   <Card className="p-2 sm:p-3 lg:p-4 min-h-[400px] sm:min-h-[500px] flex flex-col shadow-2xl border-2 bg-white">
                   <div className="flex items-center justify-between mb-3 flex-shrink-0">
                     <h2 className="text-base font-semibold">Musical Score</h2>
@@ -1261,9 +1290,9 @@ export const SightSingingStudio: React.FC = () => {
                       </Card>
                     )}
                   </div>
-                </Card>
-                </div>
-              )}
+                  </Card>
+                )}
+              </div>
             </div>
           </TabsContent>
 
