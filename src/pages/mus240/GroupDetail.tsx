@@ -21,15 +21,19 @@ import {
   Link as LinkIcon, 
   Trash2, 
   Crown,
-  BookOpen
+  BookOpen,
+  Settings,
+  UserCog
 } from 'lucide-react';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface GroupMember {
   id: string;
   full_name: string;
   email: string;
   role: 'leader' | 'member';
+  project_role?: string;
 }
 
 interface GroupNote {
@@ -82,6 +86,18 @@ export default function GroupDetail() {
   const [showAddNote, setShowAddNote] = useState(false);
   const [showAddLink, setShowAddLink] = useState(false);
   const [showAddSandbox, setShowAddSandbox] = useState(false);
+  const [showRoleManagement, setShowRoleManagement] = useState(false);
+
+  const PROJECT_ROLES = [
+    { value: 'research_lead', label: 'Research Lead', description: 'Coordinates literature review and primary research' },
+    { value: 'content_developer', label: 'Content Developer', description: 'Writes, edits, and organizes findings' },
+    { value: 'technical_lead', label: 'Technical Lead', description: 'Handles GleeWorld.org integration and digital presentation' },
+    { value: 'project_manager', label: 'Project Manager', description: 'Timeline, meetings, deliverables coordination' },
+    { value: 'researcher_analyst', label: 'Researcher/Analyst', description: 'Deep dive into topic analysis' },
+    { value: 'writer_editor', label: 'Writer/Editor', description: 'Documentation and presentation materials' },
+    { value: 'designer_developer', label: 'Designer/Developer', description: 'Visual design, web integration, multimedia' },
+    { value: 'coordinator_presenter', label: 'Coordinator/Presenter', description: 'Team communication, final presentation' }
+  ];
 
   const NOTEBOOKLM_URL = "https://notebooklm.google.com/notebook/80622ea3-83d2-4cdd-931c-aa11dffe0edf";
 
@@ -111,6 +127,7 @@ export default function GroupDetail() {
         .select(`
           member_id,
           role,
+          project_role,
           gw_profiles!member_id(
             user_id,
             full_name,
@@ -125,7 +142,8 @@ export default function GroupDetail() {
         id: m.member_id,
         full_name: m.gw_profiles?.full_name || 'Unknown',
         email: m.gw_profiles?.email || '',
-        role: m.role as 'leader' | 'member'
+        role: m.role as 'leader' | 'member',
+        project_role: m.project_role
       })) || [];
 
       setMembers(formattedMembers);
@@ -322,6 +340,29 @@ export default function GroupDetail() {
       console.error('Error deleting sandbox:', error);
       toast.error('Failed to delete sandbox');
     }
+  };
+
+  const handleUpdateProjectRole = async (memberId: string, newRole: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('mus240_group_memberships')
+        .update({ project_role: newRole || null })
+        .eq('group_id', groupId)
+        .eq('member_id', memberId);
+
+      if (error) throw error;
+
+      toast.success('Project role updated successfully');
+      fetchGroupData();
+    } catch (error) {
+      console.error('Error updating project role:', error);
+      toast.error('Failed to update project role');
+    }
+  };
+
+  const getRoleLabel = (roleValue: string) => {
+    const role = PROJECT_ROLES.find(r => r.value === roleValue);
+    return role ? role.label : 'No Role Assigned';
   };
 
   const isGroupMember = members.some(member => member.id === user?.id);

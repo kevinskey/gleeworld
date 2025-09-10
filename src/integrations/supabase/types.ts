@@ -13711,6 +13711,9 @@ export type Database = {
           id: string
           joined_at: string
           member_id: string
+          project_role:
+            | Database["public"]["Enums"]["mus240_project_role"]
+            | null
           role: string
         }
         Insert: {
@@ -13718,6 +13721,9 @@ export type Database = {
           id?: string
           joined_at?: string
           member_id: string
+          project_role?:
+            | Database["public"]["Enums"]["mus240_project_role"]
+            | null
           role?: string
         }
         Update: {
@@ -13725,6 +13731,9 @@ export type Database = {
           id?: string
           joined_at?: string
           member_id?: string
+          project_role?:
+            | Database["public"]["Enums"]["mus240_project_role"]
+            | null
           role?: string
         }
         Relationships: [
@@ -18587,6 +18596,15 @@ export type Database = {
       host_source: "booking_request" | "contract" | "manual_entry"
       host_status: "active" | "inactive" | "potential" | "blacklisted"
       hydration_level_enum: "Low" | "Normal" | "High"
+      mus240_project_role:
+        | "research_lead"
+        | "content_developer"
+        | "technical_lead"
+        | "project_manager"
+        | "researcher_analyst"
+        | "writer_editor"
+        | "designer_developer"
+        | "coordinator_presenter"
       payment_method_enum: "zelle" | "cashapp" | "venmo" | "apple_pay" | "check"
       performer_status: "draft" | "submitted" | "approved"
       review_type_enum:
@@ -18794,6 +18812,16 @@ export const Constants = {
       host_source: ["booking_request", "contract", "manual_entry"],
       host_status: ["active", "inactive", "potential", "blacklisted"],
       hydration_level_enum: ["Low", "Normal", "High"],
+      mus240_project_role: [
+        "research_lead",
+        "content_developer",
+        "technical_lead",
+        "project_manager",
+        "researcher_analyst",
+        "writer_editor",
+        "designer_developer",
+        "coordinator_presenter",
+      ],
       payment_method_enum: ["zelle", "cashapp", "venmo", "apple_pay", "check"],
       performer_status: ["draft", "submitted", "approved"],
       review_type_enum: [
