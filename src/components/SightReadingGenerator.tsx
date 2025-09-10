@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Download, Music, Play, RefreshCw } from 'lucide-react';
+import { Download, Music, Play, RefreshCw, RotateCcw } from 'lucide-react';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import { useToast } from '@/hooks/use-toast';
 
@@ -559,6 +559,35 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     }
   };
 
+  const resetGenerator = () => {
+    // Reset to default parameters
+    setParams({
+      key: 'C',
+      range: 'C4-G4',
+      difficulty: 1,
+      timeSignature: '4/4',
+      measures: 8,
+      intervals: ['unison', 'second', 'third'],
+      cadenceEvery4Bars: true,
+      noteValues: ['quarter', 'half'],
+      restsToInclude: ['quarter']
+    });
+    
+    // Clear generated content
+    setGeneratedMelody([]);
+    setMusicXML('');
+    
+    // Clear the sheet music display
+    if (sheetMusicRef.current) {
+      sheetMusicRef.current.innerHTML = '';
+    }
+    
+    toast({
+      title: "Generator Reset",
+      description: "All parameters and generated content cleared"
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Exercise Parameters Ribbon */}
@@ -818,6 +847,16 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
             >
               <Music className="h-4 w-4 mr-2" />
               Load Reference Melody
+            </Button>
+            
+            <Button
+              onClick={resetGenerator}
+              disabled={isGenerating}
+              variant="secondary"
+              size="sm"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset
             </Button>
           </div>
         </CardContent>
