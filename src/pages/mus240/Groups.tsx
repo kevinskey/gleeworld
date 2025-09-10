@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 export default function Groups() {
+  const navigate = useNavigate();
   const {
     user
   } = useAuth();
@@ -139,6 +140,9 @@ export default function Groups() {
 
       toast.success(isFirstMember ? 'Joined group as leader!' : 'Joined group successfully!');
       refetch();
+      
+      // Navigate to the group detail page
+      navigate(`/classes/mus240/groups/${groupId}`);
     } catch (err: any) {
       toast.error('Failed to join group: ' + (err.message || 'Unknown error'));
     }
