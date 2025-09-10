@@ -18062,6 +18062,10 @@ export type Database = {
           total: number
         }[]
       }
+      leave_mus240_group: {
+        Args: { p_group_id: string; p_member_id: string }
+        Returns: Json
+      }
       log_activity: {
         Args: {
           p_action_type: string
@@ -18281,6 +18285,15 @@ export type Database = {
       update_google_sheets_scope: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      update_mus240_member_role: {
+        Args: {
+          p_group_id: string
+          p_member_id: string
+          p_new_role: string
+          p_requester_id: string
+        }
+        Returns: Json
       }
       update_mus240_student_roles: {
         Args: Record<PropertyKey, never>
