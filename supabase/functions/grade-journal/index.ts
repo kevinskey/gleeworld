@@ -235,7 +235,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-5-mini-2025-08-07',
           messages: [
             { 
               role: 'system', 
@@ -243,8 +243,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
             },
             { role: 'user', content: rubricPrompt }
           ],
-          max_tokens: 1000,
-          temperature: 0.7,
+          max_completion_tokens: 1000,
           response_format: { type: 'json_object' }
         }),
       });
@@ -370,7 +369,7 @@ Be constructive, specific, and encouraging in your feedback. Focus on musical el
         metadata: gradingResult.metadata
       },
       feedback: gradingResult.overall_feedback,
-      ai_model: stub_test ? 'gpt-5-2025-08-07' : 'gpt-4o-mini',
+      ai_model: stub_test ? 'gpt-5-2025-08-07' : 'gpt-5-mini-2025-08-07',
       graded_by: null, // AI grading
       graded_at: new Date().toISOString()
       // Note: created_at and updated_at will be set by database defaults/triggers
