@@ -82,27 +82,31 @@ export const UserRoleEditor = ({ user, onUpdate }: UserRoleEditorProps) => {
     try {
       setResettingPassword(true);
 
-      // Use the auth admin method to generate a password reset link
-      const { error } = await supabase.auth.admin.generateLink({
-        type: 'recovery',
-        email: user.email!,
-        options: {
-          redirectTo: `${window.location.origin}/auth?mode=recovery`
+      // Generate a temporary password
+      const tempPassword = Math.random().toString(36).slice(-8) + '!A1';
+
+      // Call the admin password reset function
+      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+        body: {
+          userId: user.id,
+          email: user.email,
+          newPassword: tempPassword
         }
       });
 
       if (error) throw error;
 
+      // Show the temporary password to the admin
       toast({
-        title: "Password Reset Sent",
-        description: "A password reset email has been sent to the user",
+        title: "Password Reset",
+        description: `New temporary password: ${tempPassword} (Please share this securely with the user)`,
       });
 
     } catch (error) {
       console.error('Error resetting password:', error);
       toast({
         title: "Error",
-        description: "Failed to send password reset email. Please try again.",
+        description: "Failed to reset password. Please try again.",
         variant: "destructive",
       });
     } finally {

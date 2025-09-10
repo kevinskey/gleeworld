@@ -514,31 +514,16 @@ export const UserManagement = () => {
                       </Button>
 
                       {/* Full Edit Dialog */}
-                      <Dialog open={editDialogOpen && selectedUser?.id === user.id} onOpenChange={setEditDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => setSelectedUser(user)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>Edit User Permissions</DialogTitle>
-                            <DialogDescription>
-                              Modify user role, executive board status, and permissions
-                            </DialogDescription>
-                          </DialogHeader>
-                          {selectedUser && (
-                            <UserRoleEditor 
-                              user={selectedUser}
-                              onUpdate={handleUserUpdate}
-                            />
-                          )}
-                        </DialogContent>
-                      </Dialog>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setEditDialogOpen(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -591,6 +576,24 @@ export const UserManagement = () => {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit User Permissions</DialogTitle>
+            <DialogDescription>
+              Modify user role, executive board status, and permissions
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <UserRoleEditor 
+              user={selectedUser}
+              onUpdate={handleUserUpdate}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
