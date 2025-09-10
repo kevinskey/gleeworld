@@ -137,7 +137,7 @@ export default function Groups() {
           description: projectType.description,
           leader_id: user?.id,
           // Set current user as initial leader instead of null
-          semester: 'Fall 2024',
+          semester: 'Fall 2025',
           max_members: 4,
           member_count: 1,
           // Start with 1 since we're adding the creator
@@ -193,7 +193,7 @@ export default function Groups() {
       // 1. Delete all existing groups and memberships
       const {
         error: deleteGroupsError
-      } = await supabase.from('mus240_project_groups').delete().eq('semester', 'Fall 2024');
+      } = await supabase.from('mus240_project_groups').delete().eq('semester', 'Fall 2025');
       if (deleteGroupsError) throw deleteGroupsError;
 
       // 2. Delete all existing applications
@@ -214,7 +214,7 @@ export default function Groups() {
             full_name,
             email
           )
-        `).eq('semester', 'Fall 2024').eq('enrollment_status', 'enrolled');
+        `).eq('semester', 'Fall 2025').eq('enrollment_status', 'enrolled');
       if (enrollmentError) throw enrollmentError;
       const students = enrollments?.filter(e => e.gw_profiles).map(e => ({
         user_id: e.student_id,
@@ -240,7 +240,7 @@ export default function Groups() {
           description: projectType.description,
           leader_id: null,
           // Will be set when we assign the first student
-          semester: 'Fall 2024',
+          semester: 'Fall 2025',
           max_members: 4,
           is_official: false
         }).select().single();

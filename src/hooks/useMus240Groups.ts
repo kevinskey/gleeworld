@@ -43,7 +43,7 @@ export interface GroupApplication {
   reviewed_by?: string;
 }
 
-export const useMus240Groups = (semester: string = 'Fall 2024') => {
+export const useMus240Groups = (semester: string = 'Fall 2025') => {
   const [groups, setGroups] = useState<Mus240Group[]>([]);
   const [applications, setApplications] = useState<GroupApplication[]>([]);
   const [loading, setLoading] = useState(true);
