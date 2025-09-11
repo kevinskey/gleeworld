@@ -119,10 +119,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     const results = await Promise.allSettled(
       targetPhoneNumbers.map(async (phoneNumber) => {
+        console.log(`📱 Attempting to send SMS to: ${phoneNumber}`);
+        
         const formData = new URLSearchParams();
         formData.append('From', twilioPhoneNumber);
         formData.append('To', phoneNumber);
         formData.append('Body', truncatedMessage);
+
+        console.log(`🔧 Twilio request data:`, {
+          from: twilioPhoneNumber,
+          to: phoneNumber,
+          body: truncatedMessage,
+          url: twilioUrl
+        });
 
         const response = await fetch(twilioUrl, {
           method: 'POST',
@@ -133,16 +142,22 @@ const handler = async (req: Request): Promise<Response> => {
           body: formData,
         });
 
+        const responseText = await response.text();
+        console.log(`📡 Twilio response for ${phoneNumber}:`, {
+          status: response.status,
+          statusText: response.statusText,
+          body: responseText
+        });
+
         if (!response.ok) {
-          const errorText = await response.text();
           let errorDetails;
           try {
-            errorDetails = JSON.parse(errorText);
+            errorDetails = JSON.parse(responseText);
           } catch {
-            errorDetails = { message: errorText };
+            errorDetails = { message: responseText };
           }
           
-          console.error(`Twilio API error for ${phoneNumber}:`, {
+          console.error(`❌ Twilio API error for ${phoneNumber}:`, {
             status: response.status,
             statusText: response.statusText,
             error: errorDetails
@@ -151,8 +166,8 @@ const handler = async (req: Request): Promise<Response> => {
           throw new Error(`Twilio API error: ${JSON.stringify(errorDetails)}`);
         }
 
-        const result = await response.json();
-        console.log(`SMS sent to ${phoneNumber}:`, result.sid);
+        const result = JSON.parse(responseText);
+        console.log(`✅ SMS sent successfully to ${phoneNumber}:`, result.sid);
         return { phoneNumber, success: true, messageSid: result.sid };
       })
     );
