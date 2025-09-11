@@ -150,25 +150,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (createErr) {
       console.warn('createUser error, will attempt to find existing user:', createErr);
-      // If the user already exists, find them by paging
-      let page = 1;
-      const perPage = 1000;
-      let found: any = null;
-      while (page <= 20 && !found) {
-        const { data: listData, error: listErr } = await (supabase as any).auth.admin.listUsers({ page, perPage });
-        if (listErr) {
-          console.error('Error listing users (page ' + page + '):', listErr);
-          break;
-        }
-        const users = listData?.users || [];
-        found = users.find((u: any) => (u.email || '').toLowerCase() === email.toLowerCase());
-        if (!users.length) break;
-        page++;
-      }
-      if (!found) {
+      // If the user already exists, try to get them by email
+      const { data: userData, error: getUserError } = await supabase.auth.admin.getUserByEmail(email);
+      
+      if (getUserError || !userData.user) {
         throw new Error('Failed to create or locate user account: ' + createErr.message);
       }
-      targetUserId = found.id;
+      
+      targetUserId = userData.user.id;
       tempPassword = null; // Do not return a password if user already existed
       console.log('Located existing auth user for email:', email, 'id:', targetUserId);
     } else {
