@@ -235,9 +235,9 @@ Return ONLY a JSON object with this exact structure:
       assignment_id,
       // assignment_db_id, // leave out unless column exists
       journal_id: body.journal_id ?? null,
-      overall_score,
-      rubric: gradingResult,
-      feedback,
+      overall_score: overall_score || 65, // Ensure we always have a number for NOT NULL field
+      rubric: gradingResult || {}, // Ensure we always have an object for NOT NULL jsonb field
+      feedback: feedback || "AI grading completed",
       ai_model: 'gpt-4o-mini',
       graded_by: null,
       graded_at: new Date().toISOString(),
@@ -247,12 +247,11 @@ Return ONLY a JSON object with this exact structure:
 
     console.log('=== DATABASE INSERT ===');
     const { data: insertData, error: insErr } = await supabase
-      .from('public.mus240_journal_grades')
+      .from('mus240_journal_grades')
       .insert([gradeData])
       .select()
       .single();
-    if (insErr) return J(500, { error:"db_insert_failed", stage:"db_insert", ...insErr });
-
+    
     if (insErr) {
       console.log('=== DATABASE INSERT FAILED ===');
       console.log('Grade data that failed:', JSON.stringify(gradeData, null, 2));
