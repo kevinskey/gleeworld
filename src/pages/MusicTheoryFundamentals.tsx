@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Music, Clock, MapPin, User, GraduationCap, BookOpen, Award, Calendar, CheckCircle } from 'lucide-react';
+import { Music, Clock, MapPin, User, GraduationCap, BookOpen, Award, Calendar, CheckCircle, FileMusic } from 'lucide-react';
 import { SightSingingWidget } from '@/components/shared/SightSingingWidget';
 
 const MusicTheoryFundamentals = () => {
@@ -62,6 +62,21 @@ const MusicTheoryFundamentals = () => {
 
   return (
     <PublicLayout>
+      {/* Floating Sheet Music Balloon */}
+      <Link 
+        to="/sheet-music"
+        className="fixed top-20 right-6 z-50 group"
+      >
+        <div className="bg-primary text-primary-foreground rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 animate-bounce">
+          <FileMusic className="h-6 w-6" />
+        </div>
+        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="bg-background text-foreground text-xs px-2 py-1 rounded-md shadow-md border whitespace-nowrap">
+            Sheet Music
+          </div>
+        </div>
+      </Link>
+
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         {/* Hero Section */}
         <section className="py-16 px-6">
