@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Music, Upload, BookOpen, Trophy, Settings, Clock } from 'lucide-react';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
-import { SightSingingGenerator } from '@/components/music-fundamentals/SightSingingGenerator';
+import { SightSingingWidget } from '@/components/shared/SightSingingWidget';
 import { FileUploadSection } from '@/components/music-fundamentals/FileUploadSection';
 import { AssignmentsList } from '@/components/music-fundamentals/AssignmentsList';
 import { AdminGradingPanel } from '@/components/music-fundamentals/AdminGradingPanel';
@@ -105,7 +105,10 @@ export const MusicFundamentalsPage: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <SightSingingGenerator />
+                <SightSingingWidget 
+                  context="music-theory"
+                  showAdvancedControls={true}
+                />
               </CardContent>
             </Card>
           </TabsContent>
