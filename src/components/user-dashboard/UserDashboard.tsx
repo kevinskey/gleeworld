@@ -22,7 +22,7 @@ import { DashboardModulesSection } from "./sections/DashboardModulesSection";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { NotificationsSection } from "./sections/NotificationsSection";
 import { TasksSection } from "./sections/TasksSection";
-import { BookingRequestManager } from "@/components/booking/BookingRequestManager";
+import { BookingRequestManager } from "@/components/tour-manager/BookingRequestManager";
 import { ExecBoardMemberModules } from "@/components/executive/ExecBoardMemberModules";
 
 import { useAuth } from "@/contexts/AuthContext";
