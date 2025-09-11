@@ -230,10 +230,10 @@ Return ONLY a JSON object with this exact structure:
     assignment_db_id = assignmentData?.id ?? null; // proceed even if null
 
     console.log('=== PREPARING DATABASE INSERT ===');
-    const gradeData = {
+    const gradeData: any = {
       student_id,
       assignment_id,
-      assignment_db_id,
+      // assignment_db_id, // REMOVE from insert unless the column exists
       journal_id: body.journal_id,
       overall_score,
       rubric: gradingResult,
@@ -300,7 +300,8 @@ Return ONLY a JSON object with this exact structure:
     
     return J(500, { 
       error: 'unhandled',
-      message: error.message 
+      stage: 'top_catch',
+      message: String(error?.message || error) 
     });
   }
 });
