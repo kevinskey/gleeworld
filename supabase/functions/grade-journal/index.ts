@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers":
     "authorization, content-type, x-client-info, cache-control, pragma",
 };
@@ -28,6 +28,7 @@ serve(async (req) => {
   console.log('Service role configured:', !!SERVICE_ROLE);
 
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
+  if (req.method === "GET") return J(200, { ok: true, phase: "health" });
 
   try {
     if (!OPENAI_API_KEY) {
@@ -44,7 +45,8 @@ serve(async (req) => {
     }
 
     console.log('=== PARSING REQUEST ===');
-    const body = await req.json();
+    let body: any = {};
+    try { body = await req.json(); } catch { return J(400, { error: "invalid_json" }); }
     console.log('Request body keys:', Object.keys(body));
 
     // DIAG mode for debugging
@@ -100,12 +102,15 @@ serve(async (req) => {
     console.log('=== CALLING OPENAI API ===');
     console.log('OpenAI API key length:', OPENAI_API_KEY.length);
 
+    const ac = new AbortController();
+    const to = setTimeout(() => ac.abort("timeout"), 15000);
     const aiResp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
+      signal: ac.signal,
       body: JSON.stringify({
         model: 'gpt-4o-mini', // Legacy model that supports temperature parameter
         messages: [
@@ -144,6 +149,7 @@ Return ONLY a JSON object with this exact structure:
         max_tokens: 800
       })
     });
+    clearTimeout(to);
 
     console.log('OpenAI status:', aiResp.status);
 
@@ -161,7 +167,9 @@ Return ONLY a JSON object with this exact structure:
     console.log('=== OPENAI RESPONSE RECEIVED ===');
     console.log('Full AI response:', JSON.stringify(aiResponse, null, 2));
 
-    const aiContent = aiResponse.choices?.[0]?.message?.content;
+    let aiContent = aiResponse?.choices?.[0]?.message?.content ?? "";
+    // strip common formatting fences if model disobeys
+    aiContent = aiContent.replace(/^```(?:json)?/i, "").replace(/```$/,"").trim();
     console.log('AI content to parse:', aiContent);
 
     let gradingResult;
@@ -206,22 +214,20 @@ Return ONLY a JSON object with this exact structure:
     console.log('=== ATTEMPTING DATABASE INSERT ===');
 
     // Use service role for database operations (bypasses RLS)
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, { 
-      auth: { persistSession: false } 
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
+      auth: { persistSession: false },
+      db: { schema: "public" }
     });
 
-    // Look up assignment database ID
+    // Look up assignment database ID (optional and safe)
+    let assignment_db_id: string | null = null;
     const { data: assignmentData, error: assignmentError } = await supabase
       .from('mus240_assignments')
       .select('id')
       .eq('assignment_id', assignment_id)
-      .single();
-
-    let assignment_db_id = null;
-    if (assignmentData && !assignmentError) {
-      assignment_db_id = assignmentData.id;
-      console.log('Mapping assignment_id:', assignment_id, '-> assignment_db_id:', assignment_db_id);
-    }
+      .maybeSingle();
+    if (assignmentError) console.warn("assignment lookup error:", assignmentError.message);
+    assignment_db_id = assignmentData?.id ?? null; // proceed even if null
 
     console.log('=== PREPARING DATABASE INSERT ===');
     const gradeData = {
@@ -256,8 +262,9 @@ Return ONLY a JSON object with this exact structure:
       console.error('Error message:', insErr.message);
       console.error('Error details:', insErr.details);
       
-      return J(500, { 
-        error: "db_insert_failed", 
+      return J(500, {
+        stage: "db_insert",
+        error: "db_insert_failed",
         code: insErr.code, 
         details: insErr.details, 
         hint: insErr.hint, 
@@ -268,11 +275,22 @@ Return ONLY a JSON object with this exact structure:
     console.log('=== SUCCESS ===');
     console.log('Grade saved successfully:', insertData);
 
-    return J(200, { 
-      ok: true, 
-      overall_score, 
-      feedback,
-      grade_id: insertData.id
+    return J(200, {
+      success: true,
+      grade: {
+        id: insertData.id,
+        assignment_id,
+        student_id,
+        journal_id: body.journal_id ?? null,
+        overall_score,
+        letter_grade: null,
+        rubric_scores: gradingResult?.scores ?? [],
+        overall_feedback: feedback,
+        overall_points_without_peer: gradingResult?.scores?.reduce?.((s: number, r: any)=>s+(r?.score||0),0) ?? overall_score,
+        max_points_overall: 17, // 7+5+3+2
+        overall_score_percent_without_peer: (((gradingResult?.scores?.reduce?.((s: number, r: any)=>s+(r?.score||0),0) ?? 0) / 17) * 100),
+        metadata: gradingResult?.metadata ?? { word_count: null, word_range_ok: null }
+      }
     });
 
   } catch (error) {
