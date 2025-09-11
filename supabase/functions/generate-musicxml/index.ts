@@ -108,7 +108,10 @@ const TICKS: Record<DurBase, number> = { "16th":4, eighth:8, quarter:16, half:32
 const dotMul = (d:number)=> d===0?1 : d===1?1.5 : 1.75;
 const barTicks = (num:number, den:1|2|4|8|16)=> num * (64/den);
 
-function esc(s:string|undefined){ return (s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function esc(s:string|number|undefined){ 
+  const str = String(s || "");
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;"); 
+}
 
 function noteXml(ev:any, beamInfo?: {number: number, type: string}){
   const base = ev.dur.base as DurBase;
