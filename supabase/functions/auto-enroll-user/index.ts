@@ -167,12 +167,14 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Create or update profile entry in gw_profiles (idempotent)
+    const defaultRole = (role && ['member','fan','alumna','auditioner','admin','super-admin'].includes(role)) ? role : 'member';
     const { data: profile, error: profileUpsertError } = await supabase
       .from('gw_profiles')
       .upsert({
         user_id: targetUserId!,
         email: email,
-        full_name: full_name || email.split('@')[0]
+        full_name: full_name || email.split('@')[0],
+        role: defaultRole
       }, { onConflict: 'user_id' })
       .select()
       .single();
