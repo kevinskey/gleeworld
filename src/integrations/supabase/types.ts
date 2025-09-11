@@ -13923,7 +13923,7 @@ export type Database = {
           overall_score: number
           rubric: Json
           student_id: string
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           ai_model?: string | null
@@ -13939,7 +13939,7 @@ export type Database = {
           overall_score: number
           rubric?: Json
           student_id: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           ai_model?: string | null
@@ -13955,7 +13955,7 @@ export type Database = {
           overall_score?: number
           rubric?: Json
           student_id?: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
