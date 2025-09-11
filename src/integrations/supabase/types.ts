@@ -17912,6 +17912,16 @@ export type Database = {
           years_ago: number
         }[]
       }
+      get_poll_participation_stats: {
+        Args: { poll_id_param: string }
+        Returns: {
+          points_awarded: number
+          response_count: number
+          student_email: string
+          student_id: string
+          student_name: string
+        }[]
+      }
       get_scheduled_auditions_count: {
         Args: Record<PropertyKey, never>
         Returns: number

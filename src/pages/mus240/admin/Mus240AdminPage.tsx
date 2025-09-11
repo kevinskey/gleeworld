@@ -6,6 +6,7 @@ import { EnrollmentManager } from '@/components/mus240/admin/EnrollmentManager';
 import { JournalGradingManager } from '@/components/mus240/admin/JournalGradingManager';
 import { ComprehensiveJournalAdmin } from '@/components/mus240/admin/ComprehensiveJournalAdmin';
 import { PollResultsViewer } from '@/components/mus240/admin/PollResultsViewer';
+import { PollParticipationTracker } from '@/components/mus240/admin/PollParticipationTracker';
 import { StudentScoresViewer } from '@/components/mus240/admin/StudentScoresViewer';
 import { Mus240PollSystem } from '@/components/mus240/Mus240PollSystem';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -112,6 +113,7 @@ export const Mus240AdminPage = () => {
               
               <TabsContent value="polls" className="mt-6">
                 <div className="space-y-6">
+                  <PollParticipationTracker />
                   <PollResultsViewer />
                   <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
                     <CardHeader>
