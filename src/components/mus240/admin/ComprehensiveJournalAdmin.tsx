@@ -290,25 +290,31 @@ export const ComprehensiveJournalAdmin = () => {
 
       const { data, error } = await supabase.functions.invoke('grade-journal', {
         body: {
-          assignment_id: entry.assignment_id,
-          journal_content: entry.content,
           student_id: entry.student_id,
-          journal_id: entry.id,
-          stub_test: false
+          assignment_id: entry.assignment_id,
+          journal_text: entry.content,
+          rubric: {
+            criteria: [
+              { name: "Musical Analysis", description: "Identifies genre, style traits, and musical features", max_points: 7 },
+              { name: "Historical Context", description: "Connects musical features to historical and cultural significance", max_points: 5 },
+              { name: "Terminology Usage", description: "Uses correct musical terminology appropriately", max_points: 3 },
+              { name: "Writing Quality", description: "Clear, organized writing with proper grammar and 250-300 words", max_points: 2 }
+            ]
+          }
         }
       });
 
       if (error) throw error;
 
-      if (data.success) {
+      if (data.ok) {
         toast({
           title: "AI Grading Complete",
-          description: `Journal graded successfully! Overall score: ${data.grade.overall_score}/100 (${data.grade.letter_grade})`,
+          description: `Journal graded successfully! Overall score: ${data.overall_score}/100`,
         });
         // Refresh data to show new grade
         loadAllData();
       } else {
-        throw new Error(data.error || 'AI grading failed');
+        throw new Error(data.error || data.message || 'AI grading failed');
       }
     } catch (error) {
       console.error('AI grading error:', error);
