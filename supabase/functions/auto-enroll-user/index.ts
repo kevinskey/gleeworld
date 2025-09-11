@@ -128,7 +128,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Creating auth user with email:', email);
     
-    // Create user in Supabase Auth without password - send invite instead
+    // Try to invite/create auth user; if it already exists, gracefully continue by linking profile
+    let targetUserId: string | null = null;
+    let createdNewAuthUser = false;
+
     const { data: authUser, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
       data: {
         full_name: full_name || email.split('@')[0],
@@ -138,17 +141,37 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (inviteError) {
-      console.error('Error creating auth user:', inviteError);
-      throw new Error('Failed to create user account: ' + inviteError.message);
+      console.error('Error creating auth user (invite):', inviteError);
+      const msg = (inviteError?.message || '').toLowerCase();
+      // Fallback for duplicate/exists scenarios
+      if (msg.includes('already') || msg.includes('duplicate') || msg.includes('database error')) {
+        // Attempt to find existing auth user by email
+        const { data: listData, error: listErr } = await (supabase as any).auth.admin.listUsers({ page: 1, perPage: 1000 });
+        if (listErr) {
+          console.error('Error listing users:', listErr);
+          throw new Error('Failed to create user account: ' + inviteError.message);
+        }
+        const existing = listData?.users?.find((u: any) => (u.email || '').toLowerCase() === email.toLowerCase());
+        if (!existing) {
+          throw new Error('Failed to create user account: ' + inviteError.message);
+        }
+        targetUserId = existing.id;
+        console.log('Found existing auth user for email:', email, 'id:', targetUserId);
+      } else {
+        // Unknown error; bubble up
+        throw new Error('Failed to create user account: ' + inviteError.message);
+      }
+    } else {
+      targetUserId = authUser.user!.id;
+      createdNewAuthUser = true;
+      console.log('Auth user created:', targetUserId);
     }
 
-    console.log('Auth user created:', authUser.user?.id);
-
-    // Create profile entry in gw_profiles
+    // Create profile entry in gw_profiles (idempotent with prior existence check by email)
     const { data: profile, error: profileInsertError } = await supabase
       .from('gw_profiles')
       .insert({
-        user_id: authUser.user!.id,
+        user_id: targetUserId!,
         email: email,
         full_name: full_name || email.split('@')[0],
         role: role || 'auditioner'
@@ -158,8 +181,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (profileInsertError) {
       console.error('Error creating profile:', profileInsertError);
-      // Try to clean up the auth user if profile creation fails
-      await supabase.auth.admin.deleteUser(authUser.user!.id);
+      // Try to clean up the auth user only if we just created it here
+      if (createdNewAuthUser && targetUserId) {
+        try {
+          await supabase.auth.admin.deleteUser(targetUserId);
+        } catch (cleanupErr) {
+          console.warn('Cleanup failed deleting auth user:', cleanupErr);
+        }
+      }
       throw new Error('Failed to create user profile: ' + profileInsertError.message);
     }
 
@@ -169,24 +198,24 @@ const handler = async (req: Request): Promise<Response> => {
     await supabase
       .from('activity_logs')
       .insert({
-        user_id: authUser.user!.id,
+        user_id: targetUserId!,
         action_type: 'user_auto_enrolled',
         resource_type: 'user',
-        resource_id: authUser.user!.id,
+        resource_id: targetUserId!,
         details: {
           email: email,
           full_name: full_name || email.split('@')[0],
           contract_id: contract_id,
           role: role || 'auditioner',
-          method: 'invite_email'
+          method: createdNewAuthUser ? 'invite_email' : 'linked_existing_auth_user'
         }
       });
 
     return new Response(JSON.stringify({ 
       success: true, 
-      user_id: authUser.user!.id,
+      user_id: targetUserId!,
       profile: profile,
-      message: 'User auto-enrolled and invited successfully',
+      message: createdNewAuthUser ? 'User auto-enrolled and invited successfully' : 'User profile created for existing account',
       enrolled: true
     }), {
       status: 200,
