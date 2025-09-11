@@ -41,6 +41,11 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) {
+      console.error('❌ Missing Twilio credentials:', {
+        accountSid: twilioAccountSid ? 'SET' : 'MISSING',
+        authToken: twilioAuthToken ? 'SET' : 'MISSING',
+        phoneNumber: twilioPhoneNumber ? 'SET' : 'MISSING'
+      });
       throw new Error('Twilio credentials not configured');
     }
 
