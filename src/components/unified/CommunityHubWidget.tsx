@@ -1086,7 +1086,7 @@ export const CommunityHubWidget = () => {
               <Music className="h-3 w-3 mr-1" />
               Music Library
             </Button>
-            <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/sheet-music')}>
+            <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => navigate('/music-library')}>
               <BookOpen className="h-3 w-3 mr-1" />
               Browse All
             </Button>

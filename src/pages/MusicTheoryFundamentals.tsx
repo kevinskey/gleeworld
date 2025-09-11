@@ -64,7 +64,7 @@ const MusicTheoryFundamentals = () => {
     <PublicLayout>
       {/* Floating Sheet Music Balloon */}
       <Link 
-        to="/sheet-music"
+        to="/music-library"
         className="fixed top-20 right-6 z-50 group"
       >
         <div className="bg-primary text-primary-foreground rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 animate-bounce">
