@@ -13,6 +13,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { ScoreDisplay } from '@/components/sight-singing/ScoreDisplay';
 
 interface SightSingingWidgetProps {
   context?: 'music-theory' | 'audition' | 'practice' | 'assignment';
@@ -317,11 +318,7 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
                 {currentExercise.metadata.difficulty} • {currentExercise.metadata.context}
               </Badge>
             </div>
-            <div 
-              ref={sheetMusicRef} 
-              className="sheet-music-container-mobile min-h-[180px] sm:min-h-[200px] w-full bg-background"
-              style={{ position: 'relative', zIndex: 1 }}
-            />
+            <ScoreDisplay musicXML={currentExercise.musicXML} />
           </div>
         )}
       </CardContent>
