@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-export type UserRole = 'super_admin' | 'admin' | 'member' | 'bowman_scholar';
+export type UserRole = 'super_admin' | 'admin' | 'member' | 'bowman_scholar' | 'student';
 
 // Check if user has a specific role
 export const hasRole = async (userId: string, role: UserRole): Promise<boolean> => {
@@ -90,6 +90,7 @@ export const isBowmanScholar = (userId: string) => hasRole(userId, 'bowman_schol
 export const isSuperAdmin = (userId: string) => hasRole(userId, 'super_admin');
 export const isAdmin = (userId: string) => hasRole(userId, 'admin');
 export const isMember = (userId: string) => hasRole(userId, 'member');
+export const isStudent = (userId: string) => hasRole(userId, 'student');
 
 // React hook for role management
 export const useRoles = (userId?: string) => {
