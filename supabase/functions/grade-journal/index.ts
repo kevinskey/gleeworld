@@ -167,7 +167,6 @@ Format your response as JSON with these fields:
         journal_id,
         overall_score: gradingResult.score,
         feedback: gradingResult.feedback,
-        letter_grade: gradingResult.letter_grade,
         graded_at: new Date().toISOString(),
         ai_model: 'gpt-5-mini-2025-08-07'
       }, {
