@@ -28,25 +28,43 @@ serve(async (req) => {
   console.log('Service role configured:', !!SERVICE_ROLE);
 
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
-  if (req.method === "GET") return J(200, { ok: true, phase: "health" });
+  if (req.method === "GET") return new Response(JSON.stringify({ ok: true, phase: "health" }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
 
   try {
     if (!OPENAI_API_KEY) {
       console.error('Missing OpenAI API key');
-      return J(500, { error: "missing_openai_key" });
+      return new Response(JSON.stringify({ error: "missing_openai_key" }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
     if (!SUPABASE_URL) {
       console.error('Missing Supabase URL');
-      return J(500, { error: "missing_supabase_url" });
+      return new Response(JSON.stringify({ error: "missing_supabase_url" }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
     if (!SERVICE_ROLE) {
       console.error('Missing service role key');
-      return J(500, { error: "missing_service_role" });
+      return new Response(JSON.stringify({ error: "missing_service_role" }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log('=== PARSING REQUEST ===');
     let body: any = {};
-    try { body = await req.json(); } catch { return J(400, { error: "invalid_json" }); }
+    try { 
+      body = await req.json(); 
+    } catch { 
+      return new Response(JSON.stringify({ error: "invalid_json" }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }); 
+    }
     console.log('Request body keys:', Object.keys(body));
 
     // DIAG mode for debugging
@@ -72,12 +90,16 @@ serve(async (req) => {
       } catch (e: any) { 
         out.openai = { ok: false, error: String(e?.message || e) }; 
       }
-      return J(200, out);
+      return new Response(JSON.stringify(out), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // DRY mode for testing  
     if (body?.mode === "dry") {
-      return J(200, { ok: true, phase: "dry", message: "Handler reached, no AI/DB calls made" });
+      return new Response(JSON.stringify({ ok: true, phase: "dry", message: "Handler reached, no AI/DB calls made" }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const { student_id, assignment_id, journal_text, rubric } = body;
@@ -88,9 +110,12 @@ serve(async (req) => {
     console.log('- journal_text length:', journal_text?.length);
 
     if (!student_id || !assignment_id || !journal_text) {
-      return J(400, { 
+      return new Response(JSON.stringify({ 
         error: 'missing_fields',
         details: { student_id: !!student_id, assignment_id: !!assignment_id, journal_text: !!journal_text }
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -156,10 +181,13 @@ Return ONLY a JSON object with this exact structure:
     if (!aiResp.ok) {
       const errorText = await aiResp.text();
       console.error('OpenAI API error:', errorText);
-      return J(502, { 
+      return new Response(JSON.stringify({ 
         error: 'openai_failed', 
         status: aiResp.status,
         body: errorText
+      }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -261,20 +289,23 @@ Return ONLY a JSON object with this exact structure:
       console.error('Error message:', insErr.message);
       console.error('Error details:', insErr.details);
       
-      return J(500, {
+      return new Response(JSON.stringify({
         stage: "db_insert",
         error: "db_insert_failed",
         code: insErr.code, 
         details: insErr.details, 
         hint: insErr.hint, 
         message: insErr.message 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     console.log('=== SUCCESS ===');
     console.log('Grade saved successfully:', insertData);
 
-    return J(200, {
+    return new Response(JSON.stringify({
       success: true,
       grade: {
         id: insertData.id,
@@ -290,6 +321,8 @@ Return ONLY a JSON object with this exact structure:
         overall_score_percent_without_peer: (((gradingResult?.scores?.reduce?.((s: number, r: any)=>s+(r?.score||0),0) ?? 0) / 17) * 100),
         metadata: gradingResult?.metadata ?? { word_count: null, word_range_ok: null }
       }
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
@@ -297,10 +330,13 @@ Return ONLY a JSON object with this exact structure:
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
     
-    return J(500, { 
+    return new Response(JSON.stringify({ 
       error: 'unhandled',
       stage: 'top_catch',
       message: String(error?.message || error) 
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
