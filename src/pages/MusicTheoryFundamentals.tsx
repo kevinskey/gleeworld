@@ -345,6 +345,7 @@ const MusicTheoryFundamentals = () => {
               </CardHeader>
               {showSchedule && (
                 <CardContent>
+                  {weeklySchedule.map((month, monthIndex) => (
                   <div key={month.month} className="mb-6">
                     <h3 className="text-lg font-semibold text-primary mb-3">{month.month}</h3>
                     <div className="space-y-2">
