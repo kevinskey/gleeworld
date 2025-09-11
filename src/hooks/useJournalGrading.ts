@@ -103,7 +103,7 @@ export async function gradeJournalWithAI(
     const { data, error } = await supabaseClient.functions.invoke("grade-journal", {
       body: {
         assignment_id: journal.assignment_id,
-        journal_content: journal.content,
+        journal_text: journal.content, // Fixed: edge function expects journal_text
         student_id: journal.student_id,
         journal_id: journal.id,
         stub_test: false // Enable real AI grading
