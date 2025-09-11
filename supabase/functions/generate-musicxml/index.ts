@@ -832,12 +832,30 @@ Return this exact JSON structure with your composition:
                     newNote.pitch = { step: 'C', alter: 0, oct: 4 }; // Fallback
                   }
                 } else if (typeof note.pitch === 'object') {
-                  // Format: {step: "F", alter: 0, oct: 4} - already correct
-                  newNote.pitch = {
-                    step: note.pitch.step || 'C',
-                    alter: note.pitch.alter || note.pitch.acc || 0,
-                    oct: note.pitch.oct || note.pitch.octave || 4
-                  };
+                  // Handle object forms: {degree}, {step}, or canonical pitch
+                  const p: any = note.pitch as any;
+                  if (typeof p.degree === 'number') {
+                    newNote.pitch = {
+                      degree: p.degree,
+                      oct: p.oct || p.octave || 4,
+                      acc: p.acc ?? p.alter ?? 0,
+                    };
+                  } else if (typeof p.step === 'number') {
+                    // Some models put degree in step field
+                    newNote.pitch = {
+                      degree: p.step,
+                      oct: p.oct || p.octave || 4,
+                      acc: p.acc ?? p.alter ?? 0,
+                    };
+                  } else if (typeof p.step === 'string') {
+                    newNote.pitch = {
+                      step: p.step || 'C',
+                      alter: p.alter ?? p.acc ?? 0,
+                      oct: p.oct || p.octave || 4
+                    };
+                  } else {
+                    newNote.pitch = { step: 'C', alter: 0, oct: 4 };
+                  }
                 }
               } else {
                 // No pitch info, use fallback
