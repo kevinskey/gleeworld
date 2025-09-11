@@ -13,6 +13,7 @@ const MusicTheoryFundamentals = () => {
   const [showMaterials, setShowMaterials] = React.useState(false);
   const [showGrading, setShowGrading] = React.useState(false);
   const [showPolicies, setShowPolicies] = React.useState(false);
+  const [showSchedule, setShowSchedule] = React.useState(false);
 
   const weeklySchedule = [
     {
@@ -334,13 +335,16 @@ const MusicTheoryFundamentals = () => {
             {/* Weekly Schedule */}
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 cursor-pointer" onClick={() => setShowSchedule(!showSchedule)}>
                   <Calendar className="w-6 h-6" />
                   Weekly Content & Schedule
+                  <span className="ml-auto text-sm text-muted-foreground">
+                    {showSchedule ? 'Hide' : 'Show'} Details
+                  </span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                {weeklySchedule.map((month, monthIndex) => (
+              {showSchedule && (
+                <CardContent>
                   <div key={month.month} className="mb-6">
                     <h3 className="text-lg font-semibold text-primary mb-3">{month.month}</h3>
                     <div className="space-y-2">
@@ -399,7 +403,8 @@ const MusicTheoryFundamentals = () => {
                     {monthIndex < weeklySchedule.length - 1 && <Separator className="mt-6" />}
                   </div>
                 ))}
-              </CardContent>
+                </CardContent>
+              )}
             </Card>
 
             {/* Policies - Collapsed by default */}
