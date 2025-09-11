@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Music, Clock, MapPin, User, GraduationCap, BookOpen, Award, Calendar, CheckCircle } from 'lucide-react';
+import { SightSingingWidget } from '@/components/shared/SightSingingWidget';
 
 const MusicTheoryFundamentals = () => {
   const [showObjectives, setShowObjectives] = React.useState(false);
@@ -471,6 +472,33 @@ const MusicTheoryFundamentals = () => {
                   </div>
                 </CardContent>
               )}
+            </Card>
+
+            {/* Interactive Sight Singing Practice */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Music className="w-6 h-6" />
+                  Interactive Sight Singing Practice
+                </CardTitle>
+                <CardDescription>
+                  AI-powered sight singing exercises tailored to reinforce music theory concepts
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SightSingingWidget
+                  context="music-theory"
+                  showAdvancedControls={true}
+                  defaultParams={{
+                    difficulty: 'beginner',
+                    measures: 8,
+                    key: { tonic: 'C', mode: 'major' }
+                  }}
+                  onExerciseGenerated={(result) => {
+                    console.log('Generated exercise for music theory:', result);
+                  }}
+                />
+              </CardContent>
             </Card>
 
             {/* Get Started Section */}
