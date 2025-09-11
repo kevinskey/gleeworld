@@ -12,11 +12,19 @@ interface SMSNotificationData {
 export const useSendSMSNotification = () => {
   return useMutation({
     mutationFn: async (data: SMSNotificationData) => {
+      console.log('🔄 Sending SMS notification:', data);
+      
       const { data: result, error } = await supabase.functions.invoke('send-sms-notification', {
         body: data
       });
 
-      if (error) throw error;
+      console.log('📱 SMS Function Response:', { result, error });
+      
+      if (error) {
+        console.error('❌ SMS Function Error:', error);
+        throw error;
+      }
+      
       return result;
     },
     onSuccess: (result) => {
