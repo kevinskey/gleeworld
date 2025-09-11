@@ -110,6 +110,7 @@ import DocumentsForms from "./pages/admin/DocumentsForms";
 import { StudentConductorDashboard } from "./pages/StudentConductorDashboard";
 import TourPlanner from "./pages/TourPlanner";
 import BookingRequest from "./pages/BookingRequest";
+import BookingForms from "./pages/BookingForms";
 import Wardrobe from "./pages/Wardrobe";
 import { WardrobeManagementHub } from "./components/wardrobe/WardrobeManagementHub";
 import { ProductManagement } from "./pages/ProductManagement";
@@ -1095,6 +1096,14 @@ const App = () => {
                                </PublicRoute>
                              } 
                             />
+                              <Route 
+                                path="/booking-forms" 
+                                element={
+                                  <ProtectedRoute>
+                                    <BookingForms />
+                                  </ProtectedRoute>
+                                } 
+                              />
                               <Route 
                                 path="/tour-planner" 
                                 element={

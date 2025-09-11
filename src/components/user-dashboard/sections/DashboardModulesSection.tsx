@@ -159,6 +159,7 @@ export const DashboardModulesSection = () => {
         { name: "Alumnae Portal", description: "Alumni engagement & mentorship", icon: GraduationCap, route: "/alumnae", requiresAdmin: true },
         { name: "Newsletter Management", description: "Create newsletters", icon: MessageSquare, route: "/newsletter" },
         { name: "Announcements", description: "Read updates", icon: MessageSquare, route: "/announcements" },
+        { name: "Booking Forms", description: "Manage performance booking requests", icon: FileText, route: "/booking-forms" },
         { name: "SMS Center", description: "Text messaging", icon: Bell, route: "/sms-center", requiresAdmin: true }
       ]
     },
