@@ -167,8 +167,8 @@ export async function gradeJournalWithAI(
       const resp = invErr?.context?.response;
       if (resp && typeof resp.text === "function") {
         const txt = await resp.text().catch(()=>null);
-        console.error("invoke body:", txt);
-        throw new Error(`invoke_${resp.status||"err"}: ${txt||invErr.message||"unknown"}`);
+        console.error("invoke status:", resp.status, "body:", txt);
+        throw new Error(`edge_${resp.status}: ${txt || invErr.message || "unknown"}`);
       }
       throw new Error(invErr?.message || rawErr?.message || "grading_failed");
     }
@@ -199,8 +199,12 @@ export const useJournalGrading = () => {
       // Step 1: Get AI grading (4 criteria, excluding peer comments)
       const aiResult = await gradeJournalWithAI(supabase, journal);
 
-      if (!aiResult.success) {
-        throw new Error(aiResult.error || 'AI grading failed');
+      // Fixed: Don't reject valid responses that lack a success field
+      if (!aiResult || typeof aiResult !== 'object') {
+        throw new Error('Empty response from grader');
+      }
+      if ((aiResult as any).error) {
+        throw new Error((aiResult as any).error);
       }
 
       // Step 2: Get peer comment points
@@ -312,8 +316,11 @@ export const useJournalGrading = () => {
     try {
       const peerResult = await getPeerCommentPoints(supabase, assignmentId, studentId);
       
-      if (!peerResult.success) {
-        throw new Error(peerResult.error || 'Failed to recheck peer comments');
+      // Fixed: Don't reject valid responses that lack a success field
+      if (!peerResult || typeof peerResult !== 'object') {
+        console.warn('Empty peer result, proceeding without peer points');
+      } else if ((peerResult as any).error) {
+        console.warn('Peer comment calculation failed, proceeding without peer points:', (peerResult as any).error);
       }
 
       // Get current grade to update
