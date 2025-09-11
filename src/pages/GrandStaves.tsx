@@ -43,48 +43,48 @@ const GrandStaves = () => {
   // Simple Staff Lines Component - No clefs, braces, or brackets
   const StaffLines = ({ className = '' }: { className?: string }) => (
     <svg 
-      viewBox="0 0 800 200" 
-      className={`w-full border border-border/20 bg-white ${className}`}
-      style={{ height: '200px' }}
+      viewBox="0 0 800 220" 
+      className={`w-full border border-border/10 bg-white ${className}`}
+      style={{ height: '220px' }}
     >
-      {/* Treble Staff Lines - 5 lines */}
+      {/* Treble Staff Lines - 5 lines with proper spacing */}
       {[0, 1, 2, 3, 4].map(line => (
         <line
           key={`treble-${line}`}
-          x1="40"
-          y1={40 + line * 15}
-          x2="760"
-          y2={40 + line * 15}
+          x1="20"
+          y1={35 + line * 18}
+          x2="780"
+          y2={35 + line * 18}
           stroke="hsl(var(--foreground))"
-          strokeWidth="1.5"
+          strokeWidth="1.2"
         />
       ))}
       
-      {/* Bass Staff Lines - 5 lines */}
+      {/* Bass Staff Lines - 5 lines with proper spacing */}
       {[0, 1, 2, 3, 4].map(line => (
         <line
           key={`bass-${line}`}
-          x1="40"
-          y1={120 + line * 15}
-          x2="760"
-          y2={120 + line * 15}
+          x1="20"
+          y1={140 + line * 18}
+          x2="780"
+          y2={140 + line * 18}
           stroke="hsl(var(--foreground))"
-          strokeWidth="1.5"
+          strokeWidth="1.2"
         />
       ))}
       
-      {/* Measure lines - light guidelines every 150px */}
-      {[190, 340, 490, 640].map((x, index) => (
+      {/* Measure lines - very subtle guidelines */}
+      {[160, 320, 480, 640].map((x, index) => (
         <line
           key={`measure-${index}`}
           x1={x}
-          y1="35"
+          y1="30"
           x2={x}
-          y2="180"
+          y2="210"
           stroke="hsl(var(--muted-foreground))"
-          strokeWidth="0.5"
-          strokeDasharray="2,2"
-          opacity="0.3"
+          strokeWidth="0.3"
+          strokeDasharray="1,3"
+          opacity="0.2"
         />
       ))}
     </svg>
@@ -120,10 +120,10 @@ const GrandStaves = () => {
 
       {/* Main Content */}
       <main className="p-4 print:p-2">
-        <div className="max-w-7xl mx-auto space-y-6 print:space-y-4">
-          {/* Generate 8 staff line sets for a full page */}
-          {Array.from({ length: 8 }, (_, index) => (
-            <StaffLines key={index} className="print:mb-4" />
+        <div className="max-w-7xl mx-auto space-y-8 print:space-y-6">
+          {/* Generate 10 staff line sets for a full page */}
+          {Array.from({ length: 10 }, (_, index) => (
+            <StaffLines key={index} className="print:mb-6" />
           ))}
         </div>
       </main>
