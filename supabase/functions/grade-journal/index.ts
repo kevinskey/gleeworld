@@ -41,7 +41,7 @@ serve(async (req) => {
     const body = await req.json();
     console.log('Request body keys:', Object.keys(body));
     
-    const { student_id, assignment_id, journal_text, rubric } = body;
+    const { student_id, assignment_id, journal_text, rubric, journal_id } = body;
     
     console.log('Extracted values:');
     console.log('- student_id:', student_id);
@@ -165,11 +165,12 @@ Format your response as JSON with these fields:
       .upsert({
         student_id,
         assignment_id,
+        journal_id,
         overall_score: gradingResult.score,
         feedback: gradingResult.feedback,
         letter_grade: gradingResult.letter_grade,
         graded_at: new Date().toISOString(),
-        graded_by: 'ai-assistant'
+        ai_model: 'gpt-4o-mini'
       }, {
         onConflict: 'student_id,assignment_id'
       });
