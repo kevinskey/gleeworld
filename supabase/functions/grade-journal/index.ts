@@ -2,303 +2,181 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "authorization, content-type, x-client-info, cache-control, pragma, apikey",
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-
 serve(async (req) => {
-  console.log('=== STARTING JOURNAL GRADING FUNCTION ===');
-  console.log('Request URL:', req.url);
-  console.log('Request method:', req.method);
-  console.log('OpenAI API key configured:', !!OPENAI_API_KEY);
-  console.log('Supabase URL configured:', !!SUPABASE_URL);
-  console.log('Service role configured:', !!SERVICE_ROLE);
-
-  if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
-  if (req.method === "GET") return new Response(JSON.stringify({ ok: true, phase: "health" }), {
-    headers: { ...CORS, 'Content-Type': 'application/json' },
-  });
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   try {
+    console.log('=== GRADE JOURNAL FUNCTION START ===');
+    console.log('Method:', req.method);
+    console.log('URL:', req.url);
+
+    // Environment check
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    console.log('Environment check:');
+    console.log('- OpenAI key:', !!OPENAI_API_KEY);
+    console.log('- Supabase URL:', !!SUPABASE_URL);
+    console.log('- Service role:', !!SERVICE_ROLE_KEY);
+
     if (!OPENAI_API_KEY) {
       console.error('Missing OpenAI API key');
-      return new Response(JSON.stringify({ error: "missing_openai_key" }), {
+      return new Response(JSON.stringify({ error: 'Missing OpenAI API key' }), {
         status: 500,
-        headers: { ...CORS, 'Content-Type': 'application/json' },
-      });
-    }
-    if (!SUPABASE_URL) {
-      console.error('Missing Supabase URL');
-      return new Response(JSON.stringify({ error: "missing_supabase_url" }), {
-        status: 500,
-        headers: { ...CORS, 'Content-Type': 'application/json' },
-      });
-    }
-    if (!SERVICE_ROLE) {
-      console.error('Missing service role key');
-      return new Response(JSON.stringify({ error: "missing_service_role" }), {
-        status: 500,
-        headers: { ...CORS, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log('=== PARSING REQUEST ===');
-    let body: any = {};
-    try { 
-      body = await req.json(); 
-    } catch { 
-      return new Response(JSON.stringify({ error: "invalid_json" }), {
+    if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+      console.error('Missing Supabase credentials');
+      return new Response(JSON.stringify({ error: 'Missing Supabase credentials' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Parse request body
+    let body: any;
+    try {
+      body = await req.json();
+      console.log('Body parsed successfully:', Object.keys(body));
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
         status: 400,
-        headers: { ...CORS, 'Content-Type': 'application/json' },
-      }); 
-    }
-    console.log('Request body keys:', Object.keys(body));
-
-    // DIAG mode for debugging
-    if (body?.mode === "diag") {
-      const out: any = { ok: false, phase: "diag" };
-      out.secrets = {
-        has_SUPABASE_URL: !!SUPABASE_URL,
-        has_SERVICE_ROLE: !!SERVICE_ROLE,
-        has_OPENAI_API_KEY: !!OPENAI_API_KEY,
-      };
-      try {
-        const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
-        const { error } = await sb.from("mus240_journal_grades").select("id").limit(1);
-        out.db = { ok: !error, error: error?.message || null };
-      } catch (e: any) { 
-        out.db = { ok: false, error: String(e?.message || e) }; 
-      }
-      try {
-        const r = await fetch("https://api.openai.com/v1/models", {
-          headers: { Authorization: `Bearer ${OPENAI_API_KEY}` }
-        });
-        out.openai = { ok: r.ok, status: r.status, text: r.ok ? "ok" : await r.text().catch(() => null) };
-      } catch (e: any) { 
-        out.openai = { ok: false, error: String(e?.message || e) }; 
-      }
-      return new Response(JSON.stringify(out), {
-        headers: { ...CORS, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // DRY mode for testing  
-    if (body?.mode === "dry") {
-      return new Response(JSON.stringify({ ok: true, phase: "dry", message: "Handler reached, no AI/DB calls made" }), {
-        headers: { ...CORS, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const { student_id, assignment_id, journal_text, rubric } = body;
 
-    console.log('Extracted values:');
-    console.log('- assignment_id:', assignment_id);
-    console.log('- student_id:', student_id);
-    console.log('- journal_text length:', journal_text?.length);
-
+    // Validate required fields
     if (!student_id || !assignment_id || !journal_text) {
+      console.error('Missing required fields');
       return new Response(JSON.stringify({ 
-        error: 'missing_fields',
-        details: { student_id: !!student_id, assignment_id: !!assignment_id, journal_text: !!journal_text }
+        error: 'Missing required fields',
+        received: { student_id: !!student_id, assignment_id: !!assignment_id, journal_text: !!journal_text }
       }), {
         status: 400,
-        headers: { ...CORS, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Count words for validation
-    const wordCount = journal_text.trim().split(/\s+/).length;
-    const wordRangeOk = wordCount >= 250 && wordCount <= 300;
-    console.log('Word count:', wordCount, 'Word range OK:', wordRangeOk);
-
-    console.log('=== CALLING OPENAI API ===');
-    console.log('OpenAI API key length:', OPENAI_API_KEY.length);
-
-    const ac = new AbortController();
-    const to = setTimeout(() => ac.abort("timeout"), 15000);
-    const aiResp = await fetch('https://api.openai.com/v1/chat/completions', {
+    console.log('=== CALLING OPENAI ===');
+    
+    // Call OpenAI API
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      signal: ac.signal,
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // Legacy model that supports temperature parameter
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `You are a music professor grading listening journal entries. 
-
-Evaluate the following journal entry based on these criteria:
-1. Musical Analysis (7 points max): Identifies genre, style traits, and musical features
-2. Historical Context (5 points max): Connects musical features to historical and cultural significance  
-3. Terminology Usage (3 points max): Uses correct musical terminology appropriately
-4. Writing Quality (2 points max): Clear, organized writing with proper grammar and 250-300 words
-
-Return ONLY a JSON object with this exact structure:
-{
-  "scores": [
-    {"criterion": "Musical Analysis", "score": number, "max_score": 7, "feedback": "string"},
-    {"criterion": "Historical Context", "score": number, "max_score": 5, "feedback": "string"},
-    {"criterion": "Terminology Usage", "score": number, "max_score": 3, "feedback": "string"},
-    {"criterion": "Writing Quality", "score": number, "max_score": 2, "feedback": "string"}
-  ],
-  "overall_score": number,
-  "feedback": "Overall feedback string",
-  "metadata": {
-    "word_count": ${wordCount},
-    "word_range_ok": ${wordRangeOk}
-  }
-}`
+            content: 'You are an expert music educator grading student journal entries. Return your response as valid JSON with this exact structure: {"scores": [{"criterion": "Musical Analysis", "score": number, "max_score": 7, "feedback": "string"}], "overall_feedback": "string", "metadata": {"word_count": number, "word_range_ok": boolean}}'
           },
           {
             role: 'user',
-            content: `Journal Entry:\n${journal_text}\n\nRubric Context:\n${JSON.stringify(rubric || {})}`
+            content: `Please grade this music journal entry:\n\n${journal_text}\n\nRubric: ${JSON.stringify(rubric || {})}`
           }
         ],
-        temperature: 0.2,
-        max_tokens: 800
+        max_tokens: 1500,
+        temperature: 0.7
       })
     });
-    clearTimeout(to);
 
-    console.log('OpenAI status:', aiResp.status);
+    console.log('OpenAI response status:', openAIResponse.status);
 
-    if (!aiResp.ok) {
-      const errorText = await aiResp.text();
+    if (!openAIResponse.ok) {
+      const errorText = await openAIResponse.text();
       console.error('OpenAI API error:', errorText);
       return new Response(JSON.stringify({ 
-        error: 'openai_failed', 
-        status: aiResp.status,
-        body: errorText
+        error: 'OpenAI API failed',
+        status: openAIResponse.status,
+        details: errorText
       }), {
         status: 502,
-        headers: { ...CORS, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const aiResponse = await aiResp.json();
-    console.log('=== OPENAI RESPONSE RECEIVED ===');
-    console.log('Full AI response:', JSON.stringify(aiResponse, null, 2));
+    const openAIData = await openAIResponse.json();
+    console.log('OpenAI response received');
 
-    let aiContent = aiResponse?.choices?.[0]?.message?.content ?? "";
-    // strip common formatting fences if model disobeys
-    aiContent = aiContent.replace(/^```(?:json)?/i, "").replace(/```$/,"").trim();
-    console.log('AI content to parse:', aiContent);
-
+    // Parse AI response
     let gradingResult;
-    let overall_score = 65; // Default fallback score
-    let feedback = "Good listening journal entry. The AI grading system encountered a technical issue, so this is a default grade. Please have your instructor review manually.";
-
     try {
-      if (aiContent && aiContent.trim()) {
-        // Try to parse the AI response
-        const cleanedContent = aiContent.trim();
-        gradingResult = JSON.parse(cleanedContent);
-        
-        if (gradingResult.overall_score) {
-          overall_score = gradingResult.overall_score;
-        }
-        if (gradingResult.feedback) {
-          feedback = gradingResult.feedback;
-        }
-        
-        console.log('Successfully parsed AI response:', gradingResult);
-      } else {
-        throw new Error('Empty AI response content');
-      }
+      const aiContent = openAIData.choices[0].message.content;
+      gradingResult = JSON.parse(aiContent);
+      console.log('AI result parsed successfully');
     } catch (parseError) {
-      console.error('Error parsing AI response:', parseError);
-      
-      // Create fallback scoring
+      console.error('Failed to parse AI response:', parseError);
       gradingResult = {
         scores: [
-          { criterion: "Musical Analysis", score: 5, max_score: 7, feedback: "AI grading encountered a parsing error. Please have your instructor review manually." },
-          { criterion: "Historical Context", score: 4, max_score: 5, feedback: "AI grading encountered a parsing error. Please have your instructor review manually." },
-          { criterion: "Terminology Usage", score: 2, max_score: 3, feedback: "AI grading encountered a parsing error. Please have your instructor review manually." },
-          { criterion: "Writing Quality", score: 2, max_score: 2, feedback: "AI grading encountered a parsing error. Please have your instructor review manually." }
+          { criterion: "Musical Analysis", score: 5, max_score: 7, feedback: "AI grading error" },
+          { criterion: "Historical Context", score: 4, max_score: 5, feedback: "AI grading error" },
+          { criterion: "Terminology Usage", score: 2, max_score: 3, feedback: "AI grading error" },
+          { criterion: "Writing Quality", score: 2, max_score: 2, feedback: "AI grading error" }
         ],
-        metadata: {
-          word_count: wordCount,
-          word_range_ok: wordRangeOk
-        }
+        overall_feedback: "AI grading encountered an error. Manual review required.",
+        metadata: { word_count: journal_text.split(' ').length, word_range_ok: true }
       };
     }
 
-    console.log('=== ATTEMPTING DATABASE INSERT ===');
+    console.log('=== SAVING TO DATABASE ===');
 
-    // Use service role for database operations (bypasses RLS)
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
-      auth: { persistSession: false },
-      db: { schema: "public" }
-    });
+    // Initialize Supabase client
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    // Look up assignment database ID (optional and safe)
-    let assignment_db_id: string | null = null;
-    const { data: assignmentData, error: assignmentError } = await supabase
-      .from('mus240_assignments')
-      .select('id')
-      .eq('assignment_id', assignment_id)
-      .maybeSingle();
-    if (assignmentError) console.warn("assignment lookup error:", assignmentError.message);
-    assignment_db_id = assignmentData?.id ?? null; // proceed even if null
+    // Calculate overall score
+    const overall_score = gradingResult.scores?.reduce((sum, score) => sum + (score.score || 0), 0) || 65;
 
-    console.log('=== PREPARING DATABASE INSERT ===');
+    // Prepare grade data
     const gradeData = {
       student_id,
       assignment_id,
-      // assignment_db_id, // leave out unless column exists
-      journal_id: body.journal_id ?? null,
-      overall_score: overall_score || 65, // Ensure we always have a number for NOT NULL field
-      rubric: gradingResult || {}, // Ensure we always have an object for NOT NULL jsonb field
-      feedback: feedback || "AI grading completed",
+      journal_id: body.journal_id || null,
+      overall_score,
+      rubric: gradingResult,
+      feedback: gradingResult.overall_feedback || "AI grading completed",
       ai_model: 'gpt-4o-mini',
       graded_by: null,
       graded_at: new Date().toISOString(),
     };
 
-    console.log('About to insert grade data:', JSON.stringify(gradeData, null, 2));
+    console.log('Inserting grade data');
 
-    console.log('=== DATABASE INSERT ===');
-    const { data: insertData, error: insErr } = await supabase
+    // Insert grade into database
+    const { data: insertData, error: insertError } = await supabase
       .from('mus240_journal_grades')
       .insert([gradeData])
       .select()
       .single();
-    
-    if (insErr) {
-      console.log('=== DATABASE INSERT FAILED ===');
-      console.log('Grade data that failed:', JSON.stringify(gradeData, null, 2));
-      console.error('=== ERROR IN GRADE-JOURNAL FUNCTION ===');
-      console.error('Error code:', insErr.code);
-      console.error('Error hint:', insErr.hint);
-      console.error('Error message:', insErr.message);
-      console.error('Error details:', insErr.details);
-      
-      return new Response(JSON.stringify({
-        stage: "db_insert",
-        error: "db_insert_failed",
-        code: insErr.code, 
-        details: insErr.details, 
-        hint: insErr.hint, 
-        message: insErr.message 
+
+    if (insertError) {
+      console.error('Database insert error:', insertError);
+      return new Response(JSON.stringify({ 
+        error: 'Database insert failed',
+        details: insertError
       }), {
         status: 500,
-        headers: { ...CORS, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     console.log('=== SUCCESS ===');
-    console.log('Grade saved successfully:', insertData);
 
     return new Response(JSON.stringify({
       success: true,
@@ -306,18 +184,15 @@ Return ONLY a JSON object with this exact structure:
         id: insertData.id,
         assignment_id,
         student_id,
-        journal_id: body.journal_id ?? null,
         overall_score,
-        letter_grade: null,
-        rubric_scores: gradingResult?.scores ?? [],
-        overall_feedback: feedback,
-        overall_points_without_peer: gradingResult?.scores?.reduce?.((s: number, r: any)=>s+(r?.score||0),0) ?? overall_score,
-        max_points_overall: 17, // 7+5+3+2
-        overall_score_percent_without_peer: (((gradingResult?.scores?.reduce?.((s: number, r: any)=>s+(r?.score||0),0) ?? 0) / 17) * 100),
-        metadata: gradingResult?.metadata ?? { word_count: null, word_range_ok: null }
+        rubric_scores: gradingResult.scores || [],
+        feedback: gradingResult.overall_feedback || "AI grading completed",
+        ai_model: 'gpt-4o-mini',
+        graded_at: new Date().toISOString(),
+        metadata: gradingResult.metadata || {}
       }
     }), {
-      headers: { ...CORS, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
@@ -326,12 +201,12 @@ Return ONLY a JSON object with this exact structure:
     console.error('Error stack:', error.stack);
     
     return new Response(JSON.stringify({ 
-      error: 'unhandled',
-      stage: 'top_catch',
-      message: String(error?.message || error) 
+      error: 'Internal server error',
+      message: error.message,
+      stack: error.stack
     }), {
       status: 500,
-      headers: { ...CORS, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
