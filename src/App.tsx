@@ -172,6 +172,7 @@ import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
 import { Mus240AdminPage } from "./pages/mus240/admin/Mus240AdminPage";
 import { InstructorConsole } from "./pages/mus240/InstructorConsole";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
+import MUS240Instructor from "./pages/classes/mus240/instructor";
 import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
@@ -1593,6 +1594,16 @@ const App = () => {
                                       <ProtectedRoute>
                                         <AdminOnlyRoute>
                                           <InstructorConsole />
+                                        </AdminOnlyRoute>
+                                      </ProtectedRoute>
+                                    } 
+                                  />
+                                  <Route 
+                                    path="/classes/mus240/instructor/students" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <AdminOnlyRoute>
+                                          <MUS240Instructor />
                                         </AdminOnlyRoute>
                                       </ProtectedRoute>
                                     } 
