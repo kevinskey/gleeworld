@@ -130,8 +130,12 @@ function noteXml(ev:any, beamInfo?: {number: number, type: string}){
     return `<note><rest/><duration>${dur}</duration><type>${typeMap[base]}</type>${dotsXml}</note>`;
   }
   const { step = "C", alter = 0, oct = 4 } = ev.pitch || {};
+  console.log('Creating note XML for pitch:', { step, alter, oct, originalPitch: ev.pitch });
+  
+  // Ensure step is a valid string
+  const validStep = typeof step === 'string' && step.length === 1 && /[A-G]/.test(step) ? step : 'C';
   const alterXml = alter ? `<alter>${alter}</alter>` : "";
-  return `<note>${tieStart}<pitch><step>${esc(step)}</step>${alterXml}<octave>${oct}</octave></pitch><duration>${dur}</duration><type>${typeMap[base]}</type>${dotsXml}${beamXml}${tieStop}</note>`;
+  return `<note>${tieStart}<pitch><step>${validStep}</step>${alterXml}<octave>${oct}</octave></pitch><duration>${dur}</duration><type>${typeMap[base]}</type>${dotsXml}${beamXml}${tieStop}</note>`;
 }
 
 // Advanced beaming logic that follows proper meter groupings

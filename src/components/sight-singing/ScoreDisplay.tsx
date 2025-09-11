@@ -44,6 +44,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       try {
         console.log('Rendering MusicXML with OSMD...');
         console.log('MusicXML length:', musicXML.length);
+        console.log('Full MusicXML content:', musicXML);
         
         // Calculate responsive settings - Force 2 measures per row on mobile
         const containerWidth = scoreRef.current?.clientWidth || 800;
