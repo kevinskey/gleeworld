@@ -106,7 +106,7 @@ Format your response as JSON with these fields:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           {
             role: 'system',
@@ -117,8 +117,7 @@ Format your response as JSON with these fields:
             content: gradingPrompt
           }
         ],
-        max_tokens: 1000,
-        temperature: 0.7
+        max_completion_tokens: 1000
       }),
     });
 
@@ -170,7 +169,7 @@ Format your response as JSON with these fields:
         feedback: gradingResult.feedback,
         letter_grade: gradingResult.letter_grade,
         graded_at: new Date().toISOString(),
-        ai_model: 'gpt-4o-mini'
+        ai_model: 'gpt-5-mini-2025-08-07'
       }, {
         onConflict: 'student_id,assignment_id'
       });
