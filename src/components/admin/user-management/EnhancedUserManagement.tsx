@@ -28,6 +28,7 @@ import {
   Star,
   CheckCircle,
   XCircle,
+  GraduationCap,
   Clock,
   UserPlus,
   AlertCircle,
@@ -295,6 +296,12 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                         <div className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4" />
                           Member
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="student">
+                        <div className="flex items-center gap-2">
+                          <GraduationCap className="h-4 w-4" />
+                          Student
                         </div>
                       </SelectItem>
                       <SelectItem value="alumna">

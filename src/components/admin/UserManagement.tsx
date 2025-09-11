@@ -130,6 +130,16 @@ export const UserManagement = () => {
     
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     
+    console.log('UserManagement Filter Debug:', {
+      user: user.email,
+      role: user.role,
+      roleFilter,
+      matchesRole,
+      searchTerm,
+      matchesSearch,
+      included: matchesSearch && matchesRole
+    });
+    
     return matchesSearch && matchesRole;
   });
 
