@@ -43,12 +43,20 @@ export const PasswordResetTool = () => {
 
     setIsLoading(true);
     try {
+      // Use admin JWT for edge function auth
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
       const { data, error } = await supabase.functions.invoke('reset-member-passwords', {
         body: {
-          role: targetRole,
+          targetRole: targetRole,
           newPassword: newPassword.trim(),
-          dryRun: true,
-          limit: batchLimit
+          batchLimit: batchLimit
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
@@ -77,12 +85,19 @@ export const PasswordResetTool = () => {
 
     setIsLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
       const { data, error } = await supabase.functions.invoke('reset-member-passwords', {
         body: {
-          role: targetRole,
+          targetRole: targetRole,
           newPassword: newPassword.trim(),
-          dryRun: false,
-          limit: batchLimit
+          batchLimit: batchLimit
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 

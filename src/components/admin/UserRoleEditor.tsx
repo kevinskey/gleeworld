@@ -85,16 +85,26 @@ export const UserRoleEditor = ({ user, onUpdate }: UserRoleEditorProps) => {
       // Generate a temporary password
       const tempPassword = Math.random().toString(36).slice(-8) + '!A1';
 
-      // Call the admin password reset function
+      // Get current session for auth header
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
+      // Call the admin password reset function with bearer token
       const { data, error } = await supabase.functions.invoke('admin-reset-password', {
         body: {
           userId: user.id,
           email: user.email,
           newPassword: tempPassword
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
 
       // Show the temporary password to the admin
       toast({
