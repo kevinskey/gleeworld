@@ -4,7 +4,7 @@ export interface Assignment {
   description: string;
   instructions: string;
   dueDate: string;
-  type: 'listening-journal' | 'essay' | 'quiz' | 'project';
+  type: 'listening-journal' | 'essay' | 'quiz' | 'project' | 'exam' | 'reflection-paper' | 'research-proposal' | 'annotated-bibliography';
   estimatedTime?: string;
   points?: number;
 }
@@ -69,6 +69,16 @@ export const mus240Assignments: WeekAssignments[] = [
         type: "listening-journal",
         estimatedTime: "40 minutes",
         points: 20
+      },
+      {
+        id: "rp1",
+        title: "Reflection Paper 1: Cultural Context in Blues",
+        description: "Demonstrate critical thinking about blues music in its cultural context.",
+        instructions: "Write a 2-3 page essay presenting a clear thesis about how blues music reflected the cultural and social conditions of African Americans. Use evidence from assigned readings or listening examples and connect to historical/cultural issues. Format: MLA or Chicago style, double-spaced.",
+        dueDate: "2025-09-15",
+        type: "reflection-paper",
+        estimatedTime: "3 hours",
+        points: 50
       }
     ]
   },
@@ -123,6 +133,16 @@ export const mus240Assignments: WeekAssignments[] = [
         type: "listening-journal",
         estimatedTime: "45 minutes",
         points: 20
+      },
+      {
+        id: "research-proposal",
+        title: "Research Project Proposal",
+        description: "One-paragraph topic description for your research project on African American music.",
+        instructions: "Submit a one-paragraph description of your chosen research topic. Your topic should focus on a specific aspect of African American music history, artist, genre, or cultural movement. Be specific about your research question and why this topic is significant.",
+        dueDate: "2025-10-01",
+        type: "research-proposal",
+        estimatedTime: "1 hour",
+        points: 20
       }
     ]
   },
@@ -141,6 +161,16 @@ export const mus240Assignments: WeekAssignments[] = [
         type: "listening-journal",
         estimatedTime: "40 minutes",
         points: 20
+      },
+      {
+        id: "rp2",
+        title: "Reflection Paper 2: Motown and Cultural Identity",
+        description: "Analyze Motown's role in shaping African American cultural identity during the Civil Rights era.",
+        instructions: "Write a 2-3 page essay examining how Motown Records influenced both African American identity and mainstream American culture. Present a clear thesis with evidence from course materials and connect to historical/cultural contexts. Format: MLA or Chicago style, double-spaced.",
+        dueDate: "2025-10-08",
+        type: "reflection-paper",
+        estimatedTime: "3 hours",
+        points: 50
       }
     ]
   },
@@ -151,14 +181,14 @@ export const mus240Assignments: WeekAssignments[] = [
     endDate: "2025-10-14",
     assignments: [
       {
-        id: "midterm",
-        title: "Midterm Essay: African American Music Heritage",
-        description: "Write a comprehensive essay analyzing the development of African American music from spirituals to funk.",
-        instructions: "Connect musical elements across genres and discuss cultural and social influences.",
-        dueDate: "2025-10-17",
-        type: "essay",
-        estimatedTime: "3 hours",
-        points: 50
+        id: "midterm-exam",
+        title: "Midterm Exam",
+        description: "Assess understanding of music styles, genres, and cultural contexts (Weeks 1–8).",
+        instructions: "Part 1: Listening Identification - Identify musical examples and key characteristics. Part 2: Short Essays on genres, performers, and cultural significance. Completed in class. Focus on identification accuracy, strength of explanations, proper terminology, and historical/cultural integration.",
+        dueDate: "2025-10-15",
+        type: "exam",
+        estimatedTime: "2 hours",
+        points: 100
       }
     ]
   },
@@ -195,6 +225,16 @@ export const mus240Assignments: WeekAssignments[] = [
         type: "listening-journal",
         estimatedTime: "40 minutes",
         points: 20
+      },
+      {
+        id: "annotated-bibliography",
+        title: "Research Project Annotated Bibliography",
+        description: "Compile and annotate at least 5 credible sources for your research project.",
+        instructions: "Create an annotated bibliography with at least 5 credible sources (books, scholarly articles, interviews, etc.) related to your research topic. Each annotation should be 2-3 sentences summarizing the source and explaining its relevance to your project. Format: MLA or Chicago style.",
+        dueDate: "2025-10-29",
+        type: "annotated-bibliography",
+        estimatedTime: "4 hours",
+        points: 30
       }
     ]
   },
@@ -231,6 +271,16 @@ export const mus240Assignments: WeekAssignments[] = [
         type: "listening-journal",
         estimatedTime: "45 minutes",
         points: 20
+      },
+      {
+        id: "rp3",
+        title: "Reflection Paper 3: Jazz and Social Change",
+        description: "Examine jazz music's relationship to social and political movements.",
+        instructions: "Write a 2-3 page essay analyzing how jazz music both reflected and influenced social change in America. Focus on specific examples and connect musical developments to broader cultural movements. Present a clear thesis with evidence from course materials. Format: MLA or Chicago style, double-spaced.",
+        dueDate: "2025-11-12",
+        type: "reflection-paper",
+        estimatedTime: "3 hours",
+        points: 50
       }
     ]
   },
@@ -277,14 +327,14 @@ export const mus240Assignments: WeekAssignments[] = [
     endDate: "2025-12-09",
     assignments: [
       {
-        id: "final-project",
-        title: "Final Research Project: Musical Legacy Analysis",
-        description: "Create a comprehensive research project analyzing the legacy and future of African American music.",
-        instructions: "Choose a specific artist, genre, or movement and trace its historical significance and contemporary relevance. Include multimedia presentation.",
-        dueDate: "2025-12-12",
+        id: "final-research-project",
+        title: "Research Project Final Presentation",
+        description: "Conduct in-depth study of a topic in African American music and present findings in a professional online format.",
+        instructions: "Create a digital project (video, website, podcast, or interactive format) presenting your research findings. Your presentation should demonstrate content accuracy, depth of research, integration of historical/cultural context, organization, creativity, and effective delivery. Build upon your proposal and annotated bibliography to create a comprehensive exploration of your chosen topic.",
+        dueDate: "2025-12-10",
         type: "project",
-        estimatedTime: "4 hours",
-        points: 75
+        estimatedTime: "6 hours",
+        points: 100
       }
     ]
   },
@@ -295,14 +345,14 @@ export const mus240Assignments: WeekAssignments[] = [
     endDate: "2025-12-16",
     assignments: [
       {
-        id: "final-reflection",
-        title: "Course Reflection Essay",
-        description: "Write a reflective essay on your learning journey through African American music history.",
-        instructions: "Reflect on how the course has changed your understanding of music, culture, and history. Connect course themes to contemporary issues.",
+        id: "final-reflection-essay",
+        title: "Final Reflection Essay",
+        description: "Synthesize semester's learning and connect to personal perspective.",
+        instructions: "Write a 4–5-page essay reflecting on course themes, personal insights, and the role of music as cultural force. Draw on examples from at least three styles studied in the course. Focus on integrating course themes, demonstrating depth of reflection, maintaining clarity, and effectively using examples from the semester. Format: MLA or Chicago style, double-spaced.",
         dueDate: "2025-12-16",
         type: "essay",
-        estimatedTime: "2 hours",
-        points: 25
+        estimatedTime: "4 hours",
+        points: 50
       }
     ]
   }

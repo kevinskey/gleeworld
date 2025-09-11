@@ -17,7 +17,12 @@ const AssignmentWeek: React.FC = () => {
     switch (type) {
       case 'listening-journal': return <BookOpen className="h-4 w-4" />;
       case 'sight-reading': return <Music className="h-4 w-4" />;
-      case 'essay': return <FileText className="h-4 w-4" />;
+      case 'essay': 
+      case 'reflection-paper': return <FileText className="h-4 w-4" />;
+      case 'exam': return <GraduationCap className="h-4 w-4" />;
+      case 'project': 
+      case 'research-proposal':
+      case 'annotated-bibliography': return <Star className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
     }
   };
@@ -26,7 +31,12 @@ const AssignmentWeek: React.FC = () => {
     switch (type) {
       case 'listening-journal': return 'bg-blue-100 text-blue-800';
       case 'sight-reading': return 'bg-green-100 text-green-800';
-      case 'essay': return 'bg-purple-100 text-purple-800';
+      case 'essay': 
+      case 'reflection-paper': return 'bg-purple-100 text-purple-800';
+      case 'exam': return 'bg-red-100 text-red-800';
+      case 'project':
+      case 'research-proposal':
+      case 'annotated-bibliography': return 'bg-amber-100 text-amber-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -263,6 +273,24 @@ const AssignmentWeek: React.FC = () => {
                               className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 !text-white shadow-lg text-sm"
                             >
                               Open Journal
+                            </Button>
+                          ) : assignment.type === 'reflection-paper' || assignment.type === 'essay' ? (
+                            <Button 
+                              onClick={() => navigate(`/classes/mus240/assignments/${assignment.id}`)}
+                              className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 !text-white shadow-lg text-sm"
+                            >
+                              Write Essay
+                            </Button>
+                          ) : assignment.type === 'research-proposal' || assignment.type === 'annotated-bibliography' || assignment.type === 'project' ? (
+                            <Button 
+                              onClick={() => navigate(`/classes/mus240/assignments/${assignment.id}`)}
+                              className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 !text-white shadow-lg text-sm"
+                            >
+                              Submit Work
+                            </Button>
+                          ) : assignment.type === 'exam' ? (
+                            <Button variant="outline" disabled className="w-full sm:w-auto border-red-300 text-red-600 text-sm">
+                              In-Class Exam
                             </Button>
                           ) : (
                             <Button variant="outline" disabled className="w-full sm:w-auto border-gray-300 text-gray-500 text-sm">
