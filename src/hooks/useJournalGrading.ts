@@ -92,56 +92,45 @@ export async function getPeerCommentPoints(
   }
 }
 
-// Raw fetch invoker with timeout and cache-buster
-async function callEdgeRaw(
-  path: string,
-  body: unknown,
-  token?: string,
-  timeoutMs = 15000
-) {
+// Raw fetch utility with timeout and cache-buster
+async function callEdgeRaw(path: string, body: unknown, token?: string, ms = 15000) {
   const url = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/${path}?v=${Date.now()}`;
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort("timeout"), timeoutMs);
+  const t = setTimeout(() => ctrl.abort("timeout"), ms);
   const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: JSON.stringify(body),
     signal: ctrl.signal,
-  }).catch((e) => {
-    clearTimeout(t);
-    throw new Error(`fetch_failed: ${e?.message || e}`);
-  });
+  }).catch(e => { clearTimeout(t); throw new Error(`fetch_failed: ${e?.message||e}`); });
   clearTimeout(t);
-
-  const text = await res.text(); // always read
-  let json: any = null;
-  try { json = JSON.parse(text); } catch { /* keep text */ }
-
-  if (!res.ok) {
-    const status = res.status;
-    const msg = json?.error || json?.message || text || `status_${status}`;
-    throw new Error(`edge_${status}: ${msg}`);
+  const text = await res.text();
+  try {
+    const json = JSON.parse(text);
+    if (!res.ok) throw new Error(`edge_${res.status}: ${json.error||json.message||text}`);
+    return json;
+  } catch {
+    if (!res.ok) throw new Error(`edge_${res.status}: ${text||"no_body"}`);
+    return text as any;
   }
-  return json ?? text;
 }
 
-// Health and dry probes
-export async function probeGradeFunction(token?: string) {
-  // Health: proves route + CORS + SW bypass
-  const healthUrl = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/grade-journal?health=1&v=${Date.now()}`;
-  const health = await fetch(healthUrl, { method: "GET" }).then(r => r.text()).catch(e => `health_failed:${e}`);
-
-  // Dry: proves JSON parse + return path (no OpenAI, no DB)
-  const dry = await callEdgeRaw("grade-journal", {
-    mode: "dry",
-    student_id: "probe",
-    assignment_id: "probe",
-    journal_text: "probe"
-  }, token).catch(e => e.message);
-
+// Probe functions for diagnostics
+export async function probeGrade() {
+  const health = await fetch(`https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/grade-journal?health=1&v=${Date.now()}`)
+    .then(r=>r.status+" "+r.statusText).catch(e=>"health_failed:"+e);
+  const { data: s } = await supabase.auth.getSession();
+  const token = s?.session?.access_token;
+  let dry;
+  try {
+    dry = await callEdgeRaw("grade-journal", {
+      mode: "dry",
+      student_id: "probe",
+      assignment_id: "probe",
+      journal_text: "probe"
+    }, token);
+  } catch(e:any) { dry = e.message; }
+  console.log({ health, dry });
   return { health, dry };
 }
 
@@ -152,23 +141,15 @@ export async function gradeJournalWithAI(
   const { data: sessionData } = await supabaseClient.auth.getSession();
   const token = sessionData?.session?.access_token ?? "";
 
-  // 1) Quick health check if you keep seeing 502s
-  // const probe = await probeGradeFunction(token);
-  // console.log("grade-journal probe:", probe);
-
-  // 2) Prefer raw fetch so 4xx/5xx bodies are visible
   try {
-    const data = await callEdgeRaw("grade-journal", {
+    return await callEdgeRaw("grade-journal", {
       assignment_id: journal.assignment_id,
       journal_text: journal.content,
       student_id: journal.student_id,
       journal_id: journal.id,
-      stub_test: false
     }, token);
-
-    return data as GradeResponse;
-  } catch (e: any) {
-    // 3) Fallback to supabase.invoke once, for parity
+  } catch (rawErr:any) {
+    console.error("raw edge fail:", rawErr?.message);
     try {
       const { data, error } = await supabaseClient.functions.invoke("grade-journal", {
         body: {
@@ -176,16 +157,20 @@ export async function gradeJournalWithAI(
           journal_text: journal.content,
           student_id: journal.student_id,
           journal_id: journal.id,
-          stub_test: false
         },
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (error) throw new Error(error.message || "invoke_failed");
+      if (error) throw error;
       return data as GradeResponse;
-    } catch (e2: any) {
-      // Normalize with whatever we learned from raw fetch
-      const msg = e?.message || e2?.message || "grading_failed";
-      throw new Error(msg);
+    } catch (invErr:any) {
+      // Extract Supabase error body if present
+      const resp = invErr?.context?.response;
+      if (resp && typeof resp.text === "function") {
+        const txt = await resp.text().catch(()=>null);
+        console.error("invoke body:", txt);
+        throw new Error(`invoke_${resp.status||"err"}: ${txt||invErr.message||"unknown"}`);
+      }
+      throw new Error(invErr?.message || rawErr?.message || "grading_failed");
     }
   }
 }
@@ -301,7 +286,15 @@ export const useJournalGrading = () => {
     } catch (error: any) {
       console.error('Error grading journal:', error);
       
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      // Improved error handling - extract server response if available
+      const resp = error?.context?.response;
+      let errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (resp) {
+        const txt = await resp.text().catch(()=>null);
+        console.error("edge status:", resp.status, "body:", txt);
+        errorMessage = `edge_${resp.status}: ${txt || error.message}`;
+      }
       
       toast({
         title: "Grading Failed",
