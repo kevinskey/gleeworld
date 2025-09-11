@@ -739,3 +739,32 @@ button[style*="background-color: rgb(217, 119, 6)"]:hover,
   background-color: hsl(var(--primary) / 0.9) !important;
   color: hsl(var(--primary-foreground)) !important;
 }
+
+/* Submission Animation Enhancements */
+@keyframes slide-right {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-slide-right {
+  animation: slide-right 1.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}

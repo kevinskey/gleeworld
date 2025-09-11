@@ -43,6 +43,8 @@ export const LiveStudentInterface: React.FC = () => {
   const [responses, setResponses] = useState<Response[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [justSubmitted, setJustSubmitted] = useState(false);
+  const [submissionAnimation, setSubmissionAnimation] = useState(false);
 
   useEffect(() => {
     fetchActivePoll();
@@ -70,6 +72,8 @@ export const LiveStudentInterface: React.FC = () => {
           if (payload.new.current_question_index !== activePoll?.current_question_index) {
             setUserResponse(null);
             setHasSubmitted(false);
+            setJustSubmitted(false);
+            setSubmissionAnimation(false);
             checkExistingResponse(payload.new.id, payload.new.current_question_index);
           }
         }
@@ -180,6 +184,8 @@ export const LiveStudentInterface: React.FC = () => {
     if (!user || !activePoll || submitting) return;
 
     setSubmitting(true);
+    setSubmissionAnimation(true);
+    
     try {
       const { error } = await supabase
         .from('mus240_poll_responses')
@@ -195,10 +201,20 @@ export const LiveStudentInterface: React.FC = () => {
 
       setUserResponse(selectedAnswer);
       setHasSubmitted(true);
-      toast.success('Response submitted!');
+      setJustSubmitted(true);
+      
+      // Success animation sequence
+      setTimeout(() => setSubmissionAnimation(false), 1000);
+      setTimeout(() => setJustSubmitted(false), 3000);
+      
+      toast.success('🎵 Response submitted successfully!', {
+        description: 'Your answer has been recorded and counts toward participation.',
+        duration: 4000,
+      });
     } catch (error) {
       console.error('Error submitting response:', error);
-      toast.error('Failed to submit response');
+      toast.error('Failed to submit response - Please try again');
+      setSubmissionAnimation(false);
     } finally {
       setSubmitting(false);
     }
@@ -471,10 +487,28 @@ export const LiveStudentInterface: React.FC = () => {
           {!activePoll.show_results ? (
             // Answer Selection Mode
             <div className="space-y-3">
-              {hasSubmitted && (
-                <div className="flex items-center gap-2 text-green-600 font-medium mb-4">
-                  <CheckCircle className="h-5 w-5" />
-                  Response submitted! Waiting for results...
+              {/* Enhanced Submission Status */}
+              {justSubmitted && (
+                <div className="relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-6 rounded-xl shadow-lg mb-6 animate-pulse">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] animate-slide-right"></div>
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="text-3xl animate-bounce">✅</div>
+                    <div>
+                      <div className="text-xl font-bold">Response Submitted!</div>
+                      <div className="text-emerald-100">Your answer has been recorded and sent to your instructor</div>
+                    </div>
+                    <div className="text-3xl animate-bounce delay-100">🎵</div>
+                  </div>
+                </div>
+              )}
+              
+              {hasSubmitted && !justSubmitted && (
+                <div className="flex items-center gap-3 text-emerald-600 font-medium mb-4 bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+                  <CheckCircle className="h-6 w-6" />
+                  <div>
+                    <div className="font-semibold">Response Recorded</div>
+                    <div className="text-sm text-emerald-700">Waiting for instructor to show results...</div>
+                  </div>
                 </div>
               )}
               
@@ -483,20 +517,47 @@ export const LiveStudentInterface: React.FC = () => {
                   key={index}
                   onClick={() => submitResponse(index)}
                   disabled={hasSubmitted || submitting}
-                  className={`w-full text-left justify-start p-4 h-auto transition-all duration-300 ${
-                    userResponse === index
+                  className={`w-full text-left justify-start p-6 h-auto transition-all duration-300 relative overflow-hidden ${
+                    submitting && userResponse !== index
+                      ? 'opacity-50 pointer-events-none'
+                      : userResponse === index && submissionAnimation
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xl border-0 transform scale-[1.05] animate-pulse'
+                      : userResponse === index
                       ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg border-0 transform scale-[1.02]'
                       : hasSubmitted
                       ? 'bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200'
                       : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md hover:transform hover:scale-[1.01]'
                   }`}
                 >
-                  <span className="font-medium mr-3">
-                    {String.fromCharCode(65 + index)}.
-                  </span>
-                  {option}
+                  {submitting && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] animate-slide-right"></div>
+                  )}
+                  <div className="flex items-center w-full">
+                    <span className="font-bold mr-4 text-lg">
+                      {String.fromCharCode(65 + index)}.
+                    </span>
+                    <span className="flex-1">{option}</span>
+                    {userResponse === index && hasSubmitted && (
+                      <div className="ml-3 flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5" />
+                        <span className="text-sm font-medium">Selected</span>
+                      </div>
+                    )}
+                    {submitting && (
+                      <div className="ml-3">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      </div>
+                    )}
+                  </div>
                 </Button>
               ))}
+              
+              {submitting && (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-2"></div>
+                  <p className="text-emerald-600 font-medium">Submitting your response...</p>
+                </div>
+              )}
             </div>
           ) : (
             // Results Display Mode
