@@ -22,14 +22,14 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 1,
     topic: "Introduction to African American Musical Traditions",
     startDate: "2025-08-20",
-    endDate: "2025-08-26",
+    endDate: "2025-08-24",
     assignments: [
       {
         id: "lj1",
         title: "Listening Journal 1: African Roots",
         description: "Listen to the assigned African traditional music examples and reflect on their influence on African American music.",
         instructions: "Focus on rhythmic patterns, call-and-response structures, and vocal techniques. How do these elements appear in later African American musical forms?",
-        dueDate: "2025-08-31",
+        dueDate: "2025-08-29",
         type: "listening-journal",
         estimatedTime: "45 minutes",
         points: 20
@@ -39,15 +39,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 2,
     topic: "Spirituals and Vocal Traditions",
-    startDate: "2025-08-27",
-    endDate: "2025-09-02",
+    startDate: "2025-08-25",
+    endDate: "2025-08-31",
     assignments: [
       {
         id: "lj2",
         title: "Week 2 Listening Guide – Spirituals and Vocal Traditions",
         description: "Listening Selections: Fisk Jubilee Singers – \"Swing Low, Sweet Chariot\", Field Holler (archival example), Robert Johnson – \"Cross Road Blues\", Kevin Phillip Johnson's arrangement of \"Children, Go Where I Send Thee\"",
         instructions: "Reflection Prompt (250–300 words)\nRespond to the week's listening by addressing:\n• Which African musical elements are present? (e.g., call-and-response, improvisation, polyrhythm, timbre).\n• How did these forms aid enslaved Africans—practically, spiritually, emotionally?\n• How do we see connections to blues development, especially in Robert Johnson's \"Cross Road Blues\"?\n• Choose one recording that stood out. Describe what you hear, what it communicates, and its cultural significance.\n\nPeer Comment Guidelines\nAfter submitting your journal:\n• Comment on at least two peers, 3–4 sentences each.\n• Acknowledge a specific point they made.\n• Expand the discussion with another insight, example, or question.\n• Connect their ideas back to the listening or course themes.\n• Avoid generic praise. Comments should deepen conversation.",
-        dueDate: "2025-09-06",
+        dueDate: "2025-09-05",
         type: "listening-journal",
         estimatedTime: "45 minutes",
         points: 20
@@ -177,15 +177,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 8,
     topic: "Funk and the Rhythmic Revolution",
-    startDate: "2025-10-08",
-    endDate: "2025-10-14",
+    startDate: "2025-09-22",
+    endDate: "2025-09-26",
     assignments: [
       {
         id: "midterm-exam",
         title: "Midterm Exam",
         description: "Assess understanding of music styles, genres, and cultural contexts (Weeks 1–8).",
-        instructions: "Part 1: Listening Identification - Identify musical examples and key characteristics. Part 2: Short Essays on genres, performers, and cultural significance. Completed in class. Focus on identification accuracy, strength of explanations, proper terminology, and historical/cultural integration.",
-        dueDate: "2025-10-15",
+        instructions: "Part 1: Listening Identification - Identify musical examples and key characteristics. Part 2: Short Essays on genres, performers, and cultural significance. Completed in class during mid-semester examination period (Sept 25-26). Focus on identification accuracy, strength of explanations, proper terminology, and historical/cultural integration.",
+        dueDate: "2025-09-25",
         type: "exam",
         estimatedTime: "2 hours",
         points: 100
@@ -323,15 +323,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 15,
     topic: "Future Directions and Legacy",
-    startDate: "2025-12-03",
-    endDate: "2025-12-09",
+    startDate: "2025-11-24",
+    endDate: "2025-11-30",
     assignments: [
       {
         id: "final-research-project",
         title: "Research Project Final Presentation",
         description: "Conduct in-depth study of a topic in African American music and present findings in a professional online format.",
         instructions: "Create a digital project (video, website, podcast, or interactive format) presenting your research findings. Your presentation should demonstrate content accuracy, depth of research, integration of historical/cultural context, organization, creativity, and effective delivery. Build upon your proposal and annotated bibliography to create a comprehensive exploration of your chosen topic.",
-        dueDate: "2025-12-10",
+        dueDate: "2025-12-01",
         type: "project",
         estimatedTime: "6 hours",
         points: 100
@@ -341,15 +341,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 16,
     topic: "Final Presentations and Course Reflection",
-    startDate: "2025-12-10",
-    endDate: "2025-12-16",
+    startDate: "2025-12-01",
+    endDate: "2025-12-03",
     assignments: [
       {
         id: "final-reflection-essay",
         title: "Final Reflection Essay",
         description: "Synthesize semester's learning and connect to personal perspective.",
         instructions: "Write a 4–5-page essay reflecting on course themes, personal insights, and the role of music as cultural force. Draw on examples from at least three styles studied in the course. Focus on integrating course themes, demonstrating depth of reflection, maintaining clarity, and effectively using examples from the semester. Format: MLA or Chicago style, double-spaced.",
-        dueDate: "2025-12-16",
+        dueDate: "2025-12-03",
         type: "essay",
         estimatedTime: "4 hours",
         points: 50
