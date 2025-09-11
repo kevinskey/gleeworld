@@ -28,10 +28,20 @@ export const useSendSMSNotification = () => {
       return result;
     },
     onSuccess: (result) => {
-      if (result.totalSent > 0) {
+      console.log('✅ SMS Success Result:', result);
+      
+      if (result?.totalSent > 0) {
         toast.success(`SMS notifications sent to ${result.totalSent} members`);
+      } else if (result?.totalSent === 0 && result?.totalFailed > 0) {
+        toast.error(`Failed to send SMS to ${result.totalFailed} members`);
+      } else if (result?.message) {
+        toast.info(result.message);
+      } else {
+        toast.success('SMS notification process completed');
       }
-      if (result.totalFailed > 0) {
+      
+      if (result?.totalFailed > 0) {
+        console.warn(`⚠️ ${result.totalFailed} SMS notifications failed`);
         toast.warning(`Failed to send ${result.totalFailed} SMS notifications`);
       }
     },
