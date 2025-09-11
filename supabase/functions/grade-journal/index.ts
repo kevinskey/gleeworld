@@ -30,9 +30,18 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
   try {
-    if (!OPENAI_API_KEY) return J(500, { error: "missing_openai_key" });
-    if (!SUPABASE_URL) return J(500, { error: "missing_supabase_url" });
-    if (!SERVICE_ROLE) return J(500, { error: "missing_service_role" });
+    if (!OPENAI_API_KEY) {
+      console.error('Missing OpenAI API key');
+      return J(500, { error: "missing_openai_key" });
+    }
+    if (!SUPABASE_URL) {
+      console.error('Missing Supabase URL');
+      return J(500, { error: "missing_supabase_url" });
+    }
+    if (!SERVICE_ROLE) {
+      console.error('Missing service role key');
+      return J(500, { error: "missing_service_role" });
+    }
 
     console.log('=== PARSING REQUEST ===');
     const body = await req.json();
@@ -58,6 +67,7 @@ serve(async (req) => {
     console.log('Word count:', wordCount, 'Word range OK:', wordRangeOk);
 
     console.log('=== CALLING OPENAI API ===');
+    console.log('OpenAI API key length:', OPENAI_API_KEY.length);
 
     const aiResp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -66,7 +76,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // Use legacy model that supports temperature
+        model: 'gpt-4o-mini', // Legacy model that supports temperature parameter
         messages: [
           {
             role: 'system',
