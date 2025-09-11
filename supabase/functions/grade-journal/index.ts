@@ -47,6 +47,37 @@ serve(async (req) => {
     const body = await req.json();
     console.log('Request body keys:', Object.keys(body));
 
+    // DIAG mode for debugging
+    if (body?.mode === "diag") {
+      const out: any = { ok: false, phase: "diag" };
+      out.secrets = {
+        has_SUPABASE_URL: !!SUPABASE_URL,
+        has_SERVICE_ROLE: !!SERVICE_ROLE,
+        has_OPENAI_API_KEY: !!OPENAI_API_KEY,
+      };
+      try {
+        const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
+        const { error } = await sb.from("mus240_journal_grades").select("id").limit(1);
+        out.db = { ok: !error, error: error?.message || null };
+      } catch (e: any) { 
+        out.db = { ok: false, error: String(e?.message || e) }; 
+      }
+      try {
+        const r = await fetch("https://api.openai.com/v1/models", {
+          headers: { Authorization: `Bearer ${OPENAI_API_KEY}` }
+        });
+        out.openai = { ok: r.ok, status: r.status, text: r.ok ? "ok" : await r.text().catch(() => null) };
+      } catch (e: any) { 
+        out.openai = { ok: false, error: String(e?.message || e) }; 
+      }
+      return J(200, out);
+    }
+
+    // DRY mode for testing  
+    if (body?.mode === "dry") {
+      return J(200, { ok: true, phase: "dry", message: "Handler reached, no AI/DB calls made" });
+    }
+
     const { student_id, assignment_id, journal_text, rubric } = body;
 
     console.log('Extracted values:');
@@ -174,7 +205,7 @@ Return ONLY a JSON object with this exact structure:
 
     console.log('=== ATTEMPTING DATABASE INSERT ===');
 
-    // Use service role for database operations
+    // Use service role for database operations (bypasses RLS)
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, { 
       auth: { persistSession: false } 
     });
