@@ -62,23 +62,15 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           scoreRef.current.style.maxWidth = `${targetContainerWidth}px`;
         }
         
-        // Create OSMD instance with mobile-optimized settings
+        // Create OSMD instance with minimal, stable settings
         const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
           autoResize: true,
           backend: "svg",
-          drawTitle: false, // Never show title to save space
+          drawTitle: false,
+          drawComposer: false,
           drawCredits: false,
-          drawPartNames: false, // Never show part names on mobile
-          drawMeasureNumbers: !isMobile, // Only show measure numbers on desktop
-          coloringMode: 0, // No coloring
-          cursorsOptions: [{
-            type: 3, // Thin cursor
-            color: '#3B82F6',
-            alpha: 0.7,
-            follow: true
-          }],
-          pageFormat: "Endless",
-          pageBackgroundColor: "#FFFFFF"
+          drawLyrics: false,
+          drawPartNames: false
         });
 
         // Store reference for cleanup and resize
