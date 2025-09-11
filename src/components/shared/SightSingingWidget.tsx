@@ -308,18 +308,18 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
           </div>
         )}
 
-        {/* Sheet Music Display */}
+        {/* Sheet Music Display - Optimized for Mobile */}
         {currentExercise && (
-          <div className="border rounded-lg p-4 bg-background relative">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Generated Exercise</h3>
+          <div className="bg-background relative -mx-2 sm:mx-0 p-1 sm:p-4 border-t border-border sm:border sm:rounded-lg">
+            <div className="flex items-center justify-between mb-1 sm:mb-2 px-2 sm:px-0">
+              <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Generated Exercise</h3>
               <Badge variant="outline" className="text-xs">
                 {currentExercise.metadata.difficulty} • {currentExercise.metadata.context}
               </Badge>
             </div>
             <div 
               ref={sheetMusicRef} 
-              className="sheet-music-container min-h-[200px] w-full bg-background border rounded p-2"
+              className="sheet-music-container-mobile min-h-[180px] sm:min-h-[200px] w-full bg-background"
               style={{ position: 'relative', zIndex: 1 }}
             />
           </div>

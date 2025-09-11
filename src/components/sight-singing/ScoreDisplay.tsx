@@ -45,16 +45,16 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         console.log('Rendering MusicXML with OSMD...');
         console.log('MusicXML length:', musicXML.length);
         
-        // Calculate responsive settings and constrain container width for OSMD
-        // Ensure exactly 4 measures per row on iPad (768px+) and desktop (1024px+)
+        // Calculate responsive settings - Force 2 measures per row on mobile
         const containerWidth = scoreRef.current?.clientWidth || 800;
-        const measuresPerRow = containerWidth < 640 ? 2 : // Mobile: 2 measures
-                              containerWidth < 768 ? 3 : // Small tablet: 3 measures  
-                              4; // iPad and desktop: exactly 4 measures (min and max)
+        const isMobile = containerWidth < 768;
+        const measuresPerRow = isMobile ? 2 : 4; // Force 2 on mobile, 4 on desktop
+        
+        console.log(`Mobile mode: ${isMobile}, Container width: ${containerWidth}, Measures per row: ${measuresPerRow}`);
         
         // Dynamically resize the container to force the desired measures per row
-        const baseWidthPerMeasure = 160; // Approximate width needed per measure in OSMD
-        const targetContainerWidth = measuresPerRow * baseWidthPerMeasure + 60; // Add padding
+        const baseWidthPerMeasure = isMobile ? 120 : 160; // Smaller width per measure on mobile
+        const targetContainerWidth = measuresPerRow * baseWidthPerMeasure + (isMobile ? 20 : 60); // Minimal padding on mobile
         
         // Temporarily constrain the container width for OSMD calculation
         if (scoreRef.current) {
@@ -62,14 +62,14 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           scoreRef.current.style.maxWidth = `${targetContainerWidth}px`;
         }
         
-        // Create OSMD instance with constrained container
+        // Create OSMD instance with mobile-optimized settings
         const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
           autoResize: true,
           backend: "svg",
-          drawTitle: containerWidth < 768, // Show title on mobile/tablet
+          drawTitle: false, // Never show title to save space
           drawCredits: false,
-          drawPartNames: containerWidth >= 768, // Hide part names on mobile to save space
-          drawMeasureNumbers: true,
+          drawPartNames: false, // Never show part names on mobile
+          drawMeasureNumbers: !isMobile, // Only show measure numbers on desktop
           coloringMode: 0, // No coloring
           cursorsOptions: [{
             type: 3, // Thin cursor
@@ -180,7 +180,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       {musicXML && (
         <div 
           ref={scoreRef}
-          className="flex-1 min-h-[250px] sm:min-h-[300px] w-full bg-white rounded-lg border-2 shadow-xl p-1 sm:p-2 lg:p-4 overflow-auto"
+          className="flex-1 min-h-[200px] sm:min-h-[300px] w-full bg-white rounded border shadow-sm p-0 sm:p-2 overflow-x-auto overflow-y-visible"
           style={{ 
             width: '100%',
             display: 'flex',

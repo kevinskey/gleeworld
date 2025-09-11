@@ -778,14 +778,27 @@ button[style*="background-color: rgb(217, 119, 6)"]:hover,
   overflow-y: visible;
 }
 
-.sheet-music-container svg {
+.sheet-music-container-mobile {
+  background: hsl(var(--background));
+  position: relative;
+  z-index: 1;
+  overflow-x: auto;
+  overflow-y: visible;
+  /* Full width on mobile, no inner padding */
+  margin: 0;
+  padding: 0;
+}
+
+.sheet-music-container svg,
+.sheet-music-container-mobile svg {
   background: hsl(var(--background));
   width: 100% !important;
   height: auto !important;
-  min-height: 200px;
+  min-height: 180px;
 }
 
-.sheet-music-container .osmd-svg-overlay {
+.sheet-music-container .osmd-svg-overlay,
+.sheet-music-container-mobile .osmd-svg-overlay {
   background: transparent !important;
 }
 
@@ -793,18 +806,24 @@ button[style*="background-color: rgb(217, 119, 6)"]:hover,
 .sheet-music-container text,
 .sheet-music-container path,
 .sheet-music-container line,
-.sheet-music-container circle {
+.sheet-music-container circle,
+.sheet-music-container-mobile text,
+.sheet-music-container-mobile path,
+.sheet-music-container-mobile line,
+.sheet-music-container-mobile circle {
   fill: hsl(var(--foreground)) !important;
   stroke: hsl(var(--foreground)) !important;
 }
 
 /* Staff lines should be visible */
-.sheet-music-container .staff-line {
+.sheet-music-container .staff-line,
+.sheet-music-container-mobile .staff-line {
   stroke: hsl(var(--foreground)) !important;
   stroke-width: 1px;
 }
 
 /* Note heads and stems */
-.sheet-music-container .note {
+.sheet-music-container .note,
+.sheet-music-container-mobile .note {
   fill: hsl(var(--foreground)) !important;
 }
