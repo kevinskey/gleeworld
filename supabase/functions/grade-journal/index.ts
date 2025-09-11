@@ -230,28 +230,28 @@ Return ONLY a JSON object with this exact structure:
     assignment_db_id = assignmentData?.id ?? null; // proceed even if null
 
     console.log('=== PREPARING DATABASE INSERT ===');
-    const gradeData: any = {
+    const gradeData = {
       student_id,
       assignment_id,
-      // assignment_db_id, // REMOVE from insert unless the column exists
-      journal_id: body.journal_id,
+      // assignment_db_id, // leave out unless column exists
+      journal_id: body.journal_id ?? null,
       overall_score,
       rubric: gradingResult,
       feedback,
       ai_model: 'gpt-4o-mini',
-      graded_by: null, // AI grading has no human grader
-      graded_at: new Date().toISOString()
-      // Do NOT set created_at or updated_at - let database handle these
+      graded_by: null,
+      graded_at: new Date().toISOString(),
     };
 
     console.log('About to insert grade data:', JSON.stringify(gradeData, null, 2));
 
     console.log('=== DATABASE INSERT ===');
     const { data: insertData, error: insErr } = await supabase
-      .from('mus240_journal_grades')
+      .from('public.mus240_journal_grades')
       .insert([gradeData])
       .select()
       .single();
+    if (insErr) return J(500, { error:"db_insert_failed", stage:"db_insert", ...insErr });
 
     if (insErr) {
       console.log('=== DATABASE INSERT FAILED ===');
