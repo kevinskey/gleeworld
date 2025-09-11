@@ -126,87 +126,72 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    console.log('Creating auth user with email:', email);
+    console.log('Creating/ensuring auth user for email:', email);
     
-    // Try to invite/create auth user; if it already exists, gracefully continue by linking profile
+    // Prefer direct createUser with a secure temp password to avoid email invite dependency
     let targetUserId: string | null = null;
     let createdNewAuthUser = false;
+    let tempPassword: string | null = null;
 
-    const { data: authUser, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-      data: {
-        full_name: full_name || email.split('@')[0],
-        auto_enrolled: true,
-        enrolled_for_contract: contract_id || null
-      }
+    const generateTempPassword = () => {
+      const bytes = crypto.getRandomValues(new Uint8Array(16));
+      const chars = Array.from(bytes).map((b) => String.fromCharCode(33 + (b % 94))).join('');
+      // Ensure reasonable strength
+      return 'Glee' + chars.slice(0, 10) + (Math.floor(Math.random() * 10)).toString();
+    };
+
+    tempPassword = generateTempPassword();
+    const { data: created, error: createErr } = await supabase.auth.admin.createUser({
+      email,
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: { full_name: full_name || email.split('@')[0], auto_enrolled: true, enrolled_for_contract: contract_id || null }
     });
 
-    if (inviteError) {
-      console.error('Error creating auth user (invite):', inviteError);
-      const msg = (inviteError?.message || '').toLowerCase();
-      // Fallback for duplicate/exists scenarios
-      if (msg.includes('already') || msg.includes('duplicate') || msg.includes('database error')) {
-        // Attempt to find existing auth user by email (paginate defensively)
-        let page = 1;
-        const perPage = 1000;
-        let found: any = null;
-        while (page <= 20 && !found) {
-          const { data: listData, error: listErr } = await (supabase as any).auth.admin.listUsers({ page, perPage });
-          if (listErr) {
-            console.error('Error listing users (page ' + page + '):', listErr);
-            break;
-          }
-          const users = listData?.users || [];
-          found = users.find((u: any) => (u.email || '').toLowerCase() === email.toLowerCase());
-          if (!users.length) break;
-          page++;
+    if (createErr) {
+      console.warn('createUser error, will attempt to find existing user:', createErr);
+      // If the user already exists, find them by paging
+      let page = 1;
+      const perPage = 1000;
+      let found: any = null;
+      while (page <= 20 && !found) {
+        const { data: listData, error: listErr } = await (supabase as any).auth.admin.listUsers({ page, perPage });
+        if (listErr) {
+          console.error('Error listing users (page ' + page + '):', listErr);
+          break;
         }
-        if (found) {
-          targetUserId = found.id;
-          console.log('Found existing auth user for email:', email, 'id:', targetUserId);
-        } else {
-          console.warn('Existing auth user not found by email; attempting createUser fallback');
-          // Generate secure temporary password and create user directly
-          const tempPassword = crypto.getRandomValues(new Uint8Array(12))
-            .reduce((acc, byte) => acc + String.fromCharCode(33 + (byte % 94)), '');
-
-          const { data: created, error: createErr } = await supabase.auth.admin.createUser({
-            email,
-            password: tempPassword,
-            email_confirm: true,
-            user_metadata: { full_name: full_name || email.split('@')[0], auto_enrolled: true, enrolled_for_contract: contract_id || null }
-          });
-          if (createErr) {
-            console.error('createUser fallback failed:', createErr);
-            throw new Error('Failed to create user account: ' + createErr.message);
-          }
-          targetUserId = created.user!.id;
-          createdNewAuthUser = true;
-          console.log('Auth user created via createUser fallback:', targetUserId);
-        }
-      } else {
-        // Unknown error; bubble up
-        throw new Error('Failed to create user account: ' + inviteError.message);
+        const users = listData?.users || [];
+        found = users.find((u: any) => (u.email || '').toLowerCase() === email.toLowerCase());
+        if (!users.length) break;
+        page++;
       }
+      if (!found) {
+        throw new Error('Failed to create or locate user account: ' + createErr.message);
+      }
+      targetUserId = found.id;
+      tempPassword = null; // Do not return a password if user already existed
+      console.log('Located existing auth user for email:', email, 'id:', targetUserId);
     } else {
-      targetUserId = authUser.user!.id;
+      targetUserId = created.user!.id;
       createdNewAuthUser = true;
-      console.log('Auth user created:', targetUserId);
+      console.log('Auth user created via createUser:', targetUserId);
     }
 
-    // Create profile entry in gw_profiles (idempotent with prior existence check by email)
-    const { data: profile, error: profileInsertError } = await supabase
+    // Create or update profile entry in gw_profiles (idempotent)
+    const defaultRole = (role && ['member','fan','alumna','auditioner','admin','super-admin'].includes(role)) ? role : (role || 'member');
+    const { data: profile, error: profileUpsertError } = await supabase
       .from('gw_profiles')
-      .insert({
+      .upsert({
         user_id: targetUserId!,
         email: email,
         full_name: full_name || email.split('@')[0],
-        role: role || 'auditioner'
-      })
+        role: defaultRole
+      }, { onConflict: 'user_id' })
       .select()
       .single();
 
-    if (profileInsertError) {
-      console.error('Error creating profile:', profileInsertError);
+    if (profileUpsertError) {
+      console.error('Error upserting profile:', profileUpsertError);
       // Try to clean up the auth user only if we just created it here
       if (createdNewAuthUser && targetUserId) {
         try {
@@ -215,10 +200,10 @@ const handler = async (req: Request): Promise<Response> => {
           console.warn('Cleanup failed deleting auth user:', cleanupErr);
         }
       }
-      throw new Error('Failed to create user profile: ' + profileInsertError.message);
+      throw new Error('Failed to create user profile: ' + profileUpsertError.message);
     }
 
-    console.log('Profile created successfully:', profile.id);
+    console.log('Profile ensured successfully for user_id:', targetUserId);
 
     // Log the activity
     await supabase
@@ -232,8 +217,8 @@ const handler = async (req: Request): Promise<Response> => {
           email: email,
           full_name: full_name || email.split('@')[0],
           contract_id: contract_id,
-          role: role || 'auditioner',
-          method: createdNewAuthUser ? 'invite_email' : 'linked_existing_auth_user'
+          role: defaultRole,
+          method: createdNewAuthUser ? 'created_with_password' : 'linked_existing_auth_user'
         }
       });
 
@@ -241,7 +226,8 @@ const handler = async (req: Request): Promise<Response> => {
       success: true, 
       user_id: targetUserId!,
       profile: profile,
-      message: createdNewAuthUser ? 'User auto-enrolled and invited successfully' : 'User profile created for existing account',
+      message: createdNewAuthUser ? 'User created with temporary password' : 'Existing user linked; profile ensured',
+      temp_password: tempPassword || undefined,
       enrolled: true
     }), {
       status: 200,
