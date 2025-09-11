@@ -1,7 +1,7 @@
 import React from 'react';
 import { FileText } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
-import { BookingRequestManager } from '@/components/tour-manager/BookingRequestManager';
+import { BookingRequestsList } from '@/components/booking/BookingRequestsList';
 import { ModuleProps } from '@/types/unified-modules';
 
 export const BookingFormsModule = ({ user, isFullPage = false }: ModuleProps) => {
@@ -14,7 +14,7 @@ export const BookingFormsModule = ({ user, isFullPage = false }: ModuleProps) =>
       iconColor="cyan"
       fullPage={isFullPage}
     >
-      <BookingRequestManager user={user} />
+      <BookingRequestsList />
     </ModuleWrapper>
   );
 };
