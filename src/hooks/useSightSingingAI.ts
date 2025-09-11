@@ -90,13 +90,13 @@ export const useSightSingingAI = (): UseSightSingingAIReturn => {
         throw new Error(functionError.message || 'Failed to generate sight singing exercise');
       }
 
-      if (!data || !data.musicxml) {
+      if (!data || !data.musicXML) {
         throw new Error('Invalid response from generation service');
       }
 
       // Parse the response and create the result
       const result: SightSingingResult = {
-        musicXML: data.musicxml,
+        musicXML: data.musicXML,
         notes: data.notes || [],
         metadata: {
           key: `${generationParams.key.tonic} ${generationParams.key.mode}`,
