@@ -6,14 +6,9 @@ const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers":
-    "authorization, content-type, x-client-info, cache-control, pragma",
+    "authorization, content-type, x-client-info, cache-control, pragma, apikey",
 };
 
-const J = (s: number, b: any) =>
-  new Response(JSON.stringify(b), { 
-    status: s, 
-    headers: { "Content-Type":"application/json", ...CORS }
-  });
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
