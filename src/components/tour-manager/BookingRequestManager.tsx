@@ -22,7 +22,10 @@ import {
   Search,
   MessageSquare,
   Send,
-  FileSignature
+  FileSignature,
+  StickyNote,
+  Forward,
+  PlusCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -64,6 +67,8 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedRequest, setSelectedRequest] = useState<BookingRequest | null>(null);
   const [responseMessage, setResponseMessage] = useState('');
+  const [newNote, setNewNote] = useState('');
+  const [forwardNote, setForwardNote] = useState('');
   const { toast } = useToast();
 
   const loadBookingRequests = async () => {
@@ -123,6 +128,68 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
       toast({
         title: "Error updating status",
         description: "Could not update request status. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const addNoteToRequest = async (requestId: string, note: string) => {
+    try {
+      const request = requests.find(r => r.id === requestId);
+      if (!request) return;
+      
+      const existingNotes = request.notes || '';
+      const newNote = `[${new Date().toLocaleDateString()} - ${user?.full_name || 'Tour Manager'}] ${note}`;
+      const updatedNotes = existingNotes ? `${existingNotes}\n\n${newNote}` : newNote;
+      
+      const { error } = await supabase
+        .from('booking_requests')
+        .update({ 
+          notes: updatedNotes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      setRequests(prev => prev.map(req => 
+        req.id === requestId 
+          ? { ...req, notes: updatedNotes }
+          : req
+      ));
+
+      toast({
+        title: "Note added",
+        description: "Your note has been added to the request",
+      });
+    } catch (error) {
+      console.error('Error adding note:', error);
+      toast({
+        title: "Error adding note",
+        description: "Could not add note. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const forwardToDrJohnson = async (request: BookingRequest, note: string) => {
+    try {
+      // Add note about forwarding
+      const forwardNote = `[FORWARDED TO DR. JOHNSON] ${note}`;
+      await addNoteToRequest(request.id, forwardNote);
+      
+      // Update status to indicate it's been forwarded
+      await updateRequestStatus(request.id, 'reviewed', `Forwarded to Dr. Johnson with note: ${note}`);
+      
+      toast({
+        title: "Request forwarded",
+        description: "The booking request has been forwarded to Dr. Johnson with your note",
+      });
+    } catch (error) {
+      console.error('Error forwarding to Dr. Johnson:', error);
+      toast({
+        title: "Error forwarding request",
+        description: "Could not forward request. Please try again.",
         variant: "destructive"
       });
     }
@@ -347,11 +414,109 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                 </div>
               )}
 
+              {request.notes && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Notes</h4>
+                  <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md whitespace-pre-wrap">
+                    {request.notes}
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-between items-center pt-4 border-t">
                 <div className="text-xs text-muted-foreground">
                   Submitted {formatDate(request.created_at)}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  {/* Add Note Dialog */}
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" onClick={() => setSelectedRequest(request)}>
+                        <StickyNote className="h-4 w-4 mr-1" />
+                        Add Note
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Add Note to {request.organization_name}</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Note</label>
+                          <Textarea
+                            placeholder="Add your note about this booking request..."
+                            value={newNote}
+                            onChange={(e) => setNewNote(e.target.value)}
+                            rows={4}
+                          />
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="outline" onClick={() => {
+                            setSelectedRequest(null);
+                            setNewNote('');
+                          }}>
+                            Cancel
+                          </Button>
+                          <Button onClick={() => {
+                            if (selectedRequest && newNote.trim()) {
+                              addNoteToRequest(selectedRequest.id, newNote);
+                              setSelectedRequest(null);
+                              setNewNote('');
+                            }
+                          }}>
+                            <PlusCircle className="h-4 w-4 mr-1" />
+                            Add Note
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Forward to Dr Johnson Dialog */}
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" onClick={() => setSelectedRequest(request)}>
+                        <Forward className="h-4 w-4 mr-1" />
+                        Forward to Dr. Johnson
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Forward to Dr. Johnson</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Note for Dr. Johnson</label>
+                          <Textarea
+                            placeholder="Add a note for Dr. Johnson about this booking request..."
+                            value={forwardNote}
+                            onChange={(e) => setForwardNote(e.target.value)}
+                            rows={4}
+                          />
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="outline" onClick={() => {
+                            setSelectedRequest(null);
+                            setForwardNote('');
+                          }}>
+                            Cancel
+                          </Button>
+                          <Button onClick={() => {
+                            if (selectedRequest && forwardNote.trim()) {
+                              forwardToDrJohnson(selectedRequest, forwardNote);
+                              setSelectedRequest(null);
+                              setForwardNote('');
+                            }
+                          }}>
+                            <Forward className="h-4 w-4 mr-1" />
+                            Forward Request
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Response Dialog */}
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="outline" size="sm" onClick={() => setSelectedRequest(request)}>
