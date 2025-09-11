@@ -62,20 +62,6 @@ const MusicTheoryFundamentals = () => {
 
   return (
     <PublicLayout>
-      {/* Floating Sheet Music Balloon */}
-      <Link 
-        to="/music-library"
-        className="fixed top-20 right-6 z-50 group"
-      >
-        <div className="bg-primary text-primary-foreground rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 animate-bounce">
-          <FileMusic className="h-6 w-6" />
-        </div>
-        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="bg-background text-foreground text-xs px-2 py-1 rounded-md shadow-md border whitespace-nowrap">
-            Sheet Music
-          </div>
-        </div>
-      </Link>
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         {/* Hero Section */}
