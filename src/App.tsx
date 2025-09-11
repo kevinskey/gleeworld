@@ -1503,21 +1503,21 @@ const App = () => {
                                   </Mus240EnrollmentRoute>
                                 }
                              />
-                              <Route 
-                                path="/classes/mus240/assignments" 
-                              element={
-                                  <Mus240EnrollmentRoute>
-                                    <AssignmentJournal />
-                                  </Mus240EnrollmentRoute>
-                              }
-                              />
-                              <Route 
-                                path="/classes/mus240/assignments/:assignmentId" 
+                               <Route 
+                                 path="/classes/mus240/assignments" 
                                element={
-                                  <Mus240EnrollmentRoute>
-                                    <AssignmentWeek />
-                                  </Mus240EnrollmentRoute>
+                                   <Mus240EnrollmentRoute>
+                                     <AssignmentWeek />
+                                   </Mus240EnrollmentRoute>
                                }
+                               />
+                               <Route 
+                                 path="/classes/mus240/assignments/:assignmentId" 
+                                element={
+                                   <Mus240EnrollmentRoute>
+                                     <AssignmentJournal />
+                                   </Mus240EnrollmentRoute>
+                                }
                               />
                               <Route 
                                 path="/classes/mus240/listening" 
