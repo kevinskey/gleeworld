@@ -777,9 +777,9 @@ const App = () => {
                    <Route 
                      path="/music-library" 
                      element={
-                       <FanRoute>
+                       <PublicRoute>
                          <MusicLibraryPageLegacy />
-                       </FanRoute>
+                       </PublicRoute>
                      } 
                     />
                       <Route 
