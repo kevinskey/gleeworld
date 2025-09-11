@@ -27,8 +27,8 @@ export const mus240Assignments: WeekAssignments[] = [
       {
         id: "lj1",
         title: "Listening Journal 1: African Roots",
-        description: "Listen to the assigned African traditional music examples and reflect on their influence on African American music.",
-        instructions: "Focus on rhythmic patterns, call-and-response structures, and vocal techniques. How do these elements appear in later African American musical forms?",
+        description: "Listen to the assigned African traditional music examples and reflect on their influence on African American music. **No late penalty for this first assignment - students are still getting familiar with the format.**",
+        instructions: "Focus on rhythmic patterns, call-and-response structures, and vocal techniques. How do these elements appear in later African American musical forms? This is your first journal assignment, so take time to understand the format and expectations. Late submissions will be accepted without penalty to help you adjust to the course requirements.",
         dueDate: "2025-08-29",
         type: "listening-journal",
         estimatedTime: "45 minutes",
