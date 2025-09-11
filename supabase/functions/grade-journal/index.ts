@@ -202,7 +202,7 @@ Return ONLY a JSON object with this exact structure:
       rubric: gradingResult,
       feedback,
       ai_model: 'gpt-4o-mini',
-      graded_by: 'edge/grade-journal',
+      graded_by: null, // AI grading has no human grader
       graded_at: new Date().toISOString()
       // Do NOT set created_at or updated_at - let database handle these
     };
