@@ -768,3 +768,43 @@ button[style*="background-color: rgb(217, 119, 6)"]:hover,
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-out;
 }
+
+/* OpenSheetMusicDisplay Styling */
+.sheet-music-container {
+  background: hsl(var(--background));
+  position: relative;
+  z-index: 1;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.sheet-music-container svg {
+  background: hsl(var(--background));
+  width: 100% !important;
+  height: auto !important;
+  min-height: 200px;
+}
+
+.sheet-music-container .osmd-svg-overlay {
+  background: transparent !important;
+}
+
+/* Ensure music notation is visible with proper contrast */
+.sheet-music-container text,
+.sheet-music-container path,
+.sheet-music-container line,
+.sheet-music-container circle {
+  fill: hsl(var(--foreground)) !important;
+  stroke: hsl(var(--foreground)) !important;
+}
+
+/* Staff lines should be visible */
+.sheet-music-container .staff-line {
+  stroke: hsl(var(--foreground)) !important;
+  stroke-width: 1px;
+}
+
+/* Note heads and stems */
+.sheet-music-container .note {
+  fill: hsl(var(--foreground)) !important;
+}

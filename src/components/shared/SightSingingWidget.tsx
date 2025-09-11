@@ -74,11 +74,40 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
   useEffect(() => {
     if (currentExercise && osmdRef.current && sheetMusicRef.current) {
       try {
+        console.log('Attempting to render sheet music:', currentExercise.metadata);
+        sheetMusicRef.current.innerHTML = ''; // Clear previous content
         osmdRef.current.load(currentExercise.musicXML).then(() => {
+          console.log('MusicXML loaded successfully, rendering...');
           osmdRef.current?.render();
+          console.log('Sheet music rendered successfully');
+        }).catch((error) => {
+          console.error('Error loading MusicXML:', error);
+          // Show fallback content
+          if (sheetMusicRef.current) {
+            sheetMusicRef.current.innerHTML = `
+              <div class="flex items-center justify-center h-48 text-muted-foreground">
+                <div class="text-center">
+                  <Music class="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>Unable to display sheet music</p>
+                  <p class="text-sm">Generated exercise is ready for practice</p>
+                </div>
+              </div>
+            `;
+          }
         });
       } catch (error) {
-        console.error('Error rendering sheet music:', error);
+        console.error('Error in sheet music rendering:', error);
+        // Show error message in the display area
+        if (sheetMusicRef.current) {
+          sheetMusicRef.current.innerHTML = `
+            <div class="flex items-center justify-center h-48 text-muted-foreground">
+              <div class="text-center">
+                <p>Sheet music display error</p>
+                <p class="text-sm">Exercise generated but cannot be displayed</p>
+              </div>
+            </div>
+          `;
+        }
       }
     }
   }, [currentExercise]);
@@ -281,8 +310,18 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
 
         {/* Sheet Music Display */}
         {currentExercise && (
-          <div className="border rounded-lg p-4 bg-background">
-            <div ref={sheetMusicRef} className="sheet-music-container min-h-[200px]" />
+          <div className="border rounded-lg p-4 bg-background relative">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Generated Exercise</h3>
+              <Badge variant="outline" className="text-xs">
+                {currentExercise.metadata.difficulty} • {currentExercise.metadata.context}
+              </Badge>
+            </div>
+            <div 
+              ref={sheetMusicRef} 
+              className="sheet-music-container min-h-[200px] w-full bg-background border rounded p-2"
+              style={{ position: 'relative', zIndex: 1 }}
+            />
           </div>
         )}
       </CardContent>
