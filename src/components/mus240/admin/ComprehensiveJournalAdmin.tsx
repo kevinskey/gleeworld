@@ -281,13 +281,8 @@ export const ComprehensiveJournalAdmin = () => {
     return comments.filter(comment => comment.journal_id === entryId);
   };
 
-  const handleAIGrading = async (entry: JournalEntry) => {
+  const grade = async (entry: JournalEntry) => {
     try {
-      toast({
-        title: "AI Grading Started",
-        description: `Grading journal entry by ${entry.student_name}...`,
-      });
-
       const { data, error } = await supabase.functions.invoke('grade-journal', {
         body: {
           student_id: entry.student_id,
@@ -300,30 +295,60 @@ export const ComprehensiveJournalAdmin = () => {
               { name: "Terminology Usage", description: "Uses correct musical terminology appropriately", max_points: 3 },
               { name: "Writing Quality", description: "Clear, organized writing with proper grammar and 250-300 words", max_points: 2 }
             ]
-          }
+          },
         }
       });
 
-      if (error) throw error;
-
-      if (data.ok) {
-        toast({
-          title: "AI Grading Complete",
-          description: `Journal graded successfully! Overall score: ${data.overall_score}/100`,
-        });
-        // Refresh data to show new grade
-        loadAllData();
-      } else {
-        throw new Error(data.error || data.message || 'AI grading failed');
+      if (error) {
+        // Supabase wraps function errors here
+        console.error("Edge error:", error);
+        // Try to parse server-provided JSON body if present
+        const m = error.message || "";
+        try { console.error("Edge body:", JSON.parse(m)); } catch (_) { /* ignore */ }
+        alert(`Edge error: ${m}`);
+        return;
       }
-    } catch (error) {
-      console.error('AI grading error:', error);
+
+      console.log("Grade OK:", data);
       toast({
-        title: "AI Grading Failed",
-        description: error.message || 'Failed to grade journal with AI',
-        variant: "destructive"
+        title: "AI Grading Complete",
+        description: `Journal graded successfully! Overall score: ${data.overall_score}/100`,
       });
+      loadAllData();
+    } catch (e: any) {
+      // Network/CORS etc.
+      console.error("Invoke threw:", e);
+      alert(`Invoke threw: ${e?.message ?? e}`);
     }
+  };
+
+  const debugRaw = async () => {
+    const url = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/grade-journal`;
+    const anon = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg";
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${anon}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        student_id: "4e6c2ec0-1f83-449a-a984-8920f6056ab5",
+        assignment_id: "lj2",
+        journal_text: "test",
+        rubric: { criteria: [] }
+      })
+    });
+    const text = await res.text();
+    console.log("Status:", res.status, "Body:", text);
+    alert(`Status ${res.status}: ${text}`);
+  };
+
+  const handleAIGrading = async (entry: JournalEntry) => {
+    toast({
+      title: "AI Grading Started",
+      description: `Grading journal entry by ${entry.student_name}...`,
+    });
+    await grade(entry);
   };
 
   const filteredJournalEntries = journalEntries.filter(entry => {
@@ -377,15 +402,24 @@ export const ComprehensiveJournalAdmin = () => {
           <h3 className="text-4xl font-bold text-white">Complete Journal Administration</h3>
           <p className="text-muted-foreground">View all journal entries, comments, and file submissions</p>
         </div>
-        <Button
-          variant="outline"
-          onClick={loadAllData}
-          disabled={loading}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh All Data
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={loadAllData}
+            disabled={loading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh All Data
+          </Button>
+          <Button
+            variant="outline"
+            onClick={debugRaw}
+            className="flex items-center gap-2"
+          >
+            Debug Raw
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-4 items-center">

@@ -2,38 +2,37 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "authorization, content-type, x-client-info, cache-control, pragma",
 };
 
+const J = (s: number, b: any) =>
+  new Response(JSON.stringify(b), { 
+    status: s, 
+    headers: { "Content-Type":"application/json", ...CORS }
+  });
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 serve(async (req) => {
   console.log('=== STARTING JOURNAL GRADING FUNCTION ===');
   console.log('Request URL:', req.url);
   console.log('Request method:', req.method);
-  console.log('OpenAI API key length:', OPENAI_API_KEY?.length || 'MISSING');
+  console.log('OpenAI API key configured:', !!OPENAI_API_KEY);
+  console.log('Supabase URL configured:', !!SUPABASE_URL);
+  console.log('Service role configured:', !!SERVICE_ROLE);
 
-  if (req.method === 'OPTIONS') {
-    console.log('Returning CORS response');
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
   try {
-    console.log('=== GRADE-JOURNAL FUNCTION START ===');
-    console.log('Supabase service key configured:', !!SUPABASE_SERVICE_ROLE_KEY);
-    console.log('Supabase URL configured:', !!SUPABASE_URL);
-    console.log('OpenAI API key configured:', !!OPENAI_API_KEY);
-
-    if (!OPENAI_API_KEY) {
-      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    if (!OPENAI_API_KEY) return J(500, { error: "missing_openai_key" });
+    if (!SUPABASE_URL) return J(500, { error: "missing_supabase_url" });
+    if (!SERVICE_ROLE) return J(500, { error: "missing_service_role" });
 
     console.log('=== PARSING REQUEST ===');
     const body = await req.json();
@@ -44,15 +43,12 @@ serve(async (req) => {
     console.log('Extracted values:');
     console.log('- assignment_id:', assignment_id);
     console.log('- student_id:', student_id);
-    console.log('- journal_content length:', journal_text?.length);
+    console.log('- journal_text length:', journal_text?.length);
 
     if (!student_id || !assignment_id || !journal_text) {
-      return new Response(JSON.stringify({ 
-        error: 'Missing required fields',
+      return J(400, { 
+        error: 'missing_fields',
         details: { student_id: !!student_id, assignment_id: !!assignment_id, journal_text: !!journal_text }
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -63,7 +59,7 @@ serve(async (req) => {
 
     console.log('=== CALLING OPENAI API ===');
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const aiResp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -108,22 +104,19 @@ Return ONLY a JSON object with this exact structure:
       })
     });
 
-    console.log('OpenAI status:', response.status);
+    console.log('OpenAI status:', aiResp.status);
 
-    if (!response.ok) {
-      const errorText = await response.text();
+    if (!aiResp.ok) {
+      const errorText = await aiResp.text();
       console.error('OpenAI API error:', errorText);
-      return new Response(JSON.stringify({ 
-        error: 'OpenAI API failed', 
-        status: response.status,
-        details: errorText
-      }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      return J(502, { 
+        error: 'openai_failed', 
+        status: aiResp.status,
+        body: errorText
       });
     }
 
-    const aiResponse = await response.json();
+    const aiResponse = await aiResp.json();
     console.log('=== OPENAI RESPONSE RECEIVED ===');
     console.log('Full AI response:', JSON.stringify(aiResponse, null, 2));
 
@@ -171,11 +164,12 @@ Return ONLY a JSON object with this exact structure:
 
     console.log('=== ATTEMPTING DATABASE INSERT ===');
 
-    // Look up assignment database ID
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { 
+    // Use service role for database operations
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, { 
       auth: { persistSession: false } 
     });
 
+    // Look up assignment database ID
     const { data: assignmentData, error: assignmentError } = await supabase
       .from('mus240_assignments')
       .select('id')
@@ -197,55 +191,47 @@ Return ONLY a JSON object with this exact structure:
       overall_score,
       rubric: gradingResult,
       feedback,
-      ai_model: 'gpt-5-mini-2025-08-07',
-      graded_by: null, // Let the database set this
+      ai_model: 'gpt-4o-mini',
+      graded_by: 'edge/grade-journal',
       graded_at: new Date().toISOString()
+      // Do NOT set created_at or updated_at - let database handle these
     };
 
     console.log('About to insert grade data:', JSON.stringify(gradeData, null, 2));
 
     console.log('=== DATABASE INSERT ===');
-    const { data: insertData, error: insertError } = await supabase
+    const { data: insertData, error: insErr } = await supabase
       .from('mus240_journal_grades')
       .insert([gradeData])
       .select()
       .single();
 
-    if (insertError) {
+    if (insErr) {
       console.log('=== DATABASE INSERT FAILED ===');
       console.log('Grade data that failed:', JSON.stringify(gradeData, null, 2));
       console.error('=== ERROR IN GRADE-JOURNAL FUNCTION ===');
-      console.error('Error code:', insertError.code);
-      console.error('Error hint:', insertError.hint);
-      console.error('Error message:', insertError.message);
-      console.error('Error details:', insertError.details);
-      console.error('Error type:', typeof insertError);
-      console.error('Error name:', insertError.name);
-      console.error('Full error object:', insertError);
-      console.error('Error stack:', new Error(`Failed to save grade: ${insertError.message}`).stack);
+      console.error('Error code:', insErr.code);
+      console.error('Error hint:', insErr.hint);
+      console.error('Error message:', insErr.message);
+      console.error('Error details:', insErr.details);
       
-      return new Response(JSON.stringify({ 
-        error: 'Database insert failed',
-        code: insertError.code,
-        message: insertError.message,
-        details: insertError.details,
-        hint: insertError.hint
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      return J(500, { 
+        error: "db_insert_failed", 
+        code: insErr.code, 
+        details: insErr.details, 
+        hint: insErr.hint, 
+        message: insErr.message 
       });
     }
 
     console.log('=== SUCCESS ===');
     console.log('Grade saved successfully:', insertData);
 
-    return new Response(JSON.stringify({ 
+    return J(200, { 
       ok: true, 
       overall_score, 
       feedback,
       grade_id: insertData.id
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
@@ -253,12 +239,9 @@ Return ONLY a JSON object with this exact structure:
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
     
-    return new Response(JSON.stringify({ 
-      error: 'Internal server error',
+    return J(500, { 
+      error: 'unhandled',
       message: error.message 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
