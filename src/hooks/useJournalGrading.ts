@@ -92,41 +92,101 @@ export async function getPeerCommentPoints(
   }
 }
 
+// Raw fetch invoker with timeout and cache-buster
+async function callEdgeRaw(
+  path: string,
+  body: unknown,
+  token?: string,
+  timeoutMs = 15000
+) {
+  const url = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/${path}?v=${Date.now()}`;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort("timeout"), timeoutMs);
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+    signal: ctrl.signal,
+  }).catch((e) => {
+    clearTimeout(t);
+    throw new Error(`fetch_failed: ${e?.message || e}`);
+  });
+  clearTimeout(t);
+
+  const text = await res.text(); // always read
+  let json: any = null;
+  try { json = JSON.parse(text); } catch { /* keep text */ }
+
+  if (!res.ok) {
+    const status = res.status;
+    const msg = json?.error || json?.message || text || `status_${status}`;
+    throw new Error(`edge_${status}: ${msg}`);
+  }
+  return json ?? text;
+}
+
+// Health and dry probes
+export async function probeGradeFunction(token?: string) {
+  // Health: proves route + CORS + SW bypass
+  const healthUrl = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/grade-journal?health=1&v=${Date.now()}`;
+  const health = await fetch(healthUrl, { method: "GET" }).then(r => r.text()).catch(e => `health_failed:${e}`);
+
+  // Dry: proves JSON parse + return path (no OpenAI, no DB)
+  const dry = await callEdgeRaw("grade-journal", {
+    mode: "dry",
+    student_id: "probe",
+    assignment_id: "probe",
+    journal_text: "probe"
+  }, token).catch(e => e.message);
+
+  return { health, dry };
+}
+
 export async function gradeJournalWithAI(
   supabaseClient: SupabaseClient,
   journal: { id: string; assignment_id: string; student_id: string; content: string }
 ): Promise<GradeResponse> {
   const { data: sessionData } = await supabaseClient.auth.getSession();
   const token = sessionData?.session?.access_token ?? "";
-  
-  try {
-    const { data, error } = await supabaseClient.functions.invoke("grade-journal", {
-      body: {
-        assignment_id: journal.assignment_id,
-        journal_text: journal.content, // Fixed: edge function expects journal_text
-        student_id: journal.student_id,
-        journal_id: journal.id,
-        stub_test: false // Enable real AI grading
-      },
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
 
-    if (error) {
-      throw new Error(error.message || 'Edge function error');
-    }
+  // 1) Quick health check if you keep seeing 502s
+  // const probe = await probeGradeFunction(token);
+  // console.log("grade-journal probe:", probe);
+
+  // 2) Prefer raw fetch so 4xx/5xx bodies are visible
+  try {
+    const data = await callEdgeRaw("grade-journal", {
+      assignment_id: journal.assignment_id,
+      journal_text: journal.content,
+      student_id: journal.student_id,
+      journal_id: journal.id,
+      stub_test: false
+    }, token);
 
     return data as GradeResponse;
   } catch (e: any) {
-    // Normalize error to a plain string to prevent object rendering in React
-    let msg = e?.message || "Grading failed";
-    if (e?.context?.response && typeof e.context.response.json === "function") {
-      try {
-        const detail = await e.context.response.json();
-        const status = e.context.response.status;
-        msg = `${detail?.error || msg}${status ? ` [${status}]` : ""}${detail?.trace ? ` trace=${detail.trace}` : ""}`;
-      } catch {}
+    // 3) Fallback to supabase.invoke once, for parity
+    try {
+      const { data, error } = await supabaseClient.functions.invoke("grade-journal", {
+        body: {
+          assignment_id: journal.assignment_id,
+          journal_text: journal.content,
+          student_id: journal.student_id,
+          journal_id: journal.id,
+          stub_test: false
+        },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (error) throw new Error(error.message || "invoke_failed");
+      return data as GradeResponse;
+    } catch (e2: any) {
+      // Normalize with whatever we learned from raw fetch
+      const msg = e?.message || e2?.message || "grading_failed";
+      throw new Error(msg);
     }
-    throw new Error(msg);
   }
 }
 
