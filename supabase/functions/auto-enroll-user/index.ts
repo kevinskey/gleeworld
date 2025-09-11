@@ -145,18 +145,44 @@ const handler = async (req: Request): Promise<Response> => {
       const msg = (inviteError?.message || '').toLowerCase();
       // Fallback for duplicate/exists scenarios
       if (msg.includes('already') || msg.includes('duplicate') || msg.includes('database error')) {
-        // Attempt to find existing auth user by email
-        const { data: listData, error: listErr } = await (supabase as any).auth.admin.listUsers({ page: 1, perPage: 1000 });
-        if (listErr) {
-          console.error('Error listing users:', listErr);
-          throw new Error('Failed to create user account: ' + inviteError.message);
+        // Attempt to find existing auth user by email (paginate defensively)
+        let page = 1;
+        const perPage = 1000;
+        let found: any = null;
+        while (page <= 20 && !found) {
+          const { data: listData, error: listErr } = await (supabase as any).auth.admin.listUsers({ page, perPage });
+          if (listErr) {
+            console.error('Error listing users (page ' + page + '):', listErr);
+            break;
+          }
+          const users = listData?.users || [];
+          found = users.find((u: any) => (u.email || '').toLowerCase() === email.toLowerCase());
+          if (!users.length) break;
+          page++;
         }
-        const existing = listData?.users?.find((u: any) => (u.email || '').toLowerCase() === email.toLowerCase());
-        if (!existing) {
-          throw new Error('Failed to create user account: ' + inviteError.message);
+        if (found) {
+          targetUserId = found.id;
+          console.log('Found existing auth user for email:', email, 'id:', targetUserId);
+        } else {
+          console.warn('Existing auth user not found by email; attempting createUser fallback');
+          // Generate secure temporary password and create user directly
+          const tempPassword = crypto.getRandomValues(new Uint8Array(12))
+            .reduce((acc, byte) => acc + String.fromCharCode(33 + (byte % 94)), '');
+
+          const { data: created, error: createErr } = await supabase.auth.admin.createUser({
+            email,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: { full_name: full_name || email.split('@')[0], auto_enrolled: true, enrolled_for_contract: contract_id || null }
+          });
+          if (createErr) {
+            console.error('createUser fallback failed:', createErr);
+            throw new Error('Failed to create user account: ' + createErr.message);
+          }
+          targetUserId = created.user!.id;
+          createdNewAuthUser = true;
+          console.log('Auth user created via createUser fallback:', targetUserId);
         }
-        targetUserId = existing.id;
-        console.log('Found existing auth user for email:', email, 'id:', targetUserId);
       } else {
         // Unknown error; bubble up
         throw new Error('Failed to create user account: ' + inviteError.message);
