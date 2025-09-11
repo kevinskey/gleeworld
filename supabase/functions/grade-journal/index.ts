@@ -165,7 +165,7 @@ Format your response as JSON with these fields:
       .upsert({
         student_id,
         assignment_id,
-        score: gradingResult.score,
+        overall_score: gradingResult.score,
         feedback: gradingResult.feedback,
         letter_grade: gradingResult.letter_grade,
         graded_at: new Date().toISOString(),
