@@ -14,6 +14,7 @@ interface GradeData {
   overall_score: number;
   letter_grade: string;
   graded_at: string;
+  feedback: string;
   rubric_scores: any[];
 }
 
@@ -39,6 +40,8 @@ export const GradesAdmin = () => {
 
   const fetchGrades = async () => {
     try {
+  const fetchGrades = async () => {
+    try {
       const { data, error } = await supabase
         .from('mus240_journal_grades')
         .select('*')
@@ -49,40 +52,34 @@ export const GradesAdmin = () => {
       // Fetch related data for each grade
       const formattedGrades = await Promise.all(
         (data || []).map(async (grade) => {
-          // Get journal entry
-          const { data: journalData } = await supabase
-            .from('mus240_journal_entries')
-            .select('assignment_id, student_id')
-            .eq('id', grade.journal_id)
-            .single();
-
           // Get user profile
           const { data: profileData } = await supabase
             .from('gw_profiles')
             .select('full_name, email')
-            .eq('user_id', journalData?.student_id)
-            .single();
-
-          // Get assignment
-          const { data: assignmentData } = await supabase
-            .from('mus240_assignments')
-            .select('title')
-            .eq('id', journalData?.assignment_id)
+            .eq('user_id', grade.student_id)
             .single();
 
           return {
             student_name: profileData?.full_name || 'Unknown',
             student_email: profileData?.email || '',
-            assignment_title: assignmentData?.title || 'Unknown Assignment',
-            overall_score: grade.overall_score,
-            letter_grade: grade.letter_grade,
+            assignment_title: `Assignment ${grade.assignment_id}`,
+            overall_score: grade.overall_score || 0,
+            letter_grade: grade.letter_grade || 'N/A',
             graded_at: grade.graded_at,
+            feedback: grade.feedback || '',
             rubric_scores: []
           };
         })
       );
 
       setGrades(formattedGrades);
+    } catch (error) {
+      console.error('Error fetching grades:', error);
+      toast.error('Failed to load grades');
+    } finally {
+      setLoading(false);
+    }
+  };
     } catch (error) {
       console.error('Error fetching grades:', error);
       toast.error('Failed to load grades');
@@ -289,6 +286,16 @@ export const GradesAdmin = () => {
                 <div className="flex-1">
                   <p className="font-medium">{grade.student_name}</p>
                   <p className="text-sm text-gray-600">{grade.assignment_title}</p>
+                  {grade.feedback && (
+                    <details className="mt-2">
+                      <summary className="text-sm text-blue-600 cursor-pointer hover:text-blue-800">
+                        View AI Feedback
+                      </summary>
+                      <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
+                        {grade.feedback}
+                      </div>
+                    </details>
+                  )}
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
