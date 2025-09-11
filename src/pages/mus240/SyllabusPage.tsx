@@ -160,21 +160,27 @@ export default function Syllabus() {
                       <div className="border border-gray-200 rounded-lg p-6 bg-white/50">
                         <h4 className="text-lg font-semibold mb-3 text-gray-900">Listening Journals (10 × 20 pts each)</h4>
                         <div className="space-y-3 text-sm text-gray-700">
-                          <p><strong>Purpose:</strong> Strengthen listening skills and connect musical features with historical and cultural contexts.</p>
-                          <p><strong>Instructions:</strong> Write a 250–300 word entry each week on assigned works, identifying genre, style traits, and cultural significance. Use correct musical terminology. Submit via Canvas.</p>
-                          <p><strong>Format:</strong> Typed, double-spaced, PDF or Word.</p>
-                          <p><strong>Evaluation:</strong> Accuracy, depth of analysis, correct terminology, completion</p>
+                          <p>Weekly 250–300 word essays connecting listening examples to cultural context.</p>
                         </div>
                       </div>
 
-                      {/* Reflection Papers */}
+                      {/* Research Project */}
                       <div className="border border-gray-200 rounded-lg p-6 bg-white/50">
-                        <h4 className="text-lg font-semibold mb-3 text-gray-900">Reflection Papers (3 × 50 pts each)</h4>
+                        <h4 className="text-lg font-semibold mb-3 text-gray-900">Research Project (150 pts)</h4>
                         <div className="space-y-3 text-sm text-gray-700">
-                          <p><strong>Purpose:</strong> Demonstrate critical thinking about music in its cultural context.</p>
-                          <p><strong>Instructions:</strong> Three essays (2–3 pages). Each must present a clear thesis, evidence from assigned readings or listening, and connections to historical/cultural issues.</p>
-                          <p><strong>Format:</strong> MLA or Chicago style, double-spaced, submitted via Canvas.</p>
-                          <p><strong>Evaluation:</strong> Thesis clarity, historical/cultural connection, analysis, organization, mechanics.</p>
+                          <p>Proposal, annotated bibliography, and final online presentation.</p>
+                        </div>
+                      </div>
+
+                      {/* AI Group Project */}
+                      <div className="border border-gray-200 rounded-lg p-6 bg-white/50">
+                        <h4 className="text-lg font-semibold mb-3 text-gray-900">AI Group Project (100 pts)</h4>
+                        <div className="space-y-3 text-sm text-gray-700">
+                          <p>Collaborative exploration of AI and African American music in six teams.</p>
+                          <p>Weekly updates (Wed) + deep dive sessions (Fri).</p>
+                          <p>Deliverables: research, media/creative work, merch prototypes, and contributions to GleeWorld.org.</p>
+                          <p>Final Showcase in Week 15.</p>
+                          <p>Rubrics included in Appendix.</p>
                         </div>
                       </div>
 
@@ -182,26 +188,7 @@ export default function Syllabus() {
                       <div className="border border-gray-200 rounded-lg p-6 bg-white/50">
                         <h4 className="text-lg font-semibold mb-3 text-gray-900">Midterm Exam (100 pts)</h4>
                         <div className="space-y-3 text-sm text-gray-700">
-                          <p><strong>Purpose:</strong> Assess understanding of music styles, genres, and cultural contexts (Weeks 1–8).</p>
-                          <p><strong>Instructions:</strong> Part 1—Listening Identification. Part 2—Short Essays on genres, performers, and cultural significance. Completed in class.</p>
-                          <p><strong>Evaluation:</strong> Identification accuracy, strength of explanations, terminology, historical/cultural integration.</p>
-                        </div>
-                      </div>
-
-                      {/* Research Project */}
-                      <div className="border border-gray-200 rounded-lg p-6 bg-white/50">
-                        <h4 className="text-lg font-semibold mb-3 text-gray-900">Research Project (150 pts total)</h4>
-                        <div className="space-y-3 text-sm text-gray-700">
-                          <p><strong>Purpose:</strong> Conduct in-depth study of a topic in African American music and present findings in a professional online format.</p>
-                          <div>
-                            <strong>Components:</strong>
-                            <ul className="ml-4 mt-2 space-y-1">
-                              <li>• Proposal (20 pts): One-paragraph topic description (Week 6).</li>
-                              <li>• Annotated Bibliography (30 pts): At least 5 credible sources with annotations (Week 10).</li>
-                              <li>• Final Presentation (100 pts): Digital project (video, website, podcast, or interactive format) presented in class (Week 15).</li>
-                            </ul>
-                          </div>
-                          <p><strong>Evaluation:</strong> Content accuracy, depth of research, integration of context, organization, creativity, delivery.</p>
+                          <p>Listening identification + essays on styles and cultural context.</p>
                         </div>
                       </div>
 
@@ -209,20 +196,15 @@ export default function Syllabus() {
                       <div className="border border-gray-200 rounded-lg p-6 bg-white/50">
                         <h4 className="text-lg font-semibold mb-3 text-gray-900">Final Reflection Essay (50 pts)</h4>
                         <div className="space-y-3 text-sm text-gray-700">
-                          <p><strong>Purpose:</strong> Synthesize semester's learning and connect to personal perspective.</p>
-                          <p><strong>Instructions:</strong> Write a 4–5-page essay reflecting on course themes, personal insights, and the role of music as cultural force. Draw on examples from at least three styles studied.</p>
-                          <p><strong>Format:</strong> MLA or Chicago style, double-spaced, submitted via Canvas.</p>
-                          <p><strong>Evaluation:</strong> Integration of themes, depth of reflection, clarity, use of examples.</p>
+                          <p>4–5 page synthesis essay on themes and personal insights.</p>
                         </div>
                       </div>
 
-                      {/* Participation & Discussion */}
+                      {/* Participation, Discussion & Attendance */}
                       <div className="border border-gray-200 rounded-lg p-6 bg-white/50">
-                        <h4 className="text-lg font-semibold mb-3 text-gray-900">Participation & Discussion (75 pts total)</h4>
+                        <h4 className="text-lg font-semibold mb-3 text-gray-900">Participation, Discussion & Attendance (50 pts)</h4>
                         <div className="space-y-3 text-sm text-gray-700">
-                          <p><strong>Purpose:</strong> Build a collaborative classroom and strengthen communication skills.</p>
-                          <p><strong>Instructions:</strong> Attend class prepared, contribute regularly and respectfully, complete assigned readings/listening, and participate in peer feedback.</p>
-                          <p><strong>Evaluation:</strong> Preparation, contribution, engagement, respect for peers.</p>
+                          <p>Active engagement, consistent attendance, and preparation.</p>
                         </div>
                       </div>
                     </CardContent>
@@ -257,14 +239,14 @@ export default function Syllabus() {
                               <td className="border border-gray-300 p-3">30%</td>
                             </tr>
                             <tr className="bg-gray-50">
-                              <td className="border border-gray-300 p-3">Reflection Papers</td>
+                              <td className="border border-gray-300 p-3">Research Project</td>
                               <td className="border border-gray-300 p-3">150</td>
                               <td className="border border-gray-300 p-3">23%</td>
                             </tr>
                             <tr>
-                              <td className="border border-gray-300 p-3">Research Project</td>
-                              <td className="border border-gray-300 p-3">150</td>
-                              <td className="border border-gray-300 p-3">23%</td>
+                              <td className="border border-gray-300 p-3">AI Group Project</td>
+                              <td className="border border-gray-300 p-3">100</td>
+                              <td className="border border-gray-300 p-3">15%</td>
                             </tr>
                             <tr className="bg-gray-50">
                               <td className="border border-gray-300 p-3">Midterm Exam</td>
@@ -272,14 +254,14 @@ export default function Syllabus() {
                               <td className="border border-gray-300 p-3">15%</td>
                             </tr>
                             <tr>
-                              <td className="border border-gray-300 p-3">Final Reflection</td>
+                              <td className="border border-gray-300 p-3">Final Reflection Essay</td>
                               <td className="border border-gray-300 p-3">50</td>
                               <td className="border border-gray-300 p-3">8%</td>
                             </tr>
                             <tr className="bg-gray-50">
-                              <td className="border border-gray-300 p-3">Participation/Discussion</td>
-                              <td className="border border-gray-300 p-3">75</td>
-                              <td className="border border-gray-300 p-3">11%</td>
+                              <td className="border border-gray-300 p-3">Participation, Discussion & Attendance</td>
+                              <td className="border border-gray-300 p-3">50</td>
+                              <td className="border border-gray-300 p-3">8%</td>
                             </tr>
                             <tr className="bg-amber-100 font-semibold">
                               <td className="border border-gray-300 p-3">Total</td>
@@ -325,39 +307,39 @@ export default function Syllabus() {
                       <div className="space-y-4">
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Weeks 1–2:</span>
-                          <span className="text-gray-700">Introduction & Historical Context — African musical heritage, the middle passage, and early African American musical traditions</span>
+                          <span className="text-gray-700">African Roots, Spirituals, Vocal Traditions → Journals #1–2. Week 2: Introduce AI Project.</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
                           <span className="font-semibold min-w-24 text-amber-800">Weeks 3–4:</span>
-                          <span className="text-gray-700">Spirituals & Work Songs — Origins, functions, and musical characteristics</span>
+                          <span className="text-gray-700">Blues, Ragtime, Harlem Renaissance, Jazz → Journals #3–4. AI updates begin, Group 1 focus (Week 4).</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Weeks 5–6:</span>
-                          <span className="text-gray-700">Blues — Rural and urban traditions, key performers, musical structure</span>
+                          <span className="text-gray-700">Gospel, Swing, R&B, Soul → Journals #5–6. Research Proposal due (Week 6). Group 2 + 3 focus.</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
                           <span className="font-semibold min-w-24 text-amber-800">Weeks 7–8:</span>
-                          <span className="text-gray-700">Jazz — Origins, early styles, major figures, and evolution</span>
+                          <span className="text-gray-700">Motown, Funk, Civil Rights Music → Journal #7. Midterm Exam (Week 8). Groups 4 + 5 focus.</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 9:</span>
-                          <span className="text-gray-700">Midterm Exam</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Weeks 9–10:</span>
+                          <span className="text-gray-700">Hip-Hop, Funk, Soul → Journals #8–9. Annotated Bibliography due (Week 10). Groups 1 + 2 second focus.</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Weeks 10–11:</span>
-                          <span className="text-gray-700">Gospel Music — Sacred traditions, performance styles, social impact</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Weeks 11–12:</span>
+                          <span className="text-gray-700">Contemporary R&B, Gospel, Jazz Fusion → Journals #10–11. Groups 3 + 4 second focus.</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Weeks 12–13:</span>
-                          <span className="text-gray-700">Rhythm & Blues, Soul — Commercial development, cultural significance</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Weeks 13–14:</span>
+                          <span className="text-gray-700">Popular Culture, Music & Social Justice → Journals #12–13. Group 5 second focus, all polish final projects.</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Weeks 14–15:</span>
-                          <span className="text-gray-700">Hip-Hop & Contemporary — Modern expressions, technology, global influence</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 15:</span>
+                          <span className="text-gray-700">Future Directions & Legacy → Research Project Presentations + AI Final Showcase.</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 16:</span>
-                          <span className="text-gray-700">Final presentations and reflection essays due</span>
+                          <span className="text-gray-700">Final Reflection Essay due.</span>
                         </div>
                       </div>
                     </CardContent>
