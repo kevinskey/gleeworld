@@ -81,6 +81,10 @@ export const router = createBrowserRouter([
     element: <MusicLibrary />,
   },
   {
+    path: "/sheet-music",
+    element: <MusicLibrary />,
+  },
+  {
     path: "/notifications",
     element: <Notifications />,
   },
