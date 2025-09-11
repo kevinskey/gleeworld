@@ -38,7 +38,12 @@ interface GradingResult {
 }
 
 serve(async (req) => {
+  console.log('=== GRADE-JOURNAL FUNCTION START ===');
+  console.log('Request method:', req.method);
+  console.log('Request URL:', req.url);
+  
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -49,12 +54,19 @@ serve(async (req) => {
     
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     console.log('OpenAI API key configured:', openAIApiKey ? 'Yes' : 'No');
+    console.log('OpenAI API key length:', openAIApiKey?.length || 0);
     
     if (!openAIApiKey) {
       console.error('OpenAI API key not configured');
       return new Response(JSON.stringify({ 
         success: false,
-        error: 'OpenAI API key not configured'
+        error: 'OpenAI API key not configured',
+        debug: {
+          hasKey: false,
+          keyLength: 0,
+          env: Object.keys(Deno.env.toObject()).filter(k => k.includes('OPENAI')),
+          timestamp: new Date().toISOString()
+        }
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
