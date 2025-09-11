@@ -177,6 +177,7 @@ import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
 import SightSingingTestPage from "./pages/SightSingingTestPage";
+import GrandStaves from "./pages/GrandStaves";
 import { Mus240PollPage } from "./pages/Mus240PollPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
@@ -363,7 +364,16 @@ const App = () => {
                     <WritingGraderPage />
                   </PublicRoute>
                 } 
-              />
+               />
+               {/* Grand Staves page */}
+               <Route 
+                 path="/grand-staves" 
+                 element={
+                   <PublicRoute>
+                     <GrandStaves />
+                   </PublicRoute>
+                 } 
+               />
               {/* MUS 240 Poll System */}
               <Route 
                 path="/mus240-polls" 
