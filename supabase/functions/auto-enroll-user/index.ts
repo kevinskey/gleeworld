@@ -167,14 +167,12 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Create or update profile entry in gw_profiles (idempotent)
-    const defaultRole = (role && ['member','fan','alumna','auditioner','admin','super-admin'].includes(role)) ? role : (role || 'member');
     const { data: profile, error: profileUpsertError } = await supabase
       .from('gw_profiles')
       .upsert({
         user_id: targetUserId!,
         email: email,
-        full_name: full_name || email.split('@')[0],
-        role: defaultRole
+        full_name: full_name || email.split('@')[0]
       }, { onConflict: 'user_id' })
       .select()
       .single();
@@ -206,7 +204,7 @@ const handler = async (req: Request): Promise<Response> => {
           email: email,
           full_name: full_name || email.split('@')[0],
           contract_id: contract_id,
-          role: defaultRole,
+          requested_role: role || null,
           method: createdNewAuthUser ? 'created_with_password' : 'linked_existing_auth_user'
         }
       });
