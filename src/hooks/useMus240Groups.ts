@@ -20,7 +20,9 @@ export interface Mus240Group {
   members?: {
     id: string;
     role: string;
+    member_id: string;
     gw_profiles: {
+      user_id: string;
       full_name: string;
       email: string;
     } | null;
@@ -46,10 +48,10 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
         .from('mus240_project_groups')
         .select(`
           *,
-          leader_profile:gw_profiles!leader_id(full_name, email),
+          leader_profile:gw_profiles!leader_id(user_id, full_name, email),
           members:mus240_group_memberships(
-            id, role,
-            gw_profiles!member_id(full_name, email)
+            id, role, member_id,
+            gw_profiles!member_id(user_id, full_name, email)
           )
         `)
         .eq('semester', semester)
@@ -60,6 +62,8 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
     } catch (err) {
       console.error('Error fetching groups:', err);
       setError('Failed to load groups');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,8 +90,6 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
     } catch (err) {
       console.error('Error creating group:', err);
       throw new Error('Failed to create group');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -102,7 +104,7 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
       
       // Check if user is already in the group
       const isAlreadyMember = group.members?.some(member => 
-        member.gw_profiles && user.id === member.id
+        member.member_id === user.id
       );
       if (isAlreadyMember) throw new Error('Already a member of this group');
       
@@ -196,7 +198,7 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
   const getUserGroup = () => {
     return groups.find(group => 
       group.leader_id === user?.id || 
-      group.members?.some(member => member.gw_profiles && user?.id)
+      group.members?.some(member => member.gw_profiles && member.gw_profiles.user_id === user?.id)
     );
   };
 
