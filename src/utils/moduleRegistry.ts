@@ -150,9 +150,11 @@ ModuleRegistry.registerModule({
   requiredPermissions: ['super-admin']
 });
 
-// Import and register the Enhanced Contract Manager
+// Import and register additional modules
 import { EnhancedContractManager } from '@/components/contracts/EnhancedContractManager';
-import { FileText } from 'lucide-react';
+import { FileText, GraduationCap, QrCode } from 'lucide-react';
+import GleeAcademy from '@/pages/GleeAcademy';
+import { QRCodeManagementModule } from '@/components/modules/QRCodeManagementModule';
 
 ModuleRegistry.registerModule({
   id: 'enhanced-contract-management',
@@ -163,4 +165,28 @@ ModuleRegistry.registerModule({
   category: 'business',
   component: EnhancedContractManager,
   requiredPermissions: ['admin', 'super-admin']
+});
+
+// Register Glee Academy
+ModuleRegistry.registerModule({
+  id: 'glee-academy',
+  title: 'Glee Academy',
+  description: 'Music education platform with courses and private lessons',
+  icon: GraduationCap,
+  iconColor: 'blue',
+  category: 'education',
+  component: GleeAcademy,
+  requiredPermissions: ['admin', 'super-admin']
+});
+
+// Register QR Code Management
+ModuleRegistry.registerModule({
+  id: 'qr-code-management',
+  title: 'QR Code Management',
+  description: 'Generate and manage attendance QR codes for any event or class',
+  icon: QrCode,
+  iconColor: 'purple',
+  category: 'administration',
+  component: QRCodeManagementModule,
+  requiredPermissions: ['admin', 'super-admin', 'exec']
 });
