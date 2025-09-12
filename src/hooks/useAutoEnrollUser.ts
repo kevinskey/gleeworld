@@ -28,26 +28,61 @@ export const useAutoEnrollUser = () => {
     try {
       console.log('Auto-enrolling user:', email);
       
-      const { data, error } = await supabase.functions.invoke('auto-enroll-user', {
-        body: { email, full_name, contract_id, role }
-      });
+      // Get current session for explicit Authorization header
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
 
-      if (error) {
-        console.error('Error auto-enrolling user:', { error, data });
-        const detail = (data as any)?.error || (data as any)?.message || error.message || 'Failed to auto-enroll user';
-        throw new Error(detail);
+      let result: AutoEnrollResult | null = null;
+
+      try {
+        // Primary path: standard Supabase invoke
+        const { data, error } = await supabase.functions.invoke('auto-enroll-user', {
+          body: { email, full_name, contract_id, role },
+          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+        });
+
+        if (error) {
+          console.error('Error auto-enrolling user (invoke):', { error, data });
+          const detail = (data as any)?.error || (data as any)?.message || error.message || 'Failed to auto-enroll user';
+          throw new Error(detail);
+        }
+
+        result = data as AutoEnrollResult;
+      } catch (invokeErr: any) {
+        // Fallback path: direct fetch to Edge Function endpoint (handles rare invoke transport issues)
+        const msg = invokeErr?.message || '';
+        if (msg.includes('Failed to send a request to the Edge Function') || msg.includes('Load failed')) {
+          console.warn('Falling back to direct Edge Function call...');
+          const resp = await fetch('https://oopmlreysjzuxzylyheb.functions.supabase.co/auto-enroll-user', {
+            method: 'POST',
+            headers: {
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, full_name, contract_id, role }),
+          });
+
+          const json = await resp.json().catch(() => ({}));
+          if (!resp.ok) {
+            const detail = (json as any)?.error || (json as any)?.message || `HTTP ${resp.status}`;
+            throw new Error(detail);
+          }
+          result = json as AutoEnrollResult;
+        } else {
+          throw invokeErr;
+        }
       }
 
-      console.log('Auto-enroll result:', data);
+      console.log('Auto-enroll result:', result);
 
-      if (data.enrolled) {
+      if (result?.enrolled) {
         toast({
           title: "User Auto-Enrolled",
           description: `${email} has been automatically enrolled in the system.`,
         });
       }
 
-      return data;
+      return result as AutoEnrollResult;
     } catch (error: any) {
       console.error('Auto-enroll error:', error);
       toast({
