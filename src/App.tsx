@@ -180,6 +180,7 @@ import WritingGraderPage from "./pages/writing/WritingGraderPage";
 import SightSingingTestPage from "./pages/SightSingingTestPage";
 import GrandStaves from "./pages/GrandStaves";
 import { Mus240PollPage } from "./pages/Mus240PollPage";
+import MySubmissionsPage from "./pages/student/MySubmissionsPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -1538,15 +1539,25 @@ const App = () => {
                                      <AssignmentJournal />
                                    </Mus240EnrollmentRoute>
                                 }
-                              />
-                              <Route 
-                                path="/classes/mus240/listening" 
-                               element={
-                                 <Mus240EnrollmentRoute>
-                                   <ListeningHub />
-                                 </Mus240EnrollmentRoute>
-                               }
-                              />
+                               />
+                               <Route 
+                                 path="/classes/mus240/my-submissions" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <Mus240EnrollmentRoute>
+                                       <MySubmissionsPage />
+                                     </Mus240EnrollmentRoute>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route 
+                                 path="/classes/mus240/listening" 
+                                element={
+                                  <Mus240EnrollmentRoute>
+                                    <ListeningHub />
+                                  </Mus240EnrollmentRoute>
+                                }
+                               />
                               <Route 
                                 path="/classes/mus240/listening/:week" 
                                element={
