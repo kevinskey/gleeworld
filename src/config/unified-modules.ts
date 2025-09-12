@@ -84,6 +84,7 @@ import { PRManagerModule } from '@/components/modules/PRManagerModule';
 import { SightReadingGeneratorModule } from '@/components/modules/SightReadingGeneratorModule';
 import { MemberSightReadingModule } from '@/components/modules/MemberSightReadingModule';
 import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
+import GleeAcademy from '@/pages/GleeAcademy';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -821,6 +822,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: BudgetsModule, // Using existing budget module as placeholder
     dbFunctionName: "ai-financial"
+  },
+  {
+    id: "glee-academy",
+    name: "glee-academy",
+    title: "Glee Academy",
+    description: "Music education platform with courses and private lessons",
+    icon: GraduationCap,
+    iconColor: "blue",
+    category: "musical-leadership",
+    isActive: true,
+    component: GleeAcademy,
+    dbFunctionName: "glee-academy"
   }
 ];
 

@@ -29,6 +29,7 @@ import { FirstYearConsoleModule } from '../modules/FirstYearConsoleModule';
 import { UserManagementModule } from '../modules/UserManagementModule';
 import { BowmanScholarsModule } from '../modules/BowmanScholarsModule';
 import { RadioManagement } from '../admin/RadioManagement';
+import GleeAcademy from '../../pages/GleeAcademy';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -106,6 +107,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <UserManagementModule />;
       case 'bowman-scholars':
         return <BowmanScholarsModule />;
+      case 'glee-academy':
+        return <GleeAcademy />;
       default:
         return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2><p>This module is being developed. Stay tuned!</p></div>;
     }
