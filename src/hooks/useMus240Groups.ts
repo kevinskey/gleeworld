@@ -27,25 +27,9 @@ export interface Mus240Group {
   }[];
 }
 
-export interface GroupApplication {
-  id: string;
-  group_id: string;
-  applicant_id: string;
-  full_name: string;
-  email: string;
-  phone_number?: string;
-  main_skill_set: string;
-  other_skills?: string;
-  motivation?: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  applied_at: string;
-  reviewed_at?: string;
-  reviewed_by?: string;
-}
 
 export const useMus240Groups = (semester: string = 'Fall 2025') => {
   const [groups, setGroups] = useState<Mus240Group[]>([]);
-  const [applications, setApplications] = useState<GroupApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
@@ -53,7 +37,6 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
   useEffect(() => {
     if (user) {
       fetchGroups();
-      fetchApplications();
     }
   }, [user, semester]);
 
@@ -80,22 +63,6 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
     }
   };
 
-  const fetchApplications = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('mus240_group_applications')
-        .select('*')
-        .order('applied_at', { ascending: false });
-
-      if (error) throw error;
-      setApplications(data as any || []);
-    } catch (err) {
-      console.error('Error fetching applications:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const createGroup = async (groupData: {
     name: string;
     description?: string;
@@ -105,87 +72,55 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
         .from('mus240_project_groups')
         .insert({
           ...groupData,
-          leader_id: null, // No automatic leader assignment
+          leader_id: null,
           semester,
-          member_count: 0 // Start with no members
+          member_count: 0,
+          max_members: 4 // Set max to 4
         })
         .select()
         .single();
 
       if (error) throw error;
-
-      // Do not automatically add creator as member/leader
       await fetchGroups();
       return data;
     } catch (err) {
       console.error('Error creating group:', err);
       throw new Error('Failed to create group');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const applyToGroup = async (applicationData: {
-    group_id: string;
-    full_name: string;
-    email: string;
-    phone_number?: string;
-    main_skill_set: string;
-    other_skills?: string;
-    motivation?: string;
-  }) => {
+  const joinGroup = async (groupId: string) => {
+    if (!user?.id) throw new Error('User not authenticated');
+    
     try {
-      const { data, error } = await supabase
-        .from('mus240_group_applications')
-        .insert({
-          ...applicationData,
-          applicant_id: user?.id
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      await fetchApplications();
-      return data;
-    } catch (err) {
-      console.error('Error applying to group:', err);
-      throw new Error('Failed to apply to group');
-    }
-  };
-
-  const reviewApplication = async (
-    applicationId: string,
-    status: 'accepted' | 'rejected'
-  ) => {
-    try {
+      // Check if group has space (max 4 members)
+      const group = groups.find(g => g.id === groupId);
+      if (!group) throw new Error('Group not found');
+      if (group.member_count >= 4) throw new Error('Group is full (max 4 members)');
+      
+      // Check if user is already in the group
+      const isAlreadyMember = group.members?.some(member => 
+        member.gw_profiles && user.id === member.id
+      );
+      if (isAlreadyMember) throw new Error('Already a member of this group');
+      
+      // Add user to group
       const { error } = await supabase
-        .from('mus240_group_applications')
-        .update({
-          status,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: user?.id
-        })
-        .eq('id', applicationId);
+        .from('mus240_group_memberships')
+        .insert({
+          group_id: groupId,
+          member_id: user.id,
+          role: 'member'
+        });
 
       if (error) throw error;
-
-      // If accepted, add to group memberships
-      if (status === 'accepted') {
-        const application = applications.find(app => app.id === applicationId);
-        if (application) {
-          await supabase
-            .from('mus240_group_memberships')
-            .insert({
-              group_id: application.group_id,
-              member_id: application.applicant_id,
-              role: 'member'
-            });
-        }
-      }
-
-      await fetchApplications();
       await fetchGroups();
+      return { success: true };
     } catch (err) {
-      console.error('Error reviewing application:', err);
-      throw new Error('Failed to review application');
+      console.error('Error joining group:', err);
+      throw err;
     }
   };
 
@@ -265,32 +200,19 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
     );
   };
 
-  const getUserApplications = () => {
-    return applications.filter(app => app.applicant_id === user?.id);
-  };
-
-  const getGroupApplications = (groupId: string) => {
-    return applications.filter(app => app.group_id === groupId);
-  };
-
   return {
     groups,
-    applications,
     loading,
     error,
     createGroup,
-    applyToGroup,
-    reviewApplication,
+    joinGroup,
     deleteGroup,
     leaveGroup,
     updateMemberRole,
     getAvailableGroups,
     getUserGroup,
-    getUserApplications,
-    getGroupApplications,
     refetch: () => {
       fetchGroups();
-      fetchApplications();
     }
   };
 };

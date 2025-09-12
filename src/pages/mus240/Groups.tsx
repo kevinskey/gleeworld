@@ -32,14 +32,12 @@ export default function Groups() {
     loading,
     error,
     createGroup,
-    applyToGroup,
-    reviewApplication,
+    joinGroup,
     deleteGroup,
     leaveGroup,
     updateMemberRole,
     getAvailableGroups,
     getUserGroup,
-    getGroupApplications,
     refetch
   } = useMus240Groups();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -90,68 +88,19 @@ export default function Groups() {
     }
 
     try {
-      // Check if group is full
-      const group = groups.find(g => g.id === groupId);
-      if (!group) {
-        toast.error('Group not found');
-        return;
-      }
-
-      if (group.member_count >= 4) {
-        toast.error('This group is full (maximum 4 members)');
-        return;
-      }
-
       // Check if user is already in a group
       if (userGroup) {
         toast.error('You are already in a group. Leave your current group first.');
         return;
       }
 
-      const isFirstMember = group.member_count === 0;
-      
-      // Add user as member
-      const { error: membershipError } = await supabase
-        .from('mus240_group_memberships')
-        .insert({
-          group_id: groupId,
-          member_id: user.id,
-          role: isFirstMember ? 'leader' : 'member'
-        });
-
-      if (membershipError) throw membershipError;
-
-      // Update group member count and leader if first member
-      const updateData: any = {
-        member_count: group.member_count + 1
-      };
-
-      if (isFirstMember) {
-        updateData.leader_id = user.id;
-      }
-
-      const { error: updateError } = await supabase
-        .from('mus240_project_groups')
-        .update(updateData)
-        .eq('id', groupId);
-
-      if (updateError) throw updateError;
-
-      toast.success(isFirstMember ? 'Joined group as leader!' : 'Joined group successfully!');
-      refetch();
+      await joinGroup(groupId);
+      toast.success('Joined group successfully!');
       
       // Navigate to the group detail page
       navigate(`/classes/mus240/groups/${groupId}`);
     } catch (err: any) {
       toast.error('Failed to join group: ' + (err.message || 'Unknown error'));
-    }
-  };
-  const handleReviewApplication = async (applicationId: string, status: 'accepted' | 'rejected') => {
-    try {
-      await reviewApplication(applicationId, status);
-      toast.success(`Application ${status} successfully!`);
-    } catch (err) {
-      toast.error(`Failed to ${status} application`);
     }
   };
   const handleDeleteGroup = async (groupId: string) => {
