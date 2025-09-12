@@ -29,17 +29,13 @@ export const useAutoEnrollUser = () => {
       console.log('Auto-enrolling user:', email);
       
       const { data, error } = await supabase.functions.invoke('auto-enroll-user', {
-        body: {
-          email,
-          full_name,
-          contract_id,
-          role
-        }
+        body: { email, full_name, contract_id, role }
       });
 
       if (error) {
-        console.error('Error auto-enrolling user:', error);
-        throw new Error(error.message || 'Failed to auto-enroll user');
+        console.error('Error auto-enrolling user:', { error, data });
+        const detail = (data as any)?.error || (data as any)?.message || error.message || 'Failed to auto-enroll user';
+        throw new Error(detail);
       }
 
       console.log('Auto-enroll result:', data);
