@@ -4,7 +4,7 @@ import { Music, Calendar, BookOpen, Users, TrendingUp, Brain, BarChart } from 'l
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { AdminGradesCard } from '@/components/mus240/admin/AdminGradesCard';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
-import { AdminBootstrap } from '@/components/debug/AdminBootstrap';
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -177,12 +177,6 @@ export default function ClassLanding() {
             <AdminGradesCard />
           </section>
 
-          {/* Debug Admin Bootstrap - Only visible in development */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-8 flex justify-center">
-              <AdminBootstrap />
-            </div>
-          )}
           
           {/* Course Description */}
           <div className="mt-16 text-center">
