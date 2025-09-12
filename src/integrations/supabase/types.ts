@@ -15402,6 +15402,42 @@ export type Database = {
           },
         ]
       }
+      qr_attendance_tokens: {
+        Row: {
+          created_at: string
+          created_by: string
+          event_id: string
+          expires_at: string
+          id: string
+          is_active: boolean
+          max_scans: number | null
+          scan_count: number
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          event_id: string
+          expires_at: string
+          id?: string
+          is_active?: boolean
+          max_scans?: number | null
+          scan_count?: number
+          token: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          event_id?: string
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          max_scans?: number | null
+          scan_count?: number
+          token?: string
+        }
+        Relationships: []
+      }
       qr_scan_logs: {
         Row: {
           created_at: string | null
@@ -17773,6 +17809,14 @@ export type Database = {
           p_expires_minutes?: number
           p_qr_type?: string
           p_title: string
+        }
+        Returns: string
+      }
+      generate_qr_attendance_token: {
+        Args: {
+          p_created_by: string
+          p_event_id: string
+          p_expires_in_minutes?: number
         }
         Returns: string
       }
