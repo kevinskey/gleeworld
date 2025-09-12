@@ -16,11 +16,13 @@ import {
   Award,
   ChevronDown,
   ChevronUp,
-  BookOpen
+  BookOpen,
+  QrCode
 } from 'lucide-react';
 import { TakeAttendance } from './TakeAttendance';
 import { MyAttendance } from './MyAttendance';
 import { AttendanceReports } from './AttendanceReports';
+import { QRAttendanceGenerator } from './QRAttendanceGenerator';
 import { ExcuseGenerator } from './ExcuseGenerator';
 import { ExcuseRequestManager } from './ExcuseRequestManager';
 import { ExcuseRequestApproval } from './ExcuseRequestApproval';
@@ -297,16 +299,33 @@ export const AttendanceDashboard = () => {
 
       {/* Admin/Secretary Attendance Management - Bottom Section */}
       {canTakeAttendance && (
-        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-xl p-4 sm:p-6 border shadow-lg">
-          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-white">
-            <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="truncate">Take Attendance</span>
-            <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-white/30">
-              {isAdmin ? 'Admin' : 'Secretary'}
-            </Badge>
-          </h2>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4">
-            <TakeAttendance />
+        <div className="space-y-4">
+          {/* QR Code Generator */}
+          <div className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 rounded-xl p-4 sm:p-6 border shadow-lg">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-white">
+              <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="truncate">QR Attendance Generator</span>
+              <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-white/30">
+                {isAdmin ? 'Admin' : 'Secretary'}
+              </Badge>
+            </h2>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4">
+              <QRAttendanceGenerator />
+            </div>
+          </div>
+
+          {/* Manual Attendance */}
+          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-xl p-4 sm:p-6 border shadow-lg">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-white">
+              <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="truncate">Manual Attendance</span>
+              <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-white/30">
+                {isAdmin ? 'Admin' : 'Secretary'}
+              </Badge>
+            </h2>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4">
+              <TakeAttendance />
+            </div>
           </div>
         </div>
       )}
