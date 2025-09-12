@@ -31,6 +31,7 @@ interface RoleUpdateDialog {
 
 const AVAILABLE_ROLES = [
   { value: 'member', label: 'Member', description: 'Regular member access' },
+  { value: 'student', label: 'Student', description: 'Student access level' },
   { value: 'fan', label: 'Fan', description: 'Fan access level' },
   { value: 'alumna', label: 'Alumna', description: 'Alumni access level' },
   { value: 'admin', label: 'Admin', description: 'Administrative access' },
