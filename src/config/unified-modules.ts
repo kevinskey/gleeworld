@@ -35,7 +35,8 @@ import {
   Camera,
   GraduationCap,
   Radio,
-  Mic2
+  Mic2,
+  QrCode
 } from 'lucide-react';
 
 // Import core module components
@@ -85,6 +86,7 @@ import { SightReadingGeneratorModule } from '@/components/modules/SightReadingGe
 import { MemberSightReadingModule } from '@/components/modules/MemberSightReadingModule';
 import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
 import GleeAcademy from '@/pages/GleeAcademy';
+import { QRCodeManagementModule } from '@/components/modules/QRCodeManagementModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -834,6 +836,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: GleeAcademy,
     dbFunctionName: "glee-academy"
+  },
+  {
+    id: "qr-code-management",
+    name: "qr-code-management",
+    title: "QR Code Management",
+    description: "Generate and manage attendance QR codes for any event or class",
+    icon: QrCode,
+    iconColor: "purple",
+    category: "system",
+    isActive: true,
+    component: QRCodeManagementModule,
+    dbFunctionName: "qr-code-management"
   }
 ];
 

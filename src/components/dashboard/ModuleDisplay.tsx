@@ -30,6 +30,7 @@ import { UserManagementModule } from '../modules/UserManagementModule';
 import { BowmanScholarsModule } from '../modules/BowmanScholarsModule';
 import { RadioManagement } from '../admin/RadioManagement';
 import GleeAcademy from '../../pages/GleeAcademy';
+import { QRCodeManagementModule } from '../modules/QRCodeManagementModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -109,6 +110,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <BowmanScholarsModule />;
       case 'glee-academy':
         return <GleeAcademy />;
+      case 'qr-code-management':
+        return <QRCodeManagementModule />;
       default:
         return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2><p>This module is being developed. Stay tuned!</p></div>;
     }
