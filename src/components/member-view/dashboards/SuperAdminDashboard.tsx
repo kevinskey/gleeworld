@@ -832,6 +832,34 @@ export const SuperAdminDashboard = ({
               <CollapsibleContent>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Glee World Academy - Top Priority */}
+                    <Button variant="outline" className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-emerald-200 hover:border-emerald-300" onClick={() => setSelectedModule('glee-academy')}>
+                      <div className="w-full">
+                        <div className="flex items-center gap-2 mb-2">
+                          <GraduationCap className="h-5 w-5 text-emerald-600" />
+                          <Badge variant="secondary" className="text-xs">Academy</Badge>
+                        </div>
+                        <h3 className="font-semibold text-base lg:text-lg text-emerald-700">Glee World Academy</h3>
+                        <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
+                          Educational platform and course management
+                        </p>
+                      </div>
+                    </Button>
+
+                    {/* Members Management - Second Priority */}
+                    <Button variant="outline" className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-indigo-200 hover:border-indigo-300" onClick={() => setSelectedModule('user-management')}>
+                      <div className="w-full">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Users className="h-5 w-5 text-indigo-600" />
+                          <Badge variant="secondary" className="text-xs">Management</Badge>
+                        </div>
+                        <h3 className="font-semibold text-base lg:text-lg text-indigo-700">Members Management</h3>
+                        <p className="text-sm lg:text-base text-muted-foreground mt-2 line-clamp-2">
+                          Manage user profiles, roles, and permissions
+                        </p>
+                      </div>
+                    </Button>
+
                     {/* Module Assignment - Only for Super Admin */}
                     <Button variant="outline" className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-blue-200 hover:border-blue-300" onClick={() => {
                   console.log('Module Assignment button clicked, setting selectedModule to user-module-assignment');
@@ -848,9 +876,6 @@ export const SuperAdminDashboard = ({
                         </p>
                       </div>
                     </Button>
-
-                    {/* Executive Board Monitor - Only for Super Admin */}
-                    
                     
                     {/* Music Library Quick Access */}
                     <Button variant="outline" className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-green-200 hover:border-green-300" onClick={() => navigate('/music-library')}>
@@ -866,7 +891,7 @@ export const SuperAdminDashboard = ({
                       </div>
                     </Button>
                     
-                    {allModules.filter(m => m.canAccess && ['user-management', 'auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id)).slice(0, 4) // Reduced from 5 to 4 to accommodate Music Library
+                    {allModules.filter(m => m.canAccess && ['auditions', 'budgets', 'email-management', 'calendar-management', 'permissions'].includes(m.id)).slice(0, 3) // Reduced to 3 to accommodate the two top modules
                 .map(module => <Button key={module.id} variant="outline" className="h-[160px] p-6 flex flex-col items-start gap-3 text-left hover:bg-accent border-purple-200 hover:border-purple-300" onClick={() => setSelectedModule(module.id)}>
                     <div className="w-full">
                       <div className="flex items-center gap-2 mb-2">
