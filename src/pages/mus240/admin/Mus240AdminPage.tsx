@@ -30,32 +30,32 @@ export const Mus240AdminPage = () => {
         {/* Gradient overlay for better text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10"></div>
         
-        <main className="relative z-10 max-w-6xl mx-auto px-4 py-8 sm:py-12">
+        <main className="relative z-10 max-w-6xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
           {/* Header Section */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <Settings className="h-6 w-6 text-amber-300" />
-              <span className="text-white/90 font-medium">Administration</span>
+          <div className="text-center mb-4 sm:mb-8">
+            <div className="inline-flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 px-3 sm:px-6 py-2 sm:py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+              <Settings className="h-4 w-4 sm:h-6 sm:w-6 text-amber-300" />
+              <span className="text-white/90 font-medium text-sm sm:text-base">Administration</span>
             </div>
             
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl px-2">
               MUS 240 Administration
             </h1>
             
-            <p className="text-lg sm:text-xl text-white/95 mb-6 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-white/95 mb-4 sm:mb-6 max-w-4xl mx-auto leading-relaxed px-2">
               Manage course enrollments, resources, and settings
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button asChild variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 px-2">
+              <Button asChild variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 w-full sm:w-auto text-sm">
                 <Link to="/classes/mus240/instructor">
-                  <ExternalLink className="h-4 w-4 mr-2" />
+                  <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                   Instructor Console
                 </Link>
               </Button>
-              <Button asChild className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30">
+              <Button asChild className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30 w-full sm:w-auto text-sm">
                 <Link to="/classes/mus240">
-                  <GraduationCap className="h-4 w-4 mr-2" />
+                  <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                   View Course
                 </Link>
               </Button>
@@ -63,35 +63,32 @@ export const Mus240AdminPage = () => {
           </div>
 
           {/* Main Content */}
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-2xl p-3 sm:p-6 border border-white/20">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-6 bg-white/20 backdrop-blur-sm">
-                <TabsTrigger value="scores" className="flex items-center gap-2 text-xs sm:text-sm">
+              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-3 sm:mb-6 bg-white/20 backdrop-blur-sm h-auto p-1 gap-0.5 sm:gap-1">
+                <TabsTrigger value="scores" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs py-2 px-1 sm:px-3 data-[state=active]:bg-white/30">
                   <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Scores</span>
-                  <span className="sm:hidden">Scores</span>
+                  <span className="text-xs sm:text-sm">Scores</span>
                 </TabsTrigger>
-                <TabsTrigger value="enrollments" className="flex items-center gap-2 text-xs sm:text-sm">
+                <TabsTrigger value="enrollments" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs py-2 px-1 sm:px-3 data-[state=active]:bg-white/30">
                   <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Enrollments</span>
-                  <span className="sm:hidden">Students</span>
+                  <span className="text-xs sm:text-sm">Students</span>
                 </TabsTrigger>
-                <TabsTrigger value="journals" className="flex items-center gap-2 text-xs sm:text-sm">
+                <TabsTrigger value="journals" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs py-2 px-1 sm:px-3 data-[state=active]:bg-white/30">
                   <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Journals</span>
-                  <span className="sm:hidden">Journals</span>
+                  <span className="text-xs sm:text-sm">Journals</span>
                 </TabsTrigger>
-                <TabsTrigger value="resources" className="flex items-center gap-2 text-xs sm:text-sm">
+                <TabsTrigger value="resources" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs py-2 px-1 sm:px-3 data-[state=active]:bg-white/30">
                   <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-                  Resources
+                  <span className="text-xs sm:text-sm">Resources</span>
                 </TabsTrigger>
-                <TabsTrigger value="polls" className="flex items-center gap-2 text-xs sm:text-sm">
+                <TabsTrigger value="polls" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs py-2 px-1 sm:px-3 data-[state=active]:bg-white/30">
                   <BarChart className="h-3 w-3 sm:h-4 sm:w-4" />
-                  Polls
+                  <span className="text-xs sm:text-sm">Polls</span>
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="flex items-center gap-2 text-xs sm:text-sm">
+                <TabsTrigger value="settings" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs py-2 px-1 sm:px-3 data-[state=active]:bg-white/30">
                   <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
-                  Settings
+                  <span className="text-xs sm:text-sm">Settings</span>
                 </TabsTrigger>
               </TabsList>
               
