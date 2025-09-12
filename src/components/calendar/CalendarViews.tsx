@@ -93,37 +93,82 @@ export const CalendarViews = () => {
               </div>
             </div>
           </CardHeader>
-        <CardContent className="px-1.5 pt-2">
-          <Tabs value={activeView} onValueChange={setActiveView}>
-            <TabsList className="grid w-full grid-cols-3 h-12 md:h-10 gap-1">
-              <TabsTrigger value="month" className="flex items-center justify-center gap-1 text-xs md:text-sm px-1 md:px-2">
-                <span className="hidden sm:inline">Month</span>
-                <span className="sm:hidden">Mo</span>
-              </TabsTrigger>
-              <TabsTrigger value="week" className="flex items-center justify-center gap-1 text-xs md:text-sm px-1 md:px-2">
-                <CalendarIcon className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Week</span>
-                <span className="sm:hidden">Wk</span>
-              </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center justify-center gap-1 text-xs md:text-sm px-1 md:px-2">
-                <ListIcon className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">List</span>
-                <span className="sm:hidden">Li</span>
-              </TabsTrigger>
-            </TabsList>
+        <CardContent className="px-0 pt-2 pb-0 md:px-1.5">
+          <div className="relative">
+            {/* Mobile Header with View Selector */}
+            <div className="md:hidden bg-gradient-to-r from-primary/5 to-accent/5 border-b border-border/50 px-4 py-3 mb-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Calendar</h2>
+                <div className="flex bg-muted rounded-full p-1">
+                  <Button
+                    variant={activeView === 'month' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setActiveView('month')}
+                    className="rounded-full px-3 py-1 text-xs h-8"
+                  >
+                    Month
+                  </Button>
+                  <Button
+                    variant={activeView === 'week' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setActiveView('week')}
+                    className="rounded-full px-3 py-1 text-xs h-8"
+                  >
+                    Week
+                  </Button>
+                  <Button
+                    variant={activeView === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setActiveView('list')}
+                    className="rounded-full px-3 py-1 text-xs h-8"
+                  >
+                    List
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop Tabs */}
+            <div className="hidden md:block">
+              <Tabs value={activeView} onValueChange={setActiveView}>
+                <TabsList className="grid w-full grid-cols-3 h-10 gap-1">
+                  <TabsTrigger value="month" className="flex items-center justify-center gap-1">
+                    <Grid3X3Icon className="h-4 w-4" />
+                    Month
+                  </TabsTrigger>
+                  <TabsTrigger value="week" className="flex items-center justify-center gap-1">
+                    <CalendarIcon className="h-4 w-4" />
+                    Week
+                  </TabsTrigger>
+                  <TabsTrigger value="list" className="flex items-center justify-center gap-1">
+                    <ListIcon className="h-4 w-4" />
+                    List
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
             
-            <TabsContent value="month" className="mt-2 md:mt-3">
-              <MonthlyCalendar events={filteredEvents} onEventUpdated={fetchEvents} />
-            </TabsContent>
-            
-            <TabsContent value="week" className="mt-2 md:mt-3">
-              <WeeklyCalendar events={filteredEvents} onEventUpdated={fetchEvents} />
-            </TabsContent>
-            
-            <TabsContent value="list" className="mt-2 md:mt-3">
-              <EventsList events={filteredEvents} onEventUpdated={fetchEvents} />
-            </TabsContent>
-          </Tabs>
+            {/* Content Area */}
+            <div className="px-2 md:px-0 md:mt-3">
+              {activeView === 'month' && (
+                <div className="animate-fade-in">
+                  <MonthlyCalendar events={filteredEvents} onEventUpdated={fetchEvents} />
+                </div>
+              )}
+              
+              {activeView === 'week' && (
+                <div className="animate-fade-in">
+                  <WeeklyCalendar events={filteredEvents} onEventUpdated={fetchEvents} />
+                </div>
+              )}
+              
+              {activeView === 'list' && (
+                <div className="animate-fade-in">
+                  <EventsList events={filteredEvents} onEventUpdated={fetchEvents} />
+                </div>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
       
