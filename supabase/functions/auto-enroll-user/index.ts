@@ -1,241 +1,180 @@
-
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, cache-control, pragma',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
-interface AutoEnrollRequest {
-  email: string;
-  full_name?: string;
-  contract_id?: string;
-  role?: string;
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const handler = async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // CRITICAL SECURITY FIX: Verify admin authorization for auto-enrollment
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ 
-          error: "Unauthorized: Authentication required",
-          success: false,
-          enrolled: false 
-        }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
+    // Initialize Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
-    // Initialize Supabase client with service role key for admin operations
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization')!
+    const token = authHeader.replace('Bearer ', '')
 
-    // Verify the requesting user is an admin
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+    // Verify the user is authenticated
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
     if (authError || !user) {
+      console.error('Authentication error:', authError)
       return new Response(
-        JSON.stringify({ 
-          error: "Unauthorized: Invalid authentication",
-          success: false,
-          enrolled: false 
-        }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    // Check if user has admin privileges using gw_profiles
-    const { data: adminProfile, error: profileError } = await supabase
-      .from("gw_profiles")
-      .select("is_admin, is_super_admin, role")
-      .eq("user_id", user.id)
-      .single();
-
-    if (profileError || !adminProfile || (!adminProfile.is_admin && !adminProfile.is_super_admin && adminProfile.role !== 'admin' && adminProfile.role !== 'super-admin')) {
-      return new Response(
-        JSON.stringify({ 
-          error: "Unauthorized: Admin privileges required",
-          success: false,
-          enrolled: false 
-        }),
-        {
-          status: 403,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
-    const { email, full_name, contract_id, role }: AutoEnrollRequest = await req.json();
-
-    console.log("Admin", user.id, "auto-enrolling user:", email);
-
-    // Log the admin operation for audit trail
-    await supabase
-      .from('activity_logs')
-      .insert({
-        user_id: user.id,
-        action_type: 'admin_auto_enroll_attempt',
-        resource_type: 'user_creation',
-        details: { 
-          target_email: email,
-          full_name: full_name,
-          contract_id: contract_id,
-          role: role
-        }
-      });
-
-    // Check if user already exists in gw_profiles table
-    const { data: existingProfile, error: checkProfileError } = await supabase
+    // Check if user is admin
+    const { data: adminData, error: adminError } = await supabaseClient
       .from('gw_profiles')
-      .select('user_id, email')
-      .eq('email', email)
-      .maybeSingle();
+      .select('is_admin, is_super_admin')
+      .eq('user_id', user.id)
+      .single()
 
-    if (checkProfileError) {
-      console.error('Error checking existing profile:', checkProfileError);
-      throw new Error('Failed to check existing user: ' + checkProfileError.message);
+    if (adminError || (!adminData?.is_admin && !adminData?.is_super_admin)) {
+      console.error('Permission denied - user is not admin:', { user: user.id, adminData })
+      return new Response(
+        JSON.stringify({ error: 'Permission denied' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    if (existingProfile) {
-      console.log('User already exists:', email);
-      return new Response(JSON.stringify({ 
-        success: true, 
-        user_id: existingProfile.user_id,
-        message: 'User already exists',
-        enrolled: false
-      }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+    const { email, full_name, contract_id, role = 'user' } = await req.json()
+
+    if (!email) {
+      return new Response(
+        JSON.stringify({ error: 'Email is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    console.log('Creating/ensuring auth user for email:', email);
+    console.log('Auto-enrolling user:', { email, full_name, role })
+
+    // Check if user already exists
+    const { data: existingAuth } = await supabaseClient.auth.admin.getUserByEmail(email)
     
-    // Prefer direct createUser with a secure temp password to avoid email invite dependency
-    let targetUserId: string | null = null;
-    let createdNewAuthUser = false;
-    let tempPassword: string | null = null;
+    let userId: string
+    let userCreated = false
 
-    const generateTempPassword = () => {
-      const bytes = crypto.getRandomValues(new Uint8Array(16));
-      const chars = Array.from(bytes).map((b) => String.fromCharCode(33 + (b % 94))).join('');
-      // Ensure reasonable strength
-      return 'Glee' + chars.slice(0, 10) + (Math.floor(Math.random() * 10)).toString();
-    };
-
-    tempPassword = generateTempPassword();
-    const { data: created, error: createErr } = await supabase.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: true,
-      user_metadata: { full_name: full_name || email.split('@')[0], auto_enrolled: true, enrolled_for_contract: contract_id || null }
-    });
-
-    if (createErr) {
-      console.warn('createUser error, will attempt to find existing user:', createErr);
-      // If the user already exists, try to get them by email
-      const { data: userData, error: getUserError } = await supabase.auth.admin.getUserByEmail(email);
-      
-      if (getUserError || !userData.user) {
-        throw new Error('Failed to create or locate user account: ' + createErr.message);
-      }
-      
-      targetUserId = userData.user.id;
-      tempPassword = null; // Do not return a password if user already existed
-      console.log('Located existing auth user for email:', email, 'id:', targetUserId);
+    if (existingAuth.user) {
+      // User exists in auth, use their ID
+      userId = existingAuth.user.id
+      console.log('User already exists in auth:', userId)
     } else {
-      targetUserId = created.user!.id;
-      createdNewAuthUser = true;
-      console.log('Auth user created via createUser:', targetUserId);
-    }
-
-    // Create or update profile entry in gw_profiles (idempotent)
-    const defaultRole = (role && ['member','fan','alumna','auditioner','admin','super-admin','student'].includes(role)) ? role : 'member';
-    const { data: profile, error: profileUpsertError } = await supabase
-      .from('gw_profiles')
-      .upsert({
-        user_id: targetUserId!,
-        email: email,
-        full_name: full_name || email.split('@')[0],
-        role: defaultRole
-      }, { onConflict: 'user_id' })
-      .select()
-      .single();
-
-    if (profileUpsertError) {
-      console.error('Error upserting profile:', profileUpsertError);
-      // Try to clean up the auth user only if we just created it here
-      if (createdNewAuthUser && targetUserId) {
-        try {
-          await supabase.auth.admin.deleteUser(targetUserId);
-        } catch (cleanupErr) {
-          console.warn('Cleanup failed deleting auth user:', cleanupErr);
+      // Create new user in auth
+      const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
+        email,
+        email_confirm: true,
+        user_metadata: {
+          full_name: full_name || email.split('@')[0]
         }
+      })
+
+      if (createError) {
+        console.error('Error creating user:', createError)
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            enrolled: false, 
+            error: createError.message 
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
-      throw new Error('Failed to create user profile: ' + profileUpsertError.message);
+
+      userId = newUser.user.id
+      userCreated = true
+      console.log('Created new user:', userId)
     }
 
-    console.log('Profile ensured successfully for user_id:', targetUserId);
+    // Check if profile exists
+    const { data: existingProfile } = await supabaseClient
+      .from('gw_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
 
-    // Log the activity
-    await supabase
-      .from('activity_logs')
-      .insert({
-        user_id: targetUserId!,
-        action_type: 'user_auto_enrolled',
-        resource_type: 'user',
-        resource_id: targetUserId!,
-        details: {
-          email: email,
+    if (!existingProfile) {
+      // Create profile
+      const { error: profileError } = await supabaseClient
+        .from('gw_profiles')
+        .insert({
+          user_id: userId,
+          email,
           full_name: full_name || email.split('@')[0],
-          contract_id: contract_id,
-          requested_role: role || null,
-          method: createdNewAuthUser ? 'created_with_password' : 'linked_existing_auth_user'
-        }
-      });
+          role: role,
+          is_admin: role === 'admin',
+          is_super_admin: role === 'super-admin',
+          verified: true
+        })
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      user_id: targetUserId!,
-      profile: profile,
-      message: createdNewAuthUser ? 'User created with temporary password' : 'Existing user linked; profile ensured',
-      temp_password: tempPassword || undefined,
-      enrolled: true
-    }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+      if (profileError) {
+        console.error('Error creating profile:', profileError)
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            enrolled: false, 
+            error: profileError.message 
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    } else {
+      // Update existing profile with new role if provided
+      const { error: updateError } = await supabaseClient
+        .from('gw_profiles')
+        .update({
+          role: role,
+          is_admin: role === 'admin' || role === 'super-admin',
+          is_super_admin: role === 'super-admin',
+          verified: true
+        })
+        .eq('user_id', userId)
 
-  } catch (error: any) {
-    console.error("Error in auto-enroll-user:", error);
+      if (updateError) {
+        console.error('Error updating profile:', updateError)
+      }
+    }
+
+    // Send invitation email if user was newly created
+    if (userCreated) {
+      const { error: inviteError } = await supabaseClient.auth.admin.inviteUserByEmail(email)
+      if (inviteError) {
+        console.error('Error sending invitation:', inviteError)
+        // Don't fail the whole operation if invitation fails
+      }
+    }
+
+    console.log('Successfully auto-enrolled user:', { userId, email, role })
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        enrolled: true,
+        user_id: userId,
+        message: userCreated ? 'User created and enrolled' : 'User updated and enrolled'
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error in auto-enroll-user function:', error)
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        success: false 
+        success: false, 
+        enrolled: false, 
+        error: error.message 
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
-};
-
-serve(handler);
+})
