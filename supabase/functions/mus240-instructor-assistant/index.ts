@@ -16,9 +16,11 @@ serve(async (req) => {
 
   try {
     if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
       throw new Error('OpenAI API key not configured');
     }
 
+    console.log('OpenAI API key configured successfully');
     const { task, prompt } = await req.json();
     console.log('Received request:', { task, prompt });
 
