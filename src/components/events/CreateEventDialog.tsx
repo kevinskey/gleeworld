@@ -35,6 +35,29 @@ interface ImageUpload {
   url?: string;
 }
 
+interface EventFormData {
+  calendar_id: string;
+  event_type: string;
+  title: string;
+  event_date_start: string;
+  event_date_end: string;
+  location: string;
+  description: string;
+  start_time: string;
+  end_time: string;
+  is_travel_involved: boolean;
+  no_sing_rest_required: boolean;
+  no_sing_rest_date_start: string;
+  no_sing_rest_date_end: string;
+  brief_description: string;
+  approval_needed: boolean;
+  is_recurring: boolean;
+  recurring_frequency: string;
+  recurring_days: string[];
+  recurring_end_date: string;
+  recurring_end_type: string;
+}
+
 export const CreateEventDialog = ({ onEventCreated, open: controlledOpen, onOpenChange, showTrigger = true }: CreateEventDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -46,13 +69,16 @@ export const CreateEventDialog = ({ onEventCreated, open: controlledOpen, onOpen
   const [images, setImages] = useState<ImageUpload[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<EventFormData>({
     calendar_id: '',
     event_type: 'performance',
     title: '',
     event_date_start: '',
     event_date_end: '',
     location: '',
+    description: '',
+    start_time: '',
+    end_time: '',
     is_travel_involved: false,
     no_sing_rest_required: false,
     no_sing_rest_date_start: '',
@@ -279,7 +305,7 @@ export const CreateEventDialog = ({ onEventCreated, open: controlledOpen, onOpen
         const { data, error } = await supabase.rpc('create_recurring_events', {
           p_title: formData.title,
           p_start_date: formData.event_date_start,
-          p_description: formData.description,
+          p_description: formData.description || formData.brief_description,
           p_location: formData.location,
           p_end_date: formData.event_date_end,
           p_start_time: formData.start_time,
@@ -297,7 +323,9 @@ export const CreateEventDialog = ({ onEventCreated, open: controlledOpen, onOpen
 
         toast({
           title: "Success",
-          description: data.message || `Created ${data.total_events} recurring events successfully!`,
+          description: typeof data === 'object' && data && 'message' in data 
+            ? (data as any).message 
+            : "Recurring events created successfully!",
         });
       } else {
         // Handle single event
@@ -379,6 +407,9 @@ export const CreateEventDialog = ({ onEventCreated, open: controlledOpen, onOpen
         event_date_start: '',
         event_date_end: '',
         location: '',
+        description: '',
+        start_time: '',
+        end_time: '',
         is_travel_involved: false,
         no_sing_rest_required: false,
         no_sing_rest_date_start: '',
