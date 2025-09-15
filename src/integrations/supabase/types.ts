@@ -2275,6 +2275,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_private: boolean | null
+          is_recurring: boolean | null
           is_travel_involved: boolean | null
           location: string | null
           misc_supplies: number | null
@@ -2283,6 +2284,12 @@ export type Database = {
           no_sing_rest_date_start: string | null
           no_sing_rest_required: boolean | null
           purpose: string | null
+          recurring_days: string[] | null
+          recurring_end_date: string | null
+          recurring_frequency: string | null
+          recurring_interval: number | null
+          recurring_occurrence_date: string | null
+          recurring_parent_id: string | null
           send_contracts: boolean
           start_date: string
           ticket_sales: number | null
@@ -2326,6 +2333,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_private?: boolean | null
+          is_recurring?: boolean | null
           is_travel_involved?: boolean | null
           location?: string | null
           misc_supplies?: number | null
@@ -2334,6 +2342,12 @@ export type Database = {
           no_sing_rest_date_start?: string | null
           no_sing_rest_required?: boolean | null
           purpose?: string | null
+          recurring_days?: string[] | null
+          recurring_end_date?: string | null
+          recurring_frequency?: string | null
+          recurring_interval?: number | null
+          recurring_occurrence_date?: string | null
+          recurring_parent_id?: string | null
           send_contracts?: boolean
           start_date: string
           ticket_sales?: number | null
@@ -2377,6 +2391,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_private?: boolean | null
+          is_recurring?: boolean | null
           is_travel_involved?: boolean | null
           location?: string | null
           misc_supplies?: number | null
@@ -2385,6 +2400,12 @@ export type Database = {
           no_sing_rest_date_start?: string | null
           no_sing_rest_required?: boolean | null
           purpose?: string | null
+          recurring_days?: string[] | null
+          recurring_end_date?: string | null
+          recurring_frequency?: string | null
+          recurring_interval?: number | null
+          recurring_occurrence_date?: string | null
+          recurring_parent_id?: string | null
           send_contracts?: boolean
           start_date?: string
           ticket_sales?: number | null
@@ -2400,6 +2421,13 @@ export type Database = {
             columns: ["cohort_id"]
             isOneToOne: false
             referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_recurring_parent_id_fkey"
+            columns: ["recurring_parent_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
@@ -17836,6 +17864,25 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      create_recurring_events: {
+        Args: {
+          p_created_by?: string
+          p_description?: string
+          p_end_date?: string
+          p_end_time?: string
+          p_event_type?: string
+          p_location?: string
+          p_max_occurrences?: number
+          p_recurring_days?: string[]
+          p_recurring_end_date?: string
+          p_recurring_frequency?: string
+          p_recurring_interval?: number
+          p_start_date: string
+          p_start_time?: string
+          p_title: string
+        }
+        Returns: Json
       }
       create_recurring_rehearsals: {
         Args: { created_by_id?: string; end_date: string; start_date: string }

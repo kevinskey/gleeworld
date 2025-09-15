@@ -275,18 +275,29 @@ export const CreateEventDialog = ({ onEventCreated, open: controlledOpen, onOpen
     setLoading(true);
     try {
       if (formData.is_recurring) {
-        // Handle recurring events
-        const { data, error } = await supabase.rpc('create_recurring_rehearsals', {
-          start_date: formData.event_date_start,
-          end_date: formData.recurring_end_type === 'date' ? formData.recurring_end_date : formData.event_date_start,
-          created_by_id: user.id
+        // Handle recurring events using the new comprehensive function
+        const { data, error } = await supabase.rpc('create_recurring_events', {
+          p_title: formData.title,
+          p_start_date: formData.event_date_start,
+          p_description: formData.description,
+          p_location: formData.location,
+          p_end_date: formData.event_date_end,
+          p_start_time: formData.start_time,
+          p_end_time: formData.end_time,
+          p_event_type: formData.event_type,
+          p_recurring_frequency: formData.recurring_frequency,
+          p_recurring_interval: 1,
+          p_recurring_days: formData.recurring_days,
+          p_recurring_end_date: formData.recurring_end_date,
+          p_max_occurrences: 52,
+          p_created_by: user.id
         });
 
         if (error) throw error;
 
         toast({
           title: "Success",
-          description: `Created ${data} recurring events successfully!`,
+          description: data.message || `Created ${data.total_events} recurring events successfully!`,
         });
       } else {
         // Handle single event
@@ -743,6 +754,30 @@ export const CreateEventDialog = ({ onEventCreated, open: controlledOpen, onOpen
                     />
                   </div>
                 </div>
+
+                {formData.recurring_frequency === 'weekly' && (
+                  <div className="space-y-2">
+                    <Label>Days of the Week</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].map((day) => (
+                        <label key={day} className="flex items-center space-x-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.recurring_days.includes(day)}
+                            onChange={(e) => {
+                              const updatedDays = e.target.checked
+                                ? [...formData.recurring_days, day]
+                                : formData.recurring_days.filter(d => d !== day);
+                              setFormData(prev => ({ ...prev, recurring_days: updatedDays }));
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                          <span className="text-sm capitalize">{day}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
