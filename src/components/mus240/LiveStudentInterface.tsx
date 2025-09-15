@@ -142,6 +142,7 @@ export const LiveStudentInterface: React.FC = () => {
   };
 
   const checkExistingResponse = async (pollId: string, questionIndex: number) => {
+    // Skip checking existing response for anonymous users to allow fresh participation
     if (!user) return;
 
     try {
@@ -181,17 +182,20 @@ export const LiveStudentInterface: React.FC = () => {
   };
 
   const submitResponse = async (selectedAnswer: number) => {
-    if (!user || !activePoll || submitting) return;
+    if (!activePoll || submitting) return;
 
     setSubmitting(true);
     setSubmissionAnimation(true);
+    
+    // Generate a student identifier - use user ID if authenticated, otherwise generate anonymous ID
+    const studentId = user?.id ?? `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     try {
       const { error } = await supabase
         .from('mus240_poll_responses')
         .upsert({
           poll_id: activePoll.id,
-          student_id: user?.id ?? '',
+          student_id: studentId,
           question_index: activePoll.current_question_index,
           selected_option: selectedAnswer,
           response_time: new Date().toISOString()
