@@ -63,7 +63,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    alert('Copy and paste is disabled. Please type your journal entry directly.');
+    alert("Copy and paste is disabled. Please type your journal entry directly.");
   };
 
   const handleSave = async () => {
@@ -75,7 +75,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
 
   const handlePublish = async () => {
     if (wordCount < 250) {
-      alert('Your journal must be at least 250 words before publishing.');
+      alert("Your journal must be at least 250 words before publishing.");
       return;
     }
 
@@ -94,7 +94,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+    if (!confirm("Are you sure you want to delete this journal entry? This action cannot be undone.")) {
       return;
     }
 
@@ -107,10 +107,10 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
       setHasChanges(false);
       setGrade(null);
     } catch (error: any) {
-      if (error.message.includes('Cannot delete journal with existing comments')) {
-        alert('Cannot delete this journal because it has comments from other students.');
+      if (error.message.includes("Cannot delete journal with existing comments")) {
+        alert("Cannot delete this journal because it has comments from other students.");
       } else {
-        alert('Failed to delete journal entry. Please try again.');
+        alert("Failed to delete journal entry. Please try again.");
       }
     }
   };
