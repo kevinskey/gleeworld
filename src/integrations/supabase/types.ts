@@ -11524,6 +11524,95 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_time_entries: {
+        Row: {
+          break_duration_minutes: number | null
+          check_in_time: string
+          check_out_time: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          timesheet_id: string
+          total_hours: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          break_duration_minutes?: number | null
+          check_in_time: string
+          check_out_time?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          timesheet_id: string
+          total_hours?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          break_duration_minutes?: number | null
+          check_in_time?: string
+          check_out_time?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          timesheet_id?: string
+          total_hours?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_time_entries_timesheet_id_fkey"
+            columns: ["timesheet_id"]
+            isOneToOne: false
+            referencedRelation: "gw_timesheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_timesheets: {
+        Row: {
+          created_at: string
+          goal_evaluation: string | null
+          goal_met: boolean | null
+          id: string
+          status: string | null
+          total_hours_worked: number | null
+          updated_at: string
+          user_id: string
+          week_end_date: string
+          week_start_date: string
+          weekly_goal: string | null
+        }
+        Insert: {
+          created_at?: string
+          goal_evaluation?: string | null
+          goal_met?: boolean | null
+          id?: string
+          status?: string | null
+          total_hours_worked?: number | null
+          updated_at?: string
+          user_id: string
+          week_end_date: string
+          week_start_date: string
+          weekly_goal?: string | null
+        }
+        Update: {
+          created_at?: string
+          goal_evaluation?: string | null
+          goal_met?: boolean | null
+          id?: string
+          status?: string | null
+          total_hours_worked?: number | null
+          updated_at?: string
+          user_id?: string
+          week_end_date?: string
+          week_start_date?: string
+          weekly_goal?: string | null
+        }
+        Relationships: []
+      }
       gw_tour_cities: {
         Row: {
           arrival_date: string | null
@@ -17940,6 +18029,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_current_week_dates: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          week_end: string
+          week_start: string
+        }[]
+      }
       get_graduation_decade: {
         Args: { grad_year: number }
         Returns: string
@@ -17986,7 +18082,7 @@ export type Database = {
       }
       get_user_admin_status: {
         Args: Record<PropertyKey, never> | { user_id_param: string }
-        Returns: Json
+        Returns: boolean
       }
       get_user_executive_position: {
         Args: { user_id_param: string }

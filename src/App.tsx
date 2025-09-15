@@ -159,6 +159,7 @@ import StudentRegistration from "./pages/StudentRegistration";
 import { ProviderDashboard } from "./components/providers/ProviderDashboard";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
+import TimesheetPage from "./pages/TimesheetPage";
 
 import ClassLanding from "./pages/mus240/ClassLanding";
 import SyllabusPage from "./pages/mus240/SyllabusPage";
@@ -571,6 +572,14 @@ const App = () => {
                     <Profile />
                   </ProtectedRoute>
                 } 
+                />
+                <Route
+                  path="/timesheet" 
+                  element={
+                    <ProtectedRoute>
+                      <TimesheetPage />
+                    </ProtectedRoute>
+                  } 
                 />
                 <Route
                   path="/profile/setup" 
