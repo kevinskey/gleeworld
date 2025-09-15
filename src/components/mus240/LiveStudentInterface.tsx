@@ -134,6 +134,7 @@ export const LiveStudentInterface: React.FC = () => {
   }, [activePoll?.id, activePoll?.current_question_index]);
 
   const fetchActivePoll = async () => {
+    console.log('🔍 Fetching active poll...');
     try {
       const { data, error } = await supabase
         .from('mus240_polls')
@@ -141,6 +142,8 @@ export const LiveStudentInterface: React.FC = () => {
         .eq('is_active', true)
         .eq('is_live_session', true)
         .maybeSingle();
+
+      console.log('📊 Active poll query result:', { data, error });
 
       if (error && error.code !== 'PGRST116') {
         throw error;
@@ -151,7 +154,11 @@ export const LiveStudentInterface: React.FC = () => {
           ...data,
           questions: Array.isArray(data.questions) ? data.questions : JSON.parse(typeof data.questions === 'string' ? data.questions : '[]')
         } as Poll;
+        console.log('✅ Active poll set:', poll);
         setActivePoll(poll);
+      } else {
+        console.log('ℹ️ No active poll found');
+        setActivePoll(null);
       }
     } catch (error) {
       console.error('Error fetching active poll:', error);
@@ -202,13 +209,20 @@ export const LiveStudentInterface: React.FC = () => {
   };
 
   const submitResponse = async (selectedAnswer: number) => {
-    if (!activePoll || submitting) return;
+    console.log('🎯 submitResponse called', { activePoll: !!activePoll, submitting, selectedAnswer, user: !!user, anonId });
+    
+    if (!activePoll || submitting) {
+      console.log('❌ Early return:', { activePoll: !!activePoll, submitting });
+      return;
+    }
 
     setSubmitting(true);
     setSubmissionAnimation(true);
     
     // Resolve student identifier - authenticated user ID or persistent anonymous UUID
     let studentId = user?.id ?? anonId ?? null;
+    console.log('🔑 Student ID resolution:', { userId: user?.id, anonId, finalStudentId: studentId });
+    
     if (!studentId) {
       try {
         studentId = (crypto as any)?.randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}-anon`;
@@ -217,21 +231,33 @@ export const LiveStudentInterface: React.FC = () => {
       }
       localStorage.setItem('gw_anon_student_uuid', studentId);
       setAnonId(studentId);
+      console.log('🆔 Generated new student ID:', studentId);
     }
     
+    const requestData = {
+      poll_id: activePoll.id,
+      student_id: studentId,
+      question_index: activePoll.current_question_index,
+      selected_option: selectedAnswer,
+      response_time: new Date().toISOString()
+    };
+    
+    console.log('📤 Submitting poll response:', requestData);
+    
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('mus240_poll_responses')
-        .upsert({
-          poll_id: activePoll.id,
-          student_id: studentId,
-          question_index: activePoll.current_question_index,
-          selected_option: selectedAnswer,
-          response_time: new Date().toISOString()
-        });
+        .upsert(requestData);
 
-      if (error) throw error;
+      console.log('📥 Supabase response:', { data, error });
+      
+      if (error) {
+        console.error('❌ Supabase error details:', error);
+        throw error;
+      }
 
+      console.log('✅ Poll response submitted successfully');
+      
       setUserResponse(selectedAnswer);
       setHasSubmitted(true);
       setJustSubmitted(true);
@@ -245,7 +271,8 @@ export const LiveStudentInterface: React.FC = () => {
         duration: 4000,
       });
     } catch (error) {
-      console.error('Error submitting response:', error);
+      console.error('❌ Error submitting response:', error);
+      console.error('❌ Error details:', JSON.stringify(error, null, 2));
       toast.error('Failed to submit response - Please try again');
       setSubmissionAnimation(false);
     } finally {
