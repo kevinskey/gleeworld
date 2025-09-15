@@ -126,6 +126,25 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
     }
   };
 
+  const updateGroup = async (groupId: string, groupData: {
+    name?: string;
+    description?: string;
+  }) => {
+    try {
+      const { error } = await supabase
+        .from('mus240_project_groups')
+        .update(groupData)
+        .eq('id', groupId);
+
+      if (error) throw error;
+      await fetchGroups();
+      return { success: true };
+    } catch (err) {
+      console.error('Error updating group:', err);
+      throw new Error('Failed to update group');
+    }
+  };
+
   const deleteGroup = async (groupId: string) => {
     try {
       const { error } = await supabase
@@ -207,6 +226,7 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
     loading,
     error,
     createGroup,
+    updateGroup,
     joinGroup,
     deleteGroup,
     leaveGroup,
