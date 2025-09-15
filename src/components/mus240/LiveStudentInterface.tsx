@@ -45,6 +45,25 @@ export const LiveStudentInterface: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [justSubmitted, setJustSubmitted] = useState(false);
   const [submissionAnimation, setSubmissionAnimation] = useState(false);
+  const [anonId, setAnonId] = useState<string | null>(null);
+
+  // Ensure we have a persistent anonymous UUID for non-authenticated students
+  useEffect(() => {
+    if (!user) {
+      let existing = localStorage.getItem('gw_anon_student_uuid');
+      if (!existing) {
+        try {
+          existing = (crypto as any)?.randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}-anon`;
+          localStorage.setItem('gw_anon_student_uuid', existing);
+        } catch (e) {
+          // Fallback if crypto not available
+          existing = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}-anon`;
+          localStorage.setItem('gw_anon_student_uuid', existing);
+        }
+      }
+      setAnonId(existing);
+    }
+  }, [user]);
 
   useEffect(() => {
     fetchActivePoll();
@@ -142,15 +161,16 @@ export const LiveStudentInterface: React.FC = () => {
   };
 
   const checkExistingResponse = async (pollId: string, questionIndex: number) => {
-    // Skip checking existing response for anonymous users to allow fresh participation
-    if (!user) return;
+    // Use authenticated user id or persistent anonymous UUID
+    const sid = user?.id ?? anonId;
+    if (!sid) return;
 
     try {
       const { data, error } = await supabase
         .from('mus240_poll_responses')
         .select('selected_option')
         .eq('poll_id', pollId)
-        .eq('student_id', user?.id ?? '')
+        .eq('student_id', sid)
         .eq('question_index', questionIndex)
         .single();
 
@@ -187,8 +207,17 @@ export const LiveStudentInterface: React.FC = () => {
     setSubmitting(true);
     setSubmissionAnimation(true);
     
-    // Generate a student identifier - use user ID if authenticated, otherwise generate anonymous ID
-    const studentId = user?.id ?? `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Resolve student identifier - authenticated user ID or persistent anonymous UUID
+    let studentId = user?.id ?? anonId ?? null;
+    if (!studentId) {
+      try {
+        studentId = (crypto as any)?.randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}-anon`;
+      } catch (e) {
+        studentId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}-anon`;
+      }
+      localStorage.setItem('gw_anon_student_uuid', studentId);
+      setAnonId(studentId);
+    }
     
     try {
       const { error } = await supabase
