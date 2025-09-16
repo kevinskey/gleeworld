@@ -41,21 +41,32 @@ export const ComprehensiveAppointmentSystem = () => {
   const updateMutation = useUpdateRealAppointment();
   const deleteMutation = useDeleteRealAppointment();
 
-  // Stats calculations
-  const todayAppointments = appointments.filter(apt => {
+  // Provider filtering state (admin or wardrobe managers)
+  const [selectedProviderId, setSelectedProviderId] = useState<string>('');
+  const selectedProvider = providers.find(p => p.id === selectedProviderId);
+
+  // Visible appointments depending on provider selection
+  const visibleAppointments = selectedProvider
+    ? appointments.filter(apt => selectedProvider.services_offered?.length
+        ? selectedProvider.services_offered.includes(apt.service)
+        : false)
+    : appointments;
+
+  // Stats calculations (respect provider filter if selected)
+  const todayAppointments = visibleAppointments.filter(apt => {
     const today = new Date();
     return apt.date.toDateString() === today.toDateString();
   }).length;
 
-  const weeklyAppointments = appointments.filter(apt => {
+  const weeklyAppointments = visibleAppointments.filter(apt => {
     const now = new Date();
     const weekStart = startOfWeek(now);
     const weekEnd = addWeeks(weekStart, 1);
     return apt.date >= weekStart && apt.date < weekEnd;
   }).length;
 
-  const pendingAppointments = appointments.filter(apt => apt.status === 'pending').length;
-  const confirmedAppointments = appointments.filter(apt => apt.status === 'confirmed').length;
+  const pendingAppointments = visibleAppointments.filter(apt => apt.status === 'pending').length;
+  const confirmedAppointments = visibleAppointments.filter(apt => apt.status === 'confirmed').length;
 
   // Event handlers using mutations
   const handleAppointmentCreate = (newAppointment: Omit<Appointment, 'id'>) => {
@@ -136,7 +147,12 @@ export const ComprehensiveAppointmentSystem = () => {
         
         {hasAdminAccess && (
           <div className="flex gap-2">
-            <select className="px-3 py-2 border rounded-md text-sm w-full min-w-0 lg:w-auto">
+            <select 
+              className="px-3 py-2 border rounded-md text-sm w-full min-w-0 lg:w-auto"
+              value={selectedProviderId}
+              onChange={(e) => setSelectedProviderId(e.target.value)}
+              aria-label="Filter by provider"
+            >
               <option value="">All Providers</option>
               {providers.map(provider => (
                 <option key={provider.id} value={provider.id}>
@@ -218,14 +234,14 @@ export const ComprehensiveAppointmentSystem = () => {
 
         <TabsContent value="calendar" className="space-y-6">
           <EnhancedAppointmentCalendar
-            appointments={appointments}
+            appointments={visibleAppointments}
             onAppointmentSelect={setSelectedAppointment}
           />
         </TabsContent>
 
         <TabsContent value="management" className="space-y-6">
           <AppointmentManager
-            appointments={appointments}
+            appointments={visibleAppointments}
             onAppointmentCreate={handleAppointmentCreate}
             onAppointmentUpdate={handleAppointmentUpdate}
             onAppointmentDelete={handleAppointmentDelete}
