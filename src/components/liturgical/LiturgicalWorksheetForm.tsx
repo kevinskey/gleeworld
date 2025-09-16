@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Music, BookOpen, FileText } from 'lucide-react';
+import { Calendar, Music, BookOpen, FileText, Download, Loader2 } from 'lucide-react';
 import { LiturgicalWorksheet } from '@/hooks/useLiturgicalWorksheets';
+import { useUSCCBSync } from '@/hooks/useUSCCBSync';
 
 interface LiturgicalWorksheetFormProps {
   worksheet?: LiturgicalWorksheet;
@@ -15,6 +16,7 @@ interface LiturgicalWorksheetFormProps {
 }
 
 export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: LiturgicalWorksheetFormProps) => {
+  const { syncLiturgicalData, liturgicalData, isLoading, error } = useUSCCBSync();
   const [formData, setFormData] = useState({
     liturgical_date: worksheet?.liturgical_date || '',
     liturgical_season: worksheet?.liturgical_season || '',
@@ -58,6 +60,29 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
     }));
   };
 
+  const handleAutoPopulate = async () => {
+    if (!formData.liturgical_date) {
+      alert('Please select a liturgical date first');
+      return;
+    }
+    
+    const data = await syncLiturgicalData(formData.liturgical_date);
+    if (data) {
+      // Auto-populate readings from USCCB data
+      setFormData(prev => ({
+        ...prev,
+        liturgical_season: data.season || prev.liturgical_season,
+        theme: data.title || prev.theme,
+        readings: {
+          first_reading: data.readings.first_reading?.citation || prev.readings.first_reading,
+          psalm: data.readings.responsorial_psalm?.citation || prev.readings.psalm,
+          second_reading: data.readings.second_reading?.citation || prev.readings.second_reading,
+          gospel: data.readings.gospel?.citation || prev.readings.gospel,
+        }
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -93,13 +118,34 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="liturgical_date">Liturgical Date</Label>
-              <Input
-                id="liturgical_date"
-                type="date"
-                value={formData.liturgical_date}
-                onChange={(e) => handleInputChange('liturgical_date', e.target.value)}
-                required
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="liturgical_date"
+                  type="date"
+                  value={formData.liturgical_date}
+                  onChange={(e) => handleInputChange('liturgical_date', e.target.value)}
+                  required
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoPopulate}
+                  disabled={isLoading || !formData.liturgical_date}
+                  className="whitespace-nowrap"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  Auto-populate
+                </Button>
+              </div>
+              {error && (
+                <p className="text-sm text-destructive mt-1">{error}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="liturgical_season">Liturgical Season</Label>
