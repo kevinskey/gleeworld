@@ -531,12 +531,12 @@ export const SuperAdminDashboard = ({
           </Card>
 
           {/* User Management Module */}
-          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => window.location.href = '/bowna-scholar'}>
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => navigate('/bowman-scholars')}>
             <CardContent className="p-4 text-center">
                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-3">
                  <GraduationCap className="h-6 w-6 text-primary" />
                </div>
-               <h3 className="font-semibold text-sm mb-1">Bowna Scholar</h3>
+               <h3 className="font-semibold text-sm mb-1">Bowman Scholars</h3>
                <p className="text-xs text-muted-foreground">Academic excellence program</p>
             </CardContent>
           </Card>
