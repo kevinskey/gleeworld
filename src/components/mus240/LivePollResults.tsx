@@ -89,7 +89,7 @@ export const LivePollResults = () => {
       supabase.removeChannel(pollChannel);
       supabase.removeChannel(responseChannel);
     };
-  }, [activePoll?.id]);
+  }, []); // Remove dependency on activePoll?.id
 
   useEffect(() => {
     if (activePoll) {

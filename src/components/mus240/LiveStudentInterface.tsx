@@ -102,7 +102,7 @@ export const LiveStudentInterface: React.FC = () => {
     return () => {
       supabase.removeChannel(pollChannel);
     };
-  }, [activePoll?.current_question_index]);
+  }, []); // Remove dependency on activePoll?.current_question_index
 
   useEffect(() => {
     if (activePoll) {
@@ -111,7 +111,7 @@ export const LiveStudentInterface: React.FC = () => {
       
       // Subscribe to response updates for live results
       const responseChannel = supabase
-        .channel('poll-responses-live')
+        .channel(`poll-responses-live-${activePoll.id}-${activePoll.current_question_index}`)
         .on(
           'postgres_changes',
           {
