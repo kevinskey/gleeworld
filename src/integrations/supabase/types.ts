@@ -13305,6 +13305,7 @@ export type Database = {
           music_selections: Json | null
           notes: string | null
           readings: Json | null
+          responsorial_psalm_musicxml: string | null
           special_instructions: string | null
           status: string | null
           theme: string | null
@@ -13319,6 +13320,7 @@ export type Database = {
           music_selections?: Json | null
           notes?: string | null
           readings?: Json | null
+          responsorial_psalm_musicxml?: string | null
           special_instructions?: string | null
           status?: string | null
           theme?: string | null
@@ -13333,6 +13335,7 @@ export type Database = {
           music_selections?: Json | null
           notes?: string | null
           readings?: Json | null
+          responsorial_psalm_musicxml?: string | null
           special_instructions?: string | null
           status?: string | null
           theme?: string | null

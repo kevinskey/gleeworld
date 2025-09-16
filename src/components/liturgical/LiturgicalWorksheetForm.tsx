@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Music, BookOpen, FileText, Download, Loader2 } from 'lucide-react';
+import { Calendar, Music, BookOpen, FileText, Download, Loader2, Upload, Eye } from 'lucide-react';
 import { LiturgicalWorksheet } from '@/hooks/useLiturgicalWorksheets';
 import { useUSCCBSync } from '@/hooks/useUSCCBSync';
+import { MusicXMLViewer } from './MusicXMLViewer';
 
 interface LiturgicalWorksheetFormProps {
   worksheet?: LiturgicalWorksheet;
@@ -27,6 +28,7 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
       second_reading: worksheet?.readings?.second_reading || '',
       gospel: worksheet?.readings?.gospel || '',
     },
+    responsorial_psalm_musicxml: worksheet?.responsorial_psalm_musicxml || '',
     music_selections: {
       entrance_hymn: worksheet?.music_selections?.entrance_hymn || '',
       responsorial_psalm: worksheet?.music_selections?.responsorial_psalm || '',
@@ -41,6 +43,7 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
   });
 
   const [saving, setSaving] = useState(false);
+  const [showMusicXMLViewer, setShowMusicXMLViewer] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -58,6 +61,21 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
       ...prev,
       music_selections: { ...prev.music_selections, [music]: value }
     }));
+  };
+
+  const handleMusicXMLUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === 'text/xml') {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setFormData(prev => ({
+          ...prev,
+          responsorial_psalm_musicxml: result
+        }));
+      };
+      reader.readAsText(file);
+    }
   };
 
   const handleAutoPopulate = async () => {
@@ -240,6 +258,53 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
                   />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Responsorial Psalm MusicXML */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Music className="h-4 w-4" />
+                Responsorial Psalm Composition
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="musicxml-upload">Upload MusicXML</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    id="musicxml-upload"
+                    type="file"
+                    accept=".xml,.musicxml"
+                    onChange={handleMusicXMLUpload}
+                    className="flex-1"
+                  />
+                  {formData.responsorial_psalm_musicxml && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowMusicXMLViewer(true)}
+                      className="whitespace-nowrap"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Upload a MusicXML file for the responsorial psalm composition
+                </p>
+              </div>
+              
+              {showMusicXMLViewer && formData.responsorial_psalm_musicxml && (
+                <MusicXMLViewer
+                  musicxml={formData.responsorial_psalm_musicxml}
+                  onClose={() => setShowMusicXMLViewer(false)}
+                  title="Responsorial Psalm Composition"
+                />
+              )}
             </CardContent>
           </Card>
 

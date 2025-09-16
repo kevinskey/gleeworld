@@ -14,6 +14,7 @@ export interface LiturgicalWorksheet {
     second_reading?: string;
     gospel?: string;
   };
+  responsorial_psalm_musicxml?: string;
   music_selections: {
     entrance_hymn?: string;
     responsorial_psalm?: string;
@@ -86,6 +87,7 @@ export const useLiturgicalWorksheets = () => {
         liturgical_date: worksheetData.liturgical_date || '',
         liturgical_season: worksheetData.liturgical_season || '',
         readings: worksheetData.readings || {},
+        responsorial_psalm_musicxml: worksheetData.responsorial_psalm_musicxml,
         music_selections: worksheetData.music_selections || {},
         special_instructions: worksheetData.special_instructions,
         theme: worksheetData.theme,
