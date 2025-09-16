@@ -531,13 +531,13 @@ export const SuperAdminDashboard = ({
           </Card>
 
           {/* User Management Module */}
-          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedModule('user-management')}>
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => window.location.href = '/bowna-scholar'}>
             <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center mx-auto mb-3">
-                <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="font-semibold text-sm mb-1">User Management</h3>
-              <p className="text-xs text-muted-foreground">Manage users & roles</p>
+               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-3">
+                 <GraduationCap className="h-6 w-6 text-primary" />
+               </div>
+               <h3 className="font-semibold text-sm mb-1">Bowna Scholar</h3>
+               <p className="text-xs text-muted-foreground">Academic excellence program</p>
             </CardContent>
           </Card>
 

@@ -161,6 +161,7 @@ import { ProviderDashboard } from "./components/providers/ProviderDashboard";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
 import TimesheetPage from "./pages/TimesheetPage";
+import BownaScholarLanding from "./pages/BownaScholarLanding";
 
 import ClassLanding from "./pages/mus240/ClassLanding";
 import SyllabusPage from "./pages/mus240/SyllabusPage";
@@ -1211,7 +1212,15 @@ const App = () => {
                                         <ReceiptsPage />
                                       </ProtectedRoute>
                                     } 
-                                  />
+                />
+                <Route 
+                  path="/bowna-scholar" 
+                  element={
+                    <ProtectedRoute>
+                      <BownaScholarLanding />
+                    </ProtectedRoute>
+                  } 
+                />
                                   <Route 
                                     path="/admin/approval-system" 
                                     element={
