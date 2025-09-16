@@ -563,14 +563,14 @@ export const SuperAdminDashboard = ({
             </CardContent>
           </Card>
 
-          {/* Analytics Module */}
-          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedModule('analytics')}>
+          {/* Glee Academy Module */}
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => navigate('/glee-academy')}>
             <CardContent className="p-4 text-center">
               <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center mx-auto mb-3">
                 <BarChart3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="font-semibold text-sm mb-1">Analytics</h3>
-              <p className="text-xs text-muted-foreground">System insights</p>
+              <h3 className="font-semibold text-sm mb-1">Glee Academy</h3>
+              <p className="text-xs text-muted-foreground">Educational platform</p>
             </CardContent>
           </Card>
         </div>
