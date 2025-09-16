@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,50 +27,45 @@ interface USCCBLiturgicalData {
 }
 
 serve(async (req) => {
+  console.log('=== USCCB Liturgical Sync Function Started ===');
+  console.log('Request method:', req.method);
+  console.log('Request URL:', req.url);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Starting liturgical sync request...');
+    console.log('Processing POST request...');
     
-    // Initialize Supabase client (authentication is optional for this function)
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!supabaseUrl) {
-      console.error('SUPABASE_URL environment variable not found');
-      return new Response(
-        JSON.stringify({ error: 'Server configuration error' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-
-    console.log('Environment variables loaded successfully');
-
     // Parse request body safely
     let requestBody;
     try {
-      requestBody = await req.json();
+      const bodyText = await req.text();
+      console.log('Raw request body:', bodyText);
+      requestBody = JSON.parse(bodyText);
+      console.log('Parsed request body:', requestBody);
     } catch (jsonError) {
       console.error('Error parsing request body:', jsonError);
       return new Response(
-        JSON.stringify({ error: 'Invalid request body' }),
+        JSON.stringify({ error: 'Invalid request body', success: false }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
     const { date } = requestBody;
     const targetDate = date || new Date().toISOString().split('T')[0];
-
-    console.log(`Syncing liturgical data for date: ${targetDate}`);
+    console.log('Target date:', targetDate);
 
     // Parse the date for API format
     const dateObj = new Date(targetDate);
     const year = dateObj.getFullYear();
     const month = String(dateObj.getMonth() + 1).padStart(2, '0');
     const day = String(dateObj.getDate()).padStart(2, '0');
+
+    console.log(`Formatted date: ${year}-${month}-${day}`);
 
     let transformedData: USCCBLiturgicalData;
 
@@ -80,58 +74,59 @@ serve(async (req) => {
       const apiUrl = `https://calapi.inadiutorium.cz/api/v0/en/calendars/general-en/${year}/${month}/${day}`;
       console.log(`Fetching from Liturgical Calendar API: ${apiUrl}`);
       
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+      
       const response = await fetch(apiUrl, {
         headers: {
           'User-Agent': 'GleeWorld/1.0',
           'Accept': 'application/json'
         },
-        signal: AbortSignal.timeout(10000) // 10 second timeout
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
       console.log(`API Response status: ${response.status}`);
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Successfully fetched liturgical data');
+        console.log('Successfully fetched liturgical data from API');
         transformedData = transformLiturgicalData(data, targetDate);
       } else {
         const errorText = await response.text();
-        console.log(`Failed to fetch liturgical data: ${response.status} ${response.statusText} - ${errorText}`);
+        console.log(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
         throw new Error(`API responded with status ${response.status}`);
       }
     } catch (fetchError) {
-      console.log('Error fetching liturgical data, using fallback:', fetchError);
-      
-      // Fallback response when API is unavailable
+      console.log('API fetch failed, using fallback data:', fetchError);
       transformedData = createFallbackData(targetDate);
     }
 
-    console.log('Successfully created liturgical data response');
+    console.log('Successfully prepared response data');
 
     return new Response(
       JSON.stringify({
         success: true,
         data: transformedData,
-        source: 'liturgical_calendar_api',
-        note: 'Data provided by Catholic Liturgical Calendar API'
+        source: transformedData.title?.includes('fallback') ? 'fallback' : 'liturgical_calendar_api',
+        note: 'Liturgical data provided for Glee World'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Liturgical sync error:', error);
+    console.error('Function error:', error);
     
     // Always provide a fallback response
     try {
-      const { date } = await req.json().catch(() => ({ date: new Date().toISOString().split('T')[0] }));
-      const fallbackData = createFallbackData(date || new Date().toISOString().split('T')[0]);
+      const fallbackData = createFallbackData(new Date().toISOString().split('T')[0]);
       
       return new Response(
         JSON.stringify({
           success: true,
           data: fallbackData,
           source: 'fallback',
-          note: 'Using fallback data due to API unavailability'
+          note: 'Using fallback data due to system error'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -226,6 +221,8 @@ function mapSeasonToColor(season: string): string {
 
 // Helper function to create fallback data
 function createFallbackData(date: string): USCCBLiturgicalData {
+  console.log('Creating fallback liturgical data for:', date);
+  
   const dateObj = new Date(date);
   const formattedDate = dateObj.toLocaleDateString('en-US', { 
     weekday: 'long', 
@@ -238,7 +235,7 @@ function createFallbackData(date: string): USCCBLiturgicalData {
     date,
     season: 'Ordinary Time',
     week: '',
-    title: `Daily Readings for ${formattedDate}`,
+    title: `Daily Readings for ${formattedDate} (Fallback Data)`,
     readings: {
       first_reading: {
         title: 'First Reading',
