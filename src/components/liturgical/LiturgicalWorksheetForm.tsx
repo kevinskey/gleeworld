@@ -65,16 +65,26 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
 
   const handleMusicXMLUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type === 'text/xml') {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setFormData(prev => ({
-          ...prev,
-          responsorial_psalm_musicxml: result
-        }));
-      };
-      reader.readAsText(file);
+    if (file) {
+      // Accept MusicXML files regardless of MIME type, check by extension
+      const isValidFile = file.name.toLowerCase().endsWith('.xml') || 
+                         file.name.toLowerCase().endsWith('.musicxml') ||
+                         file.type === 'text/xml' ||
+                         file.type === 'application/xml';
+      
+      if (isValidFile) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          setFormData(prev => ({
+            ...prev,
+            responsorial_psalm_musicxml: result
+          }));
+        };
+        reader.readAsText(file);
+      } else {
+        alert('Please select a valid MusicXML file (.xml or .musicxml)');
+      }
     }
   };
 
