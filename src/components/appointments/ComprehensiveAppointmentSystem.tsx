@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AppointmentCalendar } from './AppointmentCalendar';
+import { EnhancedAppointmentCalendar } from './EnhancedAppointmentCalendar';
 import { AppointmentManager } from './AppointmentManager';
 import { AppointmentServiceManager } from './AppointmentServiceManager';
 import { ProviderProfileSelector } from './ProviderProfileSelector';
@@ -214,7 +214,7 @@ export const ComprehensiveAppointmentSystem = () => {
         </div>
 
         <TabsContent value="calendar" className="space-y-6">
-          <AppointmentCalendar
+          <EnhancedAppointmentCalendar
             appointments={appointments}
             onAppointmentSelect={setSelectedAppointment}
           />
