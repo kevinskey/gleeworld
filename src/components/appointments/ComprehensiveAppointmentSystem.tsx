@@ -28,7 +28,10 @@ export const ComprehensiveAppointmentSystem = () => {
   const navigate = useNavigate();
   
   // Use user role hook
-  const { isSuperAdmin } = useUserRole();
+  const { isSuperAdmin, isWardrobeManager } = useUserRole();
+  
+  // Check if user has admin access (super admin or wardrobe manager)
+  const hasAdminAccess = isSuperAdmin() || isWardrobeManager();
   
   // Use real appointments data
   const { data: appointments = [], isLoading, error } = useRealAppointments();
@@ -131,7 +134,7 @@ export const ComprehensiveAppointmentSystem = () => {
           </div>
         </div>
         
-        {isSuperAdmin() && (
+        {hasAdminAccess && (
           <div className="flex gap-2">
             <select className="px-3 py-2 border rounded-md text-sm w-full min-w-0 lg:w-auto">
               <option value="">All Providers</option>
@@ -199,12 +202,12 @@ export const ComprehensiveAppointmentSystem = () => {
       {/* Main Content Tabs */}
       <Tabs defaultValue="calendar" className="space-y-4 lg:space-y-6">
         <div className="overflow-x-auto">
-          <TabsList className={`inline-flex w-full min-w-fit gap-1 ${isSuperAdmin() ? 'grid-cols-6' : 'grid-cols-4'} lg:grid lg:w-full`}>
+          <TabsList className={`inline-flex w-full min-w-fit gap-1 ${hasAdminAccess ? 'grid-cols-6' : 'grid-cols-4'} lg:grid lg:w-full`}>
             <TabsTrigger value="calendar" className="text-xs lg:text-sm whitespace-nowrap">Calendar</TabsTrigger>
             <TabsTrigger value="management" className="text-xs lg:text-sm whitespace-nowrap">Management</TabsTrigger>
             <TabsTrigger value="my-profile" className="text-xs lg:text-sm whitespace-nowrap">My Profile</TabsTrigger>
             <TabsTrigger value="services" className="text-xs lg:text-sm whitespace-nowrap">Services</TabsTrigger>
-            {isSuperAdmin() && (
+            {hasAdminAccess && (
               <>
                 <TabsTrigger value="providers" className="text-xs lg:text-sm whitespace-nowrap">Providers</TabsTrigger>
                 <TabsTrigger value="admin" className="text-xs lg:text-sm whitespace-nowrap">Admin</TabsTrigger>
@@ -239,7 +242,7 @@ export const ComprehensiveAppointmentSystem = () => {
           <AppointmentServiceManager />
         </TabsContent>
 
-        {isSuperAdmin() && (
+        {hasAdminAccess && (
           <TabsContent value="providers" className="space-y-4 lg:space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
               {providers.map(provider => (
@@ -284,7 +287,7 @@ export const ComprehensiveAppointmentSystem = () => {
           </TabsContent>
         )}
 
-        {isSuperAdmin() && (
+        {hasAdminAccess && (
           <TabsContent value="admin" className="space-y-6">
             <ProviderManagement />
           </TabsContent>
