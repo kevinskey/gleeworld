@@ -15,7 +15,7 @@ const BownaScholarLanding = () => {
             <GraduationCap className="h-10 w-10 text-white" />
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent mb-4">
-            Bowna Scholar Program
+            Bowman Scholars
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Excellence in Academic Achievement and Musical Leadership
@@ -32,7 +32,7 @@ const BownaScholarLanding = () => {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              The Bowna Scholar Program recognizes exceptional students who demonstrate outstanding 
+              The Bowman Scholar Program recognizes exceptional students who demonstrate outstanding 
               academic achievement, musical excellence, and leadership within the Spelman College 
               Glee Club community.
             </p>
@@ -92,7 +92,7 @@ const BownaScholarLanding = () => {
               <Badge variant="secondary" className="text-primary">
                 2024-2025
               </Badge>
-              Current Bowna Scholars
+              Current Bowman Scholars
             </CardTitle>
           </CardHeader>
           <CardContent>
