@@ -14,6 +14,7 @@ import { ExecBoardModulePanel } from '@/components/executive/ExecBoardModulePane
 import FanDashboard from '@/pages/FanDashboard';
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
+import { ModuleDisplay } from './ModuleDisplay';
 
 // Lazy load heavy components to improve initial load time
 const CommunityHubModule = lazy(() => import('./modules/CommunityHubModule').then(m => ({
@@ -92,6 +93,15 @@ export const UnifiedDashboard = () => {
           <p className="text-sm text-gray-500">
             User ID: {user?.id}
           </p>
+        </div>
+      </div>;
+  }
+
+  // If module specified via query param, render it directly
+  if (activeModuleId && activeModuleId !== 'collapsed-toggle' && viewMode === 'default') {
+    return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+        <div className="px-6 py-4">
+          <ModuleDisplay selectedModule={activeModuleId} />
         </div>
       </div>;
   }
