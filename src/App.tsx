@@ -1221,6 +1221,14 @@ const App = () => {
                     </ProtectedRoute>
                   } 
                 />
+                <Route 
+                  path="/bowman-scholars" 
+                  element={
+                    <ProtectedRoute>
+                      <BownaScholarLanding />
+                    </ProtectedRoute>
+                  } 
+                />
                                   <Route 
                                     path="/admin/approval-system" 
                                     element={
