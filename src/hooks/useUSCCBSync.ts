@@ -42,31 +42,59 @@ export const useUSCCBSync = () => {
       console.log('Syncing liturgical data for date:', date);
       console.log('About to call sync-usccb-liturgical function...');
 
+      // First attempt: standard invoke
       const { data, error: functionError } = await supabase.functions.invoke('sync-usccb-liturgical', {
         body: { date }
       });
 
-      console.log('Function response:', { data, functionError });
-      console.log('Function data details:', JSON.stringify(data, null, 2));
+      console.log('Invoke response:', { data, functionError });
 
-      if (functionError) {
-        console.error('Function error details:', functionError);
-        throw new Error(functionError.message || 'Failed to sync liturgical data');
+      let result = data as any;
+
+      // Fallback to direct fetch if invoke fails to send
+      if (functionError || !result) {
+        console.warn('Invoke failed or returned no data, attempting direct fetch fallback...');
+        try {
+          const { data: sessionData } = await supabase.auth.getSession();
+          const token = sessionData.session?.access_token;
+          const resp = await fetch('https://oopmlreysjzuxzylyheb.functions.supabase.co/sync-usccb-liturgical', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': (supabase as any).headers?.['x-client-info'] ? '' : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg',
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ date })
+          });
+
+          if (!resp.ok) {
+            const txt = await resp.text();
+            throw new Error(`Direct fetch failed: ${resp.status} ${txt}`);
+          }
+          result = await resp.json();
+        } catch (fallbackErr) {
+          console.error('Direct fetch fallback failed:', fallbackErr);
+          throw functionError || fallbackErr;
+        }
       }
 
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch liturgical data');
+      console.log('Function data details:', JSON.stringify(result, null, 2));
+
+      const payload = result?.data ?? result; // support both shapes
+
+      if (!result?.success && !payload?.season) {
+        throw new Error(result?.error || 'Failed to fetch liturgical data');
       }
 
-      console.log('Successfully synced liturgical data:', data.data);
-      setLiturgicalData(data.data);
+      console.log('Successfully synced liturgical data:', payload);
+      setLiturgicalData(payload);
 
       toast({
         title: "Liturgical Data Loaded",
         description: `Successfully loaded liturgical calendar for ${new Date(date).toLocaleDateString()}`,
       });
 
-      return data.data;
+      return payload;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sync liturgical data';
       console.error('Error syncing liturgical data:', err);
