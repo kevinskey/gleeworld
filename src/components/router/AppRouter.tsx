@@ -43,6 +43,7 @@ import LibrarianDashboardPage from "@/pages/LibrarianDashboardPage";
 import { Onboarding } from "@/pages/Onboarding";
 import { MessagingInterface } from '@/components/messaging/MessagingInterface';
 import StudentRegistration from "@/pages/StudentRegistration";
+import BownaScholarLanding from "@/pages/BownaScholarLanding";
 
 // MUS240 Pages
 import ClassLanding from "@/pages/mus240/ClassLanding";
@@ -203,6 +204,10 @@ export const router = createBrowserRouter([
   {
     path: "/dashboard",
     element: <UnifiedDashboard />,
+  },
+  {
+    path: "/bowman-scholars",
+    element: <BownaScholarLanding />,
   },
   {
     path: "/executive-board-dashboard", 
