@@ -16,6 +16,12 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Bypass caching for Supabase function calls to avoid masking network errors
+  if (event.request.url.includes('.supabase.co/functions/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
