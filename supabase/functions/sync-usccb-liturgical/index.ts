@@ -71,58 +71,111 @@ serve(async (req) => {
     let source = 'unknown';
 
     try {
-      // Try USCCB API first (official source)
+      // Try multiple liturgical sources in order of preference
       let apiSuccess = false;
-      
-      try {
-        const usccbUrl = `https://bible.usccb.org/bible/readings/${month}${day}${year}.cfm`;
-        console.log(`Attempting USCCB API: ${usccbUrl}`);
-        
-        const usccbResponse = await fetch(usccbUrl, {
+      const sources = [
+        {
+          name: 'usccb',
+          url: `https://bible.usccb.org/bible/readings/${month}${day}${year}.cfm`,
           headers: {
             'User-Agent': 'GleeWorld/1.0 Educational Use',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
           },
-          signal: AbortSignal.timeout(5000)
-        });
-
-        if (usccbResponse.ok) {
-          const htmlContent = await usccbResponse.text();
-          console.log('Successfully fetched from USCCB');
-          transformedData = parseUSCCBData(htmlContent, targetDate);
-          apiSuccess = true;
-          source = 'usccb';
-        }
-      } catch (usccbError) {
-        console.log('USCCB fetch failed:', usccbError);
-      }
-
-      // Fallback to liturgical calendar API if USCCB fails
-      if (!apiSuccess) {
-        const calApiUrl = `https://calapi.inadiutorium.cz/api/v0/en/calendars/general-en/${year}/${month}/${day}`;
-        console.log(`Fallback to Liturgical Calendar API: ${calApiUrl}`);
-        
-        const response = await fetch(calApiUrl, {
+          timeout: 5000,
+          parser: 'html'
+        },
+        {
+          name: 'calendar_api',
+          url: `https://calapi.inadiutorium.cz/api/v0/en/calendars/general-en/${year}/${month}/${day}`,
           headers: {
             'User-Agent': 'GleeWorld/1.0',
             'Accept': 'application/json'
           },
-          signal: AbortSignal.timeout(10000)
-        });
+          timeout: 8000,
+          parser: 'json'
+        },
+        {
+          name: 'universalis',
+          url: `https://universalis.com/${year}${month}${day}/readings.json`,
+          headers: {
+            'User-Agent': 'GleeWorld/1.0',
+            'Accept': 'application/json'
+          },
+          timeout: 8000,
+          parser: 'json'
+        },
+        {
+          name: 'catholic_calendar',
+          url: `https://api.catholiccalendar.com/readings/${year}-${month}-${day}`,
+          headers: {
+            'User-Agent': 'GleeWorld/1.0',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          timeout: 8000,
+          parser: 'json'
+        },
+        {
+          name: 'ibreviary',
+          url: `https://ibreviary.org/api/readings/${year}${month}${day}`,
+          headers: {
+            'User-Agent': 'GleeWorld/1.0',
+            'Accept': 'application/json'
+          },
+          timeout: 8000,
+          parser: 'json'
+        }
+      ];
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Successfully fetched liturgical data from calendar API');
-          transformedData = transformLiturgicalData(data, targetDate);
-          apiSuccess = true;
-          source = 'calendar_api';
-        } else {
-          throw new Error(`Calendar API responded with status ${response.status}`);
+      for (const sourceConfig of sources) {
+        if (apiSuccess) break;
+        
+        try {
+          console.log(`Attempting ${sourceConfig.name}: ${sourceConfig.url}`);
+          
+          const response = await fetch(sourceConfig.url, {
+            headers: sourceConfig.headers,
+            signal: AbortSignal.timeout(sourceConfig.timeout)
+          });
+
+          if (response.ok) {
+            if (sourceConfig.parser === 'html') {
+              const htmlContent = await response.text();
+              console.log(`Successfully fetched from ${sourceConfig.name}`);
+              transformedData = parseUSCCBData(htmlContent, targetDate);
+              apiSuccess = true;
+              source = sourceConfig.name;
+            } else if (sourceConfig.parser === 'json') {
+              const data = await response.json();
+              console.log(`Successfully fetched from ${sourceConfig.name}`);
+              
+              // Handle different JSON response formats
+              if (sourceConfig.name === 'calendar_api') {
+                transformedData = transformLiturgicalData(data, targetDate);
+              } else if (sourceConfig.name === 'universalis') {
+                transformedData = transformUniversalisData(data, targetDate);
+              } else if (sourceConfig.name === 'catholic_calendar') {
+                transformedData = transformCatholicCalendarData(data, targetDate);
+              } else if (sourceConfig.name === 'ibreviary') {
+                transformedData = transformIBreviaryData(data, targetDate);
+              } else {
+                // Generic transformation for unknown sources
+                transformedData = transformGenericLiturgicalData(data, targetDate);
+              }
+              
+              apiSuccess = true;
+              source = sourceConfig.name;
+            }
+          } else {
+            console.log(`${sourceConfig.name} responded with status ${response.status}`);
+          }
+        } catch (error) {
+          console.log(`${sourceConfig.name} failed:`, error.message);
         }
       }
 
       if (!apiSuccess) {
-        throw new Error('All API sources failed');
+        throw new Error('All liturgical API sources failed');
       }
     } catch (fetchError) {
       console.log('All API sources failed, creating enhanced fallback data:', fetchError);
@@ -374,6 +427,187 @@ function createEnhancedFallbackData(date: string): USCCBLiturgicalData {
       }
     },
     saint_of_day,
+    liturgical_color
+  };
+}
+
+// Additional transformation functions for different API sources
+
+// Transform Universalis API data
+function transformUniversalisData(data: any, date: string): USCCBLiturgicalData {
+  console.log('Transforming Universalis API data...');
+  
+  const dateObj = new Date(date);
+  const formattedDate = dateObj.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
+  const season = data.season?.name || determineLiturgicalSeason(dateObj);
+  const liturgical_color = data.colour || mapSeasonToColor(season);
+  
+  return {
+    date,
+    season,
+    week: data.week || '',
+    title: data.title || `Daily Readings for ${formattedDate}`,
+    readings: {
+      first_reading: {
+        title: 'First Reading',
+        citation: data.readings?.first?.citation || 'Universalis',
+        content: data.readings?.first?.text || 'First reading available at Universalis.com'
+      },
+      responsorial_psalm: {
+        title: 'Responsorial Psalm',
+        citation: data.readings?.psalm?.citation || 'Universalis',
+        content: data.readings?.psalm?.text || 'Responsorial psalm available at Universalis.com'
+      },
+      gospel: {
+        title: 'Gospel',
+        citation: data.readings?.gospel?.citation || 'Universalis',
+        content: data.readings?.gospel?.text || 'Gospel reading available at Universalis.com'
+      }
+    },
+    saint_of_day: data.saint || getSaintForDate(dateObj),
+    liturgical_color
+  };
+}
+
+// Transform Catholic Calendar API data
+function transformCatholicCalendarData(data: any, date: string): USCCBLiturgicalData {
+  console.log('Transforming Catholic Calendar API data...');
+  
+  const dateObj = new Date(date);
+  const formattedDate = dateObj.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
+  const season = data.liturgical_season || determineLiturgicalSeason(dateObj);
+  const liturgical_color = data.liturgical_color || mapSeasonToColor(season);
+  
+  const readings: any = {
+    first_reading: {
+      title: 'First Reading',
+      citation: data.readings?.first_reading?.citation || 'Catholic Calendar',
+      content: data.readings?.first_reading?.text || 'First reading available through Catholic Calendar API'
+    },
+    responsorial_psalm: {
+      title: 'Responsorial Psalm',
+      citation: data.readings?.psalm?.citation || 'Catholic Calendar',
+      content: data.readings?.psalm?.text || 'Responsorial psalm available through Catholic Calendar API'
+    },
+    gospel: {
+      title: 'Gospel',
+      citation: data.readings?.gospel?.citation || 'Catholic Calendar',
+      content: data.readings?.gospel?.text || 'Gospel reading available through Catholic Calendar API'
+    }
+  };
+
+  // Add second reading if available
+  if (data.readings?.second_reading) {
+    readings.second_reading = {
+      title: 'Second Reading',
+      citation: data.readings.second_reading.citation || 'Catholic Calendar',
+      content: data.readings.second_reading.text || 'Second reading available through Catholic Calendar API'
+    };
+  }
+
+  return {
+    date,
+    season,
+    week: data.week || '',
+    title: data.title || `Daily Readings for ${formattedDate}`,
+    readings,
+    saint_of_day: data.saint || getSaintForDate(dateObj),
+    liturgical_color
+  };
+}
+
+// Transform iBreviary API data
+function transformIBreviaryData(data: any, date: string): USCCBLiturgicalData {
+  console.log('Transforming iBreviary API data...');
+  
+  const dateObj = new Date(date);
+  const formattedDate = dateObj.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
+  const season = data.season || determineLiturgicalSeason(dateObj);
+  const liturgical_color = data.color || mapSeasonToColor(season);
+  
+  return {
+    date,
+    season,
+    week: data.week || '',
+    title: data.title || `Daily Readings for ${formattedDate}`,
+    readings: {
+      first_reading: {
+        title: 'First Reading',
+        citation: data.first_reading?.reference || 'iBreviary',
+        content: data.first_reading?.text || 'First reading available through iBreviary app'
+      },
+      responsorial_psalm: {
+        title: 'Responsorial Psalm',
+        citation: data.psalm?.reference || 'iBreviary',
+        content: data.psalm?.text || 'Responsorial psalm available through iBreviary app'
+      },
+      gospel: {
+        title: 'Gospel',
+        citation: data.gospel?.reference || 'iBreviary',
+        content: data.gospel?.text || 'Gospel reading available through iBreviary app'
+      }
+    },
+    saint_of_day: data.commemoration || getSaintForDate(dateObj),
+    liturgical_color
+  };
+}
+
+// Generic transformation function for unknown API formats
+function transformGenericLiturgicalData(data: any, date: string): USCCBLiturgicalData {
+  console.log('Transforming generic liturgical API data...');
+  
+  const dateObj = new Date(date);
+  const formattedDate = dateObj.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
+  const season = data.season || data.liturgical_season || determineLiturgicalSeason(dateObj);
+  const liturgical_color = data.color || data.liturgical_color || mapSeasonToColor(season);
+  
+  return {
+    date,
+    season,
+    week: data.week || '',
+    title: data.title || `Daily Readings for ${formattedDate}`,
+    readings: {
+      first_reading: {
+        title: 'First Reading',
+        citation: 'Liturgical Source',
+        content: 'First reading available from liturgical source'
+      },
+      responsorial_psalm: {
+        title: 'Responsorial Psalm',
+        citation: 'Liturgical Source',
+        content: 'Responsorial psalm available from liturgical source'
+      },
+      gospel: {
+        title: 'Gospel',
+        citation: 'Liturgical Source',
+        content: 'Gospel reading available from liturgical source'
+      }
+    },
+    saint_of_day: data.saint || data.commemoration || getSaintForDate(dateObj),
     liturgical_color
   };
 }
