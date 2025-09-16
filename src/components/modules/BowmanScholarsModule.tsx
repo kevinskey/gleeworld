@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBowmanScholars } from '@/hooks/useBowmanScholars';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { GraduationCap, User, Edit2, Users, BookOpen, Calendar, Plus, FileText, Clock } from 'lucide-react';
+import { GraduationCap, User, Edit2, Users, BookOpen, Calendar, Plus, Trash2, Clock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLiturgicalWorksheets, LiturgicalWorksheet } from '@/hooks/useLiturgicalWorksheets';
 import { LiturgicalWorksheetForm } from '@/components/liturgical/LiturgicalWorksheetForm';
@@ -385,8 +385,12 @@ export const BowmanScholarsModule = () => {
                   ) : (
                     <ScrollArea className="h-96">
                       <div className="space-y-4">
-                        {worksheets.map((worksheet) => (
-                          <Card key={worksheet.id} className="p-4 hover:shadow-md transition-shadow">
+                         {worksheets.map((worksheet) => (
+                          <Card 
+                            key={worksheet.id} 
+                            className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+                            onClick={() => handleEditWorksheet(worksheet)}
+                          >
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
@@ -420,16 +424,23 @@ export const BowmanScholarsModule = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleEditWorksheet(worksheet)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditWorksheet(worksheet);
+                                  }}
                                 >
-                                  <Edit2 className="h-4 w-4" />
+                                  <Edit2 className="h-5 w-5" />
                                 </Button>
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => deleteWorksheet(worksheet.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteWorksheet(worksheet.id);
+                                  }}
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                 >
-                                  <FileText className="h-4 w-4" />
+                                  <Trash2 className="h-5 w-5" />
                                 </Button>
                               </div>
                             </div>
