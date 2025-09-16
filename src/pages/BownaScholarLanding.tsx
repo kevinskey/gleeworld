@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { GraduationCap, Award, Users, BookOpen, Star, Calendar, Info } from 'lucide-react';
 
 const BownaScholarLanding = () => {
+  const navigate = useNavigate();
+
+  const handleApplyNow = () => {
+    navigate('/dashboard?module=bowman-scholars');
+  };
+
   return (
     <TooltipProvider>
       <UniversalLayout>
@@ -371,7 +378,7 @@ const BownaScholarLanding = () => {
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button className="flex-1">
+                  <Button className="flex-1" onClick={handleApplyNow}>
                     Apply Now
                   </Button>
                 </TooltipTrigger>
