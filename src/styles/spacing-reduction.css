@@ -1,96 +1,92 @@
 /* Update all CardHeaders globally to use reduced spacing */
-@layer components {
-  /* Reduce CardHeader padding by default */
-  .card-header-reduced {
-    @apply pb-1 pt-3;
-  }
-  
-  /* Card header compact variant - apply intentionally */
-  .card-header-compact {
-    @apply pb-1 pt-2;
-  }
+.card-header-reduced {
+  @apply pb-1 pt-3;
+}
+
+/* Card header compact variant - apply intentionally */
+.card-header-compact {
+  @apply pb-1 pt-2;
 }
 
 /* Update page container spacing globally */
-@layer utilities {
-  .page-container {
-    @apply py-0.5 md:py-1 space-y-0.5 md:space-y-1;
-  }
-  
-  .page-header {
-    @apply text-base md:text-lg font-bebas mb-0.5 md:mb-1 tracking-wide;
-  }
-  
-  .page-title-large {
-    @apply text-lg md:text-xl font-bebas mb-0.5 md:mb-1 tracking-wide;
-  }
-  
-  .section-spacing {
-    @apply space-y-0.5 md:space-y-1;
-  }
-  
-  .card-spacing {
-    @apply gap-0.5 md:gap-1;
-  }
+/* Update page container spacing globally */
+.page-container {
+  @apply py-0.5 md:py-1 space-y-0.5 md:space-y-1;
+}
 
-  /* Responsive grid utilities */
-  .responsive-grid-2 {
-    @apply grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2;
-  }
-  
-  .responsive-grid-3 {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 md:gap-2;
-  }
-  
-  .responsive-grid-4 {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 md:gap-2;
-  }
+.page-header {
+  @apply text-base md:text-lg font-bebas mb-0.5 md:mb-1 tracking-wide;
+}
 
-  /* Compact card utilities */
-  .card-compact {
-    @apply p-1.5 md:p-2 space-y-1;
-  }
-  
-  .card-header-compact {
-    @apply pb-0.5 pt-1;
-  }
+.page-title-large {
+  @apply text-lg md:text-xl font-bebas mb-0.5 md:mb-1 tracking-wide;
+}
 
-  /* Dropdown and popover compact utilities */
-  .dropdown-compact {
-    @apply py-0.5 px-1;
-  }
-  
-  .dropdown-item-compact {
-    @apply py-1 px-2 text-sm leading-tight;
-  }
+.section-spacing {
+  @apply space-y-0.5 md:space-y-1;
+}
 
-  /* Touch-friendly mobile utilities */
-  .touch-target {
-    @apply min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 transition-all duration-200;
-  }
+.card-spacing {
+  @apply gap-0.5 md:gap-1;
+}
 
-  .touch-hover:hover {
-    @apply scale-105 md:scale-100;
-  }
-  
-  .mobile-text-lg {
-    @apply text-sm sm:text-base md:text-lg;
-  }
-  
-  .mobile-text-xl {
-    @apply text-base sm:text-lg md:text-xl;
-  }
-  
-  .mobile-text-2xl {
-    @apply text-lg sm:text-xl md:text-2xl;
-  }
+/* Responsive grid utilities */
+.responsive-grid-2 {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2;
+}
 
-  /* Overflow handling utilities */
-  .text-overflow-fade {
-    @apply relative after:absolute after:right-0 after:top-0 after:h-full after:w-8 after:bg-gradient-to-l after:from-background after:to-transparent;
-  }
-  
-  .scrollbar-thin-mobile {
-    @apply scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent md:scrollbar-thumb-primary/30;
-  }
+.responsive-grid-3 {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 md:gap-2;
+}
+
+.responsive-grid-4 {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 md:gap-2;
+}
+
+/* Compact card utilities */
+.card-compact {
+  @apply p-1.5 md:p-2 space-y-1;
+}
+
+.card-header-compact {
+  @apply pb-0.5 pt-1;
+}
+
+/* Dropdown and popover compact utilities */
+.dropdown-compact {
+  @apply py-0.5 px-1;
+}
+
+.dropdown-item-compact {
+  @apply py-1 px-2 text-sm leading-tight;
+}
+
+/* Touch-friendly mobile utilities */
+.touch-target {
+  @apply min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 transition-all duration-200;
+}
+
+.touch-hover:hover {
+  @apply scale-105 md:scale-100;
+}
+
+.mobile-text-lg {
+  @apply text-sm sm:text-base md:text-lg;
+}
+
+.mobile-text-xl {
+  @apply text-base sm:text-lg md:text-xl;
+}
+
+.mobile-text-2xl {
+  @apply text-lg sm:text-xl md:text-2xl;
+}
+
+/* Overflow handling utilities */
+.text-overflow-fade {
+  @apply relative after:absolute after:right-0 after:top-0 after:h-full after:w-8 after:bg-gradient-to-l after:from-background after:to-transparent;
+}
+
+.scrollbar-thin-mobile {
+  /* plugin not available; noop to avoid build error */
 }

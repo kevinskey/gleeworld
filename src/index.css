@@ -1,5 +1,3 @@
-@import './styles/spacing-reduction.css';
-
 @font-face {
   font-family: 'Bravura';
   src: url('/fonts/Bravura.otf') format('opentype');
@@ -11,6 +9,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import './styles/spacing-reduction.css';
 /* Definition of the design system with custom brand colors */
 
 @layer base {
