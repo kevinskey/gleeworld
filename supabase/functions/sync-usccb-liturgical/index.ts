@@ -68,6 +68,7 @@ serve(async (req) => {
     console.log(`Formatted date: ${year}-${month}-${day}`);
 
     let transformedData: USCCBLiturgicalData;
+    let source = 'unknown';
 
     try {
       // Try USCCB API first (official source)
@@ -90,6 +91,7 @@ serve(async (req) => {
           console.log('Successfully fetched from USCCB');
           transformedData = parseUSCCBData(htmlContent, targetDate);
           apiSuccess = true;
+          source = 'usccb';
         }
       } catch (usccbError) {
         console.log('USCCB fetch failed:', usccbError);
@@ -113,6 +115,7 @@ serve(async (req) => {
           console.log('Successfully fetched liturgical data from calendar API');
           transformedData = transformLiturgicalData(data, targetDate);
           apiSuccess = true;
+          source = 'calendar_api';
         } else {
           throw new Error(`Calendar API responded with status ${response.status}`);
         }
@@ -124,6 +127,7 @@ serve(async (req) => {
     } catch (fetchError) {
       console.log('All API sources failed, creating enhanced fallback data:', fetchError);
       transformedData = createEnhancedFallbackData(targetDate);
+      source = 'fallback';
     }
 
     console.log('Successfully prepared response data');
@@ -132,7 +136,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         data: transformedData,
-        source: transformedData.title?.includes('fallback') ? 'fallback' : 'liturgical_calendar_api',
+        source,
         note: 'Liturgical data provided for Glee World'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -179,6 +183,11 @@ function transformLiturgicalData(data: any, date: string): USCCBLiturgicalData {
     day: 'numeric' 
   });
 
+  const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const dd = String(dateObj.getDate()).padStart(2, '0');
+  const yyyy = String(dateObj.getFullYear());
+  const usccbUrl = `https://bible.usccb.org/bible/readings/${mm}${dd}${yyyy}.cfm`;
+
   // Extract season and color from API data
   const season = data.season?.name || 'Ordinary Time';
   const liturgical_color = mapSeasonToColor(season);
@@ -194,28 +203,28 @@ function transformLiturgicalData(data: any, date: string): USCCBLiturgicalData {
   const readings = {
     first_reading: {
       title: 'First Reading',
-      citation: 'Daily Mass Readings',
-      content: `Today's liturgical celebration: ${data.title || formattedDate}. Please visit your local parish or Catholic liturgical resources for complete readings.`
+      citation: 'USCCB Daily Readings',
+      content: `Full readings: ${usccbUrl}`
     },
     responsorial_psalm: {
       title: 'Responsorial Psalm',
-      citation: 'Daily Mass Readings',
-      content: 'Please visit your local parish or Catholic liturgical resources for the complete responsorial psalm.'
+      citation: 'USCCB Daily Readings',
+      content: `Full readings: ${usccbUrl}`
     },
     gospel: {
       title: 'Gospel',
-      citation: 'Daily Mass Readings',
-      content: `Today's Gospel reading is available through your local parish or Catholic liturgical resources for ${formattedDate}.`
+      citation: 'USCCB Daily Readings',
+      content: `Full readings: ${usccbUrl}`
     }
-  };
+  } as any;
 
   // Add second reading for Sundays and major feasts
   const isImportantDay = data.rank === 'solemnity' || data.rank === 'feast' || dateObj.getDay() === 0;
   if (isImportantDay) {
-    readings.second_reading = {
+    (readings as any).second_reading = {
       title: 'Second Reading',
-      citation: 'Daily Mass Readings',
-      content: 'Please visit your local parish or Catholic liturgical resources for the complete second reading.'
+      citation: 'USCCB Daily Readings',
+      content: `Full readings: ${usccbUrl}`
     };
   }
 
