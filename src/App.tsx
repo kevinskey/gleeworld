@@ -196,7 +196,8 @@ const queryClient = new QueryClient({
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  try {
+    const { user, loading } = useAuth();
   
   console.log('🔒 ProtectedRoute DEBUG:', {
     user: !!user,
@@ -229,6 +230,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   console.log('🔒 ProtectedRoute: User authenticated, rendering children');
   return <>{children}</>;
+  } catch (error) {
+    console.error('ProtectedRoute: Error accessing auth context:', error);
+    return <Navigate to="/auth" replace />;
+  }
 };
 
 // Public route wrapper - no auth check needed
