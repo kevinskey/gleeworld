@@ -531,9 +531,9 @@ export const SuperAdminDashboard = ({
           </Card>
 
           {/* User Management Module */}
-          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => navigate('/bowman-scholars')}>
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => navigate('/dashboard?module=bowman-scholars')}>
             <CardContent className="p-4 text-center">
-               <Link to="/bowman-scholars" className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-md">
+               <Link to="/dashboard?module=bowman-scholars" className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-md">
                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-3">
                    <GraduationCap className="h-6 w-6 text-primary" />
                  </div>
