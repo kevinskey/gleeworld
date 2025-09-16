@@ -210,3 +210,6 @@ verify_jwt = true
 
 [functions.update-student-roles]
 verify_jwt = true
+
+[functions.sync-usccb-liturgical]
+verify_jwt = false
