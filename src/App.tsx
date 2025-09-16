@@ -150,6 +150,7 @@ import QRGeneratorPage from "./pages/QRGenerator";
 import QRAnalytics from "./pages/QRAnalytics";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
+import ProviderAppointments from "./pages/ProviderAppointments";
 import SearchPage from "./pages/SearchPage";
 import FirstYearHub from "./pages/FirstYearHub";
 import FirstYearConsolePage from "./pages/console/FirstYearConsolePage";
@@ -1138,16 +1139,24 @@ const App = () => {
                                    </ProtectedRoute>
                                  } 
                                />
-                               <Route 
-                                 path="/provider-dashboard" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <UniversalLayout>
-                                       <ProviderDashboard />
-                                     </UniversalLayout>
-                                   </ProtectedRoute>
-                                 } 
-                               />
+                                <Route 
+                                  path="/provider-appointments" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <ProviderAppointments />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
+                                  path="/provider-dashboard" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <UniversalLayout>
+                                        <ProviderDashboard />
+                                      </UniversalLayout>
+                                    </ProtectedRoute>
+                                  } 
+                                />
                                <Route 
                                  path="/wardrobe" 
                                  element={
