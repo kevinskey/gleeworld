@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { Save, Send, AlertTriangle, Lock, Type, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { useMus240Journals } from '@/hooks/useMus240Journals';
 import { useJournalGrading } from '@/hooks/useJournalGrading';
 import { Assignment } from '@/data/mus240Assignments';
@@ -23,6 +24,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
   const [userEntry, setUserEntry] = useState<any>(null);
   const [grade, setGrade] = useState<any>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { toast } = useToast();
   
   const { 
     fetchUserEntry, 
@@ -63,7 +65,13 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    alert("Copy and paste is disabled. Please type your journal entry directly.");
+    // Use toast instead of alert for better UX
+    const { toast } = useToast();
+    toast({
+      title: "Copy and paste disabled",
+      description: "Please type your journal entry directly.",
+      variant: "destructive"
+    });
   };
 
   const handleSave = async () => {
@@ -75,7 +83,11 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
 
   const handlePublish = async () => {
     if (wordCount < 250) {
-      alert("Your journal must be at least 250 words before publishing.");
+      toast({
+        title: "Word count too low",
+        description: "Your journal must be at least 250 words before publishing.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -106,11 +118,23 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
       setUserEntry(null);
       setHasChanges(false);
       setGrade(null);
+      toast({
+        title: "Journal deleted",
+        description: "Your journal entry has been deleted successfully."
+      });
     } catch (error: any) {
       if (error.message.includes("Cannot delete journal with existing comments")) {
-        alert("Cannot delete this journal because it has comments from other students.");
+        toast({
+          title: "Cannot delete journal",
+          description: "Cannot delete this journal because it has comments from other students.",
+          variant: "destructive"
+        });
       } else {
-        alert("Failed to delete journal entry. Please try again.");
+        toast({
+          title: "Failed to delete",
+          description: "Failed to delete journal entry. Please try again.",
+          variant: "destructive"
+        });
       }
     }
   };
