@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useMus240Groups } from '@/hooks/useMus240Groups';
-import { Users, Plus, Clock, CheckCircle, XCircle, UserCheck, Trash2, ArrowLeft, Shuffle, AlertTriangle, Info } from 'lucide-react';
+import { Users, Plus, Clock, CheckCircle, XCircle, UserCheck, Trash2, ArrowLeft, Shuffle, AlertTriangle, Info, Edit2, X } from 'lucide-react';
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +33,7 @@ export default function Groups() {
     error,
     createGroup,
     joinGroup,
+    updateGroup,
     deleteGroup,
     leaveGroup,
     updateMemberRole,
@@ -50,6 +51,11 @@ export default function Groups() {
     id: string;
     name: string;
     role: string;
+  } | null>(null);
+  const [editingGroup, setEditingGroup] = useState<{
+    id: string;
+    name: string;
+    description: string;
   } | null>(null);
   const PROJECT_TYPES = [{
     name: "Commodification & Technology Timeline",
@@ -83,6 +89,23 @@ export default function Groups() {
       toast.success('Group created successfully!');
     } catch (err) {
       toast.error('Failed to create group');
+    }
+  };
+
+  const handleEditGroup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingGroup) return;
+    
+    const formData = new FormData(e.currentTarget);
+    try {
+      await updateGroup(editingGroup.id, {
+        name: formData.get('name') as string,
+        description: formData.get('description') as string
+      });
+      setEditingGroup(null);
+      toast.success('Group updated successfully!');
+    } catch (err) {
+      toast.error('Failed to update group');
     }
   };
   const handleJoinGroup = async (groupId: string) => {
@@ -465,10 +488,23 @@ export default function Groups() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Link to={`/classes/mus240/groups/${group.id}`}>
-                            <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                            <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="View Group Details">
                               <Info className="h-4 w-4" />
                             </Button>
                           </Link>
+                          <Button 
+                            onClick={() => setEditingGroup({
+                              id: group.id,
+                              name: group.name,
+                              description: group.description || ''
+                            })} 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            title="Edit Group"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
                           {hasAdminAccess && <Button onClick={() => handleDeleteGroup(group.id)} variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-500/20">
                               <Trash2 className="h-4 w-4" />
                             </Button>}
@@ -498,10 +534,21 @@ export default function Groups() {
                               </Button>
                             </div>}
 
-                        {userGroup?.id === group.id && <Badge className="w-full justify-center bg-blue-500/80 text-white">
-                            <UserCheck className="h-3 w-3 mr-1" />
-                            Your Group
-                          </Badge>}
+                        {userGroup?.id === group.id && <div className="flex gap-2">
+                             <Badge className="flex-1 justify-center bg-blue-500/80 text-white">
+                               <UserCheck className="h-3 w-3 mr-1" />
+                               Your Group
+                             </Badge>
+                             <Button 
+                               onClick={() => handleLeaveGroup(group.id)} 
+                               variant="outline" 
+                               size="sm" 
+                               className="text-red-600 border-red-300 hover:bg-red-50"
+                               title="Leave Group"
+                             >
+                               <X className="h-4 w-4" />
+                             </Button>
+                           </div>}
                       </div>
                     </CardContent>
                   </Card>)}
@@ -592,6 +639,48 @@ export default function Groups() {
                 Create Group
               </Button>
               <Button type="button" variant="outline" onClick={() => setShowCreateGroup(false)}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Group Dialog */}
+      <Dialog open={!!editingGroup} onOpenChange={() => setEditingGroup(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Group</DialogTitle>
+            <DialogDescription>
+              Update your group's name and description. All students can edit group details.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditGroup} className="space-y-4">
+            <div>
+              <Label htmlFor="edit_name">Group Name *</Label>
+              <Input 
+                id="edit_name" 
+                name="name" 
+                required 
+                defaultValue={editingGroup?.name || ''} 
+                placeholder="Enter group name" 
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_description">Description</Label>
+              <Textarea 
+                id="edit_description" 
+                name="description" 
+                defaultValue={editingGroup?.description || ''} 
+                placeholder="Describe your group's focus or goals" 
+                rows={3} 
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                Update Group
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setEditingGroup(null)}>
                 Cancel
               </Button>
             </div>

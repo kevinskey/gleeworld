@@ -18323,6 +18323,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_mus240_student: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       is_super_admin: {
         Args: Record<PropertyKey, never> | { _user_id: string }
         Returns: boolean
