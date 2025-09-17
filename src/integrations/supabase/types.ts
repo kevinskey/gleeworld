@@ -13691,6 +13691,7 @@ export type Database = {
           participation_possible: number
           semester: string
           student_id: string
+          updated_at: string | null
         }
         Insert: {
           assignment_points?: number
@@ -13705,6 +13706,7 @@ export type Database = {
           participation_possible?: number
           semester?: string
           student_id: string
+          updated_at?: string | null
         }
         Update: {
           assignment_points?: number
@@ -13719,6 +13721,7 @@ export type Database = {
           participation_possible?: number
           semester?: string
           student_id?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
