@@ -479,26 +479,26 @@ export default function Groups() {
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {groups.map((group, index) => {
                   const pastelColors = [
-                    'bg-slate-50 border-slate-200',
-                    'bg-blue-50 border-blue-200', 
-                    'bg-emerald-50 border-emerald-200',
-                    'bg-amber-50 border-amber-200',
-                    'bg-violet-50 border-violet-200',
-                    'bg-rose-50 border-rose-200',
-                    'bg-cyan-50 border-cyan-200',
-                    'bg-orange-50 border-orange-200'
+                    { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-900' },
+                    { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-900' }, 
+                    { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-900' },
+                    { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-900' },
+                    { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-900' },
+                    { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-900' },
+                    { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-900' },
+                    { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-900' }
                   ];
-                  const colorClass = pastelColors[index % pastelColors.length];
+                  const colorScheme = pastelColors[index % pastelColors.length];
                   
                   return (
-                <Card key={group.id} className={`${colorClass} shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]`}>
+                <Card key={group.id} className={`${colorScheme.bg} ${colorScheme.border} shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]`}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <CardTitle className="text-slate-900">{group.name}</CardTitle>
-                          <CardDescription className="text-slate-600">
-                            {group.description}
-                          </CardDescription>
+                         <div className="flex-1">
+                           <CardTitle className={colorScheme.text}>{group.name}</CardTitle>
+                           <CardDescription className={`${colorScheme.text} opacity-75`}>
+                             {group.description}
+                           </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
                           <Link to={`/classes/mus240/groups/${group.id}`}>
