@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { Music, Calendar, BookOpen, Users, TrendingUp, Brain, BarChart } from 'lucide-react';
+import { Music, Calendar, BookOpen, Users, TrendingUp, Brain, BarChart, FileCheck } from 'lucide-react';
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { AdminGradesCard } from '@/components/mus240/admin/AdminGradesCard';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
@@ -48,6 +48,13 @@ export default function ClassLanding() {
       to: '/classes/mus240/syllabus', 
       desc: 'Policies, grading, schedule',
       icon: BookOpen
+    },
+    { 
+      title: 'Midterm Exam', 
+      to: '/classes/mus240/midterm-exam', 
+      desc: 'African American Music (1840–1940)',
+      icon: FileCheck,
+      highlight: true
     },
     { 
       title: 'Listening Hub', 
@@ -160,14 +167,30 @@ export default function ClassLanding() {
                   to={card.to} 
                   className="group block"
                 >
-                  <div className="bg-white/95 backdrop-blur-sm rounded-2xl lg:rounded-3xl px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6 shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105">
+                  <div className={`backdrop-blur-sm rounded-2xl lg:rounded-3xl px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6 shadow-xl border transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 ${
+                    card.highlight 
+                      ? 'bg-gradient-to-r from-red-500 to-orange-600 border-red-400/30 hover:shadow-2xl' 
+                      : 'bg-white/95 border-white/30 hover:bg-white hover:shadow-2xl'
+                  }`}>
                     <div className="flex items-center gap-4 sm:gap-3 lg:gap-6 mb-4 sm:mb-3 lg:mb-6">
-                      <div className="p-3 sm:p-2 md:p-5 lg:p-4 xl:p-6 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg lg:rounded-xl">
-                        <IconComponent className="h-6 w-6 sm:h-5 sm:w-5 md:h-8 md:w-8 lg:h-10 lg:w-10 xl:h-12 xl:w-12 text-white" />
+                      <div className={`p-3 sm:p-2 md:p-5 lg:p-4 xl:p-6 rounded-lg lg:rounded-xl ${
+                        card.highlight ? 'bg-white/20' : 'bg-gradient-to-br from-amber-500 to-orange-600'
+                      }`}>
+                        <IconComponent className={`h-6 w-6 sm:h-5 sm:w-5 md:h-8 md:w-8 lg:h-10 lg:w-10 xl:h-12 xl:w-12 ${
+                          card.highlight ? 'text-white' : 'text-white'
+                        }`} />
                       </div>
-                      <h3 className="text-5xl sm:text-2xl md:text-4xl lg:text-3xl xl:text-4xl font-semibold text-gray-900">{card.title}</h3>
+                      <h3 className={`text-5xl sm:text-2xl md:text-4xl lg:text-3xl xl:text-4xl font-semibold ${
+                        card.highlight ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {card.title}
+                      </h3>
                     </div>
-                    <p className="text-gray-600 text-xl sm:text-sm md:text-lg lg:text-base xl:text-lg leading-relaxed">{card.desc}</p>
+                    <p className={`text-xl sm:text-sm md:text-lg lg:text-base xl:text-lg leading-relaxed ${
+                      card.highlight ? 'text-white/90' : 'text-gray-600'
+                    }`}>
+                      {card.desc}
+                    </p>
                   </div>
                 </Link>
               );

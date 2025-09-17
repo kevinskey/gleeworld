@@ -177,6 +177,7 @@ import { Mus240AdminPage } from "./pages/mus240/admin/Mus240AdminPage";
 import { InstructorConsole } from "./pages/mus240/InstructorConsole";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
 import MUS240Instructor from "./pages/classes/mus240/instructor";
+import MidtermExam from "./pages/mus240/MidtermExam";
 import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
@@ -1630,18 +1631,28 @@ const App = () => {
                                   </Mus240EnrollmentRoute>
                                 }
                                />
-                              <Route 
-                                path="/classes/mus240/resources/admin" 
-                                element={
-                                  <ProtectedRoute>
-                                    <AdminOnlyRoute>
-                                      <ResourcesAdmin />
-                                    </AdminOnlyRoute>
-                                  </ProtectedRoute>
-                                } 
-                               />
                                <Route 
-                                 path="/classes/mus240/grades" 
+                                 path="/classes/mus240/resources/admin" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <AdminOnlyRoute>
+                                       <ResourcesAdmin />
+                                     </AdminOnlyRoute>
+                                   </ProtectedRoute>
+                                 } 
+                                />
+                                <Route 
+                                 path="/classes/mus240/midterm-exam" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <Mus240EnrollmentRoute>
+                                       <MidtermExam />
+                                     </Mus240EnrollmentRoute>
+                                   </ProtectedRoute>
+                                 } 
+                                />
+                                <Route 
+                                  path="/classes/mus240/grades"
                                 element={
                                   <Mus240EnrollmentRoute>
                                     <Mus240GradesPage />
