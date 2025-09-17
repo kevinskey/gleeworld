@@ -477,7 +477,21 @@ export default function Groups() {
               </div>
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {groups.map(group => <Card key={group.id} className="bg-white border border-slate-200 shadow-md hover:shadow-lg transition-shadow">
+                {groups.map((group, index) => {
+                  const pastelColors = [
+                    'bg-red-50 border-red-200',
+                    'bg-blue-50 border-blue-200', 
+                    'bg-green-50 border-green-200',
+                    'bg-yellow-50 border-yellow-200',
+                    'bg-purple-50 border-purple-200',
+                    'bg-pink-50 border-pink-200',
+                    'bg-indigo-50 border-indigo-200',
+                    'bg-orange-50 border-orange-200'
+                  ];
+                  const colorClass = pastelColors[index % pastelColors.length];
+                  
+                  return (
+                <Card key={group.id} className={`${colorClass} shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]`}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -548,10 +562,12 @@ export default function Groups() {
                              >
                                <X className="h-4 w-4" />
                              </Button>
-                           </div>}
-                      </div>
+                            </div>}
+                       </div>
                     </CardContent>
-                  </Card>)}
+                  </Card>
+                  );
+                 })}
               </div>
 
               {groups.length === 0 && <div className="text-center py-12">
