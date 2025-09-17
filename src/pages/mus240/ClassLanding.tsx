@@ -174,7 +174,7 @@ export default function ClassLanding() {
                   }`}>
                     <div className="flex items-center gap-4 sm:gap-3 lg:gap-6 mb-4 sm:mb-3 lg:mb-6">
                       <div className={`p-3 sm:p-2 md:p-5 lg:p-4 xl:p-6 rounded-lg lg:rounded-xl ${
-                        card.highlight ? 'bg-white/20' : 'bg-gradient-to-br from-amber-500 to-orange-600'
+                        card.highlight ? 'bg-white/20' : 'bg-gradient-to-br from-sky-300 to-blue-400'
                       }`}>
                         <IconComponent className={`h-6 w-6 sm:h-5 sm:w-5 md:h-8 md:w-8 lg:h-10 lg:w-10 xl:h-12 xl:w-12 ${
                           card.highlight ? 'text-white' : 'text-white'
