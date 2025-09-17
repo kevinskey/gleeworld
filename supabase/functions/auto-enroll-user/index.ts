@@ -117,7 +117,7 @@ serve(async (req) => {
       }
     }
 
-    // 3) Upsert profile linked to auth user
+    // 3) Create or update profile linked to auth user without relying on onConflict
     const profilePayload = {
       user_id: userId,
       email,
@@ -129,16 +129,44 @@ serve(async (req) => {
       updated_at: new Date().toISOString(),
     } as Record<string, any>;
 
-    const { error: upsertErr } = await supabase
+    const { data: existingRows, error: selectErr } = await supabase
       .from("gw_profiles")
-      .upsert(profilePayload, { onConflict: "user_id" });
+      .select("user_id")
+      .eq("user_id", userId)
+      .limit(1);
 
-    if (upsertErr) {
-      console.error("Profile upsert error:", upsertErr);
+    if (selectErr) {
+      console.error("Profile select error:", selectErr);
       return new Response(
-        JSON.stringify({ success: false, enrolled: false, error: upsertErr.message }),
+        JSON.stringify({ success: false, enrolled: false, error: selectErr.message }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    if (existingRows && existingRows.length > 0) {
+      const { error: updateErr } = await supabase
+        .from("gw_profiles")
+        .update(profilePayload)
+        .eq("user_id", userId);
+      if (updateErr) {
+        console.error("Profile update error:", updateErr);
+        return new Response(
+          JSON.stringify({ success: false, enrolled: false, error: updateErr.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      const insertPayload = { ...profilePayload, created_at: new Date().toISOString() };
+      const { error: insertErr } = await supabase
+        .from("gw_profiles")
+        .insert(insertPayload);
+      if (insertErr) {
+        console.error("Profile insert error:", insertErr);
+        return new Response(
+          JSON.stringify({ success: false, enrolled: false, error: insertErr.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Optional: ensure MUS240 enrollment table exists and enroll if applicable
