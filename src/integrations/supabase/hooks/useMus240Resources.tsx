@@ -6,7 +6,7 @@ export interface Mus240Resource {
   title: string;
   url: string;
   description: string;
-  category: 'reading' | 'website' | 'video' | 'article' | 'database';
+  category: 'reading' | 'website' | 'video' | 'article' | 'database' | 'audio';
   is_active: boolean;
   display_order: number;
   created_by?: string;

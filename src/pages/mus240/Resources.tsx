@@ -60,6 +60,7 @@ export default function Resources() {
       case 'video': return FileText;
       case 'article': return FileText;
       case 'database': return Users;
+      case 'audio': return FileText;
       default: return FileText;
     }
   };
@@ -71,6 +72,7 @@ export default function Resources() {
       case 'video': return 'bg-purple-100 text-purple-800';
       case 'article': return 'bg-orange-100 text-orange-800';
       case 'database': return 'bg-indigo-100 text-indigo-800';
+      case 'audio': return 'bg-pink-100 text-pink-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
