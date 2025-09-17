@@ -78,6 +78,41 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Parse request body to check for specific admin promotion
+    const body = await req.json().catch(() => ({}));
+    
+    // Handle Genesis admin promotion
+    if (body.targetEmail === 'genesisharris@spelman.edu') {
+      console.log('Promoting Genesis to admin...');
+      
+      const { data: genesisUpdate, error: genesisError } = await supabaseClient
+        .from('gw_profiles')
+        .update({ 
+          is_admin: true, 
+          is_super_admin: true,
+          verified: true 
+        })
+        .eq('email', 'genesisharris@spelman.edu')
+        .select();
+
+      if (genesisError) {
+        console.error('Error updating Genesis:', genesisError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to update Genesis admin permissions' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'Genesis admin permissions updated successfully',
+          profile: genesisUpdate[0]
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Get all MUS 240 students using the service role client
     const { data: students, error: studentsError } = await supabaseClient
       .from('mus240_grade_summaries')
