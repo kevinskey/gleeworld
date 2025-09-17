@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useMus240Groups } from '@/hooks/useMus240Groups';
-import { Users, Plus, Clock, CheckCircle, XCircle, UserCheck, Trash2, ArrowLeft, Shuffle, AlertTriangle } from 'lucide-react';
+import { Users, Plus, Clock, CheckCircle, XCircle, UserCheck, Trash2, ArrowLeft, Shuffle, AlertTriangle, Info } from 'lucide-react';
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
 import { supabase } from '@/integrations/supabase/client';
@@ -457,15 +457,22 @@ export default function Groups() {
                 {groups.map(group => <Card key={group.id} className="bg-white border border-slate-200 shadow-md hover:shadow-lg transition-shadow">
                     <CardHeader>
                       <div className="flex justify-between items-start">
-                        <div>
+                        <div className="flex-1">
                           <CardTitle className="text-slate-900">{group.name}</CardTitle>
                           <CardDescription className="text-slate-600">
                             {group.description}
                           </CardDescription>
                         </div>
-                        {hasAdminAccess && <Button onClick={() => handleDeleteGroup(group.id)} variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-500/20">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>}
+                        <div className="flex items-center gap-2">
+                          <Link to={`/classes/mus240/groups/${group.id}`}>
+                            <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                              <Info className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          {hasAdminAccess && <Button onClick={() => handleDeleteGroup(group.id)} variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-500/20">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>}
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>
