@@ -53,7 +53,7 @@ export default function MidtermExam() {
                   <AlertTriangle className="h-5 w-5 text-white mt-0.5" />
                   <div>
                     <p className="text-amber-800 font-medium mb-1">Important Notice</p>
-                    <p className="text-amber-700 text-sm">
+                    <p className="text-white text-sm">
                       This exam is <strong>closed-book</strong>. You may not use AI tools (ChatGPT, etc.). 
                       Answers must reflect our class discussions, readings, and listening assignments.
                     </p>
