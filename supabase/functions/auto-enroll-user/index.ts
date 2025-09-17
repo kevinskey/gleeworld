@@ -65,51 +65,29 @@ serve(async (req) => {
 
     console.log('Auto-enrolling user:', { email, full_name, role })
 
-    // Check if user already exists
-    const { data: existingAuth } = await supabaseClient.auth.admin.getUserByEmail(email)
+    // Check if user already exists in profiles first
+    const { data: existingProfile } = await supabaseClient
+      .from('gw_profiles')
+      .select('user_id')
+      .eq('email', email)
+      .single()
     
     let userId: string
     let userCreated = false
 
-    if (existingAuth.user) {
-      // User exists in auth, use their ID
-      userId = existingAuth.user.id
-      console.log('User already exists in auth:', userId)
+    if (existingProfile) {
+      // User already exists in profiles
+      userId = existingProfile.user_id
+      console.log('User already exists:', userId)
     } else {
-      // Create new user in auth
-      const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        user_metadata: {
-          full_name: full_name || email.split('@')[0]
-        }
-      })
-
-      if (createError) {
-        console.error('Error creating user:', createError)
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            enrolled: false, 
-            error: createError.message 
-          }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-
-      userId = newUser.user.id
+      // Generate a new user ID for direct profile creation
+      userId = crypto.randomUUID()
       userCreated = true
-      console.log('Created new user:', userId)
+      console.log('Creating new user profile:', userId)
     }
 
-    // Check if profile exists
-    const { data: existingProfile } = await supabaseClient
-      .from('gw_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
-
-    if (!existingProfile) {
+    // Create or update profile
+    if (userCreated) {
       // Create profile
       const { error: profileError } = await supabaseClient
         .from('gw_profiles')
@@ -151,13 +129,9 @@ serve(async (req) => {
       }
     }
 
-    // Send invitation email if user was newly created
+    // For new users, we'll let them register normally through the UI
     if (userCreated) {
-      const { error: inviteError } = await supabaseClient.auth.admin.inviteUserByEmail(email)
-      if (inviteError) {
-        console.error('Error sending invitation:', inviteError)
-        // Don't fail the whole operation if invitation fails
-      }
+      console.log('New user profile created, they can now register through the normal signup flow')
     }
 
     console.log('Successfully auto-enrolled user:', { userId, email, role })
