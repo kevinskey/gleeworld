@@ -46,7 +46,11 @@ export default function Groups() {
   const [autoAssigning, setAutoAssigning] = useState(false);
   const [deletingAllGroups, setDeletingAllGroups] = useState(false);
   const [showMemberManagement, setShowMemberManagement] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<{id: string, name: string, role: string} | null>(null);
+  const [selectedMember, setSelectedMember] = useState<{
+    id: string;
+    name: string;
+    role: string;
+  } | null>(null);
   const PROJECT_TYPES = [{
     name: "Commodification & Technology Timeline",
     description: "Explore how music becomes commodified through technology and AI. Create timeline visualizations and analysis of the transformation from art to product."
@@ -86,17 +90,15 @@ export default function Groups() {
       toast.error('Please log in to join a group');
       return;
     }
-
     try {
       // Check if user is already in a group
       if (userGroup) {
         toast.error('You are already in a group. Leave your current group first.');
         return;
       }
-
       await joinGroup(groupId);
       toast.success('Joined group successfully!');
-      
+
       // Navigate to the group detail page
       navigate(`/classes/mus240/groups/${groupId}`);
     } catch (err: any) {
@@ -132,10 +134,12 @@ export default function Groups() {
         const groupData = {
           name: projectType.name,
           description: projectType.description,
-          leader_id: null, // No automatic leader assignment
+          leader_id: null,
+          // No automatic leader assignment
           semester: 'Fall 2025',
           max_members: 4,
-          member_count: 0, // Start with 0 members
+          member_count: 0,
+          // Start with 0 members
           is_official: false
         };
         console.log('Group data to insert:', groupData);
@@ -322,12 +326,10 @@ export default function Groups() {
       setDeletingAllGroups(false);
     }
   };
-
   const handleLeaveGroup = async (groupId: string) => {
     if (!confirm('Are you sure you want to leave this group?')) {
       return;
     }
-    
     try {
       await leaveGroup(groupId);
       toast.success('Successfully left the group');
@@ -335,10 +337,8 @@ export default function Groups() {
       toast.error(err.message || 'Failed to leave group');
     }
   };
-
   const handleUpdateMemberRole = async (newRole: string) => {
     if (!selectedMember || !selectedGroupId) return;
-    
     try {
       await updateMemberRole(selectedGroupId, selectedMember.id, newRole);
       toast.success('Member role updated successfully');
@@ -358,8 +358,7 @@ export default function Groups() {
   if (error) {
     return <div>Error: {error}</div>;
   }
-  return (
-    <UniversalLayout showHeader={true} showFooter={false}>
+  return <UniversalLayout showHeader={true} showFooter={false}>
       <Mus240UserAvatar />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -412,70 +411,25 @@ export default function Groups() {
                 <span className="text-slate-700 font-medium">{totalGroupsCount} Groups Created</span>
               </div>
             </div>
-            {userGroup && (
-              <div className="bg-green-50 border border-green-200 rounded-lg px-6 py-3">
+            {userGroup && <div className="bg-green-50 border border-green-200 rounded-lg px-6 py-3">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <span className="text-green-700 font-medium">You're in a Group</span>
                 </div>
-              </div>
-            )}
-            {hasAdminAccess && (
-              <div className="flex flex-wrap gap-2 justify-center">
-                <Button
-                  onClick={handleCreateProjectGroups}
-                  disabled={autoAssigning}
-                  className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                >
-                  {autoAssigning ? (
-                    <>
-                      <Clock className="h-4 w-4 mr-2 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create AI Project Groups
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleAutoAssignGroups}
-                  disabled={autoAssigning}
-                  className="bg-purple-600 hover:bg-purple-700 text-white shadow-md"
-                >
-                  {autoAssigning ? (
-                    <>
-                      <Clock className="h-4 w-4 mr-2 animate-spin" />
-                      Auto-assigning...
-                    </>
-                  ) : (
-                    <>
-                      <Shuffle className="h-4 w-4 mr-2" />
-                      Auto-assign Students
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleDeleteAllGroups}
-                  disabled={deletingAllGroups}
-                  variant="destructive"
-                  className="shadow-md"
-                >
-                  {deletingAllGroups ? (
-                    <>
+              </div>}
+            {hasAdminAccess && <div className="flex flex-wrap gap-2 justify-center">
+                
+                
+                <Button onClick={handleDeleteAllGroups} disabled={deletingAllGroups} variant="destructive" className="shadow-md">
+                  {deletingAllGroups ? <>
                       <Clock className="h-4 w-4 mr-2 animate-spin" />
                       Deleting...
-                    </>
-                  ) : (
-                    <>
+                    </> : <>
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete All Groups
-                    </>
-                  )}
+                    </>}
                 </Button>
-              </div>
-            )}
+              </div>}
           </div>
 
           {/* Main Content */}
@@ -493,20 +447,14 @@ export default function Groups() {
               <TabsContent value="all-groups" className="p-6 space-y-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-slate-900">All Groups</h2>
-                  {!userGroup && availableGroups.length > 0 && (
-                    <Button
-                      onClick={() => setShowCreateGroup(true)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                    >
+                  {!userGroup && availableGroups.length > 0 && <Button onClick={() => setShowCreateGroup(true)} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
                     <Plus className="h-4 w-4 mr-2" />
                     Create Group
-                  </Button>
-                )}
+                  </Button>}
               </div>
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {groups.map((group) => (
-                  <Card key={group.id} className="bg-white border border-slate-200 shadow-md hover:shadow-lg transition-shadow">
+                {groups.map(group => <Card key={group.id} className="bg-white border border-slate-200 shadow-md hover:shadow-lg transition-shadow">
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
@@ -515,16 +463,9 @@ export default function Groups() {
                             {group.description}
                           </CardDescription>
                         </div>
-                        {hasAdminAccess && (
-                          <Button
-                            onClick={() => handleDeleteGroup(group.id)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
-                          >
+                        {hasAdminAccess && <Button onClick={() => handleDeleteGroup(group.id)} variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-500/20">
                             <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                          </Button>}
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -536,62 +477,42 @@ export default function Groups() {
                           </span>
                         </div>
                         
-                        {group.is_official && (
-                          <Badge className="bg-green-100 text-green-700 border-green-200">
+                        {group.is_official && <Badge className="bg-green-100 text-green-700 border-green-200">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Official
-                          </Badge>
-                        )}
+                          </Badge>}
 
-                        {!userGroup && group.member_count < (group.max_members || 4) && (
-                            <div className="flex flex-col gap-2">
-                              <Link 
-                                to={`/classes/mus240/groups/${group.id}`}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-center transition-colors"
-                              >
+                        {!userGroup && group.member_count < (group.max_members || 4) && <div className="flex flex-col gap-2">
+                              <Link to={`/classes/mus240/groups/${group.id}`} className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-center transition-colors">
                                 View Group
                               </Link>
-                              <Button
-                                onClick={() => handleJoinGroup(group.id)}
-                                className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-                                disabled={group.member_count >= 4}
-                              >
+                              <Button onClick={() => handleJoinGroup(group.id)} className="w-full bg-amber-500 hover:bg-amber-600 text-white" disabled={group.member_count >= 4}>
                                 {group.member_count >= 4 ? 'Group Full' : 'Join'}
                               </Button>
-                            </div>
-                        )}
+                            </div>}
 
-                        {userGroup?.id === group.id && (
-                          <Badge className="w-full justify-center bg-blue-500/80 text-white">
+                        {userGroup?.id === group.id && <Badge className="w-full justify-center bg-blue-500/80 text-white">
                             <UserCheck className="h-3 w-3 mr-1" />
                             Your Group
-                          </Badge>
-                        )}
+                          </Badge>}
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
 
-              {groups.length === 0 && (
-                <div className="text-center py-12">
+              {groups.length === 0 && <div className="text-center py-12">
                   <Users className="h-16 w-16 text-slate-400 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-slate-900 mb-2">No Groups Yet</h3>
                   <p className="text-slate-600 mb-6">Be the first to create a group for the AI music project!</p>
-                  <Button
-                    onClick={() => setShowCreateGroup(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
+                  <Button onClick={() => setShowCreateGroup(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
                     <Plus className="h-4 w-4 mr-2" />
                     Create First Group
                   </Button>
-                </div>
-              )}
+                </div>}
             </TabsContent>
 
             <TabsContent value="my-group" className="p-6 space-y-6">
-              {userGroup ? (
-                <div className="space-y-6">
+              {userGroup ? <div className="space-y-6">
                   <Card className="bg-white border border-slate-200 shadow-md">
                     <CardHeader>
                       <CardTitle className="text-slate-900 mb-4">You're in a group!</CardTitle>
@@ -610,44 +531,30 @@ export default function Groups() {
                               {userGroup.member_count || 0} / {userGroup.max_members || 4} members
                             </span>
                           </div>
-                          <Link 
-                            to={`/classes/mus240/groups/${userGroup.id}`}
-                            className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors"
-                          >
+                          <Link to={`/classes/mus240/groups/${userGroup.id}`} className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors">
                             Go to Group Workspace
                           </Link>
                         </div>
                         
                         <div className="flex justify-end">
-                          <Button
-                            onClick={() => handleLeaveGroup(userGroup.id)}
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 border-red-300 hover:bg-red-50"
-                          >
+                          <Button onClick={() => handleLeaveGroup(userGroup.id)} variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50">
                             Leave Group
                           </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                </div>
-              ) : (
-                <div className="text-center py-12">
+                </div> : <div className="text-center py-12">
                   <AlertTriangle className="h-16 w-16 text-amber-500 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-slate-900 mb-2">Not in a Group</h3>
                   <p className="text-slate-600 mb-6">You haven't joined a group yet. Apply to an existing group or create your own!</p>
                   <div className="flex gap-4 justify-center">
-                    <Button
-                      onClick={() => setShowCreateGroup(true)}
-                      className="bg-amber-500 hover:bg-amber-600 text-white"
-                    >
+                    <Button onClick={() => setShowCreateGroup(true)} className="bg-amber-500 hover:bg-amber-600 text-white">
                       <Plus className="h-4 w-4 mr-2" />
                       Create Group
                     </Button>
                   </div>
-                </div>
-              )}
+                </div>}
             </TabsContent>
 
           </Tabs>
@@ -697,28 +604,15 @@ export default function Groups() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
-              {['leader', 'co-leader', 'researcher', 'writer', 'presenter', 'tech-lead', 'member'].map((role) => (
-                <Button
-                  key={role}
-                  onClick={() => handleUpdateMemberRole(role)}
-                  variant={selectedMember?.role === role ? "default" : "outline"}
-                  size="sm"
-                  className="capitalize"
-                >
+              {['leader', 'co-leader', 'researcher', 'writer', 'presenter', 'tech-lead', 'member'].map(role => <Button key={role} onClick={() => handleUpdateMemberRole(role)} variant={selectedMember?.role === role ? "default" : "outline"} size="sm" className="capitalize">
                   {role.replace('-', ' ')}
-                </Button>
-              ))}
+                </Button>)}
             </div>
-            <Button
-              onClick={() => setShowMemberManagement(false)}
-              variant="ghost"
-              className="w-full"
-            >
+            <Button onClick={() => setShowMemberManagement(false)} variant="ghost" className="w-full">
               Cancel
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-    </UniversalLayout>
-  );
+    </UniversalLayout>;
 }
