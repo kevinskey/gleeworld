@@ -14201,6 +14201,7 @@ export type Database = {
           response_time: string
           selected_option: number
           student_id: string
+          updated_at: string | null
         }
         Insert: {
           id?: string
@@ -14209,6 +14210,7 @@ export type Database = {
           response_time?: string
           selected_option: number
           student_id: string
+          updated_at?: string | null
         }
         Update: {
           id?: string
@@ -14217,6 +14219,7 @@ export type Database = {
           response_time?: string
           selected_option?: number
           student_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
