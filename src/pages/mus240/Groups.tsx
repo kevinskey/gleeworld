@@ -601,9 +601,24 @@ export default function Groups() {
                               {userGroup.member_count || 0} / {userGroup.max_members || 4} members
                             </span>
                           </div>
-                          <Link to={`/classes/mus240/groups/${userGroup.id}`} className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors">
-                            Go to Group Workspace
-                          </Link>
+                          <div className="flex gap-3">
+                            <Link to={`/classes/mus240/groups/${userGroup.id}`} className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors">
+                              Go to Group Workspace
+                            </Link>
+                            <Button
+                              onClick={() => setEditingGroup({
+                                id: userGroup.id,
+                                name: userGroup.name,
+                                description: userGroup.description
+                              })}
+                              variant="outline"
+                              size="sm"
+                              className="inline-flex items-center gap-2 px-4 py-2 border-blue-300 text-blue-700 hover:bg-blue-50"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                              Edit
+                            </Button>
+                          </div>
                         </div>
                         
                         <div className="flex justify-end">
