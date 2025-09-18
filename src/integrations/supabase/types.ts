@@ -18481,6 +18481,10 @@ export type Database = {
         Args: { audition_application_id: string; auditioner_user_id: string }
         Returns: boolean
       }
+      recalc_mus240_group_member_count: {
+        Args: { p_group_id: string }
+        Returns: undefined
+      }
       refresh_all_user_permissions: {
         Args: Record<PropertyKey, never>
         Returns: Json
