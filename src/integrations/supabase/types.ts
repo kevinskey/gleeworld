@@ -18717,6 +18717,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      user_has_username_permission: {
+        Args: { module_name_param: string; user_email_param: string }
+        Returns: boolean
+      }
       user_is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
