@@ -31,6 +31,7 @@ import { BowmanScholarsModule } from '../modules/BowmanScholarsModule';
 import { RadioManagement } from '../admin/RadioManagement';
 import GleeAcademy from '../../pages/GleeAcademy';
 import { QRCodeManagementModule } from '../modules/QRCodeManagementModule';
+import { Mus240GroupsModule } from '../modules/Mus240GroupsModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -112,6 +113,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <GleeAcademy />;
       case 'qr-code-management':
         return <QRCodeManagementModule />;
+      case 'mus240-groups':
+        return <Mus240GroupsModule />;
       default:
         return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2><p>This module is being developed. Stay tuned!</p></div>;
     }
