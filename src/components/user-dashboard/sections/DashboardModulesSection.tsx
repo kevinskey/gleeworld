@@ -121,7 +121,8 @@ export const DashboardModulesSection = () => {
         { name: "Music Studio", description: "Recording & practice space", icon: Volume2, route: "/music-studio" },
         { name: "Performance Scoring", description: "Score auditions & performances", icon: Star, route: "/mobile-scoring" },
         { name: "Download Center", description: "Get your music files", icon: Download, route: "/downloads" },
-        { name: "Audio Archive", description: "Historical recordings", icon: Volume2, route: "/audio-archive" }
+        { name: "Audio Archive", description: "Historical recordings", icon: Volume2, route: "/audio-archive" },
+        { name: "MUS240 Groups", description: "Join and manage project teams", icon: Users, route: "/classes/mus240/groups" }
       ]
     },
     {
