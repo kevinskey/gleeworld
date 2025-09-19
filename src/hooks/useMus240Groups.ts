@@ -97,6 +97,8 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
     if (!user?.id) throw new Error('User not authenticated');
     
     try {
+      console.log('Attempting to join group:', groupId, 'with user:', user.id);
+      
       // Check if group has space (max 4 members)
       const group = groups.find(g => g.id === groupId);
       if (!group) throw new Error('Group not found');
@@ -108,16 +110,29 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
       );
       if (isAlreadyMember) throw new Error('Already a member of this group');
       
+      console.log('About to insert membership:', {
+        group_id: groupId,
+        member_id: user.id,
+        role: 'member'
+      });
+      
       // Add user to group
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('mus240_group_memberships')
         .insert({
           group_id: groupId,
           member_id: user.id,
           role: 'member'
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      console.log('Insert result:', { data, error });
+
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+      
       await fetchGroups();
       return { success: true };
     } catch (err) {
