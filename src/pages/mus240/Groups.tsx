@@ -534,6 +534,26 @@ export default function Groups() {
                           </span>
                         </div>
                         
+                        {/* Display group members */}
+                        {group.members && group.members.length > 0 && (
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-medium text-slate-700">Members:</h4>
+                            <div className="space-y-1">
+                              {group.members.map((member) => (
+                                <div key={member.member_id} className="flex items-center gap-2 text-xs">
+                                  <div className={`w-2 h-2 rounded-full ${member.role === 'leader' ? 'bg-yellow-500' : 'bg-blue-500'}`}></div>
+                                  <span className="text-slate-600">
+                                    {member.gw_profiles?.full_name || member.gw_profiles?.email || 'Unknown Member'}
+                                    {member.role === 'leader' && (
+                                      <Badge variant="secondary" className="ml-1 text-xs py-0 px-1">Leader</Badge>
+                                    )}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
                         {group.is_official && <Badge className="bg-green-100 text-green-700 border-green-200">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Official
