@@ -113,8 +113,19 @@ export const useRadioPlayer = () => {
         error: (e as any).target?.error,
         networkState: (e as any).target?.networkState,
         readyState: (e as any).target?.readyState,
-        src: (e as any).target?.src
+        src: (e as any).target?.src,
+        currentTime: (e as any).target?.currentTime,
+        duration: (e as any).target?.duration
       });
+      
+      // Attempt to reconnect after a brief delay if the stream drops
+      setTimeout(() => {
+        console.log('Attempting to reconnect radio stream...');
+        if (audioRef.current && state.isPlaying) {
+          play();
+        }
+      }, 3000);
+      
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 
@@ -133,11 +144,29 @@ export const useRadioPlayer = () => {
       setState(prev => ({ ...prev, isPlaying: false }));
     };
 
+    const handleStalled = () => {
+      console.log('Radio stream stalled, attempting to resume...');
+      if (audioRef.current && state.isPlaying) {
+        setTimeout(() => play(), 1000);
+      }
+    };
+
+    const handleSuspend = () => {
+      console.log('Radio stream suspended');
+    };
+
+    const handleWaiting = () => {
+      console.log('Radio stream waiting for data...');
+    };
+
     audio.addEventListener('loadstart', handleLoadStart);
     audio.addEventListener('canplay', handleCanPlay);
     audio.addEventListener('error', handleError);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
+    audio.addEventListener('stalled', handleStalled);
+    audio.addEventListener('suspend', handleSuspend);
+    audio.addEventListener('waiting', handleWaiting);
 
     return () => {
       console.log('useRadioPlayer: Cleaning up event listeners (not stopping audio)...');
@@ -146,6 +175,9 @@ export const useRadioPlayer = () => {
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('stalled', handleStalled);
+      audio.removeEventListener('suspend', handleSuspend);
+      audio.removeEventListener('waiting', handleWaiting);
       // Do not pause or clear src; keep sharedAudio alive for seamless playback
     };
   }, []); // Empty dependency array - only run once
