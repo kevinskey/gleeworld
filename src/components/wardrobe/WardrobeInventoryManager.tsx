@@ -37,6 +37,7 @@ import {
 import { WardrobeCSVImportDialog } from "./WardrobeCSVImportDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface WardrobeItem {
   id: string;
@@ -65,7 +66,9 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [hasImportPermission, setHasImportPermission] = useState<boolean>(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const categories = [
     { value: "dresses", label: "Dresses", icon: Shirt },
@@ -82,7 +85,41 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
 
   useEffect(() => {
     fetchInventory();
+    checkImportPermission();
   }, []);
+
+  const checkImportPermission = async () => {
+    if (!user) {
+      setHasImportPermission(false);
+      return;
+    }
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('gw_profiles')
+        .select('email, full_name')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      const allowedUsers = [
+        'drew', 'soleil', 'drewroberts@spelman.edu', 'soleilvailes@spelman.edu'
+      ];
+
+      const userEmail = profile?.email?.toLowerCase() || '';
+      const userName = profile?.full_name?.toLowerCase() || '';
+      
+      const isAllowed = allowedUsers.some(name => 
+        userEmail.includes(name) || userName.includes(name)
+      );
+
+      setHasImportPermission(isAllowed);
+    } catch (error) {
+      console.error('Error checking import permission:', error);
+      setHasImportPermission(false);
+    }
+  };
 
   const fetchInventory = async () => {
     try {
@@ -350,22 +387,24 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 w-full sm:w-auto">
-            <Button 
-              variant="outline" 
-              className="shadow-sm text-sm lg:text-base"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('📤 CSV Import button clicked');
-                console.log('📄 Current isImportDialogOpen state:', isImportDialogOpen);
-                setIsImportDialogOpen(true);
-                console.log('📄 Setting isImportDialogOpen to true');
-              }}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Import CSV</span>
-              <span className="sm:hidden">Import</span>
-            </Button>
+            {hasImportPermission && (
+              <Button 
+                variant="outline" 
+                className="shadow-sm text-sm lg:text-base"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('📤 CSV Import button clicked');
+                  console.log('📄 Current isImportDialogOpen state:', isImportDialogOpen);
+                  setIsImportDialogOpen(true);
+                  console.log('📄 Setting isImportDialogOpen to true');
+                }}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Import CSV</span>
+                <span className="sm:hidden">Import</span>
+              </Button>
+            )}
             <Button 
               variant="outline" 
               className="shadow-sm text-sm lg:text-base"

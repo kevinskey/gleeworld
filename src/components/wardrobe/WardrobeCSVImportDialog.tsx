@@ -68,6 +68,45 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview' | 'importing'>('upload');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+
+  // Check if user has permission to import CSV (Drew or Soleil)
+  React.useEffect(() => {
+    const checkPermission = async () => {
+      if (!user) {
+        setHasPermission(false);
+        return;
+      }
+
+      try {
+        const { data: profile, error } = await supabase
+          .from('gw_profiles')
+          .select('email, full_name')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        const allowedUsers = [
+          'drew', 'soleil', 'drewroberts@spelman.edu', 'soleilvailes@spelman.edu', 'soleilvailes111@gmail.com'
+        ];
+
+        const userEmail = profile?.email?.toLowerCase() || '';
+        const userName = profile?.full_name?.toLowerCase() || '';
+        
+        const isAllowed = allowedUsers.some(name => 
+          userEmail.includes(name) || userName.includes(name) || userEmail === name
+        );
+
+        setHasPermission(isAllowed);
+      } catch (error) {
+        console.error('Error checking permission:', error);
+        setHasPermission(false);
+      }
+    };
+
+    checkPermission();
+  }, [user]);
 
   console.log('🔄 WardrobeCSVImportDialog state initialized, open:', open);
 
@@ -334,6 +373,40 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
   };
 
   console.log('🔄 About to render Dialog, open:', open);
+
+  // Show loading while checking permission
+  if (hasPermission === null) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Checking Permissions...</DialogTitle>
+            <DialogDescription>
+              Please wait while we verify your access.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // If user doesn't have permission, show access denied
+  if (!hasPermission) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Access Denied</DialogTitle>
+            <DialogDescription>
+              CSV import is restricted to authorized wardrobe managers only. 
+              Please contact Drew or Soleil if you need to import inventory data.
+            </DialogDescription>
+          </DialogHeader>
+          <Button onClick={() => onOpenChange(false)}>Close</Button>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   // If there's an error with the component state, show error dialog
   if (!user) {
