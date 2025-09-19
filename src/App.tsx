@@ -151,6 +151,7 @@ import QRAnalytics from "./pages/QRAnalytics";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
 import ProviderAppointments from "./pages/ProviderAppointments";
+import { ProviderRoutes } from "./routes/ProviderRoutes";
 import SearchPage from "./pages/SearchPage";
 import FirstYearHub from "./pages/FirstYearHub";
 import FirstYearConsolePage from "./pages/console/FirstYearConsolePage";
@@ -1146,14 +1147,19 @@ const App = () => {
                                    </ProtectedRoute>
                                  } 
                                />
-                                <Route 
-                                  path="/provider-appointments" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <ProviderAppointments />
-                                    </ProtectedRoute>
-                                  } 
-                                />
+                                 {/* Provider Routes - Protected for service providers only */}
+                                 <Route 
+                                   path="/provider/*" 
+                                   element={<ProviderRoutes />} 
+                                 />
+                                 <Route 
+                                   path="/provider-appointments" 
+                                   element={
+                                     <ProtectedRoute>
+                                       <ProviderAppointments />
+                                     </ProtectedRoute>
+                                   } 
+                                 />
                                 <Route 
                                   path="/provider-dashboard" 
                                   element={

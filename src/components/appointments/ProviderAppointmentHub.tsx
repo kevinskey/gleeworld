@@ -39,9 +39,8 @@ export const ProviderAppointmentHub = () => {
   const deleteMutation = useDeleteRealAppointment();
 
   // Filter appointments to only show those for the current provider
-  // For now, showing all appointments since provider filtering needs to be implemented in the backend
+  // RLS policies now handle this filtering automatically at the database level
   const providerAppointments = useMemo(() => {
-    // TODO: Implement provider filtering when provider_id is added to appointments table
     return allAppointments;
   }, [allAppointments]);
 
@@ -68,7 +67,7 @@ export const ProviderAppointmentHub = () => {
 
   // Event handlers using mutations
   const handleAppointmentCreate = (newAppointment: Omit<Appointment, 'id'>) => {
-    // TODO: Add provider assignment when provider_id field is available
+    // Provider assignment is now handled automatically in the backend
     createMutation.mutate(newAppointment);
   };
 

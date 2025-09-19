@@ -63,7 +63,7 @@ const convertDbToAppointment = (dbAppt: DbAppointment): Appointment => {
   };
 };
 
-// Convert component format to database format
+// Convert component format to database format with provider assignment
 const convertAppointmentToDb = async (appt: Omit<Appointment, 'id'>): Promise<DbAppointmentInsert> => {
   // Combine date and time
   const [hours, minutes] = appt.time.split(':').map(Number);
@@ -84,6 +84,21 @@ const convertAppointmentToDb = async (appt: Omit<Appointment, 'id'>): Promise<Db
     }
   }
 
+  // Get current user's provider ID
+  let providerId = null;
+  const { data: currentUser } = await supabase.auth.getUser();
+  if (currentUser.user) {
+    const { data: provider } = await supabase
+      .from('gw_service_providers')
+      .select('id')
+      .eq('user_id', currentUser.user.id)
+      .single();
+    
+    if (provider) {
+      providerId = provider.id;
+    }
+  }
+
   return {
     title: appt.title,
     client_name: appt.clientName,
@@ -94,7 +109,8 @@ const convertAppointmentToDb = async (appt: Omit<Appointment, 'id'>): Promise<Db
     duration_minutes: appt.duration,
     status: appt.status === 'confirmed' ? 'scheduled' : appt.status,
     description: appt.notes || null,
-    notes: appt.notes || null
+    notes: appt.notes || null,
+    provider_id: providerId
   };
 };
 
@@ -178,6 +194,7 @@ const deleteCalendarEvent = async (appointment: Appointment, calendarId: string)
   }
 };
 
+// Hook to get appointments for the current provider only
 export const useRealAppointments = () => {
   return useQuery({
     queryKey: ['real-appointments'],

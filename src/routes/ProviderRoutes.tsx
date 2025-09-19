@@ -1,0 +1,19 @@
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { ProviderRoute } from '@/components/provider/ProviderRoute';
+import ProviderAppointments from '@/pages/ProviderAppointments';
+
+export const ProviderRoutes = () => {
+  return (
+    <Routes>
+      <Route 
+        path="/provider/appointments" 
+        element={
+          <ProviderRoute>
+            <ProviderAppointments />
+          </ProviderRoute>
+        } 
+      />
+    </Routes>
+  );
+};

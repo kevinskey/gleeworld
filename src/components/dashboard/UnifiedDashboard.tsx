@@ -15,6 +15,7 @@ import FanDashboard from '@/pages/FanDashboard';
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
 import { ModuleDisplay } from './ModuleDisplay';
+import { DashboardNavigation } from './DashboardNavigation';
 
 // Lazy load heavy components to improve initial load time
 const CommunityHubModule = lazy(() => import('./modules/CommunityHubModule').then(m => ({
@@ -113,6 +114,9 @@ export const UnifiedDashboard = () => {
         
         {/* Member Dashboard Content */}
         <div className="max-w-full mx-auto px-2 lg:px-6 py-4 space-y-6">
+          {/* Provider Navigation for Service Providers */}
+          <DashboardNavigation />
+          
           {/* Glee Academy Hero Section */}
           <div className="relative bg-gradient-to-r from-primary/90 to-primary rounded-xl overflow-hidden cursor-pointer shadow-lg" onClick={() => window.location.href = '/glee-academy'}>
             <div className="absolute inset-0 bg-black/20"></div>
