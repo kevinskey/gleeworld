@@ -80,6 +80,13 @@ export const useRadioPlayer = () => {
     }
   }, []);
 
+  // Append a timestamp to bust caches / reconnect closed streams
+  const withCacheBuster = useCallback((url: string) => {
+    const hasQuery = url.includes('?');
+    const sep = hasQuery ? '&' : '?';
+    return `${url}${sep}ts=${Date.now()}`;
+  }, []);
+
   useEffect(() => {
     console.log('useRadioPlayer: Initializing audio element (singleton)...');
 
@@ -153,6 +160,12 @@ export const useRadioPlayer = () => {
 
     const handleSuspend = () => {
       console.log('Radio stream suspended');
+      if (audioRef.current && state.isPlaying) {
+        setTimeout(() => {
+          console.log('Attempting resume after suspend...');
+          play();
+        }, 1500);
+      }
     };
 
     const handleWaiting = () => {
@@ -328,7 +341,7 @@ export const useRadioPlayer = () => {
         await new Promise(resolve => setTimeout(resolve, 100));
         
         // Set new source and load
-        audioRef.current.src = streamUrl;
+        audioRef.current.src = withCacheBuster(streamUrl);
         audioRef.current.volume = audioRef.current.volume || 0.7; // Use current volume from audio element
         audioRef.current.load();
         
@@ -446,6 +459,25 @@ export const useRadioPlayer = () => {
       audioRef.current.volume = clampedVolume;
     }
   }, []);
+
+  // Health check watchdog to auto-reconnect if playback stalls
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    let last = audio.currentTime;
+    const interval = setInterval(() => {
+      if (!audioRef.current) return;
+      const a = audioRef.current;
+      if (state.isPlaying) {
+        if (a.currentTime <= last + 1) {
+          console.log('Radio health-check: no progress, reconnecting...');
+          play();
+        }
+        last = a.currentTime;
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [state.isPlaying, play]);
 
   return {
     ...state,

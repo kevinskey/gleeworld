@@ -139,9 +139,10 @@ class AzuraCastService {
   // Get stream URLs - use Supabase proxy first to satisfy CSP, then direct
   getStreamUrls(): string[] {
     return [
-      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.directStreamUrl)}`, // Proxied HTTPS direct stream (CSP-safe)
-      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.getPublicStreamUrl())}`, // Proxied public page (CSP-safe)
-      this.directStreamUrl, // Direct HTTPS stream (may be blocked by CSP in preview)
+      this.directStreamUrl, // Prefer direct HTTPS stream for long-lived connections
+      this.getPublicStreamUrl(), // AzuraCast public player URL as fallback
+      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.directStreamUrl)}`, // Proxied direct stream (last resort)
+      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.getPublicStreamUrl())}`, // Proxied public page (last resort)
     ];
   }
 
