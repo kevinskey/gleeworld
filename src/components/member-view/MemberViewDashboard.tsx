@@ -65,54 +65,16 @@ export const MemberViewDashboard = () => {
   const backgroundImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
 
   const renderDashboardContent = () => {
-    console.log('MemberViewDashboard: rendering dashboard for user:', user);
-    console.log('MemberViewDashboard: user role is:', user.role);
-    console.log('MemberViewDashboard: user is_exec_board:', user.is_exec_board);
-    
-    switch (user.role) {
-      case 'super-admin':
-        console.log('MemberViewDashboard: Loading SuperAdminDashboard');
-        return <SuperAdminDashboard user={user} />;
-      case 'admin':
-        console.log('MemberViewDashboard: Loading AdminDashboard');
-        return <AdminDashboard user={user} />;
-      case 'executive':
-        console.log('MemberViewDashboard: Loading MemberDashboard for executive board member');
-        return <MemberDashboardV2 user={user} />;
-      case 'alumnae':
-        console.log('MemberViewDashboard: Loading AlumnaeDashboard');
-        return <AlumnaeDashboard user={user} />;
-      case 'auditioner':
-        console.log('MemberViewDashboard: Loading AuditionerDashboard');
-        return <AuditionerDashboard user={user} />;
-      case 'user':
-        console.log('MemberViewDashboard: Loading MemberDashboard for user');
-        return <MemberDashboardV2 user={user} />;
-      default:
-        console.log('MemberViewDashboard: Loading default MemberDashboard, role was:', user.role);
-        return <MemberDashboardV2 user={user} />;
-    }
+    // Import the unified MetalHeaderDashboard component
+    const { MetalHeaderDashboard } = require('@/components/shared/MetalHeaderDashboard');
+    console.log('MemberViewDashboard: rendering unified dashboard for user:', user);
+    return <MetalHeaderDashboard user={user} />;
   };
 
   const getTitle = () => {
-    switch (user.role) {
-      case 'super-admin':
-        return 'Super Admin Dashboard';
-      case 'admin':
-        return 'Admin Dashboard';
-      case 'executive':
-        return 'Executive Board Dashboard';
-      case 'alumnae':
-        return 'Alumnae Dashboard';
-      case 'auditioner':
-        return 'Auditioner Dashboard';
-      default:
-        // Check for executive board status for members
-        if (user.is_exec_board) {
-          return 'Executive Board Dashboard';
-        }
-        return 'Member Dashboard';
-    }
+    // Get the user's first name from full_name
+    const firstName = user.full_name?.split(' ')[0] || 'User';
+    return `${firstName}'s Dashboard`;
   };
 
   const getSubtitle = () => {

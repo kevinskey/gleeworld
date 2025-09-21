@@ -289,20 +289,20 @@ export const UnifiedDashboard = () => {
     }
   }
 
-  // Default view: If user is super admin and on default /dashboard route, show the SuperAdminDashboard
-  if ((profile?.is_super_admin || profile?.role === 'super-admin') && viewMode === 'default') {
+  // Default view: Use unified dashboard for all users
+  if (viewMode === 'default') {
+    const { MetalHeaderDashboard } = require('@/components/shared/MetalHeaderDashboard');
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-        
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
-          <SuperAdminDashboard user={{
-          id: profile.user_id,
-          email: profile.email || '',
-          full_name: profile.full_name || '',
-          role: profile.role || 'super-admin',
-          exec_board_role: profile.exec_board_role,
-          is_exec_board: profile.is_exec_board || false,
-          created_at: new Date().toISOString()
-        }} />
+          <MetalHeaderDashboard user={{
+            id: profile.user_id,
+            email: profile.email || '',
+            full_name: profile.full_name || '',
+            role: profile.role || 'user',
+            exec_board_role: profile.exec_board_role,
+            is_exec_board: profile.is_exec_board || false,
+            created_at: new Date().toISOString()
+          }} />
         </div>
       </div>;
   }
