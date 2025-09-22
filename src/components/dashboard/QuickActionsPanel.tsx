@@ -80,95 +80,93 @@ export const QuickActionsPanel = ({ user, onModuleSelect }: QuickActionsPanelPro
 
   return (
     <>
-      {/* Tab-style Trigger */}
-      <div className="fixed right-0 top-32 z-50">
-        <div 
-          className={`relative transition-all duration-300 ease-in-out ${
-            isOpen ? 'translate-x-0' : 'translate-x-0'
+      {/* Header Trigger Button */}
+      <div className="fixed top-4 right-4 z-50">
+        <Button
+          onClick={() => setIsOpen(!isOpen)}
+          className={`h-10 px-4 rounded-lg shadow-lg transition-all duration-300 ${
+            isOpen 
+              ? 'bg-primary text-primary-foreground' 
+              : 'bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground hover:shadow-xl'
           }`}
         >
-          <Button
-            onClick={() => setIsOpen(!isOpen)}
-            className={`h-16 w-8 rounded-l-xl rounded-r-none shadow-lg transition-all duration-300 flex flex-col items-center justify-center gap-1 ${
-              isOpen 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-gradient-to-b from-primary via-primary/90 to-primary/80 text-primary-foreground hover:shadow-xl'
-            }`}
-            size="icon"
-          >
-            <Zap className="h-4 w-4" />
-            <div className="text-xs font-medium transform -rotate-90 whitespace-nowrap">
-              Actions
-            </div>
-          </Button>
-        </div>
+          <Zap className="h-4 w-4 mr-2" />
+          <span className="text-sm font-medium">Quick Actions</span>
+          {isOpen ? <X className="h-4 w-4 ml-2" /> : <ChevronRight className="h-4 w-4 ml-2 rotate-90" />}
+        </Button>
       </div>
 
-      {/* Full Menu Slide-out */}
+      {/* Dashboard Drawer - Slides down from header */}
       <div 
-        className={`fixed right-0 top-0 h-full z-40 transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ease-out ${
           isOpen 
-            ? 'translate-x-0 opacity-100' 
-            : 'translate-x-full opacity-0 pointer-events-none'
+            ? 'translate-y-0 opacity-100' 
+            : '-translate-y-full opacity-0 pointer-events-none'
         }`}
       >
-        <div className="w-96 h-full bg-background/95 backdrop-blur-sm border-l shadow-2xl">
+        <div className="bg-background/98 backdrop-blur-lg border-b shadow-2xl mt-16">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border-b">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                  <Zap className="h-5 w-5 text-primary" />
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-8 py-6 border-b border-border/50">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                    <Zap className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-xl">Quick Actions Dashboard</h3>
+                    <p className="text-muted-foreground">Fast access to key features and tools</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Quick Actions</h3>
-                  <p className="text-sm text-muted-foreground">Fast access to key features</p>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsOpen(false)}
+                  className="hover:bg-muted/50"
+                >
+                  <X className="h-5 w-5 mr-2" />
+                  Close
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsOpen(false)}
-                className="hover:bg-muted/50"
-              >
-                <X className="h-5 w-5" />
-              </Button>
             </div>
           </div>
 
           {/* Actions Grid */}
-          <div className="p-6 space-y-3 overflow-y-auto h-full pb-20">
-            {quickActions.map((action) => {
-              const IconComponent = action.icon;
-              return (
-                <Button
-                  key={action.id}
-                  variant="ghost"
-                  className="w-full justify-start h-auto p-4 hover:bg-muted/50 group border border-transparent hover:border-muted"
-                  onClick={() => handleActionClick(action.action)}
-                >
-                  <div className="flex items-center gap-4 w-full">
-                    <div 
-                      className={`w-12 h-12 rounded-xl bg-${action.color}-100 dark:bg-${action.color}-900/20 flex items-center justify-center group-hover:scale-110 transition-transform`}
+          <div className="px-8 py-8">
+            <div className="max-w-7xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {quickActions.map((action) => {
+                  const IconComponent = action.icon;
+                  return (
+                    <Button
+                      key={action.id}
+                      variant="outline"
+                      className="h-auto p-6 hover:bg-muted/50 group border-2 hover:border-primary/20 transition-all duration-200"
+                      onClick={() => handleActionClick(action.action)}
                     >
-                      <IconComponent className={`h-6 w-6 text-${action.color}-600 dark:text-${action.color}-400`} />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-medium text-base">{action.title}</div>
-                      <div className="text-sm text-muted-foreground">{action.description}</div>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                  </div>
-                </Button>
-              );
-            })}
+                      <div className="flex flex-col items-center text-center w-full">
+                        <div 
+                          className={`w-16 h-16 rounded-2xl bg-${action.color}-100 dark:bg-${action.color}-900/20 flex items-center justify-center group-hover:scale-110 transition-transform mb-4`}
+                        >
+                          <IconComponent className={`h-8 w-8 text-${action.color}-600 dark:text-${action.color}-400`} />
+                        </div>
+                        <div className="font-semibold text-base mb-2">{action.title}</div>
+                        <div className="text-sm text-muted-foreground">{action.description}</div>
+                      </div>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Footer */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 border-t bg-background/95">
-            <p className="text-sm text-muted-foreground text-center">
-              Press ESC or click outside to close
-            </p>
+          <div className="px-8 py-4 border-t bg-muted/10">
+            <div className="max-w-7xl mx-auto">
+              <p className="text-sm text-muted-foreground text-center">
+                Press ESC to close or click the close button above
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -176,7 +174,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect }: QuickActionsPanelPro
       {/* Backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
         />
       )}
