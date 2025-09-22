@@ -28,12 +28,15 @@ export default function AuthPage() {
       const returnTo = urlParams.get('returnTo');
       const hasTimeSlot = urlParams.get('timeSlot');
       
-      if (hasTimeSlot && returnTo) {
-        // User came from booking flow, redirect back with time slot preserved
+      if (returnTo) {
+        // User came from a specific page (like QR scanning), redirect back
         window.location.href = returnTo;
+      } else if (hasTimeSlot) {
+        // User came from booking flow
+        window.location.href = '/audition-application';
       } else {
-        // Regular auth, redirect to home
-        window.location.href = '/';
+        // Regular auth, redirect to dashboard for members
+        window.location.href = '/dashboard';
       }
     }
   }, [user, loading]);
@@ -56,6 +59,15 @@ export default function AuthPage() {
           title: "Welcome back!",
           description: "You have been successfully logged in.",
         });
+
+        // Handle redirect after successful login
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnTo = urlParams.get('returnTo');
+        if (returnTo) {
+          window.location.href = returnTo;
+        } else {
+          window.location.href = '/dashboard';
+        }
 
       } else {
         // Signup flow

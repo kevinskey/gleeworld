@@ -792,7 +792,7 @@ const App = () => {
                     } 
                    />
                     <Route 
-                      path="/attendance/scan" 
+                      path="/attendance-scan" 
                       element={<AttendanceScanPage />} 
                     />
                    <Route 

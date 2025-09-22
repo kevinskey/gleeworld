@@ -118,10 +118,10 @@ const AttendanceScanPage = () => {
               You need to be logged in to record attendance.
             </p>
             <Button 
-              onClick={() => navigate('/auth')} 
+              onClick={() => navigate(`/auth?returnTo=${encodeURIComponent(window.location.href)}`)} 
               className="w-full"
             >
-              Go to Login
+              Sign In to Record Attendance
             </Button>
           </CardContent>
         </Card>
