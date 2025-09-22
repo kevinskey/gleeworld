@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { 
   Zap, 
   Shield, 
@@ -11,7 +15,21 @@ import {
   ChevronRight,
   ChevronDown,
   Users,
-  BarChart3
+  BarChart3,
+  Plus,
+  Trash2,
+  Settings,
+  Music,
+  FileText,
+  Mail,
+  Camera,
+  Mic,
+  BookOpen,
+  Heart,
+  Star,
+  Globe,
+  Home,
+  MessageSquare
 } from "lucide-react";
 
 interface QuickActionsPanelProps {
@@ -31,6 +49,13 @@ interface QuickActionsPanelProps {
 export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: QuickActionsPanelProps) => {
   const navigate = useNavigate();
   const isAdmin = user.role === 'super-admin' || user.role === 'admin';
+  const [isManaging, setIsManaging] = useState(false);
+  const [customActions, setCustomActions] = useState<any[]>([]);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newActionTitle, setNewActionTitle] = useState('');
+  const [newActionDescription, setNewActionDescription] = useState('');
+  const [newActionIcon, setNewActionIcon] = useState('Zap');
+  const [newActionModule, setNewActionModule] = useState('');
   
   // Debug logging
   console.log('QuickActionsPanel user:', {
@@ -40,48 +65,79 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
     exec_board_role: user.exec_board_role
   });
 
-  const quickActions = [
+  // Available icons for quick actions
+  const availableIcons = {
+    Zap, Shield, Calendar, Clock, Users, BarChart3, Music, FileText, Mail, 
+    Camera, Mic, BookOpen, Heart, Star, Globe, Home, MessageSquare, Settings
+  };
+
+  // Load custom actions from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem(`quickActions_${user.id}`);
+    if (stored) {
+      try {
+        setCustomActions(JSON.parse(stored));
+      } catch (error) {
+        console.error('Error loading custom actions:', error);
+      }
+    }
+  }, [user.id]);
+
+  // Save custom actions to localStorage
+  const saveCustomActions = (actions: any[]) => {
+    localStorage.setItem(`quickActions_${user.id}`, JSON.stringify(actions));
+    setCustomActions(actions);
+  };
+
+  const defaultActions = [
     ...(isAdmin ? [{
       id: 'permissions',
       title: 'Permissions',
       description: 'Manage access control',
-      icon: Shield,
+      icon: 'Shield',
       color: 'orange',
-      action: () => onModuleSelect('permissions')
+      action: () => onModuleSelect('permissions'),
+      isDefault: true
     }] : []),
     {
       id: 'calendar',
       title: 'Calendar',
       description: 'View events & schedule',
-      icon: Calendar,
+      icon: 'Calendar',
       color: 'green',
-      action: () => onModuleSelect('calendar')
+      action: () => onModuleSelect('calendar'),
+      isDefault: true
     },
     ...(isAdmin || user.is_exec_board ? [{
       id: 'appointments',
       title: 'Appointments',
       description: 'Schedule meetings',
-      icon: Clock,
+      icon: 'Clock',
       color: 'cyan',
-      action: () => navigate('/appointments')
+      action: () => navigate('/appointments'),
+      isDefault: true
     }] : []),
     {
       id: 'attendance',
       title: 'Attendance',
       description: 'Track participation',
-      icon: Users,
+      icon: 'Users',
       color: 'purple',
-      action: () => onModuleSelect('attendance')
+      action: () => onModuleSelect('attendance'),
+      isDefault: true
     },
     ...(isAdmin ? [{
       id: 'analytics',
       title: 'Analytics',
       description: 'View insights',
-      icon: BarChart3,
+      icon: 'BarChart3',
       color: 'blue',
-      action: () => onModuleSelect('analytics')
+      action: () => onModuleSelect('analytics'),
+      isDefault: true
     }] : [])
   ];
+
+  const allActions = [...defaultActions, ...customActions];
 
   const handleActionClick = (action: () => void) => {
     try {
@@ -92,6 +148,51 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
     } catch (error) {
       console.error('Error executing action:', error);
     }
+  };
+
+  const handleAddAction = () => {
+    if (!newActionTitle.trim()) {
+      toast.error('Please enter a title for the action');
+      return;
+    }
+
+    const newAction = {
+      id: `custom_${Date.now()}`,
+      title: newActionTitle.trim(),
+      description: newActionDescription.trim() || 'Custom action',
+      icon: newActionIcon,
+      color: 'blue',
+      action: () => {
+        if (newActionModule) {
+          onModuleSelect(newActionModule);
+        } else {
+          toast.info(`${newActionTitle} action clicked!`);
+        }
+      },
+      isDefault: false
+    };
+
+    const updatedActions = [...customActions, newAction];
+    saveCustomActions(updatedActions);
+    
+    // Reset form
+    setNewActionTitle('');
+    setNewActionDescription('');
+    setNewActionIcon('Zap');
+    setNewActionModule('');
+    setShowAddDialog(false);
+    
+    toast.success('Quick action added successfully!');
+  };
+
+  const handleDeleteAction = (actionId: string) => {
+    const updatedActions = customActions.filter(action => action.id !== actionId);
+    saveCustomActions(updatedActions);
+    toast.success('Quick action removed successfully!');
+  };
+
+  const getIconComponent = (iconName: string) => {
+    return availableIcons[iconName as keyof typeof availableIcons] || Zap;
   };
 
   return (
@@ -105,32 +206,147 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
         }`}
       >
         <div className="bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-b-lg border-x-2 border-b-2 border-slate-400 dark:border-slate-500 shadow-2xl mx-4">
-          {/* Actions Grid - No header */}
-          <div className="p-4 space-y-2 max-h-80 overflow-y-auto">
-            {quickActions.map((action) => {
-              const IconComponent = action.icon;
-              return (
-                <Button
-                  key={action.id}
-                  variant="ghost"
-                  className="w-full justify-start h-auto p-3 hover:bg-slate-400/20 dark:hover:bg-slate-600/20 group border border-transparent hover:border-slate-500 dark:hover:border-slate-400 rounded-lg transition-all duration-200"
-                  onClick={() => handleActionClick(action.action)}
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <div 
-                      className={`w-10 h-10 rounded-lg bg-slate-400/30 dark:bg-slate-600/30 flex items-center justify-center group-hover:scale-110 transition-transform border border-slate-500 dark:border-slate-400`}
-                    >
-                      <IconComponent className={`h-5 w-5 text-slate-800 dark:text-slate-100`} />
+          
+          {/* Header with management controls */}
+          <div className="p-3 border-b border-slate-400 dark:border-slate-500 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-slate-800 dark:text-slate-100" />
+              <span className="text-sm font-mono font-semibold text-slate-800 dark:text-slate-100">
+                Quick Actions
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 hover:bg-slate-400/20 dark:hover:bg-slate-600/20"
+                  >
+                    <Plus className="h-3 w-3 text-slate-800 dark:text-slate-100" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Add Quick Action</DialogTitle>
+                    <DialogDescription>
+                      Create a custom quick action for your dashboard
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Title</label>
+                      <Input
+                        value={newActionTitle}
+                        onChange={(e) => setNewActionTitle(e.target.value)}
+                        placeholder="Action title"
+                      />
                     </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-semibold text-sm text-slate-800 dark:text-slate-100 font-mono">{action.title}</div>
-                      <div className="text-xs text-slate-600 dark:text-slate-300 font-mono">{action.description}</div>
+                    <div>
+                      <label className="text-sm font-medium">Description</label>
+                      <Input
+                        value={newActionDescription}
+                        onChange={(e) => setNewActionDescription(e.target.value)}
+                        placeholder="Action description"
+                      />
                     </div>
-                    <ChevronRight className="h-4 w-4 text-slate-600 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-slate-100 transition-colors" />
+                    <div>
+                      <label className="text-sm font-medium">Icon</label>
+                      <Select value={newActionIcon} onValueChange={setNewActionIcon}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.keys(availableIcons).map((iconName) => {
+                            const IconComponent = availableIcons[iconName as keyof typeof availableIcons];
+                            return (
+                              <SelectItem key={iconName} value={iconName}>
+                                <div className="flex items-center gap-2">
+                                  <IconComponent className="h-4 w-4" />
+                                  {iconName}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Module (Optional)</label>
+                      <Input
+                        value={newActionModule}
+                        onChange={(e) => setNewActionModule(e.target.value)}
+                        placeholder="e.g., calendar, attendance"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-4">
+                      <Button onClick={handleAddAction} className="flex-1">
+                        Add Action
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowAddDialog(false)}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
-                </Button>
+                </DialogContent>
+              </Dialog>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 hover:bg-slate-400/20 dark:hover:bg-slate-600/20"
+                onClick={() => setIsManaging(!isManaging)}
+              >
+                <Settings className="h-3 w-3 text-slate-800 dark:text-slate-100" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Actions Grid */}
+          <div className="p-4 space-y-2 max-h-80 overflow-y-auto">
+            {allActions.map((action) => {
+              const IconComponent = getIconComponent(action.icon);
+              return (
+                <div key={action.id} className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    className="flex-1 justify-start h-auto p-3 hover:bg-slate-400/20 dark:hover:bg-slate-600/20 group border border-transparent hover:border-slate-500 dark:hover:border-slate-400 rounded-lg transition-all duration-200"
+                    onClick={() => handleActionClick(action.action)}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div 
+                        className={`w-10 h-10 rounded-lg bg-slate-400/30 dark:bg-slate-600/30 flex items-center justify-center group-hover:scale-110 transition-transform border border-slate-500 dark:border-slate-400`}
+                      >
+                        <IconComponent className={`h-5 w-5 text-slate-800 dark:text-slate-100`} />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="font-semibold text-sm text-slate-800 dark:text-slate-100 font-mono">{action.title}</div>
+                        <div className="text-xs text-slate-600 dark:text-slate-300 font-mono">{action.description}</div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-600 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-slate-100 transition-colors" />
+                    </div>
+                  </Button>
+                  {isManaging && !action.isDefault && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 w-10 p-0 hover:bg-red-500/20 text-red-600 hover:text-red-700"
+                      onClick={() => handleDeleteAction(action.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               );
             })}
+            {allActions.length === 0 && (
+              <div className="text-center py-8 text-slate-600 dark:text-slate-300">
+                <p className="text-sm font-mono">No quick actions configured</p>
+              </div>
+            )}
           </div>
 
           {/* Steel Footer */}
@@ -145,9 +361,14 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
               <div className="w-1.5 h-1.5 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
             </div>
             
-            <p className="text-xs text-slate-600 dark:text-slate-300 text-center font-mono pt-2">
-              Click outside to close
-            </p>
+            <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300 font-mono pt-2">
+              <span>
+                {isManaging ? 'Managing Mode' : 'Click outside to close'}
+              </span>
+              <span>
+                {allActions.length} action{allActions.length !== 1 ? 's' : ''}
+              </span>
+            </div>
           </div>
         </div>
       </div>
