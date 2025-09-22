@@ -90,7 +90,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
             : '-translate-y-4 opacity-0 scale-95 pointer-events-none'
         }`}
       >
-        <div className="bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-b-lg border-x-2 border-b-2 border-slate-400 dark:border-slate-500 shadow-2xl backdrop-blur-sm mx-4">
+        <div className="bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-b-lg border-x-2 border-b-2 border-slate-400 dark:border-slate-500 shadow-2xl mx-4">
           {/* Actions Grid - No header */}
           <div className="p-4 space-y-2 max-h-80 overflow-y-auto">
             {quickActions.map((action) => {
@@ -138,10 +138,10 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
         </div>
       </div>
 
-      {/* Subtle backdrop */}
+      {/* Clear backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-30 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/10 z-30 transition-opacity duration-300"
           onClick={onClose}
         />
       )}
