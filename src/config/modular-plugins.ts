@@ -80,7 +80,7 @@ export const MODULAR_PLUGINS: ModularPlugin[] = [
     category: 'administrative',
     isActive: true,
     component: (() => null) as any, // Will be loaded dynamically
-    componentPath: '@/components/modules/UserManagementModule',
+    componentPath: '@/components/modules/PermissionsModule',
     requiredRoles: ['admin', 'super-admin'],
     adminConfigurable: true,
     lockFromChanges: true, // Protected - requires password

@@ -16,9 +16,9 @@ import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
 import { SettingsModule } from '@/components/dashboard/modules/SettingsModule';
 import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
-import { ApprovalSystemModule } from '@/components/modules/ApprovalSystemModule';
-import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
 import { BudgetsModule } from '@/components/modules/BudgetsModule';
+import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
+
 import { CalendarManagementModule } from '@/components/modules/CalendarManagementModule';
 import { ContractsModule } from '@/components/modules/ContractsModule';
 import { DuesCollectionModule } from '@/components/modules/DuesCollectionModule';
@@ -82,7 +82,7 @@ const getModuleComponent = (moduleName: string) => {
     // Extended modules
     'ai-financial': AIFinancialPlanningModule,
     'alumnae-portal': AlumnaePortalModule,
-    'approval-system': ApprovalSystemModule,
+    'approval-system': BudgetsModule, // Use budgets as placeholder
     'buckets-of-love': BucketsOfLoveModule,
     'budgets': BudgetsModule,
     'calendar-management': CalendarManagementModule,
