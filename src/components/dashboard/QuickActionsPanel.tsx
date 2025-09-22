@@ -80,80 +80,97 @@ export const QuickActionsPanel = ({ user, onModuleSelect }: QuickActionsPanelPro
 
   return (
     <>
-      {/* Floating Trigger Button */}
-      <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50">
-        <Button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`h-12 w-12 rounded-full shadow-lg transition-all duration-300 ${
-            isOpen 
-              ? 'bg-primary text-primary-foreground rotate-45' 
-              : 'bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground hover:shadow-xl hover:scale-110'
+      {/* Tab-style Trigger */}
+      <div className="fixed right-0 top-32 z-50">
+        <div 
+          className={`relative transition-all duration-300 ease-in-out ${
+            isOpen ? 'translate-x-0' : 'translate-x-0'
           }`}
-          size="icon"
         >
-          {isOpen ? <X className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
-        </Button>
+          <Button
+            onClick={() => setIsOpen(!isOpen)}
+            className={`h-16 w-8 rounded-l-xl rounded-r-none shadow-lg transition-all duration-300 flex flex-col items-center justify-center gap-1 ${
+              isOpen 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-gradient-to-b from-primary via-primary/90 to-primary/80 text-primary-foreground hover:shadow-xl'
+            }`}
+            size="icon"
+          >
+            <Zap className="h-4 w-4" />
+            <div className="text-xs font-medium transform -rotate-90 whitespace-nowrap">
+              Actions
+            </div>
+          </Button>
+        </div>
       </div>
 
-      {/* Slide-out Panel */}
+      {/* Full Menu Slide-out */}
       <div 
-        className={`fixed right-0 top-1/2 transform -translate-y-1/2 z-40 transition-all duration-300 ease-in-out ${
+        className={`fixed right-0 top-0 h-full z-40 transition-all duration-300 ease-in-out ${
           isOpen 
             ? 'translate-x-0 opacity-100' 
             : 'translate-x-full opacity-0 pointer-events-none'
         }`}
       >
-        <Card className="w-80 mr-20 shadow-2xl border-2 bg-background/95 backdrop-blur-sm">
-          <CardContent className="p-0">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 border-b">
+        <div className="w-96 h-full bg-background/95 backdrop-blur-sm border-l shadow-2xl">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border-b">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                  <Zap className="h-4 w-4 text-primary" />
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Zap className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm">Quick Actions</h3>
-                  <p className="text-xs text-muted-foreground">Fast access to key features</p>
+                  <h3 className="font-semibold text-lg">Quick Actions</h3>
+                  <p className="text-sm text-muted-foreground">Fast access to key features</p>
                 </div>
               </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(false)}
+                className="hover:bg-muted/50"
+              >
+                <X className="h-5 w-5" />
+              </Button>
             </div>
+          </div>
 
-            {/* Actions Grid */}
-            <div className="p-4 space-y-2">
-              {quickActions.map((action) => {
-                const IconComponent = action.icon;
-                return (
-                  <Button
-                    key={action.id}
-                    variant="ghost"
-                    className="w-full justify-start h-auto p-3 hover:bg-muted/50 group"
-                    onClick={() => handleActionClick(action.action)}
-                  >
-                    <div className="flex items-center gap-3 w-full">
-                      <div 
-                        className={`w-10 h-10 rounded-lg bg-${action.color}-100 dark:bg-${action.color}-900/20 flex items-center justify-center group-hover:scale-110 transition-transform`}
-                      >
-                        <IconComponent className={`h-5 w-5 text-${action.color}-600 dark:text-${action.color}-400`} />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <div className="font-medium text-sm">{action.title}</div>
-                        <div className="text-xs text-muted-foreground">{action.description}</div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          {/* Actions Grid */}
+          <div className="p-6 space-y-3 overflow-y-auto h-full pb-20">
+            {quickActions.map((action) => {
+              const IconComponent = action.icon;
+              return (
+                <Button
+                  key={action.id}
+                  variant="ghost"
+                  className="w-full justify-start h-auto p-4 hover:bg-muted/50 group border border-transparent hover:border-muted"
+                  onClick={() => handleActionClick(action.action)}
+                >
+                  <div className="flex items-center gap-4 w-full">
+                    <div 
+                      className={`w-12 h-12 rounded-xl bg-${action.color}-100 dark:bg-${action.color}-900/20 flex items-center justify-center group-hover:scale-110 transition-transform`}
+                    >
+                      <IconComponent className={`h-6 w-6 text-${action.color}-600 dark:text-${action.color}-400`} />
                     </div>
-                  </Button>
-                );
-              })}
-            </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-medium text-base">{action.title}</div>
+                      <div className="text-sm text-muted-foreground">{action.description}</div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  </div>
+                </Button>
+              );
+            })}
+          </div>
 
-            {/* Footer */}
-            <div className="px-4 pb-4 pt-2 border-t bg-muted/20">
-              <p className="text-xs text-muted-foreground text-center">
-                Click outside to close
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Footer */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 border-t bg-background/95">
+            <p className="text-sm text-muted-foreground text-center">
+              Press ESC or click outside to close
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Backdrop */}
