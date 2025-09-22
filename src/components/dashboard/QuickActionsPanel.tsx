@@ -9,6 +9,7 @@ import {
   Clock, 
   X,
   ChevronRight,
+  ChevronDown,
   Users,
   BarChart3
 } from "lucide-react";
@@ -80,101 +81,103 @@ export const QuickActionsPanel = ({ user, onModuleSelect }: QuickActionsPanelPro
 
   return (
     <>
-      {/* Header Trigger Button */}
+      {/* Steel Dropdown Trigger Button - positioned in header area */}
       <div className="fixed top-4 right-4 z-50">
         <Button
           onClick={() => setIsOpen(!isOpen)}
-          className={`h-10 px-4 rounded-lg shadow-lg transition-all duration-300 ${
-            isOpen 
-              ? 'bg-primary text-primary-foreground' 
-              : 'bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground hover:shadow-xl'
+          className={`h-10 px-4 rounded-lg shadow-lg transition-all duration-300 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 border-2 border-slate-400 dark:border-slate-500 text-slate-800 dark:text-slate-100 hover:shadow-xl font-mono uppercase tracking-wide ${
+            isOpen ? 'shadow-inner' : ''
           }`}
         >
           <Zap className="h-4 w-4 mr-2" />
-          <span className="text-sm font-medium">Quick Actions</span>
-          {isOpen ? <X className="h-4 w-4 ml-2" /> : <ChevronRight className="h-4 w-4 ml-2 rotate-90" />}
+          <span className="text-sm font-bold">Actions</span>
+          <ChevronDown className={`h-4 w-4 ml-2 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
         </Button>
       </div>
 
-      {/* Dashboard Drawer - Slides down from header */}
+      {/* Steel Dropdown Panel */}
       <div 
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ease-out ${
+        className={`fixed top-16 right-4 z-40 transition-all duration-300 ease-out ${
           isOpen 
-            ? 'translate-y-0 opacity-100' 
-            : '-translate-y-full opacity-0 pointer-events-none'
+            ? 'translate-y-0 opacity-100 scale-100' 
+            : '-translate-y-4 opacity-0 scale-95 pointer-events-none'
         }`}
       >
-        <div className="bg-background/98 backdrop-blur-lg border-b shadow-2xl mt-16">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-8 py-6 border-b border-border/50">
-            <div className="max-w-7xl mx-auto">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
-                    <Zap className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-xl">Quick Actions Dashboard</h3>
-                    <p className="text-muted-foreground">Fast access to key features and tools</p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsOpen(false)}
-                  className="hover:bg-muted/50"
-                >
-                  <X className="h-5 w-5 mr-2" />
-                  Close
-                </Button>
+        <div className="w-80 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-2xl backdrop-blur-sm">
+          {/* Steel Header with Rivets */}
+          <div className="relative p-4 border-b border-slate-400 dark:border-slate-500">
+            {/* Top Left Rivet */}
+            <div className="absolute left-3 top-3 w-3 h-3 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
+              <div className="w-1.5 h-1.5 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+            </div>
+            
+            {/* Top Right Rivet */}
+            <div className="absolute right-3 top-3 w-3 h-3 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
+              <div className="w-1.5 h-1.5 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <div className="w-8 h-8 rounded-lg bg-slate-400/30 dark:bg-slate-600/30 flex items-center justify-center border border-slate-500 dark:border-slate-400">
+                <Zap className="h-4 w-4 text-slate-800 dark:text-slate-100" />
+              </div>
+              <div className="text-center">
+                <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 font-mono uppercase tracking-wide">Quick Actions</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 font-mono">Fast Dashboard Tools</p>
               </div>
             </div>
           </div>
 
           {/* Actions Grid */}
-          <div className="px-8 py-8">
-            <div className="max-w-7xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {quickActions.map((action) => {
-                  const IconComponent = action.icon;
-                  return (
-                    <Button
-                      key={action.id}
-                      variant="outline"
-                      className="h-auto p-6 hover:bg-muted/50 group border-2 hover:border-primary/20 transition-all duration-200"
-                      onClick={() => handleActionClick(action.action)}
+          <div className="p-4 space-y-2 max-h-80 overflow-y-auto">
+            {quickActions.map((action) => {
+              const IconComponent = action.icon;
+              return (
+                <Button
+                  key={action.id}
+                  variant="ghost"
+                  className="w-full justify-start h-auto p-3 hover:bg-slate-400/20 dark:hover:bg-slate-600/20 group border border-transparent hover:border-slate-500 dark:hover:border-slate-400 rounded-lg transition-all duration-200"
+                  onClick={() => handleActionClick(action.action)}
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <div 
+                      className={`w-10 h-10 rounded-lg bg-slate-400/30 dark:bg-slate-600/30 flex items-center justify-center group-hover:scale-110 transition-transform border border-slate-500 dark:border-slate-400`}
                     >
-                      <div className="flex flex-col items-center text-center w-full">
-                        <div 
-                          className={`w-16 h-16 rounded-2xl bg-${action.color}-100 dark:bg-${action.color}-900/20 flex items-center justify-center group-hover:scale-110 transition-transform mb-4`}
-                        >
-                          <IconComponent className={`h-8 w-8 text-${action.color}-600 dark:text-${action.color}-400`} />
-                        </div>
-                        <div className="font-semibold text-base mb-2">{action.title}</div>
-                        <div className="text-sm text-muted-foreground">{action.description}</div>
-                      </div>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
+                      <IconComponent className={`h-5 w-5 text-slate-800 dark:text-slate-100`} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-sm text-slate-800 dark:text-slate-100 font-mono">{action.title}</div>
+                      <div className="text-xs text-slate-600 dark:text-slate-300 font-mono">{action.description}</div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-600 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-slate-100 transition-colors" />
+                  </div>
+                </Button>
+              );
+            })}
           </div>
 
-          {/* Footer */}
-          <div className="px-8 py-4 border-t bg-muted/10">
-            <div className="max-w-7xl mx-auto">
-              <p className="text-sm text-muted-foreground text-center">
-                Press ESC to close or click the close button above
-              </p>
+          {/* Steel Footer */}
+          <div className="relative p-3 border-t border-slate-400 dark:border-slate-500">
+            {/* Bottom Left Rivet */}
+            <div className="absolute left-3 bottom-3 w-3 h-3 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
+              <div className="w-1.5 h-1.5 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
             </div>
+            
+            {/* Bottom Right Rivet */}
+            <div className="absolute right-3 bottom-3 w-3 h-3 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
+              <div className="w-1.5 h-1.5 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+            </div>
+            
+            <p className="text-xs text-slate-600 dark:text-slate-300 text-center font-mono pt-2">
+              Click outside to close
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Backdrop */}
+      {/* Subtle backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-30 transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
         />
       )}
