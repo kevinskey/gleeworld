@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RoleModuleMatrix } from '@/components/admin/RoleModuleMatrix';
-import { PermissionManagement } from '@/components/admin/PermissionManagement';
+import { UnifiedUserManagement } from '@/components/admin/UnifiedUserManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -296,7 +296,7 @@ const PermissionsPage: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="advanced">
-          <PermissionManagement />
+          <UnifiedUserManagement />
         </TabsContent>
       </Tabs>
     </main>

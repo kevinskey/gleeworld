@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Link } from "react-router-dom";
 import { RoleTransitionManager } from '@/components/admin/RoleTransitionManager';
-import { PermissionManagement } from '@/components/admin/PermissionManagement';
+import { UnifiedUserManagement } from '@/components/admin/UnifiedUserManagement';
 import { ROUTES } from '@/constants/routes';
 const AccessControl = () => {
   const { user } = useAuth();
@@ -110,7 +110,7 @@ const AccessControl = () => {
       {/* Permissions Section */}
       <section id="permissions" aria-labelledby="permissions-heading" className="space-y-4 scroll-mt-24 animate-fade-in">
         <h2 id="permissions-heading" className="text-xl font-semibold">Permissions</h2>
-        <PermissionManagement />
+        <UnifiedUserManagement />
       </section>
     </div>
   );

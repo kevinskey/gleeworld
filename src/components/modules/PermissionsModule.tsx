@@ -1,20 +1,20 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
 import { ModuleWrapper } from '@/components/shared/ModuleWrapper';
-import { PermissionManagement } from '@/components/admin/PermissionManagement';
+import { UnifiedUserManagement } from '@/components/admin/UnifiedUserManagement';
 import { ModuleProps } from '@/types/unified-modules';
 
 export const PermissionsModule = ({ user, isFullPage = false }: ModuleProps) => {
   return (
     <ModuleWrapper
-      id="permissions-management"
-      title="Executive Board Access"
-      description="Manage executive board positions and access (everyone else is a member)"
+      id="user-permissions-management"
+      title="User & Permission Management"
+      description="Unified management for users, roles, and permissions"
       icon={Shield}
       iconColor="red"
       fullPage={isFullPage}
     >
-      <PermissionManagement />
+      <UnifiedUserManagement />
     </ModuleWrapper>
   );
 };

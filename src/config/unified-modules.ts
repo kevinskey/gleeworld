@@ -51,9 +51,8 @@ import { SightSingingModule } from '@/components/modules/SightSingingModule';
 import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { BudgetsModule } from '@/components/modules/BudgetsModule';
 import { SettingsModule } from '@/components/modules/SettingsModule';
-import { UserManagementModule } from '@/components/modules/UserManagementModule';
-import { AuditionsModule } from '@/components/modules/AuditionsModule';
 import { PermissionsModule } from '@/components/modules/PermissionsModule';
+import { AuditionsModule } from '@/components/modules/AuditionsModule';
 import { WardrobeModule } from '@/components/modules/WardrobeModule';
 import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
 import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
@@ -284,7 +283,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "blue",
     category: "member-management",
     isActive: true,
-    component: UserManagementModule,
+    component: PermissionsModule,
     dbFunctionName: "user-management"
   },
   {
@@ -518,7 +517,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "red",
     category: "finances",
     isActive: true,
-    component: UserManagementModule, // Placeholder
+    component: BudgetsModule, // Placeholder for check requests
     dbFunctionName: "check-requests"
   },
   {
@@ -542,7 +541,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "orange",
     category: "finances",
     isActive: true,
-    component: UserManagementModule, // Placeholder
+    component: BudgetsModule, // Placeholder for receipts
     dbFunctionName: "receipts-records"
   },
   {
@@ -554,7 +553,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "green",
     category: "finances",
     isActive: true,
-    component: UserManagementModule, // Placeholder
+    component: BudgetsModule, // Placeholder for approval system
     dbFunctionName: "approval-system"
   },
   {
@@ -566,7 +565,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "blue",
     category: "finances",
     isActive: true,
-    component: UserManagementModule, // Placeholder
+    component: BudgetsModule, // Placeholder for ledger
     dbFunctionName: "glee-ledger"
   },
   {
@@ -578,7 +577,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "purple",
     category: "finances",
     isActive: true,
-    component: UserManagementModule, // Placeholder
+    component: BudgetsModule, // Placeholder for statements
     dbFunctionName: "monthly-statements"
   },
   {
@@ -590,7 +589,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "pink",
     category: "communications",
     isActive: true,
-    component: UserManagementModule, // Placeholder
+    component: EmailManagementModule, // PR communications
     dbFunctionName: "pr-coordinator"
   },
   {
@@ -602,7 +601,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "blue",
     category: "communications",
     isActive: true,
-    component: UserManagementModule, // Placeholder
+    component: EmailManagementModule, // Communications hub
     dbFunctionName: "communications"
   },
   {
@@ -614,7 +613,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "red",
     category: "system",
     isActive: true,
-    component: UserManagementModule, // Placeholder
+    component: PermissionsModule, // Admin tools
     dbFunctionName: "admin-tools"
   },
   {

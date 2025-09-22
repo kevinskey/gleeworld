@@ -26,7 +26,7 @@ import { SchedulingModule } from '../modules/SchedulingModule';
 import { CheckInCheckOutModule } from '../modules/CheckInCheckOutModule';
 import { GleeWritingWidget } from '../writing/GleeWritingWidget';
 import { FirstYearConsoleModule } from '../modules/FirstYearConsoleModule';
-import { UserManagementModule } from '../modules/UserManagementModule';
+import { PermissionsModule } from '../modules/PermissionsModule';
 import { BowmanScholarsModule } from '../modules/BowmanScholarsModule';
 import { RadioManagement } from '../admin/RadioManagement';
 import GleeAcademy from '../../pages/GleeAcademy';
@@ -106,7 +106,7 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
       case 'first-year-console':
         return <FirstYearConsoleModule />;
       case 'user-management':
-        return <UserManagementModule />;
+        return <PermissionsModule />;
       case 'bowman-scholars':
         return <BowmanScholarsModule />;
       case 'glee-academy':

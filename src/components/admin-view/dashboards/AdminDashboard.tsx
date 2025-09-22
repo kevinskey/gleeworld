@@ -55,7 +55,7 @@ import { ActivityLogs } from "@/components/admin/ActivityLogs";
 import { AdminSummaryStats } from "@/components/admin/AdminSummaryStats";
 import { CalendarControlsAdmin } from "@/components/admin/CalendarControlsAdmin";
 import { SystemSettings } from "@/components/admin/SystemSettings";
-import { PermissionManagement } from "@/components/admin/PermissionManagement";
+import { UnifiedUserManagement } from "@/components/admin/UnifiedUserManagement";
 import { AuditionsManagement } from "@/components/admin/AuditionsManagement";
 import { AppointmentSchedulingModule } from "@/components/modules/AppointmentSchedulingModule";
 import { WardrobeManagementHub } from "@/components/wardrobe/WardrobeManagementHub";
@@ -314,7 +314,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       case "user-management":
         return <EnhancedUserManagement users={users} loading={usersLoading} error={usersError} onRefetch={refetchUsers} />;
       case "permissions":
-        return <PermissionManagement />;
+        return <UnifiedUserManagement />;
       case "auditions":
         return <AuditionsManagement />;
       case "appointment-scheduling":

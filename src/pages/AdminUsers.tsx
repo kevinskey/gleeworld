@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { UserManagement } from '@/components/admin/UserManagement';
+import { UnifiedUserManagement } from '@/components/admin/UnifiedUserManagement';
 import { Loader2, Users, Shield } from 'lucide-react';
 
 const AdminUsers = () => {
@@ -46,7 +46,7 @@ const AdminUsers = () => {
         </div>
 
         {/* User Management Component */}
-        <UserManagement />
+        <UnifiedUserManagement />
       </div>
     </UniversalLayout>
   );

@@ -9,10 +9,9 @@ import { UNIFIED_MODULE_CATEGORIES } from "@/config/unified-modules";
 // Import all available module components for mapping
 import { MusicLibraryInlineModule } from '@/components/modules/MusicLibraryInlineModule';
 import { MusicLibraryModule } from '@/components/modules/MusicLibraryModule';
-import { UserManagementModule } from '@/components/modules/UserManagementModule';
+import { PermissionsModule } from '@/components/modules/PermissionsModule';
 import { WardrobeModule } from '@/components/modules/WardrobeModule';
 import { AuditionsModule } from '@/components/modules/AuditionsModule';
-import { PermissionsModule } from '@/components/modules/PermissionsModule';
 import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
 import { SettingsModule } from '@/components/dashboard/modules/SettingsModule';
@@ -70,7 +69,7 @@ const getModuleComponent = (moduleName: string) => {
     // Core modules
     'music-library': MusicLibraryInlineModule,
     'music-library-module': MusicLibraryModule,
-    'user-management': UserManagementModule,
+    'user-management': PermissionsModule,
     'wardrobe': WardrobeModule,
     'auditions': AuditionsModule,
     'permissions': PermissionsModule,
@@ -104,7 +103,7 @@ const getModuleComponent = (moduleName: string) => {
     'wardrobe-management': WardrobeModule,
     'permissions-management': PermissionsModule,
     'attendance-management': AttendanceModule,
-    'user-management-module': UserManagementModule,
+    'user-management-module': PermissionsModule,
     'event-management': EventPlannerModule,
     'calendar': CalendarManagementModule,
     'budget-management': BudgetsModule,
