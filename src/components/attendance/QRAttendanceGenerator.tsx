@@ -199,24 +199,56 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
   };
 
   const shareQRCode = async () => {
-    if (!navigator.share || !qrCodeUrl || !selectedEvent) return;
+    if (!qrCodeUrl || !selectedEvent) return;
     
     try {
       const selectedEventData = events.find(e => e.id === selectedEvent);
-      const response = await fetch(qrCodeUrl);
-      const blob = await response.blob();
-      const file = new File([blob], 'attendance-qr-code.png', { type: 'image/png' });
+      const title = `Attendance QR - ${selectedEventData?.title}`;
+      const text = 'Scan this QR code to check in for attendance';
       
-      await navigator.share({
-        title: `Attendance QR - ${selectedEventData?.title}`,
-        text: 'Scan this QR code to check in for attendance',
-        files: [file]
-      });
+      // Check if file sharing is supported
+      if (navigator.share && navigator.canShare) {
+        try {
+          const response = await fetch(qrCodeUrl);
+          const blob = await response.blob();
+          const file = new File([blob], 'attendance-qr-code.png', { type: 'image/png' });
+          
+          // Check if the browser can share files
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title,
+              text,
+              files: [file]
+            });
+            return;
+          }
+        } catch (fileShareError) {
+          console.log('File sharing not supported, falling back to text sharing:', fileShareError);
+        }
+      }
+      
+      // Fallback: Share just the URL if file sharing isn't supported
+      if (navigator.share) {
+        const scanUrl = `${window.location.origin}/attendance-scan?token=${qrToken}`;
+        await navigator.share({
+          title,
+          text,
+          url: scanUrl
+        });
+      } else {
+        // Final fallback: Copy to clipboard
+        const scanUrl = `${window.location.origin}/attendance-scan?token=${qrToken}`;
+        await navigator.clipboard.writeText(`${title}\n${text}\n${scanUrl}`);
+        toast({
+          title: "Copied to Clipboard",
+          description: "QR code link copied to clipboard",
+        });
+      }
     } catch (error) {
       console.error('Error sharing QR code:', error);
       toast({
         title: "Error",
-        description: "Failed to share QR code",
+        description: "Failed to share QR code. You can try downloading it instead.",
         variant: "destructive",
       });
     }
@@ -371,7 +403,7 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
                 Copy
               </Button>
               
-              {navigator.share && (
+              {(navigator.share || navigator.clipboard) && (
                 <Button
                   variant="outline"
                   size="sm"
